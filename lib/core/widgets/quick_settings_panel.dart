@@ -38,8 +38,8 @@ class QuickSettingsPanel extends ConsumerWidget {
       width: math.min(panelWidth, availableWidth),
       constraints: BoxConstraints(maxHeight: maxHeight),
       padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.xs,
-        vertical: context.spacing.md,
+        horizontal: context.spacing.xl,
+        vertical: context.spacing.xl,
       ),
       decoration: BoxDecoration(
         color: c.surface,
@@ -186,7 +186,7 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return Container(
-      padding: EdgeInsets.all(context.spacing.none),
+      padding: EdgeInsets.all(context.spacing.xxs),
       decoration: BoxDecoration(
         color: c.surfaceSubtle,
         border: context.cardBorder,
@@ -204,8 +204,8 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
                     ? c.accent
                     : c.textSecondary,
                 padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.xs,
-                  vertical: context.spacing.xxs,
+                  horizontal: context.spacing.md,
+                  vertical: context.spacing.sm,
                 ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
