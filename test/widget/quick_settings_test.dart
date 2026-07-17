@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,6 +138,31 @@ void main() {
       find.byKey(const ValueKey<String>('quick-settings-panel')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('System menu item previews the platform font', (tester) async {
+    await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    await tester.tap(find.text('Space Grotesk'));
+    await tester.pumpAndSettle();
+
+    final systemFinder = find.text('System');
+    final systemText = tester.widget<Text>(systemFinder);
+    final systemContext = tester.element(systemFinder);
+    final theme = Theme.of(systemContext);
+    final platformTypography = Typography.material2021(
+      platform: defaultTargetPlatform,
+      colorScheme: theme.colorScheme,
+    );
+    final expectedFamily =
+        (theme.brightness == Brightness.dark
+                ? platformTypography.white
+                : platformTypography.black)
+            .bodyMedium
+            ?.fontFamily;
+
+    expect(systemText.style?.fontFamily, expectedFamily);
   });
 
   testWidgets('language changes immediately and keeps the popover open', (

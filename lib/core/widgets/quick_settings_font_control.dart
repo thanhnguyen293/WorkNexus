@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../settings/app_settings.dart';
@@ -25,7 +26,20 @@ class QuickSettingsFontControl extends StatelessWidget {
 
   String _displayLabel(String font) => font == kSystemFont ? systemLabel : font;
 
-  String? _previewFamily(String font) => font == kSystemFont ? null : font;
+  String? _previewFamily(BuildContext context, String font) {
+    if (font != kSystemFont) return font;
+
+    final theme = Theme.of(context);
+    final platformTypography = Typography.material2021(
+      platform: defaultTargetPlatform,
+      colorScheme: theme.colorScheme,
+    );
+    return (theme.brightness == Brightness.dark
+            ? platformTypography.white
+            : platformTypography.black)
+        .bodyMedium
+        ?.fontFamily;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +63,7 @@ class QuickSettingsFontControl extends StatelessWidget {
                   child: Text(
                     _displayLabel(font),
                     style: context.typography.subtitle.copyWith(
-                      fontFamily: _previewFamily(font),
+                      fontFamily: _previewFamily(context, font),
                       color: c.textPrimary,
                     ),
                   ),
@@ -75,7 +89,7 @@ class QuickSettingsFontControl extends StatelessWidget {
             Text(
               _displayLabel(value),
               style: context.typography.captionStrong.copyWith(
-                fontFamily: _previewFamily(value),
+                fontFamily: _previewFamily(context, value),
                 color: c.textPrimary,
               ),
             ),
