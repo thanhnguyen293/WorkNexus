@@ -1,0 +1,112 @@
+name: work_nexus
+description: "A new Flutter project."
+# Prevents accidental `flutter pub publish` for this private package.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  # No caret anywhere in this file (project rule): use explicit lower/upper bounds.
+  sdk: '>=3.10.7 <4.0.0'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Dependency policy (project rule): versions are PINNED EXACTLY — no `^`.
+# Bump deliberately (edit the number + re-run `flutter pub get`), never implicitly.
+# Toolchain-sensitive pins carry a comment explaining the ceiling; do not raise
+# them without re-verifying codegen (`dart run build_runner build`) still works.
+# ─────────────────────────────────────────────────────────────────────────────
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # UI / icons / fonts
+  cupertino_icons: 1.0.9
+  gpt_markdown: 1.1.8
+  html2md: 1.3.2
+  cached_network_image: 3.4.1
+  two_dimensional_scrollables: 0.5.3
+
+  # State management & DI
+  flutter_riverpod: 3.3.2
+  get_it: 9.2.1
+
+  # Functional error handling (Either/Option) — pairs with core/error
+  fpdart: 1.2.0
+
+  # Persistence (local-first source of truth). drift is capped: 2.34+ needs
+  # analyzer 13 / Dart 3.11 — this SDK is 3.10.7, so keep drift on 2.3x.
+  drift: 2.31.0
+  drift_flutter: 0.2.8
+
+  # Networking / secure storage. flutter_secure_storage stays on 9.x: 10.x pulls
+  # `objective_c` (native-assets build hook) which breaks build_runner on this SDK.
+  dio: 5.10.0
+  # Type-safe dio client generator for the ZenTao v1 REST API. Runtime
+  # annotations only; the code generator is a dev_dependency below.
+  retrofit: 4.9.2
+  flutter_secure_storage: 9.2.4
+
+  # Codegen annotations. json_annotation capped <4.12 (analyzer ceiling on this SDK).
+  freezed_annotation: 3.1.0
+  json_annotation: 4.9.0
+
+  # Logging — use instead of print (rule 11.3)
+  logger: 2.7.0
+
+  # Utilities
+  window_manager: 0.5.2
+  uuid: 4.6.0
+  collection: 1.19.1
+  intl: 0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: 6.0.0
+
+  # Codegen. build_runner capped at 2.15.1: 2.15.2+ requires Dart 3.11.
+  build_runner: 2.15.1
+  drift_dev: 2.31.0
+  freezed: 3.2.3
+  json_serializable: 6.11.2
+  # Retrofit code generator (pairs with the `retrofit` runtime dep). Resolves
+  # on this SDK (analyzer-compatible); re-verify codegen if bumped.
+  retrofit_generator: 10.2.7
+
+  # Testing
+  mocktail: 1.0.5
+
+# ─────────────────────────────────────────────────────────────────────────────
+# path_provider_foundation >= 2.6 pulls `objective_c`, whose native-assets
+# `hook/build.dart` breaks `dart run build_runner` (AOT) on this Dart SDK
+# ("'dart compile' does not support build hooks"). Kept as a RANGE on purpose:
+# it must stay < 2.6 while letting the transitive resolver pick a patch.
+# Remove once build_runner tolerates build hooks on the pinned SDK.
+# ─────────────────────────────────────────────────────────────────────────────
+dependency_overrides:
+  path_provider_foundation: '>=2.4.0 <2.6.0'
+
+# NOTE: riverpod_lint + custom_lint are intentionally NOT added — they cannot
+# resolve on this toolchain (riverpod_lint needs analyzer ^7 or ^9, this SDK
+# pins analyzer 8.x; older custom_lint needs freezed_annotation 2.x). Rule
+# enforcement lives in analysis_options.yaml via the built-in lint set instead.
+
+# The following section is specific to Flutter packages.
+flutter:
+  uses-material-design: true
+  generate: true # enables flutter gen-l10n from lib/l10n/*.arb
+
+  fonts:
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-Variable.ttf
+    - family: Space Mono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/SpaceMono-Italic.ttf
+          style: italic

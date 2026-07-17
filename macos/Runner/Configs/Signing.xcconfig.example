@@ -1,0 +1,20 @@
+// Template cho code signing cục bộ (per-developer). Manual signing.
+// Copy file này thành `Signing.xcconfig` (cùng thư mục) rồi điền giá trị của bạn.
+//
+// 1) CODE_SIGN_IDENTITY = SHA-1 của cert Apple Development:
+//      security find-identity -v -p codesigning
+//        -> dòng dạng:  <SHA1>  "Apple Development: <email> (....)"
+//
+// 2) DEVELOPMENT_TEAM = OU (Team ID THỰC) của cert đó:
+//      security find-certificate -c "<email>" -p | \
+//        openssl x509 -noout -subject -nameopt sep_multiline
+//        -> lấy giá trị dòng  OU=...
+//    (Với team cá nhân, OU KHÁC chuỗi trong ngoặc mà find-identity in ra.)
+//
+// Mục đích: ký Debug/Profile bằng identity ổn định để "Always Allow" cho Keychain
+// (flutter_secure_storage) tồn tại qua các lần build lại — thay cho ad-hoc "-".
+// `Signing.xcconfig` bị git-ignore; nếu không tạo, build quay về ad-hoc "-".
+DEVELOPMENT_TEAM[config=Debug][sdk=macosx*] = YOUR_TEAM_OU
+DEVELOPMENT_TEAM[config=Profile][sdk=macosx*] = YOUR_TEAM_OU
+CODE_SIGN_IDENTITY[config=Debug][sdk=macosx*] = YOUR_CERT_SHA1
+CODE_SIGN_IDENTITY[config=Profile][sdk=macosx*] = YOUR_CERT_SHA1

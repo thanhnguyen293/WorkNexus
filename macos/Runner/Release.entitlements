@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Sandbox OFF so the app can spawn coding-agent CLIs and reach the
+	     localhost OpenCode server. Keychain uses the legacy login keychain
+	     (no signed entitlement needed). Enable Hardened Runtime + notarize for
+	     distribution. Trade-off: no Mac App Store. -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+</dict>
+</plist>
