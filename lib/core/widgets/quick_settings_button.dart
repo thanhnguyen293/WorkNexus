@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../theme/app_spacing.dart';
+import '../../l10n/app_localizations.dart';
+import 'quick_settings_panel.dart';
+
+/// Anchored title-bar trigger for the Quick Settings popover.
+class QuickSettingsButton extends StatefulWidget {
+  const QuickSettingsButton({super.key});
+
+  @override
+  State<QuickSettingsButton> createState() => _QuickSettingsButtonState();
+}
+
+class _QuickSettingsButtonState extends State<QuickSettingsButton> {
+  final _controller = OverlayPortalController();
+  final _layerLink = LayerLink();
+  final _triggerFocusNode = FocusNode();
+  final _panelFocusNode = FocusNode();
+
+  void _toggle() {
+    if (_controller.isShowing) {
+      _hideAndRestoreFocus();
+      return;
+    }
+
+    _controller.show();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller.isShowing) {
+        _panelFocusNode.requestFocus();
+      }
+    });
+  }
+
+  void _hideAndRestoreFocus() {
+    _controller.hide();
+    _triggerFocusNode.requestFocus();
+  }
+
+  KeyEventResult _handlePanelKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.escape) {
+      _hideAndRestoreFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  void dispose() {
+    _triggerFocusNode.dispose();
+    _panelFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OverlayPortal(
+      controller: _controller,
+      overlayChildBuilder: (context) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ModalBarrier(dismissible: true, onDismiss: _hideAndRestoreFocus),
+          Positioned(
+            left: context.spacing.none,
+            top: context.spacing.none,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              targetAnchor: Alignment.bottomRight,
+              followerAnchor: Alignment.topRight,
+              offset: Offset(context.spacing.none, context.spacing.xs),
+              child: Focus(
+                focusNode: _panelFocusNode,
+                onKeyEvent: _handlePanelKeyEvent,
+                child: const QuickSettingsPanel(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      child: CompositedTransformTarget(
+        link: _layerLink,
+        child: IconButton(
+          key: const ValueKey<String>('quick-settings-trigger'),
+          focusNode: _triggerFocusNode,
+          tooltip: AppL10n.of(context).quickSettings,
+          onPressed: _toggle,
+          icon: const Icon(Icons.tune),
+        ),
+      ),
+    );
+  }
+}
