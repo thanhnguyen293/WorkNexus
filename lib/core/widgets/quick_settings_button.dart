@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/app_spacing.dart';
 import 'quick_settings_panel.dart';
 
 /// Anchored title-bar trigger for the Quick Settings popover.
@@ -83,13 +83,12 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
       overlayChildBuilder: (context) => Stack(
         fit: StackFit.expand,
         children: [
-          ModalBarrier(dismissible: true, onDismiss: _hideAndRestoreFocus),
+          ModalBarrier(onDismiss: _hideAndRestoreFocus),
           Positioned(
             left: context.spacing.none,
             top: context.spacing.none,
             child: CompositedTransformFollower(
               link: _layerLink,
-              showWhenUnlinked: false,
               targetAnchor: Alignment.bottomRight,
               followerAnchor: Alignment.topRight,
               offset: Offset(context.spacing.none, context.spacing.xs),

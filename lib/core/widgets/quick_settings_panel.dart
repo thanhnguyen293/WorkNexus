@@ -3,14 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import '../theme/fonts.dart';
-import '../../l10n/app_localizations.dart';
 
 /// Reactive controls for the app-wide language and appearance preferences.
 class QuickSettingsPanel extends ConsumerWidget {
