@@ -47,6 +47,28 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
     return KeyEventResult.ignored;
   }
 
+  double _panelMaxHeight(BuildContext context) {
+    final renderObject = _triggerFocusNode.context?.findRenderObject();
+    final trigger = renderObject is RenderBox ? renderObject : null;
+    if (trigger == null) {
+      return 0;
+    }
+
+    final triggerBottom =
+        trigger.localToGlobal(Offset.zero).dy + trigger.size.height;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final followerOffset = context.spacing.xs;
+    final bottomSpacing = context.spacing.xs;
+    final remainingHeight =
+        MediaQuery.sizeOf(context).height -
+        triggerBottom -
+        followerOffset -
+        bottomInset -
+        bottomSpacing;
+
+    return remainingHeight.clamp(0, context.spacing.xl6 * 12.5);
+  }
+
   @override
   void dispose() {
     _triggerFocusNode.dispose();
@@ -71,10 +93,15 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
               targetAnchor: Alignment.bottomRight,
               followerAnchor: Alignment.topRight,
               offset: Offset(context.spacing.none, context.spacing.xs),
-              child: Focus(
-                focusNode: _panelFocusNode,
-                onKeyEvent: _handlePanelKeyEvent,
-                child: const QuickSettingsPanel(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: _panelMaxHeight(context),
+                ),
+                child: Focus(
+                  focusNode: _panelFocusNode,
+                  onKeyEvent: _handlePanelKeyEvent,
+                  child: const QuickSettingsPanel(),
+                ),
               ),
             ),
           ),

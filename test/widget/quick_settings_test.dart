@@ -9,8 +9,11 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
-  Future<ProviderContainer> pumpTitleBar(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1200, 900);
+  Future<ProviderContainer> pumpTitleBar(
+    WidgetTester tester, {
+    Size physicalSize = const Size(1200, 900),
+  }) async {
+    tester.view.physicalSize = physicalSize;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -138,6 +141,18 @@ void main() {
       find.byKey(const ValueKey<String>('quick-settings-panel')),
       findsNothing,
     );
+  });
+
+  testWidgets('quick settings panel stays within a short viewport', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester, physicalSize: const Size(1200, 200));
+    await openQuickSettings(tester);
+
+    final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
+
+    expect(tester.getRect(panel).bottom, lessThanOrEqualTo(200));
+    expect(tester.takeException(), isNull);
   });
 }
 
