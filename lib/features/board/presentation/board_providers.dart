@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
+import '../../../core/error/result.dart';
 import '../domain/entities/board_model.dart';
 import '../domain/entities/filter_state.dart';
 import '../domain/usecases/build_board.dart';
@@ -17,6 +19,18 @@ import '../domain/usecases/filter_tickets.dart';
 import '../domain/value_objects/saved_view.dart';
 
 enum ViewMode { board, zentaoBugs, zentaoTasks, list }
+
+class ZenTaoProductSelection {
+  const ZenTaoProductSelection({
+    required this.accountId,
+    required this.productId,
+    required this.productName,
+  });
+
+  final String accountId;
+  final String productId;
+  final String productName;
+}
 
 final viewModeProvider = NotifierProvider<ViewModeController, ViewMode>(
   ViewModeController.new,
@@ -115,9 +129,77 @@ class TicketActionPending extends Notifier<Set<String>> {
 final ticketActionPendingProvider =
     NotifierProvider<TicketActionPending, Set<String>>(TicketActionPending.new);
 
+class ZenTaoProductsExpanded extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+final zentaoProductsExpandedProvider =
+    NotifierProvider<ZenTaoProductsExpanded, bool>(ZenTaoProductsExpanded.new);
+
+class ZenTaoProductSyncing extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void start(ProviderProduct product) =>
+      state = '${product.accountId}:${product.id}';
+  void finish() => state = null;
+}
+
+final zentaoProductSyncingProvider =
+    NotifierProvider<ZenTaoProductSyncing, String?>(ZenTaoProductSyncing.new);
+
+class SelectedZenTaoProduct extends Notifier<ZenTaoProductSelection?> {
+  @override
+  ZenTaoProductSelection? build() => null;
+
+  void select(ProviderProduct product) {
+    state = ZenTaoProductSelection(
+      accountId: product.accountId,
+      productId: product.id,
+      productName: product.name,
+    );
+  }
+
+  void clear() => state = null;
+}
+
+final selectedZenTaoProductProvider =
+    NotifierProvider<SelectedZenTaoProduct, ZenTaoProductSelection?>(
+      SelectedZenTaoProduct.new,
+    );
+
+final zentaoProductsProvider =
+    FutureProvider.family<List<ProviderProduct>, String>((
+      ref,
+      accountId,
+    ) async {
+      final res = await ref.watch(syncServiceProvider).listProducts(accountId);
+      switch (res) {
+        case Ok(:final value):
+          return value;
+        case Err(:final failure):
+          throw failure;
+      }
+    });
+
 /// The query fed to the pure board/list use cases.
 final _boardQueryProvider = Provider<BoardQuery>((ref) {
-  final tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
+  var tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
+  final product = ref.watch(selectedZenTaoProductProvider);
+  if (product != null) {
+    final productLabel = 'zentao-product:${product.productId}';
+    tickets = tickets
+        .where(
+          (ticket) =>
+              ticket.accountId == product.accountId &&
+              (ticket.externalType ?? '').toLowerCase() == 'bug' &&
+              ticket.labels.contains(productLabel),
+        )
+        .toList();
+  }
   final filter = ref.watch(filterStateProvider);
   return BoardQuery(
     tickets: tickets,

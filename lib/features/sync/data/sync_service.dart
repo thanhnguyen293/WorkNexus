@@ -51,6 +51,36 @@ class SyncService {
     }
   }
 
+  Future<Result<List<ProviderProduct>>> listProducts(String accountId) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    return adapter.listProducts();
+  }
+
+  Future<Result<int>> syncProductBugs(ProviderProduct product) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(product.accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('ZenTao account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(product.accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listProductBugs(product.id);
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(account, value.tickets);
+        return Ok(value.tickets.length);
+    }
+  }
+
   /// Fetches full detail + comments for a single [ticket] from its provider and
   /// writes them into drift (from where the detail panel reads reactively).
   ///

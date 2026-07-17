@@ -207,6 +207,80 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
+  Future<Result<List<ProviderProduct>>> listProducts() async {
+    return _guard(() async {
+      const limit = 100;
+      final out = <ProviderProduct>[];
+      final seen = <String>{};
+      var total = 0;
+      for (var page = 1; page <= 50; page++) {
+        final res = await _client.products(page: page, limit: limit);
+        if (res.total > 0) total = res.total;
+        var added = 0;
+        for (final product in res.products) {
+          if (product.id.isEmpty || !seen.add(product.id)) continue;
+          out.add(
+            ProviderProduct(
+              id: product.id,
+              name: product.name.isEmpty ? product.id : product.name,
+              accountId: accountId,
+            ),
+          );
+          added++;
+        }
+        if (added == 0) break;
+        if (total > 0 && out.length >= total) break;
+      }
+      return out;
+    });
+  }
+
+  @override
+  Future<Result<TicketPage>> listProductBugs(String productId) async {
+    return _guard(() async {
+      const limit = 100;
+      final out = <Ticket>[];
+      final seen = <String>{};
+      var total = 0;
+      for (var page = 1; page <= 50; page++) {
+        final res = await _client.productBugs(
+          productId,
+          page: page,
+          limit: limit,
+        );
+        if (res.total > 0) total = res.total;
+        var added = 0;
+        for (final bug in res.bugs) {
+          final id = bug.idString;
+          if (id.isEmpty || !seen.add(id)) continue;
+          final ticket = normalizeZenTao(
+            bug,
+            type: ZenTaoType.bug,
+            accountId: accountId,
+            baseUrl: _client.baseUrl,
+          );
+          out.add(
+            ticket.copyWith(
+              labels: [...ticket.labels, 'zentao-product:$productId'],
+            ),
+          );
+          added++;
+        }
+        if (added == 0) break;
+        if (total > 0 && out.length >= total) break;
+      }
+      final maxUpdated = out
+          .map((t) => t.updatedAt)
+          .whereType<DateTime>()
+          .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
+      return TicketPage(
+        tickets: out,
+        nextCursor: maxUpdated?.toIso8601String(),
+      );
+    });
+  }
+
+  @override
   Future<Result<bool>> assignTicket(
     Ticket ticket, {
     required String assignee,

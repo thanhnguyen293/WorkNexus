@@ -38,6 +38,19 @@ class ProviderUser {
   final String displayName;
 }
 
+/// A provider-side product/container that can scope ticket sync.
+class ProviderProduct {
+  const ProviderProduct({
+    required this.id,
+    required this.name,
+    required this.accountId,
+  });
+
+  final String id;
+  final String name;
+  final String accountId;
+}
+
 /// The contract every ticket source implements. An instance is bound to a single
 /// [Account] (base URL + credentials), so returned entities are already stamped
 /// with that account's id. Add a provider = implement this once (ZenTao first).
@@ -64,6 +77,12 @@ abstract class ProviderAdapter {
 
   /// Users the ticket can be (re)assigned to.
   Future<Result<List<ProviderUser>>> listUsers();
+
+  /// Products/containers available to this account.
+  Future<Result<List<ProviderProduct>>> listProducts();
+
+  /// Bugs scoped to one provider product/container.
+  Future<Result<TicketPage>> listProductBugs(String productId);
 
   /// Reassign the ticket to [assignee] (a provider account), with an optional note.
   Future<Result<bool>> assignTicket(

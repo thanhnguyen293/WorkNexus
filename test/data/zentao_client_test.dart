@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
+import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -284,6 +285,63 @@ void main() {
     final users = (res as Ok).value;
     expect(users.map((u) => u.displayName).toList(), ['Amy', 'Zoe']); // sorted
     expect(users.first.account, 'amy');
+  });
+
+  test('listProducts parses /products into provider products', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/products')) {
+        return _json({
+          'total': 2,
+          'products': [
+            {'id': 8, 'name': 'VN_Socialfi'},
+            {'id': 9, 'name': 'VN_IM_Chat'},
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.listProducts();
+
+    expect(res, isA<Ok>());
+    final products = (res as Ok).value;
+    expect(products.map((p) => p.id).toList(), ['8', '9']);
+    expect(products.map((p) => p.name).toList(), ['VN_Socialfi', 'VN_IM_Chat']);
+  });
+
+  test('listProductBugs fetches all bugs for a ZenTao product', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/products/8/bugs')) {
+        return _json({
+          'total': 1,
+          'bugs': [
+            {
+              'id': 1092,
+              'title': 'Product bug',
+              'status': 'active',
+              'confirmed': 1,
+              'pri': 2,
+              'productName': 'VN_Socialfi',
+            },
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.listProductBugs('8');
+
+    expect(res, isA<Ok<TicketPage>>());
+    final tickets = (res as Ok<TicketPage>).value.tickets;
+    expect(tickets.single.externalKey, '1092');
+    expect(tickets.single.labels, contains('zentao-product:8'));
+    final req = fake.requests.firstWhere(
+      (r) => r.uri.path.endsWith('/api.php/v1/products/8/bugs'),
+    );
+    expect(req.uri.queryParameters['page'], '1');
+    expect(req.uri.queryParameters['limit'], '100');
   });
 
   test('listComments parses actions given as an id-keyed object', () async {

@@ -39,6 +39,7 @@ void main() {
     expect(find.text('ZenTao'), findsOneWidget);
     expect(find.text('Bugs'), findsOneWidget);
     expect(find.text('Tasks'), findsOneWidget);
+    expect(find.text('Products'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Bugs'));
     await tester.pumpAndSettle();

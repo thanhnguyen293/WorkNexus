@@ -14,6 +14,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import 'account_row.dart';
 import 'sidebar_primitives.dart';
+import 'zentao_products_branch.dart';
 import 'zentao_type_row.dart';
 
 const _providerOrder = [
@@ -161,19 +162,30 @@ class _ProviderGroup extends ConsumerWidget {
                       count: zentaoBugCount,
                       active:
                           ref.watch(viewModeProvider) == ViewMode.zentaoBugs,
-                      onTap: () => ref
-                          .read(viewModeProvider.notifier)
-                          .set(ViewMode.zentaoBugs),
+                      onTap: () {
+                        ref
+                            .read(selectedZenTaoProductProvider.notifier)
+                            .clear();
+                        ref
+                            .read(viewModeProvider.notifier)
+                            .set(ViewMode.zentaoBugs);
+                      },
                     ),
                     ZenTaoTypeRow(
                       label: 'Tasks',
                       count: zentaoTaskCount,
                       active:
                           ref.watch(viewModeProvider) == ViewMode.zentaoTasks,
-                      onTap: () => ref
-                          .read(viewModeProvider.notifier)
-                          .set(ViewMode.zentaoTasks),
+                      onTap: () {
+                        ref
+                            .read(selectedZenTaoProductProvider.notifier)
+                            .clear();
+                        ref
+                            .read(viewModeProvider.notifier)
+                            .set(ViewMode.zentaoTasks);
+                      },
                     ),
+                    ZenTaoProductsBranch(accounts: accounts, tickets: tickets),
                   ],
                   if (showWorkspaceGroups)
                     for (final wsId in workspaceIds)

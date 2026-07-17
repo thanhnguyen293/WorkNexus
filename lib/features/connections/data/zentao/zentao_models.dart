@@ -71,6 +71,62 @@ class ZenTaoUsersResponse {
       _$ZenTaoUsersResponseFromJson(json);
 }
 
+/// A ZenTao product from `GET /products`.
+class ZenTaoProduct {
+  const ZenTaoProduct({required this.id, required this.name});
+
+  final String id;
+  final String name;
+
+  factory ZenTaoProduct.fromJson(Map<String, dynamic> json) {
+    final id = json['id']?.toString() ?? '';
+    final name = json['name']?.toString() ?? id;
+    return ZenTaoProduct(id: id, name: name);
+  }
+}
+
+/// `GET /products` → `{ total, products: [...] }`.
+class ZenTaoProductsResponse {
+  const ZenTaoProductsResponse({required this.total, required this.products});
+
+  final int total;
+  final List<ZenTaoProduct> products;
+
+  factory ZenTaoProductsResponse.fromJson(Map<String, dynamic> json) {
+    final rawProducts = json['products'];
+    return ZenTaoProductsResponse(
+      total: zentaoInt(json['total']) ?? 0,
+      products: [
+        if (rawProducts is List)
+          for (final product in rawProducts)
+            if (product is Map)
+              ZenTaoProduct.fromJson(Map<String, dynamic>.from(product)),
+      ],
+    );
+  }
+}
+
+/// `GET /products/{id}/bugs` → `{ total, bugs: [...] }`.
+class ZenTaoProductBugsResponse {
+  const ZenTaoProductBugsResponse({required this.total, required this.bugs});
+
+  final int total;
+  final List<ZenTaoEntity> bugs;
+
+  factory ZenTaoProductBugsResponse.fromJson(Map<String, dynamic> json) {
+    final rawBugs = json['bugs'];
+    return ZenTaoProductBugsResponse(
+      total: zentaoInt(json['total']) ?? 0,
+      bugs: [
+        if (rawBugs is List)
+          for (final bug in rawBugs)
+            if (bug is Map)
+              ZenTaoEntity.fromJson(Map<String, dynamic>.from(bug)),
+      ],
+    );
+  }
+}
+
 /// One entry in a ticket's action/history collection.
 @JsonSerializable(createToJson: false)
 class ZenTaoAction {

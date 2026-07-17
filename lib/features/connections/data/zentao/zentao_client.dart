@@ -8,6 +8,7 @@ import 'package:dio/io.dart';
 import '../../../../core/debug/app_talker.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
+import 'zentao_models.dart';
 
 /// HTTP transport for ZenTao, handling both API generations:
 ///  - REST v1 (`/api.php/v1`) via the type-safe [ZenTaoApi] (retrofit). A
@@ -110,6 +111,43 @@ class ZenTaoClient {
   Future<String> _reauthenticate() async {
     await authenticate();
     return _token!;
+  }
+
+  /// Product list used by the ZenTao Sources tab.
+  Future<ZenTaoProductsResponse> products({
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/products',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoProductsResponse.fromJson(_responseMap(res.data));
+  }
+
+  /// Bugs for a product, used to sync all bugs regardless of assignee.
+  Future<ZenTaoProductBugsResponse> productBugs(
+    String productId, {
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/products/$productId/bugs',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoProductBugsResponse.fromJson(_responseMap(res.data));
+  }
+
+  Map<String, dynamic> _responseMap(Object? data) {
+    Object? decoded = data;
+    if (decoded is String) {
+      decoded = jsonDecode(decoded);
+    }
+    if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    throw DioException(
+      requestOptions: RequestOptions(path: _v1),
+      message: 'ZenTao response was not a JSON object',
+    );
   }
 
   // ---- classic web-action channel (for operations with no REST v1 endpoint) ----
