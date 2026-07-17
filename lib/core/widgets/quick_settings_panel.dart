@@ -11,6 +11,7 @@ import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'quick_settings_font_control.dart';
 
 /// Reactive controls for the app-wide language and appearance preferences.
 class QuickSettingsPanel extends ConsumerWidget {
@@ -36,7 +37,10 @@ class QuickSettingsPanel extends ConsumerWidget {
       key: const ValueKey<String>('quick-settings-panel'),
       width: math.min(panelWidth, availableWidth),
       constraints: BoxConstraints(maxHeight: maxHeight),
-      padding: EdgeInsets.all(context.spacing.md),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.xs,
+        vertical: context.spacing.md,
+      ),
       decoration: BoxDecoration(
         color: c.surface,
         borderRadius: BorderRadius.circular(context.radii.md),
@@ -119,8 +123,9 @@ class QuickSettingsPanel extends ConsumerWidget {
             SizedBox(height: context.spacing.xs),
             _SettingRow(
               label: l.font,
-              control: _FontControl(
+              control: QuickSettingsFontControl(
                 tooltip: l.chooseUiFont,
+                systemLabel: l.systemFont,
                 value: settings.fontFamily,
                 onChanged: controller.setFontFamily,
               ),
@@ -143,7 +148,7 @@ class _SettingRow extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: context.spacing.xl6 * 2,
+          width: context.spacing.xl6 * 2 - context.spacing.xs,
           child: Text(
             label,
             style: context.typography.caption.copyWith(
@@ -181,7 +186,7 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return Container(
-      padding: EdgeInsets.all(context.spacing.xxs),
+      padding: EdgeInsets.all(context.spacing.none),
       decoration: BoxDecoration(
         color: c.surfaceSubtle,
         border: context.cardBorder,
@@ -199,7 +204,7 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
                     ? c.accent
                     : c.textSecondary,
                 padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.none,
+                  horizontal: context.spacing.xs,
                   vertical: context.spacing.xxs,
                 ),
                 minimumSize: Size.zero,
@@ -214,82 +219,6 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
               child: Text(entry.value),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _FontControl extends StatelessWidget {
-  const _FontControl({
-    required this.tooltip,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String tooltip;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return PopupMenuButton<String>(
-      initialValue: value,
-      onSelected: onChanged,
-      tooltip: tooltip,
-      color: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.md),
-        side: context.hairlineSide,
-      ),
-      itemBuilder: (context) => [
-        for (final font in kFontChoices)
-          PopupMenuItem<String>(
-            value: font,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    font,
-                    style: context.typography.subtitle.copyWith(
-                      fontFamily: font,
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-                if (font == value) Icon(Icons.check, color: c.accent),
-              ],
-            ),
-          ),
-      ],
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.sm,
-          vertical: context.spacing.xxs,
-        ),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          border: context.cardBorder,
-          borderRadius: BorderRadius.circular(context.radii.md),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              value,
-              style: context.typography.captionStrong.copyWith(
-                fontFamily: value,
-                color: c.textPrimary,
-              ),
-            ),
-            SizedBox(width: context.spacing.xs),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: context.spacing.xl3,
-              color: c.textSecondary,
-            ),
-          ],
-        ),
       ),
     );
   }

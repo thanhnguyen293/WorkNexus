@@ -6,6 +6,7 @@ import 'package:work_nexus/app/shell/title_bar.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -96,6 +97,45 @@ void main() {
               tester.getCenter(find.text('Light')).dy)
           .abs(),
       lessThan(2),
+    );
+  });
+
+  testWidgets('segmented options have readable horizontal gaps', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    double gapBetween(String left, String right) {
+      final leftRect = tester.getRect(find.text(left));
+      final rightRect = tester.getRect(find.text(right));
+      return rightRect.left - leftRect.right;
+    }
+
+    expect(gapBetween('English', 'Vietnamese'), greaterThanOrEqualTo(8));
+    expect(gapBetween('Light', 'Dark'), greaterThanOrEqualTo(8));
+  });
+
+  testWidgets('system font selection stays in the open popover', (
+    tester,
+  ) async {
+    final container = await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    expect(kFontChoices.first, kSystemFont);
+    await tester.tap(find.text('Space Grotesk'));
+    await tester.pumpAndSettle();
+    expect(find.text('System'), findsOneWidget);
+
+    await tester.tap(find.text('System'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appSettingsProvider).fontFamily, kSystemFont);
+    expect(find.text('System'), findsOneWidget);
+    expect(find.text(kSystemFont), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('quick-settings-panel')),
+      findsOneWidget,
     );
   });
 

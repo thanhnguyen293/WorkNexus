@@ -583,6 +583,12 @@ abstract class AppL10n {
   /// **'Font'**
   String get font;
 
+  /// No description provided for @systemFont.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemFont;
+
   /// No description provided for @chooseUiFont.
   ///
   /// In en, this message translates to:

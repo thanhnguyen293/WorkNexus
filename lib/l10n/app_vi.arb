@@ -87,5 +87,6 @@
   "settingOff": "Tắt",
   "settingOn": "Bật",
   "font": "Phông chữ",
+  "systemFont": "Hệ thống",
   "chooseUiFont": "Chọn phông chữ giao diện"
 }

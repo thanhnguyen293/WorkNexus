@@ -87,5 +87,6 @@
   "settingOff": "Off",
   "settingOn": "On",
   "font": "Font",
+  "systemFont": "System",
   "chooseUiFont": "Choose UI font"
 }

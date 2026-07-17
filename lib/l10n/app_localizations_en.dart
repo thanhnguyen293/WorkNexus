@@ -256,5 +256,8 @@ class AppL10nEn extends AppL10n {
   String get font => 'Font';
 
   @override
+  String get systemFont => 'System';
+
+  @override
   String get chooseUiFont => 'Choose UI font';
 }

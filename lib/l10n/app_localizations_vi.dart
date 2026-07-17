@@ -256,5 +256,8 @@ class AppL10nVi extends AppL10n {
   String get font => 'Phông chữ';
 
   @override
+  String get systemFont => 'Hệ thống';
+
+  @override
   String get chooseUiFont => 'Chọn phông chữ giao diện';
 }
