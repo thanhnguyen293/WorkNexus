@@ -111,19 +111,40 @@ class ZenTaoEntity {
     this.spec,
     this.status,
     this.resolution,
+    this.type,
+    this.os,
+    this.browser,
     this.pri,
     this.confirmed,
     this.severity,
     this.keywords,
     this.assignedTo,
+    this.openedBy,
     this.openedDate,
+    this.openedBuild,
+    this.assignedDate,
+    this.deadline,
+    this.resolvedBy,
+    this.resolvedDate,
+    this.resolvedBuild,
+    this.closedBy,
+    this.closedDate,
+    this.lastEditedBy,
     this.lastEditedDate,
     this.productName,
     this.projectName,
     this.executionName,
+    this.storyTitle,
+    this.taskName,
+    this.planName,
     this.product,
     this.project,
     this.execution,
+    this.branch,
+    this.module,
+    this.story,
+    this.task,
+    this.plan,
     this.actions = const [],
   });
 
@@ -136,6 +157,9 @@ class ZenTaoEntity {
   final Object? spec;
   final Object? status;
   final Object? resolution;
+  final Object? type;
+  final Object? os;
+  final Object? browser;
   @JsonKey(fromJson: zentaoInt)
   final int? pri;
   @JsonKey(fromJson: zentaoInt)
@@ -144,14 +168,32 @@ class ZenTaoEntity {
   final int? severity;
   final Object? keywords;
   final Object? assignedTo; // String | { account, realname }
+  final Object? openedBy;
   final Object? openedDate;
+  final Object? openedBuild;
+  final Object? assignedDate;
+  final Object? deadline;
+  final Object? resolvedBy;
+  final Object? resolvedDate;
+  final Object? resolvedBuild;
+  final Object? closedBy;
+  final Object? closedDate;
+  final Object? lastEditedBy;
   final Object? lastEditedDate;
   final Object? productName;
   final Object? projectName;
   final Object? executionName;
+  final Object? storyTitle;
+  final Object? taskName;
+  final Object? planName;
   final Object? product;
   final Object? project;
   final Object? execution;
+  final Object? branch;
+  final Object? module;
+  final Object? story;
+  final Object? task;
+  final Object? plan;
   @JsonKey(fromJson: zentaoActions)
   final List<ZenTaoAction> actions;
 

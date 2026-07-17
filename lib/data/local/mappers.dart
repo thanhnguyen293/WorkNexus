@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart' show Locale;
+import 'package:json_annotation/json_annotation.dart';
 
 import '../../core/database/database.dart';
 import '../../core/domain/entities/account.dart';
 import '../../core/domain/entities/activity_event.dart';
 import '../../core/domain/entities/comment.dart';
 import '../../core/domain/entities/project.dart';
+import '../../core/domain/entities/provider_entity.dart';
 import '../../core/domain/entities/ticket.dart';
 import '../../core/domain/entities/translation_record.dart';
 import '../../core/domain/entities/workspace.dart';
@@ -83,6 +87,7 @@ Ticket ticketFromRow(TicketRow r) => Ticket(
   severity: r.severity,
   createdAt: r.createdAt,
   updatedAt: r.updatedAt,
+  providerEntity: decodeProviderEntity(r.providerEntityJson),
   sourceHash: r.sourceHash,
 );
 
@@ -104,6 +109,7 @@ TicketsCompanion ticketToCompanion(Ticket t) => TicketsCompanion.insert(
   severity: Value(t.severity),
   createdAt: Value(t.createdAt),
   updatedAt: Value(t.updatedAt),
+  providerEntityJson: Value(encodeProviderEntity(t.providerEntity)),
   sourceHash: t.sourceHash,
 );
 
@@ -197,3 +203,19 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   localeCode: Value(s.locale.languageCode),
   fontFamily: Value(s.fontFamily),
 );
+
+TicketProviderEntity? decodeProviderEntity(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return null;
+    return TicketProviderEntity.fromJson(Map<String, dynamic>.from(decoded));
+  } on FormatException {
+    return null;
+  } on CheckedFromJsonException {
+    return null;
+  }
+}
+
+String? encodeProviderEntity(TicketProviderEntity? entity) =>
+    entity == null ? null : jsonEncode(entity.toJson());

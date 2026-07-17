@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../value_objects/priority.dart';
 import '../value_objects/provider_type.dart';
 import '../value_objects/unified_status.dart';
+import 'provider_entity.dart';
 
 part 'ticket.freezed.dart';
 
@@ -35,5 +36,6 @@ abstract class Ticket with _$Ticket {
     int? severity,
     DateTime? createdAt,
     DateTime? updatedAt,
+    TicketProviderEntity? providerEntity,
   }) = _Ticket;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -63,8 +64,25 @@ void main() {
       'keywords': 'sync,inventory',
       'product': 'Internal ERP',
       'assignedTo': {'account': 'mobile2', 'realname': 'Thanh Nguyen'},
+      'openedBy': {'account': 'tester', 'realname': 'QA One'},
+      'openedBuild': 'trunk',
+      'assignedDate': '2026-07-16T10:00:00Z',
+      'resolvedBy': {'account': 'dev', 'realname': 'Dev One'},
+      'resolvedDate': '2026-07-17T09:00:00Z',
+      'resolvedBuild': '2026.07',
+      'closedBy': {'account': 'qa', 'realname': 'QA Close'},
+      'closedDate': '2026-07-18T09:00:00Z',
+      'deadline': '2026-07-20',
+      'type': 'codeerror',
+      'os': 'iOS',
+      'browser': 'Safari',
       'openedDate': '2026-07-15T09:00:00Z',
       'lastEditedDate': '2026-07-17 08:30:00',
+      'projectName': 'Mobile App',
+      'executionName': 'Sprint 24',
+      'storyTitle': 'Translate social post',
+      'taskName': 'Fix mention parser',
+      'planName': 'July release',
     };
     final t = normalizeZenTao(
       ZenTaoEntity.fromJson(json),
@@ -87,6 +105,26 @@ void main() {
     expect(t.url, 'https://zentao.example.com/bug-view-1092.html');
     expect(t.createdAt, isNotNull);
     expect(t.updatedAt, isNotNull);
+    final entity = t.providerEntity;
+    expect(entity, isA<ZenTaoBugEntity>());
+    final bug = entity as ZenTaoBugEntity;
+    expect(bug.confirmed, 1);
+    expect(bug.resolution, 'postponed');
+    expect(bug.openedBy, 'QA One');
+    expect(bug.openedBuild, 'trunk');
+    expect(bug.assignedDate, DateTime.parse('2026-07-16T10:00:00Z'));
+    expect(bug.resolvedBy, 'Dev One');
+    expect(bug.resolvedBuild, '2026.07');
+    expect(bug.closedBy, 'QA Close');
+    expect(bug.deadline, '2026-07-20');
+    expect(bug.bugType, 'codeerror');
+    expect(bug.os, 'iOS');
+    expect(bug.browser, 'Safari');
+    expect(bug.projectName, 'Mobile App');
+    expect(bug.executionName, 'Sprint 24');
+    expect(bug.storyTitle, 'Translate social post');
+    expect(bug.taskName, 'Fix mention parser');
+    expect(bug.planName, 'July release');
   });
 
   test('handles the 0000-00-00 date sentinel and bare-string assignee', () {

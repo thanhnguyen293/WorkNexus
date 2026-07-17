@@ -61,6 +61,7 @@ class Tickets extends Table {
   IntColumn get severity => integer().nullable()();
   DateTimeColumn get createdAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
+  TextColumn get providerEntityJson => text().nullable()();
   TextColumn get sourceHash => text()();
 
   @override
@@ -142,7 +143,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -156,6 +157,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.fontFamily);
       }
       if (from < 4) await m.createTable(activities);
+      if (from < 5) await m.addColumn(tickets, tickets.providerEntityJson);
     },
   );
 

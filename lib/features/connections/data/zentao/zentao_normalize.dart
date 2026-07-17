@@ -1,5 +1,6 @@
 import 'package:html2md/html2md.dart' as html2md;
 
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
@@ -224,6 +225,53 @@ Ticket normalizeZenTao(
     severity: type == ZenTaoType.bug ? e.severity : null,
     createdAt: parseZenTaoDate(e.openedDate),
     updatedAt: parseZenTaoDate(e.lastEditedDate),
+    providerEntity: switch (type) {
+      ZenTaoType.bug => _zentaoBugEntity(e, resolution),
+      ZenTaoType.task || ZenTaoType.story => null,
+    },
     sourceHash: contentHash(title, body),
   );
+}
+
+TicketProviderEntity _zentaoBugEntity(ZenTaoEntity e, String resolution) =>
+    TicketProviderEntity.zentaoBug(
+      product: _text(e.product),
+      project: _text(e.project),
+      execution: _text(e.execution),
+      branch: _text(e.branch),
+      module: _text(e.module),
+      story: _text(e.story),
+      task: _text(e.task),
+      plan: _text(e.plan),
+      productName: _text(e.productName),
+      projectName: _text(e.projectName),
+      executionName: _text(e.executionName),
+      storyTitle: _text(e.storyTitle),
+      taskName: _text(e.taskName),
+      planName: _text(e.planName),
+      bugType: _text(e.type),
+      os: _text(e.os),
+      browser: _text(e.browser),
+      confirmed: e.confirmed,
+      severity: e.severity,
+      resolution: resolution.isEmpty ? null : resolution,
+      openedBy: accountName(e.openedBy),
+      openedDate: parseZenTaoDate(e.openedDate),
+      openedBuild: _text(e.openedBuild),
+      assignedTo: accountName(e.assignedTo),
+      assignedDate: parseZenTaoDate(e.assignedDate),
+      deadline: _text(e.deadline),
+      resolvedBy: accountName(e.resolvedBy),
+      resolvedDate: parseZenTaoDate(e.resolvedDate),
+      resolvedBuild: _text(e.resolvedBuild),
+      closedBy: accountName(e.closedBy),
+      closedDate: parseZenTaoDate(e.closedDate),
+      lastEditedBy: accountName(e.lastEditedBy),
+      lastEditedDate: parseZenTaoDate(e.lastEditedDate),
+    );
+
+String? _text(Object? value) {
+  if (value == null) return null;
+  final text = value.toString().trim();
+  return text.isEmpty ? null : text;
 }
