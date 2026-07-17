@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
+import '../../../../core/debug/app_talker.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
 
@@ -43,6 +44,7 @@ class ZenTaoClient {
       );
     }
     _api = ZenTaoApi(_dio, baseUrl: _v1);
+    _dio.interceptors.add(buildTalkerDioLogger());
     _dio.interceptors.add(
       ZenTaoAuthInterceptor(
         dio: _dio,

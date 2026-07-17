@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../navigation/navigation_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import 'quick_settings_panel.dart';
 
 /// Anchored title-bar trigger for the Quick Settings popover.
-class QuickSettingsButton extends StatefulWidget {
+class QuickSettingsButton extends ConsumerStatefulWidget {
   const QuickSettingsButton({super.key});
 
   @override
-  State<QuickSettingsButton> createState() => _QuickSettingsButtonState();
+  ConsumerState<QuickSettingsButton> createState() =>
+      _QuickSettingsButtonState();
 }
 
-class _QuickSettingsButtonState extends State<QuickSettingsButton> {
+class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
   final _controller = OverlayPortalController();
   final _layerLink = LayerLink();
   final _triggerFocusNode = FocusNode();
   final _panelFocusNode = FocusNode();
+  DateTime? _firstTapAt;
+  var _tapCount = 0;
   var _isOpen = false;
+
+  static const _debugTapWindow = Duration(milliseconds: 650);
 
   void _toggle() {
     if (_isOpen) {
@@ -35,6 +42,33 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
         _panelFocusNode.requestFocus();
       }
     });
+  }
+
+  void _handleTriggerTap() {
+    final now = DateTime.now();
+    final firstTapAt = _firstTapAt;
+    if (firstTapAt == null || now.difference(firstTapAt) > _debugTapWindow) {
+      _firstTapAt = now;
+      _tapCount = 0;
+    }
+    _tapCount++;
+
+    if (_tapCount >= 3) {
+      _tapCount = 0;
+      _firstTapAt = null;
+      _openDebugScreen();
+      return;
+    }
+
+    _toggle();
+  }
+
+  void _openDebugScreen() {
+    if (_isOpen) {
+      _controller.hide();
+      setState(() => _isOpen = false);
+    }
+    ref.read(talkerDebugOpenProvider.notifier).state = true;
   }
 
   void _hideAndRestoreFocus() {
@@ -74,6 +108,13 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
     return remainingHeight.clamp(0, context.spacing.xl6 * 12.5);
   }
 
+  double _barrierTop() {
+    final renderObject = _triggerFocusNode.context?.findRenderObject();
+    final trigger = renderObject is RenderBox ? renderObject : null;
+    if (trigger == null) return 0;
+    return trigger.localToGlobal(Offset.zero).dy + trigger.size.height;
+  }
+
   @override
   void dispose() {
     _triggerFocusNode.dispose();
@@ -90,7 +131,10 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
       overlayChildBuilder: (context) => Stack(
         fit: StackFit.expand,
         children: [
-          ModalBarrier(onDismiss: _hideAndRestoreFocus),
+          Positioned.fill(
+            top: _barrierTop(),
+            child: ModalBarrier(onDismiss: _hideAndRestoreFocus),
+          ),
           Positioned(
             left: context.spacing.none,
             top: context.spacing.none,
@@ -130,7 +174,7 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
                 ),
                 child: InkWell(
                   focusNode: _triggerFocusNode,
-                  onTap: _toggle,
+                  onTap: _handleTriggerTap,
                   hoverColor: c.surfaceSubtle,
                   borderRadius: BorderRadius.circular(context.radii.sm),
                   child: Icon(

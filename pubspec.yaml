@@ -43,6 +43,8 @@ dependencies:
   # Networking / secure storage. flutter_secure_storage stays on 9.x: 10.x pulls
   # `objective_c` (native-assets build hook) which breaks build_runner on this SDK.
   dio: 5.10.0
+  talker_dio_logger: 5.1.16
+  talker_flutter: 5.1.16
   # Type-safe dio client generator for the ZenTao v1 REST API. Runtime
   # annotations only; the code generator is a dev_dependency below.
   retrofit: 4.9.2

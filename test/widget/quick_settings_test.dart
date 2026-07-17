@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
+import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -99,6 +100,27 @@ void main() {
           .abs(),
       lessThan(2),
     );
+  });
+
+  testWidgets('triple tapping quick settings opens Talker debug panel', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester);
+
+    final trigger = find.byKey(
+      const ValueKey<String>('quick-settings-trigger'),
+    );
+    await tester.tap(trigger);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(trigger);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(trigger);
+    await tester.pumpAndSettle();
+
+    expect(find.text('WorkNexus Debug'), findsOneWidget);
+    final panel = find.byKey(const ValueKey<String>('talker-debug-panel'));
+    expect(panel, findsOneWidget);
+    expect(tester.getSize(panel).width, lessThan(900));
   });
 
   testWidgets('segmented options have readable horizontal gaps', (
@@ -297,7 +319,9 @@ class _SettingsHarness extends ConsumerWidget {
         density: settings.density,
         fontFamily: settings.fontFamily,
       ),
-      home: Scaffold(body: child),
+      home: Scaffold(
+        body: Stack(children: [child, const TalkerDebugOverlay()]),
+      ),
     );
   }
 }

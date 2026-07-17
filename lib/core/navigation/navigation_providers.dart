@@ -20,3 +20,6 @@ final openTicketIdProvider = NotifierProvider<OpenTicketController, String?>(
 
 /// Whether the Settings / Integrations view is showing (replaces the board).
 final settingsOpenProvider = StateProvider<bool>((ref) => false);
+
+/// Hidden developer log panel, opened from the title-bar settings trigger.
+final talkerDebugOpenProvider = StateProvider<bool>((ref) => false);

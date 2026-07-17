@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -40,6 +41,7 @@ class AppShell extends ConsumerWidget {
                   ],
                 ),
                 const DetailOverlay(),
+                const TalkerDebugOverlay(),
               ],
             ),
           ),
