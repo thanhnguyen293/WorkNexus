@@ -39,6 +39,32 @@ Escape. The popover is constrained to the available window area and uses a
 compact, vertically arranged layout rather than the wide wrapping layout from
 the Integrations page.
 
+### Compact visual treatment
+
+The first implementation rendered as a large settings form and did not match
+the app's dense desktop toolbar, sidebar, and filter controls. Quick Settings
+therefore uses a compact inspector layout:
+
+- The title-bar trigger is a muted, 16px outlined settings icon inside a compact
+  28px interaction area. It uses the existing surface/selection roles for hover
+  and open states instead of a large high-contrast sliders glyph.
+- The popover is approximately 300 logical pixels wide, uses the app's medium
+  radius, and retains the established popover border and shadow treatment.
+- The heading uses the 13px strong body token rather than a large title style.
+- Settings render as six dense rows. Each row has a small tertiary label in a
+  consistent left column and its control aligned to the right.
+- Segmented options use the same selection fill/accent treatment as the board
+  toolbar, with compact token padding and caption-scale text.
+- The font picker is a compact row control rather than a standalone form field.
+- The redundant Appearance subsection heading and its large vertical gaps are
+  removed. All controls remain visible without scrolling at a normal desktop
+  window height; the existing constrained scroll behavior remains for short
+  windows.
+
+No new palette, typography family, radius, or spacing scale is introduced. The
+visual signature is the compact inspector rhythm already present in WorkNexus,
+not a separate settings-page aesthetic.
+
 ## Component Design
 
 `TitleBar` owns the placement of a new public `QuickSettingsButton`. The button
@@ -88,7 +114,8 @@ Widget tests will verify that:
 
 - The title bar exposes a Quick Settings trigger instead of the inline language
   toggle.
-- Activating the trigger shows every language and appearance setting.
+- Activating the trigger shows every language and appearance setting in compact
+  label/control rows.
 - Choosing a language updates `appSettingsProvider` and the visible localized
   content.
 - Choosing an appearance value updates the provider while the popover remains
@@ -103,7 +130,11 @@ verified with the relevant Flutter widget tests followed by the full test suite.
 ## Acceptance Criteria
 
 - One Quick Settings icon is always visible at the right end of the title bar.
+- The trigger uses a compact outlined settings icon aligned with the title-bar
+  typography and sync indicator.
 - Its compact popover is anchored below and right-aligned with the icon.
+- The popover is approximately 300 logical pixels wide and uses six dense
+  label/control rows without a redundant Appearance subsection.
 - Language and all existing appearance controls are available in the popover.
 - Changes apply and persist immediately without closing the popover.
 - Outside click, Escape, and a second trigger click dismiss the popover.
