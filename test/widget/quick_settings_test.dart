@@ -6,6 +6,7 @@ import 'package:work_nexus/app/shell/title_bar.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
@@ -153,6 +154,28 @@ void main() {
 
     expect(tester.getRect(panel).bottom, lessThanOrEqualTo(200));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Integrations page no longer contains appearance settings', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _SettingsHarness(child: SettingsPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connected accounts'), findsOneWidget);
+    expect(find.text('APPEARANCE'), findsNothing);
   });
 }
 
