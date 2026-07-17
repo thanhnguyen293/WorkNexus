@@ -19,7 +19,10 @@ import '../../../../core/widgets/badges.dart';
 import '../../../agents/presentation/agent_providers.dart';
 import '../../../task_detail/presentation/detail_providers.dart';
 import '../../../translation/presentation/translation_providers.dart';
+import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/usecases/derive_dev_context.dart';
+import '../../domain/value_objects/zentao_bug_column.dart';
+import '../board_providers.dart';
 
 /// A board card rendering one ticket, matching the editorial design.
 class TicketCard extends ConsumerWidget {
@@ -36,6 +39,9 @@ class TicketCard extends ConsumerWidget {
     final projectName = lookups.projects[ticket.projectId]?.name ?? '';
     final tint = ref.watch(appSettingsProvider).companyTint;
     final selected = ref.watch(openTicketIdProvider) == ticket.id;
+    final pending = ref.watch(
+      ticketActionPendingProvider.select((ids) => ids.contains(ticket.id)),
+    );
 
     final trStatus = ref.watch(translationStatusProvider(ticket.id)).state;
     final links =
@@ -59,89 +65,135 @@ class TicketCard extends ConsumerWidget {
         ? context.hairlineSide
         : BorderSide.none;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(context.radii.card),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: bg,
-              border: Border(top: side, right: side, bottom: side),
-            ),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: stripeWidth, color: wsColor),
-                  Expanded(
-                    child: Padding(
-                      padding: context.spacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: WorkspaceTag(wsColor, projectName),
-                              ),
-                              const Spacer(),
-                              PriorityTag(ticket.providerType, ticket.priority),
-                            ],
-                          ),
-                          SizedBox(height: context.spacing.md),
-                          Text(
-                            ticket.title,
-                            style: context.typography.cardTitle.copyWith(
-                              color: c.textPrimary,
+    return Opacity(
+      opacity: pending ? 0.48 : 1,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: pending
+              ? null
+              : () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(context.radii.card),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: bg,
+                border: Border(top: side, right: side, bottom: side),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: stripeWidth, color: wsColor),
+                    Expanded(
+                      child: Padding(
+                        padding: context.spacing.cardPadding,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: WorkspaceTag(wsColor, projectName),
+                                ),
+                                const Spacer(),
+                                PriorityTag(
+                                  ticket.providerType,
+                                  ticket.priority,
+                                ),
+                              ],
                             ),
-                          ),
-                          if (dev.hasDev) ...[
                             SizedBox(height: context.spacing.md),
-                            _DevRow(dev: dev),
-                          ],
-                          if (dev.agent != null) ...[
-                            SizedBox(height: context.spacing.md),
-                            _AgentChip(dev.agent!),
-                          ],
-                          SizedBox(height: context.spacing.md),
-                          Row(
-                            children: [
-                              ProviderBadge(ticket.providerType),
-                              SizedBox(width: context.spacing.sm),
-                              Expanded(
-                                child: Text(
-                                  ticketRef(
-                                    ticket.providerType,
-                                    ticket.externalKey,
-                                    ticket.externalType,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  style: context.typography.mono.copyWith(
-                                    color: c.textSecondary,
-                                  ),
-                                ),
+                            Text(
+                              ticket.title,
+                              style: context.typography.cardTitle.copyWith(
+                                color: c.textPrimary,
                               ),
-                              SizedBox(width: context.spacing.sm),
-                              TranslationDot(trStatus),
-                              SizedBox(width: context.spacing.sm),
-                              Text(
-                                formatWhen(context, ticket.updatedAt),
-                                style: context.typography.monoXs.copyWith(
-                                  color: c.textTertiary,
-                                ),
-                              ),
+                            ),
+                            if (dev.hasDev) ...[
+                              SizedBox(height: context.spacing.md),
+                              _DevRow(dev: dev),
                             ],
-                          ),
-                        ],
+                            if (dev.agent != null) ...[
+                              SizedBox(height: context.spacing.md),
+                              _AgentChip(dev.agent!),
+                            ],
+                            if (zentaoBugResolution(ticket).isNotEmpty) ...[
+                              SizedBox(height: context.spacing.md),
+                              _ResolutionChip(ticket),
+                            ],
+                            SizedBox(height: context.spacing.md),
+                            Row(
+                              children: [
+                                ProviderBadge(ticket.providerType),
+                                SizedBox(width: context.spacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    ticketRef(
+                                      ticket.providerType,
+                                      ticket.externalKey,
+                                      ticket.externalType,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.typography.mono.copyWith(
+                                      color: c.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: context.spacing.sm),
+                                TranslationDot(trStatus),
+                                SizedBox(width: context.spacing.sm),
+                                Text(
+                                  formatWhen(context, ticket.updatedAt),
+                                  style: context.typography.monoXs.copyWith(
+                                    color: c.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResolutionChip extends StatelessWidget {
+  const _ResolutionChip(this.ticket);
+
+  final Ticket ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final resolution = zentaoBugResolution(ticket);
+    final label = zentaoBugResolutionLabels[resolution] ?? resolution;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.md,
+        vertical: context.spacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: c.mixT(c.accent, 0.12),
+        borderRadius: BorderRadius.circular(context.radii.xs),
+        border: context.borders.showOutline
+            ? Border.all(color: c.mixT(c.accent, 0.28))
+            : null,
+      ),
+      child: Text(
+        label,
+        overflow: TextOverflow.ellipsis,
+        style: context.typography.monoXs.copyWith(
+          fontWeight: FontWeight.w600,
+          color: c.accent,
         ),
       ),
     );

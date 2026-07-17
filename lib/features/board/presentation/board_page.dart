@@ -9,6 +9,8 @@ import 'widgets/chrome_bar.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_popover.dart';
 import 'widgets/list_view.dart';
+import 'widgets/zentao_bug_board_view.dart';
+import 'widgets/zentao_task_board_view.dart';
 
 /// The main content area: chrome bar + board/list/empty/skeleton + the
 /// advanced-filter popover overlay.
@@ -29,7 +31,12 @@ class BoardPage extends ConsumerWidget {
     } else if (count == 0) {
       body = const EmptyState();
     } else {
-      body = mode == ViewMode.board ? const BoardView() : const TaskListView();
+      body = switch (mode) {
+        ViewMode.board => const BoardView(),
+        ViewMode.zentaoBugs => const ZenTaoBugBoardView(),
+        ViewMode.zentaoTasks => const ZenTaoTaskBoardView(),
+        ViewMode.list => const TaskListView(),
+      };
     }
 
     return ColoredBox(

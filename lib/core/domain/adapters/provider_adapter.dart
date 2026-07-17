@@ -81,4 +81,12 @@ abstract class ProviderAdapter {
     String? assignee,
     String? comment,
   });
+
+  /// Reopen/activate a previously resolved or closed bug.
+  Future<Result<bool>> activateBug(
+    Ticket ticket, {
+    String? openedBuild,
+    String? assignee,
+    String? comment,
+  });
 }

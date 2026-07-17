@@ -11,10 +11,12 @@ import '../domain/entities/board_model.dart';
 import '../domain/entities/filter_state.dart';
 import '../domain/usecases/build_board.dart';
 import '../domain/usecases/build_list.dart';
+import '../domain/usecases/build_zentao_bug_board.dart';
+import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/filter_tickets.dart';
 import '../domain/value_objects/saved_view.dart';
 
-enum ViewMode { board, list }
+enum ViewMode { board, zentaoBugs, zentaoTasks, list }
 
 final viewModeProvider = NotifierProvider<ViewModeController, ViewMode>(
   ViewModeController.new,
@@ -98,6 +100,21 @@ final boardLoadingProvider = NotifierProvider<BoardLoading, bool>(
   BoardLoading.new,
 );
 
+class TicketActionPending extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const <String>{};
+
+  void start(String id) => state = {...state, id};
+
+  void finish(String id) {
+    final next = {...state}..remove(id);
+    state = next;
+  }
+}
+
+final ticketActionPendingProvider =
+    NotifierProvider<TicketActionPending, Set<String>>(TicketActionPending.new);
+
 /// The query fed to the pure board/list use cases.
 final _boardQueryProvider = Provider<BoardQuery>((ref) {
   final tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
@@ -115,11 +132,25 @@ final boardProvider = Provider<BoardModel>(
   (ref) => const BuildBoard()(ref.watch(_boardQueryProvider)),
 );
 
+final zentaoBugBoardProvider = Provider<ZenTaoBugBoardModel>(
+  (ref) => const BuildZenTaoBugBoard()(ref.watch(_boardQueryProvider)),
+);
+
+final zentaoTaskBoardProvider = Provider<ZenTaoTaskBoardModel>(
+  (ref) => const BuildZenTaoTaskBoard()(ref.watch(_boardQueryProvider)),
+);
+
 final listRowsProvider = Provider<List<Ticket>>(
   (ref) => const BuildList()(ref.watch(_boardQueryProvider)),
 );
 
 final resultCountProvider = Provider<int>((ref) {
+  if (ref.watch(viewModeProvider) == ViewMode.zentaoBugs) {
+    return ref.watch(zentaoBugBoardProvider).total;
+  }
+  if (ref.watch(viewModeProvider) == ViewMode.zentaoTasks) {
+    return ref.watch(zentaoTaskBoardProvider).total;
+  }
   final q = ref.watch(_boardQueryProvider);
   return const FilterTickets()(q).length;
 });

@@ -244,6 +244,25 @@ void main() {
     },
   );
 
+  test(
+    'activateBug POSTs default openedBuild to /bugs/{id}/activate',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        return _json({'status': 'success'});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      final res = await adapter.activateBug(_bugTicket());
+
+      expect(res, isA<Ok<bool>>());
+      final req = fake.requests.firstWhere(
+        (r) => r.path.contains('bugs/4302/activate'),
+      );
+      expect(req.method, 'POST');
+      expect((req.data as Map)['openedBuild'], ['trunk']);
+    },
+  );
+
   test('listUsers parses /users into sorted ProviderUsers', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

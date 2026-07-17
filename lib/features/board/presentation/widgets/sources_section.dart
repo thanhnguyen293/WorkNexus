@@ -14,6 +14,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import 'account_row.dart';
 import 'sidebar_primitives.dart';
+import 'zentao_type_row.dart';
 
 const _providerOrder = [
   ProviderType.github,
@@ -22,7 +23,7 @@ const _providerOrder = [
   ProviderType.zentao,
 ];
 
-/// The "Sources" tree: workspace → provider → account → project.
+/// The "Sources" tree: provider → workspace/account → project.
 class SourcesSection extends ConsumerWidget {
   const SourcesSection({super.key});
 
@@ -34,70 +35,97 @@ class SourcesSection extends ConsumerWidget {
         ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
     final lookups = ref.watch(lookupsProvider);
 
-    final wsIds = filter.workspaceId == 'all'
-        ? lookups.workspaces.keys.toList()
-        : [filter.workspaceId];
+    final scopedAccounts = lookups.accounts.values
+        .where(
+          (account) =>
+              filter.workspaceId == 'all' ||
+              account.workspaceId == filter.workspaceId,
+        )
+        .toList();
+    final providers = _providerOrder
+        .where(
+          (provider) => scopedAccounts.any((a) => a.providerType == provider),
+        )
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SidebarSectionLabel(l.sources),
-        for (final wsId in wsIds)
-          _WorkspaceGroup(wsId: wsId, tickets: tickets, lookups: lookups),
+        for (final provider in providers)
+          _ProviderGroup(
+            provider: provider,
+            accounts: scopedAccounts
+                .where((account) => account.providerType == provider)
+                .toList(),
+            tickets: tickets,
+            lookups: lookups,
+            showWorkspaceGroups: filter.workspaceId == 'all',
+          ),
       ],
     );
   }
 }
 
-class _WorkspaceGroup extends ConsumerWidget {
-  const _WorkspaceGroup({
-    required this.wsId,
+class _ProviderGroup extends ConsumerWidget {
+  const _ProviderGroup({
+    required this.provider,
+    required this.accounts,
     required this.tickets,
     required this.lookups,
+    required this.showWorkspaceGroups,
   });
-  final String wsId;
+  final ProviderType provider;
+  final List<Account> accounts;
   final List<Ticket> tickets;
   final Lookups lookups;
+  final bool showWorkspaceGroups;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final ws = lookups.workspaces[wsId];
-    if (ws == null) return const SizedBox.shrink();
-    final l = AppL10n.of(context);
-    final wsAccounts = lookups.accounts.values
-        .where((a) => a.workspaceId == wsId)
-        .toList();
-    final wsTickets = tickets.where(
-      (tk) => lookups.accounts[tk.accountId]?.workspaceId == wsId,
-    );
-    final providers = _providerOrder
-        .where((p) => wsAccounts.any((a) => a.providerType == p))
-        .toList();
+    final filter = ref.watch(filterStateProvider);
+    final accIds = accounts.map((a) => a.id).toSet();
+    final connTickets = tickets.where((tk) => accIds.contains(tk.accountId));
+    final zentaoBugCount = connTickets
+        .where((tk) => (tk.externalType ?? '').toLowerCase() == 'bug')
+        .length;
+    final zentaoTaskCount = connTickets
+        .where((tk) => (tk.externalType ?? '').toLowerCase() == 'task')
+        .length;
+    final workspaceIds = {
+      for (final account in accounts) account.workspaceId,
+    }.toList();
+    final isZenTao = provider == ProviderType.zentao;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.xl),
+      padding: EdgeInsets.only(bottom: context.spacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: () =>
-                ref.read(filterStateProvider.notifier).setWorkspace(wsId),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                context.spacing.xs,
-                context.spacing.sm,
-                context.spacing.xs,
-                context.spacing.sm,
+            onTap: isZenTao
+                ? null
+                : () => ref
+                      .read(filterStateProvider.notifier)
+                      .toggleProvider(provider),
+            borderRadius: BorderRadius.circular(context.radii.sm),
+            child: Container(
+              height: 31,
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+              decoration: BoxDecoration(
+                color: !isZenTao && filter.providers.contains(provider)
+                    ? c.selectionFill
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(context.radii.sm),
               ),
               child: Row(
                 children: [
-                  WorkspaceBadge(Color(ws.colorValue), ws.shortCode, big: true),
+                  ProviderBadge(provider),
                   SizedBox(width: context.spacing.md),
                   Expanded(
                     child: Text(
-                      ws.isPersonal ? l.personal : ws.name,
-                      overflow: TextOverflow.ellipsis,
+                      provider.displayName,
                       style: context.typography.bodySm.copyWith(
                         fontWeight: FontWeight.w700,
                         color: c.textPrimary,
@@ -105,7 +133,7 @@ class _WorkspaceGroup extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    '${wsTickets.length}',
+                    '${connTickets.length}',
                     style: context.typography.monoXs.copyWith(
                       color: c.textTertiary,
                     ),
@@ -114,30 +142,75 @@ class _WorkspaceGroup extends ConsumerWidget {
               ),
             ),
           ),
-          for (final p in providers)
-            _ProviderGroup(
-              wsId: wsId,
-              provider: p,
-              accounts: wsAccounts.where((a) => a.providerType == p).toList(),
-              tickets: tickets,
-              lookups: lookups,
+          Padding(
+            padding: EdgeInsets.only(
+              left: context.spacing.md,
+              top: context.spacing.xxs,
             ),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(left: BorderSide(color: c.borderStrong)),
+              ),
+              padding: EdgeInsets.only(left: context.spacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isZenTao) ...[
+                    ZenTaoTypeRow(
+                      label: 'Bugs',
+                      count: zentaoBugCount,
+                      active:
+                          ref.watch(viewModeProvider) == ViewMode.zentaoBugs,
+                      onTap: () => ref
+                          .read(viewModeProvider.notifier)
+                          .set(ViewMode.zentaoBugs),
+                    ),
+                    ZenTaoTypeRow(
+                      label: 'Tasks',
+                      count: zentaoTaskCount,
+                      active:
+                          ref.watch(viewModeProvider) == ViewMode.zentaoTasks,
+                      onTap: () => ref
+                          .read(viewModeProvider.notifier)
+                          .set(ViewMode.zentaoTasks),
+                    ),
+                  ],
+                  if (showWorkspaceGroups)
+                    for (final wsId in workspaceIds)
+                      _WorkspaceBranch(
+                        wsId: wsId,
+                        accounts: accounts
+                            .where((a) => a.workspaceId == wsId)
+                            .toList(),
+                        tickets: tickets,
+                        lookups: lookups,
+                      )
+                  else
+                    for (final account in accounts)
+                      AccountRow(
+                        account: account,
+                        tickets: tickets,
+                        lookups: lookups,
+                      ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ProviderGroup extends ConsumerWidget {
-  const _ProviderGroup({
+class _WorkspaceBranch extends ConsumerWidget {
+  const _WorkspaceBranch({
     required this.wsId,
-    required this.provider,
     required this.accounts,
     required this.tickets,
     required this.lookups,
   });
+
   final String wsId;
-  final ProviderType provider;
   final List<Account> accounts;
   final List<Ticket> tickets;
   final Lookups lookups;
@@ -145,74 +218,72 @@ class _ProviderGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final filter = ref.watch(filterStateProvider);
-    final accIds = accounts.map((a) => a.id).toSet();
-    final connTickets = tickets.where(
-      (tk) =>
-          lookups.accounts[tk.accountId]?.workspaceId == wsId &&
-          accIds.contains(tk.accountId),
-    );
+    final l = AppL10n.of(context);
+    final ws = lookups.workspaces[wsId];
+    if (ws == null) return const SizedBox.shrink();
+    final accountIds = accounts.map((account) => account.id).toSet();
+    final count = tickets
+        .where((tk) => accountIds.contains(tk.accountId))
+        .length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () =>
-              ref.read(filterStateProvider.notifier).toggleProvider(provider),
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          child: Container(
-            height: 29,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-            decoration: BoxDecoration(
-              color: filter.providers.contains(provider)
-                  ? c.selectionFill
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(context.radii.sm),
-            ),
-            child: Row(
-              children: [
-                ProviderBadge(provider),
-                SizedBox(width: context.spacing.md),
-                Expanded(
-                  child: Text(
-                    provider.displayName,
-                    style: context.typography.meta.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: c.textPrimary,
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () =>
+                ref.read(filterStateProvider.notifier).setWorkspace(wsId),
+            borderRadius: BorderRadius.circular(context.radii.sm),
+            child: Container(
+              height: 27,
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+              child: Row(
+                children: [
+                  WorkspaceBadge(Color(ws.colorValue), ws.shortCode),
+                  SizedBox(width: context.spacing.sm),
+                  Expanded(
+                    child: Text(
+                      ws.isPersonal ? l.personal : ws.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.typography.meta.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: c.textPrimary,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  '${connTickets.length}',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
+                  Text(
+                    '$count',
+                    style: context.typography.monoXs.copyWith(
+                      color: c.textTertiary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(
-            left: context.spacing.md,
-            top: context.spacing.xxs,
-            bottom: context.spacing.xxs,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: c.borderStrong)),
-            ),
+          Padding(
             padding: EdgeInsets.only(left: context.spacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final a in accounts)
-                  AccountRow(account: a, tickets: tickets, lookups: lookups),
-              ],
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(left: BorderSide(color: c.border)),
+              ),
+              padding: EdgeInsets.only(left: context.spacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final account in accounts)
+                    AccountRow(
+                      account: account,
+                      tickets: tickets,
+                      lookups: lookups,
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

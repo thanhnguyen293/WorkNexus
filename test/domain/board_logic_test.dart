@@ -5,8 +5,12 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
 import 'package:work_nexus/features/board/domain/usecases/build_board.dart';
+import 'package:work_nexus/features/board/domain/usecases/build_zentao_bug_board.dart';
+import 'package:work_nexus/features/board/domain/usecases/build_zentao_task_board.dart';
 import 'package:work_nexus/features/board/domain/usecases/filter_tickets.dart';
 import 'package:work_nexus/features/board/domain/value_objects/saved_view.dart';
+import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_column.dart';
+import 'package:work_nexus/features/board/domain/value_objects/zentao_task_column.dart';
 
 Ticket _t({
   required String id,
@@ -15,10 +19,12 @@ Ticket _t({
   ProviderType provider = ProviderType.github,
   String key = '1',
   UnifiedStatus status = UnifiedStatus.todo,
+  String providerStatus = '',
   Priority priority = Priority.medium,
   String title = 'Title',
   List<String> labels = const [],
   DateTime? updated,
+  int? severity,
 }) {
   return Ticket(
     id: id,
@@ -30,11 +36,46 @@ Ticket _t({
     body: '',
     priority: priority,
     status: status,
-    providerStatus: '',
+    providerStatus: providerStatus,
     sourceHash: 'h',
     labels: labels,
+    severity: severity,
     updatedAt: updated,
   );
+}
+
+Ticket _ztBug({
+  required String id,
+  required String providerStatus,
+  String? resolution,
+  UnifiedStatus status = UnifiedStatus.todo,
+  int? severity,
+}) {
+  return _t(
+    id: id,
+    account: 'ztB',
+    provider: ProviderType.zentao,
+    key: id,
+    status: status,
+    providerStatus: providerStatus,
+    labels: [if (resolution != null) 'resolution:$resolution'],
+    severity: severity,
+  ).copyWith(externalType: 'Bug');
+}
+
+Ticket _ztTask({
+  required String id,
+  required String providerStatus,
+  UnifiedStatus status = UnifiedStatus.todo,
+}) {
+  return _t(
+    id: id,
+    account: 'ztB',
+    provider: ProviderType.zentao,
+    key: id,
+    status: status,
+    providerStatus: providerStatus,
+  ).copyWith(externalType: 'Task');
 }
 
 BoardQuery _q(
@@ -170,6 +211,134 @@ void main() {
         (c) => c.status == UnifiedStatus.todo,
       );
       expect(todo.tickets.map((t) => t.id), ['urgent', 'med', 'low']);
+    });
+  });
+
+  group('BuildZenTaoBugBoard', () {
+    test('groups ZenTao bugs into native bug workflow columns', () {
+      final tickets = [
+        _ztBug(
+          id: 'new',
+          providerStatus: 'active',
+          status: UnifiedStatus.inbox,
+        ),
+        _ztBug(id: 'confirmed', providerStatus: 'active'),
+        _ztBug(
+          id: 'fixed',
+          providerStatus: 'resolved',
+          resolution: 'fixed',
+          status: UnifiedStatus.review,
+        ),
+        _ztBug(
+          id: 'postponed',
+          providerStatus: 'resolved',
+          resolution: 'postponed',
+          status: UnifiedStatus.review,
+        ),
+        _ztBug(
+          id: 'nonfix',
+          providerStatus: 'resolved',
+          resolution: 'willnotfix',
+          status: UnifiedStatus.review,
+        ),
+        _ztBug(
+          id: 'closed',
+          providerStatus: 'closed',
+          resolution: 'fixed',
+          status: UnifiedStatus.done,
+        ),
+        _t(id: 'not-bug', provider: ProviderType.zentao, account: 'ztB'),
+      ];
+
+      final board = const BuildZenTaoBugBoard()(
+        _q(tickets, const FilterState()),
+      );
+
+      expect(board.columns.map((c) => c.column), ZenTaoBugColumn.columns);
+      expect(board.total, 6);
+      expect(
+        board.column(ZenTaoBugColumn.newUnconfirmed).tickets.map((t) => t.id),
+        ['new'],
+      );
+      expect(
+        board.column(ZenTaoBugColumn.confirmedToFix).tickets.map((t) => t.id),
+        ['confirmed'],
+      );
+      expect(
+        board.column(ZenTaoBugColumn.resolvedVerify).tickets.map((t) => t.id),
+        ['fixed'],
+      );
+      expect(board.column(ZenTaoBugColumn.postponed).tickets.map((t) => t.id), [
+        'postponed',
+      ]);
+      expect(board.column(ZenTaoBugColumn.nonFix).tickets.map((t) => t.id), [
+        'nonfix',
+      ]);
+      expect(board.column(ZenTaoBugColumn.closed).tickets.map((t) => t.id), [
+        'closed',
+      ]);
+    });
+  });
+
+  group('BuildZenTaoTaskBoard', () {
+    test('groups ZenTao tasks into native task workflow columns', () {
+      final tickets = [
+        _ztTask(id: 'wait', providerStatus: 'wait'),
+        _ztTask(
+          id: 'doing',
+          providerStatus: 'doing',
+          status: UnifiedStatus.inprogress,
+        ),
+        _ztTask(
+          id: 'pause',
+          providerStatus: 'pause',
+          status: UnifiedStatus.blocked,
+        ),
+        _ztTask(
+          id: 'done',
+          providerStatus: 'done',
+          status: UnifiedStatus.review,
+        ),
+        _ztTask(
+          id: 'closed',
+          providerStatus: 'closed',
+          status: UnifiedStatus.done,
+        ),
+        _ztTask(
+          id: 'cancel',
+          providerStatus: 'cancel',
+          status: UnifiedStatus.done,
+        ),
+        _ztBug(id: 'not-task', providerStatus: 'active'),
+      ];
+
+      final board = const BuildZenTaoTaskBoard()(
+        _q(tickets, const FilterState()),
+      );
+
+      expect(board.columns.map((c) => c.column), ZenTaoTaskColumn.columns);
+      expect(board.total, 6);
+      expect(
+        board.column(ZenTaoTaskColumn.notStarted).tickets.map((t) => t.id),
+        ['wait'],
+      );
+      expect(
+        board.column(ZenTaoTaskColumn.inProgress).tickets.map((t) => t.id),
+        ['doing'],
+      );
+      expect(board.column(ZenTaoTaskColumn.paused).tickets.map((t) => t.id), [
+        'pause',
+      ]);
+      expect(
+        board.column(ZenTaoTaskColumn.doneVerify).tickets.map((t) => t.id),
+        ['done'],
+      );
+      expect(board.column(ZenTaoTaskColumn.closed).tickets.map((t) => t.id), [
+        'closed',
+      ]);
+      expect(board.column(ZenTaoTaskColumn.canceled).tickets.map((t) => t.id), [
+        'cancel',
+      ]);
     });
   });
 }

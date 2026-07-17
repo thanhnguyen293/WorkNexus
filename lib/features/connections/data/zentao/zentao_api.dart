@@ -46,5 +46,15 @@ abstract class ZenTaoApi {
 
   /// Resolve a bug, e.g. `POST /bugs/4302/resolve`.
   @POST('/bugs/{id}/resolve')
-  Future<void> resolve(@Path('id') String id, @Body() Map<String, dynamic> body);
+  Future<void> resolve(
+    @Path('id') String id,
+    @Body() Map<String, dynamic> body,
+  );
+
+  /// Activate/reopen a bug, e.g. `POST /bugs/4302/activate`.
+  @POST('/bugs/{id}/activate')
+  Future<void> activate(
+    @Path('id') String id,
+    @Body() Map<String, dynamic> body,
+  );
 }

@@ -245,6 +245,27 @@ class ZenTaoAdapter implements ProviderAdapter {
     });
   }
 
+  @override
+  Future<Result<bool>> activateBug(
+    Ticket ticket, {
+    String? openedBuild,
+    String? assignee,
+    String? comment,
+  }) async {
+    return _guard(() async {
+      await _client.api.activate(ticket.externalKey, {
+        'openedBuild': [
+          (openedBuild == null || openedBuild.trim().isEmpty)
+              ? 'trunk'
+              : openedBuild.trim(),
+        ],
+        if (assignee != null && assignee.isNotEmpty) 'assignedTo': assignee,
+        if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
+      });
+      return true;
+    });
+  }
+
   // ---- helpers ----
 
   /// Fetches a ticket's full detail (with its embedded `actions`), preferring

@@ -56,6 +56,7 @@ void main() {
       'title': 'Inventory sync fails for warehouse #3',
       'steps': '<p>The sync aborts on a <b>duplicate SKU</b>.</p>',
       'status': 'active',
+      'resolution': 'postponed',
       'confirmed': 1,
       'pri': 1,
       'severity': 2,
@@ -82,6 +83,7 @@ void main() {
     expect(t.body, isNot(contains('<b>')));
     expect(t.assignee, 'Thanh Nguyen');
     expect(t.labels, containsAll(<String>['sync', 'inventory']));
+    expect(t.labels, contains('resolution:postponed'));
     expect(t.url, 'https://zentao.example.com/bug-view-1092.html');
     expect(t.createdAt, isNotNull);
     expect(t.updatedAt, isNotNull);
@@ -118,8 +120,10 @@ void main() {
 
   group('activity descriptions', () {
     test('created / assigned / resolved / closed / edited', () {
-      expect(zentaoActionText(ZenTaoAction.fromJson({'action': 'opened'})),
-          'created');
+      expect(
+        zentaoActionText(ZenTaoAction.fromJson({'action': 'opened'})),
+        'created',
+      );
       expect(
         zentaoActionText(
           ZenTaoAction.fromJson({'action': 'assigned', 'extra': 'thanh'}),
@@ -138,10 +142,14 @@ void main() {
         ),
         'resolved · resolution: Fixed',
       );
-      expect(zentaoActionText(ZenTaoAction.fromJson({'action': 'closed'})),
-          'closed');
-      expect(zentaoActionText(ZenTaoAction.fromJson({'action': 'edited'})),
-          'edited');
+      expect(
+        zentaoActionText(ZenTaoAction.fromJson({'action': 'closed'})),
+        'closed',
+      );
+      expect(
+        zentaoActionText(ZenTaoAction.fromJson({'action': 'edited'})),
+        'edited',
+      );
     });
 
     test('assigned target can be an account object (realname)', () {

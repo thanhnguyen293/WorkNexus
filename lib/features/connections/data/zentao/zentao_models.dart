@@ -110,6 +110,7 @@ class ZenTaoEntity {
     this.description,
     this.spec,
     this.status,
+    this.resolution,
     this.pri,
     this.confirmed,
     this.severity,
@@ -134,6 +135,7 @@ class ZenTaoEntity {
   final Object? description;
   final Object? spec;
   final Object? status;
+  final Object? resolution;
   @JsonKey(fromJson: zentaoInt)
   final int? pri;
   @JsonKey(fromJson: zentaoInt)
@@ -180,8 +182,8 @@ class ZenTaoAssignedGroup {
   final List<ZenTaoEntity> items;
 
   factory ZenTaoAssignedGroup.fromJson(Map<String, dynamic> json) {
-    final lists = json.values.whereType<List>();
-    final list = lists.isEmpty ? const [] : lists.first;
+    final lists = json.values.whereType<List<Object?>>();
+    final list = lists.isEmpty ? const <Object?>[] : lists.first;
     return ZenTaoAssignedGroup(
       total: zentaoInt(json['total']) ?? 0,
       items: [

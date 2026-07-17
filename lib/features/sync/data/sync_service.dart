@@ -6,6 +6,7 @@ import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
@@ -164,8 +165,15 @@ class SyncService {
     String? assignee,
     String? comment,
   }) async {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.review,
+      providerStatus: 'resolved',
+      labels: _withResolution(ticket.labels, resolution),
+    );
+    await _optimisticallyUpdateTicket(optimistic);
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) {
+      await _rollbackTicket(ticket);
       return const Err(AuthFailure('No stored credentials for this account'));
     }
     final res = await adapter.resolveBug(
@@ -175,10 +183,67 @@ class SyncService {
       assignee: assignee,
       comment: comment,
     );
-    if (res case Err(:final failure)) return Err(failure);
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
     await syncTicketDetail(ticket);
+    await _optimisticallyUpdateTicket(optimistic);
     return const Ok(null);
   }
+
+  /// Activates/reopens a bug, then refreshes its cached detail/status/history.
+  Future<Result<void>> activateBug(
+    Ticket ticket, {
+    String? build,
+    String? assignee,
+    String? comment,
+    UnifiedStatus optimisticStatus = UnifiedStatus.todo,
+  }) async {
+    final optimistic = ticket.copyWith(
+      status: optimisticStatus,
+      providerStatus: 'active',
+      labels: _withoutResolution(ticket.labels),
+    );
+    await _optimisticallyUpdateTicket(optimistic);
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter == null) {
+      await _rollbackTicket(ticket);
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.activateBug(
+      ticket,
+      openedBuild: build,
+      assignee: assignee,
+      comment: comment,
+    );
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
+    await syncTicketDetail(ticket);
+    await _optimisticallyUpdateTicket(optimistic);
+    return const Ok(null);
+  }
+
+  Future<void> _optimisticallyUpdateTicket(Ticket ticket) async {
+    await _db
+        .into(_db.tickets)
+        .insertOnConflictUpdate(ticketToCompanion(ticket));
+  }
+
+  Future<void> _rollbackTicket(Ticket ticket) =>
+      _optimisticallyUpdateTicket(ticket);
+
+  List<String> _withResolution(List<String> labels, String resolution) => [
+    ..._withoutResolution(labels),
+    'resolution:${resolution.toLowerCase()}',
+  ];
+
+  List<String> _withoutResolution(List<String> labels) => [
+    for (final label in labels)
+      if (!label.toLowerCase().startsWith('resolution:')) label,
+  ];
 
   // ---- inline image loading (authenticated + self-signed TLS) ----
 

@@ -179,8 +179,7 @@ Ticket normalizeZenTao(
   required String baseUrl,
 }) {
   final id = e.idString;
-  final title =
-      (type == ZenTaoType.task ? e.name : e.title)?.toString() ?? '';
+  final title = (type == ZenTaoType.task ? e.name : e.title)?.toString() ?? '';
   final rawBody =
       (switch (type) {
         ZenTaoType.bug => e.steps,
@@ -199,6 +198,10 @@ Ticket normalizeZenTao(
   final labels = <String>[];
   final keywords = e.keywords?.toString() ?? '';
   labels.addAll(keywords.split(RegExp(r'[,\s]+')).where((s) => s.isNotEmpty));
+  final resolution = e.resolution?.toString().trim().toLowerCase() ?? '';
+  if (type == ZenTaoType.bug && resolution.isNotEmpty) {
+    labels.add('resolution:$resolution');
+  }
 
   final scopeName = e.scopeName;
   final projectId = '$accountId:${scopeName.isEmpty ? type.label : scopeName}';
