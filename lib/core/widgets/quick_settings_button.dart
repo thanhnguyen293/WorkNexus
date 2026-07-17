@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import 'quick_settings_panel.dart';
 
@@ -18,13 +20,15 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
   final _layerLink = LayerLink();
   final _triggerFocusNode = FocusNode();
   final _panelFocusNode = FocusNode();
+  var _isOpen = false;
 
   void _toggle() {
-    if (_controller.isShowing) {
+    if (_isOpen) {
       _hideAndRestoreFocus();
       return;
     }
 
+    setState(() => _isOpen = true);
     _controller.show();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _controller.isShowing) {
@@ -35,6 +39,7 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
 
   void _hideAndRestoreFocus() {
     _controller.hide();
+    setState(() => _isOpen = false);
     _triggerFocusNode.requestFocus();
   }
 
@@ -78,6 +83,8 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).extension<AppColors>()!;
+    final triggerSize = context.spacing.xl5 + context.spacing.xs;
     return OverlayPortal(
       controller: _controller,
       overlayChildBuilder: (context) => Stack(
@@ -108,12 +115,33 @@ class _QuickSettingsButtonState extends State<QuickSettingsButton> {
       ),
       child: CompositedTransformTarget(
         link: _layerLink,
-        child: IconButton(
+        child: SizedBox.square(
           key: const ValueKey<String>('quick-settings-trigger'),
-          focusNode: _triggerFocusNode,
-          tooltip: AppL10n.of(context).quickSettings,
-          onPressed: _toggle,
-          icon: const Icon(Icons.tune),
+          dimension: triggerSize,
+          child: Tooltip(
+            message: AppL10n.of(context).quickSettings,
+            child: Semantics(
+              button: true,
+              label: AppL10n.of(context).quickSettings,
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: _isOpen ? c.selectionFill : null,
+                  borderRadius: BorderRadius.circular(context.radii.sm),
+                ),
+                child: InkWell(
+                  focusNode: _triggerFocusNode,
+                  onTap: _toggle,
+                  hoverColor: c.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(context.radii.sm),
+                  child: Icon(
+                    Icons.settings_outlined,
+                    size: context.spacing.xl3,
+                    color: _isOpen ? c.accent : c.textTertiary,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

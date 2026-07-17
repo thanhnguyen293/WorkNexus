@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
+import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
@@ -21,19 +22,24 @@ class QuickSettingsPanel extends ConsumerWidget {
     final l = AppL10n.of(context);
     final settings = ref.watch(appSettingsProvider);
     final controller = ref.read(appSettingsProvider.notifier);
+    final panelWidth = context.spacing.xl6 * 7.5;
     final maxHeight = math.min(
       context.spacing.xl6 * 12.5,
       MediaQuery.sizeOf(context).height,
     );
+    final availableWidth = math.max(
+      context.spacing.none,
+      MediaQuery.sizeOf(context).width - context.spacing.xl2,
+    );
 
     return Container(
       key: const ValueKey<String>('quick-settings-panel'),
-      width: context.spacing.xl6 * 8.5,
+      width: math.min(panelWidth, availableWidth),
       constraints: BoxConstraints(maxHeight: maxHeight),
-      padding: EdgeInsets.all(context.spacing.xl2),
+      padding: EdgeInsets.all(context.spacing.md),
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.lg),
+        borderRadius: BorderRadius.circular(context.radii.md),
         border: Border.all(color: c.borderStrong),
         boxShadow: [
           BoxShadow(
@@ -45,65 +51,79 @@ class QuickSettingsPanel extends ConsumerWidget {
       ),
       child: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l.quickSettings,
-              style: context.typography.title.copyWith(color: c.textPrimary),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l.quickSettings,
+                style: context.typography.bodyStrong.copyWith(
+                  color: c.textPrimary,
+                ),
+              ),
             ),
-            SizedBox(height: context.spacing.xl),
-            _SegmentedControl<String>(
+            SizedBox(height: context.spacing.md),
+            _SettingRow(
               label: l.language,
-              value: settings.locale.languageCode,
-              options: {'en': l.english, 'vi': l.vietnamese},
-              onChanged: controller.setLanguageCode,
+              control: _CompactSegmentedControl<String>(
+                value: settings.locale.languageCode,
+                options: {'en': l.english, 'vi': l.vietnamese},
+                onChanged: controller.setLanguageCode,
+              ),
             ),
-            SizedBox(height: context.spacing.xl2),
-            _SectionLabel(l.appearance),
-            SizedBox(height: context.spacing.lg),
-            _SegmentedControl<AppThemeVariant>(
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.theme,
-              value: settings.variant,
-              options: {
-                AppThemeVariant.light: l.themeLight,
-                AppThemeVariant.dark: l.themeDark,
-                AppThemeVariant.midnight: l.themeMidnight,
-              },
-              onChanged: controller.setVariant,
+              control: _CompactSegmentedControl<AppThemeVariant>(
+                value: settings.variant,
+                options: {
+                  AppThemeVariant.light: l.themeLight,
+                  AppThemeVariant.dark: l.themeDark,
+                  AppThemeVariant.midnight: l.themeMidnight,
+                },
+                onChanged: controller.setVariant,
+              ),
             ),
-            SizedBox(height: context.spacing.xl),
-            _SegmentedControl<SurfaceStyle>(
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.surface,
-              value: settings.surface,
-              options: {
-                SurfaceStyle.flat: l.surfaceFlat,
-                SurfaceStyle.outline: l.surfaceOutline,
-              },
-              onChanged: controller.setSurface,
+              control: _CompactSegmentedControl<SurfaceStyle>(
+                value: settings.surface,
+                options: {
+                  SurfaceStyle.flat: l.surfaceFlat,
+                  SurfaceStyle.outline: l.surfaceOutline,
+                },
+                onChanged: controller.setSurface,
+              ),
             ),
-            SizedBox(height: context.spacing.xl),
-            _SegmentedControl<AppDensity>(
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.density,
-              value: settings.density,
-              options: {
-                AppDensity.comfortable: l.densityComfortable,
-                AppDensity.compact: l.densityCompact,
-              },
-              onChanged: controller.setDensity,
+              control: _CompactSegmentedControl<AppDensity>(
+                value: settings.density,
+                options: {
+                  AppDensity.comfortable: l.densityComfortable,
+                  AppDensity.compact: l.densityCompact,
+                },
+                onChanged: controller.setDensity,
+              ),
             ),
-            SizedBox(height: context.spacing.xl),
-            _SegmentedControl<bool>(
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.companyTint,
-              value: settings.companyTint,
-              options: {false: l.settingOff, true: l.settingOn},
-              onChanged: controller.setCompanyTint,
+              control: _CompactSegmentedControl<bool>(
+                value: settings.companyTint,
+                options: {false: l.settingOff, true: l.settingOn},
+                onChanged: controller.setCompanyTint,
+              ),
             ),
-            SizedBox(height: context.spacing.xl),
-            _FontControl(
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.font,
-              tooltip: l.chooseUiFont,
-              value: settings.fontFamily,
-              onChanged: controller.setFontFamily,
+              control: _FontControl(
+                tooltip: l.chooseUiFont,
+                value: settings.fontFamily,
+                onChanged: controller.setFontFamily,
+              ),
             ),
           ],
         ),
@@ -112,31 +132,47 @@ class QuickSettingsPanel extends ConsumerWidget {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
+class _SettingRow extends StatelessWidget {
+  const _SettingRow({required this.label, required this.control});
 
   final String label;
+  final Widget control;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: context.typography.label.copyWith(
-        color: context.colors.textTertiary,
-      ),
+    return Row(
+      children: [
+        SizedBox(
+          width: context.spacing.xl6 * 2,
+          child: Text(
+            label,
+            style: context.typography.caption.copyWith(
+              color: context.colors.textTertiary,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: control,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _SegmentedControl<T> extends StatelessWidget {
-  const _SegmentedControl({
-    required this.label,
+class _CompactSegmentedControl<T> extends StatelessWidget {
+  const _CompactSegmentedControl({
     required this.value,
     required this.options,
     required this.onChanged,
   });
 
-  final String label;
   final T value;
   final Map<T, String> options;
   final ValueChanged<T> onChanged;
@@ -144,64 +180,52 @@ class _SegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(label),
-        SizedBox(height: context.spacing.sm),
-        Container(
-          padding: EdgeInsets.all(context.spacing.xxs),
-          decoration: BoxDecoration(
-            color: c.surfaceSubtle,
-            border: Border.all(color: c.border),
-            borderRadius: BorderRadius.circular(context.radii.md),
-          ),
-          child: Wrap(
-            children: [
-              for (final entry in options.entries)
-                TextButton(
-                  onPressed: () => onChanged(entry.key),
-                  style: TextButton.styleFrom(
-                    backgroundColor: entry.key == value
-                        ? c.selectionFill
-                        : null,
-                    foregroundColor: entry.key == value
-                        ? c.accent
-                        : c.textSecondary,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.lg,
-                      vertical: context.spacing.xs,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(context.radii.sm),
-                    ),
-                    textStyle: context.typography.bodySm.copyWith(
-                      fontWeight: entry.key == value
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                    ),
-                  ),
-                  child: Text(entry.value),
+    return Container(
+      padding: EdgeInsets.all(context.spacing.xxs),
+      decoration: BoxDecoration(
+        color: c.surfaceSubtle,
+        border: context.cardBorder,
+        borderRadius: BorderRadius.circular(context.radii.md),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final entry in options.entries)
+            TextButton(
+              onPressed: () => onChanged(entry.key),
+              style: TextButton.styleFrom(
+                backgroundColor: entry.key == value ? c.selectionFill : null,
+                foregroundColor: entry.key == value
+                    ? c.accent
+                    : c.textSecondary,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.none,
+                  vertical: context.spacing.xxs,
                 ),
-            ],
-          ),
-        ),
-      ],
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(context.radii.sm),
+                ),
+                textStyle: entry.key == value
+                    ? context.typography.captionStrong
+                    : context.typography.caption,
+              ),
+              child: Text(entry.value),
+            ),
+        ],
+      ),
     );
   }
 }
 
 class _FontControl extends StatelessWidget {
   const _FontControl({
-    required this.label,
     required this.tooltip,
     required this.value,
     required this.onChanged,
   });
 
-  final String label;
   final String tooltip;
   final String value;
   final ValueChanged<String> onChanged;
@@ -209,70 +233,64 @@ class _FontControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(label),
-        SizedBox(height: context.spacing.sm),
-        PopupMenuButton<String>(
-          initialValue: value,
-          onSelected: onChanged,
-          tooltip: tooltip,
-          color: c.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            side: BorderSide(color: c.border),
-          ),
-          itemBuilder: (context) => [
-            for (final font in kFontChoices)
-              PopupMenuItem<String>(
-                value: font,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        font,
-                        style: context.typography.subtitle.copyWith(
-                          fontFamily: font,
-                          fontWeight: FontWeight.w400,
-                          color: c.textPrimary,
-                        ),
-                      ),
-                    ),
-                    if (font == value) Icon(Icons.check, color: c.accent),
-                  ],
-                ),
-              ),
-          ],
-          child: Container(
-            padding: EdgeInsets.fromLTRB(
-              context.spacing.lg,
-              context.spacing.sm,
-              context.spacing.md,
-              context.spacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: c.surfaceSubtle,
-              border: Border.all(color: c.border),
-              borderRadius: BorderRadius.circular(context.radii.md),
-            ),
+    return PopupMenuButton<String>(
+      initialValue: value,
+      onSelected: onChanged,
+      tooltip: tooltip,
+      color: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.md),
+        side: context.hairlineSide,
+      ),
+      itemBuilder: (context) => [
+        for (final font in kFontChoices)
+          PopupMenuItem<String>(
+            value: font,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value,
-                  style: context.typography.bodySmStrong.copyWith(
-                    fontFamily: value,
-                    color: c.textPrimary,
+                Expanded(
+                  child: Text(
+                    font,
+                    style: context.typography.subtitle.copyWith(
+                      fontFamily: font,
+                      color: c.textPrimary,
+                    ),
                   ),
                 ),
-                SizedBox(width: context.spacing.sm),
-                Icon(Icons.keyboard_arrow_down, color: c.textSecondary),
+                if (font == value) Icon(Icons.check, color: c.accent),
               ],
             ),
           ),
-        ),
       ],
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: context.spacing.sm,
+          vertical: context.spacing.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: c.surfaceSubtle,
+          border: context.cardBorder,
+          borderRadius: BorderRadius.circular(context.radii.md),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: context.typography.captionStrong.copyWith(
+                fontFamily: value,
+                color: c.textPrimary,
+              ),
+            ),
+            SizedBox(width: context.spacing.xs),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: context.spacing.xl3,
+              color: c.textSecondary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

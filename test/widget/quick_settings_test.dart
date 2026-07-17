@@ -54,7 +54,6 @@ void main() {
     for (final label in <String>[
       'Quick settings',
       'Language',
-      'Appearance',
       'Theme',
       'Surface',
       'Density',
@@ -63,6 +62,41 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget);
     }
+  });
+
+  testWidgets('quick settings uses the compact inspector treatment', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester);
+
+    final trigger = find.byKey(
+      const ValueKey<String>('quick-settings-trigger'),
+    );
+    final iconFinder = find.byIcon(Icons.settings_outlined);
+    expect(iconFinder, findsOneWidget);
+    final icon = tester.widget<Icon>(iconFinder);
+    expect(icon.size, 16);
+    expect(find.byIcon(Icons.tune), findsNothing);
+    expect(tester.getSize(trigger), const Size(28, 28));
+
+    await openQuickSettings(tester);
+
+    final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
+    expect(tester.getSize(panel).width, lessThanOrEqualTo(300));
+    expect(tester.getSize(panel).height, lessThan(300));
+    expect(find.text('Appearance'), findsNothing);
+    expect(
+      (tester.getCenter(find.text('Language')).dy -
+              tester.getCenter(find.text('English')).dy)
+          .abs(),
+      lessThan(2),
+    );
+    expect(
+      (tester.getCenter(find.text('Theme')).dy -
+              tester.getCenter(find.text('Light')).dy)
+          .abs(),
+      lessThan(2),
+    );
   });
 
   testWidgets('language changes immediately and keeps the popover open', (
