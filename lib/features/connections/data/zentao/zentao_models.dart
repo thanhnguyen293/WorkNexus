@@ -42,6 +42,50 @@ List<ZenTaoAction> zentaoActions(Object? raw) {
   ];
 }
 
+/// ZenTao returns `files` as an id-keyed object (`{ "7931": {...}, ... }`);
+/// normalize it to a list, ordered by ascending id (upload order).
+List<ZenTaoFile> zentaoFiles(Object? raw) {
+  if (raw is! Map) return const [];
+  final entries =
+      <Map<String, dynamic>>[
+        for (final v in raw.values)
+          if (v is Map) Map<String, dynamic>.from(v),
+      ]..sort((a, b) {
+        final ai = zentaoInt(a['id']) ?? 0;
+        final bi = zentaoInt(b['id']) ?? 0;
+        return ai.compareTo(bi);
+      });
+  return [for (final e in entries) ZenTaoFile.fromJson(e)];
+}
+
+/// A file attached to a ZenTao object (`bug.files[<id>]`).
+@JsonSerializable(createToJson: false)
+class ZenTaoFile {
+  const ZenTaoFile({
+    this.id,
+    this.title,
+    this.name,
+    this.extension,
+    this.size,
+    this.url,
+    this.addedBy,
+    this.addedDate,
+  });
+
+  final Object? id;
+  final Object? title;
+  final Object? name;
+  final Object? extension;
+  @JsonKey(fromJson: zentaoInt)
+  final int? size;
+  final Object? url;
+  final Object? addedBy;
+  final Object? addedDate;
+
+  factory ZenTaoFile.fromJson(Map<String, dynamic> json) =>
+      _$ZenTaoFileFromJson(json);
+}
+
 /// `POST /tokens` → `{ token }`. The token doubles as the `zentaosid` session id.
 @JsonSerializable(createToJson: false)
 class ZenTaoTokenResponse {
@@ -201,6 +245,8 @@ class ZenTaoEntity {
     this.story,
     this.task,
     this.plan,
+    this.activatedCount,
+    this.files = const [],
     this.actions = const [],
   });
 
@@ -250,6 +296,10 @@ class ZenTaoEntity {
   final Object? story;
   final Object? task;
   final Object? plan;
+  @JsonKey(fromJson: zentaoInt)
+  final int? activatedCount;
+  @JsonKey(fromJson: zentaoFiles)
+  final List<ZenTaoFile> files;
   @JsonKey(fromJson: zentaoActions)
   final List<ZenTaoAction> actions;
 

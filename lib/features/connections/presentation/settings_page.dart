@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'add_connection_dialog.dart';
@@ -69,15 +70,17 @@ class SettingsPage extends ConsumerWidget {
                         ),
                       ),
                       SizedBox(width: context.spacing.xl3),
-                      FilledButton.icon(
+                      AppButton.filled(
                         onPressed: () => ref
                             .read(connectPickerOpenProvider.notifier)
                             .update((v) => !v),
-                        icon: const Icon(Icons.add, size: 16),
-                        label: Text(l.connect),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: c.accent,
-                          foregroundColor: c.onAccent,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add, size: 16),
+                            SizedBox(width: context.spacing.sm),
+                            Text(l.connect),
+                          ],
                         ),
                       ),
                     ],
@@ -124,7 +127,8 @@ class _ProviderPicker extends ConsumerWidget {
             children: [
               for (final p in ProviderType.values) ...[
                 Expanded(
-                  child: OutlinedButton(
+                  child: AppButton.outlinedNeutral(
+                    size: AppButtonSize.large,
                     onPressed: () {
                       if (p == ProviderType.zentao) {
                         AddConnectionDialog.show(context);
@@ -138,13 +142,6 @@ class _ProviderPicker extends ConsumerWidget {
                         );
                       }
                     },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: c.textPrimary,
-                      side: BorderSide(color: c.border),
-                      padding: EdgeInsets.symmetric(
-                        vertical: context.spacing.xl,
-                      ),
-                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

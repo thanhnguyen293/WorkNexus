@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_borders.dart';
+import 'app_button_theme.dart';
 import 'app_colors.dart';
 import 'app_palette.dart';
 import 'app_radii.dart';
@@ -19,11 +20,27 @@ ThemeData buildAppTheme({
   required SurfaceStyle surface,
   required AppDensity density,
   String fontFamily = kSansFont,
+  double componentRadius = kComponentRadiusDefault,
+  int? accentColorValue,
 }) {
   final p = AppPalette.of(variant);
-  final colors = AppColors.fromPalette(p);
   final spacing = AppSpacing.forDensity(density);
   final borders = AppBorders(showOutline: surface == SurfaceStyle.outline);
+
+  // Effective accent: the user's chosen primary color, or the palette default.
+  // Text/selection tints derive from it so a custom accent stays coherent.
+  final accent = accentColorValue == null ? p.accent : Color(accentColorValue);
+  final onAccent = accentColorValue == null
+      ? p.accentTx
+      : (accent.computeLuminance() > 0.55 ? p.onColorInk : Colors.white);
+  final colors = accentColorValue == null
+      ? AppColors.fromPalette(p)
+      : AppColors.fromPalette(p).copyWith(
+          accent: accent,
+          onAccent: onAccent,
+          selectionFill: accent.withValues(alpha: 0.14),
+          selectionBorder: accent.withValues(alpha: 0.5),
+        );
   final requestedFamily = fontFamily.trim();
   final String? family = requestedFamily.isEmpty
       ? kSansFont
@@ -33,10 +50,10 @@ ThemeData buildAppTheme({
 
   final colorScheme = ColorScheme(
     brightness: p.brightness,
-    primary: p.accent,
-    onPrimary: p.accentTx,
-    secondary: p.accent,
-    onSecondary: p.accentTx,
+    primary: accent,
+    onPrimary: onAccent,
+    secondary: accent,
+    onSecondary: onAccent,
     error: p.red,
     onError: Colors.white,
     surface: p.panel,
@@ -86,8 +103,9 @@ ThemeData buildAppTheme({
       colors,
       const AppTypography(),
       spacing,
-      const AppRadii(),
+      AppRadii(component: componentRadius),
       borders,
+      AppButtonTheme.build(colors, borders),
     ],
   );
 }

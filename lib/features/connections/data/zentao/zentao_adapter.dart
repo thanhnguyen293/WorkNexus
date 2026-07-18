@@ -164,7 +164,8 @@ class ZenTaoAdapter implements ProviderAdapter {
       for (final a in entity.actions) {
         // Pure comments render as bubbles, not activity rows.
         if (a.actionType == 'commented') continue;
-        final note = stripHtml(a.commentText);
+        final parsed = zentaoActionAttachments(a.commentText);
+        final note = parsed.note;
         events.add(
           ActivityEvent(
             id: '${ticket.id}:${a.id ?? events.length}',
@@ -173,6 +174,7 @@ class ZenTaoAdapter implements ProviderAdapter {
             action: zentaoActionText(a),
             at: parseZenTaoDate(a.date) ?? DateTime.now(),
             detail: note.isEmpty ? null : note,
+            attachments: parsed.files,
           ),
         );
       }

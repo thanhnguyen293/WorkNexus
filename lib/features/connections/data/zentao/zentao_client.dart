@@ -210,6 +210,37 @@ class ZenTaoClient {
     return null;
   }
 
+  /// Downloads an attachment's raw bytes through the authenticated session,
+  /// accepting any content type (unlike [fetchBytes], which is image-only). Used
+  /// by the detail panel's attachment "open" action. Returns null on failure.
+  Future<Uint8List?> downloadBytes(String url) async {
+    final token = await _ensureToken();
+    final base = Uri.parse('$baseUrl/');
+    final resolved = base.resolveUri(Uri.parse(url));
+    final onServer = resolved.host == base.host;
+    final target = onServer
+        ? resolved.replace(
+            queryParameters: {...resolved.queryParameters, 'zentaosid': token},
+          )
+        : resolved;
+    final res = await _dio.getUri<List<int>>(
+      target,
+      options: Options(
+        responseType: ResponseType.bytes,
+        followRedirects: false,
+        validateStatus: (s) => s != null && s < 500,
+        headers: onServer
+            ? {'Cookie': 'zentaosid=$token', 'Token': token}
+            : null,
+      ),
+    );
+    final data = res.data;
+    if (res.statusCode == 200 && data != null && data.isNotEmpty) {
+      return Uint8List.fromList(data);
+    }
+    return null;
+  }
+
   /// Classic detail JSON: `GET {base}/{type}-view-{id}.json`. Used as a fallback
   /// when the REST v1 detail endpoint returns an empty body (older installs /
   /// permission quirks). The payload is `{status, data}` where `data` (sometimes

@@ -12,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../ticket_actions.dart';
 
@@ -87,6 +88,10 @@ class DetailHeader extends ConsumerWidget {
               ),
               SizedBox(width: context.spacing.sm),
               PriorityTag(ticket.providerType, ticket.priority),
+              if (ticket.severity != null) ...[
+                SizedBox(width: context.spacing.sm),
+                SeverityTag(ticket.severity),
+              ],
             ],
           ),
           SizedBox(height: context.spacing.md),

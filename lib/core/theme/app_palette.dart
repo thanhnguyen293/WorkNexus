@@ -3,6 +3,36 @@ import 'package:flutter/material.dart';
 /// Which of the three editorial themes is active.
 enum AppThemeVariant { light, dark, midnight }
 
+/// Selectable app primary/accent colors offered in settings. `null` (not in this
+/// list) means "use the theme variant's built-in accent". Two families — a
+/// saturated row and a pastel row across the same hues — so the picker offers a
+/// diverse spread. `onAccent` contrast is auto-chosen per color in the theme, so
+/// light pastels get dark text.
+const List<int> kAccentPresets = <int>[
+  // Saturated
+  0xFF5A57D6, // indigo
+  0xFF2563EB, // blue
+  0xFF0EA5E9, // sky
+  0xFF0D9488, // teal
+  0xFF16A34A, // green
+  0xFFD97706, // amber
+  0xFFEA580C, // orange
+  0xFFE11D48, // rose
+  0xFFDB2777, // pink
+  0xFF7C3AED, // violet
+  // Pastel
+  0xFFA5B4FC, // pastel indigo
+  0xFF93C5FD, // pastel blue
+  0xFF7DD3FC, // pastel sky
+  0xFF5EEAD4, // pastel teal
+  0xFF86EFAC, // pastel green
+  0xFFFCD34D, // pastel amber
+  0xFFFDBA74, // pastel orange
+  0xFFFDA4AF, // pastel rose
+  0xFFF9A8D4, // pastel pink
+  0xFFC4B5FD, // pastel violet
+];
+
 /// Flat vs outline surface treatment (outline adds 1px `line` borders).
 enum SurfaceStyle { flat, outline }
 
@@ -133,29 +163,30 @@ class AppPalette {
     workspaceFallback: Color(0xFF888888),
   );
 
+  // Ported verbatim from the BugPanel design's midnight CSS vars.
   static const midnight = AppPalette(
     variant: AppThemeVariant.midnight,
     brightness: Brightness.dark,
-    bg: Color(0xFF0A0C18),
-    panel: Color(0xFF111428),
-    panel2: Color(0xFF171B33),
-    card: Color(0xFF171B33),
-    line: Color(0xFF272D4A),
-    line2: Color(0xFF3A4166),
-    tx: Color(0xFFEAECF8),
-    tx2: Color(0xFF9BA2C6),
-    tx3: Color(0xFF6D7399),
-    accent: Color(0xFF4D94FF),
+    bg: Color(0xFF0C0E13),
+    panel: Color(0xFF12151D),
+    panel2: Color(0xFF181C26),
+    card: Color(0xFF181C26),
+    line: Color(0xFF262C38),
+    line2: Color(0xFF38404F),
+    tx: Color(0xFFE9ECF3),
+    tx2: Color(0xFF9AA4B8),
+    tx3: Color(0xFF697386),
+    accent: Color(0xFF6A86FF),
     accentTx: Color(0xFFFFFFFF),
-    titlebar: Color(0xFF0B0D1A),
-    sel: Color.fromRGBO(77, 148, 255, .17),
-    selLine: Color.fromRGBO(77, 148, 255, .6),
-    red: Color(0xFFF56B74),
-    orange: Color(0xFFF0A05A),
-    yellow: Color(0xFFE6C15A),
-    green: Color(0xFF4FC79B),
-    amber: Color(0xFFEAB54E),
-    violet: Color(0xFFB39DFF),
+    titlebar: Color(0xFF090B10),
+    sel: Color.fromRGBO(106, 134, 255, .15),
+    selLine: Color.fromRGBO(106, 134, 255, .5),
+    red: Color(0xFFEF6B63),
+    orange: Color(0xFFE59A4A),
+    yellow: Color(0xFFD8B850),
+    green: Color(0xFF4CC06B),
+    amber: Color(0xFFE3A63C),
+    violet: Color(0xFF9D8CFF),
     skel: Color.fromRGBO(255, 255, 255, .055),
     skel2: Color.fromRGBO(255, 255, 255, .11),
     scrim: Color(0xFF000000),

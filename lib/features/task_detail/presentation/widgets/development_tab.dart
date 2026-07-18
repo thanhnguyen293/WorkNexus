@@ -6,32 +6,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/agent_kind.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../agents/presentation/agent_providers.dart';
 import '../detail_providers.dart';
 import 'agent_sessions.dart';
+import 'detail_scroll_body.dart';
 import 'section_label.dart';
 
 /// The "Development" tab — linked code, and coding-agent dispatch.
 class DevelopmentTab extends ConsumerWidget {
-  const DevelopmentTab({super.key, required this.ticket});
+  const DevelopmentTab({super.key, required this.ticket, required this.layout});
   final Ticket ticket;
+  final DetailLayout layout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final links = ref.watch(devLinksProvider(ticket.id));
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        context.spacing.xl3,
-        context.spacing.xl3,
-        context.spacing.xl3,
-        context.spacing.xl4,
-      ),
-      child: Column(
+    return DetailScrollBody(
+      layout: layout,
+      content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionLabel('Linked code'),
@@ -107,7 +106,8 @@ class DevelopmentTab extends ConsumerWidget {
             runSpacing: context.spacing.md,
             children: [
               for (final kind in AgentKind.values)
-                OutlinedButton(
+                AppButton.outlinedNeutral(
+                  size: AppButtonSize.small,
                   onPressed: () => ref
                       .read(dispatchControllerProvider.notifier)
                       .dispatch(
@@ -117,10 +117,6 @@ class DevelopmentTab extends ConsumerWidget {
                         prompt:
                             'Work on ticket ${ticket.externalKey}: ${ticket.title}\n\n${ticket.body}',
                       ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: c.textPrimary,
-                    side: BorderSide(color: c.borderStrong),
-                  ),
                   child: Text('▶ ${kind.displayName}'),
                 ),
             ],

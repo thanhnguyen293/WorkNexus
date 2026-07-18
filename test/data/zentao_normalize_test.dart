@@ -202,4 +202,84 @@ void main() {
       );
     });
   });
+
+  group('attachments', () {
+    test('maps the id-keyed files map onto sorted TicketAttachments', () {
+      final json = <String, dynamic>{
+        'id': 2668,
+        'title': 'A bug',
+        'status': 'active',
+        'activatedCount': 2,
+        'files': {
+          '11548': {
+            'id': 11548,
+            'title': 'bandicam.mp4',
+            'extension': 'mp4',
+            'size': 5003944,
+            'addedBy': 'Ryan',
+            'addedDate': '2026-05-21 00:00:00',
+            'url': 'https://z.example.com/zentao/file-download-11548.json',
+          },
+          '7931': {
+            'id': 7931,
+            'title': 'ScreenRecording.MP4',
+            'extension': 'mp4',
+            'size': 39124123,
+            'addedBy': 'Ryan',
+          },
+        },
+      };
+      final t = normalizeZenTao(
+        ZenTaoEntity.fromJson(json),
+        type: ZenTaoType.bug,
+        accountId: 'ztB',
+        baseUrl: 'https://z.example.com/',
+      );
+      final bug = t.providerEntity! as ZenTaoBugEntity;
+      expect(bug.activatedCount, 2);
+      expect(bug.attachments, hasLength(2));
+      // Ordered by ascending id (upload order), not map order.
+      expect(bug.attachments.first.id, '7931');
+      expect(bug.attachments.first.size, 39124123);
+      // Missing url falls back to a constructed file-download path.
+      expect(
+        bug.attachments.first.url,
+        'https://z.example.com/file-download-7931.mp4',
+      );
+      // Present url is preserved verbatim.
+      expect(
+        bug.attachments.last.url,
+        'https://z.example.com/zentao/file-download-11548.json',
+      );
+      expect(bug.attachments.last.addedDate, isNotNull);
+    });
+
+    test('no files → empty attachments, null activatedCount', () {
+      final t = normalizeZenTao(
+        ZenTaoEntity.fromJson({'id': 1, 'title': 'x', 'status': 'active'}),
+        type: ZenTaoType.bug,
+        accountId: 'z',
+        baseUrl: 'https://z',
+      );
+      final bug = t.providerEntity! as ZenTaoBugEntity;
+      expect(bug.attachments, isEmpty);
+      expect(bug.activatedCount, isNull);
+    });
+  });
+
+  group('action attachments', () {
+    test('splits "Added Files <name>" prefix from the note', () {
+      final parsed = zentaoActionAttachments(
+        'Added Files 10.mp4\r\n<p>Please recheck on the latest build</p>',
+      );
+      expect(parsed.files, ['10.mp4']);
+      expect(parsed.note, 'Please recheck on the latest build');
+    });
+
+    test('a plain comment yields no files and the stripped note', () {
+      final parsed = zentaoActionAttachments('<p>Reopening this ticket.</p>');
+      expect(parsed.files, isEmpty);
+      expect(parsed.note, 'Reopening this ticket.');
+    });
+  });
 }

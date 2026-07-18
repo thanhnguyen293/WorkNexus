@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/navigation/navigation_providers.dart';
+import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_borders.dart';
 import '../../../core/theme/app_colors.dart';
 import 'detail_providers.dart';
@@ -53,10 +54,14 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
     final id = _current;
     if (id == null && _c.isDismissed) return const SizedBox.shrink();
 
-    final width = (MediaQuery.of(context).size.width * 0.52).clamp(
-      460.0,
-      760.0,
-    );
+    // Two-pane needs room for the content column plus the metadata sidebar, so
+    // the slide-over opens wider than the single-column document layout.
+    final layout = ref.watch(appSettingsProvider.select((s) => s.detailLayout));
+    final screenWidth = MediaQuery.of(context).size.width;
+    final twoPane = layout == DetailLayout.twoPane;
+    final width = (screenWidth * (twoPane ? 0.64 : 0.52))
+        .clamp(twoPane ? 680.0 : 460.0, twoPane ? 1000.0 : 760.0)
+        .clamp(0.0, screenWidth);
     final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
 
     return AnimatedBuilder(
@@ -111,6 +116,7 @@ class _DetailPanel extends ConsumerWidget {
     final ws = account == null ? null : lookups.workspaces[account.workspaceId];
     final wsColor = ws == null ? c.workspaceFallback : Color(ws.colorValue);
     final tab = ref.watch(detailTabProvider);
+    final layout = ref.watch(appSettingsProvider.select((s) => s.detailLayout));
     // Pull fresh detail + comments from the provider when the panel opens.
     final detailLoading = ref
         .watch(ticketDetailSyncProvider(ticketId))
@@ -143,7 +149,7 @@ class _DetailPanel extends ConsumerWidget {
                   : null,
             ),
             Expanded(
-              child: DetailTabBody(ticket: ticket, tab: tab),
+              child: DetailTabBody(ticket: ticket, tab: tab, layout: layout),
             ),
             if (tab == DetailTab.translation)
               TranslationFooter(ticketId: ticketId),

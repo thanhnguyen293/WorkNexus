@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/translation_state.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -12,12 +13,14 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../translation/presentation/translation_providers.dart';
+import 'detail_scroll_body.dart';
 import 'section_label.dart';
 
 /// The "Vietnamese" tab — shows the translation record and its lifecycle state.
 class TranslationTab extends ConsumerWidget {
-  const TranslationTab({super.key, required this.ticket});
+  const TranslationTab({super.key, required this.ticket, required this.layout});
   final Ticket ticket;
+  final DetailLayout layout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,14 +47,9 @@ class TranslationTab extends ConsumerWidget {
       ),
     );
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        context.spacing.xl3,
-        context.spacing.xl3,
-        context.spacing.xl3,
-        context.spacing.xl4,
-      ),
-      child: Column(
+    return DetailScrollBody(
+      layout: layout,
+      content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (state == TranslationState.none)

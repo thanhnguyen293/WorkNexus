@@ -25,6 +25,7 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     String? browser,
     int? confirmed,
     int? severity,
+    int? activatedCount,
     String? resolution,
     String? openedBy,
     DateTime? openedDate,
@@ -39,8 +40,30 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     DateTime? closedDate,
     String? lastEditedBy,
     DateTime? lastEditedDate,
+    @Default(<TicketAttachment>[]) List<TicketAttachment> attachments,
   }) = ZenTaoBugEntity;
 
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>
       _$TicketProviderEntityFromJson(json);
+}
+
+/// A file attached to a provider ticket (screenshot, screen recording, log).
+///
+/// [url] is the provider's authenticated download URL — the bytes are fetched
+/// through the account's credentialed client, never opened directly. [size] is
+/// in bytes; [extension] is the lowercased file extension without the dot.
+@freezed
+abstract class TicketAttachment with _$TicketAttachment {
+  const factory TicketAttachment({
+    required String id,
+    required String title,
+    required String url,
+    String? extension,
+    int? size,
+    String? addedBy,
+    DateTime? addedDate,
+  }) = _TicketAttachment;
+
+  factory TicketAttachment.fromJson(Map<String, dynamic> json) =>
+      _$TicketAttachmentFromJson(json);
 }

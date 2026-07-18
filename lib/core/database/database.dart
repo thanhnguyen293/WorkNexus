@@ -89,10 +89,19 @@ class Settings extends Table {
   TextColumn get variant => text().withDefault(const Constant('light'))();
   TextColumn get surface => text().withDefault(const Constant('outline'))();
   TextColumn get density => text().withDefault(const Constant('comfortable'))();
+  TextColumn get detailLayout =>
+      text().withDefault(const Constant('twoPane'))();
   BoolColumn get companyTint => boolean().withDefault(const Constant(false))();
   TextColumn get localeCode => text().withDefault(const Constant('en'))();
   TextColumn get fontFamily =>
       text().withDefault(const Constant('Space Grotesk'))();
+  RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
+  IntColumn get accentColorValue => integer().nullable()();
+
+  /// JSON array of pinned ZenTao project keys (`"accountId:productId"`), shown at
+  /// the top of the sources tree. Persisted so pins survive restarts.
+  TextColumn get pinnedProjectsJson =>
+      text().withDefault(const Constant('[]'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -106,6 +115,7 @@ class Activities extends Table {
   TextColumn get action => text()();
   DateTimeColumn get at => dateTime()();
   TextColumn get detail => text().nullable()();
+  TextColumn get attachmentsJson => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -143,7 +153,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -158,6 +168,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) await m.createTable(activities);
       if (from < 5) await m.addColumn(tickets, tickets.providerEntityJson);
+      if (from < 6) await m.addColumn(activities, activities.attachmentsJson);
+      if (from < 7) await m.addColumn(settings, settings.componentRadius);
+      if (from < 8) await m.addColumn(settings, settings.accentColorValue);
+      if (from < 9) await m.addColumn(settings, settings.pinnedProjectsJson);
+      if (from < 10) await m.addColumn(settings, settings.detailLayout);
     },
   );
 

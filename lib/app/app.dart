@@ -31,6 +31,8 @@ class WorkNexusApp extends ConsumerWidget {
         surface: settings.surface,
         density: settings.density,
         fontFamily: settings.fontFamily,
+        componentRadius: settings.componentRadius,
+        accentColorValue: settings.accentColorValue,
       ),
       home: const AppShell(),
     );

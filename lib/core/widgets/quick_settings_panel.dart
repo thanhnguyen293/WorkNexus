@@ -11,7 +11,9 @@ import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'quick_settings_color_control.dart';
 import 'quick_settings_font_control.dart';
+import 'quick_settings_radius_control.dart';
 
 /// Reactive controls for the app-wide language and appearance preferences.
 class QuickSettingsPanel extends ConsumerWidget {
@@ -113,6 +115,18 @@ class QuickSettingsPanel extends ConsumerWidget {
             ),
             SizedBox(height: context.spacing.xs),
             _SettingRow(
+              label: l.detailLayout,
+              control: _CompactSegmentedControl<DetailLayout>(
+                value: settings.detailLayout,
+                options: {
+                  DetailLayout.twoPane: l.layoutTwoPane,
+                  DetailLayout.document: l.layoutDocument,
+                },
+                onChanged: controller.setDetailLayout,
+              ),
+            ),
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.companyTint,
               control: _CompactSegmentedControl<bool>(
                 value: settings.companyTint,
@@ -130,6 +144,10 @@ class QuickSettingsPanel extends ConsumerWidget {
                 onChanged: controller.setFontFamily,
               ),
             ),
+            SizedBox(height: context.spacing.md),
+            const QuickSettingsColorControl(),
+            SizedBox(height: context.spacing.xs),
+            const QuickSettingsRadiusControl(),
           ],
         ),
       ),

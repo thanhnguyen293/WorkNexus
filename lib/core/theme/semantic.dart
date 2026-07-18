@@ -33,6 +33,15 @@ Color priorityColor(AppColors c, Priority p) => switch (p) {
   Priority.low => c.textTertiary,
 };
 
+/// ZenTao severity (1 = most severe … 4 = least) → color token. Unknown → null.
+Color? severityColor(AppColors c, int? severity) => switch (severity) {
+  1 => c.error,
+  2 => c.caution,
+  3 => c.notice,
+  4 => c.textTertiary,
+  _ => null,
+};
+
 /// Provider-specific priority label (design prioTextFor).
 String priorityLabel(ProviderType prov, Priority p) {
   final lv = p.level;

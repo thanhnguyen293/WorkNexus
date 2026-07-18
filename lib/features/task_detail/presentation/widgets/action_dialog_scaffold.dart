@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 
 /// Users the ticket can be (re)assigned to, fetched from its provider.
 final providerUsersProvider = FutureProvider.family<List<ProviderUser>, String>(
@@ -59,27 +60,14 @@ class ActionScaffold extends StatelessWidget {
       ),
       content: SizedBox(width: 420, child: child),
       actions: [
-        TextButton(
+        AppButton.textNeutral(
           onPressed: busy ? null : () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(foregroundColor: c.textSecondary),
           child: const Text('Cancel'),
         ),
-        FilledButton(
+        AppButton.filled(
+          isLoading: busy,
           onPressed: (busy || !canSubmit) ? null : onSubmit,
-          style: FilledButton.styleFrom(
-            backgroundColor: c.accent,
-            foregroundColor: c.onAccent,
-          ),
-          child: busy
-              ? SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: c.onAccent,
-                  ),
-                )
-              : Text(submitLabel),
+          child: Text(submitLabel),
         ),
       ],
     );

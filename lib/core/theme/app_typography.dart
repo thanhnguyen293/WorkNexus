@@ -89,7 +89,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
   // ---- Badges (mono, tight line height) ----
   TextStyle get badge => const TextStyle(
     fontSize: 10,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w500,
     fontFamily: kMonoFont,
     height: 1,
   );

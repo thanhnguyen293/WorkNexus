@@ -139,6 +139,17 @@ class ActivityRow extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (event.attachments.isNotEmpty) ...[
+                  SizedBox(height: context.spacing.sm),
+                  Wrap(
+                    spacing: context.spacing.xs,
+                    runSpacing: context.spacing.xs,
+                    children: [
+                      for (final name in event.attachments)
+                        _AttachmentChip(name),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -146,6 +157,46 @@ class ActivityRow extends StatelessWidget {
           Text(
             formatWhen(context, event.at),
             style: context.typography.monoXs.copyWith(color: c.textTertiary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A read-only chip naming a file attached in a state-change comment (e.g. a
+/// reopen with an added screen recording).
+class _AttachmentChip extends StatelessWidget {
+  const _AttachmentChip(this.name);
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.sm,
+        vertical: context.spacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: c.surfaceSubtle,
+        borderRadius: BorderRadius.circular(context.radii.sm),
+        border: Border.all(color: c.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.attach_file, size: 12, color: c.textTertiary),
+          SizedBox(width: context.spacing.xs),
+          Flexible(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.captionSm.copyWith(
+                color: c.textSecondary,
+              ),
+            ),
           ),
         ],
       ),

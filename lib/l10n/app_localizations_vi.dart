@@ -244,6 +244,15 @@ class AppL10nVi extends AppL10n {
   String get densityCompact => 'Gọn';
 
   @override
+  String get detailLayout => 'Bố cục chi tiết';
+
+  @override
+  String get layoutTwoPane => 'Hai cột';
+
+  @override
+  String get layoutDocument => 'Tài liệu';
+
+  @override
   String get companyTint => 'Màu công ty';
 
   @override
@@ -260,4 +269,149 @@ class AppL10nVi extends AppL10n {
 
   @override
   String get chooseUiFont => 'Chọn phông chữ giao diện';
+
+  @override
+  String get cornerRadius => 'Bo góc';
+
+  @override
+  String get primaryColor => 'Màu chủ đạo';
+
+  @override
+  String get colorDefault => 'Mặc định';
+
+  @override
+  String get projects => 'Dự án';
+
+  @override
+  String get pinProject => 'Ghim dự án';
+
+  @override
+  String get unpinProject => 'Bỏ ghim dự án';
+
+  @override
+  String get loadingProjects => 'Đang tải dự án…';
+
+  @override
+  String get projectsUnavailable => 'Không tải được dự án';
+
+  @override
+  String get projectOpenFailed => 'Không mở được dự án';
+
+  @override
+  String get close => 'Đóng';
+
+  @override
+  String get download => 'Tải xuống';
+
+  @override
+  String get attachments => 'Tệp đính kèm';
+
+  @override
+  String get savedToDownloads => 'Đã lưu vào thư mục Downloads';
+
+  @override
+  String get saveFailed => 'Không lưu được tệp';
+
+  @override
+  String get attachmentLoadFailed => 'Không tải được tệp đính kèm';
+
+  @override
+  String get previewUnavailable => 'Không xem trước được loại tệp này';
+
+  @override
+  String get confirmed => 'Đã xác nhận';
+
+  @override
+  String reopenedTimes(int count) {
+    return 'Mở lại ×$count';
+  }
+
+  @override
+  String get openedBy => 'Người mở';
+
+  @override
+  String get assignedTo => 'Được giao cho';
+
+  @override
+  String get lastEdited => 'Sửa lần cuối';
+
+  @override
+  String get classification => 'Phân loại';
+
+  @override
+  String get lifecycle => 'Vòng đời';
+
+  @override
+  String showEmptyFields(int count) {
+    return 'Hiện $count trường trống';
+  }
+
+  @override
+  String get hideEmptyFields => 'Ẩn trường trống';
+
+  @override
+  String get stepsToReproduce => 'Các bước tái hiện';
+
+  @override
+  String get actualResult => 'Kết quả thực tế';
+
+  @override
+  String get expectedResult => 'Kết quả mong đợi';
+
+  @override
+  String get fieldProduct => 'Sản phẩm';
+
+  @override
+  String get fieldExecution => 'Bản thực thi';
+
+  @override
+  String get fieldModule => 'Mô-đun';
+
+  @override
+  String get fieldBranch => 'Nhánh';
+
+  @override
+  String get fieldType => 'Loại lỗi';
+
+  @override
+  String get fieldSeverity => 'Mức độ';
+
+  @override
+  String get fieldPlan => 'Kế hoạch';
+
+  @override
+  String get fieldStory => 'Story';
+
+  @override
+  String get fieldOs => 'Hệ điều hành';
+
+  @override
+  String get fieldBrowser => 'Trình duyệt';
+
+  @override
+  String get fieldOpenedBuild => 'Bản phát hiện';
+
+  @override
+  String get fieldOpened => 'Ngày mở';
+
+  @override
+  String get fieldAssigned => 'Ngày giao';
+
+  @override
+  String get fieldDeadline => 'Hạn chót';
+
+  @override
+  String get fieldResolvedBy => 'Người xử lý';
+
+  @override
+  String get fieldResolved => 'Ngày xử lý';
+
+  @override
+  String get fieldResolvedBuild => 'Bản sửa';
+
+  @override
+  String get fieldClosedBy => 'Người đóng';
+
+  @override
+  String get fieldClosed => 'Ngày đóng';
 }

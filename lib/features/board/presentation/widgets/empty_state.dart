@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 
@@ -53,16 +54,8 @@ class EmptyState extends ConsumerWidget {
             ),
           ),
           SizedBox(height: context.spacing.xl3),
-          FilledButton(
+          AppButton.filled(
             onPressed: () => ref.read(filterStateProvider.notifier).clearAll(),
-            style: FilledButton.styleFrom(
-              backgroundColor: c.accent,
-              foregroundColor: c.onAccent,
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.xl2,
-                vertical: context.spacing.md,
-              ),
-            ),
             child: Text(l.clearAllFilters),
           ),
         ],

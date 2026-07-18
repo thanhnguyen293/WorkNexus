@@ -27,6 +27,10 @@ dependencies:
   html2md: 1.3.2
   cached_network_image: 3.4.1
   two_dimensional_scrollables: 0.5.3
+  # In-app attachment preview (repro videos). The macOS backend
+  # (video_player_avfoundation) is a standard method-channel plugin — not a
+  # native-assets/FFI build hook — so it does not affect build_runner.
+  video_player: 2.9.2
 
   # State management & DI
   flutter_riverpod: 3.3.2

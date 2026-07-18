@@ -60,11 +60,36 @@ void main() {
       'Theme',
       'Surface',
       'Density',
+      'Detail layout',
       'Company tint',
       'Font',
     ]) {
       expect(find.text(label), findsOneWidget);
     }
+  });
+
+  testWidgets('detail layout toggle updates settings and keeps popover open', (
+    tester,
+  ) async {
+    final container = await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    expect(
+      container.read(appSettingsProvider).detailLayout,
+      DetailLayout.twoPane,
+    );
+
+    await tester.tap(find.text('Document'));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(appSettingsProvider).detailLayout,
+      DetailLayout.document,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('quick-settings-panel')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('quick settings uses the compact inspector treatment', (
@@ -86,7 +111,10 @@ void main() {
 
     final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
     expect(tester.getSize(panel).width, lessThanOrEqualTo(300));
-    expect(tester.getSize(panel).height, lessThan(300));
+    // Compact popover: hosts the appearance controls (incl. the primary-color
+    // palette + radius) but stays well short of a full settings page and its
+    // ~500px max height; scrolls if the viewport is shorter.
+    expect(tester.getSize(panel).height, lessThan(470));
     expect(find.text('Appearance'), findsNothing);
     expect(
       (tester.getCenter(find.text('Language')).dy -

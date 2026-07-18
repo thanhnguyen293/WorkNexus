@@ -12,5 +12,6 @@ abstract class ActivityEvent with _$ActivityEvent {
     required String action,
     required DateTime at,
     String? detail,
+    @Default(<String>[]) List<String> attachments,
   }) = _ActivityEvent;
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 
 class NonFixResolutionDialog extends StatefulWidget {
@@ -48,11 +49,11 @@ class _NonFixResolutionDialogState extends State<NonFixResolutionDialog> {
         onChanged: (value) => setState(() => _resolution = value),
       ),
       actions: [
-        TextButton(
+        AppButton.textNeutral(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
+        AppButton.filled(
           onPressed: _resolution == null
               ? null
               : () => Navigator.of(context).pop(_resolution),

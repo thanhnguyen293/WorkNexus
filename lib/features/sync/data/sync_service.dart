@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 
 import '../../../core/database/database.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/project.dart';
+import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
@@ -13,6 +16,25 @@ import '../../../core/platform/credential_store.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
+
+/// Prefix of synthetic board-membership labels added at list-sync time (e.g.
+/// `zentao-product:<id>`) that the provider's detail endpoint doesn't return.
+/// The product board filters on these, so a detail refresh must keep them.
+const String kSyntheticLabelPrefix = 'zentao-product:';
+
+/// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
+/// labels ([kSyntheticLabelPrefix]) carried on the already-stored
+/// [existingLabels]. The detail endpoint omits those synthetic labels, so
+/// without this a detail refresh would silently drop the ticket from its board.
+List<String> mergeDetailLabels(
+  List<String> detailLabels,
+  List<String> existingLabels,
+) {
+  final preserved = existingLabels.where(
+    (l) => l.startsWith(kSyntheticLabelPrefix) && !detailLabels.contains(l),
+  );
+  return [...detailLabels, ...preserved];
+}
 
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
@@ -103,10 +125,15 @@ class SyncService {
     final detail = await adapter.getTicket(ticket);
     if (detail case Ok(:final value)) {
       // Keep the local identity/scope stable; refresh only the content fields.
+      // Carry forward synthetic board-membership labels (e.g.
+      // `zentao-product:<id>`, added by the product-board sync): the detail
+      // endpoint doesn't return them, so dropping them would silently remove
+      // the ticket from its product board the moment its detail is opened.
       final merged = value.copyWith(
         id: ticket.id,
         accountId: ticket.accountId,
         projectId: ticket.projectId,
+        labels: mergeDetailLabels(value.labels, ticket.labels),
       );
       await _db
           .into(_db.tickets)
@@ -291,6 +318,53 @@ class SyncService {
       return null;
     }
   }
+
+  /// Downloads a ticket [attachment] through the account's authenticated client
+  /// into a per-session temp cache and returns the local file path, so the
+  /// in-app viewer can display images/videos directly. Returns null if the
+  /// account lacks credentials or the download fails.
+  Future<String?> cacheAttachment(Ticket ticket, TicketAttachment att) async {
+    final client = await _zenClientFor(ticket.accountId);
+    if (client == null) return null;
+    try {
+      final dir = Directory(
+        '${Directory.systemTemp.path}/worknexus_attachments',
+      );
+      await dir.create(recursive: true);
+      final file = File('${dir.path}/${att.id}_${_safeName(att.title)}');
+      // Reuse an already-downloaded file (viewer reopen, download after view).
+      if (await file.exists() && await file.length() > 0) return file.path;
+      final bytes = await client.downloadBytes(att.url);
+      if (bytes == null) return null;
+      await file.writeAsBytes(bytes, flush: true);
+      return file.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Copies an already-[cachedPath] attachment into the user's Downloads folder
+  /// and reveals it in Finder. Returns the saved path, or null on failure.
+  Future<String?> saveAttachmentToDownloads(
+    String cachedPath,
+    String name,
+  ) async {
+    try {
+      final home = Platform.environment['HOME'];
+      if (home == null) return null;
+      final downloads = Directory('$home/Downloads');
+      if (!await downloads.exists()) return null;
+      final dest = File('${downloads.path}/${_safeName(name)}');
+      await File(cachedPath).copy(dest.path);
+      await Process.run('open', ['-R', dest.path]);
+      return dest.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _safeName(String name) =>
+      name.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_');
 
   Future<ZenTaoClient?> _zenClientFor(String accountId) async {
     final cached = _zenClients[accountId];

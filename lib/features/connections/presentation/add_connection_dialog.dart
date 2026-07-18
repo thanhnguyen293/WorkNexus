@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import 'connection_controllers.dart';
 
@@ -149,17 +150,15 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  AppButton.textNeutral(
                     onPressed: state.busy
                         ? null
                         : () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: c.textSecondary,
-                    ),
                     child: const Text('Cancel'),
                   ),
                   SizedBox(width: context.spacing.md),
-                  FilledButton(
+                  AppButton.filled(
+                    isLoading: state.busy,
                     onPressed: _canConnect(state)
                         ? () => ref
                               .read(addConnectionControllerProvider.notifier)
@@ -175,20 +174,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                                     : null,
                               )
                         : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: c.accent,
-                      foregroundColor: c.onAccent,
-                    ),
-                    child: state.busy
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: c.onAccent,
-                            ),
-                          )
-                        : const Text('Connect & sync'),
+                    child: const Text('Connect & sync'),
                   ),
                 ],
               ),

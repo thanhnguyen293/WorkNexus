@@ -29,6 +29,39 @@ class SidebarSectionLabel extends StatelessWidget {
   }
 }
 
+/// One indentation level of the sources tree: a left guide rail with the child
+/// inset beside it. [strong] uses the heavier border for top-level branches.
+class SidebarTreeBranch extends StatelessWidget {
+  const SidebarTreeBranch({
+    super.key,
+    required this.child,
+    this.strong = false,
+  });
+
+  final Widget child;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: context.spacing.md,
+        top: context.spacing.xxs,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: strong ? c.borderStrong : c.border),
+          ),
+        ),
+        padding: EdgeInsets.only(left: context.spacing.md),
+        child: child,
+      ),
+    );
+  }
+}
+
 /// A tappable sidebar row with leading glyph, label and a trailing count.
 class SidebarNavRow extends StatelessWidget {
   const SidebarNavRow({

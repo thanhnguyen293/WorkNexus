@@ -143,6 +143,9 @@ ActivityEvent activityFromRow(ActivityRow r) => ActivityEvent(
   action: r.action,
   at: r.at,
   detail: r.detail,
+  attachments: r.attachmentsJson == null
+      ? const []
+      : decodeLabels(r.attachmentsJson!),
 );
 
 ActivitiesCompanion activityToCompanion(ActivityEvent e) =>
@@ -153,6 +156,9 @@ ActivitiesCompanion activityToCompanion(ActivityEvent e) =>
       action: e.action,
       at: e.at,
       detail: Value(e.detail),
+      attachmentsJson: Value(
+        e.attachments.isEmpty ? null : encodeLabels(e.attachments),
+      ),
     );
 
 TranslationRecord translationFromRow(TranslationRow r) => TranslationRecord(
@@ -189,9 +195,17 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   ),
   surface: _enumByName(SurfaceStyle.values, r.surface, SurfaceStyle.outline),
   density: _enumByName(AppDensity.values, r.density, AppDensity.comfortable),
+  detailLayout: _enumByName(
+    DetailLayout.values,
+    r.detailLayout,
+    DetailLayout.twoPane,
+  ),
   companyTint: r.companyTint,
   locale: Locale(r.localeCode),
   fontFamily: r.fontFamily,
+  componentRadius: r.componentRadius,
+  accentColorValue: r.accentColorValue,
+  pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -199,9 +213,13 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   variant: Value(s.variant.name),
   surface: Value(s.surface.name),
   density: Value(s.density.name),
+  detailLayout: Value(s.detailLayout.name),
   companyTint: Value(s.companyTint),
   localeCode: Value(s.locale.languageCode),
   fontFamily: Value(s.fontFamily),
+  componentRadius: Value(s.componentRadius),
+  accentColorValue: Value(s.accentColorValue),
+  pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
 );
 
 TicketProviderEntity? decodeProviderEntity(String? raw) {

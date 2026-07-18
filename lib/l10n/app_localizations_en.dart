@@ -244,6 +244,15 @@ class AppL10nEn extends AppL10n {
   String get densityCompact => 'Compact';
 
   @override
+  String get detailLayout => 'Detail layout';
+
+  @override
+  String get layoutTwoPane => 'Two pane';
+
+  @override
+  String get layoutDocument => 'Document';
+
+  @override
   String get companyTint => 'Company tint';
 
   @override
@@ -260,4 +269,150 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get chooseUiFont => 'Choose UI font';
+
+  @override
+  String get cornerRadius => 'Corner radius';
+
+  @override
+  String get primaryColor => 'Primary color';
+
+  @override
+  String get colorDefault => 'Default';
+
+  @override
+  String get projects => 'Projects';
+
+  @override
+  String get pinProject => 'Pin project';
+
+  @override
+  String get unpinProject => 'Unpin project';
+
+  @override
+  String get loadingProjects => 'Loading projects…';
+
+  @override
+  String get projectsUnavailable => 'Can\'t load projects';
+
+  @override
+  String get projectOpenFailed => 'Couldn\'t open project';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get attachments => 'Attachments';
+
+  @override
+  String get savedToDownloads => 'Saved to Downloads';
+
+  @override
+  String get saveFailed => 'Couldn\'t save the file';
+
+  @override
+  String get attachmentLoadFailed => 'Couldn\'t load the attachment';
+
+  @override
+  String get previewUnavailable =>
+      'Preview isn\'t available for this file type';
+
+  @override
+  String get confirmed => 'Confirmed';
+
+  @override
+  String reopenedTimes(int count) {
+    return 'Reopened ×$count';
+  }
+
+  @override
+  String get openedBy => 'Opened by';
+
+  @override
+  String get assignedTo => 'Assigned to';
+
+  @override
+  String get lastEdited => 'Last edited';
+
+  @override
+  String get classification => 'Classification';
+
+  @override
+  String get lifecycle => 'Lifecycle';
+
+  @override
+  String showEmptyFields(int count) {
+    return 'Show $count empty fields';
+  }
+
+  @override
+  String get hideEmptyFields => 'Hide empty fields';
+
+  @override
+  String get stepsToReproduce => 'Steps to reproduce';
+
+  @override
+  String get actualResult => 'Actual result';
+
+  @override
+  String get expectedResult => 'Expected result';
+
+  @override
+  String get fieldProduct => 'Product';
+
+  @override
+  String get fieldExecution => 'Execution';
+
+  @override
+  String get fieldModule => 'Module';
+
+  @override
+  String get fieldBranch => 'Branch';
+
+  @override
+  String get fieldType => 'Type';
+
+  @override
+  String get fieldSeverity => 'Severity';
+
+  @override
+  String get fieldPlan => 'Plan';
+
+  @override
+  String get fieldStory => 'Story';
+
+  @override
+  String get fieldOs => 'OS';
+
+  @override
+  String get fieldBrowser => 'Browser';
+
+  @override
+  String get fieldOpenedBuild => 'Opened build';
+
+  @override
+  String get fieldOpened => 'Opened';
+
+  @override
+  String get fieldAssigned => 'Assigned';
+
+  @override
+  String get fieldDeadline => 'Deadline';
+
+  @override
+  String get fieldResolvedBy => 'Resolved by';
+
+  @override
+  String get fieldResolved => 'Resolved';
+
+  @override
+  String get fieldResolvedBuild => 'Resolved build';
+
+  @override
+  String get fieldClosedBy => 'Closed by';
+
+  @override
+  String get fieldClosed => 'Closed';
 }

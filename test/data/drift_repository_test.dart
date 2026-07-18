@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
+import 'package:work_nexus/core/domain/entities/activity_event.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/entities/workspace.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
@@ -152,6 +153,44 @@ void main() {
     expect(reloaded.companyTint, isTrue);
     expect(reloaded.locale.languageCode, 'vi');
     expect(reloaded.fontFamily, 'Georgia');
+  });
+
+  test('activity attachments round-trip through the DB', () async {
+    final event = ActivityEvent(
+      id: 'zt:1:99',
+      ticketId: 'zt:1',
+      actor: 'Becca',
+      action: 'activated',
+      at: DateTime(2026, 7, 16, 17, 42),
+      detail: 'Reopening this ticket.',
+      attachments: const ['10.mp4', 'log.txt'],
+    );
+    await db.into(db.activities).insert(activityToCompanion(event));
+
+    final rows = await db.select(db.activities).get();
+    final reloaded = activityFromRow(rows.single);
+    expect(reloaded.attachments, ['10.mp4', 'log.txt']);
+
+    // An event with no attachments stores null and reloads as an empty list.
+    await db
+        .into(db.activities)
+        .insert(
+          activityToCompanion(
+            ActivityEvent(
+              id: 'zt:1:100',
+              ticketId: 'zt:1',
+              actor: 'Ryan',
+              action: 'commented',
+              at: DateTime(2026, 7, 16, 18),
+            ),
+          ),
+        );
+    final plain = activityFromRow(
+      (await (db.select(
+        db.activities,
+      )..where((a) => a.id.equals('zt:1:100'))).getSingle()),
+    );
+    expect(plain.attachments, isEmpty);
   });
 
   test('system font sentinel persists unchanged', () async {

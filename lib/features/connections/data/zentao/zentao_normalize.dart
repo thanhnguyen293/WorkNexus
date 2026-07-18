@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/util/content_hash.dart';
+import '../../../../core/util/zentao_labels.dart';
 import 'zentao_models.dart';
 
 /// ZenTao object kinds we import.
@@ -102,18 +103,6 @@ DateTime? parseZenTaoDate(Object? value) {
   return DateTime.tryParse(s.replaceFirst(' ', 'T'));
 }
 
-/// ZenTao bug resolution codes → readable labels.
-const _bugResolutions = <String, String>{
-  'bydesign': 'By design',
-  'duplicate': 'Duplicate',
-  'external': 'External',
-  'fixed': 'Fixed',
-  'notrepro': 'Irreproducible',
-  'willnotfix': "Won't fix",
-  'postponed': 'Postponed',
-  'tostory': 'Converted to story',
-};
-
 /// Human-readable phrase for a ZenTao action/history record, rendered after the
 /// actor's name (e.g. "assigned to Thanh", "resolved · resolution: Fixed").
 /// Mirrors ZenTao's own history descriptions (assignee, resolution, …).
@@ -129,7 +118,7 @@ String zentaoActionText(ZenTaoAction action) {
       final to = accountName(extra);
       return (to == null || to.isEmpty) ? 'assigned' : 'assigned to $to';
     case 'resolved':
-      final r = _bugResolutions[extraStr.toLowerCase()] ?? extraStr;
+      final r = zentaoResolutionLabel(extraStr) ?? extraStr;
       return r.isEmpty ? 'resolved' : 'resolved · resolution: $r';
     case 'closed':
       return extraStr.isEmpty ? 'closed' : 'closed ($extraStr)';
@@ -145,6 +134,24 @@ String zentaoActionText(ZenTaoAction action) {
     default:
       return a.isEmpty ? 'updated' : a;
   }
+}
+
+/// Splits a ZenTao action comment into its attached-file names and the residual
+/// note. Reopen/resolve comments often lead with `Added Files <name>\r\n<html>`;
+/// we lift the file names onto the activity row as chips and strip that line
+/// from the note so it isn't repeated as prose.
+({List<String> files, String note}) zentaoActionAttachments(String comment) {
+  final trimmed = comment.trimLeft();
+  final match = RegExp(r'^Added Files\s+(.+?)(?:\r?\n|$)').firstMatch(trimmed);
+  if (match == null) return (files: const [], note: stripHtml(comment));
+  final names = match
+      .group(1)!
+      .split(',')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+  final rest = trimmed.substring(match.end);
+  return (files: names, note: stripHtml(rest));
 }
 
 /// `assignedTo` is an account object (REST v1) or a bare string (legacy).
@@ -226,52 +233,117 @@ Ticket normalizeZenTao(
     createdAt: parseZenTaoDate(e.openedDate),
     updatedAt: parseZenTaoDate(e.lastEditedDate),
     providerEntity: switch (type) {
-      ZenTaoType.bug => _zentaoBugEntity(e, resolution),
+      ZenTaoType.bug => _zentaoBugEntity(e, resolution, normalizedBase),
       ZenTaoType.task || ZenTaoType.story => null,
     },
     sourceHash: contentHash(title, body),
   );
 }
 
-TicketProviderEntity _zentaoBugEntity(ZenTaoEntity e, String resolution) =>
-    TicketProviderEntity.zentaoBug(
-      product: _text(e.product),
-      project: _text(e.project),
-      execution: _text(e.execution),
-      branch: _text(e.branch),
-      module: _text(e.module),
-      story: _text(e.story),
-      task: _text(e.task),
-      plan: _text(e.plan),
-      productName: _text(e.productName),
-      projectName: _text(e.projectName),
-      executionName: _text(e.executionName),
-      storyTitle: _text(e.storyTitle),
-      taskName: _text(e.taskName),
-      planName: _text(e.planName),
-      bugType: _text(e.type),
-      os: _text(e.os),
-      browser: _text(e.browser),
-      confirmed: e.confirmed,
-      severity: e.severity,
-      resolution: resolution.isEmpty ? null : resolution,
-      openedBy: accountName(e.openedBy),
-      openedDate: parseZenTaoDate(e.openedDate),
-      openedBuild: _text(e.openedBuild),
-      assignedTo: accountName(e.assignedTo),
-      assignedDate: parseZenTaoDate(e.assignedDate),
-      deadline: _text(e.deadline),
-      resolvedBy: accountName(e.resolvedBy),
-      resolvedDate: parseZenTaoDate(e.resolvedDate),
-      resolvedBuild: _text(e.resolvedBuild),
-      closedBy: accountName(e.closedBy),
-      closedDate: parseZenTaoDate(e.closedDate),
-      lastEditedBy: accountName(e.lastEditedBy),
-      lastEditedDate: parseZenTaoDate(e.lastEditedDate),
+TicketProviderEntity _zentaoBugEntity(
+  ZenTaoEntity e,
+  String resolution,
+  String baseUrl,
+) => TicketProviderEntity.zentaoBug(
+  product: _text(e.product),
+  project: _text(e.project),
+  execution: _text(e.execution),
+  branch: _text(e.branch),
+  module: _text(e.module),
+  story: _text(e.story),
+  task: _text(e.task),
+  plan: _text(e.plan),
+  productName: _text(e.productName),
+  projectName: _text(e.projectName),
+  executionName: _text(e.executionName),
+  storyTitle: _text(e.storyTitle),
+  taskName: _text(e.taskName),
+  planName: _text(e.planName),
+  bugType: _text(e.type),
+  os: _text(e.os),
+  browser: _text(e.browser),
+  confirmed: e.confirmed,
+  severity: e.severity,
+  activatedCount: e.activatedCount,
+  resolution: resolution.isEmpty ? null : resolution,
+  openedBy: accountName(e.openedBy),
+  openedDate: parseZenTaoDate(e.openedDate),
+  openedBuild: formatZenTaoBuild(e.openedBuild),
+  assignedTo: accountName(e.assignedTo),
+  assignedDate: parseZenTaoDate(e.assignedDate),
+  deadline: _text(e.deadline),
+  resolvedBy: accountName(e.resolvedBy),
+  resolvedDate: parseZenTaoDate(e.resolvedDate),
+  resolvedBuild: formatZenTaoBuild(e.resolvedBuild),
+  closedBy: accountName(e.closedBy),
+  closedDate: parseZenTaoDate(e.closedDate),
+  lastEditedBy: accountName(e.lastEditedBy),
+  lastEditedDate: parseZenTaoDate(e.lastEditedDate),
+  attachments: _attachments(e, baseUrl),
+);
+
+/// Maps ZenTao's id-keyed `files` map onto domain [TicketAttachment]s. Prefers
+/// the payload's absolute `url`; falls back to the classic
+/// `{base}/file-download-{id}.{ext}` when it's missing.
+List<TicketAttachment> _attachments(ZenTaoEntity e, String baseUrl) {
+  final base = baseUrl.endsWith('/')
+      ? baseUrl.substring(0, baseUrl.length - 1)
+      : baseUrl;
+  final out = <TicketAttachment>[];
+  for (final f in e.files) {
+    final id = f.id?.toString() ?? '';
+    if (id.isEmpty) continue;
+    final ext = _text(f.extension)?.toLowerCase();
+    final title =
+        _text(f.title) ??
+        _text(f.name) ??
+        (ext == null ? 'file-$id' : 'file-$id.$ext');
+    final url =
+        _text(f.url) ?? '$base/file-download-$id${ext == null ? '' : '.$ext'}';
+    out.add(
+      TicketAttachment(
+        id: id,
+        title: title,
+        url: url,
+        extension: ext,
+        size: f.size,
+        addedBy: _text(f.addedBy),
+        addedDate: parseZenTaoDate(f.addedDate),
+      ),
     );
+  }
+  return out;
+}
 
 String? _text(Object? value) {
   if (value == null) return null;
   final text = value.toString().trim();
   return text.isEmpty ? null : text;
+}
+
+/// Formats ZenTao's `openedBuild`/`resolvedBuild`, which arrives as a build
+/// object (or list of them) like `[{id: trunk, title: 主干}]`. Renders each as
+/// `Trunk · 主干` (capitalised id · localized title); falls back to plain text.
+String? formatZenTaoBuild(Object? value) {
+  if (value == null) return null;
+  if (value is List) {
+    final parts = value
+        .map(_buildLabel)
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+  final single = _buildLabel(value);
+  return (single == null || single.isEmpty) ? _text(value) : single;
+}
+
+String? _buildLabel(Object? v) {
+  if (v is Map) {
+    final id = (v['id']?.toString() ?? '').trim();
+    final title = (v['title']?.toString() ?? '').trim();
+    final idCap = id.isEmpty ? '' : id[0].toUpperCase() + id.substring(1);
+    return [idCap, title].where((s) => s.isNotEmpty).join(' · ');
+  }
+  return v?.toString().trim();
 }

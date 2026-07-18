@@ -8,6 +8,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/fonts.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../translation/presentation/translation_providers.dart';
 
@@ -23,23 +24,12 @@ class TranslationFooter extends ConsumerWidget {
     final state = ref.watch(translationStatusProvider(ticketId)).state;
     final loading = state == TranslationState.loading;
 
-    String label;
-    Color bg;
-    Color fg = c.onAccent;
-    if (loading) {
-      label = l.translating;
-      bg = c.accent;
-    } else if (state == TranslationState.error) {
-      label = 'Retry';
-      bg = c.error;
-    } else if (state == TranslationState.none) {
-      label = l.translate;
-      bg = c.accent;
-    } else {
-      label = l.retranslate;
-      bg = c.surfaceSubtle;
-      fg = c.textPrimary;
-    }
+    final (AppButtonVariant variant, String label) = switch (state) {
+      TranslationState.loading => (AppButtonVariant.filled, l.translating),
+      TranslationState.error => (AppButtonVariant.error, 'Retry'),
+      TranslationState.none => (AppButtonVariant.filled, l.translate),
+      _ => (AppButtonVariant.filledNeutral, l.retranslate),
+    };
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -52,36 +42,13 @@ class TranslationFooter extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          FilledButton(
+          AppButton(
+            style: variant.style(context),
+            isLoading: loading,
             onPressed: loading
                 ? null
                 : () => translateWithOpenCode(context, ref, ticketId),
-            style: FilledButton.styleFrom(
-              backgroundColor: bg,
-              foregroundColor: fg,
-              disabledBackgroundColor: c.accent.withValues(alpha: 0.6),
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.xl2,
-                vertical: context.spacing.xl,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (loading) ...[
-                  SizedBox(
-                    width: 13,
-                    height: 13,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: c.onAccent,
-                    ),
-                  ),
-                  SizedBox(width: context.spacing.md),
-                ],
-                Text(label),
-              ],
-            ),
+            child: Text(label),
           ),
           SizedBox(width: context.spacing.lg),
           Expanded(
@@ -186,12 +153,8 @@ class _OpenCodeNotLinkedDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        FilledButton(
+        AppButton.filled(
           onPressed: () => Navigator.of(context).pop(),
-          style: FilledButton.styleFrom(
-            backgroundColor: c.accent,
-            foregroundColor: c.onAccent,
-          ),
           child: const Text('Got it'),
         ),
       ],

@@ -559,6 +559,24 @@ abstract class AppL10n {
   /// **'Compact'**
   String get densityCompact;
 
+  /// No description provided for @detailLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Detail layout'**
+  String get detailLayout;
+
+  /// No description provided for @layoutTwoPane.
+  ///
+  /// In en, this message translates to:
+  /// **'Two pane'**
+  String get layoutTwoPane;
+
+  /// No description provided for @layoutDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get layoutDocument;
+
   /// No description provided for @companyTint.
   ///
   /// In en, this message translates to:
@@ -594,6 +612,288 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Choose UI font'**
   String get chooseUiFont;
+
+  /// No description provided for @cornerRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Corner radius'**
+  String get cornerRadius;
+
+  /// No description provided for @primaryColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary color'**
+  String get primaryColor;
+
+  /// No description provided for @colorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get colorDefault;
+
+  /// No description provided for @projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get projects;
+
+  /// No description provided for @pinProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin project'**
+  String get pinProject;
+
+  /// No description provided for @unpinProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin project'**
+  String get unpinProject;
+
+  /// No description provided for @loadingProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading projects…'**
+  String get loadingProjects;
+
+  /// No description provided for @projectsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t load projects'**
+  String get projectsUnavailable;
+
+  /// No description provided for @projectOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open project'**
+  String get projectOpenFailed;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @attachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get attachments;
+
+  /// No description provided for @savedToDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Downloads'**
+  String get savedToDownloads;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the file'**
+  String get saveFailed;
+
+  /// No description provided for @attachmentLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the attachment'**
+  String get attachmentLoadFailed;
+
+  /// No description provided for @previewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview isn\'t available for this file type'**
+  String get previewUnavailable;
+
+  /// No description provided for @confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get confirmed;
+
+  /// No description provided for @reopenedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopened ×{count}'**
+  String reopenedTimes(int count);
+
+  /// No description provided for @openedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened by'**
+  String get openedBy;
+
+  /// No description provided for @assignedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to'**
+  String get assignedTo;
+
+  /// No description provided for @lastEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Last edited'**
+  String get lastEdited;
+
+  /// No description provided for @classification.
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get classification;
+
+  /// No description provided for @lifecycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifecycle'**
+  String get lifecycle;
+
+  /// No description provided for @showEmptyFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} empty fields'**
+  String showEmptyFields(int count);
+
+  /// No description provided for @hideEmptyFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide empty fields'**
+  String get hideEmptyFields;
+
+  /// No description provided for @stepsToReproduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps to reproduce'**
+  String get stepsToReproduce;
+
+  /// No description provided for @actualResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual result'**
+  String get actualResult;
+
+  /// No description provided for @expectedResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected result'**
+  String get expectedResult;
+
+  /// No description provided for @fieldProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get fieldProduct;
+
+  /// No description provided for @fieldExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Execution'**
+  String get fieldExecution;
+
+  /// No description provided for @fieldModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Module'**
+  String get fieldModule;
+
+  /// No description provided for @fieldBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch'**
+  String get fieldBranch;
+
+  /// No description provided for @fieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get fieldType;
+
+  /// No description provided for @fieldSeverity.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity'**
+  String get fieldSeverity;
+
+  /// No description provided for @fieldPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get fieldPlan;
+
+  /// No description provided for @fieldStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get fieldStory;
+
+  /// No description provided for @fieldOs.
+  ///
+  /// In en, this message translates to:
+  /// **'OS'**
+  String get fieldOs;
+
+  /// No description provided for @fieldBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser'**
+  String get fieldBrowser;
+
+  /// No description provided for @fieldOpenedBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened build'**
+  String get fieldOpenedBuild;
+
+  /// No description provided for @fieldOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get fieldOpened;
+
+  /// No description provided for @fieldAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get fieldAssigned;
+
+  /// No description provided for @fieldDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline'**
+  String get fieldDeadline;
+
+  /// No description provided for @fieldResolvedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved by'**
+  String get fieldResolvedBy;
+
+  /// No description provided for @fieldResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get fieldResolved;
+
+  /// No description provided for @fieldResolvedBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved build'**
+  String get fieldResolvedBuild;
+
+  /// No description provided for @fieldClosedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed by'**
+  String get fieldClosedBy;
+
+  /// No description provided for @fieldClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get fieldClosed;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

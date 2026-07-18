@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_button.dart';
 import 'widgets/assign_dialog.dart';
 import 'widgets/resolve_dialog.dart';
 
@@ -61,19 +60,16 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return OutlinedButton.icon(
+    return AppButton.outlinedNeutral(
+      size: AppButtonSize.small,
       onPressed: onTap,
-      icon: Icon(icon, size: 15),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: c.textPrimary,
-        side: BorderSide(color: c.borderStrong),
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.xl,
-          vertical: context.spacing.md,
-        ),
-        textStyle: context.typography.secondaryStrong,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15),
+          SizedBox(width: context.spacing.sm),
+          Text(label),
+        ],
       ),
     );
   }

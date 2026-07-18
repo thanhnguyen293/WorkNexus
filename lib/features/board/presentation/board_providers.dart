@@ -129,15 +129,23 @@ class TicketActionPending extends Notifier<Set<String>> {
 final ticketActionPendingProvider =
     NotifierProvider<TicketActionPending, Set<String>>(TicketActionPending.new);
 
-class ZenTaoProductsExpanded extends Notifier<bool> {
+/// Which ZenTao accounts have their collapsible "Projects" group expanded.
+/// Empty by default, so every group starts collapsed.
+class ZenTaoProjectsExpanded extends Notifier<Set<String>> {
   @override
-  bool build() => false;
+  Set<String> build() => const <String>{};
 
-  void toggle() => state = !state;
+  void toggle(String accountId) {
+    final next = Set<String>.of(state);
+    next.contains(accountId) ? next.remove(accountId) : next.add(accountId);
+    state = next;
+  }
 }
 
-final zentaoProductsExpandedProvider =
-    NotifierProvider<ZenTaoProductsExpanded, bool>(ZenTaoProductsExpanded.new);
+final zentaoProjectsExpandedProvider =
+    NotifierProvider<ZenTaoProjectsExpanded, Set<String>>(
+      ZenTaoProjectsExpanded.new,
+    );
 
 class ZenTaoProductSyncing extends Notifier<String?> {
   @override
