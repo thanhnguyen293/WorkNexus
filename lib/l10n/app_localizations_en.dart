@@ -75,6 +75,12 @@ class AppL10nEn extends AppL10n {
   String get noBoardFilters => 'No filters for this board';
 
   @override
+  String get assignedToMe => 'Assigned to me';
+
+  @override
+  String get resolvedByMe => 'Resolved by me';
+
+  @override
   String get filters => 'Filters';
 
   @override

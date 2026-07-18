@@ -22,6 +22,8 @@
   "resolution": "Cách xử lý",
   "unassigned": "Chưa gán",
   "noBoardFilters": "Bảng này chưa có bộ lọc",
+  "assignedToMe": "Giao cho tôi",
+  "resolvedByMe": "Tôi đã xử lý",
   "filters": "Bộ lọc",
   "hide": "Ẩn",
   "clear": "Xóa",

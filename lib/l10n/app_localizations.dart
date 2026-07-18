@@ -229,6 +229,18 @@ abstract class AppL10n {
   /// **'No filters for this board'**
   String get noBoardFilters;
 
+  /// No description provided for @assignedToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to me'**
+  String get assignedToMe;
+
+  /// No description provided for @resolvedByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved by me'**
+  String get resolvedByMe;
+
   /// No description provided for @filters.
   ///
   /// In en, this message translates to:

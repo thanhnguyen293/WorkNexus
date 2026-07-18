@@ -76,6 +76,10 @@ class FilterController extends Notifier<FilterState> {
       state = state.copyWith(bugTypes: _toggle(state.bugTypes, t));
   void toggleResolution(String r) =>
       state = state.copyWith(resolutions: _toggle(state.resolutions, r));
+  void toggleAssignedToMe() =>
+      state = state.copyWith(assignedToMe: !state.assignedToMe);
+  void toggleResolvedByMe() =>
+      state = state.copyWith(resolvedByMe: !state.resolvedByMe);
 
   void clearAll() => state = state.copyWith(
     providers: {},
@@ -87,6 +91,8 @@ class FilterController extends Notifier<FilterState> {
     assignees: {},
     bugTypes: {},
     resolutions: {},
+    assignedToMe: false,
+    resolvedByMe: false,
     search: '',
   );
 
@@ -356,12 +362,21 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
 
 /// The query fed to the pure board/list use cases.
 final _boardQueryProvider = Provider<BoardQuery>((ref) {
+  // "Me" for the assigned/resolved-by-me quick filters: the handle of the
+  // account whose ZenTao board is in view (null off a ZenTao board).
+  final selectionAccountId =
+      ref.watch(selectedZenTaoExecutionProvider)?.accountId ??
+      ref.watch(selectedZenTaoProductProvider)?.accountId;
+  final me = selectionAccountId == null
+      ? null
+      : ref.watch(lookupsProvider).accounts[selectionAccountId]?.handle;
   return BoardQuery(
     tickets: ref.watch(_scopedTicketsProvider),
     filter: ref.watch(filterStateProvider),
     accountWorkspace: ref.watch(accountWorkspaceProvider),
     workspaceOrder: ref.watch(workspaceOrderProvider),
     now: DateTime.now(),
+    currentUserHandle: me,
   );
 });
 

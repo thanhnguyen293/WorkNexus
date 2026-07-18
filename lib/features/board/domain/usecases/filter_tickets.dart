@@ -14,6 +14,7 @@ class BoardQuery {
     required this.accountWorkspace,
     required this.now,
     this.workspaceOrder = const [],
+    this.currentUserHandle,
   });
 
   final List<Ticket> tickets;
@@ -27,6 +28,11 @@ class BoardQuery {
 
   /// Workspace ids in display order (for the List view sort).
   final List<String> workspaceOrder;
+
+  /// The handle of the account whose board is in view — the identity matched by
+  /// the "assigned to me" / "resolved by me" quick filters. Null off a ZenTao
+  /// board (those filters then no-op).
+  final String? currentUserHandle;
 }
 
 /// Whether a ticket satisfies a built-in saved view.
@@ -96,6 +102,17 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
         if (f.resolutions.isNotEmpty && !f.resolutions.contains(resolution)) {
           return false;
         }
+      }
+      final me = q.currentUserHandle?.toLowerCase();
+      if (f.assignedToMe && me != null) {
+        if ((t.assignee ?? '').toLowerCase() != me) return false;
+      }
+      if (f.resolvedByMe && me != null) {
+        final entity = t.providerEntity;
+        final resolvedBy = entity is ZenTaoBugEntity
+            ? (entity.resolvedBy ?? '').toLowerCase()
+            : '';
+        if (resolvedBy != me) return false;
       }
       if (query.isNotEmpty) {
         final hay = [

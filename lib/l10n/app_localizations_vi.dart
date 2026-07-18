@@ -75,6 +75,12 @@ class AppL10nVi extends AppL10n {
   String get noBoardFilters => 'Bảng này chưa có bộ lọc';
 
   @override
+  String get assignedToMe => 'Giao cho tôi';
+
+  @override
+  String get resolvedByMe => 'Tôi đã xử lý';
+
+  @override
   String get filters => 'Bộ lọc';
 
   @override

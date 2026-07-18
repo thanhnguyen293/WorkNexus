@@ -5,6 +5,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/agent_session.dart';
 import '../../../../core/domain/entities/dev_link.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/translation_state.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -14,7 +15,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
-import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../agents/presentation/agent_providers.dart';
 import '../../../task_detail/presentation/detail_providers.dart';
@@ -23,6 +23,7 @@ import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/usecases/derive_dev_context.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
+import 'ticket_card_meta.dart';
 
 /// A board card rendering one ticket, matching the editorial design.
 class TicketCard extends ConsumerWidget {
@@ -93,9 +94,13 @@ class TicketCard extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Flexible(
-                                  child: WorkspaceTag(wsColor, projectName),
-                                ),
+                                if (ticket.severity != null)
+                                  SeverityTag(ticket.severity!)
+                                else if (ticket.providerType !=
+                                    ProviderType.zentao)
+                                  Flexible(
+                                    child: WorkspaceTag(wsColor, projectName),
+                                  ),
                                 const Spacer(),
                                 PriorityTag(
                                   ticket.providerType,
@@ -125,30 +130,22 @@ class TicketCard extends ConsumerWidget {
                             SizedBox(height: context.spacing.md),
                             Row(
                               children: [
-                                ProviderBadge(ticket.providerType),
-                                SizedBox(width: context.spacing.sm),
                                 Expanded(
-                                  child: Text(
-                                    ticketRef(
-                                      ticket.providerType,
-                                      ticket.externalKey,
-                                      ticket.externalType,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.typography.mono.copyWith(
-                                      color: c.textSecondary,
-                                    ),
-                                  ),
+                                  child: AssigneeChip(ticket.assignee, wsColor),
                                 ),
                                 SizedBox(width: context.spacing.sm),
-                                TranslationDot(trStatus),
-                                SizedBox(width: context.spacing.sm),
                                 Text(
-                                  formatWhen(context, ticket.updatedAt),
+                                  ticketRef(
+                                    ticket.providerType,
+                                    ticket.externalKey,
+                                    ticket.externalType,
+                                  ),
                                   style: context.typography.monoXs.copyWith(
                                     color: c.textTertiary,
                                   ),
                                 ),
+                                SizedBox(width: context.spacing.sm),
+                                TranslationDot(trStatus),
                               ],
                             ),
                           ],

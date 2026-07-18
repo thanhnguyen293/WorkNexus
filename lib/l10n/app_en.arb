@@ -22,6 +22,8 @@
   "resolution": "Resolution",
   "unassigned": "Unassigned",
   "noBoardFilters": "No filters for this board",
+  "assignedToMe": "Assigned to me",
+  "resolvedByMe": "Resolved by me",
   "filters": "Filters",
   "hide": "Hide",
   "clear": "Clear",

@@ -103,3 +103,51 @@ class FilterOptionChip extends StatelessWidget {
     );
   }
 }
+
+/// A prominent icon+label quick-filter toggle (e.g. "Assigned to me"). Accent
+/// fill + border when [active].
+class FilterQuickToggle extends StatelessWidget {
+  const FilterQuickToggle({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+    super.key,
+  });
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final fg = active ? c.accent : c.textSecondary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 30,
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+        decoration: BoxDecoration(
+          color: active ? c.selectionFill : c.surfaceSubtle,
+          borderRadius: BorderRadius.circular(context.radii.md),
+          border: Border.all(color: active ? c.mixT(c.accent, 0.5) : c.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: fg),
+            SizedBox(width: context.spacing.xs),
+            Text(
+              label,
+              style: context.typography.meta.copyWith(
+                fontWeight: FontWeight.w600,
+                color: fg,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

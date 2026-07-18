@@ -80,34 +80,53 @@ class _FacetFilters extends ConsumerWidget {
     final f = ref.watch(filterStateProvider);
     final ctrl = ref.read(filterStateProvider.notifier);
     final facets = ref.watch(boardFacetsProvider);
-
-    if (facets.groups.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: context.spacing.xl),
-        child: Text(
-          l.noBoardFilters,
-          style: context.typography.meta.copyWith(color: c.textTertiary),
-        ),
-      );
-    }
+    final isBug = ref.watch(viewModeProvider) == ViewMode.zentaoBugs;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final g in facets.groups)
-          FilterGroup(
-            label: _facetHeader(l, g.kind),
+        Padding(
+          padding: EdgeInsets.only(bottom: context.spacing.xl),
+          child: Wrap(
+            spacing: context.spacing.sm,
+            runSpacing: context.spacing.sm,
             children: [
-              for (final o in g.options)
-                FilterOptionChip(
-                  label: _facetLabel(l, g.kind, o.value),
-                  count: o.count,
-                  active: _facetActive(f, g.kind, o.value),
-                  dotColor: _facetDot(c, g.kind, o.value),
-                  onTap: () => _facetToggle(ctrl, g.kind, o.value),
+              FilterQuickToggle(
+                icon: Icons.person_outline,
+                label: l.assignedToMe,
+                active: f.assignedToMe,
+                onTap: ctrl.toggleAssignedToMe,
+              ),
+              if (isBug)
+                FilterQuickToggle(
+                  icon: Icons.verified_outlined,
+                  label: l.resolvedByMe,
+                  active: f.resolvedByMe,
+                  onTap: ctrl.toggleResolvedByMe,
                 ),
             ],
           ),
+        ),
+        if (facets.groups.isEmpty)
+          Text(
+            l.noBoardFilters,
+            style: context.typography.meta.copyWith(color: c.textTertiary),
+          )
+        else
+          for (final g in facets.groups)
+            FilterGroup(
+              label: _facetHeader(l, g.kind),
+              children: [
+                for (final o in g.options)
+                  FilterOptionChip(
+                    label: _facetLabel(l, g.kind, o.value),
+                    count: o.count,
+                    active: _facetActive(f, g.kind, o.value),
+                    dotColor: _facetDot(c, g.kind, o.value),
+                    onTap: () => _facetToggle(ctrl, g.kind, o.value),
+                  ),
+              ],
+            ),
       ],
     );
   }
