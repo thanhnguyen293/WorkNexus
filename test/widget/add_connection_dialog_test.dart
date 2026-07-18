@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/connections/presentation/add_connection_dialog.dart';
 
+import '../support/di_test_harness.dart';
+
 void main() {
+  late AppDatabase db;
+
+  setUp(() async {
+    db = await setUpTestLocator();
+  });
+
+  tearDown(() async {
+    await resetTestLocator(db);
+  });
+
   testWidgets(
     'AddConnectionDialog opens without modifying a provider in build',
     (tester) async {
@@ -33,6 +46,8 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Connect ZenTao'), findsOneWidget);
       expect(find.text('Server URL'), findsOneWidget);
+
+      await disposeTree(tester);
     },
   );
 }

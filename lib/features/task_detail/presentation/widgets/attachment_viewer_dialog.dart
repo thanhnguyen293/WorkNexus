@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,6 +11,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../sync/data/sync_service.dart';
 import 'attachment_kinds.dart';
 import 'attachment_video_view.dart';
 import 'attachment_viewer_header.dart';
@@ -56,9 +57,10 @@ class _AttachmentViewerDialogState
   }
 
   Future<void> _load() async {
-    final path = await ref
-        .read(syncServiceProvider)
-        .cacheAttachment(widget.ticket, widget.attachment);
+    final path = await getIt<SyncService>().cacheAttachment(
+      widget.ticket,
+      widget.attachment,
+    );
     if (!mounted) return;
     setState(() {
       _path = path;
@@ -70,9 +72,10 @@ class _AttachmentViewerDialogState
     final path = _path;
     if (path == null || _saving) return;
     setState(() => _saving = true);
-    final saved = await ref
-        .read(syncServiceProvider)
-        .saveAttachmentToDownloads(path, widget.attachment.title);
+    final saved = await getIt<SyncService>().saveAttachmentToDownloads(
+      path,
+      widget.attachment.title,
+    );
     if (!mounted) return;
     setState(() => _saving = false);
     final l = AppL10n.of(context);

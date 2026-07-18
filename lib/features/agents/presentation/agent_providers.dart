@@ -1,20 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/agent_session.dart';
+import '../../../core/domain/repositories/agent_session_repository.dart';
 import '../../../core/domain/value_objects/agent_kind.dart';
 import '../domain/adapters/coding_agent_adapter.dart';
 
 /// Agent sessions for a ticket (reactive; drives the Development tab).
 final agentSessionsProvider = StreamProvider.family<List<AgentSession>, String>(
-  (ref, ticketId) => ref
-      .watch(agentSessionRepositoryProvider)
-      .watchSessions(ticketId: ticketId),
+  (ref, ticketId) =>
+      getIt<AgentSessionRepository>().watchSessions(ticketId: ticketId),
 );
 
 /// Running agents across all tickets (sidebar Activity feed source).
 final runningAgentsProvider = StreamProvider<List<AgentSession>>(
-  (ref) => ref.watch(agentSessionRepositoryProvider).watchRunning(),
+  (ref) => getIt<AgentSessionRepository>().watchRunning(),
 );
 
 /// Dispatches a ticket to a coding agent, persisting the session and streaming
@@ -32,7 +33,7 @@ class DispatchController extends Notifier<void> {
   }) async {
     final adapter = ref.read(codingAgentRegistryProvider)[kind];
     if (adapter == null) return;
-    final repo = ref.read(agentSessionRepositoryProvider);
+    final repo = getIt<AgentSessionRepository>();
     final run = adapter.dispatch(
       DispatchTask(
         ticketId: ticketId,

@@ -15,6 +15,18 @@ void main() {
       expect(merged, contains('resolution:fixed'));
     });
 
+    test('preserves synthetic execution label the detail fetch omits', () {
+      // A task opened from an execution board must not drop off the board when
+      // its detail (which carries no `zentao-execution:` label) is fetched.
+      final merged = mergeDetailLabels(
+        ['status:doing'],
+        ['status:wait', 'zentao-execution:12'],
+      );
+
+      expect(merged, contains('zentao-execution:12'));
+      expect(merged, contains('status:doing'));
+    });
+
     test('does not duplicate a synthetic label already present', () {
       final merged = mergeDetailLabels(
         ['zentao-product:4', 'bug'],

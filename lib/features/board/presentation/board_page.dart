@@ -24,12 +24,14 @@ class BoardPage extends ConsumerWidget {
     final mode = ref.watch(viewModeProvider);
     final count = ref.watch(resultCountProvider);
     final advOpen = ref.watch(advFilterOpenProvider);
-    // While a just-opened project is still syncing its bugs and nothing is
+    // While a just-opened product/execution is still syncing and nothing is
     // cached yet, show the skeleton instead of a momentary empty state.
     final productSyncing = ref.watch(zentaoProductSyncingProvider) != null;
+    final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
     final showSkeleton =
         loading ||
-        (productSyncing && count == 0 && mode == ViewMode.zentaoBugs);
+        (productSyncing && count == 0 && mode == ViewMode.zentaoBugs) ||
+        (executionSyncing && count == 0 && mode == ViewMode.zentaoTasks);
 
     Widget body;
     if (showSkeleton) {

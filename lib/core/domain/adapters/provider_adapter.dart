@@ -51,6 +51,35 @@ class ProviderProduct {
   final String accountId;
 }
 
+/// A provider-side project that groups executions (ZenTao `Project`).
+class ProviderProject {
+  const ProviderProject({
+    required this.id,
+    required this.name,
+    required this.accountId,
+  });
+
+  final String id;
+  final String name;
+  final String accountId;
+}
+
+/// A provider-side execution (sprint/iteration) that scopes task sync. Belongs
+/// to a [ProviderProject] and holds the tasks shown on the native task board.
+class ProviderExecution {
+  const ProviderExecution({
+    required this.id,
+    required this.name,
+    required this.projectId,
+    required this.accountId,
+  });
+
+  final String id;
+  final String name;
+  final String projectId;
+  final String accountId;
+}
+
 /// The contract every ticket source implements. An instance is bound to a single
 /// [Account] (base URL + credentials), so returned entities are already stamped
 /// with that account's id. Add a provider = implement this once (ZenTao first).
@@ -83,6 +112,17 @@ abstract class ProviderAdapter {
 
   /// Bugs scoped to one provider product/container.
   Future<Result<TicketPage>> listProductBugs(String productId);
+
+  /// Projects available to this account (each groups executions).
+  Future<Result<List<ProviderProject>>> listProjects();
+
+  /// Executions within one project.
+  Future<Result<List<ProviderExecution>>> listProjectExecutions(
+    String projectId,
+  );
+
+  /// Tasks scoped to one execution/container.
+  Future<Result<TicketPage>> listExecutionTasks(String executionId);
 
   /// Reassign the ticket to [assignee] (a provider account), with an optional note.
   Future<Result<bool>> assignTicket(

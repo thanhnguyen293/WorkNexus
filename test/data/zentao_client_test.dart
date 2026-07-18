@@ -344,6 +344,85 @@ void main() {
     expect(req.uri.queryParameters['limit'], '100');
   });
 
+  test('listProjects parses /projects into provider projects', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/projects')) {
+        return _json({
+          'total': 2,
+          'projects': [
+            {'id': 3, 'name': 'Mobile App'},
+            {'id': 4, 'name': 'Backend API'},
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.listProjects();
+
+    expect(res, isA<Ok<List<ProviderProject>>>());
+    final projects = (res as Ok<List<ProviderProject>>).value;
+    expect(projects.map((p) => p.id).toList(), ['3', '4']);
+    expect(projects.map((p) => p.name).toList(), ['Mobile App', 'Backend API']);
+  });
+
+  test('listProjectExecutions parses /projects/{id}/executions', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/projects/3/executions')) {
+        return _json({
+          'total': 2,
+          'executions': [
+            {'id': 12, 'name': 'Sprint 12'},
+            {'id': 11, 'name': 'Sprint 11'},
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.listProjectExecutions('3');
+
+    expect(res, isA<Ok<List<ProviderExecution>>>());
+    final executions = (res as Ok<List<ProviderExecution>>).value;
+    expect(executions.map((e) => e.id).toList(), ['12', '11']);
+    expect(executions.every((e) => e.projectId == '3'), isTrue);
+  });
+
+  test('listExecutionTasks tags tasks with the execution label', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/executions/12/tasks')) {
+        return _json({
+          'total': 1,
+          'tasks': [
+            {
+              'id': 8801,
+              'name': 'Wire the task board',
+              'status': 'doing',
+              'pri': 1,
+            },
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.listExecutionTasks('12');
+
+    expect(res, isA<Ok<TicketPage>>());
+    final tickets = (res as Ok<TicketPage>).value.tickets;
+    expect(tickets.single.externalKey, '8801');
+    expect(tickets.single.externalType, 'Task');
+    expect(tickets.single.labels, contains('zentao-execution:12'));
+    final req = fake.requests.firstWhere(
+      (r) => r.uri.path.endsWith('/api.php/v1/executions/12/tasks'),
+    );
+    expect(req.uri.queryParameters['page'], '1');
+    expect(req.uri.queryParameters['limit'], '100');
+  });
+
   test('listComments parses actions given as an id-keyed object', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

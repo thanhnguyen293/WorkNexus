@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
@@ -155,6 +156,67 @@ void main() {
           _q(tickets, const FilterState(search: 'silver-142')),
         ).map((t) => t.id),
         ['c'],
+      );
+    });
+
+    test('severity filter keeps only matching severities', () {
+      final tickets = [
+        _ztBug(id: 'crit', providerStatus: 'active', severity: 1),
+        _ztBug(id: 'minor', providerStatus: 'active', severity: 3),
+      ];
+      final out = filter(_q(tickets, const FilterState(severities: {1})));
+      expect(out.map((t) => t.id), ['crit']);
+    });
+
+    test('assignee filter matches names and unassigned via empty sentinel', () {
+      final tickets = [
+        _ztBug(
+          id: 'mine',
+          providerStatus: 'active',
+        ).copyWith(assignee: 'Thanh'),
+        _ztBug(id: 'none', providerStatus: 'active'),
+      ];
+      expect(
+        filter(
+          _q(tickets, const FilterState(assignees: {'Thanh'})),
+        ).map((t) => t.id),
+        ['mine'],
+      );
+      expect(
+        filter(
+          _q(tickets, const FilterState(assignees: {''})),
+        ).map((t) => t.id),
+        ['none'],
+      );
+    });
+
+    test('bug type + resolution filters read the provider entity', () {
+      final tickets = [
+        _ztBug(
+          id: 'code',
+          providerStatus: 'active',
+        ).copyWith(providerEntity: const ZenTaoBugEntity(bugType: 'codeerror')),
+        _ztBug(
+          id: 'cfg',
+          providerStatus: 'active',
+        ).copyWith(providerEntity: const ZenTaoBugEntity(bugType: 'config')),
+        _ztBug(
+          id: 'fixed',
+          providerStatus: 'resolved',
+          resolution: 'fixed',
+        ).copyWith(providerEntity: const ZenTaoBugEntity(resolution: 'fixed')),
+      ];
+      expect(
+        filter(
+          _q(tickets, const FilterState(bugTypes: {'codeerror'})),
+        ).map((t) => t.id),
+        ['code'],
+      );
+      expect(
+        filter(
+          _q(tickets, const FilterState(resolutions: {'fixed'})),
+        ).map((t) => t.id),
+        ['fixed'],
       );
     });
 

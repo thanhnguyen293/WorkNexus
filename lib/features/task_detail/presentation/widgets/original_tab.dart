@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -14,6 +15,7 @@ import '../../../../core/util/labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../sync/data/sync_service.dart';
 import 'bug_attachments.dart';
 import 'bug_description.dart';
 import 'bug_detail_sections.dart';
@@ -76,13 +78,13 @@ class OriginalTab extends ConsumerWidget {
           BugDescription(
             body: ticket.body,
             imageLoader: (url) =>
-                ref.read(syncServiceProvider).fetchTicketImage(ticket, url),
+                getIt<SyncService>().fetchTicketImage(ticket, url),
           )
         else
           MarkdownText(
             ticket.body,
             imageLoader: (url) =>
-                ref.read(syncServiceProvider).fetchTicketImage(ticket, url),
+                getIt<SyncService>().fetchTicketImage(ticket, url),
           ),
         if (ticket.labels.isNotEmpty) ...[
           SizedBox(height: context.spacing.md),

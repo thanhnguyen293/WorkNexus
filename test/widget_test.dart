@@ -2,8 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/app.dart';
+import 'package:work_nexus/core/database/database.dart';
+
+import 'support/di_test_harness.dart';
 
 void main() {
+  late AppDatabase db;
+
+  setUp(() async {
+    db = await setUpTestLocator();
+  });
+
+  tearDown(() async {
+    await resetTestLocator(db);
+  });
+
   testWidgets('App boots into the board shell with seeded data', (
     tester,
   ) async {
@@ -22,6 +35,8 @@ void main() {
     expect(find.text('In Progress'), findsWidgets);
     // A seeded ticket is visible.
     expect(find.text('Upgrade to React 19'), findsWidgets);
+
+    await disposeTree(tester);
   });
 
   testWidgets(
@@ -43,6 +58,8 @@ void main() {
       expect(find.text('Products'), findsNothing);
       // The workspace node is structural — no "all workspaces" catch-all.
       expect(find.text('All workspaces'), findsNothing);
+
+      await disposeTree(tester);
     },
   );
 }

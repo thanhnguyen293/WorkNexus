@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
+import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
@@ -12,7 +13,19 @@ import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
+import '../support/di_test_harness.dart';
+
 void main() {
+  late AppDatabase db;
+
+  setUp(() async {
+    db = await setUpTestLocator();
+  });
+
+  tearDown(() async {
+    await resetTestLocator(db);
+  });
+
   Future<ProviderContainer> pumpTitleBar(
     WidgetTester tester, {
     Size physicalSize = const Size(1200, 900),

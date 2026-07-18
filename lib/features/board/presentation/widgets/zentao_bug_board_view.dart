@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/error/result.dart';
@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../sync/data/sync_service.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
@@ -172,9 +173,11 @@ class _BugColumnState extends ConsumerState<_BugColumn> {
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
-      result = await ref
-          .read(syncServiceProvider)
-          .resolveBug(ticket, resolution: resolution, build: 'trunk');
+      result = await getIt<SyncService>().resolveBug(
+        ticket,
+        resolution: resolution,
+        build: 'trunk',
+      );
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
@@ -189,15 +192,13 @@ class _BugColumnState extends ConsumerState<_BugColumn> {
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
-      result = await ref
-          .read(syncServiceProvider)
-          .activateBug(
-            ticket,
-            build: 'trunk',
-            optimisticStatus: target == ZenTaoBugColumn.newUnconfirmed
-                ? UnifiedStatus.inbox
-                : UnifiedStatus.todo,
-          );
+      result = await getIt<SyncService>().activateBug(
+        ticket,
+        build: 'trunk',
+        optimisticStatus: target == ZenTaoBugColumn.newUnconfirmed
+            ? UnifiedStatus.inbox
+            : UnifiedStatus.todo,
+      );
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }

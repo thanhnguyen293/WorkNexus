@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/translation_record.dart';
+import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
 import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
@@ -17,7 +19,7 @@ final openCodeAuthedProvider = FutureProvider<bool>(
 final translationRecordProvider =
     StreamProvider.family<TranslationRecord?, String>(
       (ref, ticketId) =>
-          ref.watch(translationRepositoryProvider).watchTranslation(ticketId),
+          getIt<TranslationRepository>().watchTranslation(ticketId),
     );
 
 /// Transient UI state (in-flight / last error) for one ticket's translation.
@@ -39,7 +41,7 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
     final ticket = ref.read(ticketByIdProvider(ticketId));
     if (ticket == null) return;
     _set(ticketId, const TranslationUiState(loading: true));
-    final svc = ref.read(translationServiceProvider);
+    final svc = getIt<TranslationService>();
     final res = await svc.translate(
       ticketId: ticketId,
       source: TicketSource(title: ticket.title, body: ticket.body),
@@ -47,7 +49,7 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
     );
     await res.fold(
       (record) async {
-        await ref.read(translationRepositoryProvider).saveTranslation(record);
+        await getIt<TranslationRepository>().saveTranslation(record);
         _set(ticketId, const TranslationUiState());
       },
       (failure) async {

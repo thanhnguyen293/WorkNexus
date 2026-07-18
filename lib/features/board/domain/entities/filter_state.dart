@@ -22,6 +22,10 @@ abstract class FilterState with _$FilterState {
     @Default(<String>{}) Set<String> projectIds,
     @Default(<UnifiedStatus>{}) Set<UnifiedStatus> statuses,
     @Default(<Priority>{}) Set<Priority> priorities,
+    @Default(<int>{}) Set<int> severities,
+    @Default(<String>{}) Set<String> assignees,
+    @Default(<String>{}) Set<String> bugTypes,
+    @Default(<String>{}) Set<String> resolutions,
     @Default('') String search,
   }) = _FilterState;
 
@@ -31,6 +35,10 @@ abstract class FilterState with _$FilterState {
       projectIds.isNotEmpty ||
       statuses.isNotEmpty ||
       priorities.isNotEmpty ||
+      severities.isNotEmpty ||
+      assignees.isNotEmpty ||
+      bugTypes.isNotEmpty ||
+      resolutions.isNotEmpty ||
       search.trim().isNotEmpty;
 
   /// Number of chip-style filters active (excludes free-text search).
@@ -39,5 +47,9 @@ abstract class FilterState with _$FilterState {
       accountIds.length +
       projectIds.length +
       statuses.length +
-      priorities.length;
+      priorities.length +
+      severities.length +
+      assignees.length +
+      bugTypes.length +
+      resolutions.length;
 }

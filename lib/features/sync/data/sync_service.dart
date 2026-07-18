@@ -17,13 +17,17 @@ import '../../../data/local/mappers.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
 
-/// Prefix of synthetic board-membership labels added at list-sync time (e.g.
-/// `zentao-product:<id>`) that the provider's detail endpoint doesn't return.
-/// The product board filters on these, so a detail refresh must keep them.
-const String kSyntheticLabelPrefix = 'zentao-product:';
+/// Prefixes of synthetic board-membership labels added at list-sync time (e.g.
+/// `zentao-product:<id>` for bug boards, `zentao-execution:<id>` for task
+/// boards) that the provider's detail endpoint doesn't return. The native
+/// boards filter on these, so a detail refresh must keep them.
+const List<String> kSyntheticLabelPrefixes = <String>[
+  'zentao-product:',
+  'zentao-execution:',
+];
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
-/// labels ([kSyntheticLabelPrefix]) carried on the already-stored
+/// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
 /// [existingLabels]. The detail endpoint omits those synthetic labels, so
 /// without this a detail refresh would silently drop the ticket from its board.
 List<String> mergeDetailLabels(
@@ -31,7 +35,8 @@ List<String> mergeDetailLabels(
   List<String> existingLabels,
 ) {
   final preserved = existingLabels.where(
-    (l) => l.startsWith(kSyntheticLabelPrefix) && !detailLabels.contains(l),
+    (l) =>
+        kSyntheticLabelPrefixes.any(l.startsWith) && !detailLabels.contains(l),
   );
   return [...detailLabels, ...preserved];
 }
@@ -94,6 +99,47 @@ class SyncService {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
     final res = await adapter.listProductBugs(product.id);
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(account, value.tickets);
+        return Ok(value.tickets.length);
+    }
+  }
+
+  Future<Result<List<ProviderProject>>> listProjects(String accountId) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    return adapter.listProjects();
+  }
+
+  Future<Result<List<ProviderExecution>>> listProjectExecutions(
+    String accountId,
+    String projectId,
+  ) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    return adapter.listProjectExecutions(projectId);
+  }
+
+  Future<Result<int>> syncExecutionTasks(ProviderExecution execution) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(execution.accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('ZenTao account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(execution.accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listExecutionTasks(execution.id);
     switch (res) {
       case Err(:final failure):
         return Err(failure);

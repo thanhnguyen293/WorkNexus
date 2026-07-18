@@ -1,103 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../../data/fixtures/fixture_repositories.dart';
 import '../../features/agents/data/cli_agent_adapters.dart';
 import '../../features/agents/data/mock_coding_agent_adapter.dart';
 import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
-import '../../features/connections/data/local_connection_repository.dart';
-import '../../features/connections/domain/repositories/connection_repository.dart';
-import '../../features/sync/data/sync_service.dart';
-import '../../features/translation/data/mock_translation_service.dart';
-import '../../features/translation/domain/adapters/translation_service.dart';
-import '../database/database.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/ticket.dart';
 import '../domain/entities/workspace.dart';
-import '../domain/repositories/activity_repository.dart';
-import '../domain/repositories/agent_session_repository.dart';
-import '../domain/repositories/comment_repository.dart';
-import '../domain/repositories/dev_link_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
-import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
 import '../domain/value_objects/agent_kind.dart';
-import '../platform/credential_store.dart';
+import 'service_locator.dart';
 
-/// The shared in-memory demo store. Still provides the mock-translation VI
-/// source and the generated activity/dev-link data; the core ticket/workspace/
-/// comment/translation repositories move to drift in Phase 4 via overrides.
-final fixtureStoreProvider = Provider<FixtureStore>((ref) => FixtureStore());
-
-/// The drift database. Overridden in `main()` with the real, seeded instance;
-/// throws if a drift-backed repository is used without that override.
-final appDatabaseProvider = Provider<AppDatabase>(
-  (ref) => throw UnimplementedError(
-    'appDatabaseProvider must be overridden in main()',
-  ),
-);
-
-/// Provider secrets in the OS keychain.
-final credentialStoreProvider = Provider<CredentialStore>(
-  (ref) => CredentialStore(),
-);
-
-/// Persists provider connections (accounts) to drift.
-final connectionRepositoryProvider = Provider<ConnectionRepository>(
-  (ref) => LocalConnectionRepository(ref.watch(appDatabaseProvider)),
-);
-
-/// Pulls tickets from a provider account into drift.
-final syncServiceProvider = Provider<SyncService>(
-  (ref) => SyncService(
-    ref.watch(appDatabaseProvider),
-    ref.watch(credentialStoreProvider),
-  ),
-);
-
-// ---- Repository seam (override these to swap fixtures ↔ drift ↔ remote) ----
-
-final ticketRepositoryProvider = Provider<TicketRepository>(
-  (ref) => FixtureTicketRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final workspaceRepositoryProvider = Provider<WorkspaceRepository>(
-  (ref) => FixtureWorkspaceRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final translationRepositoryProvider = Provider<TranslationRepository>(
-  (ref) => FixtureTranslationRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final commentRepositoryProvider = Provider<CommentRepository>(
-  (ref) => FixtureCommentRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final activityRepositoryProvider = Provider<ActivityRepository>(
-  (ref) => FixtureActivityRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final devLinkRepositoryProvider = Provider<DevLinkRepository>(
-  (ref) => FixtureDevLinkRepository(ref.watch(fixtureStoreProvider)),
-);
-
-final agentSessionRepositoryProvider = Provider<AgentSessionRepository>(
-  (ref) => FixtureAgentSessionRepository(),
-);
-
-/// Translation backend. Mock demo service; a real OpenCode-backed service can
-/// be overridden in here without touching the UI.
-final translationServiceProvider = Provider<TranslationService>(
-  (ref) => MockTranslationService(ref.watch(fixtureStoreProvider).viByTicketId),
-);
+// Reactive Riverpod state only. The object graph (databases, repositories,
+// services) is wired by the GetIt service locator (`service_locator.dart`) — the
+// single composition root — and read here via `getIt<T>()`. This file holds the
+// reactive reads and derived state layered on top of those services.
 
 /// Dry-run (mock) agents vs the real installed CLIs. Defaults to dry-run so the
 /// demo never spawns a process unless the user opts in.
 final dryRunAgentsProvider = StateProvider<bool>((ref) => true);
 
 /// AgentKind → adapter. Mock adapters in dry-run; the real `claude`/`codex`/
-/// `opencode` CLI adapters otherwise.
+/// `opencode` CLI adapters otherwise. Reactive to [dryRunAgentsProvider].
 final codingAgentRegistryProvider =
     Provider<Map<AgentKind, CodingAgentAdapter>>((ref) {
       if (ref.watch(dryRunAgentsProvider)) {
@@ -110,10 +36,10 @@ final codingAgentRegistryProvider =
       };
     });
 
-// ---- Shared reactive reads ----
+// ---- Shared reactive reads (drift streams via the service locator) ----
 
 final ticketsProvider = StreamProvider<List<Ticket>>(
-  (ref) => ref.watch(ticketRepositoryProvider).watchTickets(),
+  (ref) => getIt<TicketRepository>().watchTickets(),
 );
 
 /// A single ticket from the reactive set (null while loading / not found).
@@ -126,15 +52,15 @@ final ticketByIdProvider = Provider.family<Ticket?, String>((ref, id) {
 });
 
 final workspacesProvider = StreamProvider<List<Workspace>>(
-  (ref) => ref.watch(workspaceRepositoryProvider).watchWorkspaces(),
+  (ref) => getIt<WorkspaceRepository>().watchWorkspaces(),
 );
 
 final accountsProvider = StreamProvider<List<Account>>(
-  (ref) => ref.watch(workspaceRepositoryProvider).watchAccounts(),
+  (ref) => getIt<WorkspaceRepository>().watchAccounts(),
 );
 
 final projectsProvider = StreamProvider<List<Project>>(
-  (ref) => ref.watch(workspaceRepositoryProvider).watchProjects(),
+  (ref) => getIt<WorkspaceRepository>().watchProjects(),
 );
 
 /// accountId → workspaceId (for workspace scoping in the board filter).

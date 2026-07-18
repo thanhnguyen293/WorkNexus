@@ -283,6 +283,116 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
+  Future<Result<List<ProviderProject>>> listProjects() async {
+    return _guard(() async {
+      const limit = 100;
+      final out = <ProviderProject>[];
+      final seen = <String>{};
+      var total = 0;
+      for (var page = 1; page <= 50; page++) {
+        final res = await _client.projects(page: page, limit: limit);
+        if (res.total > 0) total = res.total;
+        var added = 0;
+        for (final project in res.projects) {
+          if (project.id.isEmpty || !seen.add(project.id)) continue;
+          out.add(
+            ProviderProject(
+              id: project.id,
+              name: project.name.isEmpty ? project.id : project.name,
+              accountId: accountId,
+            ),
+          );
+          added++;
+        }
+        if (added == 0) break;
+        if (total > 0 && out.length >= total) break;
+      }
+      return out;
+    });
+  }
+
+  @override
+  Future<Result<List<ProviderExecution>>> listProjectExecutions(
+    String projectId,
+  ) async {
+    return _guard(() async {
+      const limit = 100;
+      final out = <ProviderExecution>[];
+      final seen = <String>{};
+      var total = 0;
+      for (var page = 1; page <= 50; page++) {
+        final res = await _client.projectExecutions(
+          projectId,
+          page: page,
+          limit: limit,
+        );
+        if (res.total > 0) total = res.total;
+        var added = 0;
+        for (final execution in res.executions) {
+          if (execution.id.isEmpty || !seen.add(execution.id)) continue;
+          out.add(
+            ProviderExecution(
+              id: execution.id,
+              name: execution.name.isEmpty ? execution.id : execution.name,
+              projectId: projectId,
+              accountId: accountId,
+            ),
+          );
+          added++;
+        }
+        if (added == 0) break;
+        if (total > 0 && out.length >= total) break;
+      }
+      return out;
+    });
+  }
+
+  @override
+  Future<Result<TicketPage>> listExecutionTasks(String executionId) async {
+    return _guard(() async {
+      const limit = 100;
+      final out = <Ticket>[];
+      final seen = <String>{};
+      var total = 0;
+      for (var page = 1; page <= 50; page++) {
+        final res = await _client.executionTasks(
+          executionId,
+          page: page,
+          limit: limit,
+        );
+        if (res.total > 0) total = res.total;
+        var added = 0;
+        for (final task in res.tasks) {
+          final id = task.idString;
+          if (id.isEmpty || !seen.add(id)) continue;
+          final ticket = normalizeZenTao(
+            task,
+            type: ZenTaoType.task,
+            accountId: accountId,
+            baseUrl: _client.baseUrl,
+          );
+          out.add(
+            ticket.copyWith(
+              labels: [...ticket.labels, 'zentao-execution:$executionId'],
+            ),
+          );
+          added++;
+        }
+        if (added == 0) break;
+        if (total > 0 && out.length >= total) break;
+      }
+      final maxUpdated = out
+          .map((t) => t.updatedAt)
+          .whereType<DateTime>()
+          .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
+      return TicketPage(
+        tickets: out,
+        nextCursor: maxUpdated?.toIso8601String(),
+      );
+    });
+  }
+
+  @override
   Future<Result<bool>> assignTicket(
     Ticket ticket, {
     required String assignee,

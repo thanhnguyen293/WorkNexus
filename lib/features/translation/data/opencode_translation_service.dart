@@ -8,9 +8,8 @@ import '../../../core/util/content_hash.dart';
 import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
 
-/// Real OpenCode-backed translation via the `opencode run` CLI. Bound in
-/// `main()` via [translationServiceProvider]; the [MockTranslationService] stays
-/// the default for tests/offline demos.
+/// Real OpenCode-backed translation via the `opencode run` CLI. Registered as
+/// the [TranslationService] in the GetIt service locator (`configureDependencies`).
 ///
 /// It uses OpenCode's **own** authentication (`opencode auth login`) and the
 /// configured default model, so translations run through your normal provider

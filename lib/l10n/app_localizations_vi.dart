@@ -57,6 +57,24 @@ class AppL10nVi extends AppL10n {
   String get priority => 'Ưu tiên';
 
   @override
+  String get assignee => 'Người phụ trách';
+
+  @override
+  String get severity => 'Mức độ';
+
+  @override
+  String get bugType => 'Loại';
+
+  @override
+  String get resolution => 'Cách xử lý';
+
+  @override
+  String get unassigned => 'Chưa gán';
+
+  @override
+  String get noBoardFilters => 'Bảng này chưa có bộ lọc';
+
+  @override
   String get filters => 'Bộ lọc';
 
   @override
@@ -296,6 +314,21 @@ class AppL10nVi extends AppL10n {
 
   @override
   String get projectOpenFailed => 'Không mở được dự án';
+
+  @override
+  String get executions => 'Bản thực thi';
+
+  @override
+  String get loadingExecutions => 'Đang tải bản thực thi…';
+
+  @override
+  String get executionsUnavailable => 'Không tải được bản thực thi';
+
+  @override
+  String get noExecutions => 'Không có bản thực thi';
+
+  @override
+  String get executionOpenFailed => 'Không mở được bản thực thi';
 
   @override
   String get close => 'Đóng';

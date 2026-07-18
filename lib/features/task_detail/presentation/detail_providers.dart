@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/activity_event.dart';
 import '../../../core/domain/entities/comment.dart';
 import '../../../core/domain/entities/dev_link.dart';
+import '../../../core/domain/repositories/activity_repository.dart';
+import '../../../core/domain/repositories/comment_repository.dart';
+import '../../../core/domain/repositories/dev_link_repository.dart';
+import '../../sync/data/sync_service.dart';
 
 enum DetailTab { original, translation, comments, development }
 
@@ -19,15 +24,15 @@ class DetailTabController extends Notifier<DetailTab> {
 }
 
 final commentsProvider = StreamProvider.family<List<Comment>, String>(
-  (ref, id) => ref.watch(commentRepositoryProvider).watchComments(id),
+  (ref, id) => getIt<CommentRepository>().watchComments(id),
 );
 
 final activityProvider = StreamProvider.family<List<ActivityEvent>, String>(
-  (ref, id) => ref.watch(activityRepositoryProvider).watchActivity(id),
+  (ref, id) => getIt<ActivityRepository>().watchActivity(id),
 );
 
 final devLinksProvider = StreamProvider.family<List<DevLink>, String>(
-  (ref, id) => ref.watch(devLinkRepositoryProvider).watchDevLinks(id),
+  (ref, id) => getIt<DevLinkRepository>().watchDevLinks(id),
 );
 
 /// One-shot: on opening a ticket, pull its full detail + comments from the
@@ -40,5 +45,5 @@ final ticketDetailSyncProvider = FutureProvider.family<void, String>((
 ) async {
   final ticket = ref.read(ticketByIdProvider(id));
   if (ticket == null) return;
-  await ref.read(syncServiceProvider).syncTicketDetail(ticket);
+  await getIt<SyncService>().syncTicketDetail(ticket);
 });

@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'sidebar_primitives.dart';
+import 'zentao_executions_branch.dart';
 import 'zentao_projects_branch.dart';
 
 /// The sources tree: `WORKSPACE → workspace → ZenTao → [pinned, Projects]`.
@@ -162,7 +163,13 @@ class _ZenTaoNode extends StatelessWidget {
             ),
           ),
           SidebarTreeBranch(
-            child: ZenTaoProjectsBranch(account: account, tickets: tickets),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ZenTaoProjectsBranch(account: account, tickets: tickets),
+                ZenTaoExecutionsBranch(account: account, tickets: tickets),
+              ],
+            ),
           ),
         ],
       ),

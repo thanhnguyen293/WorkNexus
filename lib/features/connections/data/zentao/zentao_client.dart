@@ -138,6 +138,45 @@ class ZenTaoClient {
     return ZenTaoProductBugsResponse.fromJson(_responseMap(res.data));
   }
 
+  /// Projects for this account (`GET /projects`), used to group executions.
+  Future<ZenTaoProjectsResponse> projects({
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/projects',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoProjectsResponse.fromJson(_responseMap(res.data));
+  }
+
+  /// Executions of a project (`GET /projects/{id}/executions`).
+  Future<ZenTaoExecutionsResponse> projectExecutions(
+    String projectId, {
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/projects/$projectId/executions',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoExecutionsResponse.fromJson(_responseMap(res.data));
+  }
+
+  /// Tasks of an execution (`GET /executions/{id}/tasks`), used to sync all
+  /// tasks regardless of assignee.
+  Future<ZenTaoExecutionTasksResponse> executionTasks(
+    String executionId, {
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/executions/$executionId/tasks',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoExecutionTasksResponse.fromJson(_responseMap(res.data));
+  }
+
   Map<String, dynamic> _responseMap(Object? data) {
     Object? decoded = data;
     if (decoded is String) {

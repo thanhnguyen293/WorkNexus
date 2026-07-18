@@ -193,6 +193,42 @@ abstract class AppL10n {
   /// **'Priority'**
   String get priority;
 
+  /// No description provided for @assignee.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignee'**
+  String get assignee;
+
+  /// No description provided for @severity.
+  ///
+  /// In en, this message translates to:
+  /// **'Severity'**
+  String get severity;
+
+  /// No description provided for @bugType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get bugType;
+
+  /// No description provided for @resolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get resolution;
+
+  /// No description provided for @unassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get unassigned;
+
+  /// No description provided for @noBoardFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No filters for this board'**
+  String get noBoardFilters;
+
   /// No description provided for @filters.
   ///
   /// In en, this message translates to:
@@ -666,6 +702,36 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Couldn\'t open project'**
   String get projectOpenFailed;
+
+  /// No description provided for @executions.
+  ///
+  /// In en, this message translates to:
+  /// **'Executions'**
+  String get executions;
+
+  /// No description provided for @loadingExecutions.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading executions…'**
+  String get loadingExecutions;
+
+  /// No description provided for @executionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t load executions'**
+  String get executionsUnavailable;
+
+  /// No description provided for @noExecutions.
+  ///
+  /// In en, this message translates to:
+  /// **'No executions'**
+  String get noExecutions;
+
+  /// No description provided for @executionOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open execution'**
+  String get executionOpenFailed;
 
   /// No description provided for @close.
   ///

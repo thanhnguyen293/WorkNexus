@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/domain/repositories/comment_repository.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -12,6 +14,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/markdown_text.dart';
+import '../../../sync/data/sync_service.dart';
 import '../detail_providers.dart';
 import 'comment_tile.dart';
 import 'detail_scroll_body.dart';
@@ -39,21 +42,17 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
   Future<void> _post() async {
     final text = _ctrl.text.trim();
     if (text.isEmpty) return;
-    await ref
-        .read(commentRepositoryProvider)
-        .addComment(
-          Comment(
-            id: '${widget.ticketId}:${DateTime.now().microsecondsSinceEpoch}',
-            ticketId: widget.ticketId,
-            authorName: 'You',
-            body: text,
-            createdAt: DateTime.now(),
-            origin: _internal
-                ? CommentOrigin.internalNote
-                : CommentOrigin.provider,
-            synced: !_internal ? false : true,
-          ),
-        );
+    await getIt<CommentRepository>().addComment(
+      Comment(
+        id: '${widget.ticketId}:${DateTime.now().microsecondsSinceEpoch}',
+        ticketId: widget.ticketId,
+        authorName: 'You',
+        body: text,
+        createdAt: DateTime.now(),
+        origin: _internal ? CommentOrigin.internalNote : CommentOrigin.provider,
+        synced: !_internal ? false : true,
+      ),
+    );
     _ctrl.clear();
     setState(() {});
   }
@@ -81,7 +80,7 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
 
     ImageBytesLoader? loader() => ticket == null
         ? null
-        : (url) => ref.read(syncServiceProvider).fetchTicketImage(ticket, url);
+        : (url) => getIt<SyncService>().fetchTicketImage(ticket, url);
 
     return Column(
       children: [

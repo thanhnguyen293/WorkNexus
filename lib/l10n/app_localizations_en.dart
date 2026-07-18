@@ -57,6 +57,24 @@ class AppL10nEn extends AppL10n {
   String get priority => 'Priority';
 
   @override
+  String get assignee => 'Assignee';
+
+  @override
+  String get severity => 'Severity';
+
+  @override
+  String get bugType => 'Type';
+
+  @override
+  String get resolution => 'Resolution';
+
+  @override
+  String get unassigned => 'Unassigned';
+
+  @override
+  String get noBoardFilters => 'No filters for this board';
+
+  @override
   String get filters => 'Filters';
 
   @override
@@ -296,6 +314,21 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get projectOpenFailed => 'Couldn\'t open project';
+
+  @override
+  String get executions => 'Executions';
+
+  @override
+  String get loadingExecutions => 'Loading executions…';
+
+  @override
+  String get executionsUnavailable => 'Can\'t load executions';
+
+  @override
+  String get noExecutions => 'No executions';
+
+  @override
+  String get executionOpenFailed => 'Couldn\'t open execution';
 
   @override
   String get close => 'Close';

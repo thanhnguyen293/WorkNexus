@@ -1,3 +1,4 @@
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -73,6 +74,28 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
       if (f.statuses.isNotEmpty && !f.statuses.contains(t.status)) return false;
       if (f.priorities.isNotEmpty && !f.priorities.contains(t.priority)) {
         return false;
+      }
+      if (f.severities.isNotEmpty &&
+          !(t.severity != null && f.severities.contains(t.severity))) {
+        return false;
+      }
+      if (f.assignees.isNotEmpty && !f.assignees.contains(t.assignee ?? '')) {
+        return false;
+      }
+      if (f.bugTypes.isNotEmpty || f.resolutions.isNotEmpty) {
+        final entity = t.providerEntity;
+        final bugType = entity is ZenTaoBugEntity
+            ? (entity.bugType ?? '').toLowerCase()
+            : '';
+        final resolution = entity is ZenTaoBugEntity
+            ? (entity.resolution ?? '').toLowerCase()
+            : '';
+        if (f.bugTypes.isNotEmpty && !f.bugTypes.contains(bugType)) {
+          return false;
+        }
+        if (f.resolutions.isNotEmpty && !f.resolutions.contains(resolution)) {
+          return false;
+        }
       }
       if (query.isNotEmpty) {
         final hay = [

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/domain/repositories/ticket_repository.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -63,7 +64,7 @@ class _ColumnState extends ConsumerState<_Column> {
       onLeave: (_) => setState(() => _over = false),
       onAcceptWithDetails: (d) {
         setState(() => _over = false);
-        ref.read(ticketRepositoryProvider).moveTicket(d.data, col.status);
+        getIt<TicketRepository>().moveTicket(d.data, col.status);
       },
       builder: (context, _, _) {
         return Container(

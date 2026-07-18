@@ -6,7 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
+import '../../../../core/util/zentao_labels.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 
@@ -46,6 +48,27 @@ class ActiveTokens extends ConsumerWidget {
         _Token(
           label: priorityName(l, p),
           onRemove: () => ctrl.togglePriority(p),
+        ),
+      for (final s in f.severities)
+        _Token(
+          label: zentaoSeverityLabel(s) ?? '$s',
+          dotColor: severityColor(c, s),
+          onRemove: () => ctrl.toggleSeverity(s),
+        ),
+      for (final a in f.assignees)
+        _Token(
+          label: a.isEmpty ? l.unassigned : a,
+          onRemove: () => ctrl.toggleAssignee(a),
+        ),
+      for (final t in f.bugTypes)
+        _Token(
+          label: zentaoBugTypeLabel(t) ?? t,
+          onRemove: () => ctrl.toggleBugType(t),
+        ),
+      for (final r in f.resolutions)
+        _Token(
+          label: zentaoResolutionLabel(r) ?? r,
+          onRemove: () => ctrl.toggleResolution(r),
         ),
     ];
 

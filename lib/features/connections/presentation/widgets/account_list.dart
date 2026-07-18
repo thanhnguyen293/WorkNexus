@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/credential_store.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../sync/data/sync_service.dart';
+import '../../domain/repositories/connection_repository.dart';
 
 /// A workspace heading followed by its connected accounts.
 class WorkspaceAccounts extends StatelessWidget {
@@ -196,7 +200,7 @@ class _AccountRow extends ConsumerWidget {
     messenger.showSnackBar(
       SnackBar(content: Text('Syncing ${account.handle}…')),
     );
-    final res = await ref.read(syncServiceProvider).syncAccount(account);
+    final res = await getIt<SyncService>().syncAccount(account);
     final msg = switch (res) {
       Ok(:final value) => 'Synced $value tickets from ${account.handle}',
       Err(:final failure) => 'Sync failed: ${failure.message}',
@@ -205,10 +209,10 @@ class _AccountRow extends ConsumerWidget {
   }
 
   Future<void> _remove(WidgetRef ref) async {
-    await ref.read(connectionRepositoryProvider).removeAccount(account.id);
+    await getIt<ConnectionRepository>().removeAccount(account.id);
     final credRef = account.credentialsRef;
     if (credRef != null) {
-      await ref.read(credentialStoreProvider).delete(credRef);
+      await getIt<CredentialStore>().delete(credRef);
     }
   }
 }

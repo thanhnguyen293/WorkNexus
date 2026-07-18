@@ -5,7 +5,6 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -14,36 +13,33 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../board_providers.dart';
 
-/// A single ZenTao project (product) row: a dot, the name, its bug count and a
-/// pin toggle. Tapping the row syncs and opens the project's bugs on the board.
-class ZenTaoProjectRow extends ConsumerWidget {
-  const ZenTaoProjectRow({
+/// A single ZenTao execution (sprint/iteration) leaf under a project node.
+/// Tapping it syncs and opens the execution's tasks on the native task board.
+class ZenTaoExecutionRow extends ConsumerWidget {
+  const ZenTaoExecutionRow({
     super.key,
-    required this.product,
+    required this.execution,
     required this.tickets,
-    required this.pinned,
   });
 
-  final ProviderProduct product;
+  final ProviderExecution execution;
   final List<Ticket> tickets;
-  final bool pinned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final l = AppL10n.of(context);
-    final selected = ref.watch(selectedZenTaoProductProvider);
-    final syncing = ref.watch(zentaoProductSyncingProvider);
-    final key = '${product.accountId}:${product.id}';
+    final selected = ref.watch(selectedZenTaoExecutionProvider);
+    final syncing = ref.watch(zentaoExecutionSyncingProvider);
+    final key = '${execution.accountId}:${execution.id}';
     final active =
-        selected?.accountId == product.accountId &&
-        selected?.productId == product.id;
+        selected?.accountId == execution.accountId &&
+        selected?.executionId == execution.id;
     final loading = syncing == key;
     final count = tickets
         .where(
           (t) =>
-              t.accountId == product.accountId &&
-              t.labels.contains('zentao-product:${product.id}'),
+              t.accountId == execution.accountId &&
+              t.labels.contains('zentao-execution:${execution.id}'),
         )
         .length;
 
@@ -68,14 +64,14 @@ class ZenTaoProjectRow extends ConsumerWidget {
                 width: 5,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: c.accent,
+                  color: c.info,
                   shape: BoxShape.circle,
                 ),
               ),
               SizedBox(width: context.spacing.sm),
               Expanded(
                 child: Text(
-                  product.name,
+                  execution.name,
                   overflow: TextOverflow.ellipsis,
                   style: context.typography.mono.copyWith(
                     fontWeight: active ? FontWeight.w600 : FontWeight.w500,
@@ -90,13 +86,6 @@ class ZenTaoProjectRow extends ConsumerWidget {
                 ),
               ),
               SizedBox(width: context.spacing.xxs),
-              _PinButton(
-                pinned: pinned,
-                tooltip: pinned ? l.unpinProject : l.pinProject,
-                onTap: () => ref
-                    .read(appSettingsProvider.notifier)
-                    .togglePinnedProject(key),
-              ),
             ],
           ),
         ),
@@ -105,51 +94,20 @@ class ZenTaoProjectRow extends ConsumerWidget {
   }
 
   Future<void> _select(BuildContext context, WidgetRef ref) async {
-    // Switch to this project's board immediately so the UI responds at once; the
-    // sync then streams its bugs into the DB, which the board reads reactively.
+    // Switch to this execution's task board immediately, then stream its tasks
+    // into the DB, which the board reads reactively. Selecting a task board and
+    // a bug board are mutually exclusive, so clear the product selection first.
     // Capture before the await so no BuildContext is used across the async gap.
     final messenger = ScaffoldMessenger.of(context);
-    final failedMessage = AppL10n.of(context).projectOpenFailed;
-    ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-    ref.read(selectedZenTaoProductProvider.notifier).select(product);
-    ref.read(viewModeProvider.notifier).set(ViewMode.zentaoBugs);
-    ref.read(zentaoProductSyncingProvider.notifier).start(product);
-    final res = await getIt<SyncService>().syncProductBugs(product);
-    ref.read(zentaoProductSyncingProvider.notifier).finish();
+    final failedMessage = AppL10n.of(context).executionOpenFailed;
+    ref.read(selectedZenTaoProductProvider.notifier).clear();
+    ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
+    ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
+    ref.read(zentaoExecutionSyncingProvider.notifier).start(execution);
+    final res = await getIt<SyncService>().syncExecutionTasks(execution);
+    ref.read(zentaoExecutionSyncingProvider.notifier).finish();
     if (res case Err()) {
       messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
     }
-  }
-}
-
-class _PinButton extends StatelessWidget {
-  const _PinButton({
-    required this.pinned,
-    required this.onTap,
-    required this.tooltip,
-  });
-
-  final bool pinned;
-  final VoidCallback onTap;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(context.radii.sm),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.xxs),
-          child: Icon(
-            pinned ? Icons.push_pin : Icons.push_pin_outlined,
-            size: 13,
-            color: pinned ? c.accent : c.textTertiary,
-          ),
-        ),
-      ),
-    );
   }
 }

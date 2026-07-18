@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/providers.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/workspace.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../core/util/content_hash.dart';
+import '../../sync/data/sync_service.dart';
 import '../data/provider_adapter_factory.dart';
+import '../domain/repositories/connection_repository.dart';
 
 /// State of the add-connection form.
 class AddConnectionState {
@@ -45,16 +47,14 @@ class AddConnectionController extends Notifier<AddConnectionState> {
     final newName = newWorkspaceName?.trim() ?? '';
     if (newName.isNotEmpty) {
       final wsId = 'ws-${_slug(newName)}-${intHash(newName).toRadixString(16)}';
-      await ref
-          .read(connectionRepositoryProvider)
-          .addWorkspace(
-            Workspace(
-              id: wsId,
-              name: newName,
-              shortCode: _initials(newName),
-              colorValue: _pickColor(newName),
-            ),
-          );
+      await getIt<ConnectionRepository>().addWorkspace(
+        Workspace(
+          id: wsId,
+          name: newName,
+          shortCode: _initials(newName),
+          colorValue: _pickColor(newName),
+        ),
+      );
       targetWorkspaceId = wsId;
     } else if (workspaceId != null && workspaceId.isNotEmpty) {
       targetWorkspaceId = workspaceId;
@@ -88,9 +88,9 @@ class AddConnectionController extends Notifier<AddConnectionState> {
         }
     }
 
-    await ref.read(credentialStoreProvider).write(credRef, password);
-    await ref.read(connectionRepositoryProvider).addAccount(account);
-    final sync = await ref.read(syncServiceProvider).syncAccount(account);
+    await getIt<CredentialStore>().write(credRef, password);
+    await getIt<ConnectionRepository>().addAccount(account);
+    final sync = await getIt<SyncService>().syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         // Account is connected but the first sync failed — keep it, surface the error.
