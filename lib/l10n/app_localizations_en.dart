@@ -81,6 +81,21 @@ class AppL10nEn extends AppL10n {
   String get resolvedByMe => 'Resolved by me';
 
   @override
+  String get bugTabAll => 'All';
+
+  @override
+  String get bugTabUnclosed => 'Unclosed';
+
+  @override
+  String get bugTabReportedByMe => 'Reported by me';
+
+  @override
+  String get bugTabAssignedByMe => 'Assigned by me';
+
+  @override
+  String get bugTabLoadFailed => 'Couldn\'t load bugs';
+
+  @override
   String get filters => 'Filters';
 
   @override

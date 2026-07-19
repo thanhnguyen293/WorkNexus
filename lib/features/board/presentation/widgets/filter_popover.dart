@@ -80,33 +80,10 @@ class _FacetFilters extends ConsumerWidget {
     final f = ref.watch(filterStateProvider);
     final ctrl = ref.read(filterStateProvider.notifier);
     final facets = ref.watch(boardFacetsProvider);
-    final isBug = ref.watch(viewModeProvider) == ViewMode.zentaoBugs;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: context.spacing.xl),
-          child: Wrap(
-            spacing: context.spacing.sm,
-            runSpacing: context.spacing.sm,
-            children: [
-              FilterQuickToggle(
-                icon: Icons.person_outline,
-                label: l.assignedToMe,
-                active: f.assignedToMe,
-                onTap: ctrl.toggleAssignedToMe,
-              ),
-              if (isBug)
-                FilterQuickToggle(
-                  icon: Icons.verified_outlined,
-                  label: l.resolvedByMe,
-                  active: f.resolvedByMe,
-                  onTap: ctrl.toggleResolvedByMe,
-                ),
-            ],
-          ),
-        ),
         if (facets.groups.isEmpty)
           Text(
             l.noBoardFilters,

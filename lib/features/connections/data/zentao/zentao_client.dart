@@ -125,15 +125,25 @@ class ZenTaoClient {
     return ZenTaoProductsResponse.fromJson(_responseMap(res.data));
   }
 
-  /// Bugs for a product, used to sync all bugs regardless of assignee.
+  /// Bugs for a product. [browseType] optionally selects a server-side view
+  /// (ZenTao's bug tabs: `all`/`unclosed`/`openedbyme`/`assigntome`/
+  /// `resolvedbyme`/`assignedbyme`); omitted means all bugs. The value is
+  /// forwarded as the `browseType` query on `GET /products/{id}/bugs` — verify
+  /// per-tab counts against a live server, since older installs may ignore it.
   Future<ZenTaoProductBugsResponse> productBugs(
     String productId, {
     required int page,
     required int limit,
+    String? browseType,
   }) async {
     final res = await _dio.get<dynamic>(
       '$_v1/products/$productId/bugs',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (browseType != null && browseType.isNotEmpty)
+          'browseType': browseType,
+      },
     );
     return ZenTaoProductBugsResponse.fromJson(_responseMap(res.data));
   }

@@ -20,6 +20,7 @@ import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
 import '../domain/value_objects/saved_view.dart';
+import '../domain/value_objects/zentao_bug_browse_type.dart';
 
 enum ViewMode { board, zentaoBugs, zentaoTasks, list }
 
@@ -76,10 +77,6 @@ class FilterController extends Notifier<FilterState> {
       state = state.copyWith(bugTypes: _toggle(state.bugTypes, t));
   void toggleResolution(String r) =>
       state = state.copyWith(resolutions: _toggle(state.resolutions, r));
-  void toggleAssignedToMe() =>
-      state = state.copyWith(assignedToMe: !state.assignedToMe);
-  void toggleResolvedByMe() =>
-      state = state.copyWith(resolvedByMe: !state.resolvedByMe);
 
   void clearAll() => state = state.copyWith(
     providers: {},
@@ -91,8 +88,6 @@ class FilterController extends Notifier<FilterState> {
     assignees: {},
     bugTypes: {},
     resolutions: {},
-    assignedToMe: false,
-    resolvedByMe: false,
     search: '',
   );
 
@@ -168,18 +163,6 @@ final zentaoProjectsExpandedProvider =
       ZenTaoProjectsExpanded.new,
     );
 
-class ZenTaoProductSyncing extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  void start(ProviderProduct product) =>
-      state = '${product.accountId}:${product.id}';
-  void finish() => state = null;
-}
-
-final zentaoProductSyncingProvider =
-    NotifierProvider<ZenTaoProductSyncing, String?>(ZenTaoProductSyncing.new);
-
 class SelectedZenTaoProduct extends Notifier<ZenTaoProductSelection?> {
   @override
   ZenTaoProductSelection? build() => null;
@@ -199,6 +182,44 @@ final selectedZenTaoProductProvider =
     NotifierProvider<SelectedZenTaoProduct, ZenTaoProductSelection?>(
       SelectedZenTaoProduct.new,
     );
+
+/// The selected bug-board tab (ZenTao browse type). Defaults to [unclosed],
+/// matching ZenTao's own bug board; reset when switching products.
+class ZenTaoBugTabController extends Notifier<ZenTaoBugBrowseType> {
+  @override
+  ZenTaoBugBrowseType build() => ZenTaoBugBrowseType.unclosed;
+
+  void set(ZenTaoBugBrowseType tab) => state = tab;
+  void reset() => state = ZenTaoBugBrowseType.unclosed;
+}
+
+final zentaoBugTabProvider =
+    NotifierProvider<ZenTaoBugTabController, ZenTaoBugBrowseType>(
+      ZenTaoBugTabController.new,
+    );
+
+/// The active bug tab's server slice: the ids of the bugs ZenTao returns for the
+/// selected product + [zentaoBugTabProvider] browse type. Refetched on every tab
+/// switch (autoDispose + reactive deps), and upserts those bugs into drift so
+/// the board still renders from the DB (local-first). Empty off a product board.
+final zentaoBugTabSliceProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final product = ref.watch(selectedZenTaoProductProvider);
+  if (product == null) return const <String>{};
+  final tab = ref.watch(zentaoBugTabProvider);
+  final res = await getIt<SyncService>().syncProductBugsTab(
+    accountId: product.accountId,
+    productId: product.productId,
+    browseType: tab.code,
+  );
+  switch (res) {
+    case Ok(:final value):
+      return value.toSet();
+    case Err(:final failure):
+      throw failure;
+  }
+});
 
 class ZenTaoExecutionSelection {
   const ZenTaoExecutionSelection({
@@ -348,12 +369,18 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
         .toList();
   } else if (product != null) {
     final productLabel = 'zentao-product:${product.productId}';
+    // The active bug tab's server slice (ids). Null while it's still loading —
+    // show nothing until it resolves (the board page renders a skeleton) so a
+    // tab switch never flashes the previous tab's bugs.
+    final slice = ref.watch(zentaoBugTabSliceProvider).asData?.value;
     tickets = tickets
         .where(
           (ticket) =>
               ticket.accountId == product.accountId &&
               (ticket.externalType ?? '').toLowerCase() == 'bug' &&
-              ticket.labels.contains(productLabel),
+              ticket.labels.contains(productLabel) &&
+              slice != null &&
+              slice.contains(ticket.id),
         )
         .toList();
   }
@@ -362,21 +389,12 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
 
 /// The query fed to the pure board/list use cases.
 final _boardQueryProvider = Provider<BoardQuery>((ref) {
-  // "Me" for the assigned/resolved-by-me quick filters: the handle of the
-  // account whose ZenTao board is in view (null off a ZenTao board).
-  final selectionAccountId =
-      ref.watch(selectedZenTaoExecutionProvider)?.accountId ??
-      ref.watch(selectedZenTaoProductProvider)?.accountId;
-  final me = selectionAccountId == null
-      ? null
-      : ref.watch(lookupsProvider).accounts[selectionAccountId]?.handle;
   return BoardQuery(
     tickets: ref.watch(_scopedTicketsProvider),
     filter: ref.watch(filterStateProvider),
     accountWorkspace: ref.watch(accountWorkspaceProvider),
     workspaceOrder: ref.watch(workspaceOrderProvider),
     now: DateTime.now(),
-    currentUserHandle: me,
   );
 });
 

@@ -110,8 +110,13 @@ abstract class ProviderAdapter {
   /// Products/containers available to this account.
   Future<Result<List<ProviderProduct>>> listProducts();
 
-  /// Bugs scoped to one provider product/container.
-  Future<Result<TicketPage>> listProductBugs(String productId);
+  /// Bugs scoped to one provider product/container. [browseType] optionally
+  /// selects a provider-defined server-side view (e.g. ZenTao's
+  /// `unclosed`/`assigntome`/`resolvedbyme` bug tabs); null means all bugs.
+  Future<Result<TicketPage>> listProductBugs(
+    String productId, {
+    String? browseType,
+  });
 
   /// Projects available to this account (each groups executions).
   Future<Result<List<ProviderProject>>> listProjects();

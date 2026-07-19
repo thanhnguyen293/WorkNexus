@@ -241,6 +241,36 @@ abstract class AppL10n {
   /// **'Resolved by me'**
   String get resolvedByMe;
 
+  /// No description provided for @bugTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get bugTabAll;
+
+  /// No description provided for @bugTabUnclosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclosed'**
+  String get bugTabUnclosed;
+
+  /// No description provided for @bugTabReportedByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by me'**
+  String get bugTabReportedByMe;
+
+  /// No description provided for @bugTabAssignedByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned by me'**
+  String get bugTabAssignedByMe;
+
+  /// No description provided for @bugTabLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load bugs'**
+  String get bugTabLoadFailed;
+
   /// No description provided for @filters.
   ///
   /// In en, this message translates to:

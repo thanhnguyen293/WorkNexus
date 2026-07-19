@@ -26,8 +26,6 @@ abstract class FilterState with _$FilterState {
     @Default(<String>{}) Set<String> assignees,
     @Default(<String>{}) Set<String> bugTypes,
     @Default(<String>{}) Set<String> resolutions,
-    @Default(false) bool assignedToMe,
-    @Default(false) bool resolvedByMe,
     @Default('') String search,
   }) = _FilterState;
 
@@ -41,8 +39,6 @@ abstract class FilterState with _$FilterState {
       assignees.isNotEmpty ||
       bugTypes.isNotEmpty ||
       resolutions.isNotEmpty ||
-      assignedToMe ||
-      resolvedByMe ||
       search.trim().isNotEmpty;
 
   /// Number of chip-style filters active (excludes free-text search).
@@ -55,7 +51,5 @@ abstract class FilterState with _$FilterState {
       severities.length +
       assignees.length +
       bugTypes.length +
-      resolutions.length +
-      (assignedToMe ? 1 : 0) +
-      (resolvedByMe ? 1 : 0);
+      resolutions.length;
 }

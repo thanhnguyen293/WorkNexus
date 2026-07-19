@@ -238,7 +238,10 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
-  Future<Result<TicketPage>> listProductBugs(String productId) async {
+  Future<Result<TicketPage>> listProductBugs(
+    String productId, {
+    String? browseType,
+  }) async {
     return _guard(() async {
       const limit = 100;
       final out = <Ticket>[];
@@ -249,6 +252,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           productId,
           page: page,
           limit: limit,
+          browseType: browseType,
         );
         if (res.total > 0) total = res.total;
         var added = 0;

@@ -108,6 +108,40 @@ class SyncService {
     }
   }
 
+  /// Fetches one ZenTao bug **tab** ([browseType]) for a product — a server-side
+  /// filtered view (unclosed / assigned-to-me / resolved-by-me / …) — upserts
+  /// its bugs into drift (local-first: the board still renders from the DB), and
+  /// returns the ids of the bugs in that tab so the board can show just that
+  /// slice. Called fresh on every tab switch.
+  Future<Result<List<String>>> syncProductBugsTab({
+    required String accountId,
+    required String productId,
+    required String browseType,
+  }) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('ZenTao account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listProductBugs(
+      productId,
+      browseType: browseType,
+    );
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(account, value.tickets);
+        return Ok([for (final t in value.tickets) t.id]);
+    }
+  }
+
   Future<Result<List<ProviderProject>>> listProjects(String accountId) async {
     final adapter = await _adapterFor(accountId);
     if (adapter == null) {

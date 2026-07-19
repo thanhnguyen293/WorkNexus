@@ -84,7 +84,6 @@ BoardQuery _q(
   FilterState filter, {
   Map<String, String>? accountWorkspace,
   DateTime? now,
-  String? currentUserHandle,
 }) {
   return BoardQuery(
     tickets: tickets,
@@ -92,7 +91,6 @@ BoardQuery _q(
     accountWorkspace:
         accountWorkspace ?? {'ghP': 'personal', 'ghA': 'compA', 'ztB': 'compB'},
     now: now ?? DateTime(2026, 7, 17, 12),
-    currentUserHandle: currentUserHandle,
   );
 }
 
@@ -220,61 +218,6 @@ void main() {
         ).map((t) => t.id),
         ['fixed'],
       );
-    });
-
-    test(
-      'assigned to me matches the current user handle (case-insensitive)',
-      () {
-        final tickets = [
-          _ztBug(
-            id: 'mine',
-            providerStatus: 'active',
-          ).copyWith(assignee: 'thanh'),
-          _ztBug(
-            id: 'other',
-            providerStatus: 'active',
-          ).copyWith(assignee: 'alex'),
-        ];
-        final out = filter(
-          _q(
-            tickets,
-            const FilterState(assignedToMe: true),
-            currentUserHandle: 'Thanh',
-          ),
-        );
-        expect(out.map((t) => t.id), ['mine']);
-      },
-    );
-
-    test('resolved by me matches provider entity resolvedBy', () {
-      final tickets = [
-        _ztBug(
-          id: 'r1',
-          providerStatus: 'resolved',
-          resolution: 'fixed',
-        ).copyWith(providerEntity: const ZenTaoBugEntity(resolvedBy: 'Thanh')),
-        _ztBug(
-          id: 'r2',
-          providerStatus: 'resolved',
-          resolution: 'fixed',
-        ).copyWith(providerEntity: const ZenTaoBugEntity(resolvedBy: 'Alex')),
-      ];
-      final out = filter(
-        _q(
-          tickets,
-          const FilterState(resolvedByMe: true),
-          currentUserHandle: 'thanh',
-        ),
-      );
-      expect(out.map((t) => t.id), ['r1']);
-    });
-
-    test('assigned to me no-ops when the current user is unknown', () {
-      final tickets = [
-        _ztBug(id: 'a', providerStatus: 'active').copyWith(assignee: 'x'),
-      ];
-      final out = filter(_q(tickets, const FilterState(assignedToMe: true)));
-      expect(out.map((t) => t.id), ['a']);
     });
 
     test('saved view: mine = todo + inprogress', () {

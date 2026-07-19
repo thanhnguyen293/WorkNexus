@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../board_providers.dart';
 
-/// A single ZenTao project (product) row: a dot, the name, its bug count and a
-/// pin toggle. Tapping the row syncs and opens the project's bugs on the board.
+/// A single ZenTao project (product) row: a dot, the name, its cached bug count
+/// and a pin toggle. Tapping the row opens the product's bug board, which then
+/// fetches the default tab (browse type) from ZenTao.
 class ZenTaoProjectRow extends ConsumerWidget {
   const ZenTaoProjectRow({
     super.key,
@@ -33,12 +31,12 @@ class ZenTaoProjectRow extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final selected = ref.watch(selectedZenTaoProductProvider);
-    final syncing = ref.watch(zentaoProductSyncingProvider);
     final key = '${product.accountId}:${product.id}';
     final active =
         selected?.accountId == product.accountId &&
         selected?.productId == product.id;
-    final loading = syncing == key;
+    // While this product is the open board and its active tab is fetching.
+    final loading = active && ref.watch(zentaoBugTabSliceProvider).isLoading;
     final count = tickets
         .where(
           (t) =>
@@ -50,7 +48,7 @@ class ZenTaoProjectRow extends ConsumerWidget {
     return Opacity(
       opacity: loading ? 0.48 : 1,
       child: InkWell(
-        onTap: loading ? null : () => _select(context, ref),
+        onTap: loading ? null : () => _select(ref),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(
           height: 27,
@@ -104,21 +102,14 @@ class ZenTaoProjectRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _select(BuildContext context, WidgetRef ref) async {
-    // Switch to this project's board immediately so the UI responds at once; the
-    // sync then streams its bugs into the DB, which the board reads reactively.
-    // Capture before the await so no BuildContext is used across the async gap.
-    final messenger = ScaffoldMessenger.of(context);
-    final failedMessage = AppL10n.of(context).projectOpenFailed;
+  /// Opens this product's bug board and resets to the default tab. The board's
+  /// `zentaoBugTabSliceProvider` reacts to the selection + tab and streams the
+  /// chosen browse type's bugs into the DB, which the board reads reactively.
+  void _select(WidgetRef ref) {
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).select(product);
+    ref.read(zentaoBugTabProvider.notifier).reset();
     ref.read(viewModeProvider.notifier).set(ViewMode.zentaoBugs);
-    ref.read(zentaoProductSyncingProvider.notifier).start(product);
-    final res = await getIt<SyncService>().syncProductBugs(product);
-    ref.read(zentaoProductSyncingProvider.notifier).finish();
-    if (res case Err()) {
-      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
-    }
   }
 }
 

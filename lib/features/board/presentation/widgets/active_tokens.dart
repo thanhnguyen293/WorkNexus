@@ -70,10 +70,6 @@ class ActiveTokens extends ConsumerWidget {
           label: zentaoResolutionLabel(r) ?? r,
           onRemove: () => ctrl.toggleResolution(r),
         ),
-      if (f.assignedToMe)
-        _Token(label: l.assignedToMe, onRemove: ctrl.toggleAssignedToMe),
-      if (f.resolvedByMe)
-        _Token(label: l.resolvedByMe, onRemove: ctrl.toggleResolvedByMe),
     ];
 
     if (tokens.isEmpty) return const SizedBox.shrink();

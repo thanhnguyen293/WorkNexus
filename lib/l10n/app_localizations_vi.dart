@@ -81,6 +81,21 @@ class AppL10nVi extends AppL10n {
   String get resolvedByMe => 'Tôi đã xử lý';
 
   @override
+  String get bugTabAll => 'Tất cả';
+
+  @override
+  String get bugTabUnclosed => 'Chưa đóng';
+
+  @override
+  String get bugTabReportedByMe => 'Tôi báo';
+
+  @override
+  String get bugTabAssignedByMe => 'Tôi giao';
+
+  @override
+  String get bugTabLoadFailed => 'Không tải được bug';
+
+  @override
   String get filters => 'Bộ lọc';
 
   @override
