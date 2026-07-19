@@ -9,37 +9,39 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
+import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
 import 'widgets/connection_text_field.dart';
 import 'widgets/workspace_picker.dart';
 
-/// Modal form for connecting a ZenTao account. The user types their own
-/// credentials; the password is stored in the OS keychain, never in the DB.
-class AddConnectionDialog extends ConsumerStatefulWidget {
-  const AddConnectionDialog({super.key});
+/// Modal form for connecting a GitLab account with a Personal Access Token.
+/// The token is stored in the OS keychain, never in the DB. Works with both
+/// gitlab.com and self-hosted instances (any base URL).
+class GitLabConnectionDialog extends ConsumerStatefulWidget {
+  const GitLabConnectionDialog({super.key});
 
-  static Future<void> show(BuildContext context) =>
-      showDialog(context: context, builder: (_) => const AddConnectionDialog());
+  static Future<void> show(BuildContext context) => showDialog(
+    context: context,
+    builder: (_) => const GitLabConnectionDialog(),
+  );
 
   @override
-  ConsumerState<AddConnectionDialog> createState() =>
-      _AddConnectionDialogState();
+  ConsumerState<GitLabConnectionDialog> createState() =>
+      _GitLabConnectionDialogState();
 }
 
-class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
+class _GitLabConnectionDialogState
+    extends ConsumerState<GitLabConnectionDialog> {
   static const _kNewWorkspace = '__new__';
 
-  final _baseUrl = TextEditingController();
-  final _username = TextEditingController();
-  final _password = TextEditingController();
+  final _baseUrl = TextEditingController(text: 'https://gitlab.com');
+  final _token = TextEditingController();
   final _newWorkspace = TextEditingController();
   String? _workspaceId;
 
   @override
   void initState() {
     super.initState();
-    // Reset after the first frame — modifying a provider during initState/build
-    // is disallowed by Riverpod.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(addConnectionControllerProvider.notifier).reset();
     });
@@ -48,8 +50,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
   @override
   void dispose() {
     _baseUrl.dispose();
-    _username.dispose();
-    _password.dispose();
+    _token.dispose();
     _newWorkspace.dispose();
     super.dispose();
   }
@@ -57,6 +58,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     final workspaces = ref.watch(lookupsProvider).workspaces.values.toList();
     _workspaceId ??= workspaces.isEmpty ? null : workspaces.first.id;
     final state = ref.watch(addConnectionControllerProvider);
@@ -80,10 +82,10 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
             children: [
               Row(
                 children: [
-                  const ProviderBadge(ProviderType.zentao, big: true),
+                  const ProviderBadge(ProviderType.gitlab, big: true),
                   SizedBox(width: context.spacing.lg),
                   Text(
-                    'Connect ZenTao',
+                    l.connectGitLab,
                     style: context.typography.title.copyWith(
                       color: c.textPrimary,
                     ),
@@ -92,29 +94,24 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
               ),
               SizedBox(height: context.spacing.xs),
               Text(
-                'Enter your ZenTao server URL and login. Your password is stored '
-                'in the macOS Keychain — never in the local database.',
+                l.gitlabConnectionSubtitle,
                 style: context.typography.paragraphSm.copyWith(
                   color: c.textSecondary,
                 ),
               ),
               SizedBox(height: context.spacing.xl3),
               ConnectionTextField(
-                label: 'Server URL',
+                label: l.serverUrl,
                 controller: _baseUrl,
-                hint: 'https://host:port/zentao (include the subpath)',
+                hint: l.gitlabServerHint,
               ),
               SizedBox(height: context.spacing.lg),
               ConnectionTextField(
-                label: 'Account (username)',
-                controller: _username,
-                hint: 'your-username',
-              ),
-              SizedBox(height: context.spacing.lg),
-              ConnectionTextField(
-                label: 'Password',
-                controller: _password,
+                label: l.personalAccessToken,
+                controller: _token,
+                hint: l.gitlabTokenHint,
                 obscure: true,
+                onChanged: (_) => setState(() {}),
               ),
               SizedBox(height: context.spacing.xl),
               WorkspacePicker(
@@ -126,9 +123,9 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
               if (_workspaceId == _kNewWorkspace) ...[
                 SizedBox(height: context.spacing.lg),
                 ConnectionTextField(
-                  label: 'New workspace name',
+                  label: l.newWorkspaceName,
                   controller: _newWorkspace,
-                  hint: 'e.g. Company C',
+                  hint: l.newWorkspaceHint,
                   onChanged: (_) => setState(() {}),
                 ),
               ],
@@ -157,7 +154,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                     onPressed: state.busy
                         ? null
                         : () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: Text(l.cancel),
                   ),
                   SizedBox(width: context.spacing.md),
                   AppButton.filled(
@@ -165,10 +162,9 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                     onPressed: _canConnect(state)
                         ? () => ref
                               .read(addConnectionControllerProvider.notifier)
-                              .connectZenTao(
+                              .connectGitLab(
                                 baseUrl: _baseUrl.text,
-                                username: _username.text,
-                                password: _password.text,
+                                token: _token.text,
                                 workspaceId: _workspaceId == _kNewWorkspace
                                     ? null
                                     : _workspaceId,
@@ -177,7 +173,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                                     : null,
                               )
                         : null,
-                    child: const Text('Connect & sync'),
+                    child: Text(l.connectAndSync),
                   ),
                 ],
               ),
@@ -190,6 +186,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
 
   bool _canConnect(AddConnectionState state) {
     if (state.busy || _workspaceId == null) return false;
+    if (_token.text.trim().isEmpty) return false;
     if (_workspaceId == _kNewWorkspace) {
       return _newWorkspace.text.trim().isNotEmpty;
     }

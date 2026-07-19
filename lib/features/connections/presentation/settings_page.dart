@@ -12,6 +12,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'add_connection_dialog.dart';
+import 'gitlab_connection_dialog.dart';
 import 'settings_providers.dart';
 import 'widgets/account_list.dart';
 
@@ -130,16 +131,20 @@ class _ProviderPicker extends ConsumerWidget {
                   child: AppButton.outlinedNeutral(
                     size: AppButtonSize.large,
                     onPressed: () {
-                      if (p == ProviderType.zentao) {
-                        AddConnectionDialog.show(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${p.displayName} adapter coming soon',
+                      switch (p) {
+                        case ProviderType.zentao:
+                          AddConnectionDialog.show(context);
+                        case ProviderType.gitlab:
+                          GitLabConnectionDialog.show(context);
+                        case ProviderType.github:
+                        case ProviderType.jira:
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${p.displayName} adapter coming soon',
+                              ),
                             ),
-                          ),
-                        );
+                          );
                       }
                     },
                     child: Row(

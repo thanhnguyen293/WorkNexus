@@ -91,6 +91,7 @@ class Settings extends Table {
   TextColumn get density => text().withDefault(const Constant('comfortable'))();
   TextColumn get detailLayout =>
       text().withDefault(const Constant('twoPane'))();
+  TextColumn get dateFormat => text().withDefault(const Constant('iso'))();
   BoolColumn get companyTint => boolean().withDefault(const Constant(false))();
   TextColumn get localeCode => text().withDefault(const Constant('en'))();
   TextColumn get fontFamily =>
@@ -153,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -173,6 +174,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) await m.addColumn(settings, settings.accentColorValue);
       if (from < 9) await m.addColumn(settings, settings.pinnedProjectsJson);
       if (from < 10) await m.addColumn(settings, settings.detailLayout);
+      if (from < 11) await m.addColumn(settings, settings.dateFormat);
     },
   );
 

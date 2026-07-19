@@ -106,6 +106,7 @@ class ZenTaoProjectRow extends ConsumerWidget {
   /// `zentaoBugTabSliceProvider` reacts to the selection + tab and streams the
   /// chosen browse type's bugs into the DB, which the board reads reactively.
   void _select(WidgetRef ref) {
+    ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).select(product);
     ref.read(zentaoBugTabProvider.notifier).reset();

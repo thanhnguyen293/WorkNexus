@@ -11,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'gitlab_projects_branch.dart';
 import 'sidebar_primitives.dart';
 import 'zentao_executions_branch.dart';
 import 'zentao_projects_branch.dart';
@@ -60,7 +61,8 @@ class _WorkspaceNode extends StatelessWidget {
         .where(
           (a) =>
               a.workspaceId == workspace.id &&
-              a.providerType == ProviderType.zentao,
+              (a.providerType == ProviderType.zentao ||
+                  a.providerType == ProviderType.gitlab),
         )
         .toList();
     final count = tickets
@@ -111,7 +113,10 @@ class _WorkspaceNode extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (final a in accounts)
-                    _ZenTaoNode(account: a, tickets: tickets),
+                    if (a.providerType == ProviderType.gitlab)
+                      _GitLabNode(account: a, tickets: tickets)
+                    else
+                      _ZenTaoNode(account: a, tickets: tickets),
                 ],
               ),
             ),
@@ -170,6 +175,56 @@ class _ZenTaoNode extends StatelessWidget {
                 ZenTaoExecutionsBranch(account: account, tickets: tickets),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GitLabNode extends StatelessWidget {
+  const _GitLabNode({required this.account, required this.tickets});
+
+  final Account account;
+  final List<Ticket> tickets;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final count = tickets.where((tk) => tk.accountId == account.id).length;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 31,
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+            child: Row(
+              children: [
+                const ProviderBadge(ProviderType.gitlab),
+                SizedBox(width: context.spacing.md),
+                Expanded(
+                  child: Text(
+                    ProviderType.gitlab.displayName,
+                    style: context.typography.bodySm.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: c.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$count',
+                  style: context.typography.monoXs.copyWith(
+                    color: c.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SidebarTreeBranch(
+            child: GitLabProjectsBranch(account: account, tickets: tickets),
           ),
         ],
       ),

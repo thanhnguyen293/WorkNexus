@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
@@ -248,12 +249,16 @@ class ZenTaoAdapter implements ProviderAdapter {
       final seen = <String>{};
       var total = 0;
       for (var page = 1; page <= 50; page++) {
-        final res = await _client.productBugs(
-          productId,
-          page: page,
-          limit: limit,
-          browseType: browseType,
-        );
+        // REST v1 ignores `browseType`, so the tab views go through the classic
+        // `bug-browse-…json` channel; a null browseType keeps the plain REST list.
+        final res = (browseType == null || browseType.isEmpty)
+            ? await _client.productBugs(productId, page: page, limit: limit)
+            : await _client.classicProductBugs(
+                productId,
+                browseType: browseType,
+                recPerPage: limit,
+                pageID: page,
+              );
         if (res.total > 0) total = res.total;
         var added = 0;
         for (final bug in res.bugs) {
@@ -443,13 +448,25 @@ class ZenTaoAdapter implements ProviderAdapter {
     String? comment,
   }) async {
     return _guard(() async {
+      // ZenTao's activate wants `openedBuild` as a non-empty STRING (like
+      // resolve's `resolvedBuild`), NOT an array — sending `['trunk']` silently
+      // fails the reopen, leaving the bug resolved.
+      final build = (openedBuild == null || openedBuild.trim().isEmpty)
+          ? 'trunk'
+          : openedBuild.trim();
+      // Default the reopen assignee to the resolver (ZenTao's own web default),
+      // so a reopened bug goes back to the dev instead of staying on the reporter
+      // it was parked on for verification at resolve time.
+      final entity = ticket.providerEntity;
+      final resolvedBy = entity is ZenTaoBugEntity
+          ? (entity.resolvedBy ?? '').trim()
+          : '';
+      final target = (assignee != null && assignee.trim().isNotEmpty)
+          ? assignee.trim()
+          : resolvedBy;
       await _client.api.activate(ticket.externalKey, {
-        'openedBuild': [
-          (openedBuild == null || openedBuild.trim().isEmpty)
-              ? 'trunk'
-              : openedBuild.trim(),
-        ],
-        if (assignee != null && assignee.isNotEmpty) 'assignedTo': assignee,
+        'openedBuild': build,
+        if (target.isNotEmpty) 'assignedTo': target,
         if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
       });
       return true;

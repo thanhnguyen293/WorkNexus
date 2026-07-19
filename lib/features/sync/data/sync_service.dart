@@ -14,6 +14,9 @@ import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../data/local/mappers.dart';
+import '../../connections/data/gitlab/gitlab_adapter.dart';
+import '../../connections/data/gitlab/gitlab_client.dart';
+import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
 
@@ -24,6 +27,7 @@ import '../../connections/data/zentao/zentao_client.dart';
 const List<String> kSyntheticLabelPrefixes = <String>[
   'zentao-product:',
   'zentao-execution:',
+  'gitlab-project:',
 ];
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
@@ -183,6 +187,45 @@ class SyncService {
     }
   }
 
+  /// Fetches one GitLab project's recent issues OR merge requests (chosen by
+  /// [mergeRequests]), tags each with a synthetic `gitlab-project:<id>` label,
+  /// upserts them into drift (local-first), and returns their ids so the board
+  /// renders just that slice. Mirrors [syncProductBugsTab] for GitLab; routes
+  /// through the concrete [GitLabAdapter] (GitLab-specific fetch, not on the
+  /// shared interface).
+  Future<Result<List<String>>> syncGitLabProjectItems({
+    required String accountId,
+    required String projectId,
+    required bool mergeRequests,
+  }) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('GitLab account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listProjectItems(
+      projectId,
+      kind: mergeRequests ? GitLabKind.mergeRequest : GitLabKind.issue,
+    );
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        final label = 'gitlab-project:$projectId';
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
+    }
+  }
+
   /// Fetches full detail + comments for a single [ticket] from its provider and
   /// writes them into drift (from where the detail panel reads reactively).
   ///
@@ -267,10 +310,12 @@ class SyncService {
     return buildProviderAdapter(account, secret);
   }
 
-  /// Users the ticket can be assigned to (empty when unavailable).
+  /// Users the ticket can be assigned to (empty when unavailable). GitLab has no
+  /// account-wide assignable list, so its members are fetched per-project.
   Future<Result<List<ProviderUser>>> listUsers(Ticket ticket) async {
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) return const Ok(<ProviderUser>[]);
+    if (adapter is GitLabAdapter) return adapter.listProjectMembers(ticket);
     return adapter.listUsers();
   }
 
@@ -363,6 +408,76 @@ class SyncService {
     return const Ok(null);
   }
 
+  // ---- GitLab actions (close / reopen / merge) ----
+
+  /// Closes a GitLab issue or MR, then refreshes its cached detail/status.
+  Future<Result<void>> closeGitLabItem(Ticket ticket) {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.done,
+      providerStatus: 'closed',
+    );
+    final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
+    return _gitlabAction(
+      ticket,
+      optimistic,
+      (a) => isMr ? a.closeMergeRequest(ticket) : a.closeIssue(ticket),
+    );
+  }
+
+  /// Reopens a GitLab issue or MR, then refreshes its cached detail/status.
+  Future<Result<void>> reopenGitLabItem(Ticket ticket) {
+    final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
+    final optimistic = ticket.copyWith(
+      status: isMr ? UnifiedStatus.review : UnifiedStatus.todo,
+      providerStatus: 'opened',
+    );
+    return _gitlabAction(
+      ticket,
+      optimistic,
+      (a) => isMr ? a.reopenMergeRequest(ticket) : a.reopenIssue(ticket),
+    );
+  }
+
+  /// Merges a GitLab merge request, then refreshes its cached detail/status.
+  Future<Result<void>> mergeGitLabMr(Ticket ticket) {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.done,
+      providerStatus: 'merged',
+    );
+    return _gitlabAction(
+      ticket,
+      optimistic,
+      (a) => a.mergeMergeRequest(ticket),
+    );
+  }
+
+  /// Optimistically applies [optimistic], runs a GitLab-specific [action]
+  /// through the concrete adapter, refreshes the ticket detail on success, and
+  /// rolls back to [ticket] on failure. Like [resolveBug]/[activateBug] but
+  /// deliberately without their post-refresh re-assert: GitLab is strongly
+  /// consistent, so the [syncTicketDetail] fetch already reflects the new state
+  /// (no stale-read lag to paper over — re-asserting the guess could overwrite
+  /// the authoritative refreshed value).
+  Future<Result<void>> _gitlabAction(
+    Ticket ticket,
+    Ticket optimistic,
+    Future<Result<bool>> Function(GitLabAdapter adapter) action,
+  ) async {
+    await _optimisticallyUpdateTicket(optimistic);
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabAdapter) {
+      await _rollbackTicket(ticket);
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await action(adapter);
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
+    await syncTicketDetail(ticket);
+    return const Ok(null);
+  }
+
   Future<void> _optimisticallyUpdateTicket(Ticket ticket) async {
     await _db
         .into(_db.tickets)
@@ -385,18 +500,20 @@ class SyncService {
   // ---- inline image loading (authenticated + self-signed TLS) ----
 
   final Map<String, ZenTaoClient> _zenClients = {};
+  final Map<String, GitLabClient> _gitlabClients = {};
 
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
-  /// via the ticket account's authenticated client. Returns null if the account
-  /// has no stored credentials or the fetch fails.
+  /// via the ticket account's authenticated client (ZenTao session or GitLab
+  /// PAT). Returns null if the account has no stored credentials or the fetch
+  /// fails. Only the matching provider's client is non-null.
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url) async {
-    final client = await _zenClientFor(ticket.accountId);
-    if (client == null) return null;
     try {
-      return await client.fetchBytes(url);
-    } catch (_) {
-      return null;
-    }
+      final zen = await _zenClientFor(ticket.accountId);
+      if (zen != null) return await zen.fetchBytes(url);
+      final gitlab = await _gitlabClientFor(ticket.accountId);
+      if (gitlab != null) return await gitlab.fetchBytes(url);
+    } catch (_) {}
+    return null;
   }
 
   /// Downloads a ticket [attachment] through the account's authenticated client
@@ -465,6 +582,27 @@ class SyncService {
       password: secret,
     );
     _zenClients[accountId] = client;
+    return client;
+  }
+
+  /// A cached authenticated [GitLabClient] for [accountId], or null when the
+  /// account isn't GitLab / has no stored credentials. Used for inline image
+  /// bytes (`/uploads/…`) that need the PAT.
+  Future<GitLabClient?> _gitlabClientFor(String accountId) async {
+    final cached = _gitlabClients[accountId];
+    if (cached != null) return cached;
+    final row = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (row == null) return null;
+    final account = accountFromRow(row);
+    if (account.providerType != ProviderType.gitlab) return null;
+    final ref = account.credentialsRef;
+    if (ref == null) return null;
+    final secret = await _credentials.read(ref);
+    if (secret == null) return null;
+    final client = GitLabClient(baseUrl: account.baseUrl ?? '', token: secret);
+    _gitlabClients[accountId] = client;
     return client;
   }
 

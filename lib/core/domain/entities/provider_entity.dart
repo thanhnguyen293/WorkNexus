@@ -43,6 +43,21 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     @Default(<TicketAttachment>[]) List<TicketAttachment> attachments,
   }) = ZenTaoBugEntity;
 
+  /// Structured metadata for a GitLab issue or merge request. MR-only fields
+  /// (branches, merge status, draft, reviewers) are null on issues.
+  const factory TicketProviderEntity.gitlabItem({
+    String? projectPath,
+    int? projectId,
+    String? author,
+    String? sourceBranch,
+    String? targetBranch,
+    String? mergeStatus,
+    bool? draft,
+    int? upvotes,
+    @Default(<String>[]) List<String> reviewers,
+    @Default(<String>[]) List<String> assignees,
+  }) = GitLabItemEntity;
+
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>
       _$TicketProviderEntityFromJson(json);
 }

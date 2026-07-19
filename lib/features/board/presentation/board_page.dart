@@ -10,6 +10,8 @@ import 'widgets/board_view.dart';
 import 'widgets/chrome_bar.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_popover.dart';
+import 'widgets/gitlab_board_view.dart';
+import 'widgets/gitlab_tabs.dart';
 import 'widgets/list_view.dart';
 import 'widgets/zentao_bug_board_view.dart';
 import 'widgets/zentao_bug_tabs.dart';
@@ -33,19 +35,25 @@ class BoardPage extends ConsumerWidget {
     final bugSlice = mode == ViewMode.zentaoBugs
         ? ref.watch(zentaoBugTabSliceProvider)
         : null;
+    final gitlabSlice = mode == ViewMode.gitlab
+        ? ref.watch(gitlabItemsSliceProvider)
+        : null;
     final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
-    // While a just-opened tab/execution is still fetching and nothing is cached
-    // yet, show the skeleton instead of a momentary empty state.
+    // While a just-opened tab/execution/project is still fetching and nothing is
+    // cached yet, show the skeleton instead of a momentary empty state.
     final showSkeleton =
         loading ||
         ((bugSlice?.isLoading ?? false) && count == 0) ||
+        ((gitlabSlice?.isLoading ?? false) && count == 0) ||
         (executionSyncing && count == 0 && mode == ViewMode.zentaoTasks);
 
     Widget body;
     if (showSkeleton) {
       body = const BoardSkeleton();
     } else if (bugSlice != null && bugSlice.hasError) {
-      body = const _BugTabError();
+      body = _SliceError(message: AppL10n.of(context).bugTabLoadFailed);
+    } else if (gitlabSlice != null && gitlabSlice.hasError) {
+      body = _SliceError(message: AppL10n.of(context).gitlabItemsLoadFailed);
     } else if (count == 0) {
       body = const EmptyState();
     } else {
@@ -53,6 +61,7 @@ class BoardPage extends ConsumerWidget {
         ViewMode.board => const BoardView(),
         ViewMode.zentaoBugs => const ZenTaoBugBoardView(),
         ViewMode.zentaoTasks => const ZenTaoTaskBoardView(),
+        ViewMode.gitlab => const GitLabBoardView(),
         ViewMode.list => const TaskListView(),
       };
     }
@@ -63,6 +72,7 @@ class BoardPage extends ConsumerWidget {
         children: [
           const ChromeBar(),
           if (mode == ViewMode.zentaoBugs) const ZenTaoBugTabs(),
+          if (mode == ViewMode.gitlab) const GitLabTabs(),
           Expanded(
             child: Stack(
               children: [
@@ -91,16 +101,16 @@ class BoardPage extends ConsumerWidget {
   }
 }
 
-/// Shown on the bug board when the active tab's fetch fails (rule 11.3: render
-/// the error, don't swallow it). The tab strip stays visible so the user can
-/// retry by switching tabs.
-class _BugTabError extends StatelessWidget {
-  const _BugTabError();
+/// Shown when the active board slice's fetch fails (rule 11.3: render the error,
+/// don't swallow it). The tab strip stays visible so the user can retry.
+class _SliceError extends StatelessWidget {
+  const _SliceError({required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final l = AppL10n.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -108,7 +118,7 @@ class _BugTabError extends StatelessWidget {
           Icon(Icons.cloud_off_outlined, size: 28, color: c.textTertiary),
           SizedBox(height: context.spacing.md),
           Text(
-            l.bugTabLoadFailed,
+            message,
             style: context.typography.bodySm.copyWith(color: c.textSecondary),
           ),
         ],

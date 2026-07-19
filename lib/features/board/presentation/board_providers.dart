@@ -14,15 +14,18 @@ import '../../sync/data/sync_service.dart';
 import '../domain/entities/board_model.dart';
 import '../domain/entities/filter_state.dart';
 import '../domain/usecases/build_board.dart';
+import '../domain/usecases/build_gitlab_issue_board.dart';
+import '../domain/usecases/build_gitlab_mr_board.dart';
 import '../domain/usecases/build_list.dart';
 import '../domain/usecases/build_zentao_bug_board.dart';
 import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
+import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/saved_view.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 
-enum ViewMode { board, zentaoBugs, zentaoTasks, list }
+enum ViewMode { board, zentaoBugs, zentaoTasks, gitlab, list }
 
 class ZenTaoProductSelection {
   const ZenTaoProductSelection({
@@ -350,11 +353,133 @@ final zentaoExecutionsProvider =
       }
     });
 
-/// Tickets scoped to the active ZenTao product/execution selection, before the
-/// user's chip filters. Facets are derived from this set so chip options and
-/// counts stay stable while filters toggle.
+// ---- GitLab dedicated board (project → issues/MRs) ----
+
+class GitLabProjectSelection {
+  const GitLabProjectSelection({
+    required this.accountId,
+    required this.projectId,
+    required this.projectName,
+  });
+
+  final String accountId;
+  final String projectId;
+  final String projectName;
+}
+
+/// The GitLab project whose dedicated board is open (null off the GitLab board).
+class SelectedGitLabProject extends Notifier<GitLabProjectSelection?> {
+  @override
+  GitLabProjectSelection? build() => null;
+
+  void select(ProviderProject project) {
+    state = GitLabProjectSelection(
+      accountId: project.accountId,
+      projectId: project.id,
+      projectName: project.name,
+    );
+  }
+
+  void clear() => state = null;
+}
+
+final selectedGitLabProjectProvider =
+    NotifierProvider<SelectedGitLabProject, GitLabProjectSelection?>(
+      SelectedGitLabProject.new,
+    );
+
+/// Which kind the GitLab board shows: Issues (default) or Merge Requests.
+class GitLabKindController extends Notifier<GitLabItemKind> {
+  @override
+  GitLabItemKind build() => GitLabItemKind.issue;
+
+  void set(GitLabItemKind kind) => state = kind;
+}
+
+final gitlabKindProvider =
+    NotifierProvider<GitLabKindController, GitLabItemKind>(
+      GitLabKindController.new,
+    );
+
+/// Which GitLab accounts have their collapsible "Projects" group expanded.
+class GitLabProjectsExpanded extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const <String>{};
+
+  void toggle(String accountId) {
+    final next = Set<String>.of(state);
+    next.contains(accountId) ? next.remove(accountId) : next.add(accountId);
+    state = next;
+  }
+}
+
+final gitlabProjectsExpandedProvider =
+    NotifierProvider<GitLabProjectsExpanded, Set<String>>(
+      GitLabProjectsExpanded.new,
+    );
+
+/// GitLab projects the account is a member of (the sidebar Projects tree).
+final gitlabProjectsProvider =
+    FutureProvider.family<List<ProviderProject>, String>((
+      ref,
+      accountId,
+    ) async {
+      final res = await getIt<SyncService>().listProjects(accountId);
+      switch (res) {
+        case Ok(:final value):
+          return value;
+        case Err(:final failure):
+          throw failure;
+      }
+    });
+
+/// The selected project + kind's server slice: syncs that project's recent
+/// issues/MRs into drift and returns their ids so the board renders just that
+/// slice. Refetched on every project/kind change (autoDispose + reactive deps).
+final gitlabItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final project = ref.watch(selectedGitLabProjectProvider);
+  if (project == null) return const <String>{};
+  final kind = ref.watch(gitlabKindProvider);
+  final res = await getIt<SyncService>().syncGitLabProjectItems(
+    accountId: project.accountId,
+    projectId: project.projectId,
+    mergeRequests: kind == GitLabItemKind.mergeRequest,
+  );
+  switch (res) {
+    case Ok(:final value):
+      return value.toSet();
+    case Err(:final failure):
+      throw failure;
+  }
+});
+
+/// Tickets scoped to the active ZenTao product/execution or GitLab project
+/// selection, before the user's chip filters. Facets are derived from this set
+/// so chip options and counts stay stable while filters toggle.
 final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   var tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
+  final gitlabProject = ref.watch(selectedGitLabProjectProvider);
+  if (gitlabProject != null) {
+    final kind = ref.watch(gitlabKindProvider);
+    final projectLabel = 'gitlab-project:${gitlabProject.projectId}';
+    // The active project+kind's server slice (ids). Null while it's still
+    // loading — show nothing until it resolves (the board page renders a
+    // skeleton) so a project/kind switch never flashes the previous slice.
+    final slice = ref.watch(gitlabItemsSliceProvider).asData?.value;
+    return tickets
+        .where(
+          (ticket) =>
+              ticket.accountId == gitlabProject.accountId &&
+              ticket.providerType == ProviderType.gitlab &&
+              (ticket.externalType ?? '') == kind.externalType &&
+              ticket.labels.contains(projectLabel) &&
+              slice != null &&
+              slice.contains(ticket.id),
+        )
+        .toList();
+  }
   final product = ref.watch(selectedZenTaoProductProvider);
   final execution = ref.watch(selectedZenTaoExecutionProvider);
   if (execution != null) {
@@ -403,7 +528,7 @@ final boardFacetsProvider = Provider<BoardFacets>((ref) {
   final scope = switch (ref.watch(viewModeProvider)) {
     ViewMode.zentaoBugs => BoardFacetScope.bug,
     ViewMode.zentaoTasks => BoardFacetScope.task,
-    ViewMode.board || ViewMode.list => BoardFacetScope.none,
+    ViewMode.board || ViewMode.gitlab || ViewMode.list => BoardFacetScope.none,
   };
   if (scope == BoardFacetScope.none) return BoardFacets.empty;
   return const DeriveBoardFacets()(
@@ -423,11 +548,24 @@ final zentaoTaskBoardProvider = Provider<ZenTaoTaskBoardModel>(
   (ref) => const BuildZenTaoTaskBoard()(ref.watch(_boardQueryProvider)),
 );
 
+final gitlabMrBoardProvider = Provider<GitLabMrBoardModel>(
+  (ref) => const BuildGitLabMrBoard()(ref.watch(_boardQueryProvider)),
+);
+
+final gitlabIssueBoardProvider = Provider<GitLabIssueBoardModel>(
+  (ref) => const BuildGitLabIssueBoard()(ref.watch(_boardQueryProvider)),
+);
+
 final listRowsProvider = Provider<List<Ticket>>(
   (ref) => const BuildList()(ref.watch(_boardQueryProvider)),
 );
 
 final resultCountProvider = Provider<int>((ref) {
+  if (ref.watch(viewModeProvider) == ViewMode.gitlab) {
+    return ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
+        ? ref.watch(gitlabMrBoardProvider).total
+        : ref.watch(gitlabIssueBoardProvider).total;
+  }
   if (ref.watch(viewModeProvider) == ViewMode.zentaoBugs) {
     return ref.watch(zentaoBugBoardProvider).total;
   }

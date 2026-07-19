@@ -5,6 +5,7 @@ import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/connections/presentation/add_connection_dialog.dart';
+import 'package:work_nexus/l10n/app_localizations.dart';
 
 import '../support/di_test_harness.dart';
 
@@ -30,6 +31,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppL10n.localizationsDelegates,
+            supportedLocales: AppL10n.supportedLocales,
             theme: buildAppTheme(
               variant: AppThemeVariant.light,
               surface: SurfaceStyle.outline,

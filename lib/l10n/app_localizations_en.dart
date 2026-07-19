@@ -232,6 +232,70 @@ class AppL10nEn extends AppL10n {
   String get chooseProvider => 'Choose a provider';
 
   @override
+  String get connectGitLab => 'Connect GitLab';
+
+  @override
+  String get gitlabConnectionSubtitle =>
+      'Enter your GitLab server URL and a Personal Access Token (scope: api). Your token is stored in the macOS Keychain — never in the local database.';
+
+  @override
+  String get serverUrl => 'Server URL';
+
+  @override
+  String get gitlabServerHint => 'https://gitlab.com or your self-hosted URL';
+
+  @override
+  String get personalAccessToken => 'Personal Access Token';
+
+  @override
+  String get gitlabTokenHint => 'glpat-… (scope: api)';
+
+  @override
+  String get newWorkspaceOption => '➕ New workspace…';
+
+  @override
+  String get newWorkspaceName => 'New workspace name';
+
+  @override
+  String get newWorkspaceHint => 'e.g. Company C';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get connectAndSync => 'Connect & sync';
+
+  @override
+  String get gitlabIssues => 'Issues';
+
+  @override
+  String get gitlabMergeRequests => 'Merge Requests';
+
+  @override
+  String get gitlabColOpen => 'Open';
+
+  @override
+  String get gitlabColDraft => 'Draft';
+
+  @override
+  String get gitlabColMerged => 'Merged';
+
+  @override
+  String get gitlabColClosed => 'Closed';
+
+  @override
+  String get gitlabItemsLoadFailed => 'Couldn\'t load items';
+
+  @override
+  String get assign => 'Assign';
+
+  @override
+  String get gitlabMerge => 'Merge';
+
+  @override
+  String get gitlabReopen => 'Reopen';
+
+  @override
   String get emptyTitle => 'No tasks match these filters';
 
   @override
@@ -290,6 +354,18 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get layoutDocument => 'Document';
+
+  @override
+  String get dateFormat => 'Date format';
+
+  @override
+  String get dateFormatIso => 'ISO';
+
+  @override
+  String get dateFormatDmy => 'DD/MM';
+
+  @override
+  String get dateFormatLong => 'Long';
 
   @override
   String get companyTint => 'Company tint';

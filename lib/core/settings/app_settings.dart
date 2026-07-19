@@ -14,6 +14,21 @@ enum DetailLayout {
   document,
 }
 
+/// How a concrete timestamp (older than an hour) renders its date part. The time
+/// is always 24h `HH:mm`, and very recent times still show "just now" / "x min
+/// ago" regardless of this.
+enum DateDisplayFormat {
+  /// `2026-05-26 10:28`
+  iso,
+
+  /// `26/05/2026 10:28`
+  dmy,
+
+  /// Locale-aware long form: `May 26, 2026 10:28` (en) / `26 thg 5, 2026 10:28`
+  /// (vi).
+  long,
+}
+
 /// App-wide appearance + language settings, persisted to drift (see `main`).
 @immutable
 class AppSettings {
@@ -22,6 +37,7 @@ class AppSettings {
     this.surface = SurfaceStyle.outline,
     this.density = AppDensity.comfortable,
     this.detailLayout = DetailLayout.twoPane,
+    this.dateFormat = DateDisplayFormat.iso,
     this.companyTint = false,
     this.locale = const Locale('en'),
     this.fontFamily = kSansFont,
@@ -34,6 +50,10 @@ class AppSettings {
   final SurfaceStyle surface;
   final AppDensity density;
   final DetailLayout detailLayout;
+
+  /// How concrete timestamps render their date part across the app.
+  final DateDisplayFormat dateFormat;
+
   final bool companyTint;
   final Locale locale;
 
@@ -58,6 +78,7 @@ class AppSettings {
     SurfaceStyle? surface,
     AppDensity? density,
     DetailLayout? detailLayout,
+    DateDisplayFormat? dateFormat,
     bool? companyTint,
     Locale? locale,
     String? fontFamily,
@@ -71,6 +92,7 @@ class AppSettings {
       surface: surface ?? this.surface,
       density: density ?? this.density,
       detailLayout: detailLayout ?? this.detailLayout,
+      dateFormat: dateFormat ?? this.dateFormat,
       companyTint: companyTint ?? this.companyTint,
       locale: locale ?? this.locale,
       fontFamily: fontFamily ?? this.fontFamily,
@@ -128,6 +150,8 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setSurface(SurfaceStyle s) => _set(state.copyWith(surface: s));
   void setDensity(AppDensity d) => _set(state.copyWith(density: d));
   void setDetailLayout(DetailLayout l) => _set(state.copyWith(detailLayout: l));
+  void setDateFormat(DateDisplayFormat f) =>
+      _set(state.copyWith(dateFormat: f));
   void setCompanyTint(bool on) => _set(state.copyWith(companyTint: on));
   void setLocale(Locale l) => _set(state.copyWith(locale: l));
   void setFontFamily(String f) => _set(state.copyWith(fontFamily: f));

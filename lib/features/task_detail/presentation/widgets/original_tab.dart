@@ -59,7 +59,14 @@ class OriginalTab extends ConsumerWidget {
           ticket.priority,
         ).replaceAll('◆ ', ''),
       ),
-      (l.updated, formatWhen(context, ticket.updatedAt)),
+      (
+        l.updated,
+        formatWhen(
+          context,
+          ticket.updatedAt,
+          format: ref.watch(appSettingsProvider.select((s) => s.dateFormat)),
+        ),
+      ),
     ];
 
     // The description, people and attachments — the narrative of the bug.

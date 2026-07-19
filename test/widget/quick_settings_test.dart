@@ -125,9 +125,9 @@ void main() {
     final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
     expect(tester.getSize(panel).width, lessThanOrEqualTo(300));
     // Compact popover: hosts the appearance controls (incl. the primary-color
-    // palette + radius) but stays well short of a full settings page and its
-    // ~500px max height; scrolls if the viewport is shorter.
-    expect(tester.getSize(panel).height, lessThan(470));
+    // palette + radius) but stays short of a full settings page and its ~500px
+    // max height; scrolls if the viewport is shorter.
+    expect(tester.getSize(panel).height, lessThan(490));
     expect(find.text('Appearance'), findsNothing);
     expect(
       (tester.getCenter(find.text('Language')).dy -

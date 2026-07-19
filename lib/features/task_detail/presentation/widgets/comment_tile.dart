@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -10,13 +12,13 @@ import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/markdown_text.dart';
 
 /// A single comment bubble in the merged comments/activity timeline.
-class CommentTile extends StatelessWidget {
+class CommentTile extends ConsumerWidget {
   const CommentTile(this.comment, {super.key, this.imageLoader});
   final Comment comment;
   final ImageBytesLoader? imageLoader;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final internal = comment.origin == CommentOrigin.internalNote;
     return Container(
@@ -50,7 +52,13 @@ class CommentTile extends StatelessWidget {
                 ),
               const Spacer(),
               Text(
-                formatWhen(context, comment.createdAt),
+                formatWhen(
+                  context,
+                  comment.createdAt,
+                  format: ref.watch(
+                    appSettingsProvider.select((s) => s.dateFormat),
+                  ),
+                ),
                 style: context.typography.monoXs.copyWith(
                   color: c.textTertiary,
                 ),
@@ -71,12 +79,12 @@ class CommentTile extends StatelessWidget {
 }
 
 /// A compact non-comment activity line in the merged timeline.
-class ActivityRow extends StatelessWidget {
+class ActivityRow extends ConsumerWidget {
   const ActivityRow(this.event, {super.key});
   final ActivityEvent event;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
@@ -155,7 +163,13 @@ class ActivityRow extends StatelessWidget {
           ),
           SizedBox(width: context.spacing.md),
           Text(
-            formatWhen(context, event.at),
+            formatWhen(
+              context,
+              event.at,
+              format: ref.watch(
+                appSettingsProvider.select((s) => s.dateFormat),
+              ),
+            ),
             style: context.typography.monoXs.copyWith(color: c.textTertiary),
           ),
         ],

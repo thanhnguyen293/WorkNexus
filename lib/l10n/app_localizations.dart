@@ -535,6 +535,132 @@ abstract class AppL10n {
   /// **'Choose a provider'**
   String get chooseProvider;
 
+  /// No description provided for @connectGitLab.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect GitLab'**
+  String get connectGitLab;
+
+  /// No description provided for @gitlabConnectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your GitLab server URL and a Personal Access Token (scope: api). Your token is stored in the macOS Keychain — never in the local database.'**
+  String get gitlabConnectionSubtitle;
+
+  /// No description provided for @serverUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get serverUrl;
+
+  /// No description provided for @gitlabServerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://gitlab.com or your self-hosted URL'**
+  String get gitlabServerHint;
+
+  /// No description provided for @personalAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Access Token'**
+  String get personalAccessToken;
+
+  /// No description provided for @gitlabTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'glpat-… (scope: api)'**
+  String get gitlabTokenHint;
+
+  /// No description provided for @newWorkspaceOption.
+  ///
+  /// In en, this message translates to:
+  /// **'➕ New workspace…'**
+  String get newWorkspaceOption;
+
+  /// No description provided for @newWorkspaceName.
+  ///
+  /// In en, this message translates to:
+  /// **'New workspace name'**
+  String get newWorkspaceName;
+
+  /// No description provided for @newWorkspaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Company C'**
+  String get newWorkspaceHint;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @connectAndSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect & sync'**
+  String get connectAndSync;
+
+  /// No description provided for @gitlabIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues'**
+  String get gitlabIssues;
+
+  /// No description provided for @gitlabMergeRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Requests'**
+  String get gitlabMergeRequests;
+
+  /// No description provided for @gitlabColOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get gitlabColOpen;
+
+  /// No description provided for @gitlabColDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get gitlabColDraft;
+
+  /// No description provided for @gitlabColMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged'**
+  String get gitlabColMerged;
+
+  /// No description provided for @gitlabColClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get gitlabColClosed;
+
+  /// No description provided for @gitlabItemsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load items'**
+  String get gitlabItemsLoadFailed;
+
+  /// No description provided for @assign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign'**
+  String get assign;
+
+  /// No description provided for @gitlabMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get gitlabMerge;
+
+  /// No description provided for @gitlabReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get gitlabReopen;
+
   /// No description provided for @emptyTitle.
   ///
   /// In en, this message translates to:
@@ -654,6 +780,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Document'**
   String get layoutDocument;
+
+  /// No description provided for @dateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get dateFormat;
+
+  /// No description provided for @dateFormatIso.
+  ///
+  /// In en, this message translates to:
+  /// **'ISO'**
+  String get dateFormatIso;
+
+  /// No description provided for @dateFormatDmy.
+  ///
+  /// In en, this message translates to:
+  /// **'DD/MM'**
+  String get dateFormatDmy;
+
+  /// No description provided for @dateFormatLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Long'**
+  String get dateFormatLong;
 
   /// No description provided for @companyTint.
   ///

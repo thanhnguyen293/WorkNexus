@@ -232,6 +232,70 @@ class AppL10nVi extends AppL10n {
   String get chooseProvider => 'Chọn một nguồn';
 
   @override
+  String get connectGitLab => 'Kết nối GitLab';
+
+  @override
+  String get gitlabConnectionSubtitle =>
+      'Nhập địa chỉ máy chủ GitLab và Personal Access Token (scope: api). Token được lưu trong macOS Keychain — không lưu trong cơ sở dữ liệu cục bộ.';
+
+  @override
+  String get serverUrl => 'Địa chỉ máy chủ';
+
+  @override
+  String get gitlabServerHint => 'https://gitlab.com hoặc URL tự host';
+
+  @override
+  String get personalAccessToken => 'Personal Access Token';
+
+  @override
+  String get gitlabTokenHint => 'glpat-… (scope: api)';
+
+  @override
+  String get newWorkspaceOption => '➕ Workspace mới…';
+
+  @override
+  String get newWorkspaceName => 'Tên workspace mới';
+
+  @override
+  String get newWorkspaceHint => 'vd Công ty C';
+
+  @override
+  String get cancel => 'Hủy';
+
+  @override
+  String get connectAndSync => 'Kết nối & đồng bộ';
+
+  @override
+  String get gitlabIssues => 'Issues';
+
+  @override
+  String get gitlabMergeRequests => 'Merge Requests';
+
+  @override
+  String get gitlabColOpen => 'Mở';
+
+  @override
+  String get gitlabColDraft => 'Nháp';
+
+  @override
+  String get gitlabColMerged => 'Đã merge';
+
+  @override
+  String get gitlabColClosed => 'Đã đóng';
+
+  @override
+  String get gitlabItemsLoadFailed => 'Không tải được danh sách';
+
+  @override
+  String get assign => 'Giao';
+
+  @override
+  String get gitlabMerge => 'Merge';
+
+  @override
+  String get gitlabReopen => 'Mở lại';
+
+  @override
   String get emptyTitle => 'Không có công việc khớp bộ lọc';
 
   @override
@@ -290,6 +354,18 @@ class AppL10nVi extends AppL10n {
 
   @override
   String get layoutDocument => 'Tài liệu';
+
+  @override
+  String get dateFormat => 'Định dạng ngày';
+
+  @override
+  String get dateFormatIso => 'ISO';
+
+  @override
+  String get dateFormatDmy => 'DD/MM';
+
+  @override
+  String get dateFormatLong => 'Dài';
 
   @override
   String get companyTint => 'Màu công ty';

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -15,16 +17,16 @@ import 'section_label.dart';
 /// groups: what the bug *is* (classification) and how it *moved* (lifecycle).
 /// Empty classification fields collapse behind a "Show N empty fields" toggle;
 /// empty lifecycle rows are always hidden.
-class ZenTaoBugSections extends StatefulWidget {
+class ZenTaoBugSections extends ConsumerStatefulWidget {
   const ZenTaoBugSections(this.bug, {super.key});
 
   final ZenTaoBugEntity bug;
 
   @override
-  State<ZenTaoBugSections> createState() => _ZenTaoBugSectionsState();
+  ConsumerState<ZenTaoBugSections> createState() => _ZenTaoBugSectionsState();
 }
 
-class _ZenTaoBugSectionsState extends State<ZenTaoBugSections> {
+class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
   bool _showEmpty = false;
 
   @override
@@ -32,6 +34,9 @@ class _ZenTaoBugSectionsState extends State<ZenTaoBugSections> {
     final c = context.colors;
     final l = AppL10n.of(context);
     final bug = widget.bug;
+    final dateFormat = ref.watch(
+      appSettingsProvider.select((s) => s.dateFormat),
+    );
 
     // Design order: filled rows surface first, the five id-only fields (Module,
     // Branch, Plan, Story, Task) fall to the empty group when unset (ZenTao
@@ -55,13 +60,22 @@ class _ZenTaoBugSectionsState extends State<ZenTaoBugSections> {
         .toList();
 
     final lifecycle = _filter([
-      (l.fieldOpened, formatWhen(context, bug.openedDate)),
-      (l.fieldAssigned, formatWhen(context, bug.assignedDate)),
+      (l.fieldOpened, formatWhen(context, bug.openedDate, format: dateFormat)),
+      (
+        l.fieldAssigned,
+        formatWhen(context, bug.assignedDate, format: dateFormat),
+      ),
       (l.fieldResolvedBy, bug.resolvedBy ?? ''),
-      (l.fieldResolved, formatWhen(context, bug.resolvedDate)),
+      (
+        l.fieldResolved,
+        formatWhen(context, bug.resolvedDate, format: dateFormat),
+      ),
       (l.fieldClosedBy, bug.closedBy ?? ''),
-      (l.fieldClosed, formatWhen(context, bug.closedDate)),
-      (l.lastEdited, formatWhen(context, bug.lastEditedDate)),
+      (l.fieldClosed, formatWhen(context, bug.closedDate, format: dateFormat)),
+      (
+        l.lastEdited,
+        formatWhen(context, bug.lastEditedDate, format: dateFormat),
+      ),
     ]);
 
     return Container(

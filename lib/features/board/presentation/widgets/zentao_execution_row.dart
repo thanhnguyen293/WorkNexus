@@ -100,6 +100,7 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     // Capture before the await so no BuildContext is used across the async gap.
     final messenger = ScaffoldMessenger.of(context);
     final failedMessage = AppL10n.of(context).executionOpenFailed;
+    ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
     ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);

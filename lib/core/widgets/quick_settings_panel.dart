@@ -127,6 +127,19 @@ class QuickSettingsPanel extends ConsumerWidget {
             ),
             SizedBox(height: context.spacing.xs),
             _SettingRow(
+              label: l.dateFormat,
+              control: _CompactSegmentedControl<DateDisplayFormat>(
+                value: settings.dateFormat,
+                options: {
+                  DateDisplayFormat.iso: l.dateFormatIso,
+                  DateDisplayFormat.dmy: l.dateFormatDmy,
+                  DateDisplayFormat.long: l.dateFormatLong,
+                },
+                onChanged: controller.setDateFormat,
+              ),
+            ),
+            SizedBox(height: context.spacing.xs),
+            _SettingRow(
               label: l.companyTint,
               control: _CompactSegmentedControl<bool>(
                 value: settings.companyTint,

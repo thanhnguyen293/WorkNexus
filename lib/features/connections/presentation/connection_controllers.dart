@@ -43,22 +43,11 @@ class AddConnectionController extends Notifier<AddConnectionState> {
     }
 
     // Resolve the target workspace, creating a new one if requested.
-    String targetWorkspaceId;
-    final newName = newWorkspaceName?.trim() ?? '';
-    if (newName.isNotEmpty) {
-      final wsId = 'ws-${_slug(newName)}-${intHash(newName).toRadixString(16)}';
-      await getIt<ConnectionRepository>().addWorkspace(
-        Workspace(
-          id: wsId,
-          name: newName,
-          shortCode: _initials(newName),
-          colorValue: _pickColor(newName),
-        ),
-      );
-      targetWorkspaceId = wsId;
-    } else if (workspaceId != null && workspaceId.isNotEmpty) {
-      targetWorkspaceId = workspaceId;
-    } else {
+    final targetWorkspaceId = await _resolveWorkspaceId(
+      workspaceId,
+      newWorkspaceName,
+    );
+    if (targetWorkspaceId == null) {
       state = const AddConnectionState(error: 'Choose or create a workspace');
       return false;
     }
@@ -102,6 +91,108 @@ class AddConnectionController extends Notifier<AddConnectionState> {
         state = const AddConnectionState(done: true);
         return true;
     }
+  }
+
+  /// Tests the GitLab connection (a Personal Access Token), stores the token in
+  /// the keychain, persists the account, and runs an initial sync. The handle is
+  /// resolved from the token (`GET /user`), so there is no username field.
+  ///
+  /// Provide EITHER [workspaceId] (existing) OR [newWorkspaceName] (created here).
+  Future<bool> connectGitLab({
+    required String baseUrl,
+    required String token,
+    String? workspaceId,
+    String? newWorkspaceName,
+  }) async {
+    state = const AddConnectionState(busy: true);
+    if (baseUrl.trim().isEmpty || token.trim().isEmpty) {
+      state = const AddConnectionState(error: 'All fields are required');
+      return false;
+    }
+
+    final targetWorkspaceId = await _resolveWorkspaceId(
+      workspaceId,
+      newWorkspaceName,
+    );
+    if (targetWorkspaceId == null) {
+      state = const AddConnectionState(error: 'Choose or create a workspace');
+      return false;
+    }
+
+    // Verify the token and resolve the authenticated username (used as the
+    // handle + account-id slug). The probe's account id is irrelevant.
+    final probe = Account(
+      id: 'gl-probe',
+      workspaceId: targetWorkspaceId,
+      providerType: ProviderType.gitlab,
+      handle: '',
+      baseUrl: baseUrl.trim(),
+    );
+    final check = await buildProviderAdapter(probe, token)!.testConnection();
+    final String username;
+    switch (check) {
+      case Err(:final failure):
+        state = AddConnectionState(error: failure.message);
+        return false;
+      case Ok(:final value):
+        if (!value.ok) {
+          state = AddConnectionState(error: value.error ?? 'Connection failed');
+          return false;
+        }
+        username = (value.account == null || value.account!.isEmpty)
+            ? 'gitlab'
+            : value.account!;
+    }
+
+    final accountId =
+        'gl-${_slug(username)}-${intHash(baseUrl).toRadixString(16)}';
+    final credRef = CredentialStore.refFor(accountId);
+    final account = Account(
+      id: accountId,
+      workspaceId: targetWorkspaceId,
+      providerType: ProviderType.gitlab,
+      handle: username,
+      baseUrl: baseUrl.trim(),
+      credentialsRef: credRef,
+    );
+
+    await getIt<CredentialStore>().write(credRef, token);
+    await getIt<ConnectionRepository>().addAccount(account);
+    final sync = await getIt<SyncService>().syncAccount(account);
+    switch (sync) {
+      case Err(:final failure):
+        state = AddConnectionState(
+          error: 'Connected, but sync failed: ${failure.message}',
+        );
+        return true;
+      case Ok():
+        state = const AddConnectionState(done: true);
+        return true;
+    }
+  }
+
+  /// Resolves the target workspace id, creating a new workspace when
+  /// [newWorkspaceName] is given. Returns null when neither an existing id nor a
+  /// new name was provided (the caller surfaces the error).
+  Future<String?> _resolveWorkspaceId(
+    String? workspaceId,
+    String? newWorkspaceName,
+  ) async {
+    final newName = newWorkspaceName?.trim() ?? '';
+    if (newName.isNotEmpty) {
+      final wsId = 'ws-${_slug(newName)}-${intHash(newName).toRadixString(16)}';
+      await getIt<ConnectionRepository>().addWorkspace(
+        Workspace(
+          id: wsId,
+          name: newName,
+          shortCode: _initials(newName),
+          colorValue: _pickColor(newName),
+        ),
+      );
+      return wsId;
+    }
+    if (workspaceId != null && workspaceId.isNotEmpty) return workspaceId;
+    return null;
   }
 
   String _slug(String s) => s

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -202,7 +203,13 @@ class _Row extends ConsumerWidget {
             SizedBox(
               width: _wUpdated,
               child: Text(
-                formatWhen(context, ticket.updatedAt),
+                formatWhen(
+                  context,
+                  ticket.updatedAt,
+                  format: ref.watch(
+                    appSettingsProvider.select((s) => s.dateFormat),
+                  ),
+                ),
                 textAlign: TextAlign.right,
                 style: context.typography.monoSm.copyWith(
                   color: c.textTertiary,
