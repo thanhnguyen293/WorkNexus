@@ -14,8 +14,9 @@ import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 import 'zentao_project_row.dart';
 
-/// The children of a ZenTao node: pinned projects listed directly, then a
-/// collapsible "Projects" group (collapsed by default) holding the rest.
+/// A ZenTao node's collapsible "Bugs" group (collapsed by default) holding the
+/// account's products. Pinned products are lifted out into the per-account
+/// Pinned area ([ZenTaoPinnedBranch]), so this shows only the unpinned rest.
 class ZenTaoProjectsBranch extends ConsumerWidget {
   const ZenTaoProjectsBranch({
     super.key,
@@ -38,25 +39,14 @@ class ZenTaoProjectsBranch extends ConsumerWidget {
 
     return products.when(
       data: (items) {
-        final pinnedItems = [
-          for (final p in items)
-            if (pinned.contains(keyOf(p))) p,
-        ];
         final rest = [
           for (final p in items)
             if (!pinned.contains(keyOf(p))) p,
         ];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final p in pinnedItems)
-              ZenTaoProjectRow(product: p, tickets: tickets, pinned: true),
-            _ProjectsGroup(
-              accountId: account.id,
-              projects: rest,
-              tickets: tickets,
-            ),
-          ],
+        return _ProjectsGroup(
+          accountId: account.id,
+          projects: rest,
+          tickets: tickets,
         );
       },
       loading: () => _MutedRow(label: l.loadingProjects),
@@ -105,17 +95,11 @@ class _ProjectsGroup extends ConsumerWidget {
                 SizedBox(width: context.spacing.xs),
                 Expanded(
                   child: Text(
-                    l.projects,
+                    l.bugs,
                     style: context.typography.mono.copyWith(
                       fontWeight: FontWeight.w600,
                       color: c.textSecondary,
                     ),
-                  ),
-                ),
-                Text(
-                  '${projects.length}',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
                   ),
                 ),
               ],

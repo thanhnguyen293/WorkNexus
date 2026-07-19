@@ -34,21 +34,21 @@ class TitleBar extends ConsumerWidget {
             ),
           ),
         ),
-        if (assignedCount != null) ...[
-          SizedBox(width: context.spacing.md),
-          Text(
-            '·',
-            style: context.typography.caption.copyWith(color: c.textTertiary),
-          ),
-          SizedBox(width: context.spacing.md),
-          Flexible(
-            child: Text(
-              l10n.assignedToYou(assignedCount!),
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.caption.copyWith(color: c.textTertiary),
-            ),
-          ),
-        ],
+        // if (assignedCount != null) ...[
+        //   SizedBox(width: context.spacing.md),
+        //   Text(
+        //     '·',
+        //     style: context.typography.caption.copyWith(color: c.textTertiary),
+        //   ),
+        //   SizedBox(width: context.spacing.md),
+        //   Flexible(
+        //     child: Text(
+        //       l10n.assignedToYou(assignedCount!),
+        //       overflow: TextOverflow.ellipsis,
+        //       style: context.typography.caption.copyWith(color: c.textTertiary),
+        //     ),
+        //   ),
+        // ],
       ],
     );
     final bar = Container(
@@ -67,7 +67,6 @@ class TitleBar extends ConsumerWidget {
                 ? DragToMoveArea(child: title)
                 : title,
           ),
-          _SyncIndicator(),
           SizedBox(width: context.spacing.lg),
           const QuickSettingsButton(),
         ],

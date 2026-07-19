@@ -5,13 +5,18 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/settings/app_settings.dart';
+import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../board_providers.dart';
+import 'sidebar_primitives.dart';
 
 /// A single ZenTao execution (sprint/iteration) leaf under a project node.
 /// Tapping it syncs and opens the execution's tasks on the native task board.
@@ -20,14 +25,22 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     super.key,
     required this.execution,
     required this.tickets,
+    required this.pinned,
+    this.showKindTag = false,
   });
 
   final ProviderExecution execution;
   final List<Ticket> tickets;
+  final bool pinned;
+
+  /// Whether to show the "Task" kind tag (used in the combined Pinned area,
+  /// where bugs and tasks sit side by side).
+  final bool showKindTag;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     final selected = ref.watch(selectedZenTaoExecutionProvider);
     final syncing = ref.watch(zentaoExecutionSyncingProvider);
     final key = '${execution.accountId}:${execution.id}';
@@ -35,13 +48,6 @@ class ZenTaoExecutionRow extends ConsumerWidget {
         selected?.accountId == execution.accountId &&
         selected?.executionId == execution.id;
     final loading = syncing == key;
-    final count = tickets
-        .where(
-          (t) =>
-              t.accountId == execution.accountId &&
-              t.labels.contains('zentao-execution:${execution.id}'),
-        )
-        .length;
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
@@ -79,13 +85,24 @@ class ZenTaoExecutionRow extends ConsumerWidget {
                   ),
                 ),
               ),
-              Text(
-                '$count',
-                style: context.typography.monoXs.copyWith(
-                  color: c.textTertiary,
-                ),
+              if (showKindTag) ...[
+                MiniTag(l.taskTag, c.info),
+                SizedBox(width: context.spacing.xs),
+              ],
+              SidebarPinButton(
+                pinned: pinned,
+                tooltip: pinned ? l.unpinTask : l.pinTask,
+                onTap: () => ref
+                    .read(appSettingsProvider.notifier)
+                    .togglePinnedExecution(
+                      PinnedExecution(
+                        accountId: execution.accountId,
+                        projectId: execution.projectId,
+                        executionId: execution.id,
+                        name: execution.name,
+                      ),
+                    ),
               ),
-              SizedBox(width: context.spacing.xxs),
             ],
           ),
         ),
@@ -100,12 +117,17 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     // Capture before the await so no BuildContext is used across the async gap.
     final messenger = ScaffoldMessenger.of(context);
     final failedMessage = AppL10n.of(context).executionOpenFailed;
+    ref.read(settingsOpenProvider.notifier).state = false;
     ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
     ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
     ref.read(zentaoExecutionSyncingProvider.notifier).start(execution);
+    // Default the task board to the current user's tickets.
+    ref
+        .read(filterStateProvider.notifier)
+        .showMine(ref.read(zentaoSelfHandleProvider(execution.accountId)));
     final res = await getIt<SyncService>().syncExecutionTasks(execution);
     ref.read(zentaoExecutionSyncingProvider.notifier).finish();
     if (res case Err()) {

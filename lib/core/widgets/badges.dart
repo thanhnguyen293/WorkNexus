@@ -69,7 +69,6 @@ class PriorityTag extends StatelessWidget {
       child: Text(
         priorityLabel(provider, priority),
         style: context.typography.badge.copyWith(
-          fontWeight: FontWeight.w600,
           color: color,
         ),
       ),
@@ -147,6 +146,36 @@ class WorkspaceTag extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A tiny labeled pill tinted by [color] — e.g. the Bug/Task kind tag shown on
+/// pinned sources-tree rows.
+class MiniTag extends StatelessWidget {
+  const MiniTag(this.label, this.color, {super.key});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.xs,
+        vertical: context.spacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: c.mixT(color, 0.16),
+        borderRadius: BorderRadius.circular(context.radii.xs),
+        border: context.borders.showOutline
+            ? Border.all(color: c.mixT(color, 0.40))
+            : null,
+      ),
+      child: Text(
+        label,
+        style: context.typography.badgeSm.copyWith(color: color),
       ),
     );
   }

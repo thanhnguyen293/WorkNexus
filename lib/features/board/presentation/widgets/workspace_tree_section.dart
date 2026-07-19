@@ -15,9 +15,10 @@ import 'github_repos_branch.dart';
 import 'gitlab_projects_branch.dart';
 import 'sidebar_primitives.dart';
 import 'zentao_executions_branch.dart';
+import 'zentao_pinned_branch.dart';
 import 'zentao_projects_branch.dart';
 
-/// The sources tree: `WORKSPACE → workspace → ZenTao → [pinned, Projects]`.
+/// The sources tree: `WORKSPACE → workspace → ZenTao → [Pinned, Bugs, Tasks]`.
 /// The workspace node is structural (not tappable); it groups its ZenTao
 /// accounts, whose projects hang beneath.
 class WorkspaceTreeSection extends ConsumerWidget {
@@ -99,12 +100,6 @@ class _WorkspaceNode extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '$count',
-                  style: context.typography.monoSm.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
               ],
             ),
           ),
@@ -162,12 +157,6 @@ class _ZenTaoNode extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '$count',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
               ],
             ),
           ),
@@ -175,6 +164,7 @@ class _ZenTaoNode extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                ZenTaoPinnedBranch(account: account, tickets: tickets),
                 ZenTaoProjectsBranch(account: account, tickets: tickets),
                 ZenTaoExecutionsBranch(account: account, tickets: tickets),
               ],
@@ -266,12 +256,6 @@ class _GitHubNode extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: c.textPrimary,
                     ),
-                  ),
-                ),
-                Text(
-                  '$count',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
                   ),
                 ),
               ],

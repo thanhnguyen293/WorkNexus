@@ -14,6 +14,7 @@ import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
 import 'widgets/connection_text_field.dart';
+import 'widgets/generate_token_link.dart';
 import 'widgets/workspace_picker.dart';
 
 /// Modal form for connecting a GitHub account with a Personal Access Token.
@@ -114,7 +115,7 @@ class _GitHubConnectionDialogState
                 hint: l.githubTokenHint,
                 obscure: true,
                 onChanged: (_) => setState(() {}),
-                trailing: _GenerateTokenLink(onTap: _openTokenPage),
+                trailing: GenerateTokenLink(onTap: _openTokenPage),
               ),
               SizedBox(height: context.spacing.xl),
               WorkspacePicker(
@@ -223,40 +224,5 @@ class _GitHubConnectionDialogState
     final host = Uri.tryParse(u)?.host.toLowerCase();
     if (host == 'api.github.com') return 'https://github.com';
     return u;
-  }
-}
-
-/// A subtle "Generate token" link shown beside the PAT field's label; opens the
-/// provider's token-creation page in the browser.
-class _GenerateTokenLink extends StatelessWidget {
-  const _GenerateTokenLink({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.xs,
-          vertical: context.spacing.xxs,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.open_in_new, size: 12, color: c.accent),
-            SizedBox(width: context.spacing.xxs),
-            Text(
-              l.githubGenerateToken,
-              style: context.typography.captionStrong.copyWith(color: c.accent),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

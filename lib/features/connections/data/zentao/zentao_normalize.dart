@@ -169,7 +169,10 @@ String? accountName(Object? value) {
   return null;
 }
 
-/// The account handle for matching "assigned to me".
+/// The stable account handle (login) of a person reference — used for the
+/// assignee so it doesn't flip between sync sources (the bug LIST returns
+/// `assignedTo` as a bare account string, DETAIL as `{account, realname}`), which
+/// keeps cards, detail, and the "assigned to me" filter in agreement.
 String? accountHandle(Object? value) {
   if (value is String) return value.isEmpty ? null : value;
   if (value is Map) {
@@ -227,7 +230,11 @@ Ticket normalizeZenTao(
     status: status,
     providerStatus: rawStatus,
     labels: labels,
-    assignee: accountName(e.assignedTo),
+    // Account handle (login), NOT realname: the bug LIST gives `assignedTo` as a
+    // bare account string but DETAIL gives {account, realname}, so realname would
+    // differ between the card (list) and the detail panel and break the default
+    // "my tickets" filter, which matches against the account handle.
+    assignee: accountHandle(e.assignedTo),
     url: '$normalizedBase/${type.pathSegment}-view-$id.html',
     severity: type == ZenTaoType.bug ? e.severity : null,
     createdAt: parseZenTaoDate(e.openedDate),
@@ -269,7 +276,8 @@ TicketProviderEntity _zentaoBugEntity(
   openedBy: accountName(e.openedBy),
   openedDate: parseZenTaoDate(e.openedDate),
   openedBuild: formatZenTaoBuild(e.openedBuild),
-  assignedTo: accountName(e.assignedTo),
+  // Account handle, matching `Ticket.assignee` above (see note there).
+  assignedTo: accountHandle(e.assignedTo),
   assignedDate: parseZenTaoDate(e.assignedDate),
   deadline: _text(e.deadline),
   resolvedBy: accountName(e.resolvedBy),

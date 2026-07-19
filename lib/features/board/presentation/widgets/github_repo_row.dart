@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -70,12 +71,6 @@ class GitHubRepoRow extends ConsumerWidget {
                   ),
                 ),
               ),
-              Text(
-                '$count',
-                style: context.typography.monoXs.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
             ],
           ),
         ),
@@ -86,6 +81,10 @@ class GitHubRepoRow extends ConsumerWidget {
   /// Opens this repo's board: clears any ZenTao/GitLab selection, selects the
   /// repo, resets to the Issues kind, and switches to the GitHub view mode.
   void _select(WidgetRef ref) {
+    ref.read(settingsOpenProvider.notifier).state = false;
+    // Drop any filters from the previous board (e.g. the ZenTao "my tickets"
+    // assignee), which don't apply to GitHub and would empty the board.
+    ref.read(filterStateProvider.notifier).clearAll();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitLabProjectProvider.notifier).clear();

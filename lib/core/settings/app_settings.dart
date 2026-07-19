@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/fonts.dart';
+import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
 enum DetailLayout {
@@ -44,6 +45,7 @@ class AppSettings {
     this.componentRadius = kComponentRadiusDefault,
     this.accentColorValue,
     this.pinnedProjects = const <String>{},
+    this.pinnedExecutions = const <PinnedExecution>[],
   });
 
   final AppThemeVariant variant;
@@ -60,6 +62,10 @@ class AppSettings {
   /// Pinned ZenTao project keys (`"accountId:productId"`) surfaced at the top of
   /// the sources tree. Persisted so pins survive restarts.
   final Set<String> pinnedProjects;
+
+  /// Pinned ZenTao executions surfaced alongside pinned projects in the tree's
+  /// per-account "Pinned" area. Persisted so pins survive restarts.
+  final List<PinnedExecution> pinnedExecutions;
 
   /// The user-chosen app primary/accent color (ARGB int), or `null` to use the
   /// active theme variant's built-in accent.
@@ -84,6 +90,7 @@ class AppSettings {
     String? fontFamily,
     double? componentRadius,
     Set<String>? pinnedProjects,
+    List<PinnedExecution>? pinnedExecutions,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -98,6 +105,7 @@ class AppSettings {
       fontFamily: fontFamily ?? this.fontFamily,
       componentRadius: componentRadius ?? this.componentRadius,
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
+      pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -167,6 +175,15 @@ class AppSettingsController extends Notifier<AppSettings> {
     final next = Set<String>.of(state.pinnedProjects);
     next.contains(key) ? next.remove(key) : next.add(key);
     _set(state.copyWith(pinnedProjects: next));
+  }
+
+  /// Pins/unpins a ZenTao [execution]. Matched by [PinnedExecution.key] so a
+  /// second toggle removes it regardless of a since-changed display name.
+  void togglePinnedExecution(PinnedExecution execution) {
+    final next = List<PinnedExecution>.of(state.pinnedExecutions);
+    final index = next.indexWhere((e) => e.key == execution.key);
+    index >= 0 ? next.removeAt(index) : next.add(execution);
+    _set(state.copyWith(pinnedExecutions: next));
   }
 
   void toggleCompanyTint() =>

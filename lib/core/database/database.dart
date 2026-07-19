@@ -104,6 +104,12 @@ class Settings extends Table {
   TextColumn get pinnedProjectsJson =>
       text().withDefault(const Constant('[]'))();
 
+  /// JSON array of pinned ZenTao executions (`{accountId, projectId,
+  /// executionId, name}`), shown alongside pinned projects. Persisted so pins
+  /// survive restarts.
+  TextColumn get pinnedExecutionsJson =>
+      text().withDefault(const Constant('[]'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -154,7 +160,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -175,6 +181,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 9) await m.addColumn(settings, settings.pinnedProjectsJson);
       if (from < 10) await m.addColumn(settings, settings.detailLayout);
       if (from < 11) await m.addColumn(settings, settings.dateFormat);
+      if (from < 12) {
+        await m.addColumn(settings, settings.pinnedExecutionsJson);
+      }
     },
   );
 

@@ -93,10 +93,10 @@ class OriginalTab extends ConsumerWidget {
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
           ),
-        if (ticket.labels.isNotEmpty) ...[
-          SizedBox(height: context.spacing.md),
-          _KeywordChips(labels: ticket.labels),
-        ],
+        // if (ticket.labels.isNotEmpty) ...[
+        //   SizedBox(height: context.spacing.md),
+        //   _KeywordChips(labels: ticket.labels),
+        // ],
         if (bug != null && bug.attachments.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl3),
           BugAttachments(ticket: ticket, attachments: bug.attachments),

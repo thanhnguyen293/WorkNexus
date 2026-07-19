@@ -17,6 +17,7 @@ import '../../core/domain/value_objects/priority.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/domain/value_objects/unified_status.dart';
 import '../../core/settings/app_settings.dart';
+import '../../core/settings/pinned_execution.dart';
 import '../../core/theme/app_palette.dart';
 
 Workspace workspaceFromRow(WorkspaceRow r) => Workspace(
@@ -211,6 +212,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   componentRadius: r.componentRadius,
   accentColorValue: r.accentColorValue,
   pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
+  pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -226,7 +228,26 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   componentRadius: Value(s.componentRadius),
   accentColorValue: Value(s.accentColorValue),
   pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
+  pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
 );
+
+/// Decodes the persisted pinned-executions column; tolerates malformed rows.
+List<PinnedExecution> decodePinnedExecutions(String json) {
+  try {
+    final decoded = jsonDecode(json);
+    if (decoded is! List) return const <PinnedExecution>[];
+    return [
+      for (final item in decoded)
+        if (item is Map)
+          PinnedExecution.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  } on FormatException {
+    return const <PinnedExecution>[];
+  }
+}
+
+String encodePinnedExecutions(List<PinnedExecution> executions) =>
+    jsonEncode([for (final e in executions) e.toJson()]);
 
 TicketProviderEntity? decodeProviderEntity(String? raw) {
   if (raw == null || raw.trim().isEmpty) return null;

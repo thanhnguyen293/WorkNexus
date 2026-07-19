@@ -28,7 +28,10 @@ import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/saved_view.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 
-enum ViewMode { board, zentaoBugs, zentaoTasks, gitlab, github, list }
+/// [home] is the launch state: no source is selected yet, so the main area
+/// shows the welcome screen instead of a board. The user opens a real view by
+/// picking a source from the sidebar.
+enum ViewMode { home, board, zentaoBugs, zentaoTasks, gitlab, github, list }
 
 class ZenTaoProductSelection {
   const ZenTaoProductSelection({
@@ -48,7 +51,7 @@ final viewModeProvider = NotifierProvider<ViewModeController, ViewMode>(
 
 class ViewModeController extends Notifier<ViewMode> {
   @override
-  ViewMode build() => ViewMode.board;
+  ViewMode build() => ViewMode.home;
   void set(ViewMode m) => state = m;
 }
 
@@ -92,6 +95,22 @@ class FilterController extends Notifier<FilterState> {
     priorities: {},
     severities: {},
     assignees: {},
+    bugTypes: {},
+    resolutions: {},
+    search: '',
+  );
+
+  /// Resets the chip filters to just "assigned to me" — the default applied when
+  /// a ZenTao bug/task board opens. An empty [self] clears filters (shows all),
+  /// so a board still opens cleanly when "me" can't be resolved.
+  void showMine(String self) => state = state.copyWith(
+    providers: {},
+    accountIds: {},
+    projectIds: {},
+    statuses: {},
+    priorities: {},
+    severities: {},
+    assignees: self.isEmpty ? {} : {self},
     bugTypes: {},
     resolutions: {},
     search: '',
@@ -337,6 +356,17 @@ final zentaoProjectsProvider =
       }
     });
 
+/// The connected ZenTao user's account handle (login) for [accountId] — the exact
+/// value `Ticket.assignee` normalizes to (see `accountHandle` in the ZenTao
+/// normalizer) — used as the default "my tickets" board filter. Empty when
+/// unknown, in which case the board opens unfiltered.
+final zentaoSelfHandleProvider = Provider.family<String, String>((
+  ref,
+  accountId,
+) {
+  return ref.watch(lookupsProvider).accounts[accountId]?.handle ?? '';
+});
+
 typedef ZenTaoExecutionsKey = ({String accountId, String projectId});
 
 final zentaoExecutionsProvider =
@@ -551,6 +581,7 @@ final boardFacetsProvider = Provider<BoardFacets>((ref) {
   final scope = switch (ref.watch(viewModeProvider)) {
     ViewMode.zentaoBugs => BoardFacetScope.bug,
     ViewMode.zentaoTasks => BoardFacetScope.task,
+    ViewMode.home ||
     ViewMode.board ||
     ViewMode.gitlab ||
     ViewMode.github ||

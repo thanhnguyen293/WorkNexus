@@ -130,32 +130,19 @@ class _AccountRow extends ConsumerWidget {
           ProviderBadge(account.providerType, big: true),
           SizedBox(width: context.spacing.xl),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Text(
-                      account.handle,
-                      style: context.typography.monoStrong.copyWith(
-                        color: c.textPrimary,
-                      ),
-                    ),
-                    SizedBox(width: context.spacing.md),
-                    Text(
-                      account.providerType.displayName,
-                      style: context.typography.captionSm.copyWith(
-                        color: c.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: context.spacing.xxs),
                 Text(
-                  '${projects.join(' · ')} — ${accTickets.length} tasks',
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.caption.copyWith(
-                    color: c.textSecondary,
+                  account.handle,
+                  style: context.typography.monoStrong.copyWith(
+                    color: c.textPrimary,
+                  ),
+                ),
+                SizedBox(width: context.spacing.md),
+                Text(
+                  account.providerType.displayName,
+                  style: context.typography.captionSm.copyWith(
+                    color: c.textTertiary,
                   ),
                 ),
               ],

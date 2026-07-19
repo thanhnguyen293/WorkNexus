@@ -30,6 +30,7 @@ class FilterPopover extends ConsumerWidget {
     return _PopoverShell(
       child: switch (mode) {
         ViewMode.zentaoBugs || ViewMode.zentaoTasks => const _FacetFilters(),
+        ViewMode.home ||
         ViewMode.board ||
         ViewMode.gitlab ||
         ViewMode.github ||

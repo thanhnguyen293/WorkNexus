@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -13,9 +14,10 @@ import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 import 'zentao_execution_row.dart';
 
-/// The Executions tree under a ZenTao node: a collapsible "Executions" group
-/// (collapsed by default) whose children are the account's projects, each
-/// expanding to the executions that hold the task board's tasks.
+/// The Tasks tree under a ZenTao node: a collapsible "Tasks" group (collapsed by
+/// default) whose children are the account's projects, each expanding to the
+/// executions that hold the task board's tasks. Pinned executions are lifted out
+/// into the per-account Pinned area ([ZenTaoPinnedBranch]).
 class ZenTaoExecutionsBranch extends ConsumerWidget {
   const ZenTaoExecutionsBranch({
     super.key,
@@ -55,7 +57,7 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
                 SizedBox(width: context.spacing.xs),
                 Expanded(
                   child: Text(
-                    l.executions,
+                    l.tasks,
                     style: context.typography.mono.copyWith(
                       fontWeight: FontWeight.w600,
                       color: c.textSecondary,
@@ -187,15 +189,26 @@ class _Executions extends ConsumerWidget {
     final executions = ref.watch(
       zentaoExecutionsProvider((accountId: accountId, projectId: projectId)),
     );
+    final pinnedKeys = {
+      for (final e in ref.watch(
+        appSettingsProvider.select((s) => s.pinnedExecutions),
+      ))
+        e.key,
+    };
 
     return executions.when(
       data: (items) {
         if (items.isEmpty) return _MutedRow(label: l.noExecutions);
+        // Pinned executions surface in the Pinned area, so drop them here.
+        final rest = [
+          for (final e in items)
+            if (!pinnedKeys.contains('${e.accountId}:${e.id}')) e,
+        ];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final e in items)
-              ZenTaoExecutionRow(execution: e, tickets: tickets),
+            for (final e in rest)
+              ZenTaoExecutionRow(execution: e, tickets: tickets, pinned: false),
           ],
         );
       },

@@ -99,7 +99,9 @@ void main() {
     expect(t.severity, 2);
     expect(t.body, contains('duplicate SKU')); // html stripped
     expect(t.body, isNot(contains('<b>')));
-    expect(t.assignee, 'Thanh Nguyen');
+    // Assignee is the account handle (login), not realname, so it stays stable
+    // across the bug LIST (bare string) vs DETAIL ({account, realname}) shapes.
+    expect(t.assignee, 'mobile2');
     expect(t.labels, containsAll(<String>['sync', 'inventory']));
     expect(t.labels, contains('resolution:postponed'));
     expect(t.url, 'https://zentao.example.com/bug-view-1092.html');

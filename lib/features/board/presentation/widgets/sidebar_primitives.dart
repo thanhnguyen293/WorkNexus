@@ -62,6 +62,40 @@ class SidebarTreeBranch extends StatelessWidget {
   }
 }
 
+/// A pin/unpin toggle for a pinnable sidebar row (products, executions).
+class SidebarPinButton extends StatelessWidget {
+  const SidebarPinButton({
+    super.key,
+    required this.pinned,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  final bool pinned;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(context.radii.sm),
+        child: Padding(
+          padding: EdgeInsets.all(context.spacing.xxs),
+          child: Icon(
+            pinned ? Icons.push_pin : Icons.push_pin_outlined,
+            size: 13,
+            color: pinned ? c.accent : c.textTertiary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A tappable sidebar row with leading glyph, label and a trailing count.
 class SidebarNavRow extends StatelessWidget {
   const SidebarNavRow({

@@ -84,12 +84,6 @@ class _ReposGroup extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '${repos.length}',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
               ],
             ),
           ),

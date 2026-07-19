@@ -55,9 +55,9 @@ String priorityLabel(ProviderType prov, Priority p) {
 
 /// Priority-tag corner radius varies by provider (design prioStyleFor).
 double priorityRadius(AppRadii r, ProviderType prov) => switch (prov) {
-  ProviderType.jira => r.pill,
-  ProviderType.zentao => r.xs,
-  _ => r.xs,
+  ProviderType.jira => r.md,
+  ProviderType.zentao => r.md,
+  _ => r.md,
 };
 
 /// A ticket's display reference (design idText/refShort).

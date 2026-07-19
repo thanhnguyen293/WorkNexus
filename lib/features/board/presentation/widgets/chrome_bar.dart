@@ -24,7 +24,6 @@ class ChromeBar extends ConsumerWidget {
     final l = AppL10n.of(context);
     final mode = ref.watch(viewModeProvider);
     final filter = ref.watch(filterStateProvider);
-    final count = ref.watch(resultCountProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -38,15 +37,15 @@ class ChromeBar extends ConsumerWidget {
       child: Row(
         children: [
           // Board / List toggle.
-          _Segmented(
-            options: {
-              ViewMode.board: '▦ ${l.board}',
-              ViewMode.list: '☰ ${l.list}',
-            },
-            value: mode,
-            onChanged: (m) => ref.read(viewModeProvider.notifier).set(m),
-          ),
-          SizedBox(width: context.spacing.lg),
+          // _Segmented(
+          //   options: {
+          //     ViewMode.board: '▦ ${l.board}',
+          //     ViewMode.list: '☰ ${l.list}',
+          //   },
+          //   value: mode,
+          //   onChanged: (m) => ref.read(viewModeProvider.notifier).set(m),
+          // ),
+          // SizedBox(width: context.spacing.lg),
           const _SearchBox(),
           SizedBox(width: context.spacing.lg),
           _FiltersButton(
@@ -56,11 +55,6 @@ class ChromeBar extends ConsumerWidget {
           ),
           SizedBox(width: context.spacing.lg),
           const Expanded(child: ActiveTokens()),
-          SizedBox(width: context.spacing.md),
-          Text(
-            '$count ${count == 1 ? l.result : l.results}',
-            style: context.typography.mono.copyWith(color: c.textTertiary),
-          ),
         ],
       ),
     );

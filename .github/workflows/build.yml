@@ -1,0 +1,142 @@
+name: Build (macOS & Windows)
+
+# Automatically build the app for macOS and Windows on every push to main.
+# Can also be triggered manually from the Actions tab (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Back-to-back pushes to main cancel the older run and keep only the newest.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pin the repo's exact toolchain (Flutter 3.38.8 -> Dart 3.10.7).
+  # No fvm on CI; subosito downloads this exact version.
+  FLUTTER_VERSION: "3.38.8"
+
+jobs:
+  # ───────────────────────────── macOS ─────────────────────────────
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Codegen (freezed / drift / injectable / retrofit / json) — required
+      # because *.g.dart / *.freezed.dart / *.config.dart are gitignored.
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Release build. No Apple cert on CI: the project defaults to ad-hoc
+      # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
+      - name: Build macOS (release, ad-hoc signed)
+        run: flutter build macos --release
+
+      # Zip the .app while preserving the bundle (use ditto, not plain zip).
+      - name: Package .app
+        run: |
+          APP="build/macos/Build/Products/Release/work_nexus.app"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" work_nexus-macos.zip
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worknexus-macos-${{ github.run_number }}
+          path: work_nexus-macos.zip
+          if-no-files-found: error
+
+  # ──────────────────────────── Windows ────────────────────────────
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      # The repo has no windows/ folder yet -> generate the runner in place.
+      # --project-name work_nexus because the "WorkNexus" folder (uppercase) is
+      # not a valid Dart package name. This only adds windows/, never touches lib/.
+      - name: Generate Windows runner
+        run: flutter create --platforms=windows --project-name work_nexus .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build Windows (release)
+        run: flutter build windows --release
+
+      # Zip the whole Release folder (exe + DLLs + data/ must stay together).
+      - name: Package build output
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath worknexus-windows.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worknexus-windows-${{ github.run_number }}
+          path: worknexus-windows.zip
+          if-no-files-found: error
+
+  # ───────────────────── Rolling "nightly" release ─────────────────────
+  # Runs after both builds succeed. Collects the two zips and refreshes a
+  # single pre-release tagged `nightly` so it always points at the newest
+  # commit on main. Only publishes from main (not from a dispatch on a branch).
+  release:
+    name: Publish nightly release
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write # required to create/replace the release and move its tag
+    steps:
+      # Pull both build artifacts flat into dist/ (no per-artifact subfolders).
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      # Delete the previous nightly release + its tag, then recreate at this
+      # commit — the reliable way to make `nightly` a moving pointer. The
+      # `|| true` covers the very first run when nightly does not exist yet.
+      - name: Publish/refresh nightly release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create nightly dist/*.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Nightly build (main)" \
+            --notes "Automated build from main @ ${GITHUB_SHA:0:7} ($(date -u +'%Y-%m-%d %H:%M UTC'))." \
+            --prerelease

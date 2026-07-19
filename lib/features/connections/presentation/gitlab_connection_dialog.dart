@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +14,7 @@ import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
 import 'widgets/connection_text_field.dart';
+import 'widgets/generate_token_link.dart';
 import 'widgets/workspace_picker.dart';
 
 /// Modal form for connecting a GitLab account with a Personal Access Token.
@@ -112,6 +115,7 @@ class _GitLabConnectionDialogState
                 hint: l.gitlabTokenHint,
                 obscure: true,
                 onChanged: (_) => setState(() {}),
+                trailing: GenerateTokenLink(onTap: _openTokenPage),
               ),
               SizedBox(height: context.spacing.xl),
               WorkspacePicker(
@@ -191,5 +195,30 @@ class _GitLabConnectionDialogState
       return _newWorkspace.text.trim().isNotEmpty;
     }
     return true;
+  }
+
+  /// Opens GitLab's "new personal access token" page (with the `api` scope and a
+  /// token name pre-filled) for the entered server, in the default browser.
+  Future<void> _openTokenPage() async {
+    final base = _tokenSettingsBase(_baseUrl.text);
+    final url =
+        '$base/-/user_settings/personal_access_tokens?name=WorkNexus&scopes=api';
+    try {
+      await Process.run('open', [url]);
+    } catch (_) {
+      // best-effort; nothing to surface if the platform lacks `open`.
+    }
+  }
+
+  /// The origin hosting the token settings page, derived from the entered base
+  /// URL (GitLab's web + API share a host): trims a trailing slash and any
+  /// pasted `/api/v4`; empty → gitlab.com.
+  String _tokenSettingsBase(String raw) {
+    var u = raw.trim();
+    if (u.isEmpty) return 'https://gitlab.com';
+    if (!u.startsWith('http')) u = 'https://$u';
+    if (u.endsWith('/')) u = u.substring(0, u.length - 1);
+    if (u.endsWith('/api/v4')) u = u.substring(0, u.length - '/api/v4'.length);
+    return u;
   }
 }

@@ -51,10 +51,18 @@ class MarkdownText extends StatelessWidget {
     return GptMarkdown(
       text,
       style: base,
+      // Keyed by URL so that when a body refresh (e.g. the detail sync landing
+      // in drift) changes an image's URL, the old element's state — and the
+      // failed/stale future memoized inside it — is discarded and the new URL
+      // is actually fetched.
       imageBuilder: imageLoader == null
           ? null
-          : (context, url, width, height) =>
-                _MarkdownImage(url: url, loader: imageLoader!, width: width),
+          : (context, url, width, height) => _MarkdownImage(
+              key: ValueKey(url),
+              url: url,
+              loader: imageLoader!,
+              width: width,
+            ),
       linkBuilder: (context, label, url, style) => Text(
         label.toPlainText(),
         style: style.copyWith(
@@ -88,7 +96,12 @@ class MarkdownText extends StatelessWidget {
 /// An inline image fetched through [ImageBytesLoader] (memoized so it isn't
 /// refetched on every markdown rebuild), with loading / broken states.
 class _MarkdownImage extends StatefulWidget {
-  const _MarkdownImage({required this.url, required this.loader, this.width});
+  const _MarkdownImage({
+    super.key,
+    required this.url,
+    required this.loader,
+    this.width,
+  });
 
   final String url;
   final ImageBytesLoader loader;
@@ -148,13 +161,10 @@ class _MarkdownImageState extends State<_MarkdownImage> {
               bytes,
               width: widget.width,
               fit: BoxFit.contain,
-              errorBuilder: (_, err, _) {
-                print('Error: $err\n, url: ${widget.url}');
-                return _frame(
-                  context,
-                  Icon(Icons.broken_image_outlined, color: c.textTertiary),
-                );
-              },
+              errorBuilder: (_, _, _) => _frame(
+                context,
+                Icon(Icons.broken_image_outlined, color: c.textTertiary),
+              ),
             ),
           ),
         );

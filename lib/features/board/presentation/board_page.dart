@@ -15,6 +15,7 @@ import 'widgets/github_tabs.dart';
 import 'widgets/gitlab_board_view.dart';
 import 'widgets/gitlab_tabs.dart';
 import 'widgets/list_view.dart';
+import 'widgets/welcome_view.dart';
 import 'widgets/zentao_bug_board_view.dart';
 import 'widgets/zentao_bug_tabs.dart';
 import 'widgets/zentao_task_board_view.dart';
@@ -27,8 +28,16 @@ class BoardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final loading = ref.watch(boardLoadingProvider);
     final mode = ref.watch(viewModeProvider);
+
+    // Fresh launch / no source picked yet: show the minimal welcome screen with
+    // no toolbar and no board. Selecting a source from the sidebar switches the
+    // view mode and brings the board (and its chrome) in.
+    if (mode == ViewMode.home) {
+      return ColoredBox(color: c.background, child: const WelcomeView());
+    }
+
+    final loading = ref.watch(boardLoadingProvider);
     final count = ref.watch(resultCountProvider);
     final advOpen = ref.watch(advFilterOpenProvider);
 
@@ -66,6 +75,8 @@ class BoardPage extends ConsumerWidget {
       body = const EmptyState();
     } else {
       body = switch (mode) {
+        // Unreachable — home returns early above — but keeps the switch total.
+        ViewMode.home => const WelcomeView(),
         ViewMode.board => const BoardView(),
         ViewMode.zentaoBugs => const ZenTaoBugBoardView(),
         ViewMode.zentaoTasks => const ZenTaoTaskBoardView(),

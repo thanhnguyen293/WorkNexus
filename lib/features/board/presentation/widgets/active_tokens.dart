@@ -107,7 +107,7 @@ class _Token extends StatelessWidget {
     return GestureDetector(
       onTap: onRemove,
       child: Container(
-        height: 24,
+        height: 31,
         padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
         decoration: BoxDecoration(
           color: c.selectionFill,

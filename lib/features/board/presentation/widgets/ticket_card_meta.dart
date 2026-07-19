@@ -27,7 +27,7 @@ class SeverityTag extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: c.mixT(color, 0.15),
-        borderRadius: BorderRadius.circular(context.radii.xs),
+        borderRadius: BorderRadius.circular(context.radii.md),
         border: context.borders.showOutline
             ? Border.all(color: c.mixT(color, 0.4))
             : null,
@@ -44,7 +44,6 @@ class SeverityTag extends StatelessWidget {
           Text(
             label,
             style: context.typography.badge.copyWith(
-              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),

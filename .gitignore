@@ -16,6 +16,7 @@ migrate_working_dir/
 .claude/
 .codex/
 .mcp.json
+/CLAUDE.md
 
 # IntelliJ related
 *.iml
@@ -51,3 +52,14 @@ app.*.map.json
 *.freezed.dart
 *.g.dart
 *.config.dart
+
+# Generated localizations (regenerated from lib/l10n/*.arb by `flutter gen-l10n`).
+# The .arb source files stay tracked.
+/lib/l10n/app_localizations*.dart
+
+# Planning / design notes — kept local, not tracked.
+/docs/
+
+# Scratch API-response dumps captured while debugging — kept local.
+/products_json.txt
+/projects_json.txt

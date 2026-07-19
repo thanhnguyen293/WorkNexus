@@ -76,8 +76,8 @@ class DetailHeader extends ConsumerWidget {
           SizedBox(height: context.spacing.lg),
           Row(
             children: [
-              ProviderBadge(ticket.providerType, big: true),
-              SizedBox(width: context.spacing.sm),
+              // ProviderBadge(ticket.providerType, big: true),
+              // SizedBox(width: context.spacing.sm),
               Text(
                 ticketRef(
                   ticket.providerType,

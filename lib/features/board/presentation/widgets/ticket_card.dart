@@ -94,14 +94,22 @@ class TicketCard extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                if (ticket.severity != null)
-                                  SeverityTag(ticket.severity!)
-                                else if (ticket.providerType !=
-                                    ProviderType.zentao)
-                                  Flexible(
-                                    child: WorkspaceTag(wsColor, projectName),
+                                Text(
+                                  ticketRef(
+                                    ticket.providerType,
+                                    ticket.externalKey,
+                                    ticket.externalType,
                                   ),
+                                  style: context.typography.monoXs.copyWith(
+                                    color: c.textTertiary,
+                                  ),
+                                ),
+                                SizedBox(width: context.spacing.sm),
                                 const Spacer(),
+
+                                if (ticket.severity != null)
+                                  SeverityTag(ticket.severity!),
+                                SizedBox(width: context.spacing.sm),
                                 PriorityTag(
                                   ticket.providerType,
                                   ticket.priority,
@@ -115,34 +123,19 @@ class TicketCard extends ConsumerWidget {
                                 color: c.textPrimary,
                               ),
                             ),
-                            if (dev.hasDev) ...[
-                              SizedBox(height: context.spacing.md),
-                              _DevRow(dev: dev),
-                            ],
-                            if (dev.agent != null) ...[
-                              SizedBox(height: context.spacing.md),
-                              _AgentChip(dev.agent!),
-                            ],
-                            if (zentaoBugResolution(ticket).isNotEmpty) ...[
-                              SizedBox(height: context.spacing.md),
-                              _ResolutionChip(ticket),
-                            ],
+                            // if (dev.hasDev) ...[
+                            //   SizedBox(height: context.spacing.md),
+                            //   _DevRow(dev: dev),
+                            // ],
+                            // if (dev.agent != null) ...[
+                            //   SizedBox(height: context.spacing.md),
+                            //   _AgentChip(dev.agent!),
+                            // ],
                             SizedBox(height: context.spacing.md),
                             Row(
                               children: [
                                 Expanded(
                                   child: AssigneeChip(ticket.assignee, wsColor),
-                                ),
-                                SizedBox(width: context.spacing.sm),
-                                Text(
-                                  ticketRef(
-                                    ticket.providerType,
-                                    ticket.externalKey,
-                                    ticket.externalType,
-                                  ),
-                                  style: context.typography.monoXs.copyWith(
-                                    color: c.textTertiary,
-                                  ),
                                 ),
                                 SizedBox(width: context.spacing.sm),
                                 TranslationDot(trStatus),

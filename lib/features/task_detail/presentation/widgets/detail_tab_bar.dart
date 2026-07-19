@@ -21,7 +21,7 @@ class DetailTabBar extends ConsumerWidget {
       DetailTab.original: l.original,
       DetailTab.translation: '🇻🇳 ${l.vietnamese}',
       DetailTab.comments: '${l.comments} & ${l.activity}',
-      DetailTab.development: l.development,
+      // DetailTab.development: l.development,
     };
     return Container(
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),

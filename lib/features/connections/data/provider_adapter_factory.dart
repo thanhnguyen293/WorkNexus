@@ -10,16 +10,28 @@ import 'zentao/zentao_client.dart';
 
 /// Builds a live [ProviderAdapter] for a configured account + its secret.
 /// Returns null for providers not yet implemented (Jira).
-ProviderAdapter? buildProviderAdapter(Account account, String secret) {
+///
+/// [zenClient] lets the caller inject a shared [ZenTaoClient] instead of minting
+/// a throwaway one. ZenTao rotates (and invalidates) its session id on every
+/// login, so two clients for the same account fighting over the session would
+/// churn the token — callers that also load session-protected assets (inline
+/// images, attachments) MUST pass the same pooled client the asset loader uses.
+ProviderAdapter? buildProviderAdapter(
+  Account account,
+  String secret, {
+  ZenTaoClient? zenClient,
+}) {
   switch (account.providerType) {
     case ProviderType.zentao:
       return ZenTaoAdapter(
         accountId: account.id,
-        client: ZenTaoClient(
-          baseUrl: account.baseUrl ?? '',
-          account: account.handle,
-          password: secret,
-        ),
+        client:
+            zenClient ??
+            ZenTaoClient(
+              baseUrl: account.baseUrl ?? '',
+              account: account.handle,
+              password: secret,
+            ),
       );
     case ProviderType.gitlab:
       return GitLabAdapter(

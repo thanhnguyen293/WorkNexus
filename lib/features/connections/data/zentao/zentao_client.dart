@@ -66,6 +66,7 @@ class ZenTaoClient {
 
   String? _token;
   DateTime? _tokenExpiry;
+  Future<String>? _authInFlight;
 
   static String _normalizeBase(String url) {
     var u = url.trim();
@@ -86,7 +87,17 @@ class ZenTaoClient {
       DateTime.now().isBefore(_tokenExpiry!);
 
   /// Obtains (or refreshes) the v1 token. Returns the account on success.
-  Future<String> authenticate() async {
+  ///
+  /// Concurrent callers share ONE in-flight `/tokens` request: ZenTao rotates the
+  /// session id on every login and invalidates the previous one, so parallel
+  /// logins (e.g. several inline images + attachments loading at once when a bug
+  /// detail opens) would churn the token and make the first asset fetch 302 to
+  /// the login page — the cause of images only appearing after a tab switch.
+  Future<String> authenticate() {
+    return _authInFlight ??= _login().whenComplete(() => _authInFlight = null);
+  }
+
+  Future<String> _login() async {
     final res = await _api.login({'account': account, 'password': password});
     final token = res.token;
     if (token == null || token.isEmpty) {
@@ -277,71 +288,82 @@ class ZenTaoClient {
   /// Fetches raw bytes for an (authenticated, self-signed-TLS) asset such as an
   /// inline image referenced by a ticket's rich text — e.g. ZenTao's
   /// `file-read-<id>.png`, which 302-redirects to the login page unless the
-  /// session is presented. We attach the session id as a `zentaosid` cookie
-  /// (ZenTao's session mechanism) plus the `Token` header and a query param for
-  /// good measure, do NOT follow redirects, and only accept an image response
-  /// (so a login-page HTML body is never mistaken for an image).
-  Future<Uint8List?> fetchBytes(String url) async {
-    final token = await _ensureToken();
-    final base = Uri.parse('$baseUrl/');
-    final resolved = base.resolveUri(Uri.parse(url));
-    final onServer = resolved.host == base.host;
-    final target = onServer
-        ? resolved.replace(
-            queryParameters: {...resolved.queryParameters, 'zentaosid': token},
-          )
-        : resolved;
-    final res = await _dio.getUri<List<int>>(
-      target,
-      options: Options(
-        responseType: ResponseType.bytes,
-        followRedirects: false,
-        validateStatus: (s) => s != null && s < 500,
-        headers: onServer
-            ? {'Cookie': 'zentaosid=$token', 'Token': token}
-            : null,
-      ),
-    );
-    final contentType = (res.headers.value('content-type') ?? '').toLowerCase();
-    final data = res.data;
-    if (res.statusCode == 200 &&
-        data != null &&
-        data.isNotEmpty &&
-        contentType.startsWith('image')) {
-      return Uint8List.fromList(data);
-    }
-    return null;
-  }
+  /// session is presented. Only an image response is accepted (so a login-page
+  /// HTML body is never mistaken for an image). See [_authedBytes] for the
+  /// session handling and the failure-recovery retries.
+  Future<Uint8List?> fetchBytes(String url) =>
+      _authedBytes(url, imageOnly: true);
 
   /// Downloads an attachment's raw bytes through the authenticated session,
   /// accepting any content type (unlike [fetchBytes], which is image-only). Used
   /// by the detail panel's attachment "open" action. Returns null on failure.
-  Future<Uint8List?> downloadBytes(String url) async {
-    final token = await _ensureToken();
+  Future<Uint8List?> downloadBytes(String url) =>
+      _authedBytes(url, imageOnly: false);
+
+  /// Shared transport for [fetchBytes]/[downloadBytes]: attaches the session id
+  /// as a `zentaosid` cookie (ZenTao's session mechanism) plus the `Token`
+  /// header and a query param for good measure, and does NOT follow redirects.
+  ///
+  /// Unlike the v1 channel — where the auth interceptor heals a dead session by
+  /// re-authenticating on a 401 — the classic asset channel signals a session
+  /// problem as a **302 to the login page**, which used to be a dead end: the
+  /// bytes silently came back null and inline images stayed broken until the
+  /// detail tab was rebuilt (the "first open shows broken images" bug). So a
+  /// failed on-server fetch now recovers in two steps mirroring the
+  /// interceptor's retry: once more on the SAME session (right after login,
+  /// ZenTao can bounce the classic channel's first hit while the freshly minted
+  /// v1 token warms up server-side), then once on a FRESH login (session truly
+  /// invalidated). Off-server URLs carry no session, so they get no retry.
+  Future<Uint8List?> _authedBytes(String url, {required bool imageOnly}) async {
     final base = Uri.parse('$baseUrl/');
     final resolved = base.resolveUri(Uri.parse(url));
     final onServer = resolved.host == base.host;
-    final target = onServer
-        ? resolved.replace(
-            queryParameters: {...resolved.queryParameters, 'zentaosid': token},
-          )
-        : resolved;
-    final res = await _dio.getUri<List<int>>(
-      target,
-      options: Options(
-        responseType: ResponseType.bytes,
-        followRedirects: false,
-        validateStatus: (s) => s != null && s < 500,
-        headers: onServer
-            ? {'Cookie': 'zentaosid=$token', 'Token': token}
-            : null,
-      ),
-    );
-    final data = res.data;
-    if (res.statusCode == 200 && data != null && data.isNotEmpty) {
-      return Uint8List.fromList(data);
+
+    Future<Uint8List?> attempt(String token) async {
+      final target = onServer
+          ? resolved.replace(
+              queryParameters: {
+                ...resolved.queryParameters,
+                'zentaosid': token,
+              },
+            )
+          : resolved;
+      final res = await _dio.getUri<List<int>>(
+        target,
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: false,
+          validateStatus: (s) => s != null && s < 500,
+          headers: onServer
+              ? {'Cookie': 'zentaosid=$token', 'Token': token}
+              : null,
+        ),
+      );
+      final contentType = (res.headers.value('content-type') ?? '')
+          .toLowerCase();
+      final data = res.data;
+      if (res.statusCode == 200 &&
+          data != null &&
+          data.isNotEmpty &&
+          (!imageOnly || contentType.startsWith('image'))) {
+        return Uint8List.fromList(data);
+      }
+      return null;
     }
-    return null;
+
+    final token = await _ensureToken();
+    var bytes = await attempt(token);
+    if (bytes == null && onServer) {
+      // Same session, second chance (classic-channel warm-up after login).
+      bytes = await attempt(token);
+    }
+    if (bytes == null && onServer) {
+      // Session presumed dead — force a fresh login (concurrent recoveries
+      // share the one in-flight /tokens request) and try once more.
+      await authenticate();
+      bytes = await attempt(await _ensureToken());
+    }
+    return bytes;
   }
 
   /// Classic detail JSON: `GET {base}/{type}-view-{id}.json`. Used as a fallback

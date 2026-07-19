@@ -6,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/repositories/comment_repository.dart';
+import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -14,6 +15,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/markdown_text.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../detail_providers.dart';
 import 'comment_tile.dart';
@@ -32,6 +34,7 @@ class CommentsTab extends ConsumerStatefulWidget {
 class _CommentsTabState extends ConsumerState<CommentsTab> {
   final _ctrl = TextEditingController();
   bool _internal = false;
+  bool _posting = false;
 
   @override
   void dispose() {
@@ -41,20 +44,42 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
 
   Future<void> _post() async {
     final text = _ctrl.text.trim();
-    if (text.isEmpty) return;
-    await getIt<CommentRepository>().addComment(
-      Comment(
-        id: '${widget.ticketId}:${DateTime.now().microsecondsSinceEpoch}',
-        ticketId: widget.ticketId,
-        authorName: 'You',
-        body: text,
-        createdAt: DateTime.now(),
-        origin: _internal ? CommentOrigin.internalNote : CommentOrigin.provider,
-        synced: !_internal ? false : true,
-      ),
-    );
-    _ctrl.clear();
-    setState(() {});
+    if (text.isEmpty || _posting) return;
+
+    // Internal notes stay local — no provider round-trip.
+    if (_internal) {
+      await getIt<CommentRepository>().addComment(
+        Comment(
+          id: '${widget.ticketId}:${DateTime.now().microsecondsSinceEpoch}',
+          ticketId: widget.ticketId,
+          authorName: 'You',
+          body: text,
+          createdAt: DateTime.now(),
+          origin: CommentOrigin.internalNote,
+          synced: true,
+        ),
+      );
+      _ctrl.clear();
+      setState(() {});
+      return;
+    }
+
+    // Provider comment: push to the provider, then the refreshed thread (written
+    // to drift by syncTicketDetail) surfaces the canonical comment reactively.
+    final ticket = ref.read(ticketByIdProvider(widget.ticketId));
+    if (ticket == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = AppL10n.of(context).commentPostFailed;
+    setState(() => _posting = true);
+    final res = await getIt<SyncService>().postComment(ticket, text);
+    if (!mounted) return;
+    setState(() => _posting = false);
+    switch (res) {
+      case Ok():
+        _ctrl.clear();
+      case Err():
+        messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+    }
   }
 
   @override
@@ -166,8 +191,12 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
                       const Spacer(),
                       AppButton.filled(
                         size: AppButtonSize.small,
-                        onPressed: _post,
-                        child: Text(_internal ? 'Save note' : 'Comment'),
+                        onPressed: _posting ? null : _post,
+                        child: Text(
+                          _posting
+                              ? 'Sending…'
+                              : (_internal ? 'Save note' : 'Comment'),
+                        ),
                       ),
                     ],
                   ),

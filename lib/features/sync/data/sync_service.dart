@@ -67,7 +67,7 @@ class SyncService {
     if (secret == null) {
       return const Err(AuthFailure('Stored credentials not found in keychain'));
     }
-    final adapter = buildProviderAdapter(account, secret);
+    final adapter = _buildAdapter(account, secret);
     if (adapter == null) {
       return Err(
         UnexpectedFailure(
@@ -285,7 +285,7 @@ class SyncService {
     if (credRef == null) return const Ok(null);
     final secret = await _credentials.read(credRef);
     if (secret == null) return const Ok(null);
-    final adapter = buildProviderAdapter(account, secret);
+    final adapter = _buildAdapter(account, secret);
     if (adapter == null) return const Ok(null);
 
     final detail = await adapter.getTicket(ticket);
@@ -338,6 +338,19 @@ class SyncService {
 
   // ---- provider actions (assign / resolve) ----
 
+  /// Builds an adapter that reuses this account's pooled ZenTao session, so the
+  /// adapter and the inline-image/attachment loaders never fight over the
+  /// session (see [_zenClientFrom]). Non-ZenTao providers authenticate with a
+  /// stateless token and need no pooling.
+  ProviderAdapter? _buildAdapter(Account account, String secret) =>
+      buildProviderAdapter(
+        account,
+        secret,
+        zenClient: account.providerType == ProviderType.zentao
+            ? _zenClientFrom(account, secret)
+            : null,
+      );
+
   /// Builds a live [ProviderAdapter] for the ticket's account, or null when the
   /// account has no stored credentials / provider isn't implemented.
   Future<ProviderAdapter?> _adapterFor(String accountId) async {
@@ -350,7 +363,7 @@ class SyncService {
     if (ref == null) return null;
     final secret = await _credentials.read(ref);
     if (secret == null) return null;
-    return buildProviderAdapter(account, secret);
+    return _buildAdapter(account, secret);
   }
 
   /// Users the ticket can be assigned to (empty when unavailable). GitLab/GitHub
@@ -361,6 +374,25 @@ class SyncService {
     if (adapter is GitLabAdapter) return adapter.listProjectMembers(ticket);
     if (adapter is GitHubAdapter) return adapter.listRepoAssignees(ticket);
     return adapter.listUsers();
+  }
+
+  /// Posts [body] as a comment on [ticket] via its provider, then refreshes the
+  /// thread from the provider so the canonical comment (with the real author and
+  /// timestamp) lands in drift, from where the panel reads reactively. Returns
+  /// the failure if the account lacks credentials or the provider rejects it.
+  Future<Result<void>> postComment(Ticket ticket, String body) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.postComment(ticket, body);
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok():
+        await syncTicketDetail(ticket);
+        return const Ok(null);
+    }
   }
 
   /// Reassigns the ticket, then refreshes its cached detail/status/history.
@@ -605,11 +637,26 @@ class SyncService {
   final Map<String, GitLabClient> _gitlabClients = {};
   final Map<String, GitHubClient> _githubClients = {};
 
+  /// Successfully loaded inline-image bytes, keyed by account + url, so the detail
+  /// panel reuses a loaded image instead of refetching on every Original/
+  /// Translate tab switch. Only successes are cached, so a failed load can retry.
+  final Map<String, Uint8List> _imageCache = {};
+
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
   /// via the ticket account's authenticated client (ZenTao session, GitLab or
   /// GitHub PAT). Returns null if the account has no stored credentials or the
-  /// fetch fails. Only the matching provider's client is non-null.
+  /// fetch fails. Only the matching provider's client is non-null. Successful
+  /// results are cached in [_imageCache].
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url) async {
+    final key = '${ticket.accountId}|$url';
+    final cached = _imageCache[key];
+    if (cached != null) return cached;
+    final bytes = await _loadTicketImage(ticket, url);
+    if (bytes != null) _imageCache[key] = bytes;
+    return bytes;
+  }
+
+  Future<Uint8List?> _loadTicketImage(Ticket ticket, String url) async {
     try {
       final zen = await _zenClientFor(ticket.accountId);
       if (zen != null) return await zen.fetchBytes(url);
@@ -668,6 +715,19 @@ class SyncService {
   String _safeName(String name) =>
       name.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_');
 
+  /// The one pooled [ZenTaoClient] for [account], created on first use and
+  /// reused thereafter so every path for this account — board/detail sync,
+  /// inline images, attachments — shares ONE session. ZenTao invalidates the
+  /// previous session id on each login, so separate clients would knock each
+  /// other's session out; that race is why inline images failed on a ticket's
+  /// first open (the detail sync logged in concurrently on its own client).
+  ZenTaoClient _zenClientFrom(Account account, String secret) =>
+      _zenClients[account.id] ??= ZenTaoClient(
+        baseUrl: account.baseUrl ?? '',
+        account: account.handle,
+        password: secret,
+      );
+
   Future<ZenTaoClient?> _zenClientFor(String accountId) async {
     final cached = _zenClients[accountId];
     if (cached != null) return cached;
@@ -681,13 +741,7 @@ class SyncService {
     if (ref == null) return null;
     final secret = await _credentials.read(ref);
     if (secret == null) return null;
-    final client = ZenTaoClient(
-      baseUrl: account.baseUrl ?? '',
-      account: account.handle,
-      password: secret,
-    );
-    _zenClients[accountId] = client;
-    return client;
+    return _zenClientFrom(account, secret);
   }
 
   /// A cached authenticated [GitLabClient] for [accountId], or null when the

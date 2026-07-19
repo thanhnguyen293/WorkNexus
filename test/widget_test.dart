@@ -17,7 +17,7 @@ void main() {
     await resetTestLocator(db);
   });
 
-  testWidgets('App boots into the board shell with seeded data', (
+  testWidgets('App boots into the empty home/welcome screen (no board)', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1440, 900);
@@ -31,16 +31,17 @@ void main() {
 
     // Title bar shows the app name.
     expect(find.text('Unified Task Board'), findsOneWidget);
-    // Board columns render (localized status labels).
-    expect(find.text('In Progress'), findsWidgets);
-    // A seeded ticket is visible.
-    expect(find.text('Upgrade to React 19'), findsWidgets);
+    // The launch state is the welcome screen — no source is selected yet.
+    expect(find.text('Welcome to WorkNexus'), findsOneWidget);
+    // No board is opened by default: no columns and no seeded tickets render.
+    expect(find.text('In Progress'), findsNothing);
+    expect(find.text('Upgrade to React 19'), findsNothing);
 
     await disposeTree(tester);
   });
 
   testWidgets(
-    'Sidebar nests workspace → ZenTao and drops Bugs/Tasks/All-workspaces',
+    'Sidebar nests workspace → ZenTao with Bugs/Tasks groups, no catch-alls',
     (tester) async {
       tester.view.physicalSize = const Size(1440, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -52,10 +53,14 @@ void main() {
 
       // The ZenTao node renders beneath its workspace in the tree.
       expect(find.text('ZenTao'), findsOneWidget);
-      // The old Bugs/Tasks entry points and "Products" wrapper are gone.
-      expect(find.text('Bugs'), findsNothing);
-      expect(find.text('Tasks'), findsNothing);
+      // Its sources hang under the "Bugs" (products) and "Tasks" (executions)
+      // group headers.
+      expect(find.text('Bugs'), findsOneWidget);
+      expect(find.text('Tasks'), findsOneWidget);
+      // The old top-level entry points / "Products" wrapper are still gone, and
+      // nothing is pinned by default so there is no "Pinned" area.
       expect(find.text('Products'), findsNothing);
+      expect(find.text('Pinned'), findsNothing);
       // The workspace node is structural — no "all workspaces" catch-all.
       expect(find.text('All workspaces'), findsNothing);
 
