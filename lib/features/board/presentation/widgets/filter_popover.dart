@@ -32,6 +32,7 @@ class FilterPopover extends ConsumerWidget {
         ViewMode.zentaoBugs || ViewMode.zentaoTasks => const _FacetFilters(),
         ViewMode.board ||
         ViewMode.gitlab ||
+        ViewMode.github ||
         ViewMode.list => const _GenericFilters(),
       },
     );

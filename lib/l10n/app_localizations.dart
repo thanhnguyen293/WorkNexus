@@ -571,6 +571,36 @@ abstract class AppL10n {
   /// **'glpat-… (scope: api)'**
   String get gitlabTokenHint;
 
+  /// No description provided for @connectGitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect GitHub'**
+  String get connectGitHub;
+
+  /// No description provided for @githubConnectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your GitHub server URL and a Personal Access Token. Your token is stored in the macOS Keychain — never in the local database.'**
+  String get githubConnectionSubtitle;
+
+  /// No description provided for @githubServerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://github.com or your GitHub Enterprise URL'**
+  String get githubServerHint;
+
+  /// No description provided for @githubTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'ghp_… (scopes: repo, read:org)'**
+  String get githubTokenHint;
+
+  /// No description provided for @githubGenerateToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate token'**
+  String get githubGenerateToken;
+
   /// No description provided for @newWorkspaceOption.
   ///
   /// In en, this message translates to:
@@ -643,11 +673,83 @@ abstract class AppL10n {
   /// **'Couldn\'t load items'**
   String get gitlabItemsLoadFailed;
 
+  /// No description provided for @githubIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues'**
+  String get githubIssues;
+
+  /// No description provided for @githubPullRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull Requests'**
+  String get githubPullRequests;
+
+  /// No description provided for @githubColOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get githubColOpen;
+
+  /// No description provided for @githubColDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get githubColDraft;
+
+  /// No description provided for @githubColMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged'**
+  String get githubColMerged;
+
+  /// No description provided for @githubColClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get githubColClosed;
+
+  /// No description provided for @githubItemsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load items'**
+  String get githubItemsLoadFailed;
+
+  /// No description provided for @githubRepositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Repositories'**
+  String get githubRepositories;
+
+  /// No description provided for @loadingRepositories.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading repositories…'**
+  String get loadingRepositories;
+
+  /// No description provided for @reposUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Repositories unavailable'**
+  String get reposUnavailable;
+
   /// No description provided for @assign.
   ///
   /// In en, this message translates to:
   /// **'Assign'**
   String get assign;
+
+  /// No description provided for @resolve.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve'**
+  String get resolve;
+
+  /// No description provided for @activate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get activate;
 
   /// No description provided for @gitlabMerge.
   ///
@@ -660,6 +762,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Reopen'**
   String get gitlabReopen;
+
+  /// No description provided for @githubMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get githubMerge;
+
+  /// No description provided for @githubReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get githubReopen;
 
   /// No description provided for @emptyTitle.
   ///

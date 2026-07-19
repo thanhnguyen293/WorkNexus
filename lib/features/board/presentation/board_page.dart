@@ -10,6 +10,8 @@ import 'widgets/board_view.dart';
 import 'widgets/chrome_bar.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/filter_popover.dart';
+import 'widgets/github_board_view.dart';
+import 'widgets/github_tabs.dart';
 import 'widgets/gitlab_board_view.dart';
 import 'widgets/gitlab_tabs.dart';
 import 'widgets/list_view.dart';
@@ -38,6 +40,9 @@ class BoardPage extends ConsumerWidget {
     final gitlabSlice = mode == ViewMode.gitlab
         ? ref.watch(gitlabItemsSliceProvider)
         : null;
+    final githubSlice = mode == ViewMode.github
+        ? ref.watch(githubItemsSliceProvider)
+        : null;
     final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
     // While a just-opened tab/execution/project is still fetching and nothing is
     // cached yet, show the skeleton instead of a momentary empty state.
@@ -45,6 +50,7 @@ class BoardPage extends ConsumerWidget {
         loading ||
         ((bugSlice?.isLoading ?? false) && count == 0) ||
         ((gitlabSlice?.isLoading ?? false) && count == 0) ||
+        ((githubSlice?.isLoading ?? false) && count == 0) ||
         (executionSyncing && count == 0 && mode == ViewMode.zentaoTasks);
 
     Widget body;
@@ -54,6 +60,8 @@ class BoardPage extends ConsumerWidget {
       body = _SliceError(message: AppL10n.of(context).bugTabLoadFailed);
     } else if (gitlabSlice != null && gitlabSlice.hasError) {
       body = _SliceError(message: AppL10n.of(context).gitlabItemsLoadFailed);
+    } else if (githubSlice != null && githubSlice.hasError) {
+      body = _SliceError(message: AppL10n.of(context).githubItemsLoadFailed);
     } else if (count == 0) {
       body = const EmptyState();
     } else {
@@ -62,6 +70,7 @@ class BoardPage extends ConsumerWidget {
         ViewMode.zentaoBugs => const ZenTaoBugBoardView(),
         ViewMode.zentaoTasks => const ZenTaoTaskBoardView(),
         ViewMode.gitlab => const GitLabBoardView(),
+        ViewMode.github => const GitHubBoardView(),
         ViewMode.list => const TaskListView(),
       };
     }
@@ -73,6 +82,7 @@ class BoardPage extends ConsumerWidget {
           const ChromeBar(),
           if (mode == ViewMode.zentaoBugs) const ZenTaoBugTabs(),
           if (mode == ViewMode.gitlab) const GitLabTabs(),
+          if (mode == ViewMode.github) const GitHubTabs(),
           Expanded(
             child: Stack(
               children: [

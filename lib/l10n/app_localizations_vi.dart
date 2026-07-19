@@ -251,6 +251,23 @@ class AppL10nVi extends AppL10n {
   String get gitlabTokenHint => 'glpat-… (scope: api)';
 
   @override
+  String get connectGitHub => 'Kết nối GitHub';
+
+  @override
+  String get githubConnectionSubtitle =>
+      'Nhập địa chỉ máy chủ GitHub và Personal Access Token. Token được lưu trong Keychain của macOS — không lưu trong cơ sở dữ liệu cục bộ.';
+
+  @override
+  String get githubServerHint =>
+      'https://github.com hoặc URL GitHub Enterprise';
+
+  @override
+  String get githubTokenHint => 'ghp_… (scopes: repo, read:org)';
+
+  @override
+  String get githubGenerateToken => 'Tạo token';
+
+  @override
   String get newWorkspaceOption => '➕ Workspace mới…';
 
   @override
@@ -287,13 +304,55 @@ class AppL10nVi extends AppL10n {
   String get gitlabItemsLoadFailed => 'Không tải được danh sách';
 
   @override
+  String get githubIssues => 'Issues';
+
+  @override
+  String get githubPullRequests => 'Pull Requests';
+
+  @override
+  String get githubColOpen => 'Mở';
+
+  @override
+  String get githubColDraft => 'Nháp';
+
+  @override
+  String get githubColMerged => 'Đã merge';
+
+  @override
+  String get githubColClosed => 'Đã đóng';
+
+  @override
+  String get githubItemsLoadFailed => 'Không tải được danh sách';
+
+  @override
+  String get githubRepositories => 'Kho lưu trữ';
+
+  @override
+  String get loadingRepositories => 'Đang tải kho lưu trữ…';
+
+  @override
+  String get reposUnavailable => 'Không có kho lưu trữ';
+
+  @override
   String get assign => 'Giao';
+
+  @override
+  String get resolve => 'Xử lý';
+
+  @override
+  String get activate => 'Kích hoạt lại';
 
   @override
   String get gitlabMerge => 'Merge';
 
   @override
   String get gitlabReopen => 'Mở lại';
+
+  @override
+  String get githubMerge => 'Merge';
+
+  @override
+  String get githubReopen => 'Mở lại';
 
   @override
   String get emptyTitle => 'Không có công việc khớp bộ lọc';

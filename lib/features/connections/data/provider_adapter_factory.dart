@@ -1,13 +1,15 @@
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import 'github/github_adapter.dart';
+import 'github/github_client.dart';
 import 'gitlab/gitlab_adapter.dart';
 import 'gitlab/gitlab_client.dart';
 import 'zentao/zentao_adapter.dart';
 import 'zentao/zentao_client.dart';
 
 /// Builds a live [ProviderAdapter] for a configured account + its secret.
-/// Returns null for providers not yet implemented (GitHub/Jira).
+/// Returns null for providers not yet implemented (Jira).
 ProviderAdapter? buildProviderAdapter(Account account, String secret) {
   switch (account.providerType) {
     case ProviderType.zentao:
@@ -25,6 +27,10 @@ ProviderAdapter? buildProviderAdapter(Account account, String secret) {
         client: GitLabClient(baseUrl: account.baseUrl ?? '', token: secret),
       );
     case ProviderType.github:
+      return GitHubAdapter(
+        accountId: account.id,
+        client: GitHubClient(baseUrl: account.baseUrl ?? '', token: secret),
+      );
     case ProviderType.jira:
       return null;
   }

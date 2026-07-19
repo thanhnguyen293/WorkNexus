@@ -14,6 +14,8 @@ import '../../sync/data/sync_service.dart';
 import '../domain/entities/board_model.dart';
 import '../domain/entities/filter_state.dart';
 import '../domain/usecases/build_board.dart';
+import '../domain/usecases/build_github_issue_board.dart';
+import '../domain/usecases/build_github_pr_board.dart';
 import '../domain/usecases/build_gitlab_issue_board.dart';
 import '../domain/usecases/build_gitlab_mr_board.dart';
 import '../domain/usecases/build_list.dart';
@@ -21,11 +23,12 @@ import '../domain/usecases/build_zentao_bug_board.dart';
 import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
+import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/saved_view.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 
-enum ViewMode { board, zentaoBugs, zentaoTasks, gitlab, list }
+enum ViewMode { board, zentaoBugs, zentaoTasks, gitlab, github, list }
 
 class ZenTaoProductSelection {
   const ZenTaoProductSelection({
@@ -480,6 +483,26 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
         )
         .toList();
   }
+  final githubRepo = ref.watch(selectedGitHubRepoProvider);
+  if (githubRepo != null) {
+    final kind = ref.watch(githubKindProvider);
+    final repoLabel = 'github-repo:${githubRepo.repoId}';
+    // The active repo+kind's server slice (ids). Null while it's still loading —
+    // show nothing until it resolves (the board page renders a skeleton) so a
+    // repo/kind switch never flashes the previous slice.
+    final slice = ref.watch(githubItemsSliceProvider).asData?.value;
+    return tickets
+        .where(
+          (ticket) =>
+              ticket.accountId == githubRepo.accountId &&
+              ticket.providerType == ProviderType.github &&
+              (ticket.externalType ?? '') == kind.externalType &&
+              ticket.labels.contains(repoLabel) &&
+              slice != null &&
+              slice.contains(ticket.id),
+        )
+        .toList();
+  }
   final product = ref.watch(selectedZenTaoProductProvider);
   final execution = ref.watch(selectedZenTaoExecutionProvider);
   if (execution != null) {
@@ -528,7 +551,10 @@ final boardFacetsProvider = Provider<BoardFacets>((ref) {
   final scope = switch (ref.watch(viewModeProvider)) {
     ViewMode.zentaoBugs => BoardFacetScope.bug,
     ViewMode.zentaoTasks => BoardFacetScope.task,
-    ViewMode.board || ViewMode.gitlab || ViewMode.list => BoardFacetScope.none,
+    ViewMode.board ||
+    ViewMode.gitlab ||
+    ViewMode.github ||
+    ViewMode.list => BoardFacetScope.none,
   };
   if (scope == BoardFacetScope.none) return BoardFacets.empty;
   return const DeriveBoardFacets()(
@@ -556,6 +582,116 @@ final gitlabIssueBoardProvider = Provider<GitLabIssueBoardModel>(
   (ref) => const BuildGitLabIssueBoard()(ref.watch(_boardQueryProvider)),
 );
 
+// ---- GitHub dedicated board (repo → issues/PRs) ----
+
+class GitHubRepoSelection {
+  const GitHubRepoSelection({
+    required this.accountId,
+    required this.repoId,
+    required this.repoName,
+  });
+
+  final String accountId;
+
+  /// The `owner/name` repo slug.
+  final String repoId;
+  final String repoName;
+}
+
+/// The GitHub repo whose dedicated board is open (null off the GitHub board).
+class SelectedGitHubRepo extends Notifier<GitHubRepoSelection?> {
+  @override
+  GitHubRepoSelection? build() => null;
+
+  void select(ProviderProject repo) {
+    state = GitHubRepoSelection(
+      accountId: repo.accountId,
+      repoId: repo.id,
+      repoName: repo.name,
+    );
+  }
+
+  void clear() => state = null;
+}
+
+final selectedGitHubRepoProvider =
+    NotifierProvider<SelectedGitHubRepo, GitHubRepoSelection?>(
+      SelectedGitHubRepo.new,
+    );
+
+/// Which kind the GitHub board shows: Issues (default) or Pull Requests.
+class GitHubKindController extends Notifier<GitHubItemKind> {
+  @override
+  GitHubItemKind build() => GitHubItemKind.issue;
+
+  void set(GitHubItemKind kind) => state = kind;
+}
+
+final githubKindProvider =
+    NotifierProvider<GitHubKindController, GitHubItemKind>(
+      GitHubKindController.new,
+    );
+
+/// Which GitHub accounts have their collapsible "Repositories" group expanded.
+class GitHubReposExpanded extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const <String>{};
+
+  void toggle(String accountId) {
+    final next = Set<String>.of(state);
+    next.contains(accountId) ? next.remove(accountId) : next.add(accountId);
+    state = next;
+  }
+}
+
+final githubReposExpandedProvider =
+    NotifierProvider<GitHubReposExpanded, Set<String>>(GitHubReposExpanded.new);
+
+/// GitHub repos the account can access (the sidebar Repositories tree).
+final githubReposProvider =
+    FutureProvider.family<List<ProviderProject>, String>((
+      ref,
+      accountId,
+    ) async {
+      final res = await getIt<SyncService>().listProjects(accountId);
+      switch (res) {
+        case Ok(:final value):
+          return value;
+        case Err(:final failure):
+          throw failure;
+      }
+    });
+
+/// The selected repo + kind's server slice: syncs that repo's recent issues/PRs
+/// into drift and returns their ids so the board renders just that slice.
+/// Refetched on every repo/kind change (autoDispose + reactive deps).
+final githubItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final repo = ref.watch(selectedGitHubRepoProvider);
+  if (repo == null) return const <String>{};
+  final kind = ref.watch(githubKindProvider);
+  final res = await getIt<SyncService>().syncGitHubRepoItems(
+    accountId: repo.accountId,
+    repoId: repo.repoId,
+    pullRequests: kind == GitHubItemKind.pullRequest,
+  );
+  switch (res) {
+    case Ok(:final value):
+      return value.toSet();
+    case Err(:final failure):
+      throw failure;
+  }
+});
+
+final githubPrBoardProvider = Provider<GitHubPrBoardModel>(
+  (ref) => const BuildGitHubPrBoard()(ref.watch(_boardQueryProvider)),
+);
+
+final githubIssueBoardProvider = Provider<GitHubIssueBoardModel>(
+  (ref) => const BuildGitHubIssueBoard()(ref.watch(_boardQueryProvider)),
+);
+
 final listRowsProvider = Provider<List<Ticket>>(
   (ref) => const BuildList()(ref.watch(_boardQueryProvider)),
 );
@@ -565,6 +701,11 @@ final resultCountProvider = Provider<int>((ref) {
     return ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
         ? ref.watch(gitlabMrBoardProvider).total
         : ref.watch(gitlabIssueBoardProvider).total;
+  }
+  if (ref.watch(viewModeProvider) == ViewMode.github) {
+    return ref.watch(githubKindProvider) == GitHubItemKind.pullRequest
+        ? ref.watch(githubPrBoardProvider).total
+        : ref.watch(githubIssueBoardProvider).total;
   }
   if (ref.watch(viewModeProvider) == ViewMode.zentaoBugs) {
     return ref.watch(zentaoBugBoardProvider).total;

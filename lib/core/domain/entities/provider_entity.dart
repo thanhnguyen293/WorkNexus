@@ -58,6 +58,22 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     @Default(<String>[]) List<String> assignees,
   }) = GitLabItemEntity;
 
+  /// Structured metadata for a GitHub issue or pull request. PR-only fields
+  /// (branches, merge state, draft, merged, reviewers) are null on issues.
+  /// [repo] is the `owner/name` slug.
+  const factory TicketProviderEntity.githubItem({
+    String? repo,
+    String? author,
+    String? headBranch,
+    String? baseBranch,
+    String? mergeableState,
+    bool? draft,
+    bool? merged,
+    int? comments,
+    @Default(<String>[]) List<String> reviewers,
+    @Default(<String>[]) List<String> assignees,
+  }) = GitHubItemEntity;
+
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>
       _$TicketProviderEntityFromJson(json);
 }

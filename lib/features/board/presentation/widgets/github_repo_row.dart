@@ -7,35 +7,30 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../domain/value_objects/gitlab_item_kind.dart';
+import '../../domain/value_objects/github_item_kind.dart';
 import '../board_providers.dart';
 
-/// A single GitLab project row: a dot, the project name and its cached item
-/// count. Tapping opens the project's dedicated board (Issues by default), which
-/// then fetches that kind's recent items from GitLab.
-class GitLabProjectRow extends ConsumerWidget {
-  const GitLabProjectRow({
-    super.key,
-    required this.project,
-    required this.tickets,
-  });
+/// A single GitHub repo row: a dot, the repo name and its cached item count.
+/// Tapping opens the repo's dedicated board (Issues by default), which then
+/// fetches that kind's recent items from GitHub.
+class GitHubRepoRow extends ConsumerWidget {
+  const GitHubRepoRow({super.key, required this.repo, required this.tickets});
 
-  final ProviderProject project;
+  final ProviderProject repo;
   final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final selected = ref.watch(selectedGitLabProjectProvider);
+    final selected = ref.watch(selectedGitHubRepoProvider);
     final active =
-        selected?.accountId == project.accountId &&
-        selected?.projectId == project.id;
-    final loading = active && ref.watch(gitlabItemsSliceProvider).isLoading;
+        selected?.accountId == repo.accountId && selected?.repoId == repo.id;
+    final loading = active && ref.watch(githubItemsSliceProvider).isLoading;
     final count = tickets
         .where(
           (t) =>
-              t.accountId == project.accountId &&
-              t.labels.contains('gitlab-project:${project.id}'),
+              t.accountId == repo.accountId &&
+              t.labels.contains('github-repo:${repo.id}'),
         )
         .length;
 
@@ -67,7 +62,7 @@ class GitLabProjectRow extends ConsumerWidget {
               SizedBox(width: context.spacing.sm),
               Expanded(
                 child: Text(
-                  project.name,
+                  repo.name,
                   overflow: TextOverflow.ellipsis,
                   style: context.typography.mono.copyWith(
                     fontWeight: active ? FontWeight.w600 : FontWeight.w500,
@@ -88,14 +83,14 @@ class GitLabProjectRow extends ConsumerWidget {
     );
   }
 
-  /// Opens this project's board: clears any ZenTao selection, selects the
-  /// project, resets to the Issues kind, and switches to the GitLab view mode.
+  /// Opens this repo's board: clears any ZenTao/GitLab selection, selects the
+  /// repo, resets to the Issues kind, and switches to the GitHub view mode.
   void _select(WidgetRef ref) {
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-    ref.read(selectedGitHubRepoProvider.notifier).clear();
-    ref.read(selectedGitLabProjectProvider.notifier).select(project);
-    ref.read(gitlabKindProvider.notifier).set(GitLabItemKind.issue);
-    ref.read(viewModeProvider.notifier).set(ViewMode.gitlab);
+    ref.read(selectedGitLabProjectProvider.notifier).clear();
+    ref.read(selectedGitHubRepoProvider.notifier).select(repo);
+    ref.read(githubKindProvider.notifier).set(GitHubItemKind.issue);
+    ref.read(viewModeProvider.notifier).set(ViewMode.github);
   }
 }

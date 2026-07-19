@@ -14,6 +14,9 @@ import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../data/local/mappers.dart';
+import '../../connections/data/github/github_adapter.dart';
+import '../../connections/data/github/github_client.dart';
+import '../../connections/data/github/github_normalize.dart';
 import '../../connections/data/gitlab/gitlab_adapter.dart';
 import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
@@ -28,6 +31,7 @@ const List<String> kSyntheticLabelPrefixes = <String>[
   'zentao-product:',
   'zentao-execution:',
   'gitlab-project:',
+  'github-repo:',
 ];
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
@@ -226,6 +230,45 @@ class SyncService {
     }
   }
 
+  /// Fetches one GitHub repo's recent issues OR pull requests (chosen by
+  /// [pullRequests]), tags each with a synthetic `github-repo:<repo>` label,
+  /// upserts them into drift (local-first), and returns their ids so the board
+  /// renders just that slice. Mirrors [syncGitLabProjectItems] for GitHub; routes
+  /// through the concrete [GitHubAdapter] (GitHub-specific fetch, not on the
+  /// shared interface). [repoId] is the `owner/name` slug.
+  Future<Result<List<String>>> syncGitHubRepoItems({
+    required String accountId,
+    required String repoId,
+    required bool pullRequests,
+  }) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('GitHub account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listRepoItems(
+      repoId,
+      kind: pullRequests ? GitHubKind.pullRequest : GitHubKind.issue,
+    );
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        final label = 'github-repo:$repoId';
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
+    }
+  }
+
   /// Fetches full detail + comments for a single [ticket] from its provider and
   /// writes them into drift (from where the detail panel reads reactively).
   ///
@@ -310,12 +353,13 @@ class SyncService {
     return buildProviderAdapter(account, secret);
   }
 
-  /// Users the ticket can be assigned to (empty when unavailable). GitLab has no
-  /// account-wide assignable list, so its members are fetched per-project.
+  /// Users the ticket can be assigned to (empty when unavailable). GitLab/GitHub
+  /// have no account-wide assignable list, so members are fetched per-project/repo.
   Future<Result<List<ProviderUser>>> listUsers(Ticket ticket) async {
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) return const Ok(<ProviderUser>[]);
     if (adapter is GitLabAdapter) return adapter.listProjectMembers(ticket);
+    if (adapter is GitHubAdapter) return adapter.listRepoAssignees(ticket);
     return adapter.listUsers();
   }
 
@@ -369,8 +413,10 @@ class SyncService {
       await _rollbackTicket(ticket);
       return Err(failure);
     }
+    // Trust the server's post-action state (assignee, status, resolution) from
+    // the detail refresh — do NOT re-apply the optimistic here, or it clobbers
+    // the real assignee (resolve → reporter) and masks a failed activate.
     await syncTicketDetail(ticket);
-    await _optimisticallyUpdateTicket(optimistic);
     return const Ok(null);
   }
 
@@ -403,8 +449,10 @@ class SyncService {
       await _rollbackTicket(ticket);
       return Err(failure);
     }
+    // Trust the server's post-action state (assignee, status, resolution) from
+    // the detail refresh — do NOT re-apply the optimistic here, or it clobbers
+    // the real assignee (resolve → reporter) and masks a failed activate.
     await syncTicketDetail(ticket);
-    await _optimisticallyUpdateTicket(optimistic);
     return const Ok(null);
   }
 
@@ -478,6 +526,60 @@ class SyncService {
     return const Ok(null);
   }
 
+  // ---- GitHub actions (close / reopen / merge) ----
+
+  /// Closes a GitHub issue or PR, then refreshes its cached detail/status.
+  Future<Result<void>> closeGitHubItem(Ticket ticket) {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.done,
+      providerStatus: 'closed',
+    );
+    return _githubAction(ticket, optimistic, (a) => a.closeItem(ticket));
+  }
+
+  /// Reopens a GitHub issue or PR, then refreshes its cached detail/status.
+  Future<Result<void>> reopenGitHubItem(Ticket ticket) {
+    final isPr = (ticket.externalType ?? '').toLowerCase() == 'pullrequest';
+    final optimistic = ticket.copyWith(
+      status: isPr ? UnifiedStatus.review : UnifiedStatus.todo,
+      providerStatus: 'open',
+    );
+    return _githubAction(ticket, optimistic, (a) => a.reopenItem(ticket));
+  }
+
+  /// Merges a GitHub pull request, then refreshes its cached detail/status.
+  Future<Result<void>> mergeGitHubPr(Ticket ticket) {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.done,
+      providerStatus: 'merged',
+    );
+    return _githubAction(ticket, optimistic, (a) => a.mergePull(ticket));
+  }
+
+  /// Optimistically applies [optimistic], runs a GitHub-specific [action] through
+  /// the concrete adapter, refreshes the ticket detail on success, and rolls back
+  /// to [ticket] on failure. Mirrors [_gitlabAction] (GitHub is likewise strongly
+  /// consistent, so no post-refresh re-assert).
+  Future<Result<void>> _githubAction(
+    Ticket ticket,
+    Ticket optimistic,
+    Future<Result<bool>> Function(GitHubAdapter adapter) action,
+  ) async {
+    await _optimisticallyUpdateTicket(optimistic);
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitHubAdapter) {
+      await _rollbackTicket(ticket);
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await action(adapter);
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
+    await syncTicketDetail(ticket);
+    return const Ok(null);
+  }
+
   Future<void> _optimisticallyUpdateTicket(Ticket ticket) async {
     await _db
         .into(_db.tickets)
@@ -501,17 +603,20 @@ class SyncService {
 
   final Map<String, ZenTaoClient> _zenClients = {};
   final Map<String, GitLabClient> _gitlabClients = {};
+  final Map<String, GitHubClient> _githubClients = {};
 
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
-  /// via the ticket account's authenticated client (ZenTao session or GitLab
-  /// PAT). Returns null if the account has no stored credentials or the fetch
-  /// fails. Only the matching provider's client is non-null.
+  /// via the ticket account's authenticated client (ZenTao session, GitLab or
+  /// GitHub PAT). Returns null if the account has no stored credentials or the
+  /// fetch fails. Only the matching provider's client is non-null.
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url) async {
     try {
       final zen = await _zenClientFor(ticket.accountId);
       if (zen != null) return await zen.fetchBytes(url);
       final gitlab = await _gitlabClientFor(ticket.accountId);
       if (gitlab != null) return await gitlab.fetchBytes(url);
+      final github = await _githubClientFor(ticket.accountId);
+      if (github != null) return await github.fetchBytes(url);
     } catch (_) {}
     return null;
   }
@@ -603,6 +708,27 @@ class SyncService {
     if (secret == null) return null;
     final client = GitLabClient(baseUrl: account.baseUrl ?? '', token: secret);
     _gitlabClients[accountId] = client;
+    return client;
+  }
+
+  /// A cached authenticated [GitHubClient] for [accountId], or null when the
+  /// account isn't GitHub / has no stored credentials. Used for inline image
+  /// bytes that need the PAT (e.g. GitHub Enterprise same-host assets).
+  Future<GitHubClient?> _githubClientFor(String accountId) async {
+    final cached = _githubClients[accountId];
+    if (cached != null) return cached;
+    final row = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (row == null) return null;
+    final account = accountFromRow(row);
+    if (account.providerType != ProviderType.github) return null;
+    final ref = account.credentialsRef;
+    if (ref == null) return null;
+    final secret = await _credentials.read(ref);
+    if (secret == null) return null;
+    final client = GitHubClient(baseUrl: account.baseUrl ?? '', token: secret);
+    _githubClients[accountId] = client;
     return client;
   }
 

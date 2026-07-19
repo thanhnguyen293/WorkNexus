@@ -15,6 +15,7 @@ class ConnectionTextField extends StatelessWidget {
     this.hint,
     this.obscure = false,
     this.onChanged,
+    this.trailing,
   });
 
   final String label;
@@ -23,17 +24,28 @@ class ConnectionTextField extends StatelessWidget {
   final bool obscure;
   final ValueChanged<String>? onChanged;
 
+  /// Optional action shown at the trailing edge of the label row (e.g. a
+  /// "Generate token" link).
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: context.typography.captionStrong.copyWith(
-            color: c.textSecondary,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: context.typography.captionStrong.copyWith(
+                  color: c.textSecondary,
+                ),
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
         ),
         SizedBox(height: context.spacing.xs),
         TextField(

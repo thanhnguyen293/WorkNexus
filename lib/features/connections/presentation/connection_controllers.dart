@@ -171,6 +171,84 @@ class AddConnectionController extends Notifier<AddConnectionState> {
     }
   }
 
+  /// Tests the GitHub connection (a Personal Access Token), stores the token in
+  /// the keychain, persists the account, and runs an initial sync. The handle is
+  /// resolved from the token (`GET /user`), so there is no username field.
+  ///
+  /// Provide EITHER [workspaceId] (existing) OR [newWorkspaceName] (created here).
+  Future<bool> connectGitHub({
+    required String baseUrl,
+    required String token,
+    String? workspaceId,
+    String? newWorkspaceName,
+  }) async {
+    state = const AddConnectionState(busy: true);
+    if (baseUrl.trim().isEmpty || token.trim().isEmpty) {
+      state = const AddConnectionState(error: 'All fields are required');
+      return false;
+    }
+
+    final targetWorkspaceId = await _resolveWorkspaceId(
+      workspaceId,
+      newWorkspaceName,
+    );
+    if (targetWorkspaceId == null) {
+      state = const AddConnectionState(error: 'Choose or create a workspace');
+      return false;
+    }
+
+    // Verify the token and resolve the authenticated login (used as the handle +
+    // account-id slug). The probe's account id is irrelevant.
+    final probe = Account(
+      id: 'gh-probe',
+      workspaceId: targetWorkspaceId,
+      providerType: ProviderType.github,
+      handle: '',
+      baseUrl: baseUrl.trim(),
+    );
+    final check = await buildProviderAdapter(probe, token)!.testConnection();
+    final String username;
+    switch (check) {
+      case Err(:final failure):
+        state = AddConnectionState(error: failure.message);
+        return false;
+      case Ok(:final value):
+        if (!value.ok) {
+          state = AddConnectionState(error: value.error ?? 'Connection failed');
+          return false;
+        }
+        username = (value.account == null || value.account!.isEmpty)
+            ? 'github'
+            : value.account!;
+    }
+
+    final accountId =
+        'gh-${_slug(username)}-${intHash(baseUrl).toRadixString(16)}';
+    final credRef = CredentialStore.refFor(accountId);
+    final account = Account(
+      id: accountId,
+      workspaceId: targetWorkspaceId,
+      providerType: ProviderType.github,
+      handle: username,
+      baseUrl: baseUrl.trim(),
+      credentialsRef: credRef,
+    );
+
+    await getIt<CredentialStore>().write(credRef, token);
+    await getIt<ConnectionRepository>().addAccount(account);
+    final sync = await getIt<SyncService>().syncAccount(account);
+    switch (sync) {
+      case Err(:final failure):
+        state = AddConnectionState(
+          error: 'Connected, but sync failed: ${failure.message}',
+        );
+        return true;
+      case Ok():
+        state = const AddConnectionState(done: true);
+        return true;
+    }
+  }
+
   /// Resolves the target workspace id, creating a new workspace when
   /// [newWorkspaceName] is given. Returns null when neither an existing id nor a
   /// new name was provided (the caller surfaces the error).

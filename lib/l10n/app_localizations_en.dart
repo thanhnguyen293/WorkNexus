@@ -251,6 +251,23 @@ class AppL10nEn extends AppL10n {
   String get gitlabTokenHint => 'glpat-… (scope: api)';
 
   @override
+  String get connectGitHub => 'Connect GitHub';
+
+  @override
+  String get githubConnectionSubtitle =>
+      'Enter your GitHub server URL and a Personal Access Token. Your token is stored in the macOS Keychain — never in the local database.';
+
+  @override
+  String get githubServerHint =>
+      'https://github.com or your GitHub Enterprise URL';
+
+  @override
+  String get githubTokenHint => 'ghp_… (scopes: repo, read:org)';
+
+  @override
+  String get githubGenerateToken => 'Generate token';
+
+  @override
   String get newWorkspaceOption => '➕ New workspace…';
 
   @override
@@ -287,13 +304,55 @@ class AppL10nEn extends AppL10n {
   String get gitlabItemsLoadFailed => 'Couldn\'t load items';
 
   @override
+  String get githubIssues => 'Issues';
+
+  @override
+  String get githubPullRequests => 'Pull Requests';
+
+  @override
+  String get githubColOpen => 'Open';
+
+  @override
+  String get githubColDraft => 'Draft';
+
+  @override
+  String get githubColMerged => 'Merged';
+
+  @override
+  String get githubColClosed => 'Closed';
+
+  @override
+  String get githubItemsLoadFailed => 'Couldn\'t load items';
+
+  @override
+  String get githubRepositories => 'Repositories';
+
+  @override
+  String get loadingRepositories => 'Loading repositories…';
+
+  @override
+  String get reposUnavailable => 'Repositories unavailable';
+
+  @override
   String get assign => 'Assign';
+
+  @override
+  String get resolve => 'Resolve';
+
+  @override
+  String get activate => 'Activate';
 
   @override
   String get gitlabMerge => 'Merge';
 
   @override
   String get gitlabReopen => 'Reopen';
+
+  @override
+  String get githubMerge => 'Merge';
+
+  @override
+  String get githubReopen => 'Reopen';
 
   @override
   String get emptyTitle => 'No tasks match these filters';

@@ -12,6 +12,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'add_connection_dialog.dart';
+import 'github_connection_dialog.dart';
 import 'gitlab_connection_dialog.dart';
 import 'settings_providers.dart';
 import 'widgets/account_list.dart';
@@ -137,6 +138,7 @@ class _ProviderPicker extends ConsumerWidget {
                         case ProviderType.gitlab:
                           GitLabConnectionDialog.show(context);
                         case ProviderType.github:
+                          GitHubConnectionDialog.show(context);
                         case ProviderType.jira:
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
