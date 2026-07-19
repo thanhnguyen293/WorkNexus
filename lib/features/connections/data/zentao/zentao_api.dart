@@ -51,9 +51,12 @@ abstract class ZenTaoApi {
     @Body() Map<String, dynamic> body,
   );
 
-  /// Activate/reopen a bug, e.g. `POST /bugs/4302/activate`.
+  /// Activate/reopen a bug, e.g. `POST /bugs/4302/activate`. Returns the raw
+  /// response so the adapter can detect a non-success: ZenTao answers some
+  /// failures with a 4xx (which `validateStatus < 500` treats as OK) or a
+  /// `{status: 'fail'}` 200 body, both of which a `Future<void>` would hide.
   @POST('/bugs/{id}/activate')
-  Future<void> activate(
+  Future<HttpResponse<dynamic>> activate(
     @Path('id') String id,
     @Body() Map<String, dynamic> body,
   );

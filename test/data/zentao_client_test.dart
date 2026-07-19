@@ -260,7 +260,8 @@ void main() {
         (r) => r.path.contains('bugs/4302/activate'),
       );
       expect(req.method, 'POST');
-      expect((req.data as Map)['openedBuild'], ['trunk']);
+      // ZenTao wants openedBuild as a non-empty string (not an array).
+      expect((req.data as Map)['openedBuild'], 'trunk');
     },
   );
 

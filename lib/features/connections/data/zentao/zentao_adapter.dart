@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
-import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
@@ -449,26 +449,21 @@ class ZenTaoAdapter implements ProviderAdapter {
   }) async {
     return _guard(() async {
       // ZenTao's activate wants `openedBuild` as a non-empty STRING (like
-      // resolve's `resolvedBuild`), NOT an array — sending `['trunk']` silently
-      // fails the reopen, leaving the bug resolved.
+      // resolve's `resolvedBuild`), NOT an array.
       final build = (openedBuild == null || openedBuild.trim().isEmpty)
           ? 'trunk'
           : openedBuild.trim();
-      // Default the reopen assignee to the resolver (ZenTao's own web default),
-      // so a reopened bug goes back to the dev instead of staying on the reporter
-      // it was parked on for verification at resolve time.
-      final entity = ticket.providerEntity;
-      final resolvedBy = entity is ZenTaoBugEntity
-          ? (entity.resolvedBy ?? '').trim()
-          : '';
+      // Reopen assigns to the acting user (me) by default; otherwise ZenTao
+      // leaves the bug on whoever it was parked on (the reporter, at resolve).
       final target = (assignee != null && assignee.trim().isNotEmpty)
           ? assignee.trim()
-          : resolvedBy;
-      await _client.api.activate(ticket.externalKey, {
+          : _client.account;
+      final resp = await _client.api.activate(ticket.externalKey, {
         'openedBuild': build,
         if (target.isNotEmpty) 'assignedTo': target,
         if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
       });
+      _ensureRestActionOk(resp, 'activate');
       return true;
     });
   }
@@ -500,6 +495,31 @@ class ZenTaoAdapter implements ProviderAdapter {
     ZenTaoType.task => 'tasks',
     ZenTaoType.story => 'stories',
   };
+
+  /// Throws (→ [_guard] turns it into a failure) when a REST action response is
+  /// not a success. ZenTao returns some failures as a 4xx — which the client's
+  /// `validateStatus < 500` accepts as OK — or as a `{status/result: 'fail'}`
+  /// 200 body; a `Future<void>` call would silently treat both as success.
+  void _ensureRestActionOk(HttpResponse<dynamic> resp, String action) {
+    final code = resp.response.statusCode ?? 0;
+    final data = resp.data;
+    final failed =
+        code >= 400 ||
+        (data is Map &&
+            (data['status']?.toString() == 'fail' ||
+                data['result']?.toString() == 'fail'));
+    if (!failed) return;
+    final msg = data is Map
+        ? (data['message'] ?? data['error'])?.toString()
+        : null;
+    throw DioException(
+      requestOptions: resp.response.requestOptions,
+      response: resp.response,
+      message:
+          'ZenTao $action failed (HTTP $code)'
+          '${msg == null || msg.isEmpty ? '' : ': $msg'}',
+    );
+  }
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {
     try {

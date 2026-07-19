@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -138,10 +137,20 @@ class _BugColumnState extends ConsumerState<_BugColumn> {
   }
 
   bool _canDrop(Ticket ticket, ZenTaoBugColumn target) {
-    if (zentaoBugColumnFor(ticket) == target) return false;
+    final current = zentaoBugColumnFor(ticket);
+    if (current == target) return false;
     return switch (target) {
-      ZenTaoBugColumn.newUnconfirmed ||
-      ZenTaoBugColumn.confirmedToFix ||
+      // ZenTao has no "un-confirm": nothing can move back into New/Unconfirmed.
+      ZenTaoBugColumn.newUnconfirmed => false,
+      // Confirmed/To Fix is reached only by reopening a resolved/closed bug
+      // (activate) — a reopened bug is active AND still confirmed. There is no
+      // "confirm" action yet, so a New/Unconfirmed bug can't be dragged here.
+      ZenTaoBugColumn.confirmedToFix =>
+        current == ZenTaoBugColumn.resolvedVerify ||
+            current == ZenTaoBugColumn.postponed ||
+            current == ZenTaoBugColumn.nonFix ||
+            current == ZenTaoBugColumn.closed,
+      // Resolving is allowed from any non-resolved state.
       ZenTaoBugColumn.resolvedVerify ||
       ZenTaoBugColumn.postponed ||
       ZenTaoBugColumn.nonFix => true,
@@ -150,9 +159,8 @@ class _BugColumnState extends ConsumerState<_BugColumn> {
   }
 
   Future<void> _handleDrop(Ticket ticket, ZenTaoBugColumn target) async {
-    if (target == ZenTaoBugColumn.newUnconfirmed ||
-        target == ZenTaoBugColumn.confirmedToFix) {
-      await _activate(ticket, target);
+    if (target == ZenTaoBugColumn.confirmedToFix) {
+      await _activate(ticket);
       return;
     }
 
@@ -187,18 +195,14 @@ class _BugColumnState extends ConsumerState<_BugColumn> {
     );
   }
 
-  Future<void> _activate(Ticket ticket, ZenTaoBugColumn target) async {
+  Future<void> _activate(Ticket ticket) async {
     final messenger = ScaffoldMessenger.of(context);
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
-      result = await getIt<SyncService>().activateBug(
-        ticket,
-        build: 'trunk',
-        optimisticStatus: target == ZenTaoBugColumn.newUnconfirmed
-            ? UnifiedStatus.inbox
-            : UnifiedStatus.todo,
-      );
+      // A reopened bug is active + confirmed → it lands in Confirmed/To Fix
+      // (activateBug's default optimistic status).
+      result = await getIt<SyncService>().activateBug(ticket, build: 'trunk');
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
