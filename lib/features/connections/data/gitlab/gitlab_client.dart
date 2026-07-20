@@ -101,20 +101,32 @@ class GitLabClient {
   Future<List<GitLabIssue>> assignedIssues() => _paginate(
     '/issues',
     GitLabIssue.fromJson,
-    query: {'scope': 'assigned_to_me', 'state': 'opened'},
+    query: {
+      'scope': 'assigned_to_me',
+      'state': 'opened',
+      'with_labels_details': 'true',
+    },
   );
 
   Future<List<GitLabMergeRequest>> assignedMergeRequests() => _paginate(
     '/merge_requests',
     GitLabMergeRequest.fromJson,
-    query: {'scope': 'assigned_to_me', 'state': 'opened'},
+    query: {
+      'scope': 'assigned_to_me',
+      'state': 'opened',
+      'with_labels_details': 'true',
+    },
   );
 
   Future<List<GitLabMergeRequest>> reviewMergeRequests(String username) =>
       _paginate(
         '/merge_requests',
         GitLabMergeRequest.fromJson,
-        query: {'reviewer_username': username, 'state': 'opened'},
+        query: {
+          'reviewer_username': username,
+          'state': 'opened',
+          'with_labels_details': 'true',
+        },
       );
 
   // ---- projects + project-scoped items ----
@@ -139,6 +151,7 @@ class GitLabClient {
     GitLabIssue.fromJson,
     maxPages: maxPages,
     query: {
+      'with_labels_details': 'true',
       'state': ?state,
       'scope': ?scope,
       'assignee_username': ?assigneeUsername,
@@ -163,6 +176,7 @@ class GitLabClient {
     GitLabMergeRequest.fromJson,
     maxPages: maxPages,
     query: {
+      'with_labels_details': 'true',
       'state': ?state,
       'scope': ?scope,
       'assignee_username': ?assigneeUsername,
@@ -176,13 +190,17 @@ class GitLabClient {
   // ---- single detail ----
 
   Future<GitLabIssue> issue(String projectId, String iid) async {
-    final res = await _dio.get<dynamic>('/projects/$projectId/issues/$iid');
+    final res = await _dio.get<dynamic>(
+      '/projects/$projectId/issues/$iid',
+      queryParameters: {'with_labels_details': 'true'},
+    );
     return GitLabIssue.fromJson(_asMap(res.data));
   }
 
   Future<GitLabMergeRequest> mergeRequest(String projectId, String iid) async {
     final res = await _dio.get<dynamic>(
       '/projects/$projectId/merge_requests/$iid',
+      queryParameters: {'with_labels_details': 'true'},
     );
     return GitLabMergeRequest.fromJson(_asMap(res.data));
   }

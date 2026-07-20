@@ -13,6 +13,7 @@ import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/util/labels.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/github/github_adapter.dart';
 import '../../connections/data/github/github_client.dart';
@@ -22,17 +23,6 @@ import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
-
-/// Prefixes of synthetic board-membership labels added at list-sync time (e.g.
-/// `zentao-product:<id>` for bug boards, `zentao-execution:<id>` for task
-/// boards) that the provider's detail endpoint doesn't return. The native
-/// boards filter on these, so a detail refresh must keep them.
-const List<String> kSyntheticLabelPrefixes = <String>[
-  'zentao-product:',
-  'zentao-execution:',
-  'gitlab-project:',
-  'github-repo:',
-];
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
 /// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
@@ -300,6 +290,10 @@ class SyncService {
         accountId: ticket.accountId,
         projectId: ticket.projectId,
         labels: mergeDetailLabels(value.labels, ticket.labels),
+        providerEntity: _preserveLabelColors(
+          value.providerEntity,
+          ticket.providerEntity,
+        ),
       );
       await _db
           .into(_db.tickets)
@@ -630,6 +624,26 @@ class SyncService {
     for (final label in labels)
       if (!label.toLowerCase().startsWith('resolution:')) label,
   ];
+
+  /// GitLab's single-MR/issue detail endpoint returns label *names* only (no
+  /// colors — `with_labels_details` is a list-endpoint feature), so a detail
+  /// refresh would drop the palette the list sync captured. Carry the existing
+  /// label colors forward when the fresh fetch didn't supply them.
+  TicketProviderEntity? _preserveLabelColors(
+    TicketProviderEntity? fresh,
+    TicketProviderEntity? existing,
+  ) {
+    if (fresh is GitLabItemEntity &&
+        existing is GitLabItemEntity &&
+        fresh.labelColors.isEmpty &&
+        existing.labelColors.isNotEmpty) {
+      return fresh.copyWith(
+        labelColors: existing.labelColors,
+        labelTextColors: existing.labelTextColors,
+      );
+    }
+    return fresh;
+  }
 
   // ---- inline image loading (authenticated + self-signed TLS) ----
 

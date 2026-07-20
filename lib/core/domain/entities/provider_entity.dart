@@ -56,6 +56,10 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     int? upvotes,
     @Default(<String>[]) List<String> reviewers,
     @Default(<String>[]) List<String> assignees,
+    // Provider label colors (label name → `#RRGGBB`) so chips match GitLab's
+    // configured palette; empty when the fetch didn't request label details.
+    @Default(<String, String>{}) Map<String, String> labelColors,
+    @Default(<String, String>{}) Map<String, String> labelTextColors,
   }) = GitLabItemEntity;
 
   /// Structured metadata for a GitHub issue or pull request. PR-only fields

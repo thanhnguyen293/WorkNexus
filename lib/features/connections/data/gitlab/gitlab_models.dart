@@ -30,6 +30,35 @@ class GitLabUser {
       (name != null && name!.isNotEmpty) ? name! : (username ?? '');
 }
 
+/// A GitLab label with its configured colors. Parsed from either a bare name
+/// string (the default list response) or a details object (when the fetch asks
+/// for `with_labels_details=true`), so both shapes are tolerated.
+class GitLabLabel {
+  const GitLabLabel({required this.name, this.color, this.textColor});
+
+  final String name;
+  final String? color; // background `#RRGGBB`
+  final String? textColor; // foreground `#RRGGBB`
+
+  factory GitLabLabel.fromDynamic(Object? raw) {
+    if (raw is String) return GitLabLabel(name: raw);
+    if (raw is Map) {
+      return GitLabLabel(
+        name: (raw['name'] ?? '').toString(),
+        color: raw['color'] as String?,
+        textColor: raw['text_color'] as String?,
+      );
+    }
+    return const GitLabLabel(name: '');
+  }
+}
+
+List<GitLabLabel> _labelsFromJson(Object? raw) => raw is List
+    ? [
+        for (final e in raw) GitLabLabel.fromDynamic(e),
+      ].where((l) => l.name.isNotEmpty).toList()
+    : const <GitLabLabel>[];
+
 /// A GitLab project from `GET /projects` — the container the sidebar browses and
 /// that scopes issue/MR fetches (parallel to a ZenTao product).
 @JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
@@ -84,8 +113,8 @@ class GitLabIssue {
   final String? title;
   final String? description;
   final String? state; // opened | closed
-  @JsonKey(defaultValue: <String>[])
-  final List<String> labels;
+  @JsonKey(fromJson: _labelsFromJson)
+  final List<GitLabLabel> labels;
   final GitLabUser? author;
   @JsonKey(defaultValue: <GitLabUser>[])
   final List<GitLabUser> assignees;
@@ -97,6 +126,16 @@ class GitLabIssue {
 
   factory GitLabIssue.fromJson(Map<String, dynamic> json) =>
       _$GitLabIssueFromJson(json);
+
+  List<String> get labelNames => [for (final l in labels) l.name];
+  Map<String, String> get labelColorMap => {
+    for (final l in labels)
+      if (l.color != null && l.color!.isNotEmpty) l.name: l.color!,
+  };
+  Map<String, String> get labelTextColorMap => {
+    for (final l in labels)
+      if (l.textColor != null && l.textColor!.isNotEmpty) l.name: l.textColor!,
+  };
 }
 
 /// A GitLab merge request from `GET /merge_requests` or
@@ -134,8 +173,8 @@ class GitLabMergeRequest {
   final String? state; // opened | closed | merged | locked
   @JsonKey(defaultValue: false)
   final bool draft;
-  @JsonKey(defaultValue: <String>[])
-  final List<String> labels;
+  @JsonKey(fromJson: _labelsFromJson)
+  final List<GitLabLabel> labels;
   final GitLabUser? author;
   @JsonKey(defaultValue: <GitLabUser>[])
   final List<GitLabUser> assignees;
@@ -153,6 +192,16 @@ class GitLabMergeRequest {
 
   factory GitLabMergeRequest.fromJson(Map<String, dynamic> json) =>
       _$GitLabMergeRequestFromJson(json);
+
+  List<String> get labelNames => [for (final l in labels) l.name];
+  Map<String, String> get labelColorMap => {
+    for (final l in labels)
+      if (l.color != null && l.color!.isNotEmpty) l.name: l.color!,
+  };
+  Map<String, String> get labelTextColorMap => {
+    for (final l in labels)
+      if (l.textColor != null && l.textColor!.isNotEmpty) l.name: l.textColor!,
+  };
 }
 
 /// The `references` block on an issue/MR (`{ short, relative, full }`), used to

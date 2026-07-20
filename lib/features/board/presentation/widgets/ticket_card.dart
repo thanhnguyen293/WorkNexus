@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/domain/entities/agent_session.dart';
-import '../../../../core/domain/entities/dev_link.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/domain/value_objects/translation_state.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -15,13 +11,10 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/util/labels.dart';
 import '../../../../core/widgets/badges.dart';
-import '../../../agents/presentation/agent_providers.dart';
-import '../../../task_detail/presentation/detail_providers.dart';
+import '../../../../core/widgets/label_chips.dart';
 import '../../../translation/presentation/translation_providers.dart';
-import '../../domain/usecases/build_zentao_bug_board.dart';
-import '../../domain/usecases/derive_dev_context.dart';
-import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
 import 'ticket_card_meta.dart';
 
@@ -37,7 +30,6 @@ class TicketCard extends ConsumerWidget {
     final account = lookups.accounts[ticket.accountId];
     final ws = account == null ? null : lookups.workspaces[account.workspaceId];
     final wsColor = ws == null ? c.workspaceFallback : Color(ws.colorValue);
-    final projectName = lookups.projects[ticket.projectId]?.name ?? '';
     final tint = ref.watch(appSettingsProvider).companyTint;
     final selected = ref.watch(openTicketIdProvider) == ticket.id;
     final pending = ref.watch(
@@ -45,18 +37,8 @@ class TicketCard extends ConsumerWidget {
     );
 
     final trStatus = ref.watch(translationStatusProvider(ticket.id)).state;
-    final links =
-        ref.watch(devLinksProvider(ticket.id)).asData?.value ??
-        const <DevLink>[];
-    final sessions =
-        ref.watch(agentSessionsProvider(ticket.id)).asData?.value ??
-        const <AgentSession>[];
-    final dev = const DeriveDevContext()(
-      ticket,
-      links: links,
-      sessions: sessions,
-      translationLoading: trStatus == TranslationState.loading,
-    );
+    final cardLabels = visibleUserLabels(ticket.labels);
+    final labelColors = labelColorsOf(ticket);
 
     final stripeWidth = selected ? 5.0 : 4.0;
     final bg = selected
@@ -100,7 +82,7 @@ class TicketCard extends ConsumerWidget {
                                     ticket.externalKey,
                                     ticket.externalType,
                                   ),
-                                  style: context.typography.monoXs.copyWith(
+                                  style: context.typography.mono.copyWith(
                                     color: c.textTertiary,
                                   ),
                                 ),
@@ -123,14 +105,14 @@ class TicketCard extends ConsumerWidget {
                                 color: c.textPrimary,
                               ),
                             ),
-                            // if (dev.hasDev) ...[
-                            //   SizedBox(height: context.spacing.md),
-                            //   _DevRow(dev: dev),
-                            // ],
-                            // if (dev.agent != null) ...[
-                            //   SizedBox(height: context.spacing.md),
-                            //   _AgentChip(dev.agent!),
-                            // ],
+                            if (cardLabels.isNotEmpty) ...[
+                              SizedBox(height: context.spacing.md),
+                              LabelChips(
+                                labels: cardLabels,
+                                colors: labelColors.background,
+                                textColors: labelColors.text,
+                              ),
+                            ],
                             SizedBox(height: context.spacing.md),
                             Row(
                               children: [
@@ -151,116 +133,6 @@ class TicketCard extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ResolutionChip extends StatelessWidget {
-  const _ResolutionChip(this.ticket);
-
-  final Ticket ticket;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final resolution = zentaoBugResolution(ticket);
-    final label = zentaoBugResolutionLabels[resolution] ?? resolution;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.md,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: c.mixT(c.accent, 0.12),
-        borderRadius: BorderRadius.circular(context.radii.xs),
-        border: context.borders.showOutline
-            ? Border.all(color: c.mixT(c.accent, 0.28))
-            : null,
-      ),
-      child: Text(
-        label,
-        overflow: TextOverflow.ellipsis,
-        style: context.typography.monoXs.copyWith(
-          fontWeight: FontWeight.w600,
-          color: c.accent,
-        ),
-      ),
-    );
-  }
-}
-
-class _DevRow extends StatelessWidget {
-  const _DevRow({required this.dev});
-  final DevContext dev;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final style = context.typography.monoXs.copyWith(color: c.textTertiary);
-    return Row(
-      children: [
-        if (dev.branch != null)
-          Expanded(
-            child: Text(
-              '⎇ ${dev.branch}',
-              overflow: TextOverflow.ellipsis,
-              style: style.copyWith(color: c.textSecondary),
-            ),
-          ),
-        if (dev.pr != null) ...[
-          SizedBox(width: context.spacing.md),
-          Text('⇢ ${dev.pr}', style: style.copyWith(color: c.textSecondary)),
-        ],
-        if (dev.commit != null) ...[
-          SizedBox(width: context.spacing.md),
-          Text('⌥ ${dev.commit}', style: style),
-        ],
-      ],
-    );
-  }
-}
-
-class _AgentChip extends StatelessWidget {
-  const _AgentChip(this.agent);
-  final DevAgentInfo agent;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final chip = agent.running ? c.warning : c.success;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.md,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: c.mixT(chip, 0.13),
-        borderRadius: BorderRadius.circular(context.radii.xs),
-        border: context.borders.showOutline
-            ? Border.all(color: c.mixT(chip, 0.32))
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: chip, shape: BoxShape.circle),
-          ),
-          SizedBox(width: context.spacing.xs),
-          Flexible(
-            child: Text(
-              '${agent.name} · ${agent.labelKey}',
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.monoXs.copyWith(
-                fontWeight: FontWeight.w600,
-                color: chip,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

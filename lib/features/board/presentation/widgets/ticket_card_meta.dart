@@ -41,12 +41,7 @@ class SeverityTag extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           SizedBox(width: context.spacing.xs),
-          Text(
-            label,
-            style: context.typography.badge.copyWith(
-              color: color,
-            ),
-          ),
+          Text(label, style: context.typography.badge.copyWith(color: color)),
         ],
       ),
     );
