@@ -15,6 +15,9 @@ class FilterGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A single-option group can't filter anything (picking the only value is a
+    // no-op), so hide it along with empty groups.
+    if (children.length <= 1) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.xl),
       child: Column(

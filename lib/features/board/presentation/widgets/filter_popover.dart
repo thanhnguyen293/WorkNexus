@@ -124,6 +124,17 @@ class _GenericFilters extends ConsumerWidget {
     final f = ref.watch(filterStateProvider);
     final ctrl = ref.read(filterStateProvider.notifier);
     final lookups = ref.watch(lookupsProvider);
+    // Only offer the providers/accounts/projects actually present in the current
+    // board's scope — so a GitLab/GitHub or "my MRs" board doesn't list every
+    // workspace project (or unconnected providers like Jira).
+    final scope = ref.watch(genericFilterScopeProvider);
+    // On the account-wide "my MRs/PRs" board the only useful axis is project
+    // (every item is yours, one provider/account), so status/priority are hidden.
+    final mineBoard =
+        ref.watch(
+          selectedGitLabProjectProvider.select((s) => s?.mine ?? false),
+        ) ||
+        ref.watch(selectedGitHubRepoProvider.select((s) => s?.mine ?? false));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,63 +143,68 @@ class _GenericFilters extends ConsumerWidget {
           label: l.provider,
           children: [
             for (final p in ProviderType.values)
-              FilterOptionChip(
-                label: p.displayName,
-                active: f.providers.contains(p),
-                onTap: () => ctrl.toggleProvider(p),
-              ),
+              if (scope.providers.contains(p))
+                FilterOptionChip(
+                  label: p.displayName,
+                  active: f.providers.contains(p),
+                  onTap: () => ctrl.toggleProvider(p),
+                ),
           ],
         ),
         FilterGroup(
           label: l.account,
           children: [
             for (final a in lookups.accounts.values)
-              FilterOptionChip(
-                label: a.handle,
-                active: f.accountIds.contains(a.id),
-                dotColor: switch (lookups.workspaces[a.workspaceId]) {
-                  final ws? => Color(ws.colorValue),
-                  null => c.workspaceFallback,
-                },
-                onTap: () => ctrl.toggleAccount(a.id),
-              ),
+              if (scope.accountIds.contains(a.id))
+                FilterOptionChip(
+                  label: a.handle,
+                  active: f.accountIds.contains(a.id),
+                  dotColor: switch (lookups.workspaces[a.workspaceId]) {
+                    final ws? => Color(ws.colorValue),
+                    null => c.workspaceFallback,
+                  },
+                  onTap: () => ctrl.toggleAccount(a.id),
+                ),
           ],
         ),
         FilterGroup(
           label: l.project,
           children: [
             for (final p in lookups.projects.values)
-              FilterOptionChip(
-                label: p.name,
-                active: f.projectIds.contains(p.id),
-                onTap: () => ctrl.toggleProject(p.id),
-              ),
+              if (scope.projectIds.contains(p.id))
+                FilterOptionChip(
+                  label: p.name,
+                  active: f.projectIds.contains(p.id),
+                  onTap: () => ctrl.toggleProject(p.id),
+                ),
           ],
         ),
-        FilterGroup(
-          label: l.status,
-          children: [
-            for (final s in UnifiedStatus.columns)
-              FilterOptionChip(
-                label: statusLabel(l, s),
-                active: f.statuses.contains(s),
-                dotColor: statusColor(c, s),
-                onTap: () => ctrl.toggleStatus(s),
-              ),
-          ],
-        ),
-        FilterGroup(
-          label: l.priority,
-          children: [
-            for (final p in Priority.values)
-              FilterOptionChip(
-                label: priorityName(l, p),
-                active: f.priorities.contains(p),
-                dotColor: priorityColor(c, p),
-                onTap: () => ctrl.togglePriority(p),
-              ),
-          ],
-        ),
+        if (!mineBoard)
+          FilterGroup(
+            label: l.status,
+            children: [
+              for (final s in UnifiedStatus.columns)
+                FilterOptionChip(
+                  label: statusLabel(l, s),
+                  active: f.statuses.contains(s),
+                  dotColor: statusColor(c, s),
+                  onTap: () => ctrl.toggleStatus(s),
+                ),
+            ],
+          ),
+        if (!mineBoard)
+          FilterGroup(
+            label: l.priority,
+            children: [
+              for (final p in Priority.values)
+                FilterOptionChip(
+                  label: priorityName(l, p),
+                  active: f.priorities.contains(p),
+                  dotColor: priorityColor(c, p),
+                  onTap: () => ctrl.togglePriority(p),
+                ),
+            ],
+          ),
       ],
     );
   }

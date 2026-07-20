@@ -640,6 +640,56 @@ final _boardQueryProvider = Provider<BoardQuery>((ref) {
   );
 });
 
+/// The provider/account/project values actually present in the current board's
+/// scope (before chip filters). The cross-provider filter uses this so a
+/// GitLab/GitHub or "my MRs" board only offers that provider, its account, and
+/// the projects on screen — never the whole workspace or unconnected providers.
+typedef GenericFilterScope = ({
+  Set<ProviderType> providers,
+  Set<String> accountIds,
+  Set<String> projectIds,
+});
+
+final genericFilterScopeProvider = Provider<GenericFilterScope>((ref) {
+  final tickets = ref.watch(_scopedTicketsProvider);
+  final providers = <ProviderType>{};
+  final accountIds = <String>{};
+  final projectIds = <String>{};
+  for (final t in tickets) {
+    providers.add(t.providerType);
+    accountIds.add(t.accountId);
+    projectIds.add(t.projectId);
+  }
+  return (providers: providers, accountIds: accountIds, projectIds: projectIds);
+});
+
+/// Whether the filter popover would render any actionable group for the current
+/// board — the "Filters" button is hidden when this is false (nothing to
+/// filter, e.g. a single-project "my MRs" board). Mirrors the popover's group
+/// visibility: `FilterGroup` hides at <= 1 option, and the "mine" board shows
+/// only the project group.
+final filterHasGroupsProvider = Provider<bool>((ref) {
+  switch (ref.watch(viewModeProvider)) {
+    case ViewMode.zentaoBugs:
+    case ViewMode.zentaoTasks:
+      return ref
+          .watch(boardFacetsProvider)
+          .groups
+          .any((g) => g.options.length >= 2);
+    case ViewMode.home:
+    case ViewMode.board:
+    case ViewMode.gitlab:
+    case ViewMode.github:
+    case ViewMode.list:
+      final mineBoard =
+          (ref.watch(selectedGitLabProjectProvider)?.mine ?? false) ||
+          (ref.watch(selectedGitHubRepoProvider)?.mine ?? false);
+      // Off the "mine" board, status + priority always offer >= 2 options.
+      if (!mineBoard) return true;
+      return ref.watch(genericFilterScopeProvider).projectIds.length >= 2;
+  }
+});
+
 /// Available filter facets for the current ZenTao board (empty off-ZenTao).
 final boardFacetsProvider = Provider<BoardFacets>((ref) {
   final scope = switch (ref.watch(viewModeProvider)) {
