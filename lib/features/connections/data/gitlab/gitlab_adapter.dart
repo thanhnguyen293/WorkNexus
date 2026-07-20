@@ -143,13 +143,13 @@ class GitLabAdapter implements ProviderAdapter {
         // Only system notes describe activity (assigned, closed, …); user
         // comments render as bubbles via [listComments].
         if (!n.system) continue;
-        final body = n.body ?? '';
+        final summary = _activitySummary(n.body ?? '');
         events.add(
           ActivityEvent(
             id: '${ticket.id}:${n.id}',
             ticketId: ticket.id,
             actor: n.author?.display ?? 'unknown',
-            action: body.isEmpty ? 'updated' : body,
+            action: summary.isEmpty ? 'updated' : summary,
             at: parseGitLabDate(n.createdAt) ?? DateTime.now(),
           ),
         );
@@ -445,4 +445,20 @@ class GitLabAdapter implements ProviderAdapter {
       );
     }
   }
+}
+
+/// GitLab system-note bodies carry the human summary on the first line, then may
+/// append a markdown/HTML detail block (e.g. the commit list on "added N
+/// commits", a "Compare with previous version" link). Keep just that summary
+/// line and strip markdown emphasis / stray HTML so the activity row reads
+/// cleanly instead of dumping raw `<ul><li>…` markup.
+String _activitySummary(String body) {
+  final line = body
+      .split('\n')
+      .map((l) => l.trim())
+      .firstWhere((l) => l.isNotEmpty, orElse: () => '');
+  return line
+      .replaceAll(RegExp(r'<[^>]+>'), '')
+      .replaceAll(RegExp(r'\*\*|__|`'), '')
+      .trim();
 }

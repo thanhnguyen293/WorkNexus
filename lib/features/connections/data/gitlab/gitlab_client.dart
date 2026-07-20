@@ -323,6 +323,43 @@ class GitLabClient {
     return null;
   }
 
+  /// Resolves an inline-asset [url] from a description into an absolute URI.
+  ///
+  /// A bare project-relative markdown upload (`/uploads/<secret>/<file>`) is
+  /// mapped to the Markdown uploads **API** endpoint for its project — the only
+  /// PAT-authenticated way to read it (the web `/uploads/…` path needs a session
+  /// cookie). The project ref is the numeric [projectId] when known, else the
+  /// URL-encoded [projectPath]. Absolute URLs are used as-is; any other relative
+  /// link resolves against the instance root.
+  Uri _resolveAsset(String url, String? projectPath, int? projectId) {
+    final parsed = Uri.parse(url);
+    if (parsed.hasScheme) return parsed;
+    final segments = parsed.pathSegments;
+    final project = projectId != null && projectId > 0
+        ? '$projectId'
+        : (projectPath != null && projectPath.isNotEmpty ? projectPath : null);
+    if (project != null &&
+        segments.length >= 3 &&
+        segments.first == 'uploads') {
+      // `.replace(pathSegments:)` percent-encodes each segment (so a project
+      // *path* like `group/web` becomes the `group%2Fweb` the API expects, and
+      // any base-URL subpath is preserved).
+      final base = Uri.parse(baseUrl);
+      return base.replace(
+        pathSegments: [
+          ...base.pathSegments.where((s) => s.isNotEmpty),
+          'api',
+          'v4',
+          'projects',
+          project,
+          'uploads',
+          ...segments.skip(1),
+        ],
+      );
+    }
+    return Uri.parse('$baseUrl/').resolveUri(parsed);
+  }
+
   // ---- helpers ----
 
   /// Walks a paginated list endpoint via the `X-Next-Page` header, accumulating

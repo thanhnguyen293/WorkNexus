@@ -756,7 +756,22 @@ class SyncService {
       final zen = await _zenClientFor(ticket.accountId);
       if (zen != null) return await zen.fetchBytes(url);
       final gitlab = await _gitlabClientFor(ticket.accountId);
-      if (gitlab != null) return await gitlab.fetchBytes(url);
+      if (gitlab != null) {
+        // A GitLab `/uploads/…` link is project-relative — pass the project ref
+        // so the client fetches it via the PAT-readable Markdown uploads API.
+        final (projectPath, projectId) = switch (ticket.providerEntity) {
+          GitLabItemEntity(:final projectPath, :final projectId) => (
+            projectPath,
+            projectId,
+          ),
+          _ => (null, null),
+        };
+        return await gitlab.fetchBytes(
+          url,
+          projectPath: projectPath,
+          projectId: projectId,
+        );
+      }
       final github = await _githubClientFor(ticket.accountId);
       if (github != null) return await github.fetchBytes(url);
     } catch (_) {}

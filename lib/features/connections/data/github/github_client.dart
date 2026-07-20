@@ -42,6 +42,7 @@ class GitHubClient {
     required this.token,
     Dio? dio,
   }) : _apiHost = apiHost,
+       _webHost = Uri.parse(webBase).host,
        _dio = dio ?? Dio() {
     _dio.options
       ..baseUrl = apiBase
@@ -66,10 +67,16 @@ class GitHubClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          if (options.uri.host == _apiHost) {
+          final host = options.uri.host;
+          if (host == _apiHost) {
             options.headers['Authorization'] = 'Bearer $token';
             options.headers['Accept'] = 'application/vnd.github+json';
             options.headers['X-GitHub-Api-Version'] = '2022-11-28';
+          } else if (host == _webHost) {
+            // Same-provider web host (github.com / GHES root): attach the PAT so
+            // private-repo inline assets (user-attachments/assets/…) authorize.
+            // No JSON Accept header — the response is image bytes, not API JSON.
+            options.headers['Authorization'] = 'Bearer $token';
           }
           handler.next(options);
         },
@@ -83,6 +90,10 @@ class GitHubClient {
   final String webBase;
   final String token;
   final String _apiHost;
+
+  /// Host of [webBase] (`github.com` on cloud; equals [_apiHost] on GHES). Inline
+  /// assets are served here, so the PAT is attached to this host too.
+  final String _webHost;
   final Dio _dio;
 
   /// Resolves a user-entered base URL into the API base, the API host (for the

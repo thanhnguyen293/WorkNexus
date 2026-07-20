@@ -199,10 +199,22 @@ class _GitLabConnectionDialogState
 
   /// Opens GitLab's "new personal access token" page (with the `api` scope and a
   /// token name pre-filled) for the entered server, in the default browser.
+  ///
+  /// GitLab moved this page's route across versions and there is no single path
+  /// that resolves on every version:
+  ///   • pre-16.x       → only `/-/profile/personal_access_tokens`
+  ///   • 16.x           → `/-/user_settings/…` (canonical); `/-/profile/…` redirects
+  ///   • 17.x and later → only `/-/user_settings/personal_access_tokens`
+  /// gitlab.com (SaaS) always runs the latest, so it gets the modern path; a
+  /// self-hosted host may be older, so it gets the legacy `/-/profile/…` path,
+  /// which GitLab 16.x transparently redirects to the modern one.
   Future<void> _openTokenPage() async {
     final base = _tokenSettingsBase(_baseUrl.text);
-    final url =
-        '$base/-/user_settings/personal_access_tokens?name=WorkNexus&scopes=api';
+    final isSaaS = Uri.tryParse(base)?.host == 'gitlab.com';
+    final path = isSaaS
+        ? '/-/user_settings/personal_access_tokens'
+        : '/-/profile/personal_access_tokens';
+    final url = '$base$path?name=WorkNexus&scopes=api';
     try {
       await Process.run('open', [url]);
     } catch (_) {
