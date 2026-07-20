@@ -51,7 +51,7 @@ class TranslationTab extends ConsumerWidget {
     return DetailScrollBody(
       layout: layout,
       content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (state == TranslationState.none)
             Column(
