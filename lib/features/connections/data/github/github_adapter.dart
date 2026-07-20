@@ -295,6 +295,27 @@ class GitHubAdapter implements ProviderAdapter {
     return true;
   });
 
+  /// Update a PR branch with its base ("Update branch"; resolves a `behind`
+  /// mergeable state — GitHub has no true rebase via the API).
+  Future<Result<bool>> updateBranch(Ticket ticket) => _guard(() async {
+    await _client.updateBranch(_repoRef(ticket), ticket.externalKey);
+    return true;
+  });
+
+  /// Request [logins] as reviewers on a PR (additive — GitHub ignores logins
+  /// already requested; removing a reviewer isn't supported through this path).
+  Future<Result<bool>> setReviewers(Ticket ticket, List<String> logins) =>
+      _guard(() async {
+        if (logins.isNotEmpty) {
+          await _client.requestReviewers(
+            _repoRef(ticket),
+            ticket.externalKey,
+            logins,
+          );
+        }
+        return true;
+      });
+
   /// Repo members the ticket can be assigned to. GitHub has no account-wide
   /// assignable list, so the assignee picker resolves per-repo assignees here.
   Future<Result<List<ProviderUser>>> listRepoAssignees(Ticket ticket) {

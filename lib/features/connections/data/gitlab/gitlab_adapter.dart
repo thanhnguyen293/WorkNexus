@@ -331,6 +331,31 @@ class GitLabAdapter implements ProviderAdapter {
     return true;
   });
 
+  /// Rebase a merge request onto its target branch (resolves a `need_rebase`
+  /// detailed merge status).
+  Future<Result<bool>> rebaseMergeRequest(Ticket ticket) => _guard(() async {
+    await _client.rebaseMergeRequest(_projectRef(ticket), ticket.externalKey);
+    return true;
+  });
+
+  /// Set the MR reviewers (replaces the current set). Resolves the selected
+  /// logins to member ids via the project member list.
+  Future<Result<bool>> setReviewers(
+    Ticket ticket,
+    List<String> logins,
+  ) => _guard(() async {
+    final ref = _projectRef(ticket);
+    final selected = logins.toSet();
+    final members = await _client.members(ref);
+    final ids = <int>[
+      for (final m in members)
+        if (m.username != null && m.id != null && selected.contains(m.username))
+          m.id!,
+    ];
+    await _client.updateMergeRequest(ref, ticket.externalKey, reviewerIds: ids);
+    return true;
+  });
+
   /// Project members the ticket can be assigned to. GitLab has no account-wide
   /// assignable list, so the assignee picker resolves per-project members here.
   Future<Result<List<ProviderUser>>> listProjectMembers(Ticket ticket) {

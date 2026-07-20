@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -9,10 +10,12 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'assign_dialog.dart';
 import 'detail_action_button.dart';
+import 'reviewers_dialog.dart';
 
-/// GitHub: Assign, plus Close/Reopen (issues) or Merge/Close/Reopen (PRs), gated
-/// on the raw provider status. Actions apply optimistically and show a snackbar
-/// result; a merged PR is terminal (no state actions).
+/// GitHub: Assign, plus Close/Reopen (issues) or Reviewers/Update-branch/Merge/
+/// Close/Reopen (PRs), gated on the raw provider status and mergeable state.
+/// Actions apply optimistically and show a snackbar result; a merged PR is
+/// terminal (no state actions).
 class GitHubActions extends ConsumerStatefulWidget {
   const GitHubActions({super.key, required this.ticket});
   final Ticket ticket;
@@ -32,10 +35,20 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
     final raw = ticket.providerStatus.toLowerCase();
     final isClosed = raw == 'closed';
     final isMerged = raw == 'merged';
+    final active = !isClosed && !isMerged;
+    final mergeableState = switch (ticket.providerEntity) {
+      GitHubItemEntity(:final mergeableState) => mergeableState,
+      _ => null,
+    };
+    // GitHub marks a PR whose base has moved ahead as `behind`; "Update branch"
+    // (merge base into head) is GitHub's fix — it has no true rebase via the API.
+    final needsUpdate = isPr && active && mergeableState == 'behind';
 
     return Padding(
       padding: EdgeInsets.only(top: context.spacing.xl),
-      child: Row(
+      child: Wrap(
+        spacing: context.spacing.md,
+        runSpacing: context.spacing.md,
         children: [
           DetailActionButton(
             icon: Icons.person_add_alt_1_outlined,
@@ -47,8 +60,29 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                     builder: (_) => AssignDialog(ticket: ticket),
                   ),
           ),
-          if (isPr && !isClosed && !isMerged) ...[
-            SizedBox(width: context.spacing.md),
+          if (isPr && active)
+            DetailActionButton(
+              icon: Icons.rate_review_outlined,
+              label: l.reviewers,
+              onTap: _busy
+                  ? null
+                  : () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ReviewersDialog(ticket: ticket),
+                    ),
+            ),
+          if (needsUpdate)
+            DetailActionButton(
+              icon: Icons.sync,
+              label: l.updateBranch,
+              onTap: _busy
+                  ? null
+                  : () => _run(
+                      () => getIt<SyncService>().updateGitHubPrBranch(ticket),
+                      'Updated #${ticket.externalKey}',
+                    ),
+            ),
+          if (isPr && active)
             DetailActionButton(
               icon: Icons.merge_type,
               label: l.githubMerge,
@@ -59,9 +93,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                       'Merged #${ticket.externalKey}',
                     ),
             ),
-          ],
-          if (!isClosed && !isMerged) ...[
-            SizedBox(width: context.spacing.md),
+          if (active)
             DetailActionButton(
               icon: Icons.check_circle_outline,
               label: l.close,
@@ -72,9 +104,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                       'Closed #${ticket.externalKey}',
                     ),
             ),
-          ],
-          if (isClosed) ...[
-            SizedBox(width: context.spacing.md),
+          if (isClosed)
             DetailActionButton(
               icon: Icons.refresh,
               label: l.githubReopen,
@@ -85,7 +115,6 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                       'Reopened #${ticket.externalKey}',
                     ),
             ),
-          ],
         ],
       ),
     );

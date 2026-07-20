@@ -265,24 +265,46 @@ class GitLabClient {
     String projectId,
     String iid, {
     List<int>? assigneeIds,
+    List<int>? reviewerIds,
     String? stateEvent,
   }) => _dio.put<dynamic>(
     '/projects/$projectId/merge_requests/$iid',
-    data: {'assignee_ids': ?assigneeIds, 'state_event': ?stateEvent},
+    data: {
+      'assignee_ids': ?assigneeIds,
+      'reviewer_ids': ?reviewerIds,
+      'state_event': ?stateEvent,
+    },
   );
 
   Future<void> mergeMergeRequest(String projectId, String iid) =>
       _dio.put<dynamic>('/projects/$projectId/merge_requests/$iid/merge');
 
+  /// Rebase a merge request onto its target branch. Resolves a `need_rebase`
+  /// detailed merge status. PUT /projects/:id/merge_requests/:iid/rebase.
+  Future<void> rebaseMergeRequest(String projectId, String iid) =>
+      _dio.put<dynamic>('/projects/$projectId/merge_requests/$iid/rebase');
+
   // ---- assets ----
 
-  /// Fetches raw bytes for an authenticated asset — e.g. an inline `/uploads/…`
-  /// image in an issue/MR description. Resolves [url] against the instance base;
-  /// the interceptor attaches the PAT only for instance-host requests, and only
-  /// an image response is accepted (so an HTML error page is never rendered as
-  /// an image). Returns null on any non-image response or failure.
-  Future<Uint8List?> fetchBytes(String url) async {
-    final resolved = Uri.parse('$baseUrl/').resolveUri(Uri.parse(url));
+  /// Fetches raw bytes for an authenticated inline asset — e.g. an `/uploads/…`
+  /// image embedded in an issue/MR description. Only an image response is
+  /// accepted (so an HTML error/login page is never rendered as an image);
+  /// returns null on any non-image response or failure.
+  ///
+  /// GitLab renders a markdown upload as a **project-web-relative** link
+  /// (`/uploads/<secret>/<file>`). That web path is served ONLY against a
+  /// session cookie — a Personal Access Token is rejected there — so fetching it
+  /// directly never works for a PAT integration. Instead we hit the **Markdown
+  /// uploads API** (`GET /projects/:id/uploads/:secret/:filename`, GitLab 17.4+),
+  /// which DOES honor the `PRIVATE-TOKEN` header. [projectId] (preferred) or
+  /// [projectPath] identifies the owning project. Absolute URLs (and any
+  /// non-upload relative link) are fetched as-is against the instance.
+  Future<Uint8List?> fetchBytes(
+    String url, {
+    String? projectPath,
+    int? projectId,
+  }) async {
+    final resolved = _resolveAsset(url, projectPath, projectId);
     final res = await _dio.getUri<List<int>>(
       resolved,
       options: Options(

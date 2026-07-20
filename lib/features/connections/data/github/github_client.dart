@@ -231,6 +231,22 @@ class GitHubClient {
     data: {'merge_method': mergeMethod},
   );
 
+  /// Update a PR's head branch with its base (GitHub's "Update branch" — the API
+  /// has no rebase, it merges the base in). Resolves a `behind` mergeable state.
+  Future<void> updateBranch(String repo, String number) =>
+      _dio.put<dynamic>('/repos/$repo/pulls/$number/update-branch');
+
+  /// Request [reviewers] (logins) on a PR. Additive — GitHub ignores logins that
+  /// are already requested. POST /repos/:repo/pulls/:number/requested_reviewers.
+  Future<void> requestReviewers(
+    String repo,
+    String number,
+    List<String> reviewers,
+  ) => _dio.post<dynamic>(
+    '/repos/$repo/pulls/$number/requested_reviewers',
+    data: {'reviewers': reviewers},
+  );
+
   // ---- assets ----
 
   /// Fetches raw bytes for an authenticated asset — e.g. an inline image in an

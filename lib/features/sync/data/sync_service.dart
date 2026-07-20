@@ -460,6 +460,26 @@ class SyncService {
     return const Ok(null);
   }
 
+  /// Sets/requests reviewers on a GitLab MR or GitHub PR, then refreshes detail.
+  /// GitLab replaces the reviewer set; GitHub requests the given logins.
+  Future<Result<void>> setReviewers(Ticket ticket, List<String> logins) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter == null) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final Result<bool> res;
+    if (adapter is GitLabAdapter) {
+      res = await adapter.setReviewers(ticket, logins);
+    } else if (adapter is GitHubAdapter) {
+      res = await adapter.setReviewers(ticket, logins);
+    } else {
+      return const Err(UnexpectedFailure('Reviewers are GitLab/GitHub only'));
+    }
+    if (res case Err(:final failure)) return Err(failure);
+    await syncTicketDetail(ticket);
+    return const Ok(null);
+  }
+
   /// Resolves a bug, then refreshes its cached detail/status/history.
   Future<Result<void>> resolveBug(
     Ticket ticket, {
@@ -576,6 +596,11 @@ class SyncService {
     );
   }
 
+  /// Rebases a GitLab MR onto its target, then refreshes its cached detail. No
+  /// status change — only the merge status flips, which the refresh picks up.
+  Future<Result<void>> rebaseGitLabMr(Ticket ticket) =>
+      _gitlabAction(ticket, ticket, (a) => a.rebaseMergeRequest(ticket));
+
   /// Optimistically applies [optimistic], runs a GitLab-specific [action]
   /// through the concrete adapter, refreshes the ticket detail on success, and
   /// rolls back to [ticket] on failure. Like [resolveBug]/[activateBug] but
@@ -632,6 +657,11 @@ class SyncService {
     );
     return _githubAction(ticket, optimistic, (a) => a.mergePull(ticket));
   }
+
+  /// Updates a GitHub PR's branch with its base ("Update branch"), then refreshes
+  /// its cached detail. No status change — only the mergeable state flips.
+  Future<Result<void>> updateGitHubPrBranch(Ticket ticket) =>
+      _githubAction(ticket, ticket, (a) => a.updateBranch(ticket));
 
   /// Optimistically applies [optimistic], runs a GitHub-specific [action] through
   /// the concrete adapter, refreshes the ticket detail on success, and rolls back

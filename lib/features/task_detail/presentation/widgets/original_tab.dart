@@ -7,12 +7,11 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/relative_time.dart';
+import '../../../../core/widgets/label_chips.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
@@ -23,6 +22,7 @@ import 'bug_people_row.dart';
 import 'bug_status_strip.dart';
 import 'detail_field_rows.dart';
 import 'detail_scroll_body.dart';
+import 'provider_detail_sections.dart';
 import 'section_label.dart';
 
 /// The "Original" tab — the ticket's source description plus typed metadata.
@@ -47,6 +47,16 @@ class OriginalTab extends ConsumerWidget {
       final ZenTaoBugEntity b => b,
       _ => null,
     };
+    final gitlab = switch (ticket.providerEntity) {
+      final GitLabItemEntity e => e,
+      _ => null,
+    };
+    final github = switch (ticket.providerEntity) {
+      final GitHubItemEntity e => e,
+      _ => null,
+    };
+    final labels = visibleUserLabels(ticket.labels);
+    final labelColors = labelColorsOf(ticket);
     final meta = <(String, String)>[
       (l.project, lookups.projects[ticket.projectId]?.name ?? ''),
       (l.account, account?.handle ?? ''),
@@ -93,10 +103,16 @@ class OriginalTab extends ConsumerWidget {
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
           ),
-        // if (ticket.labels.isNotEmpty) ...[
-        //   SizedBox(height: context.spacing.md),
-        //   _KeywordChips(labels: ticket.labels),
-        // ],
+        if (labels.isNotEmpty) ...[
+          SizedBox(height: context.spacing.xl2),
+          SectionLabel(l.labels),
+          SizedBox(height: context.spacing.md),
+          LabelChips(
+            labels: labels,
+            colors: labelColors.background,
+            textColors: labelColors.text,
+          ),
+        ],
         if (bug != null && bug.attachments.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl3),
           BugAttachments(ticket: ticket, attachments: bug.attachments),
@@ -107,50 +123,24 @@ class OriginalTab extends ConsumerWidget {
     // The typed metadata — a sidebar in two-pane, stacked below in document.
     // A ZenTao bug shows its classification/lifecycle card; other providers
     // fall back to the generic key/value table.
-    final sidebar = bug != null
-        ? ZenTaoBugSections(bug)
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(height: 1, color: c.border),
-              SizedBox(height: context.spacing.xs),
-              DetailFieldRows(rows: meta, labelWidth: 96),
-            ],
-          );
+    final Widget sidebar;
+    if (bug != null) {
+      sidebar = ZenTaoBugSections(bug);
+    } else if (gitlab != null) {
+      sidebar = GitLabDetailSections(ticket: ticket, entity: gitlab);
+    } else if (github != null) {
+      sidebar = GitHubDetailSections(ticket: ticket, entity: github);
+    } else {
+      sidebar = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(height: 1, color: c.border),
+          SizedBox(height: context.spacing.xs),
+          DetailFieldRows(rows: meta, labelWidth: 96),
+        ],
+      );
+    }
 
     return DetailScrollBody(layout: layout, content: content, sidebar: sidebar);
-  }
-}
-
-/// The ticket's keyword labels as subtle outlined chips.
-class _KeywordChips extends StatelessWidget {
-  const _KeywordChips({required this.labels});
-  final List<String> labels;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Wrap(
-      spacing: context.spacing.xs,
-      runSpacing: context.spacing.xs,
-      children: [
-        for (final lb in labels)
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.spacing.md,
-              vertical: context.spacing.xxs,
-            ),
-            decoration: BoxDecoration(
-              color: c.surfaceSubtle,
-              borderRadius: BorderRadius.circular(context.radii.xl),
-              border: Border.all(color: c.border),
-            ),
-            child: Text(
-              lb,
-              style: context.typography.monoSm.copyWith(color: c.textSecondary),
-            ),
-          ),
-      ],
-    );
   }
 }
