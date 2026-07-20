@@ -4,8 +4,6 @@ import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import 'changed_files_section.dart';
 import 'commits_section.dart';
@@ -16,14 +14,11 @@ import 'gitlab_mr_panels.dart';
 import 'gitlab_mr_sidebar.dart';
 import 'item_description.dart';
 import 'provider_user_avatar.dart';
+import 'two_pane_tabbed_detail.dart';
 
-/// Below this panel width the content + metadata sidebar stack vertically;
-/// above it they sit side by side.
-const double kMrTwoPaneBreakpoint = 820;
-
-/// The GitLab merge-request detail body: a header, a scrolling content column
-/// (description → merge widget → activity), and a metadata sidebar (side-by-side
-/// when wide, stacked below when narrow).
+/// The GitLab merge-request detail body: a header and a tabbed two-pane layout.
+/// The Overview tab shows description → merge widget → activity beside the
+/// metadata sidebar; Commits and Changed files live on their own tabs.
 class GitLabMrOverview extends StatelessWidget {
   const GitLabMrOverview({
     super.key,
@@ -77,101 +72,45 @@ class GitLabMrOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return Material(
-      color: c.card,
-      child: Column(
-        children: [
-          GitLabMrHeader(
-            ticket: ticket,
-            entity: entity,
-            onClose: onClose,
-            onSync: onSync,
-          ),
-          if (isSyncing)
-            LinearProgressIndicator(
-              minHeight: context.borders.thick,
-              backgroundColor: Colors.transparent,
-              color: c.accent,
-            )
-          else
-            SizedBox(height: context.borders.hairline),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < kMrTwoPaneBreakpoint;
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    context.spacing.xl3,
-                    context.spacing.xl2,
-                    context.spacing.xl3,
-                    context.spacing.xl3,
-                  ),
-                  child: compact
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _sections(context, compact: true),
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _sections(context, compact: false),
-                              ),
-                            ),
-                            SizedBox(width: context.spacing.xl3),
-                            SizedBox(
-                              width: context.spacing.xl6 * 6,
-                              child: _sidebar(),
-                            ),
-                          ],
-                        ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _sections(BuildContext context, {required bool compact}) {
-    return [
-      ItemDescription(ticket: ticket),
-      SizedBox(height: context.spacing.xl2),
-      GitLabMrMergePanel(
+    return TwoPaneTabbedDetail(
+      isSyncing: isSyncing,
+      header: GitLabMrHeader(
         ticket: ticket,
         entity: entity,
-        onApprove: onApprove,
-        onMerge: onMerge,
-        onRebase: onRebase,
+        onClose: onClose,
+        onSync: onSync,
       ),
-      SizedBox(height: context.spacing.xl2),
-      CommitsSection(loader: commitsLoader),
-      SizedBox(height: context.spacing.xl2),
-      ChangedFilesSection(loader: changesLoader),
-      SizedBox(height: context.spacing.xl2),
-      DetailActivityTimeline(
-        comments: comments,
-        activity: activity,
-        onComment: onComment,
-        onCloseItem: onCloseMergeRequest,
-        canClose: _canClose,
+      overviewSections: [
+        ItemDescription(ticket: ticket),
+        SizedBox(height: context.spacing.xl2),
+        GitLabMrMergePanel(
+          ticket: ticket,
+          entity: entity,
+          onApprove: onApprove,
+          onMerge: onMerge,
+          onRebase: onRebase,
+        ),
+        SizedBox(height: context.spacing.xl2),
+        DetailActivityTimeline(
+          comments: comments,
+          activity: activity,
+          onComment: onComment,
+          onCloseItem: onCloseMergeRequest,
+          canClose: _canClose,
+        ),
+      ],
+      sidebar: GitLabMrSidebar(
+        ticket: ticket,
+        entity: entity,
+        assigneeEditorBuilder: assigneeEditorBuilder,
+        reviewersEditorBuilder: reviewersEditorBuilder,
+        labelsEditorBuilder: labelsEditorBuilder,
+        milestoneEditorBuilder: milestoneEditorBuilder,
+        timeTrackingEditorBuilder: timeTrackingEditorBuilder,
+        avatarLoader: avatarLoader,
       ),
-      if (compact) ...[SizedBox(height: context.spacing.xl2), _sidebar()],
-    ];
+      commits: CommitsSection(loader: commitsLoader),
+      changes: ChangedFilesSection(loader: changesLoader),
+    );
   }
-
-  GitLabMrSidebar _sidebar() => GitLabMrSidebar(
-    ticket: ticket,
-    entity: entity,
-    assigneeEditorBuilder: assigneeEditorBuilder,
-    reviewersEditorBuilder: reviewersEditorBuilder,
-    labelsEditorBuilder: labelsEditorBuilder,
-    milestoneEditorBuilder: milestoneEditorBuilder,
-    timeTrackingEditorBuilder: timeTrackingEditorBuilder,
-    avatarLoader: avatarLoader,
-  );
 }

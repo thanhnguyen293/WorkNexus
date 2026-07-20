@@ -125,13 +125,21 @@ void main() {
     expect(find.textContaining('Merge blocked'), findsOneWidget);
     expect(find.text('Activity'), findsOneWidget);
     expect(find.text('Write a comment…'), findsOneWidget);
-    // Real Commits + Changed-files sections render (empty in this stub).
+    // Commits + Changed files now live on their own tabs (real, not the old
+    // fake Overview/Pipelines strip).
+    expect(find.text('Overview'), findsOneWidget);
     expect(find.text('Commits'), findsOneWidget);
     expect(find.text('Changed files'), findsOneWidget);
-    expect(find.text('No commits'), findsOneWidget);
-    // The fake Overview/Pipelines tab strip is gone.
-    expect(find.text('Overview'), findsNothing);
     expect(find.text('Pipelines'), findsNothing);
+
+    // Switching tabs reveals the (empty-stub) code-review sections.
+    await tester.tap(find.text('Commits'));
+    await tester.pumpAndSettle();
+    expect(find.text('No commits'), findsOneWidget);
+
+    await tester.tap(find.text('Changed files'));
+    await tester.pumpAndSettle();
+    expect(find.text('No changed files'), findsOneWidget);
   });
 
   testWidgets('GitLab MR header exposes link and state actions', (

@@ -150,6 +150,7 @@
   "noActivityYet": "No activity yet",
   "writeCommentHint": "Write a comment…",
   "commentAction": "Comment",
+  "overview": "Overview",
   "commits": "Commits",
   "changedFiles": "Changed files",
   "noCommits": "No commits",

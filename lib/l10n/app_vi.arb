@@ -150,6 +150,7 @@
   "noActivityYet": "Chưa có hoạt động",
   "writeCommentHint": "Viết bình luận…",
   "commentAction": "Bình luận",
+  "overview": "Tổng quan",
   "commits": "Commits",
   "changedFiles": "Tệp thay đổi",
   "noCommits": "Không có commit",

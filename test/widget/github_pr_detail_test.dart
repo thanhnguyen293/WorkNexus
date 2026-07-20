@@ -104,9 +104,19 @@ void main() {
     expect(find.text('Merge'), findsOneWidget);
     expect(find.text('Activity'), findsOneWidget);
     expect(find.text('Write a comment…'), findsOneWidget);
-    // Real Commits + Changed-files sections render.
+    // Commits + Changed files now live on their own tabs.
+    expect(find.text('Overview'), findsOneWidget);
     expect(find.text('Commits'), findsOneWidget);
     expect(find.text('Changed files'), findsOneWidget);
+
+    // Switching tabs reveals the (empty-stub) code-review sections.
+    await tester.tap(find.text('Commits'));
+    await tester.pumpAndSettle();
+    expect(find.text('No commits'), findsOneWidget);
+
+    await tester.tap(find.text('Changed files'));
+    await tester.pumpAndSettle();
+    expect(find.text('No changed files'), findsOneWidget);
   });
 
   testWidgets('GitHub PR merge + close callbacks fire on an open PR', (
