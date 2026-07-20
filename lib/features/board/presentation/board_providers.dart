@@ -393,11 +393,16 @@ class GitLabProjectSelection {
     required this.accountId,
     required this.projectId,
     required this.projectName,
+    this.mine = false,
   });
 
   final String accountId;
   final String projectId;
   final String projectName;
+
+  /// True for the account-wide "my merge requests" board (assigned + review
+  /// across all projects) rather than a single project.
+  final bool mine;
 }
 
 /// The GitLab project whose dedicated board is open (null off the GitLab board).
@@ -410,6 +415,16 @@ class SelectedGitLabProject extends Notifier<GitLabProjectSelection?> {
       accountId: project.accountId,
       projectId: project.id,
       projectName: project.name,
+    );
+  }
+
+  /// Open the account-wide "my merge requests" board (all projects).
+  void selectMine(String accountId) {
+    state = GitLabProjectSelection(
+      accountId: accountId,
+      projectId: '',
+      projectName: '',
+      mine: true,
     );
   }
 
@@ -473,13 +488,30 @@ final gitlabItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
   ref,
 ) async {
   final project = ref.watch(selectedGitLabProjectProvider);
-  if (project == null) return const <String>{};
+  if (project == null || project.mine) return const <String>{};
   final kind = ref.watch(gitlabKindProvider);
   final res = await getIt<SyncService>().syncGitLabProjectItems(
     accountId: project.accountId,
     projectId: project.projectId,
     mergeRequests: kind == GitLabItemKind.mergeRequest,
   );
+  switch (res) {
+    case Ok(:final value):
+      return value.toSet();
+    case Err(:final failure):
+      throw failure;
+  }
+});
+
+/// The account-wide "my merge requests" slice (assigned + review across all
+/// projects): syncs them into drift and returns their ids. Active only when the
+/// GitLab "mine" board is selected.
+final gitlabMineSliceProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final selection = ref.watch(selectedGitLabProjectProvider);
+  if (selection == null || !selection.mine) return const <String>{};
+  final res = await getIt<SyncService>().syncGitLabMine(selection.accountId);
   switch (res) {
     case Ok(:final value):
       return value.toSet();
@@ -495,6 +527,22 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   var tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
   final gitlabProject = ref.watch(selectedGitLabProjectProvider);
   if (gitlabProject != null) {
+    if (gitlabProject.mine) {
+      // The account-wide "my merge requests" board: MRs assigned to me or
+      // awaiting my review, across all projects — scoped by the mine slice ids.
+      final slice = ref.watch(gitlabMineSliceProvider).asData?.value;
+      return tickets
+          .where(
+            (ticket) =>
+                ticket.accountId == gitlabProject.accountId &&
+                ticket.providerType == ProviderType.gitlab &&
+                (ticket.externalType ?? '') ==
+                    GitLabItemKind.mergeRequest.externalType &&
+                slice != null &&
+                slice.contains(ticket.id),
+          )
+          .toList();
+    }
     final kind = ref.watch(gitlabKindProvider);
     final projectLabel = 'gitlab-project:${gitlabProject.projectId}';
     // The active project+kind's server slice (ids). Null while it's still
@@ -515,6 +563,22 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   }
   final githubRepo = ref.watch(selectedGitHubRepoProvider);
   if (githubRepo != null) {
+    if (githubRepo.mine) {
+      // The account-wide "my pull requests" board: PRs assigned to me or
+      // requesting my review, across all repos — scoped by the mine slice ids.
+      final slice = ref.watch(githubMineSliceProvider).asData?.value;
+      return tickets
+          .where(
+            (ticket) =>
+                ticket.accountId == githubRepo.accountId &&
+                ticket.providerType == ProviderType.github &&
+                (ticket.externalType ?? '') ==
+                    GitHubItemKind.pullRequest.externalType &&
+                slice != null &&
+                slice.contains(ticket.id),
+          )
+          .toList();
+    }
     final kind = ref.watch(githubKindProvider);
     final repoLabel = 'github-repo:${githubRepo.repoId}';
     // The active repo+kind's server slice (ids). Null while it's still loading —
@@ -620,6 +684,7 @@ class GitHubRepoSelection {
     required this.accountId,
     required this.repoId,
     required this.repoName,
+    this.mine = false,
   });
 
   final String accountId;
@@ -627,6 +692,10 @@ class GitHubRepoSelection {
   /// The `owner/name` repo slug.
   final String repoId;
   final String repoName;
+
+  /// True for the account-wide "my pull requests" board (assigned + review
+  /// across all repos) rather than a single repo.
+  final bool mine;
 }
 
 /// The GitHub repo whose dedicated board is open (null off the GitHub board).
@@ -639,6 +708,16 @@ class SelectedGitHubRepo extends Notifier<GitHubRepoSelection?> {
       accountId: repo.accountId,
       repoId: repo.id,
       repoName: repo.name,
+    );
+  }
+
+  /// Open the account-wide "my pull requests" board (all repos).
+  void selectMine(String accountId) {
+    state = GitHubRepoSelection(
+      accountId: accountId,
+      repoId: '',
+      repoName: '',
+      mine: true,
     );
   }
 
@@ -700,13 +779,30 @@ final githubItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
   ref,
 ) async {
   final repo = ref.watch(selectedGitHubRepoProvider);
-  if (repo == null) return const <String>{};
+  if (repo == null || repo.mine) return const <String>{};
   final kind = ref.watch(githubKindProvider);
   final res = await getIt<SyncService>().syncGitHubRepoItems(
     accountId: repo.accountId,
     repoId: repo.repoId,
     pullRequests: kind == GitHubItemKind.pullRequest,
   );
+  switch (res) {
+    case Ok(:final value):
+      return value.toSet();
+    case Err(:final failure):
+      throw failure;
+  }
+});
+
+/// The account-wide "my pull requests" slice (assigned + review across all
+/// repos): syncs them into drift and returns their ids. Active only when the
+/// GitHub "mine" board is selected.
+final githubMineSliceProvider = FutureProvider.autoDispose<Set<String>>((
+  ref,
+) async {
+  final selection = ref.watch(selectedGitHubRepoProvider);
+  if (selection == null || !selection.mine) return const <String>{};
+  final res = await getIt<SyncService>().syncGitHubMine(selection.accountId);
   switch (res) {
     case Ok(:final value):
       return value.toSet();

@@ -46,11 +46,23 @@ class BoardPage extends ConsumerWidget {
     final bugSlice = mode == ViewMode.zentaoBugs
         ? ref.watch(zentaoBugTabSliceProvider)
         : null;
+    // The account-wide "my MRs/PRs" boards reuse the GitLab/GitHub views but
+    // fetch a different slice and hide the kind tabs (they are MR/PR-only).
+    final gitlabMine =
+        mode == ViewMode.gitlab &&
+        (ref.watch(selectedGitLabProjectProvider)?.mine ?? false);
+    final githubMine =
+        mode == ViewMode.github &&
+        (ref.watch(selectedGitHubRepoProvider)?.mine ?? false);
     final gitlabSlice = mode == ViewMode.gitlab
-        ? ref.watch(gitlabItemsSliceProvider)
+        ? (gitlabMine
+              ? ref.watch(gitlabMineSliceProvider)
+              : ref.watch(gitlabItemsSliceProvider))
         : null;
     final githubSlice = mode == ViewMode.github
-        ? ref.watch(githubItemsSliceProvider)
+        ? (githubMine
+              ? ref.watch(githubMineSliceProvider)
+              : ref.watch(githubItemsSliceProvider))
         : null;
     final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
     // While a just-opened tab/execution/project is still fetching and nothing is
@@ -92,8 +104,8 @@ class BoardPage extends ConsumerWidget {
         children: [
           const ChromeBar(),
           if (mode == ViewMode.zentaoBugs) const ZenTaoBugTabs(),
-          if (mode == ViewMode.gitlab) const GitLabTabs(),
-          if (mode == ViewMode.github) const GitHubTabs(),
+          if (mode == ViewMode.gitlab && !gitlabMine) const GitLabTabs(),
+          if (mode == ViewMode.github && !githubMine) const GitHubTabs(),
           Expanded(
             child: Stack(
               children: [
