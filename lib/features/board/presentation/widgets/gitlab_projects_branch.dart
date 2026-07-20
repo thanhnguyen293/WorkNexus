@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -15,6 +16,8 @@ import 'sidebar_primitives.dart';
 
 /// The children of a GitLab account node: a collapsible "Projects" group
 /// (collapsed by default) listing the projects the account is a member of.
+/// Pinned projects are lifted into the per-account Pinned area
+/// ([GitLabPinnedBranch]), so this shows only the unpinned rest.
 class GitLabProjectsBranch extends ConsumerWidget {
   const GitLabProjectsBranch({
     super.key,
@@ -28,13 +31,22 @@ class GitLabProjectsBranch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
+    final pinned = ref.watch(
+      appSettingsProvider.select((s) => s.pinnedProjects),
+    );
     final projects = ref.watch(gitlabProjectsProvider(account.id));
     return projects.when(
-      data: (items) => _ProjectsGroup(
-        accountId: account.id,
-        projects: items,
-        tickets: tickets,
-      ),
+      data: (items) {
+        final rest = [
+          for (final p in items)
+            if (!pinned.contains('${p.accountId}:${p.id}')) p,
+        ];
+        return _ProjectsGroup(
+          accountId: account.id,
+          projects: rest,
+          tickets: tickets,
+        );
+      },
       loading: () => _MutedRow(label: l.loadingProjects),
       error: (_, _) => _MutedRow(label: l.projectsUnavailable),
     );
@@ -104,7 +116,7 @@ class _ProjectsGroup extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final p in projects)
-                  GitLabProjectRow(project: p, tickets: tickets),
+                  GitLabProjectRow(project: p, tickets: tickets, pinned: false),
               ],
             ),
           ),

@@ -5,11 +5,9 @@ import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
+import 'sidebar_primitives.dart';
 import 'zentao_execution_row.dart';
 import 'zentao_project_row.dart';
 
@@ -55,7 +53,7 @@ class ZenTaoPinnedBranch extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _PinnedHeader(),
+          const SidebarPinnedHeader(),
           for (final p in pinnedProducts)
             ZenTaoProjectRow(
               product: p,
@@ -75,34 +73,6 @@ class ZenTaoPinnedBranch extends ConsumerWidget {
               pinned: true,
               showKindTag: true,
             ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Non-tappable label marking the Pinned area.
-class _PinnedHeader extends StatelessWidget {
-  const _PinnedHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    return Container(
-      height: 27,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-      child: Row(
-        children: [
-          Icon(Icons.push_pin, size: 12, color: c.accent),
-          SizedBox(width: context.spacing.xs),
-          Text(
-            l.pinned,
-            style: context.typography.mono.copyWith(
-              fontWeight: FontWeight.w600,
-              color: c.textSecondary,
-            ),
-          ),
         ],
       ),
     );

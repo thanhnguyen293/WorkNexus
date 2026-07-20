@@ -296,6 +296,23 @@ class GitLabAdapter implements ProviderAdapter {
     });
   }
 
+  /// Merge requests assigned to me OR awaiting my review, across all projects —
+  /// the account-wide "my merge requests" dashboard slice. Deduped (an MR can be
+  /// both assigned and review-requested).
+  Future<Result<List<Ticket>>> listMyMergeRequests() => _guard(() async {
+    final me = await _client.currentUser();
+    final assigned = await _client.assignedMergeRequests();
+    final review = me.username == null
+        ? const <GitLabMergeRequest>[]
+        : await _client.reviewMergeRequests(me.username!);
+    final byId = <String, Ticket>{};
+    for (final m in [...assigned, ...review]) {
+      final t = normalizeGitLabMergeRequest(m, accountId: accountId);
+      byId[t.id] = t;
+    }
+    return byId.values.toList();
+  });
+
   /// Close / reopen an issue via `state_event` on the issue update endpoint.
   Future<Result<bool>> closeIssue(Ticket ticket) =>
       _issueStateEvent(ticket, 'close');

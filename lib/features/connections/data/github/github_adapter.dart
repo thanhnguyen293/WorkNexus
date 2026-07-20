@@ -270,6 +270,20 @@ class GitHubAdapter implements ProviderAdapter {
     });
   }
 
+  /// Pull requests assigned to me OR requesting my review, across all repos —
+  /// the account-wide "my pull requests" dashboard slice. Deduped (a PR can be
+  /// both assigned and review-requested).
+  Future<Result<List<Ticket>>> listMyPullRequests() => _guard(() async {
+    final assigned = await _client.assignedPulls();
+    final review = await _client.reviewPulls();
+    final byId = <String, Ticket>{};
+    for (final p in [...assigned, ...review]) {
+      final t = normalizeGitHubPullFromIssue(p, accountId: accountId);
+      byId[t.id] = t;
+    }
+    return byId.values.toList();
+  });
+
   /// Close / reopen an issue or PR via the issues `state` field (a PR is an
   /// issue, so this works for both).
   Future<Result<bool>> closeItem(Ticket ticket) => _setState(ticket, 'closed');

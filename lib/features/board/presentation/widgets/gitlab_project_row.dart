@@ -4,41 +4,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../board_providers.dart';
+import 'sidebar_primitives.dart';
 
-/// A single GitLab project row: a dot, the project name and its cached item
-/// count. Tapping opens the project's dedicated board (Issues by default), which
-/// then fetches that kind's recent items from GitLab.
+/// A single GitLab project row: a dot, the project name and a pin toggle.
+/// Tapping opens the project's dedicated board (Issues by default), which then
+/// fetches that kind's recent items from GitLab.
 class GitLabProjectRow extends ConsumerWidget {
   const GitLabProjectRow({
     super.key,
     required this.project,
     required this.tickets,
+    required this.pinned,
   });
 
   final ProviderProject project;
   final List<Ticket> tickets;
+  final bool pinned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     final selected = ref.watch(selectedGitLabProjectProvider);
     final active =
         selected?.accountId == project.accountId &&
         selected?.projectId == project.id;
     final loading = active && ref.watch(gitlabItemsSliceProvider).isLoading;
-    final count = tickets
-        .where(
-          (t) =>
-              t.accountId == project.accountId &&
-              t.labels.contains('gitlab-project:${project.id}'),
-        )
-        .length;
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
@@ -49,7 +48,7 @@ class GitLabProjectRow extends ConsumerWidget {
           height: 27,
           padding: EdgeInsets.only(
             left: context.spacing.sm,
-            right: context.spacing.sm,
+            right: context.spacing.xxs,
           ),
           decoration: BoxDecoration(
             color: active ? c.selectionFill : Colors.transparent,
@@ -76,11 +75,13 @@ class GitLabProjectRow extends ConsumerWidget {
                   ),
                 ),
               ),
-              Text(
-                '$count',
-                style: context.typography.monoXs.copyWith(
-                  color: c.textTertiary,
-                ),
+              SizedBox(width: context.spacing.xs),
+              SidebarPinButton(
+                pinned: pinned,
+                tooltip: pinned ? l.unpinProject : l.pinProject,
+                onTap: () => ref
+                    .read(appSettingsProvider.notifier)
+                    .togglePinnedProject('${project.accountId}:${project.id}'),
               ),
             ],
           ),

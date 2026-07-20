@@ -259,6 +259,57 @@ class SyncService {
     }
   }
 
+  /// Fetches the current user's assigned + review-requested merge requests across
+  /// all GitLab projects (the "my merge requests" board), upserts them into
+  /// drift, and returns their ids. No synthetic label — the board scopes by the
+  /// returned id set.
+  Future<Result<List<String>>> syncGitLabMine(String accountId) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('GitLab account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listMyMergeRequests();
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(account, value);
+        return Ok([for (final t in value) t.id]);
+    }
+  }
+
+  /// Fetches the current user's assigned + review-requested pull requests across
+  /// all GitHub repos (the "my pull requests" board), upserts them, and returns
+  /// their ids.
+  Future<Result<List<String>>> syncGitHubMine(String accountId) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('GitHub account not found'));
+    }
+    final account = accountFromRow(accountRow);
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.listMyPullRequests();
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(account, value);
+        return Ok([for (final t in value) t.id]);
+    }
+  }
+
   /// Fetches full detail + comments for a single [ticket] from its provider and
   /// writes them into drift (from where the detail panel reads reactively).
   ///

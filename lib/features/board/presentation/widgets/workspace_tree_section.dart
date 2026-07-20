@@ -11,8 +11,11 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'github_pinned_branch.dart';
 import 'github_repos_branch.dart';
+import 'gitlab_pinned_branch.dart';
 import 'gitlab_projects_branch.dart';
+import 'provider_mine_row.dart';
 import 'sidebar_primitives.dart';
 import 'zentao_executions_branch.dart';
 import 'zentao_pinned_branch.dart';
@@ -68,11 +71,6 @@ class _WorkspaceNode extends StatelessWidget {
                   a.providerType == ProviderType.github),
         )
         .toList();
-    final count = tickets
-        .where(
-          (tk) => lookups.accounts[tk.accountId]?.workspaceId == workspace.id,
-        )
-        .length;
 
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.lg),
@@ -134,7 +132,6 @@ class _ZenTaoNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final count = tickets.where((tk) => tk.accountId == account.id).length;
 
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.sm),
@@ -185,7 +182,6 @@ class _GitLabNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final count = tickets.where((tk) => tk.accountId == account.id).length;
 
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.sm),
@@ -208,17 +204,18 @@ class _GitLabNode extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '$count',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
               ],
             ),
           ),
           SidebarTreeBranch(
-            child: GitLabProjectsBranch(account: account, tickets: tickets),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProviderMineRow(account: account),
+                GitLabPinnedBranch(account: account, tickets: tickets),
+                GitLabProjectsBranch(account: account, tickets: tickets),
+              ],
+            ),
           ),
         ],
       ),
@@ -258,11 +255,24 @@ class _GitHubNode extends StatelessWidget {
                     ),
                   ),
                 ),
+                Text(
+                  '$count',
+                  style: context.typography.monoXs.copyWith(
+                    color: c.textTertiary,
+                  ),
+                ),
               ],
             ),
           ),
           SidebarTreeBranch(
-            child: GitHubReposBranch(account: account, tickets: tickets),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProviderMineRow(account: account),
+                GitHubPinnedBranch(account: account, tickets: tickets),
+                GitHubReposBranch(account: account, tickets: tickets),
+              ],
+            ),
           ),
         ],
       ),

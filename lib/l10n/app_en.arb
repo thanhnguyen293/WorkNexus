@@ -157,6 +157,8 @@
   "projects": "Projects",
   "pinProject": "Pin project",
   "unpinProject": "Unpin project",
+  "pinRepository": "Pin repository",
+  "unpinRepository": "Unpin repository",
   "loadingProjects": "Loading projects…",
   "projectsUnavailable": "Can't load projects",
   "projectOpenFailed": "Couldn't open project",

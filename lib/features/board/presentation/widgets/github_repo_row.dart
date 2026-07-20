@@ -4,36 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../board_providers.dart';
+import 'sidebar_primitives.dart';
 
-/// A single GitHub repo row: a dot, the repo name and its cached item count.
-/// Tapping opens the repo's dedicated board (Issues by default), which then
-/// fetches that kind's recent items from GitHub.
+/// A single GitHub repo row: a dot, the repo name and a pin toggle. Tapping
+/// opens the repo's dedicated board (Issues by default), which then fetches
+/// that kind's recent items from GitHub.
 class GitHubRepoRow extends ConsumerWidget {
-  const GitHubRepoRow({super.key, required this.repo, required this.tickets});
+  const GitHubRepoRow({
+    super.key,
+    required this.repo,
+    required this.tickets,
+    required this.pinned,
+  });
 
   final ProviderProject repo;
   final List<Ticket> tickets;
+  final bool pinned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     final selected = ref.watch(selectedGitHubRepoProvider);
     final active =
         selected?.accountId == repo.accountId && selected?.repoId == repo.id;
     final loading = active && ref.watch(githubItemsSliceProvider).isLoading;
-    final count = tickets
-        .where(
-          (t) =>
-              t.accountId == repo.accountId &&
-              t.labels.contains('github-repo:${repo.id}'),
-        )
-        .length;
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
@@ -44,7 +47,7 @@ class GitHubRepoRow extends ConsumerWidget {
           height: 27,
           padding: EdgeInsets.only(
             left: context.spacing.sm,
-            right: context.spacing.sm,
+            right: context.spacing.xxs,
           ),
           decoration: BoxDecoration(
             color: active ? c.selectionFill : Colors.transparent,
@@ -70,6 +73,14 @@ class GitHubRepoRow extends ConsumerWidget {
                     color: c.textPrimary,
                   ),
                 ),
+              ),
+              SizedBox(width: context.spacing.xs),
+              SidebarPinButton(
+                pinned: pinned,
+                tooltip: pinned ? l.unpinRepository : l.pinRepository,
+                onTap: () => ref
+                    .read(appSettingsProvider.notifier)
+                    .togglePinnedProject('${repo.accountId}:${repo.id}'),
               ),
             ],
           ),

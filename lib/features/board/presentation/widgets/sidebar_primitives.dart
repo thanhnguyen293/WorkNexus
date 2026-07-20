@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Uppercase heading above a sidebar section.
 class SidebarSectionLabel extends StatelessWidget {
@@ -62,7 +63,8 @@ class SidebarTreeBranch extends StatelessWidget {
   }
 }
 
-/// A pin/unpin toggle for a pinnable sidebar row (products, executions).
+/// A pin/unpin toggle for a pinnable sidebar row (products, executions,
+/// projects, repos).
 class SidebarPinButton extends StatelessWidget {
   const SidebarPinButton({
     super.key,
@@ -91,6 +93,35 @@ class SidebarPinButton extends StatelessWidget {
             color: pinned ? c.accent : c.textTertiary,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Non-tappable label marking a per-account "Pinned" area at the top of a
+/// source node (ZenTao / GitLab / GitHub).
+class SidebarPinnedHeader extends StatelessWidget {
+  const SidebarPinnedHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l = AppL10n.of(context);
+    return Container(
+      height: 27,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+      child: Row(
+        children: [
+          Icon(Icons.push_pin, size: 12, color: c.accent),
+          SizedBox(width: context.spacing.xs),
+          Text(
+            l.pinned,
+            style: context.typography.mono.copyWith(
+              fontWeight: FontWeight.w600,
+              color: c.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

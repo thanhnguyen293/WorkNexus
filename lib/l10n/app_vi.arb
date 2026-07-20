@@ -157,6 +157,8 @@
   "projects": "Dự án",
   "pinProject": "Ghim dự án",
   "unpinProject": "Bỏ ghim dự án",
+  "pinRepository": "Ghim kho lưu trữ",
+  "unpinRepository": "Bỏ ghim kho lưu trữ",
   "loadingProjects": "Đang tải dự án…",
   "projectsUnavailable": "Không tải được dự án",
   "projectOpenFailed": "Không mở được dự án",
