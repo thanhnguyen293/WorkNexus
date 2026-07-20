@@ -7,6 +7,8 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import 'changed_files_section.dart';
+import 'commits_section.dart';
 import 'detail_activity_timeline.dart';
 import 'detail_sidebar_section.dart';
 import 'gitlab_mr_header.dart';
@@ -35,6 +37,8 @@ class GitLabMrOverview extends StatelessWidget {
     required this.onApprove,
     required this.onMerge,
     required this.onRebase,
+    required this.commitsLoader,
+    required this.changesLoader,
     required this.assigneeEditorBuilder,
     required this.reviewersEditorBuilder,
     required this.labelsEditorBuilder,
@@ -55,6 +59,8 @@ class GitLabMrOverview extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onMerge;
   final VoidCallback onRebase;
+  final CommitsLoader commitsLoader;
+  final ChangedFilesLoader changesLoader;
   final MetadataEditorBuilder assigneeEditorBuilder;
   final MetadataEditorBuilder reviewersEditorBuilder;
   final MetadataEditorBuilder labelsEditorBuilder;
@@ -142,6 +148,10 @@ class GitLabMrOverview extends StatelessWidget {
         onMerge: onMerge,
         onRebase: onRebase,
       ),
+      SizedBox(height: context.spacing.xl2),
+      CommitsSection(loader: commitsLoader),
+      SizedBox(height: context.spacing.xl2),
+      ChangedFilesSection(loader: changesLoader),
       SizedBox(height: context.spacing.xl2),
       DetailActivityTimeline(
         comments: comments,

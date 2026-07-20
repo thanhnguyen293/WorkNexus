@@ -64,6 +64,8 @@ class GitLabMrDetail extends ConsumerWidget {
           _run(context, merge(ticket), l.gitlabMrMerged(ticket.externalKey)),
       onRebase: () =>
           _run(context, rebase(ticket), l.gitlabMrRebased(ticket.externalKey)),
+      commitsLoader: () => sync.listMergeRequestCommits(ticket),
+      changesLoader: () => sync.listMergeRequestChanges(ticket),
       assigneeEditorBuilder: (_, close) => UserPickerEditor(
         currentUsers: entity.assignees.isNotEmpty
             ? entity.assignees

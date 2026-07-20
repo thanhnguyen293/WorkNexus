@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../error/result.dart';
 import '../entities/ticket.dart';
+import '../value_objects/repo_change.dart';
 import 'provider_adapter.dart';
 
 /// Presentation-facing contract for the GitHub issue/PR detail actions, mirroring
@@ -31,4 +32,8 @@ abstract interface class GitHubPrService {
   Future<Result<List<ProviderUser>>> listUsers(Ticket ticket);
 
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url);
+
+  Future<Result<List<RepoCommit>>> listPullCommits(Ticket ticket);
+
+  Future<Result<List<RepoFileChange>>> listPullFiles(Ticket ticket);
 }

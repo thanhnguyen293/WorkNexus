@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../error/result.dart';
 import '../entities/ticket.dart';
+import '../value_objects/repo_change.dart';
 import 'provider_adapter.dart';
 
 abstract interface class GitLabMrService {
@@ -44,4 +45,8 @@ abstract interface class GitLabMrService {
   });
 
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url);
+
+  Future<Result<List<RepoCommit>>> listMergeRequestCommits(Ticket ticket);
+
+  Future<Result<List<RepoFileChange>>> listMergeRequestChanges(Ticket ticket);
 }

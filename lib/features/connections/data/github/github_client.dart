@@ -259,6 +259,18 @@ class GitHubClient {
     data: {'reviewers': reviewers},
   );
 
+  // ---- PR commits + files (detail view) ----
+
+  /// Commits on a pull request (`GET /repos/:repo/pulls/:number/commits`). Raw
+  /// maps ({sha, commit:{message, author:{name,date}}}).
+  Future<List<Map<String, dynamic>>> pullCommits(String repo, String number) =>
+      _paginate('/repos/$repo/pulls/$number/commits', (m) => m, maxPages: 5);
+
+  /// Changed files on a pull request (`GET /repos/:repo/pulls/:number/files`).
+  /// Raw maps ({filename, additions, deletions, status, patch}).
+  Future<List<Map<String, dynamic>>> pullFiles(String repo, String number) =>
+      _paginate('/repos/$repo/pulls/$number/files', (m) => m, maxPages: 5);
+
   // ---- assets ----
 
   /// Fetches raw bytes for an authenticated asset — e.g. an inline image in an

@@ -8,6 +8,7 @@ import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
+import 'package:work_nexus/core/domain/value_objects/repo_change.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
@@ -91,6 +92,8 @@ void main() {
               onApprove: () {},
               onMerge: () {},
               onRebase: () {},
+              commitsLoader: () async => const Ok(<RepoCommit>[]),
+              changesLoader: () async => const Ok(<RepoFileChange>[]),
               assigneeEditorBuilder: _emptyEditor,
               reviewersEditorBuilder: _emptyEditor,
               labelsEditorBuilder: _emptyEditor,
@@ -122,8 +125,12 @@ void main() {
     expect(find.textContaining('Merge blocked'), findsOneWidget);
     expect(find.text('Activity'), findsOneWidget);
     expect(find.text('Write a comment…'), findsOneWidget);
-    // The fake Overview/Commits/Pipelines/Changes tab strip is gone.
-    expect(find.text('Commits'), findsNothing);
+    // Real Commits + Changed-files sections render (empty in this stub).
+    expect(find.text('Commits'), findsOneWidget);
+    expect(find.text('Changed files'), findsOneWidget);
+    expect(find.text('No commits'), findsOneWidget);
+    // The fake Overview/Pipelines tab strip is gone.
+    expect(find.text('Overview'), findsNothing);
     expect(find.text('Pipelines'), findsNothing);
   });
 
@@ -178,6 +185,8 @@ void main() {
             onApprove: () => approveCalls++,
             onMerge: () {},
             onRebase: () {},
+            commitsLoader: () async => const Ok(<RepoCommit>[]),
+            changesLoader: () async => const Ok(<RepoFileChange>[]),
             assigneeEditorBuilder: _emptyEditor,
             reviewersEditorBuilder: _emptyEditor,
             labelsEditorBuilder: _emptyEditor,

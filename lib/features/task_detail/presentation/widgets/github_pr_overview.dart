@@ -7,6 +7,8 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import 'changed_files_section.dart';
+import 'commits_section.dart';
 import 'detail_activity_timeline.dart';
 import 'detail_sidebar_section.dart';
 import 'github_pr_header.dart';
@@ -34,6 +36,8 @@ class GitHubPrOverview extends StatelessWidget {
     required this.onReopen,
     required this.onMerge,
     required this.onUpdateBranch,
+    required this.commitsLoader,
+    required this.changesLoader,
     required this.assigneeEditorBuilder,
     required this.reviewersEditorBuilder,
     required this.avatarLoader,
@@ -51,6 +55,8 @@ class GitHubPrOverview extends StatelessWidget {
   final VoidCallback onReopen;
   final VoidCallback onMerge;
   final VoidCallback onUpdateBranch;
+  final CommitsLoader commitsLoader;
+  final ChangedFilesLoader changesLoader;
   final MetadataEditorBuilder assigneeEditorBuilder;
   final MetadataEditorBuilder reviewersEditorBuilder;
   final AvatarLoader avatarLoader;
@@ -135,6 +141,10 @@ class GitHubPrOverview extends StatelessWidget {
         onUpdateBranch: onUpdateBranch,
         onReopen: onReopen,
       ),
+      SizedBox(height: context.spacing.xl2),
+      CommitsSection(loader: commitsLoader),
+      SizedBox(height: context.spacing.xl2),
+      ChangedFilesSection(loader: changesLoader),
       SizedBox(height: context.spacing.xl2),
       DetailActivityTimeline(
         comments: comments,

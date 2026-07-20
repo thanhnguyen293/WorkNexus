@@ -396,6 +396,30 @@ class GitLabClient {
     return commits is List ? commits.length : null;
   }
 
+  // ---- MR commits + diffs (detail view) ----
+
+  /// Commits on a merge request (`GET …/merge_requests/:iid/commits`), newest
+  /// first. Raw maps — the adapter maps them to [RepoCommit].
+  Future<List<Map<String, dynamic>>> mergeRequestCommits(
+    String projectId,
+    String iid,
+  ) => _paginate(
+    '/projects/$projectId/merge_requests/$iid/commits',
+    (m) => m,
+    maxPages: 5,
+  );
+
+  /// Per-file diffs on a merge request (`GET …/merge_requests/:iid/diffs`,
+  /// GitLab 15.7+). Raw maps ({old_path,new_path,diff,new_file,deleted_file,…}).
+  Future<List<Map<String, dynamic>>> mergeRequestDiffs(
+    String projectId,
+    String iid,
+  ) => _paginate(
+    '/projects/$projectId/merge_requests/$iid/diffs',
+    (m) => m,
+    maxPages: 5,
+  );
+
   // ---- assets ----
 
   /// Fetches raw bytes for an authenticated inline asset — e.g. an `/uploads/…`

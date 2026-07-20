@@ -6,7 +6,9 @@ import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
+import 'package:work_nexus/core/domain/value_objects/repo_change.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
+import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/github_pr_overview.dart';
@@ -78,6 +80,8 @@ void main() {
           onReopen: () {},
           onMerge: () {},
           onUpdateBranch: () {},
+          commitsLoader: () async => const Ok(<RepoCommit>[]),
+          changesLoader: () async => const Ok(<RepoFileChange>[]),
           assigneeEditorBuilder: _emptyEditor,
           reviewersEditorBuilder: _emptyEditor,
           avatarLoader: (_) async => _avatarBytes,
@@ -100,6 +104,9 @@ void main() {
     expect(find.text('Merge'), findsOneWidget);
     expect(find.text('Activity'), findsOneWidget);
     expect(find.text('Write a comment…'), findsOneWidget);
+    // Real Commits + Changed-files sections render.
+    expect(find.text('Commits'), findsOneWidget);
+    expect(find.text('Changed files'), findsOneWidget);
   });
 
   testWidgets('GitHub PR merge + close callbacks fire on an open PR', (
@@ -121,6 +128,8 @@ void main() {
           onReopen: () {},
           onMerge: () => mergeCalls++,
           onUpdateBranch: () {},
+          commitsLoader: () async => const Ok(<RepoCommit>[]),
+          changesLoader: () async => const Ok(<RepoFileChange>[]),
           assigneeEditorBuilder: _emptyEditor,
           reviewersEditorBuilder: _emptyEditor,
           avatarLoader: (_) async => _avatarBytes,
@@ -162,6 +171,8 @@ void main() {
           onReopen: () => reopenCalls++,
           onMerge: () {},
           onUpdateBranch: () {},
+          commitsLoader: () async => const Ok(<RepoCommit>[]),
+          changesLoader: () async => const Ok(<RepoFileChange>[]),
           assigneeEditorBuilder: _emptyEditor,
           reviewersEditorBuilder: _emptyEditor,
           avatarLoader: (_) async => _avatarBytes,

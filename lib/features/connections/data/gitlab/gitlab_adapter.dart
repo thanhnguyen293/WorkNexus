@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
+import '../../../../core/domain/value_objects/repo_change.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import 'gitlab_client.dart';
@@ -509,6 +510,57 @@ class GitLabAdapter implements GitLabMrAdapter {
         );
         return true;
       });
+
+  /// Commits on a merge request (detail view). GitLab-specific — off-interface.
+  Future<Result<List<RepoCommit>>> listMergeRequestCommits(Ticket ticket) =>
+      _guard(() async {
+        final ref = _projectRef(ticket);
+        final rows = await _client.mergeRequestCommits(ref, ticket.externalKey);
+        return [
+          for (final r in rows)
+            RepoCommit(
+              sha: '${r['id'] ?? ''}',
+              shortSha: '${r['short_id'] ?? r['id'] ?? ''}',
+              title: '${r['title'] ?? r['message'] ?? ''}'.trim(),
+              author: r['author_name'] as String?,
+              date: parseGitLabDate(
+                (r['authored_date'] ?? r['created_at']) as String?,
+              ),
+            ),
+        ];
+      });
+
+  /// Per-file diffs on a merge request (detail view). GitLab-specific.
+  Future<Result<List<RepoFileChange>>> listMergeRequestChanges(Ticket ticket) =>
+      _guard(() async {
+        final ref = _projectRef(ticket);
+        final rows = await _client.mergeRequestDiffs(ref, ticket.externalKey);
+        return [for (final r in rows) _fileChange(r)];
+      });
+
+  RepoFileChange _fileChange(Map<String, dynamic> r) {
+    final newPath = r['new_path'] as String?;
+    final oldPath = r['old_path'] as String?;
+    final path = (newPath != null && newPath.isNotEmpty)
+        ? newPath
+        : (oldPath ?? '');
+    final diff = r['diff'] as String?;
+    final counts = countDiffLines(diff);
+    final status = r['new_file'] == true
+        ? 'added'
+        : r['deleted_file'] == true
+        ? 'deleted'
+        : r['renamed_file'] == true
+        ? 'renamed'
+        : 'modified';
+    return RepoFileChange(
+      path: path,
+      additions: counts.additions,
+      deletions: counts.deletions,
+      status: status,
+      diff: diff,
+    );
+  }
 
   // ---- helpers ----
 

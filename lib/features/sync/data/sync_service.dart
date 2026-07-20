@@ -12,6 +12,7 @@ import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
@@ -883,6 +884,48 @@ class SyncService implements GitLabMrService, GitHubPrService {
       );
     }
     return fresh;
+  }
+
+  // ---- detail view: commits + changed files ----
+
+  @override
+  Future<Result<List<RepoCommit>>> listMergeRequestCommits(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listMergeRequestCommits(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoFileChange>>> listMergeRequestChanges(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listMergeRequestChanges(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoCommit>>> listPullCommits(Ticket ticket) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored GitHub credentials'));
+    }
+    return adapter.listPullCommits(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoFileChange>>> listPullFiles(Ticket ticket) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored GitHub credentials'));
+    }
+    return adapter.listPullFiles(ticket);
   }
 
   // ---- inline image loading (authenticated + self-signed TLS) ----

@@ -67,6 +67,8 @@ class GitHubPrDetail extends ConsumerWidget {
         updateBranch(ticket),
         l.githubPrBranchUpdated(ticket.externalKey),
       ),
+      commitsLoader: () => service.listPullCommits(ticket),
+      changesLoader: () => service.listPullFiles(ticket),
       assigneeEditorBuilder: (_, close) => UserPickerEditor(
         currentUsers: entity.assignees.isNotEmpty
             ? entity.assignees
