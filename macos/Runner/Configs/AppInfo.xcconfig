@@ -5,10 +5,11 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-// NOTE: this is the built product / bundle *filename* (referenced by the Xcode
-// project + RunnerTests TEST_HOST), so it stays as-is. The user-facing name is
-// set via CFBundleName / CFBundleDisplayName in Info.plist ("WorkNexus").
-PRODUCT_NAME = work_nexus
+// NOTE: this is the built product / bundle *filename* — Finder shows THIS name for
+// the .app (not CFBundleName / CFBundleDisplayName), so it must be the user-facing
+// name. Referenced by the Xcode project product ref + RunnerTests TEST_HOST, which
+// are kept in sync in project.pbxproj.
+PRODUCT_NAME = WorkNexus
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.worknexus.workNexus
