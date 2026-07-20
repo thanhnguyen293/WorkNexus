@@ -7,12 +7,13 @@ import 'app_colors.dart';
 import 'app_radii.dart';
 
 /// Brand colors per provider (from the design's PROV map). Kept in the theme
-/// layer so the domain enum stays Flutter-free.
+/// layer so the domain enum stays Flutter-free. Used to tint the monochrome
+/// brand marks; ZenTao's logo is full-color so its value is informational only.
 Color providerBrandColor(ProviderType p) => switch (p) {
   ProviderType.github => const Color(0xFF6E7681),
   ProviderType.gitlab => const Color(0xFFFC6D26),
   ProviderType.jira => const Color(0xFF4C9AFF),
-  ProviderType.zentao => const Color(0xFF3FA66B),
+  ProviderType.zentao => const Color(0xFF3D8DF1),
 };
 
 /// Status → dot color token (design STAT dot mapping).

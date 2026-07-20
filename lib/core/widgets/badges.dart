@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../gen/assets.gen.dart';
 import '../domain/value_objects/priority.dart';
 import '../domain/value_objects/provider_type.dart';
 import '../domain/value_objects/translation_state.dart';
@@ -11,7 +12,9 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/semantic.dart';
 
-/// Provider code chip (GH/GL/JR/ZT), colored by brand.
+/// Provider brand logo. GitHub/GitLab/Jira are monochrome marks tinted to their
+/// brand color; ZenTao is a full-color recreation of its whirlpool logo, so it
+/// renders untinted. [big] sizes it up for dialog/section headers.
 class ProviderBadge extends StatelessWidget {
   const ProviderBadge(this.provider, {super.key, this.big = false});
   final ProviderType provider;
@@ -19,28 +22,26 @@ class ProviderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    final brand = providerBrandColor(provider);
-    return Container(
-      constraints: BoxConstraints(minWidth: big ? 24 : 20),
-      height: big ? 17 : 15,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
-      decoration: BoxDecoration(
-        color: c.mixT(brand, 0.16),
-        borderRadius: BorderRadius.circular(context.radii.xs),
-        border: context.borders.showOutline
-            ? Border.all(color: c.mixT(brand, 0.34))
-            : null,
-      ),
-      child: Text(
-        provider.code,
-        style: (big ? context.typography.badgeLg : context.typography.badgeSm)
-            .copyWith(color: brand),
-      ),
+    final size = big ? 20.0 : 15.0;
+    final tint = provider == ProviderType.zentao
+        ? null
+        : ColorFilter.mode(providerBrandColor(provider), BlendMode.srcIn);
+    return _brandMark(provider).svg(
+      width: size,
+      height: size,
+      colorFilter: tint,
+      semanticsLabel: provider.displayName,
     );
   }
 }
+
+/// The bundled brand-logo asset for [p], referenced type-safely via flutter_gen.
+SvgGenImage _brandMark(ProviderType p) => switch (p) {
+  ProviderType.github => Assets.brands.github,
+  ProviderType.gitlab => Assets.brands.gitlab,
+  ProviderType.jira => Assets.brands.jira,
+  ProviderType.zentao => Assets.brands.zentao,
+};
 
 /// Provider-specific priority tag (P0 / priority::1 / ◆ High / Pri 1).
 class PriorityTag extends StatelessWidget {
@@ -68,9 +69,7 @@ class PriorityTag extends StatelessWidget {
       ),
       child: Text(
         priorityLabel(provider, priority),
-        style: context.typography.badge.copyWith(
-          color: color,
-        ),
+        style: context.typography.badge.copyWith(color: color),
       ),
     );
   }
