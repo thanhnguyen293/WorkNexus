@@ -14,16 +14,16 @@ import 'active_tokens.dart';
 /// Whether the advanced-filter popover is open.
 final advFilterOpenProvider = StateProvider<bool>((ref) => false);
 
-/// The top toolbar: board/list toggle, search, filters button, active tokens.
+/// The top toolbar: search, filters button (hidden when nothing to filter),
+/// active tokens.
 class ChromeBar extends ConsumerWidget {
   const ChromeBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final l = AppL10n.of(context);
-    final mode = ref.watch(viewModeProvider);
     final filter = ref.watch(filterStateProvider);
+    final hasFilters = ref.watch(filterHasGroupsProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -36,77 +36,17 @@ class ChromeBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Board / List toggle.
-          // _Segmented(
-          //   options: {
-          //     ViewMode.board: '▦ ${l.board}',
-          //     ViewMode.list: '☰ ${l.list}',
-          //   },
-          //   value: mode,
-          //   onChanged: (m) => ref.read(viewModeProvider.notifier).set(m),
-          // ),
-          // SizedBox(width: context.spacing.lg),
           const _SearchBox(),
-          SizedBox(width: context.spacing.lg),
-          _FiltersButton(
-            count: filter.activeTokenCount,
-            onTap: () =>
-                ref.read(advFilterOpenProvider.notifier).update((v) => !v),
-          ),
+          if (hasFilters) ...[
+            SizedBox(width: context.spacing.lg),
+            _FiltersButton(
+              count: filter.activeTokenCount,
+              onTap: () =>
+                  ref.read(advFilterOpenProvider.notifier).update((v) => !v),
+            ),
+          ],
           SizedBox(width: context.spacing.lg),
           const Expanded(child: ActiveTokens()),
-        ],
-      ),
-    );
-  }
-}
-
-class _Segmented extends StatelessWidget {
-  const _Segmented({
-    required this.options,
-    required this.value,
-    required this.onChanged,
-  });
-  final Map<ViewMode, String> options;
-  final ViewMode value;
-  final ValueChanged<ViewMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: EdgeInsets.all(context.spacing.xxs),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: context.cardBorder,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final e in options.entries)
-            GestureDetector(
-              onTap: () => onChanged(e.key),
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.lg,
-                  vertical: context.spacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: e.key == value ? c.selectionFill : Colors.transparent,
-                  borderRadius: BorderRadius.circular(context.radii.sm),
-                ),
-                child: Text(
-                  e.value,
-                  style: context.typography.bodySm.copyWith(
-                    fontWeight: e.key == value
-                        ? FontWeight.w600
-                        : FontWeight.w500,
-                    color: e.key == value ? c.accent : c.textSecondary,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
