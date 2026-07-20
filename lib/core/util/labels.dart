@@ -3,6 +3,7 @@ import '../domain/entities/provider_entity.dart';
 import '../domain/entities/ticket.dart';
 import '../domain/value_objects/priority.dart';
 import '../domain/value_objects/unified_status.dart';
+import 'synthetic_labels.dart';
 
 /// Localized label for a [UnifiedStatus] (board column / status chip).
 ///
@@ -24,18 +25,6 @@ String priorityName(AppL10n l, Priority p) => switch (p) {
   Priority.medium => l.priorityMedium,
   Priority.low => l.priorityLow,
 };
-
-/// Prefixes of synthetic board-membership labels added at list-sync time (e.g.
-/// `zentao-product:<id>` for bug boards, `gitlab-project:<id>` / `github-repo:`
-/// for the Git provider boards) that the provider's detail endpoint doesn't
-/// return. The native boards filter on these, so a detail refresh must keep
-/// them — but they are internal machinery and must never be shown as tags.
-const List<String> kSyntheticLabelPrefixes = <String>[
-  'zentao-product:',
-  'zentao-execution:',
-  'gitlab-project:',
-  'github-repo:',
-];
 
 /// The user-facing provider labels (real tags): drops the internal synthetic
 /// board-membership labels ([kSyntheticLabelPrefixes]), the optimistic

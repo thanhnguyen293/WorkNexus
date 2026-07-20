@@ -17,7 +17,7 @@ import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
-import '../../../core/util/labels.dart';
+import '../../../core/util/synthetic_labels.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/github/github_adapter.dart';
 import '../../connections/data/github/github_client.dart';
@@ -278,7 +278,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        final label = 'gitlab-project:$projectId';
+        final label = gitlabProjectLabel(projectId);
         final tagged = [
           for (final t in value) t.copyWith(labels: [...t.labels, label]),
         ];
@@ -317,7 +317,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        final label = 'github-repo:$repoId';
+        final label = githubRepoLabel(repoId);
         final tagged = [
           for (final t in value) t.copyWith(labels: [...t.labels, label]),
         ];
@@ -327,9 +327,10 @@ class SyncService implements GitLabMrService, GitHubPrService {
   }
 
   /// Fetches the current user's assigned + review-requested merge requests across
-  /// all GitLab projects (the "my merge requests" board), upserts them into
-  /// drift, and returns their ids. No synthetic label — the board scopes by the
-  /// returned id set.
+  /// all GitLab projects (the "my merge requests" board), tags each with a
+  /// synthetic `gitlab-mine:<accountId>` label, upserts them into drift, and
+  /// returns their ids. The label lets the board render this slice from the DB
+  /// when offline (the slice id set reconciles it once a sync succeeds).
   Future<Result<List<String>>> syncGitLabMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -347,14 +348,20 @@ class SyncService implements GitLabMrService, GitHubPrService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        await _upsert(account, value);
-        return Ok([for (final t in value) t.id]);
+        final label = gitlabMineLabel(accountId);
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
     }
   }
 
   /// Fetches the current user's assigned + review-requested pull requests across
-  /// all GitHub repos (the "my pull requests" board), upserts them, and returns
-  /// their ids.
+  /// all GitHub repos (the "my pull requests" board), tags each with a synthetic
+  /// `github-mine:<accountId>` label, upserts them, and returns their ids. The
+  /// label lets the board render this slice from the DB when offline (the slice
+  /// id set reconciles it once a sync succeeds).
   Future<Result<List<String>>> syncGitHubMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -372,8 +379,12 @@ class SyncService implements GitLabMrService, GitHubPrService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        await _upsert(account, value);
-        return Ok([for (final t in value) t.id]);
+        final label = githubMineLabel(accountId);
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
     }
   }
 
@@ -1109,6 +1120,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
   }
 
   Future<void> _upsert(Account account, List<Ticket> tickets) async {
+    final merged = await _carryMembershipLabels(tickets);
     await _db.batch((b) {
       b.insert(
         _db.accounts,
@@ -1116,7 +1128,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
         onConflict: DoUpdate((_) => accountToCompanion(account)),
       );
       final projects = <String, Project>{};
-      for (final t in tickets) {
+      for (final t in merged) {
         projects.putIfAbsent(
           t.projectId,
           () => Project(
@@ -1133,7 +1145,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
           onConflict: DoUpdate((_) => projectToCompanion(p)),
         );
       }
-      for (final t in tickets) {
+      for (final t in merged) {
         b.insert(
           _db.tickets,
           ticketToCompanion(t),
@@ -1141,6 +1153,31 @@ class SyncService implements GitLabMrService, GitHubPrService {
         );
       }
     });
+  }
+
+  /// Carries forward the synthetic board-membership labels
+  /// ([kSyntheticLabelPrefixes]) already stored for these tickets. Each list
+  /// sync only stamps its own marker (a project board vs. the account-wide
+  /// "mine" board), and `_upsert`'s row overwrite would otherwise drop the
+  /// others — leaving an item missing from a board it belongs to when the board
+  /// renders from the DB offline. Real provider labels still come fresh from the
+  /// server. Stale markers reconcile online via each board's slice.
+  Future<List<Ticket>> _carryMembershipLabels(List<Ticket> tickets) async {
+    if (tickets.isEmpty) return tickets;
+    final ids = [for (final t in tickets) t.id];
+    final rows = await (_db.select(
+      _db.tickets,
+    )..where((r) => r.id.isIn(ids))).get();
+    final priorLabels = {
+      for (final r in rows) r.id: decodeLabels(r.labelsJson),
+    };
+    return [
+      for (final t in tickets)
+        if (priorLabels[t.id] case final prior?)
+          t.copyWith(labels: mergeDetailLabels(t.labels, prior))
+        else
+          t,
+    ];
   }
 }
 

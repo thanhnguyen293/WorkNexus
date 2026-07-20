@@ -10,6 +10,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/network/api_paging.dart';
+import '../../../../core/util/synthetic_labels.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
@@ -274,7 +275,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           );
           out.add(
             ticket.copyWith(
-              labels: [...ticket.labels, 'zentao-product:$productId'],
+              labels: [...ticket.labels, zentaoProductLabel(productId)],
             ),
           );
           added++;
@@ -384,7 +385,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           );
           out.add(
             ticket.copyWith(
-              labels: [...ticket.labels, 'zentao-execution:$executionId'],
+              labels: [...ticket.labels, zentaoExecutionLabel(executionId)],
             ),
           );
           added++;
