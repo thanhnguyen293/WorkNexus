@@ -30,6 +30,10 @@ enum DateDisplayFormat {
   long,
 }
 
+/// Default width (logical px) of the left sidebar, matching the historical
+/// fixed width before it became drag-resizable.
+const double kSidebarWidthDefault = 290.0;
+
 /// App-wide appearance + language settings, persisted to drift (see `main`).
 @immutable
 class AppSettings {
@@ -46,6 +50,7 @@ class AppSettings {
     this.accentColorValue,
     this.pinnedProjects = const <String>{},
     this.pinnedExecutions = const <PinnedExecution>[],
+    this.sidebarWidth = kSidebarWidthDefault,
   });
 
   final AppThemeVariant variant;
@@ -66,6 +71,10 @@ class AppSettings {
   /// Pinned ZenTao executions surfaced alongside pinned projects in the tree's
   /// per-account "Pinned" area. Persisted so pins survive restarts.
   final List<PinnedExecution> pinnedExecutions;
+
+  /// Width (logical px) of the left sidebar, adjustable by dragging its right
+  /// edge. Persisted so the chosen width survives restarts.
+  final double sidebarWidth;
 
   /// The user-chosen app primary/accent color (ARGB int), or `null` to use the
   /// active theme variant's built-in accent.
@@ -91,6 +100,7 @@ class AppSettings {
     double? componentRadius,
     Set<String>? pinnedProjects,
     List<PinnedExecution>? pinnedExecutions,
+    double? sidebarWidth,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -106,6 +116,7 @@ class AppSettings {
       componentRadius: componentRadius ?? this.componentRadius,
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
       pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
+      sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -169,6 +180,11 @@ class AppSettingsController extends Notifier<AppSettings> {
   /// Sets the app primary color; pass `null` to fall back to the theme accent.
   void setAccentColor(int? value) =>
       _set(state.copyWith(accentColorValue: value));
+
+  /// Sets the left sidebar width (logical px). Callers clamp to the allowed
+  /// range before calling.
+  void setSidebarWidth(double width) =>
+      _set(state.copyWith(sidebarWidth: width));
 
   /// Pins/unpins a ZenTao project by its `"accountId:productId"` [key].
   void togglePinnedProject(String key) {

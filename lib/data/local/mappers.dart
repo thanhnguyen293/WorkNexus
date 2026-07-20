@@ -213,6 +213,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   accentColorValue: r.accentColorValue,
   pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
   pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
+  sidebarWidth: r.sidebarWidth,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -229,6 +230,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   accentColorValue: Value(s.accentColorValue),
   pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
   pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
+  sidebarWidth: Value(s.sidebarWidth),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

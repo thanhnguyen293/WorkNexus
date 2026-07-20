@@ -6,9 +6,9 @@ import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/board/presentation/board_page.dart';
-import '../../features/board/presentation/widgets/sidebar.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
+import 'resizable_sidebar.dart';
 import 'title_bar.dart';
 
 /// Top-level window layout: custom title bar, sidebar + main area, and the
@@ -32,7 +32,7 @@ class AppShell extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const SidebarView(),
+                    const ResizableSidebar(),
                     Expanded(
                       child: settingsOpen
                           ? const SettingsPage()

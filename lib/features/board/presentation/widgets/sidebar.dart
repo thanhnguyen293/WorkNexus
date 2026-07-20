@@ -8,15 +8,15 @@ import 'settings_nav.dart';
 import 'workspace_tree_section.dart';
 
 /// The left navigation rail: the workspace → ZenTao → projects tree and the
-/// settings toggle.
+/// settings toggle. Fills the width its parent gives it — the drag-to-resize
+/// width is owned by [ResizableSidebar] in the app shell.
 class SidebarView extends ConsumerWidget {
   const SidebarView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    return Container(
-      width: 290,
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: c.surface,
         border: Border(right: context.hairlineSide),

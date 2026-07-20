@@ -110,6 +110,10 @@ class Settings extends Table {
   TextColumn get pinnedExecutionsJson =>
       text().withDefault(const Constant('[]'))();
 
+  /// Width (logical px) of the left sidebar, adjustable by dragging its right
+  /// edge. Persisted so the chosen width survives restarts.
+  RealColumn get sidebarWidth => real().withDefault(const Constant(290.0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -160,7 +164,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -184,6 +188,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 12) {
         await m.addColumn(settings, settings.pinnedExecutionsJson);
       }
+      if (from < 13) await m.addColumn(settings, settings.sidebarWidth);
     },
   );
 
