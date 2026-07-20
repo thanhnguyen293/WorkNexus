@@ -230,6 +230,15 @@ class GitHubAdapter implements ProviderAdapter {
     UnexpectedFailure('activateBug is ZenTao-only; GitHub uses close/reopen'),
   );
 
+  @override
+  Future<Result<bool>> confirmBug(
+    Ticket ticket, {
+    String? assignee,
+    String? comment,
+  }) async => const Err(
+    UnexpectedFailure('confirmBug is ZenTao-only; GitHub has no bug workflow'),
+  );
+
   // ---- GitHub-specific (not on the shared interface) ----
 
   /// All recent issues OR PRs for one repo — the dedicated GitHub board's

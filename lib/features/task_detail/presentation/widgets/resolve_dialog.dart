@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
 
@@ -83,20 +84,13 @@ class _ResolveDialogState extends ConsumerState<ResolveDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const FieldLabel('Resolution *'),
-          DropdownButtonFormField<String>(
-            initialValue: _resolution,
-            isExpanded: true,
-            dropdownColor: c.surface,
-            decoration: dropDecoration(context),
-            hint: Text(
-              'Select a resolution',
-              style: context.typography.body.copyWith(color: c.textTertiary),
-            ),
-            style: context.typography.body.copyWith(color: c.textPrimary),
-            items: [
-              for (final e in _resolutions.entries)
-                DropdownMenuItem(value: e.key, child: Text(e.value)),
-            ],
+          SearchableDropdownField<String>(
+            items: _resolutions.keys.toList(),
+            value: _resolution,
+            hintText: 'Select a resolution',
+            searchHint: 'Search resolutions…',
+            emptyLabel: 'No matching resolutions',
+            labelOf: (k) => _resolutions[k] ?? k,
             onChanged: (v) => setState(() => _resolution = v),
           ),
           SizedBox(height: context.spacing.xl2),

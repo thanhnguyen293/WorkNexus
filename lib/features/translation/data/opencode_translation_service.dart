@@ -5,6 +5,7 @@ import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/content_hash.dart';
+import '../../../core/util/translation_languages.dart';
 import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
 
@@ -35,7 +36,7 @@ class OpenCodeTranslationService implements TranslationService {
   final String? workingDir;
   final String? binaryOverride;
 
-  static const _templateVersion = 'oc-v1';
+  static const _templateVersion = 'oc-v2';
 
   @override
   String contentHash(TicketSource source) =>
@@ -46,6 +47,7 @@ class OpenCodeTranslationService implements TranslationService {
     required String ticketId,
     required TicketSource source,
     required String sourceHash,
+    required String targetLang,
   }) async {
     final path = await _runner.resolve('opencode', override: binaryOverride);
     if (path == null) {
@@ -53,7 +55,8 @@ class OpenCodeTranslationService implements TranslationService {
     }
     final cwd =
         workingDir ?? Platform.environment['HOME'] ?? Directory.current.path;
-    final prompt = _buildPrompt(source);
+    final language = translationLanguageFor(targetLang);
+    final prompt = _buildPrompt(source, language.englishName);
     try {
       final res = await Process.run(
         path,
@@ -81,10 +84,10 @@ class OpenCodeTranslationService implements TranslationService {
         TranslationRecord(
           ticketId: ticketId,
           sourceHash: sourceHash,
-          targetLang: 'vi',
-          translatedTitle: parsed['vi_title']?.toString() ?? source.title,
-          translatedBody: parsed['vi_body']?.toString() ?? source.body,
-          model: model ?? 'opencode/default',
+          targetLang: language.code,
+          translatedTitle: parsed['title']?.toString() ?? source.title,
+          translatedBody: parsed['body']?.toString() ?? source.body,
+          model: model ?? 'opencode/deepseek-v4-flash-free',
           templateVersion: _templateVersion,
           createdAt: DateTime.now(),
         ),
@@ -94,10 +97,10 @@ class OpenCodeTranslationService implements TranslationService {
     }
   }
 
-  String _buildPrompt(TicketSource s) =>
-      'Translate this software ticket into natural, technical Vietnamese. '
+  String _buildPrompt(TicketSource s, String languageName) =>
+      'Translate this software ticket into natural, technical $languageName. '
       'Preserve code, identifiers, file paths, URLs and Markdown. '
-      'Return ONLY a JSON object with keys "vi_title" and "vi_body".\n'
+      'Return ONLY a JSON object with keys "title" and "body".\n'
       'Title: <<<${s.title}>>>\nBody: <<<${s.body}>>>';
 
   Map<String, dynamic>? _extractJson(String out) {

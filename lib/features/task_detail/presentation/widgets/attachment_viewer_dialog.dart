@@ -46,6 +46,7 @@ class AttachmentViewerDialog extends ConsumerStatefulWidget {
 
 class _AttachmentViewerDialogState
     extends ConsumerState<AttachmentViewerDialog> {
+  late final Future<String?> _pathFuture;
   String? _path;
   bool _loading = true;
   bool _saving = false;
@@ -53,29 +54,35 @@ class _AttachmentViewerDialogState
   @override
   void initState() {
     super.initState();
-    _load();
+    _pathFuture = _load();
   }
 
-  Future<void> _load() async {
+  Future<String?> _load() async {
     final path = await getIt<SyncService>().cacheAttachment(
       widget.ticket,
       widget.attachment,
     );
-    if (!mounted) return;
-    setState(() {
-      _path = path;
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _path = path;
+        _loading = false;
+      });
+    }
+    return path;
   }
 
   Future<void> _save() async {
-    final path = _path;
-    if (path == null || _saving) return;
+    if (_saving) return;
     setState(() => _saving = true);
-    final saved = await getIt<SyncService>().saveAttachmentToDownloads(
-      path,
-      widget.attachment.title,
-    );
+    // Download is always enabled; if the preview is still caching, await that
+    // same fetch rather than starting a second one.
+    final path = _path ?? await _pathFuture;
+    final saved = path == null
+        ? null
+        : await getIt<SyncService>().saveAttachmentToDownloads(
+            path,
+            widget.attachment.title,
+          );
     if (!mounted) return;
     setState(() => _saving = false);
     final l = AppL10n.of(context);
@@ -106,7 +113,6 @@ class _AttachmentViewerDialogState
             AttachmentViewerHeader(
               attachment: widget.attachment,
               saving: _saving,
-              canSave: _path != null,
               onSave: _save,
               onClose: () => Navigator.of(context).pop(),
             ),

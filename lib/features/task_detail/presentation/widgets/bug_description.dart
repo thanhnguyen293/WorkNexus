@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../util/image_fallback.dart';
 
 /// Which structured section a run of the bug body belongs to.
 enum _Kind { intro, steps, actual, expected }
@@ -27,10 +28,16 @@ class _Block {
 /// is ever dropped. A blob with none of the headings renders as one markdown
 /// block.
 class BugDescription extends StatelessWidget {
-  const BugDescription({super.key, required this.body, this.imageLoader});
+  const BugDescription({
+    super.key,
+    required this.body,
+    this.imageLoader,
+    this.imageFallback,
+  });
 
   final String body;
   final ImageBytesLoader? imageLoader;
+  final ImageFallback? imageFallback;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +46,12 @@ class BugDescription extends StatelessWidget {
     final hasSections = blocks.any((b) => b.kind != _Kind.intro);
 
     if (!hasSections) {
-      return MarkdownText(body, imageLoader: imageLoader);
+      return MarkdownText(
+        body,
+        imageLoader: imageLoader,
+        imageFallbackUrl: imageFallback?.resolveUrl,
+        onOpenImage: imageFallback?.open,
+      );
     }
 
     final children = <Widget>[];
@@ -58,13 +70,19 @@ class BugDescription extends StatelessWidget {
   Widget _block(BuildContext context, AppL10n l, _Block b) {
     switch (b.kind) {
       case _Kind.intro:
-        return MarkdownText(b.text, imageLoader: imageLoader);
+        return MarkdownText(
+          b.text,
+          imageLoader: imageLoader,
+          imageFallbackUrl: imageFallback?.resolveUrl,
+          onOpenImage: imageFallback?.open,
+        );
       case _Kind.steps:
         return _Section(
           label: l.stepsToReproduce,
           labelColor: context.colors.textSecondary,
           text: b.text,
           imageLoader: imageLoader,
+          imageFallback: imageFallback,
         );
       case _Kind.actual:
         return _Section(
@@ -73,6 +91,7 @@ class BugDescription extends StatelessWidget {
           accent: context.colors.error,
           text: b.text,
           imageLoader: imageLoader,
+          imageFallback: imageFallback,
         );
       case _Kind.expected:
         return _Section(
@@ -81,6 +100,7 @@ class BugDescription extends StatelessWidget {
           accent: context.colors.success,
           text: b.text,
           imageLoader: imageLoader,
+          imageFallback: imageFallback,
         );
     }
   }
@@ -163,6 +183,7 @@ class _Section extends StatelessWidget {
     required this.text,
     this.accent,
     this.imageLoader,
+    this.imageFallback,
   });
 
   final String label;
@@ -170,13 +191,19 @@ class _Section extends StatelessWidget {
   final Color? accent;
   final String text;
   final ImageBytesLoader? imageLoader;
+  final ImageFallback? imageFallback;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final accent = this.accent;
 
-    final card = MarkdownText(text, imageLoader: imageLoader);
+    final card = MarkdownText(
+      text,
+      imageLoader: imageLoader,
+      imageFallbackUrl: imageFallback?.resolveUrl,
+      onOpenImage: imageFallback?.open,
+    );
     final padded = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.lg,

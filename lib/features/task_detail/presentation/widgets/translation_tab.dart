@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/translation_state.dart';
@@ -9,11 +10,13 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/translation_languages.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../../../translation/presentation/translation_providers.dart';
+import '../util/image_fallback.dart';
 import 'detail_scroll_body.dart';
 import 'section_label.dart';
 
@@ -30,6 +33,15 @@ class TranslationTab extends ConsumerWidget {
     final status = ref.watch(translationStatusProvider(ticket.id));
     final state = status.state;
     final record = status.record;
+    // The translated body carries the original's inline-image links, so give it
+    // the same "open in browser" fallback (e.g. GitLab < 17.4 uploads).
+    final imageFallback = ImageFallback.forTicket(
+      ticket,
+      ref.watch(lookupsProvider).accounts[ticket.accountId],
+    );
+    final lang = translationLanguageFor(
+      ref.watch(appSettingsProvider.select((s) => s.translationLang)),
+    );
 
     Widget banner(Color hue, String text) => Container(
       margin: EdgeInsets.only(bottom: context.spacing.xl2),
@@ -51,13 +63,15 @@ class TranslationTab extends ConsumerWidget {
     return DetailScrollBody(
       layout: layout,
       content: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: state == TranslationState.none
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
         children: [
           if (state == TranslationState.none)
             Column(
               children: [
                 SizedBox(height: context.spacing.xl4),
-                Text('🇻🇳', style: context.typography.displayLg),
+                Text(lang.flag, style: context.typography.displayLg),
                 SizedBox(height: context.spacing.lg),
                 Text(
                   l.notTranslated,
@@ -67,7 +81,7 @@ class TranslationTab extends ConsumerWidget {
                 ),
                 SizedBox(height: context.spacing.sm),
                 Text(
-                  'Run OpenCode to generate a Vietnamese version.',
+                  l.runOpenCodeToTranslate(lang.nativeName),
                   textAlign: TextAlign.center,
                   style: context.typography.paragraphSm.copyWith(
                     color: c.textSecondary,
@@ -106,7 +120,7 @@ class TranslationTab extends ConsumerWidget {
           if (state == TranslationState.outdated)
             banner(
               c.warning,
-              'Original changed since last translation. Showing the earlier Vietnamese version.',
+              'Original changed since last translation. Showing the earlier version.',
             ),
           if (state == TranslationState.error)
             banner(
@@ -135,6 +149,8 @@ class TranslationTab extends ConsumerWidget {
                     record.translatedBody,
                     imageLoader: (url) =>
                         getIt<SyncService>().fetchTicketImage(ticket, url),
+                    imageFallbackUrl: imageFallback.resolveUrl,
+                    onOpenImage: imageFallback.open,
                   ),
                 ],
               ),

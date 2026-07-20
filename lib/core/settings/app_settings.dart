@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/fonts.dart';
+import '../util/translation_languages.dart';
 import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
@@ -45,7 +46,8 @@ class AppSettings {
     this.dateFormat = DateDisplayFormat.iso,
     this.companyTint = false,
     this.locale = const Locale('en'),
-    this.fontFamily = kSansFont,
+    this.translationLang = kDefaultTranslationLang,
+    this.fontFamily = kVietnamFont,
     this.componentRadius = kComponentRadiusDefault,
     this.accentColorValue,
     this.pinnedProjects = const <String>{},
@@ -63,6 +65,12 @@ class AppSettings {
 
   final bool companyTint;
   final Locale locale;
+
+  /// Target language a ticket is machine-translated *into* (the "Vietnamese" tab
+  /// generalized). A BCP-47 code from [kTranslationLanguages]; defaults to
+  /// [kDefaultTranslationLang]. Distinct from [locale], which is the app's UI
+  /// language.
+  final String translationLang;
 
   /// Pinned ZenTao project keys (`"accountId:productId"`) surfaced at the top of
   /// the sources tree. Persisted so pins survive restarts.
@@ -96,6 +104,7 @@ class AppSettings {
     DateDisplayFormat? dateFormat,
     bool? companyTint,
     Locale? locale,
+    String? translationLang,
     String? fontFamily,
     double? componentRadius,
     Set<String>? pinnedProjects,
@@ -112,6 +121,7 @@ class AppSettings {
       dateFormat: dateFormat ?? this.dateFormat,
       companyTint: companyTint ?? this.companyTint,
       locale: locale ?? this.locale,
+      translationLang: translationLang ?? this.translationLang,
       fontFamily: fontFamily ?? this.fontFamily,
       componentRadius: componentRadius ?? this.componentRadius,
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
@@ -128,16 +138,19 @@ class AppSettings {
 /// `null` can distinguish "reset to theme accent".
 const Object _unset = Object();
 
-/// The selectable UI fonts. Space Grotesk / Space Mono are bundled; the rest are
-/// standard macOS system families (rendered via the platform font manager, with
-/// a fallback to the bundled sans if unavailable).
+/// The selectable UI fonts. Be Vietnam Pro / Geist Mono are served via
+/// `google_fonts`; Space Grotesk / Space Mono are bundled in `assets/fonts/`;
+/// the rest are standard macOS system families (rendered via the platform font
+/// manager, with a fallback to the bundled sans if unavailable).
 const List<String> kFontChoices = <String>[
   kSystemFont,
-  kSansFont, // Space Grotesk (default, bundled)
+  kVietnamFont, // Be Vietnam Pro (default, via google_fonts)
+  kSansFont, // Space Grotesk (bundled)
   'Helvetica Neue',
   'Avenir Next',
   'Georgia',
   kMonoFont, // Space Mono (bundled)
+  kGeistMonoFont, // Geist Mono (via google_fonts)
 ];
 
 /// Signature for persisting a settings change (drift-backed in `main`).
@@ -173,6 +186,8 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(dateFormat: f));
   void setCompanyTint(bool on) => _set(state.copyWith(companyTint: on));
   void setLocale(Locale l) => _set(state.copyWith(locale: l));
+  void setTranslationLang(String code) =>
+      _set(state.copyWith(translationLang: code));
   void setFontFamily(String f) => _set(state.copyWith(fontFamily: f));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));

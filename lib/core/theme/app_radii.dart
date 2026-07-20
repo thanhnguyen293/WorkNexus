@@ -20,26 +20,30 @@ double snapComponentRadius(double value) {
 
 /// **Corner-radius** scale exposed to the widget tree via [ThemeExtension].
 ///
-/// The fixed scale (`xs`…`pill`) is constant across theme variants. [component]
-/// is the *user-adjustable* radius used by design-system components (buttons,
-/// and any widget that opts into `context.radii.component`); it is driven by the
-/// settings slider. Read it with the `context.radii` getter.
+/// [component] is the *user-adjustable* base radius driven by the settings
+/// slider. The whole ramp (`xs`…`xl`) is derived from it as fixed multiples, so
+/// moving the slider re-rounds **every** design-system surface (cards, dialogs,
+/// inputs, popovers, badges, menus, banners, buttons) in lockstep while keeping
+/// their relative hierarchy. The multipliers are anchored so the default
+/// ([kComponentRadiusDefault] = 8) reproduces the historical fixed values
+/// exactly. Only [none], [dot] and [pill] are semantic constants that never
+/// scale. Read it with the `context.radii` getter.
 @immutable
 class AppRadii extends ThemeExtension<AppRadii> {
   const AppRadii({this.component = kComponentRadiusDefault});
 
-  /// User-adjustable component radius (settings slider).
+  /// User-adjustable base radius (settings slider). Equals [md].
   final double component;
 
   double get none => 0;
-  double get dot => 2; // tiny status dots
-  double get xs => 4;
-  double get sm => 6;
-  double get md => 8;
-  double get card => 10; // ticket card
-  double get lg => 12; // dialogs, columns, popovers
-  double get xl => 20; // search fields / large pills
-  double get pill => 999; // fully rounded
+  double get dot => 2; // tiny status dots — always subtly rounded
+  double get xs => component * 0.5; // 4 at default
+  double get sm => component * 0.75; // 6 at default
+  double get md => component; // 8 at default
+  double get card => component * 1.25; // 10 — ticket card
+  double get lg => component * 1.5; // 12 — dialogs, columns, popovers
+  double get xl => component * 2.5; // 20 — search fields / large pills
+  double get pill => 999; // fully rounded — pills, avatars
 
   @override
   AppRadii copyWith({double? component}) =>

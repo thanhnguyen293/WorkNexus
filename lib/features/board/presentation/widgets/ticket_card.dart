@@ -12,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
+import '../../../../core/util/priority_labels.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/label_chips.dart';
 import '../../../translation/presentation/translation_providers.dart';
@@ -44,9 +45,13 @@ class TicketCard extends ConsumerWidget {
     final bg = selected
         ? c.mix(c.card, wsColor, 0.16)
         : c.tintedCard(wsColor, enabled: tint);
-    final side = context.borders.showOutline
-        ? context.hairlineSide
-        : BorderSide.none;
+    // Uniform rounded border (drawn by the decoration) so the line follows the
+    // corners; a non-uniform border can't take a borderRadius, and clipping a
+    // straight-sided border to a rounded rect drops the line at the corners. The
+    // left edge is covered by the workspace stripe, so a full border is fine.
+    final border = context.borders.showOutline
+        ? Border.all(color: c.border)
+        : null;
 
     return Opacity(
       opacity: pending ? 0.48 : 1,
@@ -56,13 +61,14 @@ class TicketCard extends ConsumerWidget {
           onTap: pending
               ? null
               : () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(context.radii.card),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: bg,
-                border: Border(top: side, right: side, bottom: side),
-              ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(context.radii.card),
+              border: border,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(context.radii.card),
               child: IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,11 +97,14 @@ class TicketCard extends ConsumerWidget {
 
                                 if (ticket.severity != null)
                                   SeverityTag(ticket.severity!),
-                                SizedBox(width: context.spacing.sm),
-                                PriorityTag(
-                                  ticket.providerType,
-                                  ticket.priority,
-                                ),
+                                if (hasExplicitPriority(ticket)) ...[
+                                  if (ticket.severity != null)
+                                    SizedBox(width: context.spacing.sm),
+                                  PriorityTag(
+                                    ticket.providerType,
+                                    ticket.priority,
+                                  ),
+                                ],
                               ],
                             ),
                             SizedBox(height: context.spacing.md),

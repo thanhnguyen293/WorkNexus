@@ -553,6 +553,39 @@ class SyncService {
     return const Ok(null);
   }
 
+  /// Confirms a New/Unconfirmed bug (ZenTao `confirmed = 1`), then refreshes its
+  /// cached detail/status. The bug stays `active`, moving from New/Unconfirmed
+  /// into Confirmed/To Fix.
+  Future<Result<void>> confirmBug(
+    Ticket ticket, {
+    String? assignee,
+    String? comment,
+  }) async {
+    final optimistic = ticket.copyWith(
+      status: UnifiedStatus.todo,
+      providerStatus: 'active',
+    );
+    await _optimisticallyUpdateTicket(optimistic);
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter == null) {
+      await _rollbackTicket(ticket);
+      return const Err(AuthFailure('No stored credentials for this account'));
+    }
+    final res = await adapter.confirmBug(
+      ticket,
+      assignee: assignee,
+      comment: comment,
+    );
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
+    // Trust the server's post-action state from the detail refresh rather than
+    // re-applying the optimistic (which would mask a failed confirm).
+    await syncTicketDetail(ticket);
+    return const Ok(null);
+  }
+
   // ---- GitLab actions (close / reopen / merge) ----
 
   /// Closes a GitLab issue or MR, then refreshes its cached detail/status.
@@ -852,6 +885,15 @@ class SyncService {
     final secret = await _credentials.read(ref);
     if (secret == null) return null;
     return _zenClientFrom(account, secret);
+  }
+
+  /// The GitLab instance version for [accountId] (e.g. `16.3.8`), or null when
+  /// it isn't a GitLab account / is unavailable. Surfaced on the connected-
+  /// accounts row.
+  Future<String?> gitlabServerVersion(String accountId) async {
+    final client = await _gitlabClientFor(accountId);
+    if (client == null) return null;
+    return client.version();
   }
 
   /// A cached authenticated [GitLabClient] for [accountId], or null when the

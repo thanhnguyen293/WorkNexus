@@ -4,6 +4,7 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/util/content_hash.dart';
+import '../../../../core/util/priority_labels.dart';
 import 'gitlab_models.dart';
 
 /// The GitLab object kinds we import. [marker] is the reference separator GitLab
@@ -48,31 +49,10 @@ UnifiedStatus mapGitLabMrStatus(String state, bool draft, List<String> labels) {
 }
 
 /// GitLab has no native priority. We read a scoped `priority::<level>` label
-/// (GitLab's convention); absent → medium.
-Priority mapGitLabPriority(List<String> labels) {
-  for (final raw in labels) {
-    final l = raw.toLowerCase().trim();
-    if (!l.startsWith('priority::')) continue;
-    final level = l.substring('priority::'.length).trim();
-    switch (level) {
-      case 'urgent':
-      case 'critical':
-      case '1':
-        return Priority.urgent;
-      case 'high':
-      case '2':
-        return Priority.high;
-      case 'medium':
-      case 'normal':
-      case '3':
-        return Priority.medium;
-      case 'low':
-      case '4':
-        return Priority.low;
-    }
-  }
-  return Priority.medium;
-}
+/// (GitLab's convention); absent → medium. The nullable detection lives in
+/// `core/util` so the UI can tell a real priority from this fallback.
+Priority mapGitLabPriority(List<String> labels) =>
+    gitLabPriorityFromLabels(labels) ?? Priority.medium;
 
 bool _hasInProgressLabel(List<String> labels) => labels.any((l) {
   final s = l.toLowerCase();

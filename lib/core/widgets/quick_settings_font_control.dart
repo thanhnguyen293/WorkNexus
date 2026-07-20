@@ -8,6 +8,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/fonts.dart';
+import '../theme/google_font_families.dart';
 
 /// Compact font picker used by the Quick Settings popover.
 class QuickSettingsFontControl extends StatelessWidget {
@@ -27,6 +28,10 @@ class QuickSettingsFontControl extends StatelessWidget {
   String _displayLabel(String font) => font == kSystemFont ? systemLabel : font;
 
   String? _previewFamily(BuildContext context, String font) {
+    // google-fonts-backed families (Be Vietnam Pro, Geist Mono) resolve to a
+    // generated family name; bundled/system families are used by name.
+    final googleFont = kGoogleFontFamilies[font];
+    if (googleFont != null) return googleFont.style().fontFamily;
     if (font != kSystemFont) return font;
 
     final theme = Theme.of(context);
@@ -76,7 +81,7 @@ class QuickSettingsFontControl extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: context.spacing.sm,
-          vertical: context.spacing.xxs,
+          vertical: context.spacing.sm,
         ),
         decoration: BoxDecoration(
           color: c.surfaceSubtle,

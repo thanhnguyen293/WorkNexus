@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/value_objects/translation_state.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -9,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/fonts.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/translation_language_control.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../translation/presentation/translation_providers.dart';
 
@@ -23,6 +25,9 @@ class TranslationFooter extends ConsumerWidget {
     final l = AppL10n.of(context);
     final state = ref.watch(translationStatusProvider(ticketId)).state;
     final loading = state == TranslationState.loading;
+    final targetLang = ref.watch(
+      appSettingsProvider.select((s) => s.translationLang),
+    );
 
     final (AppButtonVariant variant, String label) = switch (state) {
       TranslationState.loading => (AppButtonVariant.filled, l.translating),
@@ -59,6 +64,14 @@ class TranslationFooter extends ConsumerWidget {
                 height: 1.4,
               ),
             ),
+          ),
+          SizedBox(width: context.spacing.lg),
+          TranslationLanguageControl(
+            value: targetLang,
+            tooltip: l.translationLanguage,
+            onChanged: ref
+                .read(appSettingsProvider.notifier)
+                .setTranslationLang,
           ),
         ],
       ),

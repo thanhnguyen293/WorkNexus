@@ -153,4 +153,13 @@ abstract class ProviderAdapter {
     String? assignee,
     String? comment,
   });
+
+  /// Confirm a New/Unconfirmed bug (ZenTao sets `confirmed = 1`), optionally
+  /// (re)assigning it and attaching a note. Only meaningful for bug-type
+  /// tickets; moves the bug from New/Unconfirmed into Confirmed/To Fix.
+  Future<Result<bool>> confirmBug(
+    Ticket ticket, {
+    String? assignee,
+    String? comment,
+  });
 }

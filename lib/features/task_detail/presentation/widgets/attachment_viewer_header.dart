@@ -17,14 +17,12 @@ class AttachmentViewerHeader extends StatelessWidget {
     super.key,
     required this.attachment,
     required this.saving,
-    required this.canSave,
     required this.onSave,
     required this.onClose,
   });
 
   final TicketAttachment attachment;
   final bool saving;
-  final bool canSave;
   final VoidCallback onSave;
   final VoidCallback onClose;
 
@@ -67,11 +65,7 @@ class AttachmentViewerHeader extends StatelessWidget {
             ),
           ),
           SizedBox(width: context.spacing.md),
-          _DownloadButton(
-            saving: saving,
-            enabled: canSave && !saving,
-            onTap: onSave,
-          ),
+          _DownloadButton(saving: saving, onTap: onSave),
           SizedBox(width: context.spacing.sm),
           _CloseButton(onTap: onClose),
         ],
@@ -89,23 +83,18 @@ class AttachmentViewerHeader extends StatelessWidget {
 
 /// A subtle bordered "download" button matching the detail-panel header style.
 class _DownloadButton extends StatelessWidget {
-  const _DownloadButton({
-    required this.saving,
-    required this.enabled,
-    required this.onTap,
-  });
+  const _DownloadButton({required this.saving, required this.onTap});
 
   final bool saving;
-  final bool enabled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    final tint = enabled ? c.accent : c.textTertiary;
+    final tint = c.accent;
     return InkWell(
-      onTap: enabled ? onTap : null,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.sm),
       child: Container(
         height: 28,

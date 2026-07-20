@@ -18,6 +18,7 @@ import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../detail_providers.dart';
+import '../util/image_fallback.dart';
 import 'comment_tile.dart';
 import 'detail_scroll_body.dart';
 
@@ -106,6 +107,14 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
     ImageBytesLoader? loader() => ticket == null
         ? null
         : (url) => getIt<SyncService>().fetchTicketImage(ticket, url);
+    // Comments share the ticket's provider context, so inline images get the
+    // same "open in browser" fallback as the description (e.g. GitLab uploads).
+    final imageFallback = ticket == null
+        ? null
+        : ImageFallback.forTicket(
+            ticket,
+            ref.watch(lookupsProvider).accounts[ticket.accountId],
+          );
 
     return Column(
       children: [
@@ -133,7 +142,11 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
                       itemBuilder: (context, i) {
                         final e = items[i];
                         return e.comment != null
-                            ? CommentTile(e.comment!, imageLoader: loader())
+                            ? CommentTile(
+                                e.comment!,
+                                imageLoader: loader(),
+                                imageFallback: imageFallback,
+                              )
                             : ActivityRow(e.activity!);
                       },
                     ),

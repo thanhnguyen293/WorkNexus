@@ -17,7 +17,11 @@ final advFilterOpenProvider = StateProvider<bool>((ref) => false);
 /// The top toolbar: search, filters button (hidden when nothing to filter),
 /// active tokens.
 class ChromeBar extends ConsumerWidget {
-  const ChromeBar({super.key});
+  const ChromeBar({super.key, this.tabs});
+
+  /// The active board's view tabs (All/Unclosed, Issues/MRs…), rendered inline
+  /// at the right of the toolbar. Null when the current board has no tabs.
+  final Widget? tabs;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +31,9 @@ class ChromeBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: c.surface,
+        // The board canvas color (not the sidebar's surface) so the toolbar
+        // reads as part of the board and doesn't blend into the sidebar.
+        color: c.background,
         border: Border(bottom: context.hairlineSide),
       ),
       padding: EdgeInsets.symmetric(
@@ -35,17 +41,16 @@ class ChromeBar extends ConsumerWidget {
         vertical: context.spacing.md,
       ),
       child: Row(
+        spacing: context.spacing.lg,
         children: [
+          ?tabs,
           const _SearchBox(),
-          if (hasFilters) ...[
-            SizedBox(width: context.spacing.lg),
+          if (hasFilters)
             _FiltersButton(
               count: filter.activeTokenCount,
               onTap: () =>
                   ref.read(advFilterOpenProvider.notifier).update((v) => !v),
             ),
-          ],
-          SizedBox(width: context.spacing.lg),
           const Expanded(child: ActiveTokens()),
         ],
       ),
@@ -89,7 +94,7 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
         decoration: InputDecoration(
           isDense: true,
           filled: true,
-          fillColor: c.surfaceSubtle,
+          fillColor: c.surface,
           hintText: l.search,
           hintStyle: context.typography.secondary.copyWith(
             color: c.textTertiary,
@@ -141,7 +146,7 @@ class _FiltersButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: count > 0 ? c.selectionFill : c.surfaceSubtle,
+          color: count > 0 ? c.selectionFill : c.surface,
           borderRadius: BorderRadius.circular(context.radii.md),
           border: context.cardBorder,
         ),

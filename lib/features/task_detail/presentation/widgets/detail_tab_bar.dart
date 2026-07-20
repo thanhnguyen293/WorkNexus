@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/translation_languages.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 
@@ -17,9 +19,12 @@ class DetailTabBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final l = AppL10n.of(context);
+    final lang = translationLanguageFor(
+      ref.watch(appSettingsProvider.select((s) => s.translationLang)),
+    );
     final labels = {
       DetailTab.original: l.original,
-      DetailTab.translation: '🇻🇳 ${l.vietnamese}',
+      DetailTab.translation: '${lang.flag} ${lang.nativeName}',
       DetailTab.comments: '${l.comments} & ${l.activity}',
       // DetailTab.development: l.development,
     };

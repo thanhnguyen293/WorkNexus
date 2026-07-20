@@ -103,21 +103,24 @@ class AppPalette {
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
 
+  // Neutral (cool-leaning) light palette — replaces the old warm "editorial"
+  // cream, which read as a yellow cast. Surfaces step bg -> panel -> card with a
+  // wide enough gap that white cards separate on the flat surface (no borders).
   static const light = AppPalette(
     variant: AppThemeVariant.light,
     brightness: Brightness.light,
-    bg: Color(0xFFF4F1EA),
-    panel: Color(0xFFFBFAF6),
-    panel2: Color(0xFFEFEADF),
-    card: Color(0xFFFFFFFF),
-    line: Color(0xFFE6DFD1),
-    line2: Color(0xFFD6CBB6),
-    tx: Color(0xFF282219),
-    tx2: Color(0xFF6F675A),
-    tx3: Color(0xFF9D9484),
+    bg: Color(0xFFE8E9EE), // board/window canvas — grey so white cards pop
+    panel: Color(0xFFF7F8FA), // sidebar / column
+    panel2: Color(0xFFE9EBEF), // insets, chips, inputs
+    card: Color(0xFFFFFFFF), // ticket card
+    line: Color(0xFFDCDFE6),
+    line2: Color(0xFFC4C9D2),
+    tx: Color(0xFF1C1F26), // neutral near-black (no brown)
+    tx2: Color(0xFF565D6B),
+    tx3: Color(0xFF888E9B),
     accent: Color(0xFF5A57D6),
     accentTx: Color(0xFFFFFFFF),
-    titlebar: Color(0xFFEEE7DB),
+    titlebar: Color(0xFFE3E5EB),
     sel: Color.fromRGBO(90, 87, 214, .10),
     selLine: Color.fromRGBO(90, 87, 214, .5),
     red: Color(0xFFCF432C),
@@ -126,8 +129,8 @@ class AppPalette {
     green: Color(0xFF2F8A52),
     amber: Color(0xFFB1740E),
     violet: Color(0xFF7C53C8),
-    skel: Color.fromRGBO(0, 0, 0, .045),
-    skel2: Color.fromRGBO(0, 0, 0, .085),
+    skel: Color.fromRGBO(0, 0, 0, .05),
+    skel2: Color.fromRGBO(0, 0, 0, .09),
     scrim: Color(0xFF000000),
     onColorInk: Color(0xFF0B0D11),
     workspaceFallback: Color(0xFF888888),
@@ -139,8 +142,8 @@ class AppPalette {
     bg: Color(0xFF151515),
     panel: Color(0xFF1C1C1C),
     panel2: Color(0xFF242424),
-    card: Color(0xFF1F1F1F),
-    line: Color(0xFF2E2E2E),
+    card: Color(0xFF252525), // lighter than bg so flat cards separate
+    line: Color(0xFF323232),
     line2: Color(0xFF3D3D3D),
     tx: Color(0xFFEDEDED),
     tx2: Color(0xFFA5A5A5),
@@ -170,8 +173,8 @@ class AppPalette {
     bg: Color(0xFF0C0E13),
     panel: Color(0xFF12151D),
     panel2: Color(0xFF181C26),
-    card: Color(0xFF181C26),
-    line: Color(0xFF262C38),
+    card: Color(0xFF1C222E), // lighter than panel2/bg so flat cards separate
+    line: Color(0xFF2A303D),
     line2: Color(0xFF38404F),
     tx: Color(0xFFE9ECF3),
     tx2: Color(0xFF9AA4B8),

@@ -259,6 +259,15 @@ class GitLabAdapter implements ProviderAdapter {
     UnexpectedFailure('activateBug is ZenTao-only; GitLab uses close/reopen'),
   );
 
+  @override
+  Future<Result<bool>> confirmBug(
+    Ticket ticket, {
+    String? assignee,
+    String? comment,
+  }) async => const Err(
+    UnexpectedFailure('confirmBug is ZenTao-only; GitLab has no bug workflow'),
+  );
+
   // ---- GitLab-specific (not on the shared interface) ----
 
   /// All recent issues OR MRs for one project — the dedicated GitLab board's

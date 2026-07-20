@@ -10,11 +10,13 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
+import '../../../../core/util/priority_labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/label_chips.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
+import '../util/image_fallback.dart';
 import 'bug_attachments.dart';
 import 'bug_description.dart';
 import 'bug_detail_sections.dart';
@@ -43,6 +45,7 @@ class OriginalTab extends ConsumerWidget {
     final lookups = ref.watch(lookupsProvider);
     final account = lookups.accounts[ticket.accountId];
     final ws = account == null ? null : lookups.workspaces[account.workspaceId];
+    final imageFallback = ImageFallback.forTicket(ticket, account);
     final bug = switch (ticket.providerEntity) {
       final ZenTaoBugEntity b => b,
       _ => null,
@@ -62,13 +65,14 @@ class OriginalTab extends ConsumerWidget {
       (l.account, account?.handle ?? ''),
       (l.workspace, ws?.isPersonal == true ? l.personal : (ws?.name ?? '')),
       (l.status, statusLabel(l, ticket.status)),
-      (
-        l.priority,
-        priorityLabel(
-          ticket.providerType,
-          ticket.priority,
-        ).replaceAll('◆ ', ''),
-      ),
+      if (hasExplicitPriority(ticket))
+        (
+          l.priority,
+          priorityLabel(
+            ticket.providerType,
+            ticket.priority,
+          ).replaceAll('◆ ', ''),
+        ),
       (
         l.updated,
         formatWhen(
@@ -96,12 +100,15 @@ class OriginalTab extends ConsumerWidget {
             body: ticket.body,
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
+            imageFallback: imageFallback,
           )
         else
           MarkdownText(
             ticket.body,
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
+            imageFallbackUrl: imageFallback.resolveUrl,
+            onOpenImage: imageFallback.open,
           ),
         if (labels.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl2),

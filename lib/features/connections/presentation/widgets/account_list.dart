@@ -5,6 +5,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/credential_store.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -15,6 +16,13 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../../domain/repositories/connection_repository.dart';
+
+/// The GitLab instance version for an account (e.g. `16.3.8`), shown on its
+/// connected-accounts row. Null for non-GitLab accounts or when unavailable.
+final gitlabServerVersionProvider = FutureProvider.autoDispose
+    .family<String?, String>(
+      (ref, accountId) => getIt<SyncService>().gitlabServerVersion(accountId),
+    );
 
 /// A workspace heading followed by its connected accounts.
 class WorkspaceAccounts extends StatelessWidget {
@@ -109,6 +117,10 @@ class _AccountRow extends ConsumerWidget {
     final c = context.colors;
     final isLive = account.credentialsRef != null;
     final l = AppL10n.of(context);
+    // GitLab instance version, once probed (null while loading / non-GitLab).
+    final gitlabVersion = account.providerType == ProviderType.gitlab
+        ? ref.watch(gitlabServerVersionProvider(account.id)).asData?.value
+        : null;
     final accTickets = tickets
         .where((tk) => tk.accountId == account.id)
         .toList();
@@ -145,6 +157,15 @@ class _AccountRow extends ConsumerWidget {
                     color: c.textTertiary,
                   ),
                 ),
+                if (gitlabVersion != null) ...[
+                  SizedBox(width: context.spacing.sm),
+                  Text(
+                    'v$gitlabVersion',
+                    style: context.typography.captionSm.copyWith(
+                      color: c.textTertiary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

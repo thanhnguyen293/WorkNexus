@@ -9,6 +9,7 @@ import 'app_radii.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
 import 'fonts.dart';
+import 'google_font_families.dart';
 
 /// Builds a [ThemeData] for the given orthogonal appearance axes.
 ///
@@ -25,6 +26,7 @@ ThemeData buildAppTheme({
 }) {
   final p = AppPalette.of(variant);
   final spacing = AppSpacing.forDensity(density);
+  final radii = AppRadii(component: componentRadius);
   final borders = AppBorders(showOutline: surface == SurfaceStyle.outline);
 
   // Effective accent: the user's chosen primary color, or the palette default.
@@ -42,10 +44,15 @@ ThemeData buildAppTheme({
           selectionBorder: accent.withValues(alpha: 0.5),
         );
   final requestedFamily = fontFamily.trim();
+  // Some families (Be Vietnam Pro, Geist Mono) are served by google_fonts under
+  // a generated family name; the rest are bundled/system names used as-is.
+  final googleFont = kGoogleFontFamilies[requestedFamily];
   final String? family = requestedFamily.isEmpty
       ? kSansFont
       : requestedFamily == kSystemFont
       ? null
+      : googleFont != null
+      ? googleFont.style().fontFamily
       : requestedFamily;
 
   final colorScheme = ColorScheme(
@@ -64,11 +71,16 @@ ThemeData buildAppTheme({
     platform: defaultTargetPlatform,
     colorScheme: colorScheme,
   );
-  final baseText =
+  final coloredBase =
       (p.brightness == Brightness.dark
               ? platformTypography.white
               : platformTypography.black)
-          .apply(fontFamily: family, bodyColor: p.tx, displayColor: p.tx);
+          .apply(bodyColor: p.tx, displayColor: p.tx);
+  // google_fonts registers each family's weight variants across the ramp;
+  // other families are applied by name (bundled or system).
+  final baseText = googleFont != null
+      ? googleFont.textTheme(coloredBase)
+      : coloredBase.apply(fontFamily: family);
 
   return ThemeData(
     useMaterial3: true,
@@ -95,7 +107,7 @@ ThemeData buildAppTheme({
       decoration: BoxDecoration(
         color: p.panel2,
         border: Border.all(color: p.line2),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(radii.sm),
       ),
       textStyle: TextStyle(color: p.tx, fontSize: 11, fontFamily: family),
     ),
@@ -103,7 +115,7 @@ ThemeData buildAppTheme({
       colors,
       const AppTypography(),
       spacing,
-      AppRadii(component: componentRadius),
+      radii,
       borders,
       AppButtonTheme.build(colors, borders),
     ],

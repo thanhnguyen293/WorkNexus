@@ -73,6 +73,11 @@
   "translating": "Đang dịch bằng OpenCode…",
   "notTranslated": "Chưa dịch",
   "translated": "Đã dịch",
+  "translationLanguage": "Ngôn ngữ dịch",
+  "runOpenCodeToTranslate": "Chạy OpenCode để tạo bản dịch {language}.",
+  "@runOpenCodeToTranslate": {
+    "placeholders": { "language": { "type": "String" } }
+  },
   "translationOutdated": "Bản dịch cũ",
   "translationFailed": "Dịch thất bại",
   "connectedAccounts": "Tài khoản đã kết nối",
@@ -229,5 +234,8 @@
   "fieldResolved": "Ngày xử lý",
   "fieldResolvedBuild": "Bản sửa",
   "fieldClosedBy": "Người đóng",
-  "fieldClosed": "Ngày đóng"
+  "fieldClosed": "Ngày đóng",
+  "openImageInBrowser": "Mở ảnh trong trình duyệt",
+  "copyLink": "Sao chép liên kết",
+  "linkCopied": "Đã sao chép!"
 }

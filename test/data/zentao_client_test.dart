@@ -203,10 +203,13 @@ void main() {
     },
   );
 
-  test('assignTicket POSTs assignedTo to /{type}/{id}/assignTo', () async {
+  // The write actions use the classic `index.php` channel — this ZenTao build
+  // has no `/bugs/{id}/<action>` REST endpoints (they 404).
+
+  test('assignTicket POSTs to the classic {type}-assignTo action', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-      return _json({'status': 'success'});
+      return _json({'result': 'success'});
     });
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.assignTicket(
@@ -215,53 +218,110 @@ void main() {
       comment: 'please',
     );
 
-    expect(res, isA<Ok>());
+    expect(res, isA<Ok<bool>>());
     final req = fake.requests.firstWhere(
-      (r) => r.path.contains('bugs/4302/assignTo'),
+      (r) => r.path.contains('bug-assignTo-4302'),
     );
     expect(req.method, 'POST');
     expect((req.data as Map)['assignedTo'], 'thanh');
     expect((req.data as Map)['comment'], 'please');
   });
 
+  test('resolveBug POSTs resolution + default build to bug-resolve', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      return _json({'result': 'success'});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.resolveBug(_bugTicket(), resolution: 'fixed');
+
+    expect(res, isA<Ok<bool>>());
+    final req = fake.requests.firstWhere(
+      (r) => r.path.contains('bug-resolve-4302'),
+    );
+    expect(req.method, 'POST');
+    expect((req.data as Map)['resolution'], 'fixed');
+    expect((req.data as Map)['resolvedBuild'], 'trunk');
+    expect((req.data as Map).containsKey('resolvedDate'), isTrue);
+  });
+
+  test('activateBug POSTs default openedBuild to bug-activate', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      return _json({'result': 'success'});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.activateBug(_bugTicket());
+
+    expect(res, isA<Ok<bool>>());
+    final req = fake.requests.firstWhere(
+      (r) => r.path.contains('bug-activate-4302'),
+    );
+    expect(req.method, 'POST');
+    // ZenTao wants openedBuild as a non-empty string (not an array).
+    expect((req.data as Map)['openedBuild'], 'trunk');
+  });
+
+  test('confirmBug POSTs to the classic bug-confirmBug action', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      return _json({'result': 'success'});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.confirmBug(_bugTicket());
+
+    expect(res, isA<Ok<bool>>());
+    // This ZenTao build has no REST bug-action endpoints, so confirm uses the
+    // classic index.php action and keeps the bug on the acting user (client
+    // account) so a confirmed bug stays on their board.
+    final req = fake.requests.firstWhere(
+      (r) => r.path.contains('bug-confirmBug-4302'),
+    );
+    expect(req.method, 'POST');
+    expect((req.data as Map)['assignedTo'], 'me');
+  });
+
+  test('confirmBug fails loudly when ZenTao returns HTML, not JSON', () async {
+    // A POST ZenTao did not process comes back as the action page's HTML (or a
+    // login redirect); that must surface as a failure, not a silent success.
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      return ResponseBody.fromString(
+        '<!DOCTYPE html><html><body>login</body></html>',
+        200,
+        headers: {
+          Headers.contentTypeHeader: ['text/html'],
+        },
+      );
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.confirmBug(_bugTicket());
+
+    expect(res, isA<Err<bool>>());
+  });
+
   test(
-    'resolveBug POSTs resolution + default build to /bugs/{id}/resolve',
+    'classic actions carry site Origin/Referer + a uid (ZenTao CSRF)',
     () async {
+      // ZenTao rejects state-changing POSTs whose Origin/Referer host doesn't
+      // match the site; the web client also sends a form uid. Without these the
+      // action silently bounced to the login page.
       final fake = _FakeAdapter((opts) {
         if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-        return _json({'status': 'success'});
+        return _json({'result': 'success'});
       });
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-      final res = await adapter.resolveBug(_bugTicket(), resolution: 'fixed');
+      await adapter.confirmBug(_bugTicket());
 
-      expect(res, isA<Ok>());
       final req = fake.requests.firstWhere(
-        (r) => r.path.contains('bugs/4302/resolve'),
+        (r) => r.path.contains('bug-confirmBug-4302'),
       );
-      expect(req.method, 'POST');
-      expect((req.data as Map)['resolution'], 'fixed');
-      expect((req.data as Map)['resolvedBuild'], 'trunk');
-      expect((req.data as Map).containsKey('resolvedDate'), isTrue);
-    },
-  );
-
-  test(
-    'activateBug POSTs default openedBuild to /bugs/{id}/activate',
-    () async {
-      final fake = _FakeAdapter((opts) {
-        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-        return _json({'status': 'success'});
-      });
-      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-      final res = await adapter.activateBug(_bugTicket());
-
-      expect(res, isA<Ok<bool>>());
-      final req = fake.requests.firstWhere(
-        (r) => r.path.contains('bugs/4302/activate'),
+      final headers = req.headers.map(
+        (k, v) => MapEntry(k.toLowerCase(), '$v'),
       );
-      expect(req.method, 'POST');
-      // ZenTao wants openedBuild as a non-empty string (not an array).
-      expect((req.data as Map)['openedBuild'], 'trunk');
+      expect(headers['origin'], 'https://zentao.example.com');
+      expect(headers['referer'], 'https://zentao.example.com/index.html');
+      expect((req.data as Map).containsKey('uid'), isTrue);
     },
   );
 

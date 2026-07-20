@@ -65,6 +65,19 @@ class BoardPage extends ConsumerWidget {
               : ref.watch(githubItemsSliceProvider))
         : null;
     final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
+
+    // The active board's view tabs, rendered inline on the ChromeBar toolbar
+    // row. The account-wide "my MRs/PRs" boards are MR/PR-only, so no tabs.
+    final Widget? boardTabs;
+    if (mode == ViewMode.zentaoBugs) {
+      boardTabs = const ZenTaoBugTabs();
+    } else if (mode == ViewMode.gitlab && !gitlabMine) {
+      boardTabs = const GitLabTabs();
+    } else if (mode == ViewMode.github && !githubMine) {
+      boardTabs = const GitHubTabs();
+    } else {
+      boardTabs = null;
+    }
     // While a just-opened tab/execution/project is still fetching and nothing is
     // cached yet, show the skeleton instead of a momentary empty state.
     final showSkeleton =
@@ -102,10 +115,7 @@ class BoardPage extends ConsumerWidget {
       color: c.background,
       child: Column(
         children: [
-          const ChromeBar(),
-          if (mode == ViewMode.zentaoBugs) const ZenTaoBugTabs(),
-          if (mode == ViewMode.gitlab && !gitlabMine) const GitLabTabs(),
-          if (mode == ViewMode.github && !githubMine) const GitHubTabs(),
+          ChromeBar(tabs: boardTabs),
           Expanded(
             child: Stack(
               children: [

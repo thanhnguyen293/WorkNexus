@@ -86,6 +86,38 @@ void main() {
     });
   });
 
+  group('AppRadii scales the whole ramp from component', () {
+    test('default component reproduces the historical fixed ramp', () {
+      const r = AppRadii(); // component == kComponentRadiusDefault (8)
+      expect(r.component, kComponentRadiusDefault);
+      expect([r.xs, r.sm, r.md, r.card, r.lg, r.xl], [4, 6, 8, 10, 12, 20]);
+    });
+
+    test('a smaller component rounds every step down in lockstep', () {
+      const r = AppRadii(component: 4);
+      expect([r.xs, r.sm, r.md, r.card, r.lg, r.xl], [2, 3, 4, 5, 6, 10]);
+    });
+
+    test('zero component squares the ramp but keeps semantic constants', () {
+      const r = AppRadii(component: 0);
+      expect([r.xs, r.sm, r.md, r.card, r.lg, r.xl], everyElement(0));
+      expect(r.none, 0);
+      expect(r.dot, 2); // tiny status dots never square off
+      expect(r.pill, 999); // pills/avatars stay fully round
+    });
+
+    test('componentRadius flows through buildAppTheme into AppRadii', () {
+      final radii = buildAppTheme(
+        variant: AppThemeVariant.light,
+        surface: SurfaceStyle.outline,
+        density: AppDensity.comfortable,
+        componentRadius: 16,
+      ).extension<AppRadii>()!;
+      expect(radii.component, 16);
+      expect([radii.md, radii.card, radii.xl], [16, 20, 40]);
+    });
+  });
+
   group('AppColors maps palette roles', () {
     test('semantic roles come straight from the palette', () {
       final c = AppColors.fromPalette(AppPalette.light);

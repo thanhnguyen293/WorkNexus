@@ -18,34 +18,26 @@ class ZenTaoBugTabs extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final active = ref.watch(zentaoBugTabProvider);
     final slice = ref.watch(zentaoBugTabSliceProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: c.background,
-        border: Border(bottom: BorderSide(color: c.border)),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl2),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final tab in const [
-              ZenTaoBugBrowseType.all,
-              ZenTaoBugBrowseType.unclosed,
-            ])
-              _BugTab(
-                label: _label(l, tab),
-                active: tab == active,
-                loading: tab == active && slice.isLoading,
-                onTap: () => ref.read(zentaoBugTabProvider.notifier).set(tab),
-              ),
-          ],
-        ),
-      ),
+    // Rendered inline on the ChromeBar toolbar row (see BoardPage) — just the
+    // tab strip; the toolbar owns the surrounding chrome.
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final tab in const [
+          ZenTaoBugBrowseType.all,
+          ZenTaoBugBrowseType.unclosed,
+        ])
+          _BugTab(
+            label: _label(l, tab),
+            active: tab == active,
+            loading: tab == active && slice.isLoading,
+            onTap: () => ref.read(zentaoBugTabProvider.notifier).set(tab),
+          ),
+      ],
     );
   }
 }
@@ -71,7 +63,7 @@ class _BugTab extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: context.spacing.md,
-          vertical: context.spacing.lg,
+          vertical: context.spacing.md,
         ),
         decoration: BoxDecoration(
           border: Border(

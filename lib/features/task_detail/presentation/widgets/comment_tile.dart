@@ -10,12 +10,19 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/markdown_text.dart';
+import '../util/image_fallback.dart';
 
 /// A single comment bubble in the merged comments/activity timeline.
 class CommentTile extends ConsumerWidget {
-  const CommentTile(this.comment, {super.key, this.imageLoader});
+  const CommentTile(
+    this.comment, {
+    super.key,
+    this.imageLoader,
+    this.imageFallback,
+  });
   final Comment comment;
   final ImageBytesLoader? imageLoader;
+  final ImageFallback? imageFallback;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,6 +78,8 @@ class CommentTile extends ConsumerWidget {
             fontSize: 12.5,
             height: 1.5,
             imageLoader: imageLoader,
+            imageFallbackUrl: imageFallback?.resolveUrl,
+            onOpenImage: imageFallback?.open,
           ),
         ],
       ),

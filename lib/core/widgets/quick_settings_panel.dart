@@ -236,7 +236,7 @@ class _CompactSegmentedControl<T> extends StatelessWidget {
                     : c.textSecondary,
                 padding: EdgeInsets.symmetric(
                   horizontal: context.spacing.md,
-                  vertical: context.spacing.sm,
+                  vertical: context.spacing.md,
                 ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,

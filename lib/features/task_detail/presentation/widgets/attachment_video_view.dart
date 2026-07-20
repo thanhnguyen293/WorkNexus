@@ -122,26 +122,7 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
                 onTap: _toggle,
               ),
               SizedBox(width: context.spacing.md),
-              Expanded(
-                // Rounded, taller track so the buffered (loaded) span reads
-                // clearly: faint track → light "buffered" fill → accent played.
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(context.radii.pill),
-                  child: SizedBox(
-                    height: 5,
-                    child: VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      padding: EdgeInsets.zero,
-                      colors: VideoProgressColors(
-                        playedColor: c.accent,
-                        bufferedColor: c.mixT(c.textPrimary, 0.45),
-                        backgroundColor: c.mixT(c.textPrimary, 0.14),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              Expanded(child: _SeekBar(controller: _controller)),
               SizedBox(width: context.spacing.md),
               Text(
                 '${_fmt(_controller.value.position)} / '
@@ -187,6 +168,90 @@ class _ControlButton extends StatelessWidget {
           border: Border.all(color: c.border),
         ),
         child: Icon(icon, size: 20, color: c.textPrimary),
+      ),
+    );
+  }
+}
+
+/// A thin progress track that seeks on tap or drag anywhere along its width.
+/// The visible bar stays 5px, but the gesture area is a full-height row so the
+/// target is easy to hit; [VideoProgressIndicator] only draws (played +
+/// buffered + track), while the seek is handled here via [seekTo].
+class _SeekBar extends StatelessWidget {
+  const _SeekBar({required this.controller});
+
+  final VideoPlayerController controller;
+
+  void _seekToFraction(double dx, double width) {
+    if (width <= 0) return;
+    final fraction = (dx / width).clamp(0.0, 1.0);
+    controller.seekTo(controller.value.duration * fraction);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final value = controller.value;
+    final durationMs = value.duration.inMilliseconds;
+    final played = durationMs == 0
+        ? 0.0
+        : (value.position.inMilliseconds / durationMs).clamp(0.0, 1.0);
+    return MouseRegion(
+      // Signal the bar is seekable with a hand pointer on hover.
+      cursor: SystemMouseCursors.click,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (d) => _seekToFraction(d.localPosition.dx, width),
+            onHorizontalDragStart: (d) =>
+                _seekToFraction(d.localPosition.dx, width),
+            onHorizontalDragUpdate: (d) =>
+                _seekToFraction(d.localPosition.dx, width),
+            // Tall, full-width hit area so the thin bar is easy to grab.
+            child: SizedBox(
+              height: 32,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Rounded track so the buffered (loaded) span reads clearly:
+                  // faint track → light "buffered" fill → accent played.
+                  // Drawing only; the seek is handled by the wrapper.
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(context.radii.pill),
+                    child: SizedBox(
+                      height: 5,
+                      child: VideoProgressIndicator(
+                        controller,
+                        allowScrubbing: false,
+                        padding: EdgeInsets.zero,
+                        colors: VideoProgressColors(
+                          playedColor: c.accent,
+                          bufferedColor: c.mixT(c.textPrimary, 0.45),
+                          backgroundColor: c.mixT(c.textPrimary, 0.14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Playhead thumb — a clear "draggable" affordance.
+                  Align(
+                    alignment: Alignment(2 * played - 1, 0),
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: c.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: c.onAccent, width: 2),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

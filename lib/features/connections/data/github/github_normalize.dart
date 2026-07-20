@@ -4,6 +4,7 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/util/content_hash.dart';
+import '../../../../core/util/priority_labels.dart';
 import 'github_models.dart';
 
 /// The GitHub object kinds we import. [label] is stored as the ticket's
@@ -63,37 +64,10 @@ String githubPrRawStatus({
 }
 
 /// GitHub has no native priority. We read a `priority: <level>` / `P1`-style
-/// label if present; absent → medium.
-Priority mapGitHubPriority(List<String> labels) {
-  for (final raw in labels) {
-    final l = raw.toLowerCase().trim();
-    final v = l.startsWith('priority')
-        ? l.replaceFirst(RegExp(r'^priority\s*[:/]?\s*'), '')
-        : l;
-    switch (v) {
-      case 'urgent':
-      case 'critical':
-      case 'p0':
-      case 'p1':
-      case '1':
-        return Priority.urgent;
-      case 'high':
-      case 'p2':
-      case '2':
-        return Priority.high;
-      case 'medium':
-      case 'normal':
-      case 'p3':
-      case '3':
-        return Priority.medium;
-      case 'low':
-      case 'p4':
-      case '4':
-        return Priority.low;
-    }
-  }
-  return Priority.medium;
-}
+/// label if present; absent → medium. The nullable detection lives in
+/// `core/util` so the UI can tell a real priority from this fallback.
+Priority mapGitHubPriority(List<String> labels) =>
+    gitHubPriorityFromLabels(labels) ?? Priority.medium;
 
 bool _hasInProgressLabel(List<String> labels) => labels.any((l) {
   final s = l.toLowerCase();

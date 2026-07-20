@@ -9,6 +9,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../sync/data/sync_service.dart';
 
 /// Users the ticket can be (re)assigned to, fetched from its provider.
@@ -170,22 +171,26 @@ class AssigneeDropdown extends ConsumerWidget {
         'Could not load users',
         style: context.typography.bodySm.copyWith(color: c.error),
       ),
-      data: (list) => DropdownButtonFormField<String>(
-        initialValue: value,
-        isExpanded: true,
-        dropdownColor: c.surface,
-        decoration: dropDecoration(context),
-        hint: Text(
-          'Select a user',
-          style: context.typography.body.copyWith(color: c.textTertiary),
-        ),
-        style: context.typography.body.copyWith(color: c.textPrimary),
-        items: [
-          for (final u in list)
-            DropdownMenuItem(value: u.account, child: Text(u.displayName)),
-        ],
-        onChanged: onChanged,
+      data: (list) => SearchableDropdownField<ProviderUser>(
+        items: list,
+        value: _selected(list),
+        hintText: 'Select a user',
+        searchHint: 'Search users…',
+        emptyLabel: 'No matching users',
+        labelOf: (u) => u.displayName,
+        searchTextOf: (u) => '${u.displayName} ${u.account}',
+        onChanged: (u) => onChanged(u.account),
       ),
     );
+  }
+
+  /// Resolves the currently-selected [ProviderUser] from the stored [value]
+  /// (a provider account), if any.
+  ProviderUser? _selected(List<ProviderUser> list) {
+    if (value == null) return null;
+    for (final u in list) {
+      if (u.account == value) return u;
+    }
+    return null;
   }
 }

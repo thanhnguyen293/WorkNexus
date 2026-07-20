@@ -23,7 +23,7 @@ class QuickSettingsColorControl extends ConsumerWidget {
     final defaultColor = AppPalette.of(settings.variant).accent;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           l.primaryColor,

@@ -5,6 +5,7 @@ import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
+import '../../../core/settings/app_settings.dart';
 import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/usecases/resolve_translation_state.dart';
@@ -15,7 +16,9 @@ final openCodeAuthedProvider = FutureProvider<bool>(
   (ref) => const AgentRunner().hasOpenCodeAuth(),
 );
 
-/// The cached translation record for a ticket (reactive).
+/// The cached translation record for a ticket (reactive). The DB holds one
+/// record per ticket; [translationStatusProvider] decides whether it matches the
+/// currently-selected target language.
 final translationRecordProvider =
     StreamProvider.family<TranslationRecord?, String>(
       (ref, ticketId) =>
@@ -46,6 +49,7 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
       ticketId: ticketId,
       source: TicketSource(title: ticket.title, body: ticket.body),
       sourceHash: ticket.sourceHash,
+      targetLang: ref.read(appSettingsProvider).translationLang,
     );
     await res.fold(
       (record) async {
@@ -67,13 +71,21 @@ final translationControllerProvider =
       TranslationController.new,
     );
 
-/// Resolved translation state + record for a ticket.
+/// Resolved translation state + record for a ticket, scoped to the currently
+/// selected target language. A cached record in a *different* language is
+/// treated as "not translated" so switching languages prompts a fresh run
+/// rather than showing the wrong-language text.
 final translationStatusProvider =
     Provider.family<
       ({TranslationState state, TranslationRecord? record}),
       String
     >((ref, id) {
-      final record = ref.watch(translationRecordProvider(id)).asData?.value;
+      final targetLang = ref.watch(
+        appSettingsProvider.select((s) => s.translationLang),
+      );
+      final cached = ref.watch(translationRecordProvider(id)).asData?.value;
+      // Only surface the cached record when it matches the selected language.
+      final record = cached?.targetLang == targetLang ? cached : null;
       final ui =
           ref.watch(translationControllerProvider)[id] ??
           const TranslationUiState();

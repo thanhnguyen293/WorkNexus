@@ -33,31 +33,11 @@ abstract class ZenTaoApi {
   Future<ZenTaoUsersResponse> users(@Query('limit') int limit);
 
   /// Full detail for one entity, e.g. `GET /bugs/4302`.
+  ///
+  /// The write actions (assign / resolve / activate / confirm) are NOT here:
+  /// this ZenTao build has no `/bugs/{id}/<action>` REST endpoints (they 404),
+  /// so they go through the classic `index.php` channel in [ZenTaoAdapter] via
+  /// `ZenTaoClient.classicActionPost`.
   @GET('/{type}/{id}')
   Future<ZenTaoEntity> entity(@Path('type') String type, @Path('id') String id);
-
-  /// Reassign, e.g. `POST /bugs/4302/assignTo`.
-  @POST('/{type}/{id}/assignTo')
-  Future<void> assignTo(
-    @Path('type') String type,
-    @Path('id') String id,
-    @Body() Map<String, dynamic> body,
-  );
-
-  /// Resolve a bug, e.g. `POST /bugs/4302/resolve`.
-  @POST('/bugs/{id}/resolve')
-  Future<void> resolve(
-    @Path('id') String id,
-    @Body() Map<String, dynamic> body,
-  );
-
-  /// Activate/reopen a bug, e.g. `POST /bugs/4302/activate`. Returns the raw
-  /// response so the adapter can detect a non-success: ZenTao answers some
-  /// failures with a 4xx (which `validateStatus < 500` treats as OK) or a
-  /// `{status: 'fail'}` 200 body, both of which a `Future<void>` would hide.
-  @POST('/bugs/{id}/activate')
-  Future<HttpResponse<dynamic>> activate(
-    @Path('id') String id,
-    @Body() Map<String, dynamic> body,
-  );
 }

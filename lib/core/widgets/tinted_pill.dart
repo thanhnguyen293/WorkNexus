@@ -35,7 +35,7 @@ class TintedPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.mixT(color, 0.15),
         borderRadius: BorderRadius.circular(
-          pill ? context.radii.pill : context.radii.xs,
+          pill ? context.radii.pill : context.radii.md,
         ),
         border: context.borders.showOutline
             ? Border.all(color: c.mixT(color, 0.40))

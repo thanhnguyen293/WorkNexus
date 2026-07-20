@@ -1,16 +1,19 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/util/priority_labels.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -59,10 +62,12 @@ class DetailHeader extends ConsumerWidget {
               ),
               const Spacer(),
               if (ticket.url != null && ticket.url!.isNotEmpty) ...[
+                _CopyLinkButton(url: ticket.url!),
+                SizedBox(width: context.spacing.md),
                 _HeaderIconButton(
                   icon: Icons.open_in_new,
                   tooltip: 'Open in browser',
-                  onTap: () => _openUrl(ticket.url!),
+                  onTap: () => openExternally(ticket.url!),
                 ),
                 SizedBox(width: context.spacing.md),
               ],
@@ -86,8 +91,10 @@ class DetailHeader extends ConsumerWidget {
                 ),
                 style: context.typography.mono.copyWith(color: c.textSecondary),
               ),
-              SizedBox(width: context.spacing.sm),
-              PriorityTag(ticket.providerType, ticket.priority),
+              if (hasExplicitPriority(ticket)) ...[
+                SizedBox(width: context.spacing.sm),
+                PriorityTag(ticket.providerType, ticket.priority),
+              ],
               if (ticket.severity != null) ...[
                 SizedBox(width: context.spacing.sm),
                 SeverityTag(ticket.severity),
@@ -142,11 +149,43 @@ class _HeaderIconButton extends StatelessWidget {
   }
 }
 
-/// Opens [url] in the user's default browser (macOS `open`).
-Future<void> _openUrl(String url) async {
-  try {
-    await Process.run('open', [url]);
-  } catch (_) {
-    // best-effort; nothing to surface if the platform lacks `open`.
+/// A header icon button that copies [url] to the clipboard, briefly showing a
+/// check mark + "Copied!" tooltip as confirmation.
+class _CopyLinkButton extends StatefulWidget {
+  const _CopyLinkButton({required this.url});
+  final String url;
+
+  @override
+  State<_CopyLinkButton> createState() => _CopyLinkButtonState();
+}
+
+class _CopyLinkButtonState extends State<_CopyLinkButton> {
+  bool _copied = false;
+  Timer? _resetCopied;
+
+  @override
+  void dispose() {
+    _resetCopied?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.url));
+    if (!mounted) return;
+    setState(() => _copied = true);
+    _resetCopied?.cancel();
+    _resetCopied = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _copied = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return _HeaderIconButton(
+      icon: _copied ? Icons.check : Icons.link,
+      tooltip: _copied ? l.linkCopied : l.copyLink,
+      onTap: _copy,
+    );
   }
 }

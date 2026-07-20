@@ -94,6 +94,10 @@ class Settings extends Table {
   TextColumn get dateFormat => text().withDefault(const Constant('iso'))();
   BoolColumn get companyTint => boolean().withDefault(const Constant(false))();
   TextColumn get localeCode => text().withDefault(const Constant('en'))();
+
+  /// Target language tickets are machine-translated into (BCP-47 code). Distinct
+  /// from [localeCode] (the app UI language). Defaults to Vietnamese.
+  TextColumn get translationLang => text().withDefault(const Constant('vi'))();
   TextColumn get fontFamily =>
       text().withDefault(const Constant('Space Grotesk'))();
   RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
@@ -164,7 +168,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -189,6 +193,17 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(settings, settings.pinnedExecutionsJson);
       }
       if (from < 13) await m.addColumn(settings, settings.sidebarWidth);
+      if (from < 14) {
+        // Idempotent: a dev DB may already carry the column from a half-applied
+        // migration (added, but the schema version not yet bumped). Skip then.
+        final existing = await customSelect(
+          "SELECT 1 FROM pragma_table_info('settings') "
+          "WHERE name = 'translation_lang'",
+        ).get();
+        if (existing.isEmpty) {
+          await m.addColumn(settings, settings.translationLang);
+        }
+      }
     },
   );
 

@@ -1,5 +1,6 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
-import 'package:retrofit/retrofit.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
@@ -408,11 +409,17 @@ class ZenTaoAdapter implements ProviderAdapter {
     String? comment,
   }) async {
     return _guard(() async {
+      // Classic web action `{type}-assignTo-{id}` (no REST v1 endpoint on this
+      // build); mirrors the web client's assign request.
       final type = _typeOf(ticket);
-      await _client.api.assignTo(_plural(type), ticket.externalKey, {
-        'assignedTo': assignee,
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
-      });
+      final resp = await _client.classicActionPost(
+        '${type.pathSegment}-assignTo-${ticket.externalKey}',
+        {
+          'assignedTo': assignee,
+          if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
+        },
+      );
+      _ensureClassicActionOk(resp, 'assign');
       return true;
     });
   }
@@ -426,16 +433,23 @@ class ZenTaoAdapter implements ProviderAdapter {
     String? comment,
   }) async {
     return _guard(() async {
+      // Classic web action `bug-resolve-{id}` (REST /bugs/{id}/resolve 404s on
+      // this build).
       final today = DateTime.now().toIso8601String().split('T').first;
-      await _client.api.resolve(ticket.externalKey, {
-        'resolution': resolution,
-        'resolvedBuild': (resolvedBuild == null || resolvedBuild.trim().isEmpty)
-            ? 'trunk'
-            : resolvedBuild.trim(),
-        'resolvedDate': today,
-        if (assignee != null && assignee.isNotEmpty) 'assignedTo': assignee,
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
-      });
+      final resp = await _client.classicActionPost(
+        'bug-resolve-${ticket.externalKey}',
+        {
+          'resolution': resolution,
+          'resolvedBuild':
+              (resolvedBuild == null || resolvedBuild.trim().isEmpty)
+              ? 'trunk'
+              : resolvedBuild.trim(),
+          'resolvedDate': today,
+          if (assignee != null && assignee.isNotEmpty) 'assignedTo': assignee,
+          if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
+        },
+      );
+      _ensureClassicActionOk(resp, 'resolve');
       return true;
     });
   }
@@ -458,12 +472,42 @@ class ZenTaoAdapter implements ProviderAdapter {
       final target = (assignee != null && assignee.trim().isNotEmpty)
           ? assignee.trim()
           : _client.account;
-      final resp = await _client.api.activate(ticket.externalKey, {
-        'openedBuild': build,
-        if (target.isNotEmpty) 'assignedTo': target,
-        if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
-      });
-      _ensureRestActionOk(resp, 'activate');
+      final resp = await _client.classicActionPost(
+        'bug-activate-${ticket.externalKey}',
+        {
+          'openedBuild': build,
+          if (target.isNotEmpty) 'assignedTo': target,
+          if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
+        },
+      );
+      _ensureClassicActionOk(resp, 'activate');
+      return true;
+    });
+  }
+
+  @override
+  Future<Result<bool>> confirmBug(
+    Ticket ticket, {
+    String? assignee,
+    String? comment,
+  }) async {
+    return _guard(() async {
+      // This ZenTao build exposes no REST v1 bug-action endpoints (they 404),
+      // so confirm goes through the classic web action `bug-confirmBug-<id>` —
+      // the same channel the board's bug browsing uses. It sets confirmed = 1
+      // and (re)assigns the bug; keep it on the acting user by default so it
+      // stays on their board.
+      final target = (assignee != null && assignee.trim().isNotEmpty)
+          ? assignee.trim()
+          : _client.account;
+      final resp = await _client.classicActionPost(
+        'bug-confirmBug-${ticket.externalKey}',
+        {
+          if (target.isNotEmpty) 'assignedTo': target,
+          if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
+        },
+      );
+      _ensureClassicActionOk(resp, 'confirm');
       return true;
     });
   }
@@ -496,28 +540,42 @@ class ZenTaoAdapter implements ProviderAdapter {
     ZenTaoType.story => 'stories',
   };
 
-  /// Throws (→ [_guard] turns it into a failure) when a REST action response is
-  /// not a success. ZenTao returns some failures as a 4xx — which the client's
-  /// `validateStatus < 500` accepts as OK — or as a `{status/result: 'fail'}`
-  /// 200 body; a `Future<void>` call would silently treat both as success.
-  void _ensureRestActionOk(HttpResponse<dynamic> resp, String action) {
-    final code = resp.response.statusCode ?? 0;
-    final data = resp.data;
-    final failed =
-        code >= 400 ||
-        (data is Map &&
-            (data['status']?.toString() == 'fail' ||
-                data['result']?.toString() == 'fail'));
-    if (!failed) return;
-    final msg = data is Map
+  /// Success check for a classic (`index.php`) action [Response]. Unlike the
+  /// REST channel, a POST that ZenTao did NOT process comes back as the action
+  /// page's HTML (a String) or a login redirect rather than a
+  /// `{result: 'success'}` JSON object — so anything that isn't a non-`fail`
+  /// JSON object is treated as a failure. (The old lenient check let a
+  /// silently-ignored action read as success, so the change was lost on the
+  /// next sync — which looked like "confirm does nothing".)
+  void _ensureClassicActionOk(Response<dynamic> resp, String action) {
+    final code = resp.statusCode ?? 0;
+    Object? data = resp.data;
+    if (data is String) {
+      final trimmed = data.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          data = jsonDecode(trimmed);
+        } catch (_) {
+          // Not JSON → leave as String, treated as a failure below.
+        }
+      }
+    }
+    final ok =
+        code < 400 &&
+        data is Map &&
+        data['result']?.toString() != 'fail' &&
+        data['status']?.toString() != 'fail';
+    if (ok) return;
+    final detail = data is Map
         ? (data['message'] ?? data['error'])?.toString()
-        : null;
+        : 'ZenTao did not process the action '
+              '(auth/permission, CSRF, or the action does not exist)';
     throw DioException(
-      requestOptions: resp.response.requestOptions,
-      response: resp.response,
+      requestOptions: resp.requestOptions,
+      response: resp,
       message:
           'ZenTao $action failed (HTTP $code)'
-          '${msg == null || msg.isEmpty ? '' : ': $msg'}',
+          '${detail == null || detail.isEmpty ? '' : ': $detail'}',
     );
   }
 

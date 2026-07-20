@@ -17,30 +17,24 @@ class GitLabTabs extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final active = ref.watch(gitlabKindProvider);
     final slice = ref.watch(gitlabItemsSliceProvider);
     final count = ref.watch(resultCountProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: c.background,
-        border: Border(bottom: BorderSide(color: c.border)),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl2),
-      child: Row(
-        children: [
-          for (final kind in GitLabItemKind.values)
-            _KindTab(
-              label: _label(l, kind),
-              active: kind == active,
-              count: kind == active ? count : null,
-              loading: kind == active && slice.isLoading,
-              onTap: () => ref.read(gitlabKindProvider.notifier).set(kind),
-            ),
-        ],
-      ),
+    // Rendered inline on the ChromeBar toolbar row (see BoardPage).
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final kind in GitLabItemKind.values)
+          _KindTab(
+            label: _label(l, kind),
+            active: kind == active,
+            count: kind == active ? count : null,
+            loading: kind == active && slice.isLoading,
+            onTap: () => ref.read(gitlabKindProvider.notifier).set(kind),
+          ),
+      ],
     );
   }
 }

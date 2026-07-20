@@ -269,6 +269,13 @@ class ZenTaoClient {
   /// POSTs to a classic ZenTao action, e.g. `action-comment-bug-4302`, at
   /// `{base}/{actionPath}.json?zentaosid={token}` with a form-urlencoded body.
   /// The authenticated v1 token doubles as the `zentaosid` session id.
+  ///
+  /// ZenTao guards state-changing POSTs with a CSRF check that requires the
+  /// `Origin`/`Referer` host to match the site — GET reads (the board browse)
+  /// are exempt, which is why reads worked while every write silently bounced
+  /// to the login page. We present the site as origin (as the web client does)
+  /// and include a form [uid] (namespaces any inline uploads; the web always
+  /// sends one) so the action is accepted.
   Future<Response<dynamic>> classicActionPost(
     String actionPath,
     Map<String, String> form,
@@ -277,13 +284,22 @@ class ZenTaoClient {
     return _dio.post<dynamic>(
       '$baseUrl/$actionPath.json',
       queryParameters: {'zentaosid': token},
-      data: form,
+      data: {'uid': _formUid(), ...form},
       options: Options(
         contentType: Headers.formUrlEncodedContentType,
-        headers: {'Cookie': 'zentaosid=$token', 'Token': token},
+        headers: {
+          'Cookie': 'zentaosid=$token',
+          'Token': token,
+          'Origin': Uri.parse(baseUrl).origin,
+          'Referer': '$baseUrl/index.html',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       ),
     );
   }
+
+  /// A ZenTao-style form uid (a `uniqid()`-like hex string) for classic actions.
+  String _formUid() => DateTime.now().microsecondsSinceEpoch.toRadixString(16);
 
   /// Fetches raw bytes for an (authenticated, self-signed-TLS) asset such as an
   /// inline image referenced by a ticket's rich text — e.g. ZenTao's

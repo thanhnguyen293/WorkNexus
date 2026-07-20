@@ -79,6 +79,20 @@ class GitLabClient {
     return GitLabUser.fromJson(_asMap(res.data));
   }
 
+  /// The instance version string (`GET /version`, e.g. `16.3.8`), surfaced on
+  /// the connected-accounts row. Null on any failure. Also tells us whether the
+  /// Markdown uploads API ([fetchBytes]) exists (17.4+).
+  Future<String?> version() async {
+    try {
+      final res = await _dio.get<dynamic>('/version');
+      final data = res.data;
+      if (data is Map && data['version'] is String) {
+        return data['version'] as String;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Resolves a username to a GitLab user (`GET /users?username=…`), used to map
   /// an assignee login to the numeric id that `assignee_ids` expects. Null when
   /// no user matches.

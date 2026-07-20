@@ -187,7 +187,7 @@ void main() {
     await openQuickSettings(tester);
 
     expect(kFontChoices.first, kSystemFont);
-    await tester.tap(find.text('Space Grotesk'));
+    await tester.tap(find.text('Be Vietnam Pro'));
     await tester.pumpAndSettle();
     expect(find.text('System'), findsOneWidget);
 
@@ -207,7 +207,7 @@ void main() {
     await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
-    await tester.tap(find.text('Space Grotesk'));
+    await tester.tap(find.text('Be Vietnam Pro'));
     await tester.pumpAndSettle();
 
     final systemFinder = find.text('System');

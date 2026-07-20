@@ -73,6 +73,11 @@
   "translating": "Translating with OpenCode…",
   "notTranslated": "Not translated",
   "translated": "Translated",
+  "translationLanguage": "Translation language",
+  "runOpenCodeToTranslate": "Run OpenCode to generate a {language} version.",
+  "@runOpenCodeToTranslate": {
+    "placeholders": { "language": { "type": "String" } }
+  },
   "translationOutdated": "Outdated translation",
   "translationFailed": "Translation failed",
   "connectedAccounts": "Connected accounts",
@@ -229,5 +234,8 @@
   "fieldResolved": "Resolved",
   "fieldResolvedBuild": "Resolved build",
   "fieldClosedBy": "Closed by",
-  "fieldClosed": "Closed"
+  "fieldClosed": "Closed",
+  "openImageInBrowser": "Open image in browser",
+  "copyLink": "Copy link",
+  "linkCopied": "Copied!"
 }
