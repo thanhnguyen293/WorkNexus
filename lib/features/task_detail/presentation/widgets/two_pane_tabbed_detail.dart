@@ -48,6 +48,20 @@ enum _DetailPaneTab { overview, commits, changes }
 class _TwoPaneTabbedDetailState extends State<TwoPaneTabbedDetail> {
   _DetailPaneTab _tab = _DetailPaneTab.overview;
 
+  /// Tabs the user has opened at least once. An [IndexedStack] keeps every
+  /// visited tab alive, so switching away and back preserves its state (loaded
+  /// commits / diffs, expanded rows, scroll position). Unvisited tabs render
+  /// nothing so their loaders stay lazy until first opened.
+  final Set<_DetailPaneTab> _visited = {_DetailPaneTab.overview};
+
+  void _select(_DetailPaneTab tab) => setState(() {
+    _tab = tab;
+    _visited.add(tab);
+  });
+
+  Widget _lazy(_DetailPaneTab tab, Widget child) =>
+      _visited.contains(tab) ? child : const SizedBox.shrink();
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -64,16 +78,29 @@ class _TwoPaneTabbedDetailState extends State<TwoPaneTabbedDetail> {
             )
           else
             SizedBox(height: context.borders.hairline),
-          _PaneTabs(current: _tab, onSelect: (t) => setState(() => _tab = t)),
+          _PaneTabs(current: _tab, onSelect: _select),
           Expanded(
-            child: switch (_tab) {
-              _DetailPaneTab.overview => _OverviewBody(
-                sections: widget.overviewSections,
-                sidebar: widget.sidebar,
-              ),
-              _DetailPaneTab.commits => _ScrollBody(child: widget.commits),
-              _DetailPaneTab.changes => _ScrollBody(child: widget.changes),
-            },
+            child: IndexedStack(
+              sizing: StackFit.expand,
+              index: _tab.index,
+              children: [
+                _lazy(
+                  _DetailPaneTab.overview,
+                  _OverviewBody(
+                    sections: widget.overviewSections,
+                    sidebar: widget.sidebar,
+                  ),
+                ),
+                _lazy(
+                  _DetailPaneTab.commits,
+                  _ScrollBody(child: widget.commits),
+                ),
+                _lazy(
+                  _DetailPaneTab.changes,
+                  _ScrollBody(child: widget.changes),
+                ),
+              ],
+            ),
           ),
         ],
       ),

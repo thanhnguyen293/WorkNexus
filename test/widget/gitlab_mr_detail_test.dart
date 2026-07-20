@@ -305,4 +305,77 @@ void main() {
       expect(find.text('Search users…'), findsNothing);
     },
   );
+
+  testWidgets('two-pane tabs keep state across switches (loader runs once)', (
+    tester,
+  ) async {
+    var commitCalls = 0;
+    const ticket = Ticket(
+      id: 'gitlab:mr:42',
+      accountId: 'gitlab',
+      projectId: 'project',
+      providerType: ProviderType.gitlab,
+      externalKey: '42',
+      externalType: 'MergeRequest',
+      title: 'MR',
+      body: '',
+      priority: Priority.medium,
+      status: UnifiedStatus.review,
+      providerStatus: 'opened',
+      sourceHash: 'hash',
+      providerEntity: TicketProviderEntity.gitlabItem(author: 'Thanh'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildAppTheme(
+          variant: AppThemeVariant.light,
+          surface: SurfaceStyle.outline,
+          density: AppDensity.comfortable,
+        ),
+        home: Scaffold(
+          body: GitLabMrOverview(
+            ticket: ticket,
+            entity: ticket.providerEntity! as GitLabItemEntity,
+            isSyncing: false,
+            onClose: () {},
+            onSync: () {},
+            onComment: (_) async => true,
+            onCloseMergeRequest: () {},
+            onApprove: () {},
+            onMerge: () {},
+            onRebase: () {},
+            commitsLoader: () async {
+              commitCalls++;
+              return const Ok(<RepoCommit>[]);
+            },
+            changesLoader: () async => const Ok(<RepoFileChange>[]),
+            assigneeEditorBuilder: _emptyEditor,
+            reviewersEditorBuilder: _emptyEditor,
+            labelsEditorBuilder: _emptyEditor,
+            milestoneEditorBuilder: _emptyEditor,
+            timeTrackingEditorBuilder: _emptyEditor,
+            avatarLoader: (_) async => _avatarBytes,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Lazy: the Commits loader hasn't fired while on the Overview tab.
+    expect(commitCalls, 0);
+
+    await tester.tap(find.text('Commits').first);
+    await tester.pumpAndSettle();
+    expect(commitCalls, 1);
+
+    // Leaving and returning keeps the tab alive → no refetch.
+    await tester.tap(find.text('Overview').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Commits').first);
+    await tester.pumpAndSettle();
+    expect(commitCalls, 1);
+  });
 }
