@@ -10,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 
 /// Users the ticket can be (re)assigned to, fetched from its provider.
@@ -46,6 +47,7 @@ class ActionScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     return AlertDialog(
       backgroundColor: c.surface,
       shape: RoundedRectangleBorder(
@@ -65,7 +67,7 @@ class ActionScaffold extends StatelessWidget {
       actions: [
         AppButton.textNeutral(
           onPressed: busy ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l.cancel),
         ),
         AppButton.filled(
           isLoading: busy,

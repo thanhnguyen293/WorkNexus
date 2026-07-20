@@ -123,7 +123,7 @@ class AppPalette {
     titlebar: Color(0xFFE3E5EB),
     sel: Color.fromRGBO(90, 87, 214, .10),
     selLine: Color.fromRGBO(90, 87, 214, .5),
-    red: Color(0xFFCF432C),
+    red: Color(0xFFDC2626),
     orange: Color(0xFFC56A12),
     yellow: Color(0xFFA67C10),
     green: Color(0xFF2F8A52),

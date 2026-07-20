@@ -102,7 +102,12 @@ void main() {
   test('listProjectMembers maps, dedupes, and sorts members', () async {
     when(() => client.members(ref)).thenAnswer(
       (_) async => const [
-        GitLabUser(id: 2, username: 'zoe', name: 'Zoe'),
+        GitLabUser(
+          id: 2,
+          username: 'zoe',
+          name: 'Zoe',
+          avatarUrl: 'https://cdn.example.com/zoe.png',
+        ),
         GitLabUser(id: 1, username: 'amy', name: 'Amy'),
         GitLabUser(
           id: 1,
@@ -120,6 +125,67 @@ void main() {
     final users = (res as Ok<List<ProviderUser>>).value;
     expect(users.map((u) => u.account), ['amy', 'zoe']); // deduped + sorted
     expect(users.first.displayName, 'Amy');
+    expect(users.last.avatarUrl, 'https://cdn.example.com/zoe.png');
+  });
+
+  test('setLabels replaces MR labels', () async {
+    when(
+      () =>
+          client.updateMergeRequest(any(), any(), labels: any(named: 'labels')),
+    ).thenAnswer((_) async {});
+
+    final result = await adapter.setLabels(
+      _ticket(externalType: 'MergeRequest'),
+      const ['backend', 'review'],
+    );
+
+    expect(result, isA<Ok<bool>>());
+    verify(
+      () => client.updateMergeRequest(
+        ref,
+        '42',
+        labels: const ['backend', 'review'],
+      ),
+    ).called(1);
+  });
+
+  test('setMilestone uses zero to clear an MR milestone', () async {
+    when(
+      () => client.updateMergeRequest(
+        any(),
+        any(),
+        milestoneId: any(named: 'milestoneId'),
+      ),
+    ).thenAnswer((_) async {});
+
+    final result = await adapter.setMilestone(
+      _ticket(externalType: 'MergeRequest'),
+      null,
+    );
+
+    expect(result, isA<Ok<bool>>());
+    verify(
+      () => client.updateMergeRequest(ref, '42', milestoneId: 0),
+    ).called(1);
+  });
+
+  test('updateTimeTracking sets estimate and adds spent time', () async {
+    when(
+      () => client.setMergeRequestTimeEstimate(any(), any(), any()),
+    ).thenAnswer((_) async {});
+    when(
+      () => client.addMergeRequestSpentTime(any(), any(), any()),
+    ).thenAnswer((_) async {});
+
+    final result = await adapter.updateTimeTracking(
+      _ticket(externalType: 'MergeRequest'),
+      estimate: '2h',
+      spent: '30m',
+    );
+
+    expect(result, isA<Ok<bool>>());
+    verify(() => client.setMergeRequestTimeEstimate(ref, '42', '2h')).called(1);
+    verify(() => client.addMergeRequestSpentTime(ref, '42', '30m')).called(1);
   });
 
   test('listProjectItems normalizes MRs for the merge-request kind', () async {

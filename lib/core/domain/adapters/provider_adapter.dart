@@ -29,13 +29,36 @@ class TicketPage {
 
 /// A user that a ticket can be assigned to.
 class ProviderUser {
-  const ProviderUser({required this.account, required this.displayName});
+  const ProviderUser({
+    required this.account,
+    required this.displayName,
+    this.avatarUrl,
+  });
 
   /// The provider login/account (what `assignedTo` expects).
   final String account;
 
   /// Human-friendly name shown in pickers.
   final String displayName;
+
+  /// Provider-hosted avatar, when available.
+  final String? avatarUrl;
+}
+
+/// A provider label available for assignment to a ticket.
+class ProviderLabelOption {
+  const ProviderLabelOption({required this.name, this.color});
+
+  final String name;
+  final String? color;
+}
+
+/// A provider milestone available for assignment to a ticket.
+class ProviderMilestoneOption {
+  const ProviderMilestoneOption({required this.id, required this.title});
+
+  final int id;
+  final String title;
 }
 
 /// A provider-side product/container that can scope ticket sync.

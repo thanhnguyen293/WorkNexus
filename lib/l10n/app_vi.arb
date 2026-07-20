@@ -122,6 +122,70 @@
   "activate": "Kích hoạt lại",
   "gitlabMerge": "Merge",
   "gitlabReopen": "Mở lại",
+  "gitlabMrClosed": "Đã đóng merge request !{key}",
+  "@gitlabMrClosed": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrApproved": "Đã phê duyệt !{key}",
+  "@gitlabMrApproved": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrMerged": "Đã merge !{key}",
+  "@gitlabMrMerged": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrRebased": "Đã rebase !{key}",
+  "@gitlabMrRebased": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "mrRequestedToMerge": "{author} muốn merge",
+  "@mrRequestedToMerge": {
+    "placeholders": { "author": { "type": "String" } }
+  },
+  "sourceBranch": "Nhánh nguồn",
+  "targetBranch": "Nhánh đích",
+  "noDescription": "Chưa có mô tả.",
+  "approve": "Phê duyệt",
+  "activity": "Hoạt động",
+  "noActivityYet": "Chưa có hoạt động",
+  "writeCommentHint": "Viết bình luận…",
+  "commentAction": "Bình luận",
+  "mergeDetails": "Chi tiết merge",
+  "mergeReady": "Sẵn sàng merge",
+  "mergeBlockedNeedRebase": "Bị chặn merge — nhánh nguồn phải được rebase lên nhánh đích.",
+  "needsRebase": "Cần rebase",
+  "mergeStatusValue": "Trạng thái merge: {status}",
+  "@mergeStatusValue": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "commitsBehindTarget": "{count, plural, other{Nhánh nguồn đang chậm hơn nhánh đích {count} commit.}}",
+  "@commitsBehindTarget": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prBehindBase": "Nhánh này đang lỗi thời so với nhánh đích.",
+  "prClosed": "Pull request này đã đóng.",
+  "githubItemClosed": "Đã đóng #{key}",
+  "@githubItemClosed": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubItemReopened": "Đã mở lại #{key}",
+  "@githubItemReopened": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubPrMerged": "Đã merge #{key}",
+  "@githubPrMerged": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubPrBranchUpdated": "Đã cập nhật nhánh cho #{key}",
+  "@githubPrBranchUpdated": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "actionFailed": "Thất bại: {message}",
+  "@actionFailed": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "commentPostFailed": "Không thể đăng bình luận",
+  "providerActionFailed": "Thao tác provider thất bại",
   "githubMerge": "Merge",
   "githubReopen": "Mở lại",
   "reviewers": "Người review",
@@ -134,6 +198,38 @@
   "author": "Tác giả",
   "details": "Chi tiết",
   "labels": "Nhãn",
+  "edit": "Sửa",
+  "none": "Không có",
+  "noReviewersAssignYourself": "Chưa có - tự nhận review",
+  "milestone": "Mốc",
+  "timeTracking": "Theo dõi thời gian",
+  "editTimeTracking": "Sửa theo dõi thời gian",
+  "participant": "Người tham gia",
+  "participants": "Người tham gia",
+  "estimateSummary": "Ước tính {value}",
+  "@estimateSummary": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "spentSummary": "Đã dùng {value}",
+  "@spentSummary": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "noEstimateOrTimeSpent": "Chưa có ước tính hoặc thời gian đã dùng",
+  "editLabels": "Sửa nhãn",
+  "searchLabels": "Tìm nhãn…",
+  "noProjectLabels": "Dự án chưa có nhãn",
+  "editMilestone": "Sửa mốc",
+  "searchMilestones": "Tìm mốc…",
+  "estimate": "Ước tính",
+  "estimateDurationHint": "Ví dụ: 2h 30m",
+  "resetEstimate": "Xóa ước tính",
+  "addTimeSpent": "Thêm thời gian đã dùng",
+  "spentDurationHint": "Ví dụ: 30m",
+  "currentTotal": "Hiện tại: {value}",
+  "@currentTotal": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "resetSpentTime": "Xóa thời gian đã dùng",
   "sourceBranch": "Nhánh nguồn",
   "targetBranch": "Nhánh đích",
   "mergeStatus": "Trạng thái merge",
@@ -239,5 +335,9 @@
   "fieldClosed": "Ngày đóng",
   "openImageInBrowser": "Mở ảnh trong trình duyệt",
   "copyLink": "Sao chép liên kết",
-  "linkCopied": "Đã sao chép!"
+  "linkCopied": "Đã sao chép!",
+  "refresh": "Làm mới",
+  "openInBrowser": "Mở trong trình duyệt",
+  "more": "Thêm",
+  "code": "Code"
 }

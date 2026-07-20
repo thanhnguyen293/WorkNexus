@@ -122,6 +122,70 @@
   "activate": "Activate",
   "gitlabMerge": "Merge",
   "gitlabReopen": "Reopen",
+  "gitlabMrClosed": "Closed merge request !{key}",
+  "@gitlabMrClosed": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrApproved": "Approved !{key}",
+  "@gitlabMrApproved": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrMerged": "Merged !{key}",
+  "@gitlabMrMerged": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "gitlabMrRebased": "Rebased !{key}",
+  "@gitlabMrRebased": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "mrRequestedToMerge": "{author} requested to merge",
+  "@mrRequestedToMerge": {
+    "placeholders": { "author": { "type": "String" } }
+  },
+  "sourceBranch": "Source branch",
+  "targetBranch": "Target branch",
+  "noDescription": "No description provided.",
+  "approve": "Approve",
+  "activity": "Activity",
+  "noActivityYet": "No activity yet",
+  "writeCommentHint": "Write a comment…",
+  "commentAction": "Comment",
+  "mergeDetails": "Merge details",
+  "mergeReady": "Ready to merge",
+  "mergeBlockedNeedRebase": "Merge blocked — the source branch must be rebased onto the target branch.",
+  "needsRebase": "Needs rebase",
+  "mergeStatusValue": "Merge status: {status}",
+  "@mergeStatusValue": {
+    "placeholders": { "status": { "type": "String" } }
+  },
+  "commitsBehindTarget": "{count, plural, =1{The source branch is 1 commit behind the target branch.} other{The source branch is {count} commits behind the target branch.}}",
+  "@commitsBehindTarget": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "prBehindBase": "This branch is out of date with the base branch.",
+  "prClosed": "This pull request is closed.",
+  "githubItemClosed": "Closed #{key}",
+  "@githubItemClosed": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubItemReopened": "Reopened #{key}",
+  "@githubItemReopened": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubPrMerged": "Merged #{key}",
+  "@githubPrMerged": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "githubPrBranchUpdated": "Updated branch for #{key}",
+  "@githubPrBranchUpdated": {
+    "placeholders": { "key": { "type": "String" } }
+  },
+  "actionFailed": "Failed: {message}",
+  "@actionFailed": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "commentPostFailed": "Could not post comment",
+  "providerActionFailed": "Provider action failed",
   "githubMerge": "Merge",
   "githubReopen": "Reopen",
   "reviewers": "Reviewers",
@@ -134,6 +198,38 @@
   "author": "Author",
   "details": "Details",
   "labels": "Labels",
+  "edit": "Edit",
+  "none": "None",
+  "noReviewersAssignYourself": "None - assign yourself",
+  "milestone": "Milestone",
+  "timeTracking": "Time tracking",
+  "editTimeTracking": "Edit time tracking",
+  "participant": "Participant",
+  "participants": "Participants",
+  "estimateSummary": "Estimate {value}",
+  "@estimateSummary": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "spentSummary": "Spent {value}",
+  "@spentSummary": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "noEstimateOrTimeSpent": "No estimate or time spent",
+  "editLabels": "Edit labels",
+  "searchLabels": "Search labels…",
+  "noProjectLabels": "No project labels",
+  "editMilestone": "Edit milestone",
+  "searchMilestones": "Search milestones…",
+  "estimate": "Estimate",
+  "estimateDurationHint": "For example, 2h 30m",
+  "resetEstimate": "Reset estimate",
+  "addTimeSpent": "Add time spent",
+  "spentDurationHint": "For example, 30m",
+  "currentTotal": "Current total: {value}",
+  "@currentTotal": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "resetSpentTime": "Reset spent time",
   "sourceBranch": "Source branch",
   "targetBranch": "Target branch",
   "mergeStatus": "Merge status",
@@ -239,5 +335,9 @@
   "fieldClosed": "Closed",
   "openImageInBrowser": "Open image in browser",
   "copyLink": "Copy link",
-  "linkCopied": "Copied!"
+  "linkCopied": "Copied!",
+  "refresh": "Refresh",
+  "openInBrowser": "Open in browser",
+  "more": "More",
+  "code": "Code"
 }

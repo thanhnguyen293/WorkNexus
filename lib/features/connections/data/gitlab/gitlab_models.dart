@@ -16,11 +16,12 @@ part 'gitlab_models.g.dart';
 /// objects embedded in issues and merge requests.
 @JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
 class GitLabUser {
-  const GitLabUser({this.id, this.username, this.name});
+  const GitLabUser({this.id, this.username, this.name, this.avatarUrl});
 
   final int? id;
   final String? username;
   final String? name;
+  final String? avatarUrl;
 
   factory GitLabUser.fromJson(Map<String, dynamic> json) =>
       _$GitLabUserFromJson(json);
@@ -51,6 +52,9 @@ class GitLabLabel {
     }
     return const GitLabLabel(name: '');
   }
+
+  factory GitLabLabel.fromJson(Map<String, dynamic> json) =>
+      GitLabLabel.fromDynamic(json);
 }
 
 List<GitLabLabel> _labelsFromJson(Object? raw) => raw is List
@@ -158,6 +162,9 @@ class GitLabMergeRequest {
     this.targetBranch,
     this.mergeStatus,
     this.detailedMergeStatus,
+    this.commitsBehind,
+    this.milestone,
+    this.timeStats,
     this.webUrl,
     this.references,
     this.upvotes,
@@ -184,6 +191,10 @@ class GitLabMergeRequest {
   final String? targetBranch;
   final String? mergeStatus;
   final String? detailedMergeStatus;
+  @JsonKey(includeFromJson: false)
+  final int? commitsBehind;
+  final GitLabMilestone? milestone;
+  final GitLabTimeStats? timeStats;
   final String? webUrl;
   final GitLabReferences? references;
   final int? upvotes;
@@ -202,6 +213,62 @@ class GitLabMergeRequest {
     for (final l in labels)
       if (l.textColor != null && l.textColor!.isNotEmpty) l.name: l.textColor!,
   };
+
+  GitLabMergeRequest copyWith({int? commitsBehind}) => GitLabMergeRequest(
+    id: id,
+    iid: iid,
+    projectId: projectId,
+    title: title,
+    description: description,
+    state: state,
+    draft: draft,
+    labels: labels,
+    author: author,
+    assignees: assignees,
+    reviewers: reviewers,
+    sourceBranch: sourceBranch,
+    targetBranch: targetBranch,
+    mergeStatus: mergeStatus,
+    detailedMergeStatus: detailedMergeStatus,
+    commitsBehind: commitsBehind ?? this.commitsBehind,
+    milestone: milestone,
+    timeStats: timeStats,
+    webUrl: webUrl,
+    references: references,
+    upvotes: upvotes,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
+}
+
+@JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
+class GitLabMilestone {
+  const GitLabMilestone({required this.id, this.iid, this.title});
+
+  final int id;
+  final int? iid;
+  final String? title;
+
+  factory GitLabMilestone.fromJson(Map<String, dynamic> json) =>
+      _$GitLabMilestoneFromJson(json);
+}
+
+@JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
+class GitLabTimeStats {
+  const GitLabTimeStats({
+    this.timeEstimate,
+    this.totalTimeSpent,
+    this.humanTimeEstimate,
+    this.humanTotalTimeSpent,
+  });
+
+  final int? timeEstimate;
+  final int? totalTimeSpent;
+  final String? humanTimeEstimate;
+  final String? humanTotalTimeSpent;
+
+  factory GitLabTimeStats.fromJson(Map<String, dynamic> json) =>
+      _$GitLabTimeStatsFromJson(json);
 }
 
 /// The `references` block on an issue/MR (`{ short, relative, full }`), used to

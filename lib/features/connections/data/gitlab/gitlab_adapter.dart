@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../../core/domain/adapters/gitlab_mr_adapter.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
@@ -18,7 +19,7 @@ import 'gitlab_normalize.dart';
 /// GitLab-specific richness (project-scoped issue/MR boards, MR merge, issue
 /// close/reopen) lives on this concrete class as extra public methods, called
 /// through GitLab-specific `SyncService` paths — not through the interface.
-class GitLabAdapter implements ProviderAdapter {
+class GitLabAdapter implements GitLabMrAdapter {
   GitLabAdapter({required this.accountId, required GitLabClient client})
     : _client = client;
 
@@ -89,7 +90,10 @@ class GitLabAdapter implements ProviderAdapter {
         return normalizeGitLabIssue(issue, accountId: accountId);
       }
       final mr = await _client.mergeRequest(ref, ticket.externalKey);
-      return normalizeGitLabMergeRequest(mr, accountId: accountId);
+      return normalizeGitLabMergeRequest(
+        await _withCommitsBehind(ref, mr),
+        accountId: accountId,
+      );
     });
   }
 
@@ -323,25 +327,38 @@ class GitLabAdapter implements ProviderAdapter {
   });
 
   /// Close / reopen an issue via `state_event` on the issue update endpoint.
+  @override
   Future<Result<bool>> closeIssue(Ticket ticket) =>
       _issueStateEvent(ticket, 'close');
+  @override
   Future<Result<bool>> reopenIssue(Ticket ticket) =>
       _issueStateEvent(ticket, 'reopen');
 
   /// Close / reopen a merge request via `state_event`.
+  @override
   Future<Result<bool>> closeMergeRequest(Ticket ticket) =>
       _mrStateEvent(ticket, 'close');
+  @override
   Future<Result<bool>> reopenMergeRequest(Ticket ticket) =>
       _mrStateEvent(ticket, 'reopen');
 
   /// Merge a merge request.
+  @override
   Future<Result<bool>> mergeMergeRequest(Ticket ticket) => _guard(() async {
     await _client.mergeMergeRequest(_projectRef(ticket), ticket.externalKey);
     return true;
   });
 
+  /// Approve a merge request as the authenticated user.
+  @override
+  Future<Result<bool>> approveMergeRequest(Ticket ticket) => _guard(() async {
+    await _client.approveMergeRequest(_projectRef(ticket), ticket.externalKey);
+    return true;
+  });
+
   /// Rebase a merge request onto its target branch (resolves a `need_rebase`
   /// detailed merge status).
+  @override
   Future<Result<bool>> rebaseMergeRequest(Ticket ticket) => _guard(() async {
     await _client.rebaseMergeRequest(_projectRef(ticket), ticket.externalKey);
     return true;
@@ -349,6 +366,7 @@ class GitLabAdapter implements ProviderAdapter {
 
   /// Set the MR reviewers (replaces the current set). Resolves the selected
   /// logins to member ids via the project member list.
+  @override
   Future<Result<bool>> setReviewers(
     Ticket ticket,
     List<String> logins,
@@ -365,8 +383,89 @@ class GitLabAdapter implements ProviderAdapter {
     return true;
   });
 
+  @override
+  Future<Result<List<ProviderLabelOption>>> listProjectLabels(Ticket ticket) =>
+      _guard(() async {
+        final labels = await _client.projectLabels(_projectRef(ticket));
+        final options = [
+          for (final label in labels)
+            ProviderLabelOption(name: label.name, color: label.color),
+        ];
+        options.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+        return options;
+      });
+
+  @override
+  Future<Result<bool>> setLabels(Ticket ticket, List<String> labels) =>
+      _guard(() async {
+        await _client.updateMergeRequest(
+          _projectRef(ticket),
+          ticket.externalKey,
+          labels: labels,
+        );
+        return true;
+      });
+
+  @override
+  Future<Result<List<ProviderMilestoneOption>>> listProjectMilestones(
+    Ticket ticket,
+  ) => _guard(() async {
+    final milestones = await _client.projectMilestones(_projectRef(ticket));
+    return [
+      for (final milestone in milestones)
+        ProviderMilestoneOption(
+          id: milestone.id,
+          title: milestone.title ?? '#${milestone.iid ?? milestone.id}',
+        ),
+    ];
+  });
+
+  @override
+  Future<Result<bool>> setMilestone(Ticket ticket, int? milestoneId) =>
+      _guard(() async {
+        await _client.updateMergeRequest(
+          _projectRef(ticket),
+          ticket.externalKey,
+          milestoneId: milestoneId ?? 0,
+        );
+        return true;
+      });
+
+  @override
+  Future<Result<bool>> updateTimeTracking(
+    Ticket ticket, {
+    String? estimate,
+    String? spent,
+    bool resetEstimate = false,
+    bool resetSpent = false,
+  }) => _guard(() async {
+    final ref = _projectRef(ticket);
+    if (resetEstimate) {
+      await _client.resetMergeRequestTimeEstimate(ref, ticket.externalKey);
+    } else if (estimate != null && estimate.trim().isNotEmpty) {
+      await _client.setMergeRequestTimeEstimate(
+        ref,
+        ticket.externalKey,
+        estimate.trim(),
+      );
+    }
+    if (resetSpent) {
+      await _client.resetMergeRequestSpentTime(ref, ticket.externalKey);
+    } else if (spent != null && spent.trim().isNotEmpty) {
+      await _client.addMergeRequestSpentTime(
+        ref,
+        ticket.externalKey,
+        spent.trim(),
+      );
+    }
+    return true;
+  });
+
   /// Project members the ticket can be assigned to. GitLab has no account-wide
   /// assignable list, so the assignee picker resolves per-project members here.
+  @override
   Future<Result<List<ProviderUser>>> listProjectMembers(Ticket ticket) {
     return _guard(() async {
       final members = await _client.members(_projectRef(ticket));
@@ -375,7 +474,13 @@ class GitLabAdapter implements ProviderAdapter {
       for (final m in members) {
         final account = m.username;
         if (account == null || account.isEmpty || !seen.add(account)) continue;
-        users.add(ProviderUser(account: account, displayName: m.display));
+        users.add(
+          ProviderUser(
+            account: account,
+            displayName: m.display,
+            avatarUrl: m.avatarUrl,
+          ),
+        );
       }
       users.sort(
         (a, b) =>
@@ -413,6 +518,23 @@ class GitLabAdapter implements ProviderAdapter {
     return _kindOf(ticket) == GitLabKind.issue
         ? _client.issueNotes(ref, ticket.externalKey)
         : _client.mrNotes(ref, ticket.externalKey);
+  }
+
+  Future<GitLabMergeRequest> _withCommitsBehind(
+    String projectRef,
+    GitLabMergeRequest mr,
+  ) async {
+    final source = mr.sourceBranch;
+    final target = mr.targetBranch;
+    if (source == null || source.isEmpty || target == null || target.isEmpty) {
+      return mr;
+    }
+    final count = await _client.commitsBehindTarget(
+      projectRef,
+      sourceBranch: source,
+      targetBranch: target,
+    );
+    return mr.copyWith(commitsBehind: count);
   }
 
   GitLabKind _kindOf(Ticket t) =>
