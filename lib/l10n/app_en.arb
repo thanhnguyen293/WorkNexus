@@ -126,6 +126,8 @@
   "githubReopen": "Reopen",
   "reviewers": "Reviewers",
   "reviewersUpdated": "Reviewers updated",
+  "searchUsers": "Search users…",
+  "noMatchingUsers": "No matching users",
   "rebase": "Rebase",
   "updateBranch": "Update branch",
   "save": "Save",

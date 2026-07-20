@@ -52,7 +52,7 @@ jobs:
       # Zip the .app while preserving the bundle (use ditto, not plain zip).
       - name: Package .app
         run: |
-          APP="build/macos/Build/Products/Release/work_nexus.app"
+          APP="build/macos/Build/Products/Release/WorkNexus.app"
           ditto -c -k --sequesterRsrc --keepParent "$APP" work_nexus-macos.zip
 
       - name: Upload macOS artifact

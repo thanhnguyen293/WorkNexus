@@ -26,8 +26,30 @@ class ReviewersDialog extends ConsumerStatefulWidget {
 
 class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
   final Set<String> _selected = {};
+  final _search = TextEditingController();
+  String _query = '';
   bool _initialized = false;
   bool _busy = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// The candidates matching the current search query (by display name or
+  /// account handle). An empty query keeps the full list.
+  List<ProviderUser> _visible(List<ProviderUser> users) {
+    if (_query.isEmpty) return users;
+    final q = _query.toLowerCase();
+    return users
+        .where(
+          (u) =>
+              u.displayName.toLowerCase().contains(q) ||
+              u.account.toLowerCase().contains(q),
+        )
+        .toList();
+  }
 
   List<String> _currentReviewers() => switch (widget.ticket.providerEntity) {
     GitLabItemEntity(:final reviewers) => reviewers,
@@ -98,34 +120,100 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
               style: context.typography.bodySm.copyWith(color: c.textTertiary),
             );
           }
+          final visible = _visible(list);
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FieldLabel(l.reviewers),
+              _UserSearchBox(
+                controller: _search,
+                hint: l.searchUsers,
+                onChanged: (v) => setState(() => _query = v),
+              ),
+              SizedBox(height: context.spacing.sm),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 260),
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    for (final u in list)
-                      _ReviewerTile(
-                        user: u,
-                        selected: _selected.contains(u.account),
-                        onChanged: (v) => setState(() {
-                          if (v) {
-                            _selected.add(u.account);
-                          } else {
-                            _selected.remove(u.account);
-                          }
-                        }),
+                child: visible.isEmpty
+                    ? Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: context.spacing.xl2,
+                        ),
+                        child: Text(
+                          l.noMatchingUsers,
+                          style: context.typography.bodySm.copyWith(
+                            color: c.textTertiary,
+                          ),
+                        ),
+                      )
+                    : ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final u in visible)
+                            _ReviewerTile(
+                              user: u,
+                              selected: _selected.contains(u.account),
+                              onChanged: (v) => setState(() {
+                                if (v) {
+                                  _selected.add(u.account);
+                                } else {
+                                  _selected.remove(u.account);
+                                }
+                              }),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Search input that filters the reviewer candidates. Mirrors the search box
+/// used by [SearchableDropdownField] so the two pickers read the same.
+class _UserSearchBox extends StatelessWidget {
+  const _UserSearchBox({
+    required this.controller,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final spacing = context.spacing;
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      style: context.typography.body.copyWith(color: c.textPrimary),
+      decoration: InputDecoration(
+        isDense: true,
+        filled: true,
+        fillColor: c.surfaceSubtle,
+        hintText: hint,
+        hintStyle: context.typography.body.copyWith(color: c.textTertiary),
+        prefixIcon: Icon(Icons.search, size: 18, color: c.textTertiary),
+        prefixIconConstraints: BoxConstraints(minWidth: spacing.xl6),
+        contentPadding: EdgeInsets.symmetric(vertical: spacing.lg),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(context.radii.md),
+          borderSide: BorderSide(color: c.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(context.radii.md),
+          borderSide: BorderSide(color: c.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(context.radii.md),
+          borderSide: BorderSide(color: c.accent),
+        ),
       ),
     );
   }

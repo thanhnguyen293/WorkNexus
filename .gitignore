@@ -67,3 +67,4 @@ app.*.map.json
 # Scratch API-response dumps captured while debugging — kept local.
 /products_json.txt
 /projects_json.txt
+/.superpowers/

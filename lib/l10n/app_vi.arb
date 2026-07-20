@@ -126,6 +126,8 @@
   "githubReopen": "Mở lại",
   "reviewers": "Người review",
   "reviewersUpdated": "Đã cập nhật người review",
+  "searchUsers": "Tìm người dùng…",
+  "noMatchingUsers": "Không có người dùng phù hợp",
   "rebase": "Rebase",
   "updateBranch": "Cập nhật nhánh",
   "save": "Lưu",
