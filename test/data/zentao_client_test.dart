@@ -402,7 +402,7 @@ void main() {
       (r) => r.uri.path.endsWith('/api.php/v1/products/8/bugs'),
     );
     expect(req.uri.queryParameters['page'], '1');
-    expect(req.uri.queryParameters['limit'], '100');
+    expect(req.uri.queryParameters['limit'], '500');
   });
 
   test('listProjects parses /projects into provider projects', () async {
@@ -481,7 +481,7 @@ void main() {
       (r) => r.uri.path.endsWith('/api.php/v1/executions/12/tasks'),
     );
     expect(req.uri.queryParameters['page'], '1');
-    expect(req.uri.queryParameters['limit'], '100');
+    expect(req.uri.queryParameters['limit'], '500');
   });
 
   test('listComments parses actions given as an id-keyed object', () async {

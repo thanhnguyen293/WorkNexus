@@ -53,6 +53,87 @@ void main() {
   // PNG magic bytes — enough to stand in for real image data.
   const png = [0x89, 0x50, 0x4e, 0x47];
 
+  test('paginated list requests use the shared 500 item page size', () async {
+    final fake = _FakeAdapter((_) {
+      return ResponseBody.fromString(
+        '[]',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    });
+
+    await _client(fake).projects();
+
+    expect(fake.requests.single.uri.queryParameters['per_page'], '500');
+  });
+
+  test('my merge request feeds request assigned and review scopes', () async {
+    final fake = _FakeAdapter((_) {
+      return ResponseBody.fromString(
+        '[]',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    });
+    final client = _client(fake);
+
+    await client.assignedMergeRequests();
+    await client.reviewMergeRequests('alice');
+
+    expect(fake.requests, hasLength(2));
+    expect(fake.requests[0].uri.path, '/api/v4/merge_requests');
+    expect(fake.requests[0].uri.queryParameters['scope'], 'assigned_to_me');
+    expect(fake.requests[1].uri.path, '/api/v4/merge_requests');
+    expect(fake.requests[1].uri.queryParameters['scope'], 'reviews_for_me');
+    expect(
+      fake.requests[1].uri.queryParameters.containsKey('reviewer_username'),
+      isFalse,
+    );
+  });
+
+  test(
+    'review feed falls back to reviewer_username when scope is unsupported',
+    () async {
+      var calls = 0;
+      final fake = _FakeAdapter((_) {
+        calls++;
+        if (calls == 1) {
+          return ResponseBody.fromString(
+            '{"error":"scope does not have a valid value"}',
+            400,
+            headers: {
+              Headers.contentTypeHeader: [Headers.jsonContentType],
+            },
+          );
+        }
+        return ResponseBody.fromString(
+          '[]',
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        );
+      });
+
+      await _client(fake).reviewMergeRequests('alice');
+
+      expect(fake.requests, hasLength(2));
+      expect(fake.requests[0].uri.queryParameters['scope'], 'reviews_for_me');
+      expect(
+        fake.requests[1].uri.queryParameters['reviewer_username'],
+        'alice',
+      );
+      expect(
+        fake.requests[1].uri.queryParameters.containsKey('scope'),
+        isFalse,
+      );
+    },
+  );
+
   test(
     'fetchBytes routes a bare /uploads link to the markdown uploads API with the PAT',
     () async {

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/network/api_paging.dart';
 import 'github_models.dart';
 
 /// HTTP transport for the GitHub REST API, bound to one account's base URL +
@@ -301,7 +302,11 @@ class GitHubClient {
     for (var i = 0; i < maxPages; i++) {
       final res = await _dio.get<dynamic>(
         path,
-        queryParameters: {'per_page': 100, 'page': page, ...?query},
+        queryParameters: {
+          'per_page': kDefaultApiPageLimit,
+          'page': page,
+          ...?query,
+        },
       );
       final data = res.data;
       if (data is List) {
@@ -329,7 +334,11 @@ class GitHubClient {
     for (var i = 0; i < maxPages; i++) {
       final res = await _dio.get<dynamic>(
         '/search/issues',
-        queryParameters: {'q': q, 'per_page': 100, 'page': page},
+        queryParameters: {
+          'q': q,
+          'per_page': kDefaultApiPageLimit,
+          'page': page,
+        },
       );
       final data = res.data;
       final items = data is Map ? data['items'] : null;

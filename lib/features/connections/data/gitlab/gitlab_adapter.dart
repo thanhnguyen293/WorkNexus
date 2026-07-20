@@ -39,9 +39,9 @@ class GitLabAdapter implements ProviderAdapter {
   @override
   Future<Result<TicketPage>> listAssignedTickets({String? sinceCursor}) async {
     return _guard(() async {
-      final me = await _client.currentUser();
       final issues = await _client.assignedIssues();
       final assignedMrs = await _client.assignedMergeRequests();
+      final me = await _client.currentUser();
       final reviewMrs = me.username == null
           ? const <GitLabMergeRequest>[]
           : await _client.reviewMergeRequests(me.username!);
@@ -309,8 +309,8 @@ class GitLabAdapter implements ProviderAdapter {
   /// the account-wide "my merge requests" dashboard slice. Deduped (an MR can be
   /// both assigned and review-requested).
   Future<Result<List<Ticket>>> listMyMergeRequests() => _guard(() async {
-    final me = await _client.currentUser();
     final assigned = await _client.assignedMergeRequests();
+    final me = await _client.currentUser();
     final review = me.username == null
         ? const <GitLabMergeRequest>[]
         : await _client.reviewMergeRequests(me.username!);

@@ -15,8 +15,8 @@ import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 
 /// A single GitLab project row: a dot, the project name and a pin toggle.
-/// Tapping opens the project's dedicated board (Issues by default), which then
-/// fetches that kind's recent items from GitLab.
+/// Tapping opens the project's dedicated board (Merge Requests by default),
+/// which then fetches that kind's recent items from GitLab.
 class GitLabProjectRow extends ConsumerWidget {
   const GitLabProjectRow({
     super.key,
@@ -91,7 +91,7 @@ class GitLabProjectRow extends ConsumerWidget {
   }
 
   /// Opens this project's board: clears any ZenTao selection, selects the
-  /// project, resets to the Issues kind, and switches to the GitLab view mode.
+  /// project, resets to Merge Requests, and switches to the GitLab view mode.
   void _select(WidgetRef ref) {
     ref.read(settingsOpenProvider.notifier).state = false;
     // Drop any filters from the previous board (e.g. the ZenTao "my tickets"
@@ -101,7 +101,7 @@ class GitLabProjectRow extends ConsumerWidget {
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedGitLabProjectProvider.notifier).select(project);
-    ref.read(gitlabKindProvider.notifier).set(GitLabItemKind.issue);
+    ref.read(gitlabKindProvider.notifier).set(GitLabItemKind.mergeRequest);
     ref.read(viewModeProvider.notifier).set(ViewMode.gitlab);
   }
 }

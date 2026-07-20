@@ -17,7 +17,7 @@ class SettingsNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final c = context.colors;
-    final active = ref.watch(settingsOpenProvider);
+    final active = ref.watch(integrationsVisibleProvider);
     return Container(
       decoration: BoxDecoration(border: Border(top: context.hairlineSide)),
       padding: EdgeInsets.all(context.spacing.md),

@@ -79,7 +79,12 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           !(t.severity != null && f.severities.contains(t.severity))) {
         return false;
       }
-      if (f.assignees.isNotEmpty && !f.assignees.contains(t.assignee ?? '')) {
+      if (f.assignees.isNotEmpty &&
+          !_anySelected(f.assignees, _assigneeValues(t))) {
+        return false;
+      }
+      if (f.reviewers.isNotEmpty &&
+          !_anySelected(f.reviewers, _reviewerValues(t))) {
         return false;
       }
       if (f.bugTypes.isNotEmpty || f.resolutions.isNotEmpty) {
@@ -110,5 +115,24 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
       }
       return true;
     }).toList();
+  }
+
+  bool _anySelected(Set<String> selected, List<String> values) =>
+      values.any(selected.contains);
+
+  List<String> _assigneeValues(Ticket ticket) {
+    final entity = ticket.providerEntity;
+    if (entity is GitLabItemEntity && entity.assignees.isNotEmpty) {
+      return entity.assignees;
+    }
+    return [ticket.assignee ?? ''];
+  }
+
+  List<String> _reviewerValues(Ticket ticket) {
+    final entity = ticket.providerEntity;
+    if (entity is GitLabItemEntity && entity.reviewers.isNotEmpty) {
+      return entity.reviewers;
+    }
+    return const [''];
   }
 }

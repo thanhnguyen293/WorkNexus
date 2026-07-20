@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/network/api_paging.dart';
 import 'gitlab_models.dart';
 
 /// HTTP transport for the GitLab REST v4 API, bound to one account's base URL +
@@ -132,16 +133,45 @@ class GitLabClient {
     },
   );
 
-  Future<List<GitLabMergeRequest>> reviewMergeRequests(String username) =>
-      _paginate(
-        '/merge_requests',
-        GitLabMergeRequest.fromJson,
-        query: {
-          'reviewer_username': username,
-          'state': 'opened',
-          'with_labels_details': 'true',
-        },
-      );
+  Future<List<GitLabMergeRequest>> reviewMergeRequests(String username) async {
+    try {
+      return await _reviewMergeRequestsForMe();
+    } on DioException catch (e) {
+      if (!_isUnsupportedReviewsForMeScope(e)) rethrow;
+      return _reviewMergeRequestsByUsername(username);
+    }
+  }
+
+  Future<List<GitLabMergeRequest>> _reviewMergeRequestsForMe() => _paginate(
+    '/merge_requests',
+    GitLabMergeRequest.fromJson,
+    query: {
+      'scope': 'reviews_for_me',
+      'state': 'opened',
+      'with_labels_details': 'true',
+    },
+  );
+
+  Future<List<GitLabMergeRequest>> _reviewMergeRequestsByUsername(
+    String username,
+  ) => _paginate(
+    '/merge_requests',
+    GitLabMergeRequest.fromJson,
+    query: {
+      'reviewer_username': username,
+      'state': 'opened',
+      'with_labels_details': 'true',
+    },
+  );
+
+  bool _isUnsupportedReviewsForMeScope(DioException e) {
+    if (e.response?.statusCode != 400) return false;
+    final data = e.response?.data;
+    if (data is Map && data['error'] is String) {
+      return (data['error'] as String).contains('scope');
+    }
+    return data.toString().contains('scope does not have a valid value');
+  }
 
   // ---- projects + project-scoped items ----
 
@@ -390,7 +420,11 @@ class GitLabClient {
     for (var i = 0; i < maxPages; i++) {
       final res = await _dio.get<dynamic>(
         path,
-        queryParameters: {'per_page': 100, 'page': page, ...?query},
+        queryParameters: {
+          'per_page': kDefaultApiPageLimit,
+          'page': page,
+          ...?query,
+        },
       );
       final data = res.data;
       if (data is List) {

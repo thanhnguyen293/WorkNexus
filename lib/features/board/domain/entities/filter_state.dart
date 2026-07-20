@@ -24,6 +24,7 @@ abstract class FilterState with _$FilterState {
     @Default(<Priority>{}) Set<Priority> priorities,
     @Default(<int>{}) Set<int> severities,
     @Default(<String>{}) Set<String> assignees,
+    @Default(<String>{}) Set<String> reviewers,
     @Default(<String>{}) Set<String> bugTypes,
     @Default(<String>{}) Set<String> resolutions,
     @Default('') String search,
@@ -37,6 +38,7 @@ abstract class FilterState with _$FilterState {
       priorities.isNotEmpty ||
       severities.isNotEmpty ||
       assignees.isNotEmpty ||
+      reviewers.isNotEmpty ||
       bugTypes.isNotEmpty ||
       resolutions.isNotEmpty ||
       search.trim().isNotEmpty;
@@ -50,6 +52,7 @@ abstract class FilterState with _$FilterState {
       priorities.length +
       severities.length +
       assignees.length +
+      reviewers.length +
       bugTypes.length +
       resolutions.length;
 }

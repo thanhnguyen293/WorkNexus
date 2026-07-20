@@ -60,6 +60,11 @@ class ActiveTokens extends ConsumerWidget {
           label: a.isEmpty ? l.unassigned : a,
           onRemove: () => ctrl.toggleAssignee(a),
         ),
+      for (final r in f.reviewers)
+        _Token(
+          label: r.isEmpty ? l.unassigned : r,
+          onRemove: () => ctrl.toggleReviewer(r),
+        ),
       for (final t in f.bugTypes)
         _Token(
           label: zentaoBugTypeLabel(t) ?? t,

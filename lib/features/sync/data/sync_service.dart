@@ -23,6 +23,7 @@ import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
+import 'timed_slice_cache.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
 /// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
@@ -42,10 +43,24 @@ List<String> mergeDetailLabels(
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
 class SyncService {
-  SyncService(this._db, this._credentials);
+  SyncService(
+    this._db,
+    this._credentials, {
+    TimedSliceCache<List<String>>? zentaoBugTabCache,
+    TimedSliceCache<int>? zentaoExecutionTaskCache,
+  }) : _zentaoBugTabCache =
+           zentaoBugTabCache ??
+           TimedSliceCache<List<String>>(ttl: zentaoTabCacheTtl),
+       _zentaoExecutionTaskCache =
+           zentaoExecutionTaskCache ??
+           TimedSliceCache<int>(ttl: zentaoTabCacheTtl);
+
+  static const zentaoTabCacheTtl = Duration(minutes: 15);
 
   final AppDatabase _db;
   final CredentialStore _credentials;
+  final TimedSliceCache<List<String>> _zentaoBugTabCache;
+  final TimedSliceCache<int> _zentaoExecutionTaskCache;
 
   /// Returns the number of tickets synced, or a [Failure].
   Future<Result<int>> syncAccount(Account account) async {
@@ -110,8 +125,26 @@ class SyncService {
   /// filtered view (unclosed / assigned-to-me / resolved-by-me / …) — upserts
   /// its bugs into drift (local-first: the board still renders from the DB), and
   /// returns the ids of the bugs in that tab so the board can show just that
-  /// slice. Called fresh on every tab switch.
+  /// slice. Successful tab slices are cached briefly per account/product/tab so
+  /// switching back and forth does not immediately hit ZenTao again.
   Future<Result<List<String>>> syncProductBugsTab({
+    required String accountId,
+    required String productId,
+    required String browseType,
+  }) async {
+    final cacheKey = '$accountId:$productId:$browseType';
+    return _cached(
+      cache: _zentaoBugTabCache,
+      key: cacheKey,
+      load: () => _syncProductBugsTabUncached(
+        accountId: accountId,
+        productId: productId,
+        browseType: browseType,
+      ),
+    );
+  }
+
+  Future<Result<List<String>>> _syncProductBugsTabUncached({
     required String accountId,
     required String productId,
     required String browseType,
@@ -160,6 +193,17 @@ class SyncService {
   }
 
   Future<Result<int>> syncExecutionTasks(ProviderExecution execution) async {
+    final cacheKey = '${execution.accountId}:${execution.id}';
+    return _cached(
+      cache: _zentaoExecutionTaskCache,
+      key: cacheKey,
+      load: () => _syncExecutionTasksUncached(execution),
+    );
+  }
+
+  Future<Result<int>> _syncExecutionTasksUncached(
+    ProviderExecution execution,
+  ) async {
     final accountRow = await (_db.select(
       _db.accounts,
     )..where((a) => a.id.equals(execution.accountId))).getSingleOrNull();
@@ -178,6 +222,25 @@ class SyncService {
       case Ok(:final value):
         await _upsert(account, value.tickets);
         return Ok(value.tickets.length);
+    }
+  }
+
+  Future<Result<T>> _cached<T>({
+    required TimedSliceCache<T> cache,
+    required String key,
+    required Future<Result<T>> Function() load,
+  }) async {
+    try {
+      final value = await cache.get(key, () async {
+        final res = await load();
+        return switch (res) {
+          Ok(:final value) => value,
+          Err(:final failure) => throw _CachedLoadFailure(failure),
+        };
+      });
+      return Ok(value);
+    } on _CachedLoadFailure catch (err) {
+      return Err(err.failure);
     }
   }
 
@@ -972,4 +1035,10 @@ class SyncService {
       }
     });
   }
+}
+
+class _CachedLoadFailure implements Exception {
+  const _CachedLoadFailure(this.failure);
+
+  final Failure failure;
 }

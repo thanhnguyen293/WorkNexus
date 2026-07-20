@@ -3,10 +3,17 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/usecase/usecase.dart';
 
 /// Which board the facets are derived for; selects which dimensions apply.
-enum BoardFacetScope { bug, task, none }
+enum BoardFacetScope { bug, task, gitlabMergeRequest, none }
 
-/// A filterable dimension of a ZenTao board.
-enum BoardFacetKind { assignee, severity, priority, bugType, resolution }
+/// A filterable dimension of a board.
+enum BoardFacetKind {
+  assignee,
+  reviewer,
+  severity,
+  priority,
+  bugType,
+  resolution,
+}
 
 /// One option within a facet group: its canonical [value] (the exact string/int
 /// stored in `FilterState`) and how many scoped tickets carry it.
@@ -52,23 +59,33 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
   @override
   BoardFacets call(BoardFacetsInput input) {
     if (input.scope == BoardFacetScope.none) return BoardFacets.empty;
-    final kinds = input.scope == BoardFacetScope.bug
-        ? const [
-            BoardFacetKind.assignee,
-            BoardFacetKind.severity,
-            BoardFacetKind.priority,
-            BoardFacetKind.bugType,
-            BoardFacetKind.resolution,
-          ]
-        : const [BoardFacetKind.assignee, BoardFacetKind.priority];
+    final kinds = switch (input.scope) {
+      BoardFacetScope.bug => const [
+        BoardFacetKind.assignee,
+        BoardFacetKind.severity,
+        BoardFacetKind.priority,
+        BoardFacetKind.bugType,
+        BoardFacetKind.resolution,
+      ],
+      BoardFacetScope.task => const [
+        BoardFacetKind.assignee,
+        BoardFacetKind.priority,
+      ],
+      BoardFacetScope.gitlabMergeRequest => const [
+        BoardFacetKind.assignee,
+        BoardFacetKind.reviewer,
+        BoardFacetKind.priority,
+      ],
+      BoardFacetScope.none => const <BoardFacetKind>[],
+    };
 
     final groups = <BoardFacetGroup>[];
     for (final kind in kinds) {
       final counts = <String, int>{};
       for (final ticket in input.tickets) {
-        final value = _valueFor(kind, ticket);
-        if (value == null) continue;
-        counts[value] = (counts[value] ?? 0) + 1;
+        for (final value in _valuesFor(kind, ticket)) {
+          counts[value] = (counts[value] ?? 0) + 1;
+        }
       }
       if (counts.length < 2) continue;
       final options =
@@ -81,28 +98,38 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
     return BoardFacets(groups: groups);
   }
 
-  /// The canonical facet value for [kind] on [t], or null when the ticket does
-  /// not carry that dimension (so it is excluded from the group).
-  String? _valueFor(BoardFacetKind kind, Ticket t) {
+  /// The canonical facet values for [kind] on [t]. Multi-user provider fields
+  /// such as GitLab reviewers contribute one count to each user.
+  List<String> _valuesFor(BoardFacetKind kind, Ticket t) {
     switch (kind) {
       case BoardFacetKind.assignee:
-        return t.assignee ?? '';
+        final e = t.providerEntity;
+        if (e is GitLabItemEntity && e.assignees.isNotEmpty) {
+          return e.assignees;
+        }
+        return [t.assignee ?? ''];
+      case BoardFacetKind.reviewer:
+        final e = t.providerEntity;
+        return e is GitLabItemEntity && e.reviewers.isNotEmpty
+            ? e.reviewers
+            : const [''];
       case BoardFacetKind.severity:
-        return t.severity?.toString();
+        final value = t.severity?.toString();
+        return value == null ? const [] : [value];
       case BoardFacetKind.priority:
-        return t.priority.name;
+        return [t.priority.name];
       case BoardFacetKind.bugType:
         final e = t.providerEntity;
         final code = e is ZenTaoBugEntity
             ? (e.bugType ?? '').toLowerCase()
             : '';
-        return code.isEmpty ? null : code;
+        return code.isEmpty ? const [] : [code];
       case BoardFacetKind.resolution:
         final e = t.providerEntity;
         final code = e is ZenTaoBugEntity
             ? (e.resolution ?? '').toLowerCase()
             : '';
-        return code.isEmpty ? null : code;
+        return code.isEmpty ? const [] : [code];
     }
   }
 }

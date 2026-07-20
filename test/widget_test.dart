@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/app.dart';
 import 'package:work_nexus/core/database/database.dart';
+import 'package:work_nexus/data/local/database_seeder.dart';
 
 import 'support/di_test_harness.dart';
 
@@ -39,6 +40,25 @@ void main() {
 
     await disposeTree(tester);
   });
+
+  testWidgets(
+    'First launch without workspaces or providers opens Integrations',
+    (tester) async {
+      await purgeSeededDemoData(db);
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const ProviderScope(child: WorkNexusApp()));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Connected accounts'), findsOneWidget);
+      expect(find.text('Welcome to WorkNexus'), findsNothing);
+
+      await disposeTree(tester);
+    },
+  );
 
   testWidgets(
     'Sidebar nests workspace → ZenTao with Bugs/Tasks groups, no catch-alls',

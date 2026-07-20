@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
-import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radii.dart';
@@ -25,8 +24,6 @@ class SettingsPage extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final lookups = ref.watch(lookupsProvider);
-    final tickets =
-        ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
     final pickerOpen = ref.watch(connectPickerOpenProvider);
 
     final workspaces = lookups.workspaces.values.toList();
@@ -93,11 +90,7 @@ class SettingsPage extends ConsumerWidget {
                   ],
                   SizedBox(height: context.spacing.xl4),
                   for (final w in workspaces)
-                    WorkspaceAccounts(
-                      workspaceId: w.id,
-                      lookups: lookups,
-                      tickets: tickets,
-                    ),
+                    WorkspaceAccounts(workspaceId: w.id, lookups: lookups),
                 ],
               ),
             ),

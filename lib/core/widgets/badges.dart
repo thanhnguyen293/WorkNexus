@@ -12,6 +12,8 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/semantic.dart';
 
+export 'workspace_badge.dart';
+
 /// Provider brand logo. GitHub/GitLab/Jira are monochrome marks tinted to their
 /// brand color; ZenTao is a full-color recreation of its whirlpool logo, so it
 /// renders untinted. [big] sizes it up for dialog/section headers.
@@ -70,33 +72,6 @@ class PriorityTag extends StatelessWidget {
       child: Text(
         priorityLabel(provider, priority),
         style: context.typography.badge.copyWith(color: color),
-      ),
-    );
-  }
-}
-
-/// Small square workspace badge with its short code.
-class WorkspaceBadge extends StatelessWidget {
-  const WorkspaceBadge(this.color, this.short, {super.key, this.big = false});
-  final Color color;
-  final String short;
-  final bool big;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = big ? 18.0 : 16.0;
-    return Container(
-      width: s,
-      height: s,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(context.radii.xs),
-      ),
-      child: Text(
-        short,
-        style: (big ? context.typography.badgeLg : context.typography.badge)
-            .copyWith(color: context.colors.onColorInk),
       ),
     );
   }

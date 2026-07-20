@@ -26,10 +26,6 @@ class QuickSettingsPanel extends ConsumerWidget {
     final settings = ref.watch(appSettingsProvider);
     final controller = ref.read(appSettingsProvider.notifier);
     final panelWidth = context.spacing.xl6 * 7.5;
-    final maxHeight = math.min(
-      context.spacing.xl6 * 12.5,
-      MediaQuery.sizeOf(context).height,
-    );
     final availableWidth = math.max(
       context.spacing.none,
       MediaQuery.sizeOf(context).width - context.spacing.xl2,
@@ -38,7 +34,6 @@ class QuickSettingsPanel extends ConsumerWidget {
     return Container(
       key: const ValueKey<String>('quick-settings-panel'),
       width: math.min(panelWidth, availableWidth),
-      constraints: BoxConstraints(maxHeight: maxHeight),
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.xl,
         vertical: context.spacing.xl,
@@ -55,114 +50,112 @@ class QuickSettingsPanel extends ConsumerWidget {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l.quickSettings,
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textPrimary,
-                ),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              l.quickSettings,
+              style: context.typography.bodyStrong.copyWith(
+                color: c.textPrimary,
               ),
             ),
-            SizedBox(height: context.spacing.md),
-            _SettingRow(
-              label: l.language,
-              control: _CompactSegmentedControl<String>(
-                value: settings.locale.languageCode,
-                options: {'en': l.english, 'vi': l.vietnamese},
-                onChanged: controller.setLanguageCode,
-              ),
+          ),
+          SizedBox(height: context.spacing.md),
+          _SettingRow(
+            label: l.language,
+            control: _CompactSegmentedControl<String>(
+              value: settings.locale.languageCode,
+              options: {'en': l.english, 'vi': l.vietnamese},
+              onChanged: controller.setLanguageCode,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.theme,
-              control: _CompactSegmentedControl<AppThemeVariant>(
-                value: settings.variant,
-                options: {
-                  AppThemeVariant.light: l.themeLight,
-                  AppThemeVariant.dark: l.themeDark,
-                  AppThemeVariant.midnight: l.themeMidnight,
-                },
-                onChanged: controller.setVariant,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.theme,
+            control: _CompactSegmentedControl<AppThemeVariant>(
+              value: settings.variant,
+              options: {
+                AppThemeVariant.light: l.themeLight,
+                AppThemeVariant.dark: l.themeDark,
+                AppThemeVariant.midnight: l.themeMidnight,
+              },
+              onChanged: controller.setVariant,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.surface,
-              control: _CompactSegmentedControl<SurfaceStyle>(
-                value: settings.surface,
-                options: {
-                  SurfaceStyle.flat: l.surfaceFlat,
-                  SurfaceStyle.outline: l.surfaceOutline,
-                },
-                onChanged: controller.setSurface,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.surface,
+            control: _CompactSegmentedControl<SurfaceStyle>(
+              value: settings.surface,
+              options: {
+                SurfaceStyle.flat: l.surfaceFlat,
+                SurfaceStyle.outline: l.surfaceOutline,
+              },
+              onChanged: controller.setSurface,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.density,
-              control: _CompactSegmentedControl<AppDensity>(
-                value: settings.density,
-                options: {
-                  AppDensity.comfortable: l.densityComfortable,
-                  AppDensity.compact: l.densityCompact,
-                },
-                onChanged: controller.setDensity,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.density,
+            control: _CompactSegmentedControl<AppDensity>(
+              value: settings.density,
+              options: {
+                AppDensity.comfortable: l.densityComfortable,
+                AppDensity.compact: l.densityCompact,
+              },
+              onChanged: controller.setDensity,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.detailLayout,
-              control: _CompactSegmentedControl<DetailLayout>(
-                value: settings.detailLayout,
-                options: {
-                  DetailLayout.twoPane: l.layoutTwoPane,
-                  DetailLayout.document: l.layoutDocument,
-                },
-                onChanged: controller.setDetailLayout,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.detailLayout,
+            control: _CompactSegmentedControl<DetailLayout>(
+              value: settings.detailLayout,
+              options: {
+                DetailLayout.twoPane: l.layoutTwoPane,
+                DetailLayout.document: l.layoutDocument,
+              },
+              onChanged: controller.setDetailLayout,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.dateFormat,
-              control: _CompactSegmentedControl<DateDisplayFormat>(
-                value: settings.dateFormat,
-                options: {
-                  DateDisplayFormat.iso: l.dateFormatIso,
-                  DateDisplayFormat.dmy: l.dateFormatDmy,
-                  DateDisplayFormat.long: l.dateFormatLong,
-                },
-                onChanged: controller.setDateFormat,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.dateFormat,
+            control: _CompactSegmentedControl<DateDisplayFormat>(
+              value: settings.dateFormat,
+              options: {
+                DateDisplayFormat.iso: l.dateFormatIso,
+                DateDisplayFormat.dmy: l.dateFormatDmy,
+                DateDisplayFormat.long: l.dateFormatLong,
+              },
+              onChanged: controller.setDateFormat,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.companyTint,
-              control: _CompactSegmentedControl<bool>(
-                value: settings.companyTint,
-                options: {false: l.settingOff, true: l.settingOn},
-                onChanged: controller.setCompanyTint,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.companyTint,
+            control: _CompactSegmentedControl<bool>(
+              value: settings.companyTint,
+              options: {false: l.settingOff, true: l.settingOn},
+              onChanged: controller.setCompanyTint,
             ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.font,
-              control: QuickSettingsFontControl(
-                tooltip: l.chooseUiFont,
-                systemLabel: l.systemFont,
-                value: settings.fontFamily,
-                onChanged: controller.setFontFamily,
-              ),
+          ),
+          SizedBox(height: context.spacing.xs),
+          _SettingRow(
+            label: l.font,
+            control: QuickSettingsFontControl(
+              tooltip: l.chooseUiFont,
+              systemLabel: l.systemFont,
+              value: settings.fontFamily,
+              onChanged: controller.setFontFamily,
             ),
-            SizedBox(height: context.spacing.md),
-            const QuickSettingsColorControl(),
-            SizedBox(height: context.spacing.xs),
-            const QuickSettingsRadiusControl(),
-          ],
-        ),
+          ),
+          SizedBox(height: context.spacing.md),
+          const QuickSettingsColorControl(),
+          SizedBox(height: context.spacing.xs),
+          const QuickSettingsRadiusControl(),
+        ],
       ),
     );
   }

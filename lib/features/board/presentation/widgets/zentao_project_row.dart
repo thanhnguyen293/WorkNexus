@@ -86,6 +86,10 @@ class ZenTaoProjectRow extends ConsumerWidget {
                 MiniTag(l.bugTag, c.accent),
                 SizedBox(width: context.spacing.xs),
               ],
+              if (loading) ...[
+                const SidebarSyncIndicator(),
+                SizedBox(width: context.spacing.xxs),
+              ],
               SidebarPinButton(
                 pinned: pinned,
                 tooltip: pinned ? l.unpinProject : l.pinProject,

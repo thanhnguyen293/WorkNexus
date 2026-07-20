@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/network/api_paging.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
@@ -71,7 +72,7 @@ class ZenTaoAdapter implements ProviderAdapter {
   /// safely stops a server that ignores the `page` parameter (a page that adds
   /// nothing new ends the loop instead of looping forever).
   Future<List<Ticket>> _fetchAssigned(String field, ZenTaoType type) async {
-    const limit = 100;
+    const limit = kDefaultApiPageLimit;
     final out = <Ticket>[];
     final seen = <String>{};
     var total = 0;
@@ -213,7 +214,7 @@ class ZenTaoAdapter implements ProviderAdapter {
   @override
   Future<Result<List<ProviderProduct>>> listProducts() async {
     return _guard(() async {
-      const limit = 100;
+      const limit = kDefaultApiPageLimit;
       final out = <ProviderProduct>[];
       final seen = <String>{};
       var total = 0;
@@ -245,7 +246,7 @@ class ZenTaoAdapter implements ProviderAdapter {
     String? browseType,
   }) async {
     return _guard(() async {
-      const limit = 100;
+      const limit = kDefaultApiPageLimit;
       final out = <Ticket>[];
       final seen = <String>{};
       var total = 0;
@@ -295,7 +296,7 @@ class ZenTaoAdapter implements ProviderAdapter {
   @override
   Future<Result<List<ProviderProject>>> listProjects() async {
     return _guard(() async {
-      const limit = 100;
+      const limit = kDefaultApiPageLimit;
       final out = <ProviderProject>[];
       final seen = <String>{};
       var total = 0;
@@ -326,7 +327,7 @@ class ZenTaoAdapter implements ProviderAdapter {
     String projectId,
   ) async {
     return _guard(() async {
-      const limit = 100;
+      const limit = kDefaultApiPageLimit;
       final out = <ProviderExecution>[];
       final seen = <String>{};
       var total = 0;
@@ -360,7 +361,7 @@ class ZenTaoAdapter implements ProviderAdapter {
   @override
   Future<Result<TicketPage>> listExecutionTasks(String executionId) async {
     return _guard(() async {
-      const limit = 100;
+      const limit = kDefaultApiPageLimit;
       final out = <Ticket>[];
       final seen = <String>{};
       var total = 0;

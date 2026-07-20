@@ -82,6 +82,8 @@ class FilterController extends Notifier<FilterState> {
       state = state.copyWith(severities: _toggle(state.severities, s));
   void toggleAssignee(String a) =>
       state = state.copyWith(assignees: _toggle(state.assignees, a));
+  void toggleReviewer(String r) =>
+      state = state.copyWith(reviewers: _toggle(state.reviewers, r));
   void toggleBugType(String t) =>
       state = state.copyWith(bugTypes: _toggle(state.bugTypes, t));
   void toggleResolution(String r) =>
@@ -95,6 +97,7 @@ class FilterController extends Notifier<FilterState> {
     priorities: {},
     severities: {},
     assignees: {},
+    reviewers: {},
     bugTypes: {},
     resolutions: {},
     search: '',
@@ -111,6 +114,7 @@ class FilterController extends Notifier<FilterState> {
     priorities: {},
     severities: {},
     assignees: self.isEmpty ? {} : {self},
+    reviewers: {},
     bugTypes: {},
     resolutions: {},
     search: '',
@@ -436,10 +440,10 @@ final selectedGitLabProjectProvider =
       SelectedGitLabProject.new,
     );
 
-/// Which kind the GitLab board shows: Issues (default) or Merge Requests.
+/// Which kind the GitLab board shows: Merge Requests (default) or Issues.
 class GitLabKindController extends Notifier<GitLabItemKind> {
   @override
-  GitLabItemKind build() => GitLabItemKind.issue;
+  GitLabItemKind build() => GitLabItemKind.mergeRequest;
 
   void set(GitLabItemKind kind) => state = kind;
 }
@@ -672,13 +676,17 @@ final filterHasGroupsProvider = Provider<bool>((ref) {
   switch (ref.watch(viewModeProvider)) {
     case ViewMode.zentaoBugs:
     case ViewMode.zentaoTasks:
+    case ViewMode.gitlab:
+      if (ref.watch(viewModeProvider) == ViewMode.gitlab &&
+          ref.watch(gitlabKindProvider) != GitLabItemKind.mergeRequest) {
+        return true;
+      }
       return ref
           .watch(boardFacetsProvider)
           .groups
           .any((g) => g.options.length >= 2);
     case ViewMode.home:
     case ViewMode.board:
-    case ViewMode.gitlab:
     case ViewMode.github:
     case ViewMode.list:
       final mineBoard =
@@ -695,9 +703,12 @@ final boardFacetsProvider = Provider<BoardFacets>((ref) {
   final scope = switch (ref.watch(viewModeProvider)) {
     ViewMode.zentaoBugs => BoardFacetScope.bug,
     ViewMode.zentaoTasks => BoardFacetScope.task,
+    ViewMode.gitlab =>
+      ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
+          ? BoardFacetScope.gitlabMergeRequest
+          : BoardFacetScope.none,
     ViewMode.home ||
     ViewMode.board ||
-    ViewMode.gitlab ||
     ViewMode.github ||
     ViewMode.list => BoardFacetScope.none,
   };

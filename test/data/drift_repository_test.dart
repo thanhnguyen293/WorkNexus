@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/activity_event.dart';
+import 'package:work_nexus/core/domain/entities/project.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/entities/workspace.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
@@ -15,6 +16,7 @@ import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/data/local/database_seeder.dart';
 import 'package:work_nexus/data/local/mappers.dart';
 import 'package:work_nexus/data/local/repositories/local_ticket_repository.dart';
+import 'package:work_nexus/features/connections/data/local_connection_repository.dart';
 import 'package:work_nexus/features/translation/data/repositories/local_translation_repository.dart';
 
 void main() {
@@ -127,6 +129,76 @@ void main() {
 
       // Idempotent: a second purge removes nothing.
       expect(await purgeSeededDemoData(db), 0);
+    },
+  );
+
+  test(
+    'workspace style can be updated and deleting a workspace cascades data',
+    () async {
+      final repo = LocalConnectionRepository(db);
+      const workspace = Workspace(
+        id: 'ws-nexsoft-1',
+        name: 'Nexsoft',
+        shortCode: 'N',
+        colorValue: 0xFF2F8A52,
+      );
+      await repo.addWorkspace(workspace);
+      await repo.updateWorkspace(
+        workspace.copyWith(colorValue: 0xFFE05561, iconKey: 'rocket'),
+      );
+
+      final saved = await db.select(db.workspaces).getSingle();
+      expect(saved.colorValue, 0xFFE05561);
+      expect(saved.iconKey, 'rocket');
+
+      await repo.addAccount(
+        const Account(
+          id: 'zt-thanh-1',
+          workspaceId: 'ws-nexsoft-1',
+          providerType: ProviderType.zentao,
+          handle: 'Thanh',
+          baseUrl: 'https://z',
+          credentialsRef: 'secret:zt-thanh-1',
+        ),
+      );
+      await db
+          .into(db.projects)
+          .insert(
+            projectToCompanion(
+              const Project(
+                id: 'zt-thanh-1:ERP',
+                accountId: 'zt-thanh-1',
+                name: 'ERP',
+              ),
+            ),
+          );
+      await db
+          .into(db.tickets)
+          .insert(
+            ticketToCompanion(
+              const Ticket(
+                id: 'zt-thanh-1:4302',
+                accountId: 'zt-thanh-1',
+                projectId: 'zt-thanh-1:ERP',
+                providerType: ProviderType.zentao,
+                externalKey: '4302',
+                title: 'real bug',
+                body: 'x',
+                priority: Priority.high,
+                status: UnifiedStatus.todo,
+                providerStatus: 'active',
+                sourceHash: 'h',
+              ),
+            ),
+          );
+
+      final removedCredentials = await repo.deleteWorkspace('ws-nexsoft-1');
+
+      expect(removedCredentials, ['secret:zt-thanh-1']);
+      expect(await db.select(db.workspaces).get(), isEmpty);
+      expect(await db.select(db.accounts).get(), isEmpty);
+      expect(await db.select(db.projects).get(), isEmpty);
+      expect(await db.select(db.tickets).get(), isEmpty);
     },
   );
 

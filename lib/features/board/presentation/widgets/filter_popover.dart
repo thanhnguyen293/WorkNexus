@@ -15,6 +15,7 @@ import '../../../../core/util/zentao_labels.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/filter_state.dart';
 import '../../domain/usecases/derive_board_facets.dart';
+import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../board_providers.dart';
 import 'filter_chip.dart';
 
@@ -27,15 +28,13 @@ class FilterPopover extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(viewModeProvider);
+    final gitlabMr =
+        mode == ViewMode.gitlab &&
+        ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest;
+    final usesFacetFilters =
+        mode == ViewMode.zentaoBugs || mode == ViewMode.zentaoTasks || gitlabMr;
     return _PopoverShell(
-      child: switch (mode) {
-        ViewMode.zentaoBugs || ViewMode.zentaoTasks => const _FacetFilters(),
-        ViewMode.home ||
-        ViewMode.board ||
-        ViewMode.gitlab ||
-        ViewMode.github ||
-        ViewMode.list => const _GenericFilters(),
-      },
+      child: usesFacetFilters ? const _FacetFilters() : const _GenericFilters(),
     );
   }
 }
@@ -212,6 +211,7 @@ class _GenericFilters extends ConsumerWidget {
 
 String _facetHeader(AppL10n l, BoardFacetKind kind) => switch (kind) {
   BoardFacetKind.assignee => l.assignee,
+  BoardFacetKind.reviewer => l.reviewers,
   BoardFacetKind.severity => l.severity,
   BoardFacetKind.priority => l.priority,
   BoardFacetKind.bugType => l.bugType,
@@ -221,6 +221,7 @@ String _facetHeader(AppL10n l, BoardFacetKind kind) => switch (kind) {
 String _facetLabel(AppL10n l, BoardFacetKind kind, String value) =>
     switch (kind) {
       BoardFacetKind.assignee => value.isEmpty ? l.unassigned : value,
+      BoardFacetKind.reviewer => value.isEmpty ? l.unassigned : value,
       BoardFacetKind.severity =>
         zentaoSeverityLabel(int.tryParse(value)) ?? value,
       BoardFacetKind.priority => priorityName(l, Priority.values.byName(value)),
@@ -241,6 +242,7 @@ Color? _facetDot(AppColors c, BoardFacetKind kind, String value) =>
 bool _facetActive(FilterState f, BoardFacetKind kind, String value) =>
     switch (kind) {
       BoardFacetKind.assignee => f.assignees.contains(value),
+      BoardFacetKind.reviewer => f.reviewers.contains(value),
       BoardFacetKind.severity => f.severities.contains(
         int.tryParse(value) ?? -1,
       ),
@@ -255,6 +257,8 @@ void _facetToggle(FilterController ctrl, BoardFacetKind kind, String value) {
   switch (kind) {
     case BoardFacetKind.assignee:
       ctrl.toggleAssignee(value);
+    case BoardFacetKind.reviewer:
+      ctrl.toggleReviewer(value);
     case BoardFacetKind.severity:
       ctrl.toggleSeverity(int.tryParse(value) ?? -1);
     case BoardFacetKind.priority:

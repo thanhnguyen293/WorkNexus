@@ -25,6 +25,7 @@ Workspace workspaceFromRow(WorkspaceRow r) => Workspace(
   name: r.name,
   shortCode: r.shortCode,
   colorValue: r.colorValue,
+  iconKey: r.iconKey,
   isPersonal: r.isPersonal,
 );
 
@@ -34,6 +35,7 @@ WorkspacesCompanion workspaceToCompanion(Workspace w, int order) =>
       name: w.name,
       shortCode: w.shortCode,
       colorValue: w.colorValue,
+      iconKey: Value(w.iconKey),
       isPersonal: Value(w.isPersonal),
       sortOrder: Value(order),
     );

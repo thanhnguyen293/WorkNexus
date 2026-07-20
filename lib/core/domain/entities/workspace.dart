@@ -11,6 +11,7 @@ abstract class Workspace with _$Workspace {
     required String name,
     required String shortCode,
     required int colorValue,
+    @Default('briefcase') String iconKey,
     @Default(false) bool isPersonal,
   }) = _Workspace;
 }

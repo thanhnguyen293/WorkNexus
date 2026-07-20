@@ -85,6 +85,10 @@ class ZenTaoExecutionRow extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (loading) ...[
+                const SidebarSyncIndicator(),
+                SizedBox(width: context.spacing.xxs),
+              ],
               if (showKindTag) ...[
                 MiniTag(l.taskTag, c.info),
                 SizedBox(width: context.spacing.xs),

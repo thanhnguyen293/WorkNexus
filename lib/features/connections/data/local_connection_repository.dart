@@ -26,6 +26,59 @@ class LocalConnectionRepository implements ConnectionRepository {
   }
 
   @override
+  Future<void> updateWorkspace(Workspace workspace) async {
+    final row = await (_db.select(
+      _db.workspaces,
+    )..where((w) => w.id.equals(workspace.id))).getSingleOrNull();
+    await _db
+        .into(_db.workspaces)
+        .insertOnConflictUpdate(
+          workspaceToCompanion(workspace, row?.sortOrder ?? 0),
+        );
+  }
+
+  @override
+  Future<List<String>> deleteWorkspace(String id) async {
+    final credentials = <String>[];
+    await _db.transaction(() async {
+      final accounts = await (_db.select(
+        _db.accounts,
+      )..where((a) => a.workspaceId.equals(id))).get();
+      final accountIds = accounts.map((a) => a.id).toList();
+      credentials.addAll(
+        accounts.map((a) => a.credentialsRef).whereType<String>(),
+      );
+      if (accountIds.isNotEmpty) {
+        final ticketIds = await (_db.select(
+          _db.tickets,
+        )..where((t) => t.accountId.isIn(accountIds))).map((t) => t.id).get();
+        if (ticketIds.isNotEmpty) {
+          await (_db.delete(
+            _db.comments,
+          )..where((c) => c.ticketId.isIn(ticketIds))).go();
+          await (_db.delete(
+            _db.activities,
+          )..where((a) => a.ticketId.isIn(ticketIds))).go();
+          await (_db.delete(
+            _db.translations,
+          )..where((t) => t.ticketId.isIn(ticketIds))).go();
+        }
+        await (_db.delete(
+          _db.tickets,
+        )..where((t) => t.accountId.isIn(accountIds))).go();
+        await (_db.delete(
+          _db.projects,
+        )..where((p) => p.accountId.isIn(accountIds))).go();
+        await (_db.delete(
+          _db.accounts,
+        )..where((a) => a.id.isIn(accountIds))).go();
+      }
+      await (_db.delete(_db.workspaces)..where((w) => w.id.equals(id))).go();
+    });
+    return credentials;
+  }
+
+  @override
   Future<void> removeAccount(String id) async {
     await _db.transaction(() async {
       // Remove the account's projects, tickets, and the account itself.

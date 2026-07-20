@@ -10,4 +10,6 @@ abstract class ConnectionRepository {
 
   /// Create (or update) a workspace, e.g. when connecting into a new one.
   Future<void> addWorkspace(Workspace workspace);
+  Future<void> updateWorkspace(Workspace workspace);
+  Future<List<String>> deleteWorkspace(String id);
 }

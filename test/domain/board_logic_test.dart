@@ -190,6 +190,38 @@ void main() {
       );
     });
 
+    test('reviewer filter matches GitLab merge request reviewers', () {
+      final tickets = [
+        _t(
+          id: 'needs-review',
+          provider: ProviderType.gitlab,
+          account: 'gl',
+        ).copyWith(
+          externalType: 'MergeRequest',
+          providerEntity: const GitLabItemEntity(reviewers: ['Thanh']),
+        ),
+        _t(
+          id: 'other-reviewer',
+          provider: ProviderType.gitlab,
+          account: 'gl',
+        ).copyWith(
+          externalType: 'MergeRequest',
+          providerEntity: const GitLabItemEntity(reviewers: ['Terry']),
+        ),
+      ];
+
+      expect(
+        filter(
+          _q(
+            tickets,
+            const FilterState(reviewers: {'Thanh'}),
+            accountWorkspace: {'gl': 'compA'},
+          ),
+        ).map((t) => t.id),
+        ['needs-review'],
+      );
+    });
+
     test('bug type + resolution filters read the provider entity', () {
       final tickets = [
         _ztBug(

@@ -51,7 +51,12 @@ class DetailHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
-              WorkspaceBadge(wsColor, ws?.shortCode ?? '?', big: true),
+              WorkspaceBadge(
+                wsColor,
+                ws?.shortCode ?? '?',
+                big: true,
+                iconKey: ws?.iconKey,
+              ),
               SizedBox(width: context.spacing.md),
               Text(
                 ws?.isPersonal == true ? l.personal : (ws?.name ?? ''),

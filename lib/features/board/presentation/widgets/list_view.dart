@@ -134,7 +134,11 @@ class _Row extends ConsumerWidget {
               width: _wTask - 3,
               child: Row(
                 children: [
-                  WorkspaceBadge(wsColor, ws?.shortCode ?? '?'),
+                  WorkspaceBadge(
+                    wsColor,
+                    ws?.shortCode ?? '?',
+                    iconKey: ws?.iconKey,
+                  ),
                   SizedBox(width: context.spacing.sm),
                   ProviderBadge(ticket.providerType),
                   SizedBox(width: context.spacing.sm),

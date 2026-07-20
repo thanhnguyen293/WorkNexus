@@ -86,6 +86,7 @@ class _WorkspaceNode extends StatelessWidget {
                 WorkspaceBadge(
                   Color(workspace.colorValue),
                   workspace.shortCode,
+                  iconKey: workspace.iconKey,
                 ),
                 SizedBox(width: context.spacing.sm),
                 Expanded(

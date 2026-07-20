@@ -38,6 +38,33 @@ Ticket _bug({
   );
 }
 
+Ticket _mr({
+  required String id,
+  List<String> assignees = const [],
+  List<String> reviewers = const [],
+  Priority priority = Priority.medium,
+}) {
+  return Ticket(
+    id: id,
+    accountId: 'gl',
+    projectId: 'p',
+    providerType: ProviderType.gitlab,
+    externalKey: id,
+    externalType: 'MergeRequest',
+    title: 't',
+    body: '',
+    priority: priority,
+    status: UnifiedStatus.review,
+    providerStatus: 'opened',
+    sourceHash: 'h',
+    assignee: assignees.firstOrNull,
+    providerEntity: TicketProviderEntity.gitlabItem(
+      assignees: assignees,
+      reviewers: reviewers,
+    ),
+  );
+}
+
 void main() {
   const derive = DeriveBoardFacets();
 
@@ -143,6 +170,42 @@ void main() {
       BoardFacetKind.assignee,
       BoardFacetKind.priority,
     ]);
+  });
+
+  test('gitlab merge request scope derives assignee/reviewer/priority', () {
+    final f = derive(
+      BoardFacetsInput(
+        scope: BoardFacetScope.gitlabMergeRequest,
+        tickets: [
+          _mr(
+            id: '1',
+            assignees: ['Thanh'],
+            reviewers: ['Terry'],
+            priority: Priority.urgent,
+          ),
+          _mr(
+            id: '2',
+            assignees: ['Terry'],
+            reviewers: ['Thanh'],
+            priority: Priority.low,
+          ),
+          _mr(
+            id: '3',
+            assignees: ['Thanh'],
+            reviewers: ['Terry'],
+            priority: Priority.low,
+          ),
+        ],
+      ),
+    );
+
+    expect(f.groups.map((g) => g.kind), [
+      BoardFacetKind.assignee,
+      BoardFacetKind.reviewer,
+      BoardFacetKind.priority,
+    ]);
+    expect(groupOf(f, BoardFacetKind.assignee).options.first.value, 'Thanh');
+    expect(groupOf(f, BoardFacetKind.reviewer).options.first.value, 'Terry');
   });
 
   test('none scope yields no groups', () {

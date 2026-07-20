@@ -11,6 +11,7 @@ class Workspaces extends Table {
   TextColumn get name => text()();
   TextColumn get shortCode => text()();
   IntColumn get colorValue => integer()();
+  TextColumn get iconKey => text().withDefault(const Constant('briefcase'))();
   BoolColumn get isPersonal => boolean().withDefault(const Constant(false))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
@@ -168,7 +169,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'worknexus'));
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -204,6 +205,7 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(settings, settings.translationLang);
         }
       }
+      if (from < 15) await m.addColumn(workspaces, workspaces.iconKey);
     },
   );
 

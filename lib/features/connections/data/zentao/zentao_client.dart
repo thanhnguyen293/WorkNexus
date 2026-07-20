@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/network/api_paging.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
 import 'zentao_models.dart';
@@ -162,7 +163,7 @@ class ZenTaoClient {
   Future<ZenTaoProductBugsResponse> classicProductBugs(
     String productId, {
     required String browseType,
-    int recPerPage = 100,
+    int recPerPage = kDefaultApiPageLimit,
     int pageID = 1,
   }) async {
     final token = await _ensureToken();

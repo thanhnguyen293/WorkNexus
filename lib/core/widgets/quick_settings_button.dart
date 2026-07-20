@@ -143,15 +143,10 @@ class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
               targetAnchor: Alignment.bottomRight,
               followerAnchor: Alignment.topRight,
               offset: Offset(context.spacing.none, context.spacing.xs),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: _panelMaxHeight(context),
-                ),
-                child: Focus(
-                  focusNode: _panelFocusNode,
-                  onKeyEvent: _handlePanelKeyEvent,
-                  child: const QuickSettingsPanel(),
-                ),
+              child: Focus(
+                focusNode: _panelFocusNode,
+                onKeyEvent: _handlePanelKeyEvent,
+                child: const QuickSettingsPanel(),
               ),
             ),
           ),

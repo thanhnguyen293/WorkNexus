@@ -98,6 +98,28 @@ class SidebarPinButton extends StatelessWidget {
   }
 }
 
+/// Compact progress glyph for sidebar rows that are actively refreshing.
+class SidebarSyncIndicator extends StatelessWidget {
+  const SidebarSyncIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return SizedBox.square(
+      dimension: 21,
+      child: Center(
+        child: SizedBox.square(
+          dimension: 12,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.6,
+            valueColor: AlwaysStoppedAnimation<Color>(c.accent),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Non-tappable label marking a per-account "Pinned" area at the top of a
 /// source node (ZenTao / GitLab / GitHub).
 class SidebarPinnedHeader extends StatelessWidget {

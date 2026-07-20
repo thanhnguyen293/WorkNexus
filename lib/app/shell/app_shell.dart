@@ -20,7 +20,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final assigned = ref.watch(ticketsProvider).asData?.value.length;
-    final settingsOpen = ref.watch(settingsOpenProvider);
+    final integrationsVisible = ref.watch(integrationsVisibleProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -34,7 +34,7 @@ class AppShell extends ConsumerWidget {
                   children: [
                     const ResizableSidebar(),
                     Expanded(
-                      child: settingsOpen
+                      child: integrationsVisible
                           ? const SettingsPage()
                           : const BoardPage(),
                     ),

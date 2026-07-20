@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/credential_store.dart';
@@ -16,6 +16,7 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../../domain/repositories/connection_repository.dart';
+import 'workspace_editor_dialog.dart';
 
 /// The GitLab instance version for an account (e.g. `16.3.8`), shown on its
 /// connected-accounts row. Null for non-GitLab accounts or when unavailable.
@@ -30,11 +31,9 @@ class WorkspaceAccounts extends StatelessWidget {
     super.key,
     required this.workspaceId,
     required this.lookups,
-    required this.tickets,
   });
   final String workspaceId;
   final Lookups lookups;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +52,12 @@ class WorkspaceAccounts extends StatelessWidget {
         children: [
           Row(
             children: [
-              WorkspaceBadge(Color(ws.colorValue), ws.shortCode, big: true),
+              WorkspaceBadge(
+                Color(ws.colorValue),
+                ws.shortCode,
+                big: true,
+                iconKey: ws.iconKey,
+              ),
               SizedBox(width: context.spacing.md),
               Text(
                 ws.isPersonal ? l.personal : ws.name,
@@ -70,6 +74,27 @@ class WorkspaceAccounts extends StatelessWidget {
                   color: c.textTertiary,
                 ),
               ),
+              SizedBox(width: context.spacing.sm),
+              IconButton(
+                tooltip: 'Edit workspace',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.palette_outlined,
+                  size: 16,
+                  color: c.textSecondary,
+                ),
+                onPressed: () => _editWorkspace(context, ws),
+              ),
+              IconButton(
+                tooltip: 'Delete workspace',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: 16,
+                  color: c.textTertiary,
+                ),
+                onPressed: () => _deleteWorkspace(context, ws.id, accounts),
+              ),
             ],
           ),
           SizedBox(height: context.spacing.md),
@@ -85,7 +110,6 @@ class WorkspaceAccounts extends StatelessWidget {
                   _AccountRow(
                     account: accounts[i],
                     lookups: lookups,
-                    tickets: tickets,
                     first: i == 0,
                     index: i,
                   ),
@@ -96,19 +120,57 @@ class WorkspaceAccounts extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _editWorkspace(BuildContext context, Workspace workspace) async {
+    final updated = await showDialog<Workspace>(
+      context: context,
+      builder: (_) => WorkspaceEditorDialog(workspace: workspace),
+    );
+    if (updated == null) return;
+    await getIt<ConnectionRepository>().updateWorkspace(updated);
+  }
+
+  Future<void> _deleteWorkspace(
+    BuildContext context,
+    String id,
+    List<Account> accounts,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete workspace?'),
+        content: Text(
+          'This removes ${accounts.length} account${accounts.length == 1 ? '' : 's'} and local synced data in this workspace.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final credentials = await getIt<ConnectionRepository>().deleteWorkspace(id);
+    for (final ref in credentials) {
+      await getIt<CredentialStore>().delete(ref);
+    }
+  }
 }
 
 class _AccountRow extends ConsumerWidget {
   const _AccountRow({
     required this.account,
     required this.lookups,
-    required this.tickets,
     required this.first,
     required this.index,
   });
   final Account account;
   final Lookups lookups;
-  final List<Ticket> tickets;
   final bool first;
   final int index;
 
@@ -121,12 +183,6 @@ class _AccountRow extends ConsumerWidget {
     final gitlabVersion = account.providerType == ProviderType.gitlab
         ? ref.watch(gitlabServerVersionProvider(account.id)).asData?.value
         : null;
-    final accTickets = tickets
-        .where((tk) => tk.accountId == account.id)
-        .toList();
-    final projects = {
-      for (final tk in accTickets) lookups.projects[tk.projectId]?.name ?? '',
-    }.where((s) => s.isNotEmpty).toList();
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.xl2,
