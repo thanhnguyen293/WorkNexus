@@ -107,6 +107,62 @@ void main() {
   });
 
   group('normalizeGitLabMergeRequest', () {
+    test(
+      'carries user avatars, milestone, and time stats into cached detail',
+      () {
+        final mr = GitLabMergeRequest.fromJson({
+          'id': 2001,
+          'iid': 7,
+          'project_id': 7,
+          'title': 'An MR',
+          'state': 'opened',
+          'references': {'full': 'group/web!7'},
+          'author': {
+            'id': 1,
+            'username': 'thanh',
+            'name': 'Thanh',
+            'avatar_url': 'https://cdn.example.com/thanh.png',
+          },
+          'assignees': [
+            {
+              'id': 1,
+              'username': 'thanh',
+              'name': 'Thanh',
+              'avatar_url': 'https://cdn.example.com/thanh.png',
+            },
+          ],
+          'reviewers': [
+            {
+              'id': 2,
+              'username': 'reviewer',
+              'name': 'Reviewer',
+              'avatar_url': 'https://cdn.example.com/reviewer.png',
+            },
+          ],
+          'milestone': {'id': 12, 'iid': 3, 'title': 'Release 1.0'},
+          'time_stats': {
+            'time_estimate': 7200,
+            'total_time_spent': 3600,
+            'human_time_estimate': '2h',
+            'human_total_time_spent': '1h',
+          },
+        });
+
+        final ticket = normalizeGitLabMergeRequest(mr, accountId: _acct);
+        final json = ticket.providerEntity!.toJson();
+
+        expect(json['authorAvatarUrl'], 'https://cdn.example.com/thanh.png');
+        expect(json['userAvatarUrls'], {
+          'Thanh': 'https://cdn.example.com/thanh.png',
+          'Reviewer': 'https://cdn.example.com/reviewer.png',
+        });
+        expect(json['milestoneId'], 12);
+        expect(json['milestoneTitle'], 'Release 1.0');
+        expect(json['humanTimeEstimate'], '2h');
+        expect(json['humanTotalTimeSpent'], '1h');
+      },
+    );
+
     test('draft MR → inprogress, raw status "draft"', () {
       final t = normalizeGitLabMergeRequest(_mr(draft: true), accountId: _acct);
       expect(t.status, UnifiedStatus.inprogress);

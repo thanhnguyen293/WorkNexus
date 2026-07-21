@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
+import '../../../core/domain/entities/provider_entity.dart';
+import '../../../core/domain/entities/ticket.dart';
 import '../../../core/navigation/navigation_providers.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_borders.dart';
@@ -10,6 +12,8 @@ import 'detail_providers.dart';
 import 'widgets/detail_header.dart';
 import 'widgets/detail_tab_bar.dart';
 import 'widgets/detail_tab_body.dart';
+import 'widgets/github_pr_detail.dart';
+import 'widgets/gitlab_mr_detail.dart';
 import 'widgets/translation_footer.dart';
 
 /// Hosts the animated right slide-over. Always present in the tree; shows/hides
@@ -121,6 +125,50 @@ class _DetailPanel extends ConsumerWidget {
     final detailLoading = ref
         .watch(ticketDetailSyncProvider(ticketId))
         .isLoading;
+    final gitlabMrEntity = _gitlabMergeRequestEntity(ticket);
+    final githubPrEntity = _githubPullRequestEntity(ticket);
+
+    // Merge requests / pull requests get their own two-pane detail; everything
+    // else (ZenTao, GitLab/GitHub issues) uses the standard tabbed panel.
+    final Widget body;
+    if (gitlabMrEntity != null) {
+      body = GitLabMrDetail(
+        ticket: ticket,
+        entity: gitlabMrEntity,
+        isSyncing: detailLoading,
+        onClose: onClose,
+      );
+    } else if (githubPrEntity != null) {
+      body = GitHubPrDetail(
+        ticket: ticket,
+        entity: githubPrEntity,
+        isSyncing: detailLoading,
+        onClose: onClose,
+      );
+    } else {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DetailHeader(ticket: ticket, wsColor: wsColor, onClose: onClose),
+          DetailTabBar(current: tab),
+          SizedBox(
+            height: 2,
+            child: detailLoading
+                ? LinearProgressIndicator(
+                    minHeight: 2,
+                    backgroundColor: Colors.transparent,
+                    color: c.accent,
+                  )
+                : null,
+          ),
+          Expanded(
+            child: DetailTabBody(ticket: ticket, tab: tab, layout: layout),
+          ),
+          if (tab == DetailTab.translation)
+            TranslationFooter(ticketId: ticketId),
+        ],
+      );
+    }
 
     return Material(
       // Brightest surface so the slide-over reads as an elevated panel that
@@ -133,29 +181,20 @@ class _DetailPanel extends ConsumerWidget {
             top: BorderSide(color: wsColor, width: context.borders.accent),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DetailHeader(ticket: ticket, wsColor: wsColor, onClose: onClose),
-            DetailTabBar(current: tab),
-            SizedBox(
-              height: 2,
-              child: detailLoading
-                  ? LinearProgressIndicator(
-                      minHeight: 2,
-                      backgroundColor: Colors.transparent,
-                      color: c.accent,
-                    )
-                  : null,
-            ),
-            Expanded(
-              child: DetailTabBody(ticket: ticket, tab: tab, layout: layout),
-            ),
-            if (tab == DetailTab.translation)
-              TranslationFooter(ticketId: ticketId),
-          ],
-        ),
+        child: body,
       ),
     );
   }
+}
+
+GitLabItemEntity? _gitlabMergeRequestEntity(Ticket ticket) {
+  final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
+  final entity = ticket.providerEntity;
+  return isMr && entity is GitLabItemEntity ? entity : null;
+}
+
+GitHubItemEntity? _githubPullRequestEntity(Ticket ticket) {
+  final isPr = (ticket.externalType ?? '').toLowerCase() == 'pullrequest';
+  final entity = ticket.providerEntity;
+  return isPr && entity is GitHubItemEntity ? entity : null;
 }

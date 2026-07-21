@@ -9,6 +9,7 @@ import 'core/platform/desktop_window_service.dart';
 import 'core/settings/app_settings.dart';
 import 'data/local/database_seeder.dart';
 import 'data/local/mappers.dart';
+import 'features/sync/data/sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,10 @@ Future<void> main() async {
   await configureDependencies(Environment.prod);
   final db = getIt<AppDatabase>();
   await purgeSeededDemoData(db);
+
+  // Scope the on-disk attachment cache to a single session: clear last
+  // session's downloaded repro videos/screenshots so temp doesn't accumulate.
+  await getIt<SyncService>().purgeAttachmentCache();
 
   // Restore persisted appearance/language settings (defaults on first run).
   final settingsRow = await db.getSettings();

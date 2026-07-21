@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -22,6 +25,7 @@ class WorkspaceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = big ? 18.0 : 16.0;
+    final imageBytes = workspaceIconImageBytes(iconKey);
     final icon = workspaceIconData(iconKey);
     return Container(
       width: s,
@@ -31,7 +35,16 @@ class WorkspaceBadge extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(context.radii.xs),
       ),
-      child: icon == null
+      clipBehavior: Clip.antiAlias,
+      child: imageBytes != null
+          ? Image.memory(
+              imageBytes,
+              width: s,
+              height: s,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+            )
+          : icon == null
           ? Text(
               short,
               style:
@@ -40,6 +53,18 @@ class WorkspaceBadge extends StatelessWidget {
             )
           : Icon(icon, size: big ? 12 : 10, color: context.colors.onColorInk),
     );
+  }
+}
+
+Uint8List? workspaceIconImageBytes(String? key) {
+  const prefix = 'data:image/';
+  if (key == null || !key.startsWith(prefix)) return null;
+  final marker = key.indexOf('base64,');
+  if (marker == -1) return null;
+  try {
+    return Uint8List.fromList(base64Decode(key.substring(marker + 7)));
+  } on FormatException {
+    return null;
   }
 }
 

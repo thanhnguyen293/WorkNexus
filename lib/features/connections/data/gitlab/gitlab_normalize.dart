@@ -137,6 +137,12 @@ Ticket normalizeGitLabMergeRequest(
   final title = e.title ?? '';
   final body = e.description ?? '';
   final state = e.state ?? 'opened';
+  final avatarUrls = <String, String>{};
+  for (final user in [e.author, ...e.assignees, ...e.reviewers]) {
+    final name = user?.display ?? '';
+    final avatarUrl = user?.avatarUrl ?? '';
+    if (name.isNotEmpty && avatarUrl.isNotEmpty) avatarUrls[name] = avatarUrl;
+  }
   // Preserve draft in the raw status so the MR board can split draft vs review.
   final rawStatus = (state == 'opened' && e.draft) ? 'draft' : state;
   return Ticket(
@@ -160,15 +166,22 @@ Ticket normalizeGitLabMergeRequest(
       projectPath: path,
       projectId: e.projectId,
       author: e.author?.display,
+      authorAvatarUrl: e.author?.avatarUrl,
       labelColors: e.labelColorMap,
       labelTextColors: e.labelTextColorMap,
       sourceBranch: e.sourceBranch,
       targetBranch: e.targetBranch,
       mergeStatus: e.detailedMergeStatus ?? e.mergeStatus,
+      commitsBehind: e.commitsBehind,
       draft: e.draft,
       upvotes: e.upvotes,
+      milestoneId: e.milestone?.id,
+      milestoneTitle: e.milestone?.title,
+      humanTimeEstimate: e.timeStats?.humanTimeEstimate,
+      humanTotalTimeSpent: e.timeStats?.humanTotalTimeSpent,
       reviewers: [for (final r in e.reviewers) r.display],
       assignees: [for (final a in e.assignees) a.display],
+      userAvatarUrls: avatarUrls,
     ),
     sourceHash: contentHash(title, body),
   );

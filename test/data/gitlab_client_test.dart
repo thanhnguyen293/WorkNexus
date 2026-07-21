@@ -95,6 +95,72 @@ void main() {
     );
   });
 
+  test('MR metadata mutations use GitLab 16.3 compatible payloads', () async {
+    final fake = _FakeAdapter(
+      (_) => ResponseBody.fromString(
+        '{}',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      ),
+    );
+    final client = _client(fake);
+
+    await client.updateMergeRequest(
+      'group%2Fweb',
+      '42',
+      labels: const ['backend', 'review'],
+      milestoneId: 12,
+    );
+    await client.setMergeRequestTimeEstimate('group%2Fweb', '42', '2h');
+    await client.addMergeRequestSpentTime('group%2Fweb', '42', '30m');
+    expect(fake.requests, hasLength(3));
+    expect(fake.requests[0].method, 'PUT');
+    expect(fake.requests[0].data, {
+      'labels': 'backend,review',
+      'milestone_id': 12,
+    });
+    expect(
+      fake.requests[1].uri.path,
+      '/api/v4/projects/group%2Fweb/merge_requests/42/time_estimate',
+    );
+    expect(fake.requests[1].data, {'duration': '2h'});
+    expect(
+      fake.requests[2].uri.path,
+      '/api/v4/projects/group%2Fweb/merge_requests/42/add_spent_time',
+    );
+    expect(fake.requests[2].data, {'duration': '30m'});
+  });
+
+  test('MR metadata options use project label and milestone APIs', () async {
+    final fake = _FakeAdapter((request) {
+      final body = request.path.endsWith('/labels')
+          ? '[{"name":"backend","color":"#428BCA"}]'
+          : '[{"id":12,"iid":3,"title":"Release 1.0"}]';
+      return ResponseBody.fromString(
+        body,
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    });
+    final client = _client(fake);
+
+    final labels = await client.projectLabels('group%2Fweb');
+    final milestones = await client.projectMilestones('group%2Fweb');
+
+    expect(labels.single.name, 'backend');
+    expect(labels.single.color, '#428BCA');
+    expect(milestones.single.title, 'Release 1.0');
+    expect(fake.requests[1].uri.queryParameters['state'], 'active');
+    expect(
+      fake.requests[1].uri.queryParameters['include_parent_milestones'],
+      'true',
+    );
+  });
+
   test(
     'review feed falls back to reviewer_username when scope is unsupported',
     () async {

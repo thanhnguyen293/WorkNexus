@@ -87,14 +87,17 @@ class BoardPage extends ConsumerWidget {
         ((githubSlice?.isLoading ?? false) && count == 0) ||
         (executionSyncing && count == 0 && mode == ViewMode.zentaoTasks);
 
+    // A slice fetch that fails only blocks the board when nothing is cached yet
+    // (offline-first: with cached tickets the board renders from the DB and the
+    // stale slice quietly reconciles once connectivity returns).
     Widget body;
     if (showSkeleton) {
       body = const BoardSkeleton();
-    } else if (bugSlice != null && bugSlice.hasError) {
+    } else if (bugSlice != null && bugSlice.hasError && count == 0) {
       body = _SliceError(message: AppL10n.of(context).bugTabLoadFailed);
-    } else if (gitlabSlice != null && gitlabSlice.hasError) {
+    } else if (gitlabSlice != null && gitlabSlice.hasError && count == 0) {
       body = _SliceError(message: AppL10n.of(context).gitlabItemsLoadFailed);
-    } else if (githubSlice != null && githubSlice.hasError) {
+    } else if (githubSlice != null && githubSlice.hasError && count == 0) {
       body = _SliceError(message: AppL10n.of(context).githubItemsLoadFailed);
     } else if (count == 0) {
       body = const EmptyState();
