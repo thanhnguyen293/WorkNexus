@@ -1,0 +1,46 @@
+name: Release Please
+
+# On every push to main, release-please reads the Conventional-Commit history
+# and maintains a rolling "release PR" that updates CHANGELOG.md + the pubspec
+# version. Merging that PR creates a git tag (vX.Y.Z) and a GitHub Release whose
+# notes are the generated changelog.
+on:
+  push:
+    branches: [main]
+
+# Never cancel a release run midway (it creates tags/releases).
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create tags + releases, commit the changelog bump
+  pull-requests: write # open/update the release PR
+
+jobs:
+  release-please:
+    name: Release PR / publish
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # When a release was just published, build macOS/Windows and attach the zips
+  # to it. Calling build.yml directly (instead of relying on the `release`
+  # event) is required because a release created with GITHUB_TOKEN does not
+  # trigger further workflow runs.
+  build-release:
+    name: Build + attach binaries
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.tag_name }}
