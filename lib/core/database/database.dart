@@ -193,21 +193,36 @@ class AppDatabase extends _$AppDatabase {
       if (from < 12) {
         await m.addColumn(settings, settings.pinnedExecutionsJson);
       }
-      if (from < 13) await m.addColumn(settings, settings.sidebarWidth);
-      if (from < 14) {
+      if (from < 13) {
         // Idempotent: a dev DB may already carry the column from a half-applied
         // migration (added, but the schema version not yet bumped). Skip then.
-        final existing = await customSelect(
-          "SELECT 1 FROM pragma_table_info('settings') "
-          "WHERE name = 'translation_lang'",
-        ).get();
-        if (existing.isEmpty) {
+        if (!await _hasColumn('settings', 'sidebar_width')) {
+          await m.addColumn(settings, settings.sidebarWidth);
+        }
+      }
+      if (from < 14) {
+        if (!await _hasColumn('settings', 'translation_lang')) {
           await m.addColumn(settings, settings.translationLang);
         }
       }
-      if (from < 15) await m.addColumn(workspaces, workspaces.iconKey);
+      if (from < 15) {
+        if (!await _hasColumn('workspaces', 'icon_key')) {
+          await m.addColumn(workspaces, workspaces.iconKey);
+        }
+      }
     },
   );
+
+  /// Whether [table] already has [column]. Used to keep column-add migrations
+  /// idempotent when a dev DB carries a column from a half-applied migration
+  /// (added, but the schema version not yet bumped).
+  Future<bool> _hasColumn(String table, String column) async {
+    final rows = await customSelect(
+      'SELECT 1 FROM pragma_table_info(?) WHERE name = ?',
+      variables: [Variable<String>(table), Variable<String>(column)],
+    ).get();
+    return rows.isNotEmpty;
+  }
 
   // ---- reactive reads ----
   Stream<List<TicketRow>> watchTickets() => select(tickets).watch();
