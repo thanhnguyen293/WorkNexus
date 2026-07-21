@@ -48,5 +48,18 @@ void main() {
     test('empty stored labels leaves the detail labels untouched', () {
       expect(mergeDetailLabels(['a', 'b'], const []), ['a', 'b']);
     });
+
+    test('unions membership markers from different sync paths', () {
+      // Offline-first regression: an MR that is both in a viewed project and
+      // assigned to me is written by two syncs; re-upserting one path's labels
+      // must not drop the other path's marker (else it vanishes from one board
+      // offline). Here the project sync re-writes a ticket already tagged mine.
+      final merged = mergeDetailLabels(
+        ['gitlab-project:42'], // this sync's fresh labels
+        ['gitlab-mine:acc', 'gitlab-project:42'], // stored by both paths
+      );
+
+      expect(merged, containsAll(['gitlab-project:42', 'gitlab-mine:acc']));
+    });
   });
 }

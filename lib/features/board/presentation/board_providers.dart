@@ -10,6 +10,7 @@ import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/result.dart';
+import '../../../core/util/synthetic_labels.dart';
 import '../../sync/data/sync_service.dart';
 import '../domain/entities/board_model.dart';
 import '../domain/entities/filter_state.dart';
@@ -23,6 +24,7 @@ import '../domain/usecases/build_zentao_bug_board.dart';
 import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
+import '../domain/usecases/scope_provider_tickets.dart';
 import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/saved_view.dart';
@@ -533,78 +535,66 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   if (gitlabProject != null) {
     if (gitlabProject.mine) {
       // The account-wide "my merge requests" board: MRs assigned to me or
-      // awaiting my review, across all projects — scoped by the mine slice ids.
+      // awaiting my review, across all projects — scoped by the `gitlab-mine`
+      // label so it renders from cache offline, reconciled by the slice ids.
       final slice = ref.watch(gitlabMineSliceProvider).asData?.value;
-      return tickets
-          .where(
-            (ticket) =>
-                ticket.accountId == gitlabProject.accountId &&
-                ticket.providerType == ProviderType.gitlab &&
-                (ticket.externalType ?? '') ==
-                    GitLabItemKind.mergeRequest.externalType &&
-                slice != null &&
-                slice.contains(ticket.id),
-          )
-          .toList();
+      return const ScopeProviderTickets()(
+        tickets: tickets,
+        accountId: gitlabProject.accountId,
+        providerType: ProviderType.gitlab,
+        externalType: GitLabItemKind.mergeRequest.externalType,
+        membershipLabel: gitlabMineLabel(gitlabProject.accountId),
+        slice: slice,
+      );
     }
     final kind = ref.watch(gitlabKindProvider);
-    final projectLabel = 'gitlab-project:${gitlabProject.projectId}';
-    // The active project+kind's server slice (ids). Null while it's still
-    // loading — show nothing until it resolves (the board page renders a
-    // skeleton) so a project/kind switch never flashes the previous slice.
+    // The active project+kind's server slice (ids), or null while it is still
+    // loading / has failed — offline-first: fall back to the cached tickets
+    // tagged with this project's label, then reconcile once the slice resolves.
     final slice = ref.watch(gitlabItemsSliceProvider).asData?.value;
-    return tickets
-        .where(
-          (ticket) =>
-              ticket.accountId == gitlabProject.accountId &&
-              ticket.providerType == ProviderType.gitlab &&
-              (ticket.externalType ?? '') == kind.externalType &&
-              ticket.labels.contains(projectLabel) &&
-              slice != null &&
-              slice.contains(ticket.id),
-        )
-        .toList();
+    return const ScopeProviderTickets()(
+      tickets: tickets,
+      accountId: gitlabProject.accountId,
+      providerType: ProviderType.gitlab,
+      externalType: kind.externalType,
+      membershipLabel: gitlabProjectLabel(gitlabProject.projectId),
+      slice: slice,
+    );
   }
   final githubRepo = ref.watch(selectedGitHubRepoProvider);
   if (githubRepo != null) {
     if (githubRepo.mine) {
       // The account-wide "my pull requests" board: PRs assigned to me or
-      // requesting my review, across all repos — scoped by the mine slice ids.
+      // requesting my review, across all repos — scoped by the `github-mine`
+      // label so it renders from cache offline, reconciled by the slice ids.
       final slice = ref.watch(githubMineSliceProvider).asData?.value;
-      return tickets
-          .where(
-            (ticket) =>
-                ticket.accountId == githubRepo.accountId &&
-                ticket.providerType == ProviderType.github &&
-                (ticket.externalType ?? '') ==
-                    GitHubItemKind.pullRequest.externalType &&
-                slice != null &&
-                slice.contains(ticket.id),
-          )
-          .toList();
+      return const ScopeProviderTickets()(
+        tickets: tickets,
+        accountId: githubRepo.accountId,
+        providerType: ProviderType.github,
+        externalType: GitHubItemKind.pullRequest.externalType,
+        membershipLabel: githubMineLabel(githubRepo.accountId),
+        slice: slice,
+      );
     }
     final kind = ref.watch(githubKindProvider);
-    final repoLabel = 'github-repo:${githubRepo.repoId}';
-    // The active repo+kind's server slice (ids). Null while it's still loading —
-    // show nothing until it resolves (the board page renders a skeleton) so a
-    // repo/kind switch never flashes the previous slice.
+    // The active repo+kind's server slice (ids), or null while it is still
+    // loading / has failed — offline-first: fall back to the cached tickets
+    // tagged with this repo's label, then reconcile once the slice resolves.
     final slice = ref.watch(githubItemsSliceProvider).asData?.value;
-    return tickets
-        .where(
-          (ticket) =>
-              ticket.accountId == githubRepo.accountId &&
-              ticket.providerType == ProviderType.github &&
-              (ticket.externalType ?? '') == kind.externalType &&
-              ticket.labels.contains(repoLabel) &&
-              slice != null &&
-              slice.contains(ticket.id),
-        )
-        .toList();
+    return const ScopeProviderTickets()(
+      tickets: tickets,
+      accountId: githubRepo.accountId,
+      providerType: ProviderType.github,
+      externalType: kind.externalType,
+      membershipLabel: githubRepoLabel(githubRepo.repoId),
+      slice: slice,
+    );
   }
   final product = ref.watch(selectedZenTaoProductProvider);
   final execution = ref.watch(selectedZenTaoExecutionProvider);
   if (execution != null) {
-    final executionLabel = 'zentao-execution:${execution.executionId}';
+    final executionLabel = zentaoExecutionLabel(execution.executionId);
     tickets = tickets
         .where(
           (ticket) =>
@@ -614,21 +604,18 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
         )
         .toList();
   } else if (product != null) {
-    final productLabel = 'zentao-product:${product.productId}';
-    // The active bug tab's server slice (ids). Null while it's still loading —
-    // show nothing until it resolves (the board page renders a skeleton) so a
-    // tab switch never flashes the previous tab's bugs.
+    // The active bug tab's server slice (ids), or null while it is still
+    // loading / has failed — offline-first: fall back to the cached bugs tagged
+    // with this product's label, then reconcile once the slice resolves.
     final slice = ref.watch(zentaoBugTabSliceProvider).asData?.value;
-    tickets = tickets
-        .where(
-          (ticket) =>
-              ticket.accountId == product.accountId &&
-              (ticket.externalType ?? '').toLowerCase() == 'bug' &&
-              ticket.labels.contains(productLabel) &&
-              slice != null &&
-              slice.contains(ticket.id),
-        )
-        .toList();
+    tickets = const ScopeProviderTickets()(
+      tickets: tickets,
+      accountId: product.accountId,
+      providerType: ProviderType.zentao,
+      externalType: 'bug',
+      membershipLabel: zentaoProductLabel(product.productId),
+      slice: slice,
+    );
   }
   return tickets;
 });

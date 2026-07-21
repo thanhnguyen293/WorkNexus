@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
@@ -137,21 +138,10 @@ class WorkspaceAccounts extends StatelessWidget {
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete workspace?'),
-        content: Text(
-          'This removes ${accounts.length} account${accounts.length == 1 ? '' : 's'} and local synced data in this workspace.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
+      builder: (dialogContext) => _DeleteWorkspaceDialog(
+        accountCount: accounts.length,
+        onCancel: () => Navigator.of(dialogContext).pop(false),
+        onDelete: () => Navigator.of(dialogContext).pop(true),
       ),
     );
     if (confirmed != true) return;
@@ -159,6 +149,85 @@ class WorkspaceAccounts extends StatelessWidget {
     for (final ref in credentials) {
       await getIt<CredentialStore>().delete(ref);
     }
+  }
+}
+
+class _DeleteWorkspaceDialog extends StatelessWidget {
+  const _DeleteWorkspaceDialog({
+    required this.accountCount,
+    required this.onCancel,
+    required this.onDelete,
+  });
+
+  final int accountCount;
+  final VoidCallback onCancel;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final accountLabel = accountCount == 1 ? 'account' : 'accounts';
+    return Dialog(
+      backgroundColor: c.card,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: EdgeInsets.all(context.spacing.xl3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        side: BorderSide(color: c.border),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: EdgeInsets.all(context.spacing.xl2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.delete_outline, size: 20, color: c.error),
+                  SizedBox(width: context.spacing.md),
+                  Expanded(
+                    child: Text(
+                      'Delete workspace?',
+                      style: context.typography.titleLg.copyWith(
+                        color: c.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: context.spacing.lg),
+              Text(
+                'This removes $accountCount $accountLabel and local synced '
+                'data in this workspace.',
+                style: context.typography.secondary.copyWith(
+                  color: c.textSecondary,
+                  height: 1.45,
+                ),
+              ),
+              SizedBox(height: context.spacing.xl2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: context.spacing.sm,
+                children: [
+                  AppButton.textNeutral(
+                    size: AppButtonSize.small,
+                    onPressed: onDelete,
+                    child: Text('Delete', style: TextStyle(color: c.error)),
+                  ),
+                  AppButton.filled(
+                    size: AppButtonSize.small,
+                    onPressed: onCancel,
+                    child: const Text('Cancel'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -15,6 +15,8 @@ import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
 import '../../features/translation/domain/adapters/translation_service.dart';
 import '../database/database.dart';
+import '../domain/adapters/github_pr_service.dart';
+import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
 import '../domain/repositories/comment_repository.dart';
@@ -92,4 +94,10 @@ abstract class ServiceModule {
   @lazySingleton
   SyncService syncService(AppDatabase db, CredentialStore credentials) =>
       SyncService(db, credentials);
+
+  @lazySingleton
+  GitLabMrService gitLabMrService(SyncService syncService) => syncService;
+
+  @lazySingleton
+  GitHubPrService gitHubPrService(SyncService syncService) => syncService;
 }

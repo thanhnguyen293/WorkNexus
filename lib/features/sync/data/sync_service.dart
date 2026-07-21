@@ -3,17 +3,21 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 
 import '../../../core/database/database.dart';
+import '../../../core/domain/adapters/github_pr_service.dart';
+import '../../../core/domain/adapters/gitlab_mr_adapter.dart';
+import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
-import '../../../core/util/labels.dart';
+import '../../../core/util/synthetic_labels.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/github/github_adapter.dart';
 import '../../connections/data/github/github_client.dart';
@@ -23,6 +27,8 @@ import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
+import 'attachment_file_cache.dart';
+import 'byte_lru_cache.dart';
 import 'timed_slice_cache.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
@@ -42,18 +48,20 @@ List<String> mergeDetailLabels(
 
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
-class SyncService {
+class SyncService implements GitLabMrService, GitHubPrService {
   SyncService(
     this._db,
     this._credentials, {
     TimedSliceCache<List<String>>? zentaoBugTabCache,
     TimedSliceCache<int>? zentaoExecutionTaskCache,
+    AttachmentFileCache? attachmentCache,
   }) : _zentaoBugTabCache =
            zentaoBugTabCache ??
            TimedSliceCache<List<String>>(ttl: zentaoTabCacheTtl),
        _zentaoExecutionTaskCache =
            zentaoExecutionTaskCache ??
-           TimedSliceCache<int>(ttl: zentaoTabCacheTtl);
+           TimedSliceCache<int>(ttl: zentaoTabCacheTtl),
+       _attachmentCache = attachmentCache ?? AttachmentFileCache();
 
   static const zentaoTabCacheTtl = Duration(minutes: 15);
 
@@ -61,6 +69,7 @@ class SyncService {
   final CredentialStore _credentials;
   final TimedSliceCache<List<String>> _zentaoBugTabCache;
   final TimedSliceCache<int> _zentaoExecutionTaskCache;
+  final AttachmentFileCache _attachmentCache;
 
   /// Returns the number of tickets synced, or a [Failure].
   Future<Result<int>> syncAccount(Account account) async {
@@ -274,7 +283,7 @@ class SyncService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        final label = 'gitlab-project:$projectId';
+        final label = gitlabProjectLabel(projectId);
         final tagged = [
           for (final t in value) t.copyWith(labels: [...t.labels, label]),
         ];
@@ -313,7 +322,7 @@ class SyncService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        final label = 'github-repo:$repoId';
+        final label = githubRepoLabel(repoId);
         final tagged = [
           for (final t in value) t.copyWith(labels: [...t.labels, label]),
         ];
@@ -323,9 +332,10 @@ class SyncService {
   }
 
   /// Fetches the current user's assigned + review-requested merge requests across
-  /// all GitLab projects (the "my merge requests" board), upserts them into
-  /// drift, and returns their ids. No synthetic label — the board scopes by the
-  /// returned id set.
+  /// all GitLab projects (the "my merge requests" board), tags each with a
+  /// synthetic `gitlab-mine:<accountId>` label, upserts them into drift, and
+  /// returns their ids. The label lets the board render this slice from the DB
+  /// when offline (the slice id set reconciles it once a sync succeeds).
   Future<Result<List<String>>> syncGitLabMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -343,14 +353,20 @@ class SyncService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        await _upsert(account, value);
-        return Ok([for (final t in value) t.id]);
+        final label = gitlabMineLabel(accountId);
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
     }
   }
 
   /// Fetches the current user's assigned + review-requested pull requests across
-  /// all GitHub repos (the "my pull requests" board), upserts them, and returns
-  /// their ids.
+  /// all GitHub repos (the "my pull requests" board), tags each with a synthetic
+  /// `github-mine:<accountId>` label, upserts them, and returns their ids. The
+  /// label lets the board render this slice from the DB when offline (the slice
+  /// id set reconciles it once a sync succeeds).
   Future<Result<List<String>>> syncGitHubMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -368,8 +384,12 @@ class SyncService {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        await _upsert(account, value);
-        return Ok([for (final t in value) t.id]);
+        final label = githubMineLabel(accountId);
+        final tagged = [
+          for (final t in value) t.copyWith(labels: [...t.labels, label]),
+        ];
+        await _upsert(account, tagged);
+        return Ok([for (final t in tagged) t.id]);
     }
   }
 
@@ -393,26 +413,26 @@ class SyncService {
     if (adapter == null) return const Ok(null);
 
     final detail = await adapter.getTicket(ticket);
-    if (detail case Ok(:final value)) {
-      // Keep the local identity/scope stable; refresh only the content fields.
-      // Carry forward synthetic board-membership labels (e.g.
-      // `zentao-product:<id>`, added by the product-board sync): the detail
-      // endpoint doesn't return them, so dropping them would silently remove
-      // the ticket from its product board the moment its detail is opened.
-      final merged = value.copyWith(
-        id: ticket.id,
-        accountId: ticket.accountId,
-        projectId: ticket.projectId,
-        labels: mergeDetailLabels(value.labels, ticket.labels),
-        providerEntity: _preserveLabelColors(
-          value.providerEntity,
-          ticket.providerEntity,
-        ),
-      );
-      await _db
-          .into(_db.tickets)
-          .insertOnConflictUpdate(ticketToCompanion(merged));
-    }
+    if (detail case Err(:final failure)) return Err(failure);
+    final value = (detail as Ok<Ticket>).value;
+    // Keep the local identity/scope stable; refresh only the content fields.
+    // Carry forward synthetic board-membership labels (e.g.
+    // `zentao-product:<id>`, added by the product-board sync): the detail
+    // endpoint doesn't return them, so dropping them would silently remove
+    // the ticket from its product board the moment its detail is opened.
+    final merged = value.copyWith(
+      id: ticket.id,
+      accountId: ticket.accountId,
+      projectId: ticket.projectId,
+      labels: mergeDetailLabels(value.labels, ticket.labels),
+      providerEntity: _preserveLabelColors(
+        value.providerEntity,
+        ticket.providerEntity,
+      ),
+    );
+    await _db
+        .into(_db.tickets)
+        .insertOnConflictUpdate(ticketToCompanion(merged));
 
     final comments = await adapter.listComments(ticket);
     final activity = await adapter.listActivity(ticket);
@@ -476,10 +496,11 @@ class SyncService {
 
   /// Users the ticket can be assigned to (empty when unavailable). GitLab/GitHub
   /// have no account-wide assignable list, so members are fetched per-project/repo.
+  @override
   Future<Result<List<ProviderUser>>> listUsers(Ticket ticket) async {
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) return const Ok(<ProviderUser>[]);
-    if (adapter is GitLabAdapter) return adapter.listProjectMembers(ticket);
+    if (adapter is GitLabMrAdapter) return adapter.listProjectMembers(ticket);
     if (adapter is GitHubAdapter) return adapter.listRepoAssignees(ticket);
     return adapter.listUsers();
   }
@@ -488,6 +509,7 @@ class SyncService {
   /// thread from the provider so the canonical comment (with the real author and
   /// timestamp) lands in drift, from where the panel reads reactively. Returns
   /// the failure if the account lacks credentials or the provider rejects it.
+  @override
   Future<Result<void>> postComment(Ticket ticket, String body) async {
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) {
@@ -498,12 +520,12 @@ class SyncService {
       case Err(:final failure):
         return Err(failure);
       case Ok():
-        await syncTicketDetail(ticket);
-        return const Ok(null);
+        return syncTicketDetail(ticket);
     }
   }
 
   /// Reassigns the ticket, then refreshes its cached detail/status/history.
+  @override
   Future<Result<void>> assignTicket(
     Ticket ticket, {
     required String assignee,
@@ -519,19 +541,19 @@ class SyncService {
       comment: comment,
     );
     if (res case Err(:final failure)) return Err(failure);
-    await syncTicketDetail(ticket);
-    return const Ok(null);
+    return syncTicketDetail(ticket);
   }
 
   /// Sets/requests reviewers on a GitLab MR or GitHub PR, then refreshes detail.
   /// GitLab replaces the reviewer set; GitHub requests the given logins.
+  @override
   Future<Result<void>> setReviewers(Ticket ticket, List<String> logins) async {
     final adapter = await _adapterFor(ticket.accountId);
     if (adapter == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
     final Result<bool> res;
-    if (adapter is GitLabAdapter) {
+    if (adapter is GitLabMrAdapter) {
       res = await adapter.setReviewers(ticket, logins);
     } else if (adapter is GitHubAdapter) {
       res = await adapter.setReviewers(ticket, logins);
@@ -539,9 +561,57 @@ class SyncService {
       return const Err(UnexpectedFailure('Reviewers are GitLab/GitHub only'));
     }
     if (res case Err(:final failure)) return Err(failure);
-    await syncTicketDetail(ticket);
-    return const Ok(null);
+    return syncTicketDetail(ticket);
   }
+
+  @override
+  Future<Result<List<ProviderLabelOption>>> listGitLabLabels(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabMrAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listProjectLabels(ticket);
+  }
+
+  @override
+  Future<Result<void>> setGitLabLabels(Ticket ticket, List<String> labels) =>
+      _gitlabAction(ticket, ticket, (a) => a.setLabels(ticket, labels));
+
+  @override
+  Future<Result<List<ProviderMilestoneOption>>> listGitLabMilestones(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabMrAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listProjectMilestones(ticket);
+  }
+
+  @override
+  Future<Result<void>> setGitLabMilestone(Ticket ticket, int? milestoneId) =>
+      _gitlabAction(ticket, ticket, (a) => a.setMilestone(ticket, milestoneId));
+
+  @override
+  Future<Result<void>> updateGitLabTimeTracking(
+    Ticket ticket, {
+    String? estimate,
+    String? spent,
+    bool resetEstimate = false,
+    bool resetSpent = false,
+  }) => _gitlabAction(
+    ticket,
+    ticket,
+    (a) => a.updateTimeTracking(
+      ticket,
+      estimate: estimate,
+      spent: spent,
+      resetEstimate: resetEstimate,
+      resetSpent: resetSpent,
+    ),
+  );
 
   /// Resolves a bug, then refreshes its cached detail/status/history.
   Future<Result<void>> resolveBug(
@@ -576,8 +646,7 @@ class SyncService {
     // Trust the server's post-action state (assignee, status, resolution) from
     // the detail refresh — do NOT re-apply the optimistic here, or it clobbers
     // the real assignee (resolve → reporter) and masks a failed activate.
-    await syncTicketDetail(ticket);
-    return const Ok(null);
+    return syncTicketDetail(ticket);
   }
 
   /// Activates/reopens a bug, then refreshes its cached detail/status/history.
@@ -649,9 +718,10 @@ class SyncService {
     return const Ok(null);
   }
 
-  // ---- GitLab actions (close / reopen / merge) ----
+  // ---- GitLab actions (close / reopen / merge / approve) ----
 
   /// Closes a GitLab issue or MR, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> closeGitLabItem(Ticket ticket) {
     final optimistic = ticket.copyWith(
       status: UnifiedStatus.done,
@@ -680,6 +750,7 @@ class SyncService {
   }
 
   /// Merges a GitLab merge request, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> mergeGitLabMr(Ticket ticket) {
     final optimistic = ticket.copyWith(
       status: UnifiedStatus.done,
@@ -692,13 +763,19 @@ class SyncService {
     );
   }
 
+  /// Approves a GitLab merge request, then refreshes its cached detail.
+  @override
+  Future<Result<void>> approveGitLabMr(Ticket ticket) =>
+      _gitlabAction(ticket, ticket, (a) => a.approveMergeRequest(ticket));
+
   /// Rebases a GitLab MR onto its target, then refreshes its cached detail. No
   /// status change — only the merge status flips, which the refresh picks up.
+  @override
   Future<Result<void>> rebaseGitLabMr(Ticket ticket) =>
       _gitlabAction(ticket, ticket, (a) => a.rebaseMergeRequest(ticket));
 
   /// Optimistically applies [optimistic], runs a GitLab-specific [action]
-  /// through the concrete adapter, refreshes the ticket detail on success, and
+  /// through the GitLab MR adapter contract, refreshes detail on success, and
   /// rolls back to [ticket] on failure. Like [resolveBug]/[activateBug] but
   /// deliberately without their post-refresh re-assert: GitLab is strongly
   /// consistent, so the [syncTicketDetail] fetch already reflects the new state
@@ -707,11 +784,11 @@ class SyncService {
   Future<Result<void>> _gitlabAction(
     Ticket ticket,
     Ticket optimistic,
-    Future<Result<bool>> Function(GitLabAdapter adapter) action,
+    Future<Result<bool>> Function(GitLabMrAdapter adapter) action,
   ) async {
     await _optimisticallyUpdateTicket(optimistic);
     final adapter = await _adapterFor(ticket.accountId);
-    if (adapter is! GitLabAdapter) {
+    if (adapter is! GitLabMrAdapter) {
       await _rollbackTicket(ticket);
       return const Err(AuthFailure('No stored credentials for this account'));
     }
@@ -720,13 +797,13 @@ class SyncService {
       await _rollbackTicket(ticket);
       return Err(failure);
     }
-    await syncTicketDetail(ticket);
-    return const Ok(null);
+    return syncTicketDetail(ticket);
   }
 
   // ---- GitHub actions (close / reopen / merge) ----
 
   /// Closes a GitHub issue or PR, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> closeGitHubItem(Ticket ticket) {
     final optimistic = ticket.copyWith(
       status: UnifiedStatus.done,
@@ -736,6 +813,7 @@ class SyncService {
   }
 
   /// Reopens a GitHub issue or PR, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> reopenGitHubItem(Ticket ticket) {
     final isPr = (ticket.externalType ?? '').toLowerCase() == 'pullrequest';
     final optimistic = ticket.copyWith(
@@ -746,6 +824,7 @@ class SyncService {
   }
 
   /// Merges a GitHub pull request, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> mergeGitHubPr(Ticket ticket) {
     final optimistic = ticket.copyWith(
       status: UnifiedStatus.done,
@@ -756,6 +835,7 @@ class SyncService {
 
   /// Updates a GitHub PR's branch with its base ("Update branch"), then refreshes
   /// its cached detail. No status change — only the mergeable state flips.
+  @override
   Future<Result<void>> updateGitHubPrBranch(Ticket ticket) =>
       _githubAction(ticket, ticket, (a) => a.updateBranch(ticket));
 
@@ -822,6 +902,48 @@ class SyncService {
     return fresh;
   }
 
+  // ---- detail view: commits + changed files ----
+
+  @override
+  Future<Result<List<RepoCommit>>> listMergeRequestCommits(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listMergeRequestCommits(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoFileChange>>> listMergeRequestChanges(
+    Ticket ticket,
+  ) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitLabAdapter) {
+      return const Err(AuthFailure('No stored GitLab credentials'));
+    }
+    return adapter.listMergeRequestChanges(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoCommit>>> listPullCommits(Ticket ticket) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored GitHub credentials'));
+    }
+    return adapter.listPullCommits(ticket);
+  }
+
+  @override
+  Future<Result<List<RepoFileChange>>> listPullFiles(Ticket ticket) async {
+    final adapter = await _adapterFor(ticket.accountId);
+    if (adapter is! GitHubAdapter) {
+      return const Err(AuthFailure('No stored GitHub credentials'));
+    }
+    return adapter.listPullFiles(ticket);
+  }
+
   // ---- inline image loading (authenticated + self-signed TLS) ----
 
   final Map<String, ZenTaoClient> _zenClients = {};
@@ -831,19 +953,21 @@ class SyncService {
   /// Successfully loaded inline-image bytes, keyed by account + url, so the detail
   /// panel reuses a loaded image instead of refetching on every Original/
   /// Translate tab switch. Only successes are cached, so a failed load can retry.
-  final Map<String, Uint8List> _imageCache = {};
+  /// LRU-bounded at 500 MB so it can't grow without limit over the app lifetime.
+  final ByteLruCache _imageCache = ByteLruCache();
 
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
   /// via the ticket account's authenticated client (ZenTao session, GitLab or
   /// GitHub PAT). Returns null if the account has no stored credentials or the
   /// fetch fails. Only the matching provider's client is non-null. Successful
   /// results are cached in [_imageCache].
+  @override
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url) async {
     final key = '${ticket.accountId}|$url';
-    final cached = _imageCache[key];
+    final cached = _imageCache.get(key);
     if (cached != null) return cached;
     final bytes = await _loadTicketImage(ticket, url);
-    if (bytes != null) _imageCache[key] = bytes;
+    if (bytes != null) _imageCache.put(key, bytes);
     return bytes;
   }
 
@@ -882,21 +1006,21 @@ class SyncService {
     final client = await _zenClientFor(ticket.accountId);
     if (client == null) return null;
     try {
-      final dir = Directory(
-        '${Directory.systemTemp.path}/worknexus_attachments',
-      );
-      await dir.create(recursive: true);
-      final file = File('${dir.path}/${att.id}_${_safeName(att.title)}');
+      final safeName = _safeName(att.title);
       // Reuse an already-downloaded file (viewer reopen, download after view).
-      if (await file.exists() && await file.length() > 0) return file.path;
+      final existing = await _attachmentCache.existing(att.id, safeName);
+      if (existing != null) return existing;
       final bytes = await client.downloadBytes(att.url);
       if (bytes == null) return null;
-      await file.writeAsBytes(bytes, flush: true);
-      return file.path;
+      return await _attachmentCache.store(att.id, safeName, bytes);
     } catch (_) {
       return null;
     }
   }
+
+  /// Wipes the on-disk attachment cache. Call once at startup so downloaded
+  /// repro videos/screenshots don't accumulate in temp across app sessions.
+  Future<void> purgeAttachmentCache() => _attachmentCache.purge();
 
   /// Copies an already-[cachedPath] attachment into the user's Downloads folder
   /// and reveals it in Finder. Returns the saved path, or null on failure.
@@ -1002,6 +1126,7 @@ class SyncService {
   }
 
   Future<void> _upsert(Account account, List<Ticket> tickets) async {
+    final merged = await _carryMembershipLabels(tickets);
     await _db.batch((b) {
       b.insert(
         _db.accounts,
@@ -1009,7 +1134,7 @@ class SyncService {
         onConflict: DoUpdate((_) => accountToCompanion(account)),
       );
       final projects = <String, Project>{};
-      for (final t in tickets) {
+      for (final t in merged) {
         projects.putIfAbsent(
           t.projectId,
           () => Project(
@@ -1026,7 +1151,7 @@ class SyncService {
           onConflict: DoUpdate((_) => projectToCompanion(p)),
         );
       }
-      for (final t in tickets) {
+      for (final t in merged) {
         b.insert(
           _db.tickets,
           ticketToCompanion(t),
@@ -1034,6 +1159,31 @@ class SyncService {
         );
       }
     });
+  }
+
+  /// Carries forward the synthetic board-membership labels
+  /// ([kSyntheticLabelPrefixes]) already stored for these tickets. Each list
+  /// sync only stamps its own marker (a project board vs. the account-wide
+  /// "mine" board), and `_upsert`'s row overwrite would otherwise drop the
+  /// others — leaving an item missing from a board it belongs to when the board
+  /// renders from the DB offline. Real provider labels still come fresh from the
+  /// server. Stale markers reconcile online via each board's slice.
+  Future<List<Ticket>> _carryMembershipLabels(List<Ticket> tickets) async {
+    if (tickets.isEmpty) return tickets;
+    final ids = [for (final t in tickets) t.id];
+    final rows = await (_db.select(
+      _db.tickets,
+    )..where((r) => r.id.isIn(ids))).get();
+    final priorLabels = {
+      for (final r in rows) r.id: decodeLabels(r.labelsJson),
+    };
+    return [
+      for (final t in tickets)
+        if (priorLabels[t.id] case final prior?)
+          t.copyWith(labels: mergeDetailLabels(t.labels, prior))
+        else
+          t,
+    ];
   }
 }
 

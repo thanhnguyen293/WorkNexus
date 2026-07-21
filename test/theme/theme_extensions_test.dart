@@ -124,6 +124,7 @@ void main() {
       expect(c.background, AppPalette.light.bg);
       expect(c.success, AppPalette.light.green);
       expect(c.error, AppPalette.light.red);
+      expect(c.error, const Color(0xFFDC2626));
       expect(c.textPrimary, AppPalette.light.tx);
     });
 
