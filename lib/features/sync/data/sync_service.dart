@@ -27,6 +27,8 @@ import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_client.dart';
+import 'attachment_file_cache.dart';
+import 'byte_lru_cache.dart';
 import 'timed_slice_cache.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
@@ -52,12 +54,14 @@ class SyncService implements GitLabMrService, GitHubPrService {
     this._credentials, {
     TimedSliceCache<List<String>>? zentaoBugTabCache,
     TimedSliceCache<int>? zentaoExecutionTaskCache,
+    AttachmentFileCache? attachmentCache,
   }) : _zentaoBugTabCache =
            zentaoBugTabCache ??
            TimedSliceCache<List<String>>(ttl: zentaoTabCacheTtl),
        _zentaoExecutionTaskCache =
            zentaoExecutionTaskCache ??
-           TimedSliceCache<int>(ttl: zentaoTabCacheTtl);
+           TimedSliceCache<int>(ttl: zentaoTabCacheTtl),
+       _attachmentCache = attachmentCache ?? AttachmentFileCache();
 
   static const zentaoTabCacheTtl = Duration(minutes: 15);
 
@@ -65,6 +69,7 @@ class SyncService implements GitLabMrService, GitHubPrService {
   final CredentialStore _credentials;
   final TimedSliceCache<List<String>> _zentaoBugTabCache;
   final TimedSliceCache<int> _zentaoExecutionTaskCache;
+  final AttachmentFileCache _attachmentCache;
 
   /// Returns the number of tickets synced, or a [Failure].
   Future<Result<int>> syncAccount(Account account) async {
@@ -948,7 +953,8 @@ class SyncService implements GitLabMrService, GitHubPrService {
   /// Successfully loaded inline-image bytes, keyed by account + url, so the detail
   /// panel reuses a loaded image instead of refetching on every Original/
   /// Translate tab switch. Only successes are cached, so a failed load can retry.
-  final Map<String, Uint8List> _imageCache = {};
+  /// LRU-bounded at 500 MB so it can't grow without limit over the app lifetime.
+  final ByteLruCache _imageCache = ByteLruCache();
 
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
   /// via the ticket account's authenticated client (ZenTao session, GitLab or
@@ -958,10 +964,10 @@ class SyncService implements GitLabMrService, GitHubPrService {
   @override
   Future<Uint8List?> fetchTicketImage(Ticket ticket, String url) async {
     final key = '${ticket.accountId}|$url';
-    final cached = _imageCache[key];
+    final cached = _imageCache.get(key);
     if (cached != null) return cached;
     final bytes = await _loadTicketImage(ticket, url);
-    if (bytes != null) _imageCache[key] = bytes;
+    if (bytes != null) _imageCache.put(key, bytes);
     return bytes;
   }
 
@@ -1000,21 +1006,21 @@ class SyncService implements GitLabMrService, GitHubPrService {
     final client = await _zenClientFor(ticket.accountId);
     if (client == null) return null;
     try {
-      final dir = Directory(
-        '${Directory.systemTemp.path}/worknexus_attachments',
-      );
-      await dir.create(recursive: true);
-      final file = File('${dir.path}/${att.id}_${_safeName(att.title)}');
+      final safeName = _safeName(att.title);
       // Reuse an already-downloaded file (viewer reopen, download after view).
-      if (await file.exists() && await file.length() > 0) return file.path;
+      final existing = await _attachmentCache.existing(att.id, safeName);
+      if (existing != null) return existing;
       final bytes = await client.downloadBytes(att.url);
       if (bytes == null) return null;
-      await file.writeAsBytes(bytes, flush: true);
-      return file.path;
+      return await _attachmentCache.store(att.id, safeName, bytes);
     } catch (_) {
       return null;
     }
   }
+
+  /// Wipes the on-disk attachment cache. Call once at startup so downloaded
+  /// repro videos/screenshots don't accumulate in temp across app sessions.
+  Future<void> purgeAttachmentCache() => _attachmentCache.purge();
 
   /// Copies an already-[cachedPath] attachment into the user's Downloads folder
   /// and reveals it in Finder. Returns the saved path, or null on failure.
