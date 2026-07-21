@@ -1,15 +1,26 @@
 name: Build (macOS & Windows)
 
 # Automatically build the app for macOS and Windows on every push to main.
-# Can also be triggered manually from the Actions tab (workflow_dispatch).
+# Can also be triggered manually from the Actions tab (workflow_dispatch), or
+# called by another workflow (workflow_call) — release-please calls it with a
+# release_tag to attach the build zips to a versioned GitHub Release.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Attach the build zips to this existing release tag instead of refreshing nightly."
+        type: string
+        required: false
+        default: ""
 
 # Back-to-back pushes to main cancel the older run and keep only the newest.
+# The versioned-release build (workflow_call with a tag) gets its own group so
+# it never cancels — or gets cancelled by — the nightly push build on main.
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.ref }}-${{ inputs.release_tag || 'nightly' }}
   cancel-in-progress: true
 
 env:
@@ -107,15 +118,17 @@ jobs:
           path: worknexus-windows.zip
           if-no-files-found: error
 
-  # ───────────────────── Rolling "nightly" release ─────────────────────
-  # Runs after both builds succeed. Collects the two zips and refreshes a
-  # single pre-release tagged `nightly` so it always points at the newest
-  # commit on main. Only publishes from main (not from a dispatch on a branch).
+  # ───────────────────── Publish build artifacts ─────────────────────
+  # Runs after both builds succeed. Collects the two zips, then either:
+  #   • release_tag set (called by release-please) → attach zips to that
+  #     versioned release (vX.Y.Z, changelog already written by release-please);
+  #   • otherwise → refresh the single moving `nightly` pre-release on main.
+  # Only publishes from main or a workflow_call (not a dispatch on a branch).
   release:
-    name: Publish nightly release
+    name: Publish release assets
     needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || inputs.release_tag != ''
     permissions:
       contents: write # required to create/replace the release and move its tag
     steps:
@@ -126,10 +139,21 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # Attach to the versioned release that release-please just published.
+      # --clobber overwrites assets if the build is re-run for the same tag.
+      - name: Attach assets to versioned release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ inputs.release_tag }}" dist/*.zip \
+            --repo "$GITHUB_REPOSITORY" --clobber
+
       # Delete the previous nightly release + its tag, then recreate at this
       # commit — the reliable way to make `nightly` a moving pointer. The
       # `|| true` covers the very first run when nightly does not exist yet.
       - name: Publish/refresh nightly release
+        if: inputs.release_tag == ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
