@@ -255,11 +255,13 @@ final zentaoBugTabSliceProvider = FutureProvider.autoDispose<Set<String>>((
 class ZenTaoExecutionSelection {
   const ZenTaoExecutionSelection({
     required this.accountId,
+    required this.projectId,
     required this.executionId,
     required this.executionName,
   });
 
   final String accountId;
+  final String projectId;
   final String executionId;
   final String executionName;
 }
@@ -285,6 +287,7 @@ class SelectedZenTaoExecution extends Notifier<ZenTaoExecutionSelection?> {
   void select(ProviderExecution execution) {
     state = ZenTaoExecutionSelection(
       accountId: execution.accountId,
+      projectId: execution.projectId,
       executionId: execution.id,
       executionName: execution.name,
     );

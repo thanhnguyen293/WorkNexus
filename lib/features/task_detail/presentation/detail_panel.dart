@@ -47,6 +47,10 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
       if (next != null) {
         setState(() => _current = next);
         ref.read(detailTabProvider.notifier).set(DetailTab.original);
+        // Every open refetches the ticket's detail: drop any result kept from a
+        // previous open (e.g. reopened during the close animation, before the
+        // autoDispose provider was disposed).
+        ref.invalidate(ticketDetailSyncProvider(next));
         _c.forward();
       } else {
         _c.reverse().then((_) {

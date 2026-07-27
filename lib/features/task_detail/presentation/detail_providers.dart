@@ -95,15 +95,15 @@ final devLinksProvider = StreamProvider.family<List<DevLink>, String>(
   (ref, id) => getIt<DevLinkRepository>().watchDevLinks(id),
 );
 
-/// One-shot: on opening a ticket, pull its full detail + comments from the
-/// provider into drift. The panel `watch`es this to show a refresh indicator;
-/// the actual content updates flow through the reactive ticket/comment streams.
-/// Cached per ticket id, so it fetches once per app session unless invalidated.
-final ticketDetailSyncProvider = FutureProvider.family<void, String>((
-  ref,
-  id,
-) async {
-  final ticket = ref.read(ticketByIdProvider(id));
-  if (ticket == null) return;
-  await getIt<SyncService>().syncTicketDetail(ticket);
-});
+/// On opening a ticket, pull its full detail + comments from the provider into
+/// drift. The panel `watch`es this to show a refresh indicator; the actual
+/// content updates flow through the reactive ticket/comment streams.
+///
+/// `autoDispose`, and invalidated by the panel on every open, so a ticket's
+/// detail is always fetched fresh — never served from a previous open's result.
+final ticketDetailSyncProvider = FutureProvider.autoDispose
+    .family<void, String>((ref, id) async {
+      final ticket = ref.read(ticketByIdProvider(id));
+      if (ticket == null) return;
+      await getIt<SyncService>().syncTicketDetail(ticket);
+    });

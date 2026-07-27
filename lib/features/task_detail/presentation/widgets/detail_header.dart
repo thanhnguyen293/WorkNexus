@@ -13,6 +13,7 @@ import '../../../../core/util/priority_labels.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../detail_providers.dart';
 import '../ticket_actions.dart';
 import 'detail_header_icon_button.dart';
 
@@ -63,6 +64,13 @@ class DetailHeader extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
+              DetailHeaderIconButton(
+                icon: Icons.sync,
+                tooltip: l.refresh,
+                onTap: () =>
+                    ref.invalidate(ticketDetailSyncProvider(ticket.id)),
+              ),
+              SizedBox(width: context.spacing.md),
               if (ticket.url != null && ticket.url!.isNotEmpty) ...[
                 DetailHeaderCopyLinkButton(url: ticket.url!),
                 SizedBox(width: context.spacing.md),
