@@ -153,6 +153,15 @@ class SyncService implements GitLabMrService, GitHubPrService {
     );
   }
 
+  /// Drops the cached slice for one bug tab so the next [syncProductBugsTab]
+  /// goes to the server — a manual board refresh must not replay a TTL-cached
+  /// answer.
+  void invalidateProductBugsTab({
+    required String accountId,
+    required String productId,
+    required String browseType,
+  }) => _zentaoBugTabCache.invalidate('$accountId:$productId:$browseType');
+
   Future<Result<List<String>>> _syncProductBugsTabUncached({
     required String accountId,
     required String productId,
@@ -209,6 +218,13 @@ class SyncService implements GitLabMrService, GitHubPrService {
       load: () => _syncExecutionTasksUncached(execution),
     );
   }
+
+  /// Drops the cached task slice for one execution so the next
+  /// [syncExecutionTasks] goes to the server (manual board refresh).
+  void invalidateExecutionTasks({
+    required String accountId,
+    required String executionId,
+  }) => _zentaoExecutionTaskCache.invalidate('$accountId:$executionId');
 
   Future<Result<int>> _syncExecutionTasksUncached(
     ProviderExecution execution,
