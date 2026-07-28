@@ -1,207 +1,270 @@
 # WorkNexus
 
-**One board for every ticket.** A local-first developer workspace that pulls bugs,
-tasks, stories, issues, merge/pull requests from **ZenTao, GitLab, and GitHub** into a
-single **Unified Task Board** — with built-in Vietnamese translation and one-click
-dispatch of a ticket to a local coding agent (`claude`, `codex`, `opencode`).
+**One place to read and act on every ticket.** WorkNexus is a local-first macOS
+workspace for developers who work across **ZenTao, GitLab, and GitHub**. It syncs
+provider data into a local SQLite read model, normalizes it as `Ticket`, and then
+shows each source with the workflow it actually uses: ZenTao bugs/tasks, GitLab
+issues/MRs, and GitHub issues/PRs.
 
 <sub>🇬🇧 English · <a href="README.vi.md">🇻🇳 Tiếng Việt</a></sub>
 
-> **Status:** early development · macOS desktop · private project.
-> Built with Flutter/Dart on a feature-first Clean Architecture.
+> **Status:** early development · macOS desktop · private project. Built with
+> Flutter/Dart on a feature-first Clean Architecture.
 
 ---
 
 ## Why WorkNexus?
 
-Modern teams scatter their work across multiple trackers. WorkNexus aggregates them
-into one keyboard-friendly desktop app so you can triage, filter, translate, comment,
-and act on tickets without tab-hopping between four different web UIs.
+Work often lives in several trackers at once. WorkNexus gives you one desktop
+surface for triage, reading, filtering, commenting, provider actions, attachment
+preview, and machine translation without jumping between several browser tabs.
 
-- **Local-first.** A local SQLite database (drift) is the single source of truth. The
-  UI always reads from the DB and reacts to changes; sync writes the network into the
-  DB, never straight into the screen. Everything stays fast and works offline once
-  synced.
-- **Provider-agnostic board.** ZenTao, GitLab, and GitHub items are normalized into one
-  `Ticket` model and shown side by side — Kanban or List.
-- **Secure by default.** Provider tokens live in the macOS Keychain, never in plain
-  text. Auth headers are attached per-host so a token never leaks to a third-party
-  image/CDN host.
+- **Local-first.** drift/SQLite is the single source of truth. Network sync writes
+  into the database; the Flutter UI reads reactive streams from the database, so
+  cached tickets keep working offline.
+- **Unified, not flattened.** All sources become `Ticket`s, but each board keeps
+  provider-native lifecycle columns and actions instead of forcing every provider
+  through one generic status model.
+- **Secure by default.** Credentials are stored with `flutter_secure_storage`
+  (macOS Keychain). Authenticated media loads attach tokens only to the provider
+  host, not to arbitrary third-party asset/CDN hosts.
 
 ---
 
 ## Features
 
-### 📋 Unified Task Board
-- **Kanban and List** views over a normalized `Ticket` model.
-- Per-provider board modes: ZenTao **Bugs** / **Tasks**, GitLab **Issues** / **MRs**,
-  GitHub **Issues** / **PRs**.
-- **Context-aware filters** with a sensible "**My tickets**" default, plus data-derived
-  facets (assignee, status, priority, labels…).
-- Server-driven browse tabs for ZenTao bug boards (**All / Unclosed**).
+### Unified source tree and board
 
-### 🔌 Multi-provider connections
-| Provider | Auth | Items | In-app actions |
+- Workspace-grouped sidebar with multiple provider accounts per company.
+- Source-specific boards:
+  - ZenTao product bug boards and execution task boards.
+  - GitLab project boards plus an account-wide **My merge requests** board.
+  - GitHub repository boards plus an account-wide **My pull requests** board.
+- Pinned projects/repos/executions stay at the top of each provider tree.
+- Kanban and List views over the same normalized `Ticket` data.
+- Provider-native columns:
+  - ZenTao bugs: new/unconfirmed, confirmed/to-fix, resolved/verify,
+    postponed, non-fix, closed.
+  - ZenTao tasks: not started, in progress, paused, done/verify, closed,
+    canceled.
+  - GitLab/GitHub issues: open, in progress, closed.
+  - GitLab/GitHub MRs/PRs: draft, review, merged, closed.
+- Context-aware filters with data-derived facets for workspace, provider,
+  account, assignee, status, priority, labels, and search.
+- Server-side slices with offline fallback: when a selected tab/project/repo
+  cannot refresh, cached tickets still render from the local database.
+
+### Multi-provider connections
+
+| Provider | Auth | Data / scopes | In-app actions |
 |---|---|---|---|
-| **ZenTao** *(primary)* | Token | Bugs, Tasks (by product / execution) | Resolve / activate bug, assign, comment, pin executions |
-| **GitLab** | Personal Access Token | Issues, Merge Requests | Close / reopen / merge, assign |
-| **GitHub** | Personal Access Token | Issues, Pull Requests | Close / reopen / merge PR, assign |
+| **ZenTao** | Login/password in Keychain; app mints the v1 session token | Bugs by product, tasks by execution | Comment, internal note, assign, confirm/resolve/activate bugs, pin products/executions |
+| **GitLab** | Personal Access Token | Issues, merge requests, project members, labels, milestones, commits/changes for MRs | Comment, internal note, assign, close/reopen, request reviewers, approve/rebase/merge MRs, edit labels/milestone/time tracking |
+| **GitHub** | Personal Access Token | Issues, pull requests, repo assignees/reviewers, commits/files for PRs | Comment, internal note, assign, close/reopen, request reviewers, update branch, merge PRs |
 
-Works with both SaaS (`gitlab.com`, `github.com`) and **self-hosted / Enterprise**
-instances.
+GitLab works with `gitlab.com` and self-hosted instances. GitHub works with
+`github.com` and GitHub Enterprise Server. Jira is currently a UI/asset
+placeholder; no Jira adapter is implemented yet.
 
-### 🗂️ Task Detail slide-over
-A focused panel with tabs: **Original · Translation · Comments · Activity ·
-Development** — including inline image/attachment preview (repro screenshots and
-videos) fetched securely with your token.
+### Task detail and review views
 
-### 🌐 Vietnamese translation (built-in)
-Translate a ticket's description and comments to Vietnamese via a local **OpenCode**
-backend (`opencode serve`). Results are cached with clear states —
-*none / loading / done / outdated / error* — so you never re-translate unchanged text.
+- Standard slide-over detail panel with **Original**, selected translation
+  target, and **Comments & Activity** tabs.
+- Two detail layouts: a two-pane metadata sidebar or a single-column document
+  reading mode.
+- Provider comments and local-only internal notes in one timeline.
+- Secure inline image loading plus attachment preview for repro screenshots and
+  videos.
+- Dedicated GitLab MR and GitHub PR views with overview, activity composer,
+  commits, changed files, merge state, and metadata editors.
 
-### 🤖 Dispatch to a coding agent
-Hand a ticket to a locally-installed CLI agent — **`claude`**, **`codex`**, or
-**`opencode`** — to start working on it directly from the board.
+### Machine translation
 
-### 🎨 Editorial design system
-- Three surfaces: **light editorial cream**, **dark**, **midnight**.
-- **Flat / outline** variants × **comfortable / compact** density × optional
-  **company accent tint** × adjustable component radius.
-- Bundled **Space Grotesk** + **Space Mono** typefaces.
-- Full **English / Vietnamese** UI (l10n).
+- Uses the local **OpenCode CLI** via `opencode run`; authenticate OpenCode with
+  `opencode auth login`.
+- Default target language is Vietnamese, with selectable targets for English,
+  Japanese, Simplified Chinese, and Korean.
+- Translation records are cached per ticket, target language, source hash, and
+  prompt template version.
+- State is explicit: `none`, `loading`, `done`, `outdated`, or `error`.
+- Prompts preserve code, identifiers, file paths, URLs, and Markdown.
+
+### Appearance and workflow settings
+
+- Full English/Vietnamese UI localization.
+- Quick settings for UI language, translation target language, theme, surface
+  style, density, detail layout, date format, font, accent color, and component
+  radius.
+- Themes: light, dark, and midnight.
+- Surface variants: flat or outline; density variants: comfortable or compact.
+- Default UI font: **Be Vietnam Pro** via `google_fonts`.
+- Bundled fonts: **Space Grotesk** and **Space Mono**; optional system fonts and
+  **Geist Mono** are selectable.
+- Resizable sidebar width is persisted in drift.
+
+### Experimental coding-agent dispatch
+
+The codebase includes a Development-tab implementation for dispatching a ticket
+to **Claude Code**, **Codex**, or **OpenCode**. It defaults to dry-run mock
+sessions; live CLI mode uses locally installed binaries and streams normalized
+events into an in-memory session store. This workflow is still experimental and
+is not part of the default detail tab strip yet.
 
 ---
 
-## Tech stack
+## Tech Stack
 
 | Area | Choice |
 |---|---|
-| Language / UI | Flutter · Dart 3.10.7 (managed via **fvm**) |
-| State management | **Riverpod 3** (immutable state via **freezed**) |
-| Dependency injection | **get_it** + **injectable** (single composition root) |
-| Local database | **drift** (SQLite) — reactive `.watch`, source of truth |
-| Networking | **dio** + **retrofit** (type-safe ZenTao REST client) |
-| Error handling | **fpdart** `Result` / `Failure` (no exceptions across layers) |
-| Secrets | **flutter_secure_storage** (macOS Keychain) |
-| Desktop shell | **window_manager** (custom title bar) |
-| Markdown / media | **gpt_markdown**, **cached_network_image**, **video_player** |
+| Language / UI | Flutter 3.38.8 · Dart 3.10.7 (via **fvm**) |
+| State management | **Riverpod 3** with immutable **freezed** state |
+| Dependency injection | **get_it** + **injectable** in one composition root |
+| Local database | **drift** / SQLite with reactive `.watch()` streams |
+| Networking | **dio** + **retrofit** for typed REST clients |
+| Error handling | **fpdart** `Result` / `Failure`; layer boundaries do not throw |
+| Secrets | **flutter_secure_storage** backed by the macOS Keychain |
+| Desktop shell | **window_manager** custom title bar |
+| UI / media | **gpt_markdown**, **flutter_svg**, **cached_network_image**, **video_player**, **image_picker**, **google_fonts** |
+| Logging / diagnostics | **talker_flutter**, **talker_dio_logger**, **logger** |
+| Codegen | **build_runner**, **freezed**, **json_serializable**, **drift_dev**, **retrofit_generator**, **injectable_generator**, **flutter_gen** |
 
 ---
 
 ## Architecture
 
-WorkNexus follows a **feature-first Clean Architecture**: every feature is a vertical
-slice with `domain → data → presentation`, dependencies point inward only, and the
-`domain` layer is pure Dart. The full, enforced rulebook lives in
+WorkNexus follows a **feature-first Clean Architecture**: features are vertical
+slices with `domain -> data -> presentation`, dependencies point inward, and
+domain objects stay pure Dart. The single composition root is `lib/core/di/`.
+The current repo still keeps shared drift repositories under `lib/data/local/`
+while feature ownership is being tightened. The full rulebook lives in
 [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
 
 ```mermaid
 flowchart LR
     subgraph Providers
-        Z[ZenTao] & G[GitLab] & H[GitHub]
+        Z[ZenTao] & GL[GitLab] & GH[GitHub]
     end
-    Providers -->|dio + token| SYNC[Sync layer]
-    SYNC -->|normalize → Ticket| DB[(drift · SQLite<br/>source of truth)]
-    DB -->|.watch stream| UI[Riverpod · Flutter UI]
-    UI -->|actions| SYNC
+    Providers -->|dio + provider credentials| SYNC[SyncService]
+    SYNC -->|normalize to Ticket / comments / activity| DB[(drift · SQLite<br/>source of truth)]
+    DB -->|watch streams| UI[Riverpod + Flutter UI]
+    UI -->|provider actions| SYNC
+    UI -->|opencode run| TR[OpenCode translation]
 ```
 
 ```
 lib/
-├── app/                 # Root widget + app shell
-├── core/                # Shared kernel: theme, widgets, error, di, database, util…
+├── app/                 # Root app widget, shell, title bar, sidebar host
+├── core/                # Shared kernel: theme, widgets, error, di, database, util
+├── data/local/          # Shared drift-backed repositories and mappers
 ├── features/
-│   ├── agents/          # Dispatch tickets to coding-agent CLIs
-│   ├── board/           # Unified Task Board (domain + presentation)
-│   ├── connections/     # Provider setup: ZenTao / GitLab / GitHub
-│   ├── sync/            # Network → drift sync
-│   ├── task_detail/     # Task Detail slide-over
-│   └── translation/     # OpenCode-backed VI translation
-└── l10n/                # EN / VI localization
+│   ├── agents/          # Dry-run/live CLI agent adapters and session streams
+│   ├── board/           # Unified source tree, board/list views, board use cases
+│   ├── connections/     # Provider setup and provider-specific adapters
+│   ├── sync/            # Provider -> drift sync, actions, secure media cache
+│   ├── task_detail/     # Slide-over detail, comments, actions, MR/PR views
+│   └── translation/     # OpenCode-backed translation service and state
+├── gen/                 # Generated asset accessors
+└── l10n/                # English/Vietnamese ARB files and generated l10n
 ```
 
 ---
 
-## Getting started
+## Getting Started
 
 ### Prerequisites
-- **[fvm](https://fvm.app/)** (the toolchain is pinned; commands run as `fvm flutter` /
-  `fvm dart`) with **Flutter 3.38.8 / Dart 3.10.7**.
-- **macOS** with Xcode command-line tools (current desktop target).
-- Optional, for their respective features:
-  - **OpenCode** on your `PATH` (Vietnamese translation).
-  - `claude` / `codex` / `opencode` CLIs on your `PATH` (dispatch to coding agent).
+
+- **[fvm](https://fvm.app/)** with Flutter **3.38.8** / Dart **3.10.7**.
+- **macOS** with Xcode command-line tools (primary desktop target).
+- Provider credentials:
+  - ZenTao server URL, account, and password.
+  - GitLab Personal Access Token, usually with `api` scope.
+  - GitHub Personal Access Token for the repos/orgs you want to read and act on.
+- Optional:
+  - `opencode` authenticated with `opencode auth login` for machine translation.
+  - `claude`, `codex`, or `opencode` on `PATH` for experimental live agent
+    dispatch.
 
 ### Setup
 
 ```bash
 # 1. Install dependencies
-make get            # → fvm flutter pub get
+make get
 
-# 2. Generate code (freezed / json / drift / retrofit / injectable)
-make codegen        # → build_runner build --delete-conflicting-outputs
+# 2. Generate freezed/json/drift/retrofit/injectable/flutter_gen output
+make codegen
 
 # 3. Run the app on macOS
-make run            # → fvm flutter run -d macos
+make run
 ```
 
-Then open **Settings → Integrations** in the app to connect a provider (ZenTao token,
-or a GitLab/GitHub Personal Access Token) and sync your first board.
+Then open **Settings -> Integrations** in the app, connect a provider account,
+and choose a source from the sidebar.
 
-### macOS notes
-- The app sandbox is intentionally **off** so it can spawn local CLI agents and reach
-  `localhost` (the OpenCode server). Tokens are stored in the **login keychain** (no
-  special entitlement required).
+### macOS Notes
+
+- The macOS app sandbox is intentionally off so WorkNexus can spawn local CLI
+  tools and access local OpenCode/agent processes.
+- Credentials are stored in the login Keychain, not in the local database.
 - For stable Keychain access across rebuilds, add a local
-  `macos/Runner/Configs/Signing.xcconfig` (see `Signing.xcconfig.example`). Without it,
-  builds fall back to ad-hoc signing.
+  `macos/Runner/Configs/Signing.xcconfig` based on
+  `macos/Runner/Configs/Signing.xcconfig.example`. Without it, builds fall back
+  to ad-hoc signing.
 
 ---
 
-## Make targets
+## Make Targets
 
 | Target | What it does |
 |---|---|
-| `make get` | Install dependencies |
+| `make doctor` | Show Flutter diagnostics |
+| `make get` | Install Dart/Flutter dependencies |
+| `make outdated` | Show dependency upgrade information |
 | `make codegen` | Run all code generators once |
-| `make watch` | Watch & regenerate generated sources |
+| `make watch` | Watch and regenerate generated Dart sources |
 | `make run` | Run the app (`DEVICE=macos` by default) |
-| `make format` | Format `lib` + `test` |
-| `make analyze` | Static analysis |
-| `make test` | Run tests (`TEST=path/or/name` to target a subset) |
-| `make verify` | `format` + `analyze` + `test` |
+| `make format` | Format `lib` and `test` |
+| `make analyze` | Run static analysis |
+| `make test` | Run tests (`TEST=path/or/name` targets a subset) |
+| `make verify` | Run `format`, `analyze`, and `test` |
+| `make build-macos` | Build the macOS app |
 | `make build-macos-release` | Build the macOS release app |
-| `make reset` | Clean, reinstall deps, regenerate code |
+| `make build-windows-release` | Build the Windows release app target |
+| `make build-linux-release` | Build the Linux release app target |
+| `make clean` | Clean Flutter build output |
+| `make reset` | Clean, reinstall dependencies, and regenerate code |
 
-Run `make help` to list everything.
+Run `make help` to list the current targets.
 
 ---
 
 ## Testing
 
-Domain logic (entities, value objects, use cases) is testable without Flutter; the data
-boundary is mocked with **mocktail** and repositories are tested against an in-memory
-drift database.
+The test suite covers domain board logic, provider normalization/adapters,
+drift repositories and migrations, caches, theme extensions, quick settings,
+provider badges, connection dialogs, MR/PR detail views, and translation state.
 
 ```bash
-make test                                   # full suite
-make test TEST=test/data/zentao_normalize_test.dart   # a single file
+make test
+make test TEST=test/domain/translation_languages_test.dart
+make test TEST=test/data/github_adapter_test.dart
 ```
 
 ---
 
 ## Roadmap
 
-- [x] ZenTao provider (bugs + tasks)
-- [x] GitLab provider (issues + merge requests)
-- [x] GitHub provider (issues + pull requests)
-- [x] Vietnamese translation via OpenCode
-- [x] Dispatch tickets to coding agents
-- [ ] Push comments back to providers
-- [ ] Additional providers (e.g. Jira)
-- [ ] iOS / Android clients
-- [ ] Client ↔ server sync split
+- [x] ZenTao provider: bugs by product, tasks by execution.
+- [x] GitLab provider: issues/MRs, project boards, and My MRs.
+- [x] GitHub provider: issues/PRs, repo boards, and My PRs.
+- [x] Provider comments plus local-only internal notes.
+- [x] OpenCode machine translation with multiple target languages.
+- [x] GitLab/GitHub MR/PR detail views with commits, changed files, and merge
+  actions.
+- [ ] Surface and polish the coding-agent Development workflow.
+- [ ] Persist dev links and agent sessions beyond the current in-memory store.
+- [ ] Jira adapter.
+- [ ] Validate Windows/Linux desktop targets.
+- [ ] Client/server sync split and mobile clients.
 
 ---
 
