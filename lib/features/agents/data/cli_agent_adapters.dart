@@ -12,18 +12,69 @@ import '../domain/adapters/coding_agent_adapter.dart';
 class AgentRunner {
   const AgentRunner();
 
+  /// Whether spawned CLIs must go through a shell. On Windows the binary may be
+  /// a `.cmd`/`.bat` shim (e.g. npm-installed `opencode`), which `CreateProcess`
+  /// cannot launch directly — it needs `%COMSPEC% /c`.
+  static bool get needsShell => Platform.isWindows;
+
   Future<String?> resolve(String name, {String? override}) async {
     if (override != null && override.trim().isNotEmpty) return override.trim();
+    return Platform.isWindows ? _resolveWindows(name) : _resolveUnix(name);
+  }
+
+  /// macOS/Linux: a GUI launch omits the interactive-shell PATH (nvm, asdf,
+  /// Homebrew, `~/.local/bin`, …), so ask a login shell, then fall back to a
+  /// direct PATH scan for non-interactive shells.
+  Future<String?> _resolveUnix(String name) async {
+    final shell = Platform.environment['SHELL'] ?? '/bin/zsh';
     try {
-      final res = await Process.run('/bin/zsh', ['-lic', 'command -v $name']);
-      final lines = res.stdout
+      final res = await Process.run(shell, ['-lic', 'command -v $name']);
+      final hit = res.stdout
           .toString()
           .split('\n')
           .map((l) => l.trim())
           .where((l) => l.startsWith('/'))
           .toList();
-      if (lines.isNotEmpty) return lines.last;
+      if (hit.isNotEmpty) return hit.last;
     } catch (_) {}
+    return _scanPath(name, const ['']);
+  }
+
+  /// Windows: the app already inherits the user/system PATH, so use `where`
+  /// (which honors PATHEXT), then fall back to a manual PATH+PATHEXT scan.
+  Future<String?> _resolveWindows(String name) async {
+    try {
+      final res = await Process.run('where', [name]);
+      if (res.exitCode == 0) {
+        final hit = res.stdout
+            .toString()
+            .split('\n')
+            .map((l) => l.trim())
+            .where((l) => l.isNotEmpty)
+            .toList();
+        if (hit.isNotEmpty) return hit.first;
+      }
+    } catch (_) {}
+    final exts = (Platform.environment['PATHEXT'] ?? '.COM;.EXE;.BAT;.CMD')
+        .split(';')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    return _scanPath(name, [...exts, '']);
+  }
+
+  /// Walks `PATH` looking for `name` with any of [exts] (in order).
+  String? _scanPath(String name, List<String> exts) {
+    final entries = (Platform.environment['PATH'] ?? '')
+        .split(Platform.isWindows ? ';' : ':')
+        .map((d) => d.trim())
+        .where((d) => d.isNotEmpty);
+    for (final dir in entries) {
+      for (final ext in exts) {
+        final candidate = File('$dir${Platform.pathSeparator}$name$ext');
+        if (candidate.existsSync()) return candidate.path;
+      }
+    }
     return null;
   }
 
@@ -34,7 +85,10 @@ class AgentRunner {
     final path = await resolve('opencode', override: override);
     if (path == null) return false;
     try {
-      final res = await Process.run(path, ['auth', 'list']);
+      final res = await Process.run(path, [
+        'auth',
+        'list',
+      ], runInShell: needsShell);
       final out = '${res.stdout}${res.stderr}';
       final m = RegExp(r'(\d+)\s+credential').firstMatch(out);
       if (m != null) return (int.tryParse(m.group(1)!) ?? 0) > 0;
@@ -55,6 +109,7 @@ class AgentRunner {
       args,
       workingDirectory: workingDir,
       environment: {...Platform.environment, ...?extraEnv},
+      runInShell: needsShell,
     );
   }
 }
@@ -337,7 +392,7 @@ class ClaudeCodeAdapter extends CliAgentAdapter {
     if (content is String) return content;
     if (content is List) {
       return content
-          .whereType<Map>()
+          .whereType<Map<String, dynamic>>()
           .where((b) => b['type'] == 'text')
           .map((b) => b['text']?.toString() ?? '')
           .join();

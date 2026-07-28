@@ -53,8 +53,10 @@ class OpenCodeTranslationService implements TranslationService {
     if (path == null) {
       return const Err(AgentFailure('opencode not found on PATH'));
     }
-    final cwd =
-        workingDir ?? Platform.environment['HOME'] ?? Directory.current.path;
+    final home = Platform.isWindows
+        ? Platform.environment['USERPROFILE']
+        : Platform.environment['HOME'];
+    final cwd = workingDir ?? home ?? Directory.current.path;
     final language = translationLanguageFor(targetLang);
     final prompt = _buildPrompt(source, language.englishName);
     try {
@@ -67,6 +69,7 @@ class OpenCodeTranslationService implements TranslationService {
         ],
         environment: Platform.environment,
         workingDirectory: cwd,
+        runInShell: AgentRunner.needsShell,
       );
       if (res.exitCode != 0) {
         final err = res.stderr.toString().trim();
