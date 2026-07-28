@@ -125,6 +125,19 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
     if (entity is GitLabItemEntity && entity.assignees.isNotEmpty) {
       return entity.assignees;
     }
+    // A ZenTao bug counts as "mine" if I'm the current assignee OR I resolved it
+    // OR I opened it: ZenTao reassigns a bug to the reporter on resolve, so a bug
+    // I resolved is no longer assigned to me and would otherwise vanish from the
+    // "my tickets" filter (Resolved/Verify column). The current assignee is kept
+    // first (possibly '') so the "unassigned" sentinel filter still works.
+    if (entity is ZenTaoBugEntity) {
+      return <String>{
+        ticket.assignee ?? '',
+        if ((entity.resolvedByHandle ?? '').isNotEmpty)
+          entity.resolvedByHandle!,
+        if ((entity.openedByHandle ?? '').isNotEmpty) entity.openedByHandle!,
+      }.toList();
+    }
     return [ticket.assignee ?? ''];
   }
 
