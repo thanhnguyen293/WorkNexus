@@ -274,6 +274,7 @@ TicketProviderEntity _zentaoBugEntity(
   activatedCount: e.activatedCount,
   resolution: resolution.isEmpty ? null : resolution,
   openedBy: accountName(e.openedBy),
+  openedByHandle: accountHandle(e.openedBy),
   openedDate: parseZenTaoDate(e.openedDate),
   openedBuild: formatZenTaoBuild(e.openedBuild),
   // Account handle, matching `Ticket.assignee` above (see note there).
@@ -281,6 +282,7 @@ TicketProviderEntity _zentaoBugEntity(
   assignedDate: parseZenTaoDate(e.assignedDate),
   deadline: _text(e.deadline),
   resolvedBy: accountName(e.resolvedBy),
+  resolvedByHandle: accountHandle(e.resolvedBy),
   resolvedDate: parseZenTaoDate(e.resolvedDate),
   resolvedBuild: formatZenTaoBuild(e.resolvedBuild),
   closedBy: accountName(e.closedBy),

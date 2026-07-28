@@ -27,13 +27,19 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     int? severity,
     int? activatedCount,
     String? resolution,
+    // `openedBy`/`resolvedBy` are display names (realname); the `*Handle`
+    // variants are the stable login handles used by the "my tickets" filter so
+    // a bug I opened or resolved still counts as mine even after ZenTao
+    // reassigns it to the reporter for verification. See `FilterTickets`.
     String? openedBy,
+    String? openedByHandle,
     DateTime? openedDate,
     String? openedBuild,
     String? assignedTo,
     DateTime? assignedDate,
     String? deadline,
     String? resolvedBy,
+    String? resolvedByHandle,
     DateTime? resolvedDate,
     String? resolvedBuild,
     String? closedBy,
