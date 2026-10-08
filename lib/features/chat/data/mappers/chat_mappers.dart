@@ -213,6 +213,7 @@ ChatConversation conversationFromRow(
     hidden: row.hidden,
     archived: row.archived,
     starred: row.starred,
+    muted: row.muted,
     pinnedMessageIds: _pinnedIds(row.pinnedJson),
     adminIds: _pinnedIds(row.adminsJson),
     ownerAccount: row.ownedBy,

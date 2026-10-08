@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/opencode_not_linked_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import '../providers/message_translation_controller.dart';
 import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'message_hover_actions.dart';
@@ -32,6 +34,20 @@ List<MessageAction> messageActions(
   final pinned =
       canPin &&
       ref.watch(chatIsPinnedProvider((chat: chat, serverId: serverId)));
+  final storedTranslation = ref
+      .watch(
+        messageTranslationProvider((
+          accountId: message.accountId,
+          gid: message.gid,
+        )),
+      )
+      .asData
+      ?.value;
+  final translated =
+      ref
+          .watch(messageTranslationControllerProvider)
+          .containsKey(message.gid) ||
+      (storedTranslation?.visible ?? false);
   final text = switch (message.content) {
     TextContent(:final text) when !message.deleted => text,
     _ => null,
@@ -52,6 +68,23 @@ List<MessageAction> messageActions(
             text: text.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
           ),
         ),
+      ),
+    if (text != null)
+      (
+        icon: translated ? Icons.translate_rounded : Icons.g_translate_rounded,
+        tooltip: translated ? l.chatShowOriginal : l.chatTranslate,
+        onTap: () async {
+          final notifier = ref.read(
+            messageTranslationControllerProvider.notifier,
+          );
+          if (translated) return notifier.hide(message);
+          // A stored translation needs no key; a new one does.
+          if (storedTranslation == null &&
+              !await ensureOpenCodeLinked(context, ref)) {
+            return;
+          }
+          await notifier.translate(message);
+        },
       ),
     if (message.content case final ImageContent image
         when serverId != null && !message.deleted)

@@ -133,5 +133,29 @@ ChatStyle chatStyleSpec(
       fontSize: 14,
       ticks: false,
     ),
+    ChatAppearance.tbchat => ChatStyle(
+      palette: dark
+          ? ChatStylePalette.tbchatDark
+          : ChatStylePalette.tbchatLight,
+      avatar: ChatAvatarPlacement.firstOfRun,
+      avatarShape: ChatAvatarShape.circle,
+      avatarSize: 40,
+      ownAvatar: false,
+      avatarInDirectChats: false,
+      name: ChatNamePlacement.aboveBubble,
+      time: ChatTimePlacement.insideEnd,
+      quote: ChatQuotePlacement.inside,
+      separator: ChatSeparatorStyle.pill,
+      separatorGap: null,
+      radius: 12,
+      joinRadius: 12,
+      tail: BubbleTailKind.curlBottom,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      maxWidth: 560,
+      runGap: 4,
+      groupGap: 16,
+      fontSize: 15,
+      ticks: false,
+    ),
   };
 }

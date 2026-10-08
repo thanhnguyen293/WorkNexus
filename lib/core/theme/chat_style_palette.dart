@@ -34,35 +34,42 @@ class ChatStylePalette {
     this.outgoingQuoteFill,
     this.outsideQuoteFill,
     this.outsideQuoteText,
-    this.wallpaper,
-    this.wallpaperInk,
   });
 
   /// The default style follows the app theme. Secondary text uses the
   /// theme's secondary (not tertiary) ink, which keeps ≥ 4.5:1 on the tinted
   /// own bubble; quotes and link cards are neutral — grey in incoming,
   /// white in own bubbles — so they stand apart without a second tint.
-  factory ChatStylePalette.fromTheme(AppColors c) => ChatStylePalette(
-    background: c.background,
-    incomingBubble: c.surface,
-    incomingText: c.textPrimary,
-    incomingMeta: c.textSecondary,
-    incomingLink: c.accent,
-    incomingQuoteBar: c.accent,
-    outgoingBubble: c.selectionFill,
-    outgoingText: c.textPrimary,
-    outgoingMeta: c.textSecondary,
-    // The accent on the accent-tinted own bubble falls a little short.
-    outgoingLink: readableOn(
-      c.accent,
-      Color.alphaBlend(c.selectionFill, c.background),
-      towards: c.textPrimary,
-    ),
-    outgoingQuoteBar: c.accent,
-    quoteFill: c.background,
-    outgoingQuoteFill: c.surface,
-    separatorText: c.textSecondary,
-  );
+  factory ChatStylePalette.fromTheme(AppColors c) {
+    // `card` (white in light mode) rather than `surface`: the sidebar grey
+    // sits too close to the chat background for the bubble to stand out. The
+    // own bubble is an accent tint over it, strong enough to read against the
+    // background by hue as well as lightness.
+    // A dark theme gets a weaker tint, or secondary text on it drops below 4.5:1.
+    final dark = c.background.computeLuminance() < 0.2;
+    final ownBubble = Color.alphaBlend(
+      c.accent.withValues(alpha: dark ? 0.16 : 0.26),
+      c.card,
+    );
+    return ChatStylePalette(
+      background: c.background,
+      incomingBubble: c.card,
+      incomingText: c.textPrimary,
+      incomingMeta: c.textSecondary,
+      incomingLink: c.accent,
+      incomingQuoteBar: c.accent,
+      // Opaque, so a wallpaper does not show through and shift its colour.
+      outgoingBubble: ownBubble,
+      outgoingText: c.textPrimary,
+      outgoingMeta: c.textSecondary,
+      // The accent on the accent-tinted own bubble falls a little short.
+      outgoingLink: readableOn(c.accent, ownBubble, towards: c.textPrimary),
+      outgoingQuoteBar: c.accent,
+      quoteFill: c.background,
+      outgoingQuoteFill: c.surface,
+      separatorText: c.textSecondary,
+    );
+  }
 
   /// This palette with own bubbles in the app's accent [c] instead of the
   /// messenger's colour. [solid] (Messenger) fills them with the accent and
@@ -102,10 +109,34 @@ class ChatStylePalette {
       // not the accent one.
       outsideQuoteFill: outsideQuoteFill,
       outsideQuoteText: outsideQuoteText,
-      wallpaper: wallpaper,
-      wallpaperInk: wallpaperInk,
     );
   }
+
+  /// This palette over another chat background: every style shows on the
+  /// one background the user picked (see the chat wallpaper setting).
+  ChatStylePalette withBackground(Color background) => ChatStylePalette(
+    background: background,
+    incomingBubble: incomingBubble,
+    incomingText: incomingText,
+    incomingMeta: incomingMeta,
+    incomingLink: incomingLink,
+    incomingQuoteBar: incomingQuoteBar,
+    outgoingBubble: outgoingBubble,
+    outgoingText: outgoingText,
+    outgoingMeta: outgoingMeta,
+    outgoingLink: outgoingLink,
+    outgoingQuoteBar: outgoingQuoteBar,
+    separatorText: separatorText,
+    incomingBorder: incomingBorder,
+    outgoingBorder: outgoingBorder,
+    separatorFill: separatorFill,
+    nameColors: nameColors,
+    outgoingTicks: outgoingTicks,
+    quoteFill: quoteFill,
+    outgoingQuoteFill: outgoingQuoteFill,
+    outsideQuoteFill: outsideQuoteFill,
+    outsideQuoteText: outsideQuoteText,
+  );
 
   /// [fill] darkened just enough for [ink] to read at 4.5:1 (a dark theme's
   /// light accent under white text would not).
@@ -165,28 +196,12 @@ class ChatStylePalette {
   final Color? outsideQuoteFill;
   final Color? outsideQuoteText;
 
-  /// A wallpaper behind the messages (Telegram): the colours of a soft
-  /// four-corner gradient — top left, top right, bottom right, bottom left
-  /// — with [background] as their average. Null = flat [background].
-  final List<Color>? wallpaper;
-
-  /// Colour of the doodle pattern drawn over [wallpaper]; null = none.
-  final Color? wallpaperInk;
-
   /// Quote/card background inside a dark or saturated bubble: a darker
   /// inset keeps light text readable (a light tint would wash it out).
   static const darkInset = Color(0x2E000000);
 
   static const telegramDay = ChatStylePalette(
     background: Color(0xFFA9C08E),
-    // Telegram's default gradient wallpaper (green / sand).
-    wallpaper: [
-      Color(0xFFDBDDBB),
-      Color(0xFF6BA587),
-      Color(0xFFD5D88D),
-      Color(0xFF88B884),
-    ],
-    wallpaperInk: Color(0x1F1D3A1A),
     incomingBubble: Color(0xFFFFFFFF),
     incomingText: Color(0xFF000000),
     incomingMeta: Color(0xFF677887),
@@ -198,7 +213,8 @@ class ChatStylePalette {
     outgoingLink: Color(0xFF378124),
     outgoingQuoteBar: Color(0xFF377430),
     outgoingTicks: Color(0xFF4AA140),
-    separatorFill: Color(0xB3405A33),
+    // Near-opaque: the pill sits on whichever background the user picked.
+    separatorFill: Color(0xF2405A33),
     separatorText: Color(0xFFFFFFFF),
     nameColors: [
       Color(0xFFC03D33),
@@ -214,13 +230,6 @@ class ChatStylePalette {
 
   static const telegramNight = ChatStylePalette(
     background: Color(0xFF0B121B),
-    wallpaper: [
-      Color(0xFF14232F),
-      Color(0xFF0B141D),
-      Color(0xFF1A2A2C),
-      Color(0xFF0E1A22),
-    ],
-    wallpaperInk: Color(0x14FFFFFF),
     incomingBubble: Color(0xFF1E2C3A),
     incomingText: Color(0xFFF5F5F5),
     incomingMeta: Color(0xFF8493A1),
@@ -353,8 +362,75 @@ class ChatStylePalette {
     outgoingQuoteBar: Color(0xFF071F13),
     quoteFill: Color(0x14000000),
     outgoingQuoteFill: Color(0x4DFFFFFF),
-    separatorText: Color(0xFF7C7C7C),
+    separatorText: Color(0xFF8C8C8C),
     outsideQuoteFill: Color(0xFF262626),
     outsideQuoteText: Color(0xFFB2B2B2),
+  );
+
+  /// The TBChat client's bubbles (tbchat_socialfi `PrimaryColorsApi.bubbleColor`
+  /// / `otherSideBubbleColor`, a 6% black hairline): pale green own, white
+  /// other; text black, secondary text black at 65% (made opaque); quote
+  /// bars the app's green. Links use a darker green, which reads on both.
+  static const tbchatLight = ChatStylePalette(
+    background: Color(0xFFEAE6DF),
+    incomingBubble: Color(0xFFFFFFFF),
+    incomingText: Color(0xFF000000),
+    incomingMeta: Color(0xFF595959),
+    incomingLink: Color(0xFF0A7A3D),
+    incomingQuoteBar: Color(0xFF0DCC61),
+    outgoingBubble: Color(0xFFD4FDD1),
+    outgoingText: Color(0xFF000000),
+    outgoingMeta: Color(0xFF4A5949),
+    outgoingLink: Color(0xFF0A7A3D),
+    outgoingQuoteBar: Color(0xFF0DCC61),
+    quoteFill: Color(0x0F000000),
+    outgoingQuoteFill: Color(0x99FFFFFF),
+    // Near-opaque: the pill sits on whichever background the user picked.
+    separatorFill: Color(0xF2FFFFFF),
+    incomingBorder: Color(0x0F000000),
+    outgoingBorder: Color(0x0F000000),
+    separatorText: Color(0xFF54656F),
+    nameColors: [
+      Color(0xFFC03D33),
+      Color(0xFF1F8A4C),
+      Color(0xFF9A6D04),
+      Color(0xFF147CB9),
+      Color(0xFF8544D6),
+      Color(0xFFCD4073),
+      Color(0xFF238194),
+      Color(0xFFB85C18),
+    ],
+  );
+
+  /// TBChat's dark bubbles: deep green own, slate other, a 12% white
+  /// hairline; text white, secondary white at 65% (made opaque).
+  static const tbchatDark = ChatStylePalette(
+    background: Color(0xFF0B141A),
+    incomingBubble: Color(0xFF182025),
+    incomingText: Color(0xFFFFFFFF),
+    incomingMeta: Color(0xFFAEB1B3),
+    incomingLink: Color(0xFF5FE39A),
+    incomingQuoteBar: Color(0xFF0DCC61),
+    outgoingBubble: Color(0xFF004E35),
+    outgoingText: Color(0xFFFFFFFF),
+    outgoingMeta: Color(0xFFA6C1B8),
+    outgoingLink: Color(0xFF7DEBB0),
+    outgoingQuoteBar: Color(0xFF0DCC61),
+    quoteFill: Color(0x14FFFFFF),
+    outgoingQuoteFill: Color(0x33000000),
+    separatorFill: Color(0xF2182229),
+    incomingBorder: Color(0x1FFFFFFF),
+    outgoingBorder: Color(0x1FFFFFFF),
+    separatorText: Color(0xFFB4C0C6),
+    nameColors: [
+      Color(0xFFFF8A80),
+      Color(0xFF7FDC9A),
+      Color(0xFFF3BC5C),
+      Color(0xFF65BDF3),
+      Color(0xFFB9A0F5),
+      Color(0xFFFF7FAE),
+      Color(0xFF62D4E3),
+      Color(0xFFFAA357),
+    ],
   );
 }

@@ -83,10 +83,7 @@ class _LabelsEditorState extends State<LabelsEditor> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (result case Err<List<ProviderLabelOption>>(:final failure)) {
-                return EditorMessage(
-                  message: failure.message,
-                  isError: true,
-                );
+                return EditorMessage(message: failure.message, isError: true);
               }
               final options = (result as Ok<List<ProviderLabelOption>>).value;
               final query = _query.trim().toLowerCase();

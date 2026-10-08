@@ -10,9 +10,12 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_list_tab.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
+import 'chat_list_tabs.dart';
+import 'chat_side_panel_frame.dart';
 import 'chat_storage_dialog.dart';
 import 'conversation_menu.dart';
 import 'conversation_tile.dart';
@@ -45,12 +48,13 @@ class ConversationListPane extends ConsumerWidget {
         ? ''
         : ref.watch(chatSearchProvider).trim().toLowerCase();
     final selected = ref.watch(selectedChatGidProvider(accountId));
+    final tab = compact ? ChatListTab.all : ref.watch(chatListTabProvider);
 
     final visible =
         [
               for (final chat
                   in chatsAsync.asData?.value ?? const <ChatConversation>[])
-                if (!chat.hidden && !chat.archived)
+                if (!chat.hidden && !chat.archived && tab.matches(chat))
                   (chat: chat, title: chatTitle(context, chat, users)),
             ]
             .where(
@@ -65,9 +69,11 @@ class ConversationListPane extends ConsumerWidget {
       ),
       child: Column(
         children: [
+          // With the divider under it, as tall as the chat header beside it
+          // (whose border is inside its height): the two bottom lines meet.
           if (compact)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
+            SizedBox(
+              height: kChatHeaderHeight - context.borders.hairline,
               child: IconButton(
                 tooltip: l.chatNewChat,
                 onPressed: () => NewChatDialog.show(context, accountId),
@@ -78,38 +84,44 @@ class ConversationListPane extends ConsumerWidget {
                 ),
               ),
             )
-          else
-            Padding(
-              padding: EdgeInsets.all(context.spacing.lg),
-              child: Column(
+          else ...[
+            const ChatAccountPicker(),
+            Container(
+              height: kChatHeaderHeight - context.borders.hairline,
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
+              alignment: Alignment.center,
+              child: Row(
                 children: [
-                  const ChatAccountPicker(),
-                  Row(
-                    children: [
-                      Expanded(child: _SearchField(hint: l.chatSearch)),
-                      IconButton(
-                        tooltip: l.chatNewChat,
-                        onPressed: () => NewChatDialog.show(context, accountId),
-                        icon: Icon(
-                          Icons.edit_square,
-                          size: context.spacing.xl4,
-                          color: c.textSecondary,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: l.chatStorage,
-                        onPressed: () => ChatStorageDialog.show(context),
-                        icon: Icon(
-                          Icons.storage_rounded,
-                          size: context.spacing.xl4,
-                          color: c.textSecondary,
-                        ),
-                      ),
-                    ],
+                  Expanded(child: _SearchField(hint: l.chatSearch)),
+                  IconButton(
+                    tooltip: l.chatNewChat,
+                    onPressed: () => NewChatDialog.show(context, accountId),
+                    icon: Icon(
+                      Icons.edit_square,
+                      size: context.spacing.xl4,
+                      color: c.textSecondary,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l.chatStorage,
+                    onPressed: () => ChatStorageDialog.show(context),
+                    icon: Icon(
+                      Icons.storage_rounded,
+                      size: context.spacing.xl4,
+                      color: c.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
+          ],
+          const _SectionDivider(),
+          if (!compact) ...[
+            SizedBox(height: context.spacing.sm),
+            const ChatListTabs(),
+            SizedBox(height: context.spacing.sm),
+            const _SectionDivider(),
+          ],
           Expanded(
             child: switch (chatsAsync) {
               AsyncError() => Center(
@@ -162,6 +174,17 @@ class ConversationListPane extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _SectionDivider extends StatelessWidget {
+  const _SectionDivider();
+
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: context.borders.hairline,
+    thickness: context.borders.hairline,
+    color: context.colors.border,
+  );
 }
 
 class _SearchField extends ConsumerWidget {

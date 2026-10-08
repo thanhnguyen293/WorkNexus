@@ -14,9 +14,11 @@ import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
 import 'chat_wallpaper.dart';
+import 'list_extent_estimate.dart';
 import 'message_list_header.dart';
 import 'message_list_item.dart';
 import 'scroll_to_latest_button.dart';
+import 'steady_extent_child_delegate.dart';
 
 /// The messages of one chat, newest at the bottom. Earlier messages load on
 /// their own as the user scrolls near the top. New messages arriving while it
@@ -52,6 +54,7 @@ const Duration _kScrollDuration = Duration(milliseconds: 250);
 
 class _MessageListState extends ConsumerState<MessageList> {
   final _scroll = ScrollController();
+  final _extent = ListExtentEstimate();
   bool _loadingOlder = false;
   bool _reachedStart = false;
 
@@ -90,6 +93,7 @@ class _MessageListState extends ConsumerState<MessageList> {
       _away = false;
       _unseen = 0;
       _pendingRows = 0;
+      _extent.reset();
     }
   }
 
@@ -236,7 +240,7 @@ class _MessageListState extends ConsumerState<MessageList> {
         onNotification: (n) => _onScrollMetrics(n.metrics),
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => _onScrollMetrics(n.metrics),
-          child: ListView.builder(
+          child: ListView.custom(
             controller: _scroll,
             reverse: true,
             cacheExtent: _kCacheExtent,
@@ -244,35 +248,37 @@ class _MessageListState extends ConsumerState<MessageList> {
               horizontal: context.spacing.xl5,
               vertical: context.spacing.xl3,
             ),
-            itemCount: items.length + 1,
-            findChildIndexCallback: (key) =>
-                key is ValueKey<String> ? rows[key.value] : null,
-            itemBuilder: (context, i) => i == items.length
-                ? MessageListHeader(
-                    reachedStart: _reachedStart,
-                    failed: _loadFailed,
-                    onLoadOlder: _loadOlder,
-                  )
-                : MessageListItem(
-                    key: switch (items[i]) {
-                      final ChatMessage m => ValueKey(m.gid),
-                      _ => null,
-                    },
-                    thread: t,
-                    items: items,
-                    index: i,
-                    style: style,
-                    users: users,
-                    summaries: summaries,
-                    showSenders: widget.showSenders,
-                  ),
+            childrenDelegate: SteadyExtentChildDelegate(
+              (context, i) => i == items.length
+                  ? MessageListHeader(
+                      reachedStart: _reachedStart,
+                      failed: _loadFailed,
+                      onLoadOlder: _loadOlder,
+                    )
+                  : MessageListItem(
+                      key: switch (items[i]) {
+                        final ChatMessage m => ValueKey(m.gid),
+                        _ => null,
+                      },
+                      thread: t,
+                      items: items,
+                      index: i,
+                      style: style,
+                      users: users,
+                      summaries: summaries,
+                      showSenders: widget.showSenders,
+                    ),
+              estimate: _extent,
+              childCount: items.length + 1,
+              findChildIndexCallback: (key) =>
+                  key is ValueKey<String> ? rows[key.value] : null,
+            ),
           ),
         ),
       ),
     );
     final s = context.spacing;
     return ChatBackground(
-      palette: style.palette,
       child: Stack(
         children: [
           list,

@@ -105,24 +105,24 @@ class AppPalette {
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
 
-  // Neutral (cool-leaning) light palette — replaces the old warm "editorial"
-  // cream, which read as a yellow cast. Surfaces step bg -> panel -> card with a
+  // Neutral light palette: pure greys (R = G = B) — no warm cream, no cool
+  // blue-violet cast. Surfaces step bg -> panel -> card with a
   // wide enough gap that white cards separate on the flat surface (no borders).
   static const light = AppPalette(
     variant: AppThemeVariant.light,
     brightness: Brightness.light,
-    bg: Color(0xFFE8E9EE), // board/window canvas — grey so white cards pop
-    panel: Color(0xFFF7F8FA), // sidebar / column
-    panel2: Color(0xFFE9EBEF), // insets, chips, inputs
+    bg: Color(0xFFE8E8E8), // board/window canvas — grey so white cards pop
+    panel: Color(0xFFF8F8F8), // sidebar / column
+    panel2: Color(0xFFEBEBEB), // insets, chips, inputs
     card: Color(0xFFFFFFFF), // ticket card
-    line: Color(0xFFDCDFE6),
-    line2: Color(0xFFC4C9D2),
-    tx: Color(0xFF1C1F26), // neutral near-black (no brown)
-    tx2: Color(0xFF565D6B),
-    tx3: Color(0xFF888E9B),
+    line: Color(0xFFDEDEDE),
+    line2: Color(0xFFC8C8C8),
+    tx: Color(0xFF1C1C1C), // neutral near-black
+    tx2: Color(0xFF5A5A5A),
+    tx3: Color(0xFF8A8A8A),
     accent: Color(0xFF5A57D6),
     accentTx: Color(0xFFFFFFFF),
-    titlebar: Color(0xFFE3E5EB),
+    titlebar: Color(0xFFE4E4E4),
     sel: Color.fromRGBO(90, 87, 214, .10),
     selLine: Color.fromRGBO(90, 87, 214, .5),
     red: Color(0xFFDC2626),

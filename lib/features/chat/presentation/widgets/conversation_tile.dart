@@ -113,14 +113,6 @@ class ConversationTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (chat.starred) ...[
-                        Icon(
-                          Icons.push_pin_rounded,
-                          size: context.spacing.xl2,
-                          color: c.textTertiary,
-                        ),
-                        SizedBox(width: context.spacing.xs),
-                      ],
                       Text(
                         chatListTime(context, chat.lastActiveAt),
                         style: context.typography.captionSm.copyWith(
@@ -143,6 +135,22 @@ class ConversationTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (chat.muted) ...[
+                        SizedBox(width: context.spacing.sm),
+                        Icon(
+                          Icons.notifications_off_rounded,
+                          size: context.spacing.xl2,
+                          color: c.textTertiary,
+                        ),
+                      ],
+                      if (chat.starred) ...[
+                        SizedBox(width: context.spacing.sm),
+                        Icon(
+                          Icons.push_pin_rounded,
+                          size: context.spacing.xl2,
+                          color: c.textTertiary,
+                        ),
+                      ],
                       if (unread) ...[
                         SizedBox(width: context.spacing.sm),
                         UnreadBadge(count: chat.unreadCount),

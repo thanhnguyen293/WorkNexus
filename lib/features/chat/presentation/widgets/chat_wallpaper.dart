@@ -6,15 +6,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/chat_style_palette.dart';
+import '../../../../core/theme/chat_doodle_palette.dart';
 
-/// The messages' background as the user set it: the style's own
-/// ([ChatWallpaper]), its plain colour, or a picked image darkened by
+/// Whether the user's chat background is a picture (the pattern or an
+/// image) rather than the plain app background — then separators need a
+/// fill of their own to stay readable.
+bool chatWallpaperIsPicture(String wallpaper) =>
+    wallpaper.isNotEmpty && wallpaper != kChatWallpaperPlain;
+
+/// The messages' background, shared by every chat style: the app's plain
+/// background, the doodle pattern, or a picked image darkened by
 /// `chatWallpaperDim` so separators and times stay readable over it.
 class ChatBackground extends ConsumerWidget {
-  const ChatBackground({super.key, required this.palette, required this.child});
+  const ChatBackground({super.key, required this.child});
 
-  final ChatStylePalette palette;
   final Widget child;
 
   @override
@@ -22,11 +27,16 @@ class ChatBackground extends ConsumerWidget {
     final (wallpaper, dim) = ref.watch(
       appSettingsProvider.select((s) => (s.chatWallpaper, s.chatWallpaperDim)),
     );
-    if (wallpaper.isEmpty) return ChatWallpaper(palette: palette, child: child);
-    if (wallpaper == kChatWallpaperPlain) {
-      return ColoredBox(color: palette.background, child: child);
+    final plain = ColoredBox(color: context.colors.background);
+    if (!chatWallpaperIsPicture(wallpaper)) {
+      return ColoredBox(color: context.colors.background, child: child);
     }
-    final plain = ColoredBox(color: palette.background);
+    if (wallpaper == kChatWallpaperPattern) {
+      return ChatWallpaper(
+        doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
+        child: child,
+      );
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -51,47 +61,40 @@ class ChatBackground extends ConsumerWidget {
   }
 }
 
-/// The chat area's background: a flat colour, or — for styles with a
-/// wallpaper (Telegram) — a soft four-corner gradient under a tiled doodle
-/// pattern. Drawn once and cached (RepaintBoundary), so scrolling the
-/// messages over it does not repaint it.
+/// The doodle pattern background: a soft four-corner gradient under a
+/// tiled doodle pattern. Drawn once and cached (RepaintBoundary), so
+/// scrolling the messages over it does not repaint it.
 class ChatWallpaper extends StatelessWidget {
   const ChatWallpaper({
     super.key,
-    required this.palette,
+    required this.doodle,
     required this.child,
     this.scale = 1,
   });
 
-  final ChatStylePalette palette;
+  final ChatDoodlePalette doodle;
   final Widget child;
 
   /// Pattern size (previews draw it smaller).
   final double scale;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = palette.wallpaper;
-    if (colors == null || colors.length != 4) {
-      return ColoredBox(color: palette.background, child: child);
-    }
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        RepaintBoundary(
-          child: CustomPaint(
-            painter: _WallpaperPainter(
-              base: palette.background,
-              corners: colors,
-              ink: palette.wallpaperInk,
-              scale: scale,
-            ),
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      RepaintBoundary(
+        child: CustomPaint(
+          painter: _WallpaperPainter(
+            base: doodle.base,
+            corners: doodle.corners,
+            ink: doodle.ink,
+            scale: scale,
           ),
         ),
-        child,
-      ],
-    );
-  }
+      ),
+      child,
+    ],
+  );
 }
 
 /// Doodles of the pattern: work and everyday things, from Material icons.

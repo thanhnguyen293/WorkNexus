@@ -20,6 +20,7 @@ import 'message_body.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
 import 'message_link_previews.dart';
+import 'message_translation_view.dart';
 import 'reply_quote.dart';
 import 'thread_chip.dart';
 
@@ -181,6 +182,10 @@ class MessageBubble extends ConsumerWidget {
                 ),
               if (style.quote == ChatQuotePlacement.inside) ?quote,
               body,
+              MessageTranslationView(
+                accountId: chat.accountId,
+                gid: message.gid,
+              ),
               // Compact previews of the links, under the text.
               MessageLinkPreviews(message: message),
               ?footer,

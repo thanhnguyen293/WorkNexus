@@ -236,6 +236,9 @@ class ChatConversations extends Table {
   /// Pinned to the top of the chat list (xxd `star`).
   BoolColumn get starred => boolean().withDefault(const Constant(false))();
 
+  /// Notifications silenced for this chat. Local only: xxd has no mute.
+  BoolColumn get muted => boolean().withDefault(const Constant(false))();
+
   /// User ids of the group's admins, as a JSON array.
   TextColumn get adminsJson => text().withDefault(const Constant('[]'))();
 
@@ -272,6 +275,27 @@ class ChatMessages extends Table {
 
   @override
   Set<Column> get primaryKey => {accountId, gid};
+}
+
+/// A machine translation of a chat message, one per target language, so a
+/// message is translated once and then read from here.
+@DataClassName('ChatMessageTranslationRow')
+class ChatMessageTranslations extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get gid => text()();
+  TextColumn get targetLang => text()();
+  TextColumn get translatedText => text()();
+
+  /// The model that produced it; empty = OpenCode's own default.
+  TextColumn get model => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  /// Whether the translation is shown under the message; hiding keeps it, so
+  /// showing it again costs nothing.
+  BoolColumn get visible => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {accountId, gid, targetLang};
 }
 
 /// A ZenTao user as seen by chat (names and avatars for senders and peers).
@@ -312,6 +336,7 @@ class ChatUsers extends Table {
     ChatConversations,
     ChatMessages,
     ChatUsers,
+    ChatMessageTranslations,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -325,7 +350,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 31;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -421,6 +446,21 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('chat_users', column)) {
             await m.addColumn(chatUsers, add);
           }
+        }
+      }
+      if (from < 31) {
+        await m.createTable(chatMessageTranslations);
+        // Dev DBs already at 30 have the table without this column.
+        if (!await _hasColumn('chat_message_translations', 'visible')) {
+          await m.addColumn(
+            chatMessageTranslations,
+            chatMessageTranslations.visible,
+          );
+        }
+      }
+      if (from < 29) {
+        if (!await _hasColumn('chat_conversations', 'muted')) {
+          await m.addColumn(chatConversations, chatConversations.muted);
         }
       }
       if (from < 28) {

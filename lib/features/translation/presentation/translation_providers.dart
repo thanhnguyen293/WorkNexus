@@ -2,23 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/di/service_locator.dart';
-import '../../../core/domain/adapters/opencode_cli.dart';
 import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
 import '../../../core/settings/app_settings.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/usecases/resolve_translation_state.dart';
-
-/// Whether OpenCode is authenticated (`opencode auth login` has been run, or a
-/// key was saved in Settings → OpenCode). When true, translation uses OpenCode's
-/// own provider/auth so it shows in usage.
-///
-/// `autoDispose` so each Translate re-asks the CLI: a key added in Settings has
-/// to take effect without an app restart.
-final openCodeAuthedProvider = FutureProvider.autoDispose<bool>(
-  (ref) => getIt<OpenCodeCli>().hasAuthenticatedProvider(),
-);
 
 /// The cached translation record for a ticket (reactive). The DB holds one
 /// record per ticket; [translationStatusProvider] decides whether it matches the

@@ -37,8 +37,11 @@ enum DateDisplayFormat {
 const double kSidebarWidthDefault = 290.0;
 
 /// App-wide appearance + language settings, persisted to drift (see `main`).
-/// [AppSettings.chatWallpaper] value for the style's plain colour.
+/// [AppSettings.chatWallpaper] values: the plain app background (also what
+/// an empty value means) and the doodle pattern; anything else is the path
+/// of an image.
 const kChatWallpaperPlain = 'none';
+const kChatWallpaperPattern = 'pattern';
 
 @immutable
 class AppSettings {
@@ -120,8 +123,9 @@ class AppSettings {
   /// Own bubbles in Telegram/Zalo/Messenger/WeChat styles use the accent.
   final bool chatPrimaryBubbles;
 
-  /// '' = the chat style's own background, [kChatWallpaperPlain] = its plain
-  /// colour, otherwise the path of a wallpaper image.
+  /// The chat background, shared by every chat style: '' or
+  /// [kChatWallpaperPlain] = the plain app background, [kChatWallpaperPattern]
+  /// = the doodle pattern, otherwise the path of a wallpaper image.
   final String chatWallpaper;
 
   /// How much a wallpaper image is darkened (0–1).

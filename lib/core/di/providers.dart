@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../features/agents/data/cli_agent_adapters.dart';
 import '../../features/agents/data/mock_coding_agent_adapter.dart';
 import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
+import '../domain/adapters/opencode_cli.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/ticket.dart';
@@ -92,3 +93,13 @@ final lookupsProvider = Provider<Lookups>((ref) {
     projects: {for (final p in projects) p.id: p},
   );
 });
+
+/// Whether OpenCode is authenticated (`opencode auth login` has been run, or a
+/// key was saved in Settings → OpenCode). When true, translation uses OpenCode's
+/// own provider/auth so it shows in usage.
+///
+/// `autoDispose` so each translation re-asks the CLI: a key added in Settings
+/// has to take effect without an app restart.
+final openCodeAuthedProvider = FutureProvider.autoDispose<bool>(
+  (ref) => getIt<OpenCodeCli>().hasAuthenticatedProvider(),
+);

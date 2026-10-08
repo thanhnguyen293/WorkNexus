@@ -46,6 +46,18 @@ void main() {
                       context,
                       primaryBubbles: primary,
                     );
+                    // Date separators on the shared chat background.
+                    final p = style.palette;
+                    final separatorBack =
+                        style.separator == ChatSeparatorStyle.pill
+                        ? Color.alphaBlend(
+                            p.separatorFill ?? p.background,
+                            p.background,
+                          )
+                        : p.background;
+                    if (contrastRatio(p.separatorText, separatorBack) < 4.5) {
+                      failures.add('${appearance.name}: separator');
+                    }
                     for (final mine in [false, true]) {
                       final ink = style.ink(mine: mine);
                       final surface = ink.quoteSurface;

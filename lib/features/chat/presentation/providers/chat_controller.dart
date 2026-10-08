@@ -77,6 +77,12 @@ class ChatController {
     required String? selfAccount,
   }) => _pin.canPin(chat, selfUserId: selfUserId, selfAccount: selfAccount);
 
+  /// Mutes or unmutes a chat's notifications (a CRUD pass-through).
+  Future<Result<void>> setChatMuted(
+    ChatConversation chat, {
+    required bool muted,
+  }) => _repository.setChatMuted(chat.accountId, chat.gid, muted: muted);
+
   /// Pins or unpins a chat at the top of the list (a CRUD pass-through).
   Future<Result<void>> setChatStarred(
     ChatConversation chat, {

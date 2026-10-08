@@ -32,6 +32,16 @@ abstract class TranslationService {
     String? model,
   });
 
+  /// Translate a free-form [text] (e.g. a chat message) into [targetLang].
+  /// [key] identifies the run so [cancel] can stop it. Nothing is cached — the
+  /// caller owns the result.
+  Future<Result<String>> translateText({
+    required String key,
+    required String text,
+    required String targetLang,
+    String? model,
+  });
+
   /// Aborts the in-flight translation for [ticketId]; a no-op when there is
   /// none. The pending [translate] future still completes (with a failure).
   Future<void> cancel(String ticketId);

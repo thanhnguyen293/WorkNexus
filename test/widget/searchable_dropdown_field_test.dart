@@ -10,7 +10,11 @@ import 'package:work_nexus/core/widgets/searchable_dropdown_field.dart';
 void main() {
   const users = ['Alice Nguyen', 'Bob Tran', 'Charlie Le', 'Dora Pham'];
 
-  Future<String?> pumpField(WidgetTester tester, {String? initial}) async {
+  Future<String?> pumpField(
+    WidgetTester tester, {
+    String? initial,
+    Alignment alignment = Alignment.center,
+  }) async {
     String? picked = initial;
     await tester.pumpWidget(
       MaterialApp(
@@ -20,7 +24,8 @@ void main() {
           density: AppDensity.comfortable,
         ),
         home: Scaffold(
-          body: Center(
+          body: Align(
+            alignment: alignment,
             child: SizedBox(
               width: 320,
               child: StatefulBuilder(
@@ -91,5 +96,30 @@ void main() {
     await tester.enterText(find.byType(TextField), 'zzz');
     await tester.pumpAndSettle();
     expect(find.text('No matches'), findsOneWidget);
+  });
+
+  testWidgets('opens below the field when there is room', (tester) async {
+    await pumpField(tester, alignment: Alignment.topCenter);
+    await tester.tap(find.text('Select a user'));
+    await tester.pumpAndSettle();
+
+    final field = tester.getRect(find.text('Select a user'));
+    final search = tester.getRect(find.byType(TextField));
+    expect(search.top, greaterThan(field.bottom));
+  });
+
+  testWidgets('flips above the field near the bottom edge', (tester) async {
+    await pumpField(tester, alignment: Alignment.bottomCenter);
+    await tester.tap(find.text('Select a user'));
+    await tester.pumpAndSettle();
+
+    final field = tester.getRect(find.text('Select a user'));
+    final search = tester.getRect(find.byType(TextField));
+    expect(search.bottom, lessThan(field.top));
+    // Every option still lands on screen rather than being clipped.
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    for (final u in users) {
+      expect(tester.getRect(find.text(u)).bottom, lessThan(screen.height));
+    }
   });
 }

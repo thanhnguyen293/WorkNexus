@@ -9,16 +9,17 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/chat_doodle_palette.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/wallpaper_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_snack.dart';
-import 'chat_style.dart';
 import 'chat_wallpaper.dart';
 
-/// "Wallpaper" in the chat style panel: the style's own background, its
-/// plain colour, or one of the user's images (+ adds one, right-click
-/// removes it), and how much an image is darkened.
+/// "Wallpaper" in the chat style panel — one background for every chat
+/// style: the plain app background, the doodle pattern, or one of the
+/// user's images (+ adds one, right-click removes it), and how much an
+/// image is darkened.
 class ChatWallpaperPicker extends ConsumerWidget {
   const ChatWallpaperPicker({super.key});
 
@@ -62,12 +63,12 @@ class ChatWallpaperPicker extends ConsumerWidget {
       appSettingsProvider.select((s) => (s.chatWallpaper, s.chatWallpaperDim)),
     );
     final settings = ref.read(appSettingsProvider.notifier);
-    final palette = ChatStyle.watch(ref, context).palette;
     final images = switch (ref.watch(chatWallpapersProvider)) {
       AsyncData(value: Ok(:final value)) => value,
       _ => const <String>[],
     };
-    final usingImage = current.isNotEmpty && current != kChatWallpaperPlain;
+    final usingImage =
+        chatWallpaperIsPicture(current) && current != kChatWallpaperPattern;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -81,20 +82,20 @@ class ChatWallpaperPicker extends ConsumerWidget {
           runSpacing: s.md,
           children: [
             _Tile(
-              label: l.chatWallpaperStyle,
-              selected: current.isEmpty,
+              label: l.chatWallpaperDefault,
+              selected: !chatWallpaperIsPicture(current),
               onTap: () => settings.setChatWallpaper(''),
+              child: ColoredBox(color: c.background),
+            ),
+            _Tile(
+              label: l.chatWallpaperPattern,
+              selected: current == kChatWallpaperPattern,
+              onTap: () => settings.setChatWallpaper(kChatWallpaperPattern),
               child: ChatWallpaper(
-                palette: palette,
+                doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
                 scale: 0.3,
                 child: const SizedBox.expand(),
               ),
-            ),
-            _Tile(
-              label: l.chatWallpaperPlain,
-              selected: current == kChatWallpaperPlain,
-              onTap: () => settings.setChatWallpaper(kChatWallpaperPlain),
-              child: ColoredBox(color: palette.background),
             ),
             for (final path in images)
               GestureDetector(

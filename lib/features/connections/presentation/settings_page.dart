@@ -16,6 +16,7 @@ import 'gitlab_connection_dialog.dart';
 import 'settings_providers.dart';
 import 'widgets/account_list.dart';
 import 'widgets/opencode_key_card.dart';
+import 'widgets/translation_language_card.dart';
 import 'widgets/translation_model_card.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -94,6 +95,8 @@ class SettingsPage extends ConsumerWidget {
                   for (final w in workspaces)
                     WorkspaceAccounts(workspaceId: w.id, lookups: lookups),
                   const OpenCodeKeyCard(),
+                  SizedBox(height: context.spacing.xl4),
+                  const TranslationLanguageCard(),
                   SizedBox(height: context.spacing.xl4),
                   const TranslationModelCard(),
                 ],

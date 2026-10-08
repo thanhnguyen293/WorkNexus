@@ -42,6 +42,7 @@ String chatAppearanceLabel(AppL10n l, ChatAppearance a) => switch (a) {
   ChatAppearance.zalo => 'Zalo',
   ChatAppearance.messenger => 'Messenger',
   ChatAppearance.wechat => 'WeChat',
+  ChatAppearance.tbchat => 'TBChat',
 };
 
 class _AppearancePanel extends ConsumerWidget {
