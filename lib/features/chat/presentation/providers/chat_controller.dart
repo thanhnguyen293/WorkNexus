@@ -77,6 +77,12 @@ class ChatController {
     required String? selfAccount,
   }) => _pin.canPin(chat, selfUserId: selfUserId, selfAccount: selfAccount);
 
+  /// Pins or unpins a chat at the top of the list (a CRUD pass-through).
+  Future<Result<void>> setChatStarred(
+    ChatConversation chat, {
+    required bool starred,
+  }) => _repository.setChatStarred(chat.accountId, chat.gid, starred: starred);
+
   Future<Result<void>> setPinned(ChatMessage message, {required bool pinned}) =>
       _pin(message, pinned: pinned);
 
@@ -176,8 +182,14 @@ class ChatController {
   Future<Result<void>> refresh(String accountId, String chatGid) =>
       _refresh(accountId: accountId, chatGid: chatGid);
 
-  Future<Result<int>> loadOlder(String accountId, String chatGid) =>
-      _older(accountId: accountId, chatGid: chatGid);
+  /// See [LoadOlderMessages]: how many messages before [oldestShown] are
+  /// now available to show.
+  Future<Result<int>> loadOlder(
+    String accountId,
+    String chatGid, {
+    ChatMessage? oldestShown,
+  }) =>
+      _older(accountId: accountId, chatGid: chatGid, oldestShown: oldestShown);
 
   Future<Result<void>> markRead(String accountId, String chatGid) =>
       _markRead(accountId: accountId, chatGid: chatGid);

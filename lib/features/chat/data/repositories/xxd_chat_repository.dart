@@ -336,8 +336,29 @@ class XxdChatRepository implements ChatRepository {
       _history.refresh(_sessions[accountId], accountId, chatGid);
 
   @override
-  Future<Result<int>> loadOlderMessages(String accountId, String chatGid) =>
-      _history.loadOlder(_sessions[accountId], accountId, chatGid);
+  Future<Result<int>> loadOlderMessages(
+    String accountId,
+    String chatGid, {
+    int? beforeServerId,
+  }) => _history.loadOlder(
+    _sessions[accountId],
+    accountId,
+    chatGid,
+    before: beforeServerId,
+  );
+
+  @override
+  Future<Result<int>> countOlderMessages(
+    String accountId,
+    String chatGid, {
+    required DateTime before,
+  }) async {
+    try {
+      return Ok(await _local.countOlder(accountId, chatGid, before));
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not read stored messages', cause: e));
+    }
+  }
 
   @override
   Future<Result<void>> fetchMessages(
@@ -612,6 +633,27 @@ class XxdChatRepository implements ChatRepository {
       Ok() => Ok(gid),
       Err(:final failure) => Err(failure),
     };
+  }
+
+  @override
+  Future<Result<void>> setChatStarred(
+    String accountId,
+    String chatGid, {
+    required bool starred,
+  }) async {
+    final session = _sessions[accountId];
+    if (session == null) return const Err(NetworkFailure('Chat is offline'));
+    // Moves at once; the server's reply confirms it (or the change is undone).
+    await _local.setStarred(accountId, chatGid, starred: starred);
+    final result = await _requestAndStore(
+      accountId,
+      session,
+      XxdRequest('chatStar', params: [starred, chatGid]),
+    );
+    if (result is Err) {
+      await _local.setStarred(accountId, chatGid, starred: !starred);
+    }
+    return result;
   }
 
   @override

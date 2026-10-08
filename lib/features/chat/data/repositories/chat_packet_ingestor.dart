@@ -92,6 +92,14 @@ class ChatPacketIngestor {
             'offline',
           );
         }
+      case 'chatstar':
+        if (data is Map && data['gid'] is String) {
+          await _local.setStarred(
+            accountId,
+            data['gid']! as String,
+            starred: data['star'] == true || data['star'] == 1,
+          );
+        }
       case 'chatsetavatar':
         if (data is Map && data['gid'] is String && data['avatar'] is Map) {
           await _local.setChatAvatar(

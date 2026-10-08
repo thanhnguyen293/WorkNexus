@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
+import '../../../../core/widgets/merge_request_state_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_panel_header_actions.dart';
 
@@ -69,7 +71,10 @@ class GitLabMrHeader extends StatelessWidget {
             runSpacing: context.spacing.sm,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              _StatusPill(status: ticket.providerStatus),
+              MergeRequestStatePill(
+                status: ticket.providerStatus,
+                provider: ProviderType.gitlab,
+              ),
               if ((entity.author ?? '').isNotEmpty)
                 Text(
                   l.mrRequestedToMerge(entity.author!),
@@ -96,52 +101,6 @@ class GitLabMrHeader extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The MR state chip (Open / Draft / Merged / Closed), color-coded off the raw
-/// provider status.
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final normalized = status.toLowerCase();
-    final (color, label) = switch (normalized) {
-      'merged' => (c.info, l.gitlabColMerged),
-      'closed' => (c.textTertiary, l.gitlabColClosed),
-      'draft' => (c.warning, l.gitlabColDraft),
-      _ => (c.success, l.gitlabColOpen),
-    };
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: c.mixT(color, 0.16),
-        borderRadius: BorderRadius.circular(context.radii.md),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.account_tree_outlined,
-            size: context.spacing.xl2,
-            color: color,
-          ),
-          SizedBox(width: context.spacing.xs),
-          Text(
-            label,
-            style: context.typography.captionStrong.copyWith(color: color),
           ),
         ],
       ),

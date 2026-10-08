@@ -22,10 +22,12 @@ part 'github_models.g.dart';
 /// directly (GitHub takes login strings, not the numeric ids GitLab needs).
 @JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
 class GitHubUser {
-  const GitHubUser({this.login, this.name});
+  const GitHubUser({this.login, this.name, this.avatarUrl});
 
   final String? login;
   final String? name;
+  @JsonKey(name: 'avatar_url')
+  final String? avatarUrl;
 
   factory GitHubUser.fromJson(Map<String, dynamic> json) =>
       _$GitHubUserFromJson(json);
@@ -163,6 +165,9 @@ class GitHubPull {
     this.comments,
     this.createdAt,
     this.updatedAt,
+    this.additions,
+    this.deletions,
+    this.changedFiles,
   });
 
   final int number;
@@ -187,6 +192,11 @@ class GitHubPull {
   final int? comments;
   final String? createdAt;
   final String? updatedAt;
+
+  /// Change size; only the single-PR endpoint sends these.
+  final int? additions;
+  final int? deletions;
+  final int? changedFiles;
 
   /// A PR is "merged" when the flag is set or a merge timestamp is present
   /// (`state` alone stays `closed` for both merged and abandoned PRs).

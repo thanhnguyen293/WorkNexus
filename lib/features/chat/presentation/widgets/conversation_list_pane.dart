@@ -14,6 +14,7 @@ import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
 import 'chat_storage_dialog.dart';
+import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 import 'new_chat_dialog.dart';
 
@@ -128,22 +129,30 @@ class ConversationListPane extends ConsumerWidget {
                 itemCount: visible.length,
                 itemBuilder: (context, i) {
                   final e = visible[i];
-                  return ConversationTile(
+                  return GestureDetector(
                     key: ValueKey(e.chat.gid),
-                    chat: e.chat,
-                    title: e.title,
-                    avatar: chatAvatarStyle(e.chat, users),
-                    presence: e.chat.type == ChatType.one2one
-                        ? chatPresenceOf(users, e.chat.peerUserId)
-                        : null,
-                    selected: e.chat.gid == selected,
-                    compact: compact,
-                    onTap: () =>
-                        ref
-                            .read(selectedChatGidProvider(accountId).notifier)
-                            .state = e
-                            .chat
-                            .gid,
+                    onSecondaryTapUp: (d) => showConversationMenu(
+                      context,
+                      ref,
+                      chat: e.chat,
+                      at: d.globalPosition,
+                    ),
+                    child: ConversationTile(
+                      chat: e.chat,
+                      title: e.title,
+                      avatar: chatAvatarStyle(e.chat, users),
+                      presence: e.chat.type == ChatType.one2one
+                          ? chatPresenceOf(users, e.chat.peerUserId)
+                          : null,
+                      selected: e.chat.gid == selected,
+                      compact: compact,
+                      onTap: () =>
+                          ref
+                              .read(selectedChatGidProvider(accountId).notifier)
+                              .state = e
+                              .chat
+                              .gid,
+                    ),
                   );
                 },
               ),

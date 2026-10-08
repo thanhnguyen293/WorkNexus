@@ -112,6 +112,18 @@ class Settings extends Table {
   /// Chat message layout style (`ChatAppearance` name).
   TextColumn get chatAppearance => text().withDefault(const Constant('zalo'))();
 
+  /// Whether own bubbles in the messenger-like chat styles use the app's
+  /// accent colour instead of the messenger's own.
+  BoolColumn get chatPrimaryBubbles =>
+      boolean().withDefault(const Constant(false))();
+
+  /// Chat wallpaper: '' = the style's own, 'none' = plain colour, otherwise
+  /// the path of an image the user picked.
+  TextColumn get chatWallpaper => text().withDefault(const Constant(''))();
+
+  /// How much the wallpaper image is darkened (0–1), for readability.
+  RealColumn get chatWallpaperDim => real().withDefault(const Constant(0.2))();
+
   /// Whether chat messages are sent as Markdown.
   BoolColumn get chatSendMarkdown =>
       boolean().withDefault(const Constant(false))();
@@ -221,6 +233,9 @@ class ChatConversations extends Table {
   /// none (initials are drawn).
   TextColumn get avatarJson => text().nullable()();
 
+  /// Pinned to the top of the chat list (xxd `star`).
+  BoolColumn get starred => boolean().withDefault(const Constant(false))();
+
   /// User ids of the group's admins, as a JSON array.
   TextColumn get adminsJson => text().withDefault(const Constant('[]'))();
 
@@ -310,7 +325,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -406,6 +421,24 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('chat_users', column)) {
             await m.addColumn(chatUsers, add);
           }
+        }
+      }
+      if (from < 28) {
+        if (!await _hasColumn('chat_conversations', 'starred')) {
+          await m.addColumn(chatConversations, chatConversations.starred);
+        }
+      }
+      if (from < 27) {
+        if (!await _hasColumn('settings', 'chat_wallpaper')) {
+          await m.addColumn(settings, settings.chatWallpaper);
+        }
+        if (!await _hasColumn('settings', 'chat_wallpaper_dim')) {
+          await m.addColumn(settings, settings.chatWallpaperDim);
+        }
+      }
+      if (from < 26) {
+        if (!await _hasColumn('settings', 'chat_primary_bubbles')) {
+          await m.addColumn(settings, settings.chatPrimaryBubbles);
         }
       }
       if (from < 25) {

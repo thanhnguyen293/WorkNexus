@@ -1,9 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../domain/entities/chat_message.dart';
@@ -12,6 +13,7 @@ import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
+import 'chat_wallpaper.dart';
 import 'message_list_header.dart';
 import 'message_list_item.dart';
 import 'scroll_to_latest_button.dart';
@@ -122,34 +124,23 @@ class _MessageListState extends ConsumerState<MessageList> {
 
   Future<void> _loadOlder() async {
     final t = widget.thread;
-    final limit = ref.read(chatMessageLimitProvider(t).notifier);
-    final shown = ref.read(chatMessagesProvider(t)).value?.length ?? 0;
-    // The local database may already hold more than is shown: page those in
-    // without asking the server.
-    if (shown >= limit.state) {
-      limit.state += ChatController.pageSize;
-      return;
-    }
-    // Rows the server sends land in the database; while the limit has room
-    // they would appear at once, even mid-drag. Pin the limit to what is
-    // shown and grow it in [_showPending] instead.
-    if (shown > 0) limit.state = shown;
+    final shown = ref.read(chatMessagesProvider(t)).value ?? const [];
     setState(() {
       _loadingOlder = true;
       _loadFailed = false;
     });
     final result = await ref
         .read(chatControllerProvider)
-        .loadOlder(t.accountId, t.chatGid);
+        .loadOlder(t.accountId, t.chatGid, oldestShown: shown.firstOrNull);
     if (!mounted || widget.thread != t) return;
     setState(() => _loadingOlder = false);
     switch (result) {
       case Ok(:final value) when value > 0:
-        _pendingRows += value;
+        _pendingRows += math.min(value, ChatController.pageSize);
         _showPending();
       // Nothing was cached yet: that call fetched the latest page, which is
       // not the start of the chat.
-      case Ok() when shown == 0:
+      case Ok() when shown.isEmpty:
         break;
       case Ok():
         setState(() => _reachedStart = true);
@@ -159,10 +150,14 @@ class _MessageListState extends ConsumerState<MessageList> {
     }
   }
 
+  /// Shows [_pendingRows] more older messages — unless the mouse is held
+  /// (likely on the scrollbar thumb): growing the list mid-drag throws the
+  /// content away from the cursor, so they wait for the release.
   void _showPending() {
     if (_pendingRows == 0 || _mouseDown) return;
-    ref.read(chatMessageLimitProvider(widget.thread).notifier).state +=
-        _pendingRows;
+    final t = widget.thread;
+    final shown = ref.read(chatMessagesProvider(t)).value?.length ?? 0;
+    ref.read(chatMessageLimitProvider(t).notifier).state = shown + _pendingRows;
     _pendingRows = 0;
   }
 
@@ -224,10 +219,7 @@ class _MessageListState extends ConsumerState<MessageList> {
       return const AppInlineSpinner();
     }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
-    final style = ChatStyle.of(
-      ref.watch(appSettingsProvider.select((s) => s.chatAppearance)),
-      context,
-    );
+    final style = ChatStyle.watch(ref, context);
     final items = chatListItems(messages, style.separatorGap);
     // Lets a message keep its row (and state) when newer ones push it up.
     final rows = {
@@ -279,8 +271,8 @@ class _MessageListState extends ConsumerState<MessageList> {
       ),
     );
     final s = context.spacing;
-    return ColoredBox(
-      color: style.palette.background,
+    return ChatBackground(
+      palette: style.palette,
       child: Stack(
         children: [
           list,

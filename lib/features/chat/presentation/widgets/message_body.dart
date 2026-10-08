@@ -7,16 +7,18 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/usecases/parse_merge_request_link.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_file_body.dart';
 import 'chat_image_body.dart';
-import 'notification_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
 import 'chat_user_profile_dialog.dart';
 import 'link_preview_card.dart';
 import 'mention_text.dart';
+import 'merge_request_card.dart';
+import 'notification_body.dart';
 
 /// The content of a message, by content type.
 class MessageBody extends StatelessWidget {
@@ -85,6 +87,9 @@ class MessageBody extends StatelessWidget {
   }
 }
 
+/// Most merge request cards one message shows.
+const int _kMaxMergeRequestCards = 4;
+
 /// Message text — Markdown or plain with mentions and links — followed by a
 /// preview of the first web page it links to.
 class ChatTextBody extends ConsumerWidget {
@@ -106,7 +111,15 @@ class ChatTextBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ink = ChatBubbleTheme.of(context);
-    final url = linkPreview ? chatFirstUrl(text) : null;
+    final urls = linkPreview ? chatUrls(text) : const <String>[];
+    // Merge/pull requests get a live status card each (a few at most);
+    // the first other link gets the page preview.
+    const parseMr = ParseMergeRequestLink();
+    final mergeRequests = [
+      for (final u in urls)
+        if (parseMr(u) != null) u,
+    ].take(_kMaxMergeRequestCards);
+    final url = urls.where((u) => parseMr(u) == null).firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -130,6 +143,7 @@ class ChatTextBody extends ConsumerWidget {
           )
         else
           MentionText(text, accountId: accountId),
+        for (final mr in mergeRequests) MergeRequestCard(url: mr),
         if (url != null) LinkPreviewCard(url: url),
       ],
     );

@@ -22,6 +22,9 @@ abstract class ChatConversation with _$ChatConversation {
     @Default(false) bool hidden,
     @Default(false) bool archived,
 
+    /// Pinned to the top of the chat list.
+    @Default(false) bool starred,
+
     /// Server ids of pinned messages, oldest pin first.
     @Default(<int>[]) List<int> pinnedMessageIds,
 

@@ -62,6 +62,10 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     int? commitsBehind,
     bool? draft,
     int? upvotes,
+    // Size of an MR's change (from its diffs), for compact summaries.
+    int? additions,
+    int? deletions,
+    int? changedFiles,
     int? milestoneId,
     String? milestoneTitle,
     String? humanTimeEstimate,
@@ -81,12 +85,17 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
   const factory TicketProviderEntity.githubItem({
     String? repo,
     String? author,
+    String? authorAvatarUrl,
     String? headBranch,
     String? baseBranch,
     String? mergeableState,
     bool? draft,
     bool? merged,
     int? comments,
+    // Size of a PR's change, for compact summaries.
+    int? additions,
+    int? deletions,
+    int? changedFiles,
     @Default(<String>[]) List<String> reviewers,
     @Default(<String>[]) List<String> assignees,
   }) = GitHubItemEntity;

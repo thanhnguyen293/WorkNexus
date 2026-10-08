@@ -22,12 +22,15 @@ import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/http_link_preview_repository.dart';
 import '../../features/chat/data/repositories/local_sticker_repository.dart';
+import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/repositories/link_preview_repository.dart';
 import '../../features/chat/domain/repositories/sticker_repository.dart';
+import '../../features/chat/domain/repositories/wallpaper_repository.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
+import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
@@ -36,6 +39,7 @@ import '../database/database.dart';
 import '../debug/app_talker.dart';
 import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
+import '../domain/adapters/merge_request_link_service.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/repositories/activity_repository.dart';
@@ -135,6 +139,13 @@ abstract class ServiceModule {
   );
 
   @lazySingleton
+  WallpaperRepository get wallpaperRepository => LocalWallpaperRepository(
+    directory: () async => Directory(
+      '${(await getApplicationSupportDirectory()).path}/wallpapers',
+    ),
+  );
+
+  @lazySingleton
   LinkPreviewRepository get linkPreviewRepository =>
       HttpLinkPreviewRepository();
 
@@ -178,4 +189,10 @@ abstract class ServiceModule {
   @lazySingleton
   ZenTaoTicketService zenTaoTicketService(SyncService syncService) =>
       syncService;
+
+  @lazySingleton
+  MergeRequestLinkService mergeRequestLinkService(
+    AppDatabase db,
+    CredentialStore credentials,
+  ) => MergeRequestLinkFetcher(db, credentials);
 }

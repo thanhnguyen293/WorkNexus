@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -75,10 +74,7 @@ class MessageBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final style = ChatStyle.of(
-      ref.watch(appSettingsProvider.select((s) => s.chatAppearance)),
-      context,
-    );
+    final style = ChatStyle.watch(ref, context);
     final s = context.spacing;
     final mine = message.isMine;
     final ink = style.ink(mine: mine);

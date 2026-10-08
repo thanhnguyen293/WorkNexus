@@ -113,6 +113,14 @@ class ConversationTile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (chat.starred) ...[
+                        Icon(
+                          Icons.push_pin_rounded,
+                          size: context.spacing.xl2,
+                          color: c.textTertiary,
+                        ),
+                        SizedBox(width: context.spacing.xs),
+                      ],
                       Text(
                         chatListTime(context, chat.lastActiveAt),
                         style: context.typography.captionSm.copyWith(

@@ -34,6 +34,10 @@ const _urlPattern =
 /// First web address in a text, for a link preview.
 String? chatFirstUrl(String text) => RegExp(_urlPattern).firstMatch(text)?[0];
 
+/// Every web address in [text], in order, without repeats.
+List<String> chatUrls(String text) =>
+    {for (final m in RegExp(_urlPattern).allMatches(text)) m[0]!}.toList();
+
 /// Whether plain text is evidently Markdown — people paste it into `plain`
 /// messages too — so it can be rendered formatted.
 bool chatLooksLikeMarkdown(String text) => _markdownSignal.hasMatch(text);
@@ -245,4 +249,16 @@ String chatPresenceLabel(BuildContext context, ChatPresence presence) {
     ChatPresence.busy => l.chatBusy,
     ChatPresence.offline => l.chatOffline,
   };
+}
+
+/// How long ago [t] was, compactly: "just now", "5m ago", "2h ago", "3d
+/// ago", then the date.
+String chatAgo(BuildContext context, DateTime t, {DateTime? now}) {
+  final l = AppL10n.of(context);
+  final diff = (now ?? DateTime.now()).difference(t);
+  if (diff.inMinutes < 1) return l.justNow;
+  if (diff.inHours < 1) return l.minutesAgo(diff.inMinutes);
+  if (diff.inDays < 1) return l.hoursAgo(diff.inHours);
+  if (diff.inDays < 30) return l.daysAgo(diff.inDays);
+  return DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(t);
 }

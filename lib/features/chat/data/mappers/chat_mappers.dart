@@ -41,6 +41,11 @@ ChatConversationsCompanion conversationFromXxd(
         ? Value(pinnedJsonOf(chat['admins']))
         : const Value.absent(),
     ownedBy: Value(_text(chat['ownedBy'])),
+    starred: chat.containsKey('star')
+        ? Value(
+            chat['star'] == true || chat['star'] == 1 || chat['star'] == '1',
+          )
+        : const Value.absent(),
     avatarJson: chat['avatar'] is Map
         ? Value(jsonEncode(chat['avatar']))
         : const Value.absent(),
@@ -207,6 +212,7 @@ ChatConversation conversationFromRow(
     peerUserId: type == ChatType.one2one ? peerOf(row.gid, selfUserId) : null,
     hidden: row.hidden,
     archived: row.archived,
+    starred: row.starred,
     pinnedMessageIds: _pinnedIds(row.pinnedJson),
     adminIds: _pinnedIds(row.adminsJson),
     ownerAccount: row.ownedBy,

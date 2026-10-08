@@ -53,6 +53,8 @@
   "syncedAgo": "Đồng bộ 2 phút trước",
   "justNow": "vừa xong",
   "minutesAgo": "{count} phút trước",
+  "hoursAgo": "{count} giờ trước",
+  "daysAgo": "{count} ngày trước",
   "@minutesAgo": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -440,6 +442,12 @@
   "chatSendLike": "Gửi like",
   "chatMention": "Nhắc đến ai đó",
   "chatEmoji": "Biểu tượng cảm xúc",
+  "chatPinChat": "Ghim đoạn chat",
+  "chatUnpinChat": "Bỏ ghim đoạn chat",
+  "chatMrLoading": "Đang tải trạng thái…",
+  "chatMrFiles": "{count} file",
+  "chatMrUnavailable": "Không tải được trạng thái — bấm để mở",
+  "chatMrNoAccount": "Kết nối tài khoản cho {host} để xem trạng thái",
   "chatBotName": "Xuanbot",
   "chatViewDetail": "Xem chi tiết",
   "chatNotificationsBlocked": "Thông báo của WorkNexus đang bị tắt trong Cài đặt hệ thống, bạn sẽ không được báo khi có tin nhắn mới.",
@@ -564,7 +572,15 @@
   "chatMembers": "{count} thành viên",
   "chatMessageTo": "Nhập @, tin nhắn tới {name}",
   "chatAppearance": "Kiểu hiển thị",
-  "chatAppearanceDefault": "WorkNexus",
+  "chatAppearanceDefault": "Mặc định",
+  "chatPrimaryBubbles": "Dùng màu chủ đạo cho bong bóng chat",
+  "chatPrimaryBubblesHint": "Telegram, Zalo, Messenger và WeChat dùng màu chủ đạo của app cho tin nhắn của bạn. Kiểu Mặc định luôn theo màu của app.",
+  "chatWallpaper": "Ảnh nền",
+  "chatWallpaperStyle": "Theo kiểu hiển thị",
+  "chatWallpaperPlain": "Màu trơn",
+  "chatWallpaperAdd": "Thêm ảnh",
+  "chatWallpaperRemove": "Xoá ảnh nền",
+  "chatWallpaperDim": "Làm tối",
   "chatMarkdownOn": "Đang bật Markdown — tin gửi đi có định dạng",
   "chatMarkdownOff": "Đang tắt Markdown — tin gửi đi là chữ thường"
 }
