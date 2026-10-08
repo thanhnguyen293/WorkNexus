@@ -8,92 +8,99 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The composer's bottom row: attach image / file and the Markdown toggle
-/// on the left; the key hint (while typing) and the send button on the
-/// right. The send button lights up once there is text.
-class ChatComposerToolbar extends StatelessWidget {
-  const ChatComposerToolbar({
+/// The composer's tool row (above the input): send image, attach file,
+/// mention someone and the Markdown toggle.
+class ChatComposerTools extends StatelessWidget {
+  const ChatComposerTools({
     super.key,
-    required this.text,
-    required this.focused,
     required this.onPickImage,
     required this.onAttach,
+    required this.onMention,
+  });
+
+  final VoidCallback onPickImage;
+  final VoidCallback onAttach;
+  final VoidCallback onMention;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final s = context.spacing;
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.xs),
+      child: Row(
+        children: [
+          _ToolButton(
+            icon: Icons.image_outlined,
+            tooltip: l.chatSendImage,
+            onPressed: onPickImage,
+          ),
+          _ToolButton(
+            icon: Icons.attach_file_rounded,
+            tooltip: l.chatAttach,
+            onPressed: onAttach,
+          ),
+          _ToolButton(
+            icon: Icons.alternate_email_rounded,
+            tooltip: l.chatMention,
+            onPressed: onMention,
+          ),
+          const _MarkdownToggle(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Right of the input: 👍 sends a like while the input is empty; once there
+/// is text it becomes the send button.
+class ChatComposerSendButton extends StatelessWidget {
+  const ChatComposerSendButton({
+    super.key,
+    required this.text,
     required this.onSend,
+    required this.onLike,
   });
 
   final TextEditingController text;
-  final bool focused;
-  final VoidCallback onPickImage;
-  final VoidCallback onAttach;
   final VoidCallback onSend;
+  final VoidCallback onLike;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    return Row(
-      children: [
-        _ToolButton(
-          icon: Icons.image_outlined,
-          tooltip: l.chatSendImage,
-          onPressed: onPickImage,
-        ),
-        _ToolButton(
-          icon: Icons.attach_file_rounded,
-          tooltip: l.chatAttach,
-          onPressed: onAttach,
-        ),
-        const _MarkdownToggle(),
-        const Spacer(),
-        ValueListenableBuilder(
-          valueListenable: text,
-          builder: (context, value, _) {
-            final ready = value.text.trim().isNotEmpty;
-            return Row(
-              children: [
-                if (focused && ready)
-                  Padding(
-                    padding: EdgeInsets.only(right: s.lg),
-                    child: Text(
-                      l.chatSendHint,
-                      style: context.typography.caption.copyWith(
-                        color: c.textTertiary,
-                      ),
-                    ),
-                  ),
-                Tooltip(
-                  message: l.chatSend,
-                  child: Material(
-                    color: ready ? c.accent : c.surfaceSubtle,
-                    borderRadius: BorderRadius.circular(context.radii.md),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(context.radii.md),
-                      onTap: ready ? onSend : null,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: s.lg,
-                          vertical: s.sm,
-                        ),
-                        child: Icon(
-                          Icons.send_rounded,
-                          size: s.xl3,
-                          color: ready ? c.onAccent : c.textTertiary,
-                        ),
-                      ),
-                    ),
+    return ValueListenableBuilder(
+      valueListenable: text,
+      builder: (context, value, _) {
+        final ready = value.text.trim().isNotEmpty;
+        return ready
+            ? IconButton(
+                tooltip: '${l.chatSend} · ${l.chatSendHint}',
+                onPressed: onSend,
+                style: IconButton.styleFrom(
+                  backgroundColor: c.accent,
+                  foregroundColor: c.onAccent,
+                ),
+                icon: Icon(Icons.send_rounded, size: s.xl4),
+              )
+            : IconButton(
+                tooltip: l.chatSendLike,
+                onPressed: onLike,
+                icon: Text(
+                  '👍',
+                  style: context.typography.titleLg.copyWith(
+                    fontSize: s.xl5,
+                    height: 1,
                   ),
                 ),
-              ],
-            );
-          },
-        ),
-      ],
+              );
+      },
     );
   }
 }
 
-/// A compact icon button of the toolbar.
 class _ToolButton extends StatelessWidget {
   const _ToolButton({
     required this.icon,
@@ -113,8 +120,7 @@ class _ToolButton extends StatelessWidget {
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      visualDensity: VisualDensity.compact,
-      iconSize: context.spacing.xl4,
+      iconSize: context.spacing.xl5,
       style: IconButton.styleFrom(
         backgroundColor: selected ? c.selectionFill : null,
         shape: RoundedRectangleBorder(

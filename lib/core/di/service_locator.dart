@@ -33,6 +33,7 @@ import '../debug/app_talker.dart';
 import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
 import '../domain/repositories/comment_repository.dart';
@@ -162,4 +163,8 @@ abstract class ServiceModule {
 
   @lazySingleton
   GitHubPrService gitHubPrService(SyncService syncService) => syncService;
+
+  @lazySingleton
+  ZenTaoTicketService zenTaoTicketService(SyncService syncService) =>
+      syncService;
 }

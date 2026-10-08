@@ -42,6 +42,7 @@ class MarkdownText extends StatelessWidget {
     this.onOpenImage,
     this.linkColor,
     this.onLinkTap,
+    this.isPlainLink,
   });
 
   final String data;
@@ -64,6 +65,10 @@ class MarkdownText extends StatelessWidget {
 
   /// Handles a tapped link; null leaves it to the markdown renderer.
   final void Function(String url)? onLinkTap;
+
+  /// Links drawn in the link colour only, without an underline (e.g. chat
+  /// mentions).
+  final bool Function(String url)? isPlainLink;
 
   @override
   Widget build(BuildContext context) {
@@ -96,13 +101,17 @@ class MarkdownText extends StatelessWidget {
               onOpenImage: onOpenImage,
               width: width,
             ),
-      linkBuilder: (context, label, url, style) => Text(
-        label.toPlainText(),
-        style: style.copyWith(
-          color: linkColor ?? c.accent,
-          decoration: TextDecoration.underline,
-        ),
-      ),
+      linkBuilder: (context, label, url, style) {
+        final plain = isPlainLink?.call(url) ?? false;
+        return Text(
+          label.toPlainText(),
+          style: style.copyWith(
+            color: linkColor ?? c.accent,
+            fontWeight: plain ? FontWeight.w600 : null,
+            decoration: plain ? TextDecoration.none : TextDecoration.underline,
+          ),
+        );
+      },
       codeBuilder: (context, name, code, closed) => Container(
         width: double.infinity,
         margin: EdgeInsets.symmetric(vertical: context.spacing.sm),
