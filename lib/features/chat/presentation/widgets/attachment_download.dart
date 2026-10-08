@@ -2,9 +2,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/open_external.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'chat_labels.dart';
 import 'chat_snack.dart';
+import 'chat_video_dialog.dart';
 
 /// Opens an attachment: right away when it is downloaded; otherwise it is
 /// downloaded first and opened only if its message is still on screen when
@@ -53,3 +56,33 @@ bool isOnScreen(BuildContext context) {
   if (viewport is! RenderBox || !viewport.hasSize) return true;
   return (viewport.localToGlobal(Offset.zero) & viewport.size).overlaps(rect);
 }
+
+/// Opens a file message (downloading it first when needed): a video plays
+/// in-app, anything else opens with the system's default app.
+Future<void> openChatFile(
+  BuildContext context,
+  WidgetRef ref, {
+  required String accountId,
+  required FileContent file,
+}) => openAttachment(
+  context,
+  ref,
+  accountId: accountId,
+  content: file,
+  open: () async {
+    if (isVideoFile(file)) {
+      await ChatVideoDialog.show(context, accountId: accountId, video: file);
+      return;
+    }
+    final path = await ref
+        .read(chatControllerProvider)
+        .attachmentFile(accountId, file);
+    if (!context.mounted) return;
+    switch (path) {
+      case Ok(:final value):
+        await openExternally(value);
+      case Err(:final failure):
+        showChatFailure(context, failure);
+    }
+  },
+);

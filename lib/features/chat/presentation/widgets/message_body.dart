@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -12,6 +12,7 @@ import 'chat_bubble_theme.dart';
 import 'chat_file_body.dart';
 import 'chat_image_body.dart';
 import 'chat_labels.dart';
+import 'chat_links.dart';
 import 'link_preview_card.dart';
 import 'mention_text.dart';
 
@@ -71,14 +72,14 @@ class MessageBody extends StatelessWidget {
 
 /// Message text — Markdown or plain with mentions and links — followed by a
 /// preview of the first web page it links to.
-class _TextBody extends StatelessWidget {
+class _TextBody extends ConsumerWidget {
   const _TextBody({required this.text, required this.markdown});
 
   final String text;
   final bool markdown;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ink = ChatBubbleTheme.of(context);
     final url = chatFirstUrl(text);
     return Column(
@@ -92,6 +93,7 @@ class _TextBody extends StatelessWidget {
             height: 1.5,
             color: ink.text,
             linkColor: ink.link,
+            onLinkTap: (link) => openChatLink(ref, link),
           )
         else
           MentionText(text),
@@ -102,18 +104,18 @@ class _TextBody extends StatelessWidget {
 }
 
 /// A shared link: icon tile, title and the site it points to.
-class _LinkCard extends StatelessWidget {
+class _LinkCard extends ConsumerWidget {
   const _LinkCard({required this.url, this.title});
 
   final String url;
   final String? title;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ink = ChatBubbleTheme.of(context);
     final s = context.spacing;
     return InkWell(
-      onTap: () => openExternally(url),
+      onTap: () => openChatLink(ref, url),
       borderRadius: BorderRadius.circular(context.radii.md),
       child: Row(
         mainAxisSize: MainAxisSize.min,

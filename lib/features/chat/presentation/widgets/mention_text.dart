@@ -1,22 +1,23 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/platform/open_external.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
+import 'chat_links.dart';
 
 /// Plain message text: `[@Name](@#id)` mentions as highlighted `@Name`, and
 /// web addresses as tappable links. Colours and size follow the bubble.
-class MentionText extends StatefulWidget {
+class MentionText extends ConsumerStatefulWidget {
   const MentionText(this.text, {super.key});
 
   final String text;
 
   @override
-  State<MentionText> createState() => _MentionTextState();
+  ConsumerState<MentionText> createState() => _MentionTextState();
 }
 
-class _MentionTextState extends State<MentionText> {
+class _MentionTextState extends ConsumerState<MentionText> {
   final _recognizers = <TapGestureRecognizer>[];
 
   @override
@@ -58,7 +59,7 @@ class _MentionTextState extends State<MentionText> {
       } else {
         final url = m[0]!;
         final recognizer = TapGestureRecognizer()
-          ..onTap = () => openExternally(url);
+          ..onTap = () => openChatLink(ref, url);
         _recognizers.add(recognizer);
         spans.add(TextSpan(text: url, style: link, recognizer: recognizer));
       }
