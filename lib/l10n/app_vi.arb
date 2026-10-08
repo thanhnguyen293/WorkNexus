@@ -445,6 +445,8 @@
   "chatCloseThread": "Đóng luồng",
   "chatReplyHint": "Trả lời trong luồng",
   "chatReplyMissing": "Chưa tải được tin gốc",
+  "chatReplyingTo": "Trả lời",
+  "chatCancelReply": "Huỷ trả lời",
   "chatAttach": "Đính kèm tệp",
   "chatUploading": "Đang tải lên…",
   "chatCopy": "Sao chép",

@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -13,14 +12,17 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
+import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
+import 'chat_separator.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
 import 'message_bubble.dart';
 
-/// The messages of one chat, newest at the bottom, with "load earlier" on top.
-/// New messages arriving while it is open are marked read.
+/// The messages of one chat, newest at the bottom. Earlier messages load on
+/// their own as the user scrolls near the top. New messages arriving while it
+/// is open are marked read.
 class MessageList extends ConsumerStatefulWidget {
   const MessageList({
     super.key,
@@ -35,24 +37,74 @@ class MessageList extends ConsumerStatefulWidget {
   ConsumerState<MessageList> createState() => _MessageListState();
 }
 
+/// How close (in pixels) to the oldest loaded message the user may scroll
+/// before the next page is fetched, so it is usually there before they reach it.
+const double _kLoadOlderThreshold = 600;
+
 class _MessageListState extends ConsumerState<MessageList> {
   bool _loadingOlder = false;
   bool _reachedStart = false;
 
+  /// Set when a load failed: automatic loading stops (no retry loop while
+  /// offline) and the header offers a button to try again.
+  bool _loadFailed = false;
+
+  @override
+  void didUpdateWidget(MessageList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.thread != widget.thread) {
+      _loadingOlder = false;
+      _reachedStart = false;
+      _loadFailed = false;
+    }
+  }
+
+  /// Fires on scrolling and on content/viewport size changes, which also
+  /// covers a first page too short to fill the screen.
+  bool _onScrollMetrics(ScrollMetrics metrics) {
+    if (metrics.axis == Axis.vertical &&
+        metrics.extentAfter < _kLoadOlderThreshold &&
+        !_loadingOlder &&
+        !_reachedStart &&
+        !_loadFailed) {
+      // Not during layout: loading calls setState.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_loadingOlder) _loadOlder();
+      });
+    }
+    return false;
+  }
+
   Future<void> _loadOlder() async {
-    setState(() => _loadingOlder = true);
     final t = widget.thread;
+    final limit = ref.read(chatMessageLimitProvider(t).notifier);
+    final shown = ref.read(chatMessagesProvider(t)).asData?.value.length ?? 0;
+    // The local database may already hold more than is shown: page those in
+    // without asking the server.
+    if (shown >= limit.state) {
+      limit.state += ChatController.pageSize;
+      return;
+    }
+    setState(() {
+      _loadingOlder = true;
+      _loadFailed = false;
+    });
     final result = await ref
         .read(chatControllerProvider)
         .loadOlder(t.accountId, t.chatGid);
-    if (!mounted) return;
+    if (!mounted || widget.thread != t) return;
     setState(() => _loadingOlder = false);
     switch (result) {
       case Ok(:final value) when value > 0:
         ref.read(chatMessageLimitProvider(t).notifier).state += value;
+      // Nothing was cached yet: that call fetched the latest page, which is
+      // not the start of the chat.
+      case Ok() when shown == 0:
+        break;
       case Ok():
         setState(() => _reachedStart = true);
       case Err(:final failure):
+        setState(() => _loadFailed = true);
         showChatFailure(context, failure);
     }
   }
@@ -100,46 +152,65 @@ class _MessageListState extends ConsumerState<MessageList> {
     }
     return ColoredBox(
       color: style.palette.background,
-      child: ListView.builder(
-        reverse: true,
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.xl5,
-          vertical: context.spacing.xl3,
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: (n) => _onScrollMetrics(n.metrics),
+        child: NotificationListener<ScrollUpdateNotification>(
+          onNotification: (n) => _onScrollMetrics(n.metrics),
+          child: ListView.builder(
+            reverse: true,
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.xl5,
+              vertical: context.spacing.xl3,
+            ),
+            itemCount: items.length + 1,
+            itemBuilder: (context, i) {
+              if (i == items.length) {
+                return _ListHeader(
+                  reachedStart: _reachedStart,
+                  failed: _loadFailed,
+                  onLoadOlder: _loadOlder,
+                );
+              }
+              final item = items[i];
+              if (item is DateTime) {
+                return ChatSeparator(
+                  style: style,
+                  label: chatDayLabel(context, item),
+                );
+              }
+              if (item is _TimeMarker) {
+                return ChatSeparator(
+                  style: style,
+                  label: DateFormat('HH:mm').format(item.at),
+                );
+              }
+              final message = item as ChatMessage;
+              final older = i + 1 < items.length ? items[i + 1] : null;
+              final newer = i > 0 ? items[i - 1] : null;
+              return MessageBubble(
+                key: ValueKey(message.gid),
+                chat: t,
+                message: message,
+                users: users,
+                firstOfRun: !_sameRun(older, message),
+                lastOfRun: !_sameRun(newer, message),
+                showSender: widget.showSenders,
+                thread: summaries[message.serverId],
+                onOpenThread: (id) => openReplyThread(ref, t, id),
+                onReply: (m) =>
+                    ref
+                            .read(
+                              chatReplyDraftProvider((
+                                chat: t,
+                                inThread: false,
+                              )).notifier,
+                            )
+                            .state =
+                        m,
+              );
+            },
+          ),
         ),
-        itemCount: items.length + 1,
-        itemBuilder: (context, i) {
-          if (i == items.length) {
-            return _ListHeader(
-              reachedStart: _reachedStart,
-              loading: _loadingOlder,
-              onLoadOlder: _loadOlder,
-            );
-          }
-          final item = items[i];
-          if (item is DateTime) {
-            return _Separator(style: style, label: chatDayLabel(context, item));
-          }
-          if (item is _TimeMarker) {
-            return _Separator(
-              style: style,
-              label: DateFormat('HH:mm').format(item.at),
-            );
-          }
-          final message = item as ChatMessage;
-          final older = i + 1 < items.length ? items[i + 1] : null;
-          final newer = i > 0 ? items[i - 1] : null;
-          return MessageBubble(
-            key: ValueKey(message.gid),
-            chat: t,
-            message: message,
-            users: users,
-            firstOfRun: !_sameRun(older, message),
-            lastOfRun: !_sameRun(newer, message),
-            showSender: widget.showSenders,
-            thread: summaries[message.serverId],
-            onOpenThread: (id) => openReplyThread(ref, t, id),
-          );
-        },
       ),
     );
   }
@@ -158,72 +229,23 @@ bool _sameRun(Object? other, ChatMessage message) =>
     other.senderId == message.senderId &&
     other.sentAt.difference(message.sentAt).abs() <= const Duration(minutes: 5);
 
-/// A centered date or time separator in the chat style's look: a pill
-/// (Telegram, Zalo), plain text (Messenger, WeChat) or text between hairlines.
-class _Separator extends StatelessWidget {
-  const _Separator({required this.style, required this.label});
-
-  final ChatStyle style;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = style.palette;
-    final text = Text(
-      label,
-      style: context.typography.captionStrong.copyWith(color: p.separatorText),
-    );
-    final Widget child = switch (style.separator) {
-      ChatSeparatorStyle.pill => DecoratedBox(
-        decoration: BoxDecoration(
-          color: p.separatorFill,
-          borderRadius: BorderRadius.circular(context.radii.pill),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.xl,
-            vertical: context.spacing.xs,
-          ),
-          child: text,
-        ),
-      ),
-      ChatSeparatorStyle.plain => text,
-      ChatSeparatorStyle.hairline => Row(
-        children: [
-          Expanded(child: Divider(color: context.colors.border, height: 1)),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-            child: text,
-          ),
-          Expanded(child: Divider(color: context.colors.border, height: 1)),
-        ],
-      ),
-    };
-    return Padding(
-      padding: EdgeInsets.only(
-        top: context.spacing.xl4,
-        bottom: context.spacing.xs,
-      ),
-      child: Center(child: child),
-    );
-  }
-}
-
-/// Top of the thread: "load earlier messages", or the start marker.
+/// Top of the thread: a spinner while earlier messages load (they load on
+/// their own), a retry button after a failed load, or the start marker.
 class _ListHeader extends StatelessWidget {
   const _ListHeader({
     required this.reachedStart,
-    required this.loading,
+    required this.failed,
     required this.onLoadOlder,
   });
 
   final bool reachedStart;
-  final bool loading;
+  final bool failed;
   final VoidCallback onLoadOlder;
 
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
+    if (!reachedStart && !failed) return const AppInlineSpinner();
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.xl),
       child: Center(
@@ -236,8 +258,7 @@ class _ListHeader extends StatelessWidget {
               )
             : AppButton.textNeutral(
                 size: AppButtonSize.small,
-                isLoading: loading,
-                onPressed: loading ? null : onLoadOlder,
+                onPressed: onLoadOlder,
                 child: Text(l.chatLoadOlder),
               ),
       ),

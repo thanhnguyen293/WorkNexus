@@ -33,6 +33,48 @@ class BubbleTail extends StatelessWidget {
   );
 }
 
+/// A bubble with its tail drawn just outside the avatar-side edge.
+class BubbleWithTail extends StatelessWidget {
+  const BubbleWithTail({
+    super.key,
+    required this.kind,
+    required this.color,
+    required this.mine,
+    required this.child,
+  });
+
+  final BubbleTailKind kind;
+  final Color color;
+  final bool mine;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tail = BubbleTail(kind: kind, color: color, pointsLeft: !mine);
+    final top = kind == BubbleTailKind.triangleTop;
+    return Padding(
+      // Room for the tail so it is not clipped by the row.
+      padding: EdgeInsets.only(
+        left: mine ? 0 : BubbleTail.width,
+        right: mine ? BubbleTail.width : 0,
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          Positioned(
+            left: mine ? null : -BubbleTail.width,
+            right: mine ? -BubbleTail.width : null,
+            top: top ? 8 : null,
+            bottom: top ? null : 0,
+            child: tail,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TailPainter extends CustomPainter {
   _TailPainter(this.kind, this.color, this.pointsLeft);
 
