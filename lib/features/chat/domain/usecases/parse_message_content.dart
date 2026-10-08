@@ -61,7 +61,7 @@ class ParseMessageContent {
             json?['type'] == 'emoji' &&
             inline is String &&
             inline.isNotEmpty) {
-          return MessageContent.text(_decodeEmoji(inline));
+          return MessageContent.emoji(_decodeEmoji(inline));
         }
         if (contentType == 'image' &&
             json?['type'] == 'base64' &&
@@ -113,6 +113,8 @@ class ParseMessageContent {
                 time: time,
                 mimeType: mime,
               );
+      case 'notification':
+        if (_object(content) case final json?) return _notification(json);
       case 'object':
         final json = _object(content);
         final url = json?['url'];
@@ -130,6 +132,43 @@ class ParseMessageContent {
   static const _decodeEmoji = DecodeEmoji();
 
   static String _text(String content) => _decodeEmoji(repairMentions(content));
+
+  /// The official client merges an `object` content's JSON into the
+  /// notification before reading title, url and actions from it.
+  static MessageContent _notification(Map<String, Object?> json) {
+    final n = {...json};
+    if (n['contentType'] == 'object' && n['content'] is String) {
+      n.addAll(_object(n['content']! as String) ?? const {});
+    }
+    final actions = n['actions'];
+    final sender = n['sender'];
+    return MessageContent.notification(
+      title: _str(n['title']),
+      subtitle: _str(n['subtitle']),
+      text: n['content'] is String && n['contentType'] != 'object'
+          ? _decodeEmoji(n['content']! as String)
+          : '',
+      markdown: n['contentType'] != 'plain',
+      url: _str(n['url']),
+      actions: [
+        for (final a in actions is List ? actions : [?actions])
+          if (a is Map && _str(a['url']) != null)
+            NotificationAction(
+              label: _str(a['label']) ?? _str(a['url'])!,
+              url: _str(a['url'])!,
+            ),
+      ],
+      sender: switch (sender) {
+        final Map<Object?, Object?> m =>
+          _str(m['realname']) ?? _str(m['name']) ?? _str(m['displayName']),
+        final String s when s.isNotEmpty => s,
+        _ => null,
+      },
+    );
+  }
+
+  static String? _str(Object? v) =>
+      v is String && v.trim().isNotEmpty ? v.trim() : null;
 
   static Map<String, Object?>? _object(String content) {
     try {

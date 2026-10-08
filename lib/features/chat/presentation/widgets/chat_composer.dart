@@ -144,8 +144,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     }
   }
 
-  /// Types "@" at the cursor (after a space when needed) to start a
-  /// mention.
+  /// Types "@" at the cursor (after a space if needed): starts a mention.
   void _startMention() {
     final value = _text.value;
     final at = value.selection.isValid
@@ -232,6 +231,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
             onPickImage: () => _pick(imagesOnly: true),
             onAttach: _pick,
             onMention: _startMention,
+            thread: widget.thread,
             text: _text,
             focus: _focus,
           ),

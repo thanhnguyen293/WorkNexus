@@ -150,6 +150,9 @@ flutter:
     # brand at render time; ZenTao is a full-color recreation of its whirlpool
     # logo (rendered untinted). Referenced type-safely via flutter_gen.
     - assets/brands/
+    # Sticker sets, one folder per set (each must be listed here); the
+    # folder name is the set's tab title in the chat's emoji panel.
+    - assets/stickers/WorkNexus/
 
   fonts:
     - family: Space Grotesk

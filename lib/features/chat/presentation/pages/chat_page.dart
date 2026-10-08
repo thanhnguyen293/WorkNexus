@@ -6,6 +6,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import '../widgets/chat_layout.dart';
+import '../widgets/chat_notification_banner.dart';
 import '../widgets/chat_status_banner.dart';
 import '../widgets/conversation_list_pane.dart';
 import '../widgets/thread_pane.dart';
@@ -35,6 +36,7 @@ class ChatPage extends ConsumerWidget {
       child: Column(
         children: [
           ChatStatusBanner(accountId: accountId),
+          const ChatNotificationBanner(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {

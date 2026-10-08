@@ -35,6 +35,17 @@ final desktopNotifierProvider = Provider<DesktopNotifier>(
   (ref) => getIt<DesktopNotifier>(),
 );
 
+/// Whether the OS lets the app show notifications; null where unknown.
+/// Invalidate to check again (e.g. when the app comes back to the front).
+final chatNotificationPermissionProvider = FutureProvider.autoDispose<bool?>(
+  (ref) => ref.watch(desktopNotifierProvider).permissionGranted(),
+);
+
+/// The user closed the "notifications are blocked" bar (until restart).
+final chatNotificationWarningDismissedProvider = StateProvider<bool>(
+  (ref) => false,
+);
+
 final chatControllerProvider = Provider<ChatController>(
   (ref) => ChatController(ref.watch(chatRepositoryProvider)),
 );

@@ -248,6 +248,10 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
+  Future<Result<void>> sendEmoji(String a, String c, String code) async =>
+      const Ok(null);
+
+  @override
   Future<Result<void>> retract(String a, String g) async => const Ok(null);
 
   @override

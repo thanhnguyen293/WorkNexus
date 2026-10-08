@@ -61,6 +61,8 @@ String chatTitle(
 /// A user's display name, with a localized fallback.
 String chatUserName(BuildContext context, Map<int, ChatUser> users, int id) {
   final u = users[id];
+  // xxd's bot (xuanbot replies, ZenTao notifications) is user 0.
+  if (id == 0) return AppL10n.of(context).chatBotName;
   if (u == null) return AppL10n.of(context).chatUnknownUser(id);
   return u.realname.isNotEmpty ? u.realname : u.account;
 }
@@ -74,6 +76,9 @@ String chatPreview(BuildContext context, ChatMessage message) {
           .replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}')
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim(),
+    EmojiContent(:final emoji) => emoji,
+    NotificationContent(:final title, :final text) =>
+      (title ?? _stripMarkdown(text)).replaceAll(RegExp(r'\s+'), ' ').trim(),
     ImageContent() => l.chatImage,
     FileContent(:final name) => '${l.chatFile}: $name',
     LinkContent(:final title, :final url) => title ?? url,

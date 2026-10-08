@@ -72,6 +72,18 @@ class ChatLocalDatasource {
     );
   }
 
+  /// Brings a chat up the list for a message without a server id (a
+  /// notification); never moves it back.
+  Future<void> touchConversation(String accountId, String gid, DateTime at) =>
+      (_db.update(_db.chatConversations)..where(
+            (c) =>
+                c.accountId.equals(accountId) &
+                c.gid.equals(gid) &
+                (c.lastActiveAt.isNull() |
+                    c.lastActiveAt.isSmallerThanValue(at)),
+          ))
+          .write(ChatConversationsCompanion(lastActiveAt: Value(at)));
+
   /// Moves the read marker forward (never back: a late echo from another
   /// device must not resurrect unread messages).
   Future<void> setLastReadIndex(String accountId, String gid, int index) =>

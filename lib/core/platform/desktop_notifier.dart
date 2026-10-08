@@ -15,6 +15,10 @@ class DesktopNotifier {
 
   static const _appName = 'WorkNexus';
 
+  /// macOS bundle id (macos/Runner/Configs/AppInfo.xcconfig), to open this
+  /// app's page in System Settings → Notifications.
+  static const _macBundleId = 'com.worknexus.workNexus';
+
   // Windows ties toasts to an AppUserModelID + COM activator GUID; both must
   // stay stable across releases or Windows treats it as a different app.
   static const _windowsAppId = 'WorkNexus.WorkNexus.Desktop';
@@ -63,6 +67,58 @@ class DesktopNotifier {
       appTalker.handle(e, st, 'Notifications: initialize failed');
       return false;
     }
+  }
+
+  /// Whether the OS lets the app show alerts: false when notifications or
+  /// their banners/alerts are turned off for it (macOS), null where that
+  /// cannot be known (other platforms, plugin failure).
+  Future<bool?> permissionGranted() async {
+    final mac = await _macOS();
+    if (mac == null) return null;
+    try {
+      final options = await mac.checkPermissions();
+      if (options == null) return null;
+      return options.isEnabled && options.isAlertEnabled;
+    } on Exception catch (e, st) {
+      appTalker.handle(e, st, 'Notifications: checkPermissions failed');
+      return null;
+    }
+  }
+
+  /// Asks for permission. macOS only shows its prompt once; after the user
+  /// declined, it can only be changed in System Settings
+  /// ([openSystemSettings]).
+  Future<bool> requestPermission() async {
+    final mac = await _macOS();
+    if (mac == null) return false;
+    try {
+      return await mac.requestPermissions(alert: true, sound: true) ?? false;
+    } on Exception catch (e, st) {
+      appTalker.handle(e, st, 'Notifications: requestPermissions failed');
+      return false;
+    }
+  }
+
+  /// Opens the OS notification settings for this app.
+  Future<void> openSystemSettings() async {
+    if (kIsWeb || !Platform.isMacOS) return;
+    try {
+      await Process.run('open', [
+        'x-apple.systempreferences:com.apple.Notifications-Settings.extension'
+            '?id=$_macBundleId',
+      ]);
+    } on Exception catch (e, st) {
+      appTalker.handle(e, st, 'Notifications: opening settings failed');
+    }
+  }
+
+  Future<MacOSFlutterLocalNotificationsPlugin?> _macOS() async {
+    if (kIsWeb || !Platform.isMacOS) return null;
+    await initialize();
+    return _plugin
+        .resolvePlatformSpecificImplementation<
+          MacOSFlutterLocalNotificationsPlugin
+        >();
   }
 
   /// Shows a notification; one with the same [id] replaces the previous

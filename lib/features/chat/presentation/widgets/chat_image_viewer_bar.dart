@@ -9,7 +9,7 @@ import 'chat_labels.dart';
 import 'chat_media_viewer_bar.dart';
 
 /// The image viewer's top bar: name, position, size and dimensions; zoom,
-/// fit, rotate, copy, save, open-with and close.
+/// fit, rotate, copy, save, save as sticker, open-with and close.
 class ChatImageViewerBar extends StatelessWidget {
   const ChatImageViewerBar({
     super.key,
@@ -22,6 +22,7 @@ class ChatImageViewerBar extends StatelessWidget {
     required this.onRotate,
     required this.onCopy,
     required this.onSave,
+    required this.onSaveSticker,
     required this.onOpenExternally,
     required this.onClose,
   });
@@ -39,6 +40,9 @@ class ChatImageViewerBar extends StatelessWidget {
   /// Null until the original has loaded.
   final VoidCallback? onCopy;
   final VoidCallback onSave;
+
+  /// Keeps the image as a sticker; null once it was saved.
+  final VoidCallback? onSaveSticker;
   final VoidCallback onOpenExternally;
   final VoidCallback onClose;
 
@@ -100,6 +104,15 @@ class ChatImageViewerBar extends StatelessWidget {
           icon: Icons.download_rounded,
           tooltip: l.chatSaveAs,
           onPressed: onSave,
+        ),
+        ChatViewerButton(
+          icon: onSaveSticker == null
+              ? Icons.check_rounded
+              : Icons.add_reaction_outlined,
+          tooltip: onSaveSticker == null
+              ? l.chatStickerSaved
+              : l.chatSaveSticker,
+          onPressed: onSaveSticker,
         ),
         ChatViewerButton(
           icon: Icons.open_in_new_rounded,

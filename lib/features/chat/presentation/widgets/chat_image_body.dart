@@ -11,6 +11,7 @@ import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
 import 'attachment_download_badge.dart';
 import 'chat_image_viewer.dart';
+import 'save_sticker_action.dart';
 
 /// Box an inline image is fitted into (its aspect ratio is kept).
 const double _kImageMaxSide = 360;
@@ -107,35 +108,46 @@ class ChatImageBody extends ConsumerWidget {
       ),
       _ => ColoredBox(color: c.skeleton),
     };
-    return InkWell(
-      borderRadius: radius,
-      onTap: () => openAttachment(
-        context,
-        ref,
-        accountId: accountId,
-        content: image,
-        open: () async => _openViewer(context, ref),
-      ),
-      child: ClipRRect(
+    return GestureDetector(
+      onSecondaryTapUp: message.serverId == null
+          ? null
+          : (d) => showImageContextMenu(
+              context,
+              ref,
+              at: d.globalPosition,
+              accountId: accountId,
+              image: image,
+            ),
+      child: InkWell(
         borderRadius: radius,
-        child: SizedBox.fromSize(
-          size: size,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              child,
-              // Without a server thumbnail the inline image is the original.
-              if (image.hasThumb)
-                Positioned(
-                  left: context.spacing.md,
-                  bottom: context.spacing.md,
-                  child: AttachmentDownloadBadge(
-                    accountId: accountId,
-                    content: image,
-                    size: image.size,
+        onTap: () => openAttachment(
+          context,
+          ref,
+          accountId: accountId,
+          content: image,
+          open: () async => _openViewer(context, ref),
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: SizedBox.fromSize(
+            size: size,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                child,
+                // Without a server thumbnail the inline image is the original.
+                if (image.hasThumb)
+                  Positioned(
+                    left: context.spacing.md,
+                    bottom: context.spacing.md,
+                    child: AttachmentDownloadBadge(
+                      accountId: accountId,
+                      content: image,
+                      size: image.size,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

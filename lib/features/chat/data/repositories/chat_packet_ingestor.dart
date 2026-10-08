@@ -100,11 +100,42 @@ class ChatPacketIngestor {
             jsonEncode(data['avatar']),
           );
         }
+      // ZenTao's notifications and xuanbot replies (official client: kh).
+      case 'syncnotifications':
+        if (selfUserId == null) break;
+        return storeNotifications(accountId, data, selfUserId: selfUserId);
       case 'usergetlist':
         await _local.upsertUsers([
           for (final u in _maps(data))
             if (u['id'] != null) userFromXxd(accountId, u),
         ]);
+    }
+    return const IngestFollowUp();
+  }
+
+  /// Stores notifications in the xuanbot chat, created locally when the
+  /// server's chat list did not include it (as the official client does).
+  Future<IngestFollowUp> storeNotifications(
+    String accountId,
+    Object? data, {
+    required int selfUserId,
+  }) async {
+    final rows = notificationsFromXxd(accountId, data, selfUserId: selfUserId);
+    if (rows.isEmpty) return const IngestFollowUp();
+    final bot = xuanbotGid(selfUserId);
+    if (rows.any((r) => r.cgid.value == bot) &&
+        await _local.conversation(accountId, bot) == null) {
+      await _storeChats(accountId, [
+        {'gid': bot, 'type': 'bot', 'name': 'Xuanbot'},
+      ]);
+    }
+    await _local.upsertMessages(rows);
+    for (final row in rows) {
+      await _local.touchConversation(
+        accountId,
+        row.cgid.value,
+        row.sentAt.value,
+      );
     }
     return const IngestFollowUp();
   }
