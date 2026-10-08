@@ -11,13 +11,13 @@ import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'message_hover_actions.dart';
 
-/// The hover actions a message offers: reply in thread, copy text, and —
-/// for your own recent messages — retract.
+/// The hover actions a message offers: reply, copy text, and — for your own
+/// recent messages — retract.
 List<MessageAction> messageActions(
   BuildContext context,
   WidgetRef ref,
   ChatMessage message,
-  void Function(int messageId) onOpenThread,
+  void Function(ChatMessage message) onReply,
 ) {
   final l = AppL10n.of(context);
   final controller = ref.read(chatControllerProvider);
@@ -31,7 +31,7 @@ List<MessageAction> messageActions(
       (
         icon: Icons.reply_rounded,
         tooltip: l.chatReply,
-        onTap: () => onOpenThread(serverId),
+        onTap: () => onReply(message),
       ),
     if (text != null)
       (

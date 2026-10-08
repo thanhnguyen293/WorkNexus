@@ -42,8 +42,23 @@ class ReplyThreadPanel extends ConsumerWidget {
         .watch(chatControllerProvider)
         .thread(rootId, allReplies)
         .replies;
-    void close() =>
-        ref.read(openReplyThreadProvider(chat).notifier).state = null;
+    void close() {
+      ref.read(openReplyThreadProvider(chat).notifier).state = null;
+      ref
+              .read(
+                chatReplyDraftProvider((chat: chat, inThread: true)).notifier,
+              )
+              .state =
+          null;
+    }
+
+    void reply(ChatMessage message) =>
+        ref
+                .read(
+                  chatReplyDraftProvider((chat: chat, inThread: true)).notifier,
+                )
+                .state =
+            message;
 
     return Container(
       width: _kThreadPanelWidth,
@@ -95,6 +110,7 @@ class ReplyThreadPanel extends ConsumerWidget {
                     users: users,
                     showQuote: false,
                     onOpenThread: (_) {},
+                    onReply: reply,
                   ),
                 if (replies.isNotEmpty) ...[
                   Padding(
@@ -115,12 +131,17 @@ class ReplyThreadPanel extends ConsumerWidget {
                       users: users,
                       showQuote: r.replyToId != rootId,
                       onOpenThread: (_) {},
+                      onReply: reply,
                     ),
                 ],
               ],
             ),
           ),
-          ChatComposer(thread: chat, replyToId: rootId, hint: l.chatReplyHint),
+          ChatComposer(
+            thread: chat,
+            threadRootId: rootId,
+            hint: l.chatReplyHint,
+          ),
         ],
       ),
     );
