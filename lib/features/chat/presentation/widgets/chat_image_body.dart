@@ -81,6 +81,7 @@ class ChatImageBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final radius = BorderRadius.circular(context.radii.lg);
+    final size = _size;
     final bytes = ref.watch(
       chatAttachmentProvider((
         accountId: accountId,
@@ -89,10 +90,14 @@ class ChatImageBody extends ConsumerWidget {
       )),
     );
     final Widget child = switch (bytes) {
+      // Decoded at display size: full-size decodes of every image passing
+      // by make fast scrolling stutter.
       AsyncData(value: Ok(:final value)) => Image.memory(
         value,
         fit: BoxFit.cover,
         gaplessPlayback: true,
+        cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
+            .round(),
       ),
       AsyncData(value: Err()) || AsyncError() => ColoredBox(
         color: c.surface,
@@ -114,7 +119,7 @@ class ChatImageBody extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: radius,
         child: SizedBox.fromSize(
-          size: _size,
+          size: size,
           child: Stack(
             fit: StackFit.expand,
             children: [

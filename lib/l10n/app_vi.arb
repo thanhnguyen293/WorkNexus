@@ -500,6 +500,8 @@
   "chatSendFailed": "Chưa gửi được · Thử lại",
   "chatLoadOlder": "Tải tin nhắn cũ hơn",
   "chatBeginning": "Đầu cuộc trò chuyện",
+  "chatScrollToLatest": "Cuộn xuống tin nhắn mới nhất",
+  "chatNewMessages": "{count} tin nhắn mới",
   "chatImage": "Hình ảnh",
   "chatFile": "Tệp",
   "chatUnsupportedMessage": "Tin nhắn chưa hỗ trợ ({type})",

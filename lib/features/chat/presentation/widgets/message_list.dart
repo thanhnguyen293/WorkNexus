@@ -1,25 +1,20 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/inline_status.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
-import 'chat_labels.dart';
-import 'chat_panels.dart';
-import 'chat_separator.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
-import 'message_bubble.dart';
+import 'message_list_header.dart';
+import 'message_list_item.dart';
+import 'scroll_to_latest_button.dart';
 
 /// The messages of one chat, newest at the bottom. Earlier messages load on
 /// their own as the user scrolls near the top. New messages arriving while it
@@ -42,13 +37,46 @@ class MessageList extends ConsumerStatefulWidget {
 /// before the next page is fetched, so it is usually there before they reach it.
 const double _kLoadOlderThreshold = 600;
 
+/// Distance from the newest message that shows the jump-to-latest button.
+const double _kAwayThreshold = 400;
+
+/// Further than this from the bottom, jumping is better than a long animation.
+const double _kAnimateLimit = 4000;
+
+/// Laying out far past the viewport steadies the estimated list length.
+const double _kCacheExtent = 2000;
+
+const Duration _kScrollDuration = Duration(milliseconds: 250);
+
 class _MessageListState extends ConsumerState<MessageList> {
+  final _scroll = ScrollController();
   bool _loadingOlder = false;
   bool _reachedStart = false;
 
   /// Set when a load failed: automatic loading stops (no retry loop while
   /// offline) and the header offers a button to try again.
   bool _loadFailed = false;
+
+  /// Scrolled up far enough to show the jump-to-latest button.
+  bool _away = false;
+
+  /// Messages that arrived since the user scrolled away from the bottom.
+  int _unseen = 0;
+
+  /// A mouse button is held: likely dragging the scrollbar thumb. Older pages
+  /// wait until it is released: the thumb maps its offset to a scroll position
+  /// through the list's length, so growing the list mid-drag throws the
+  /// content far from the cursor.
+  bool _mouseDown = false;
+
+  /// Older messages fetched while the mouse was held, shown on release.
+  int _pendingRows = 0;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(MessageList oldWidget) {
@@ -57,21 +85,36 @@ class _MessageListState extends ConsumerState<MessageList> {
       _loadingOlder = false;
       _reachedStart = false;
       _loadFailed = false;
+      _away = false;
+      _unseen = 0;
+      _pendingRows = 0;
     }
   }
 
   /// Fires on scrolling and on content/viewport size changes, which also
   /// covers a first page too short to fill the screen.
   bool _onScrollMetrics(ScrollMetrics metrics) {
-    if (metrics.axis == Axis.vertical &&
-        metrics.extentAfter < _kLoadOlderThreshold &&
+    if (metrics.axis != Axis.vertical) return false;
+    // Reversed list: 0 is the newest message.
+    final away = metrics.pixels > _kAwayThreshold;
+    if (away != _away) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _away = away;
+          if (!away) _unseen = 0;
+        });
+      });
+    }
+    if (metrics.extentAfter < _kLoadOlderThreshold &&
+        !_mouseDown &&
         !_loadingOlder &&
         !_reachedStart &&
         !_loadFailed &&
         !ref.read(chatMessagesProvider(widget.thread)).isLoading) {
       // Not during layout: loading calls setState.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_loadingOlder) _loadOlder();
+        if (mounted && !_loadingOlder && !_mouseDown) _loadOlder();
       });
     }
     return false;
@@ -87,6 +130,10 @@ class _MessageListState extends ConsumerState<MessageList> {
       limit.state += ChatController.pageSize;
       return;
     }
+    // Rows the server sends land in the database; while the limit has room
+    // they would appear at once, even mid-drag. Pin the limit to what is
+    // shown and grow it in [_showPending] instead.
+    if (shown > 0) limit.state = shown;
     setState(() {
       _loadingOlder = true;
       _loadFailed = false;
@@ -98,7 +145,8 @@ class _MessageListState extends ConsumerState<MessageList> {
     setState(() => _loadingOlder = false);
     switch (result) {
       case Ok(:final value) when value > 0:
-        ref.read(chatMessageLimitProvider(t).notifier).state += value;
+        _pendingRows += value;
+        _showPending();
       // Nothing was cached yet: that call fetched the latest page, which is
       // not the start of the chat.
       case Ok() when shown == 0:
@@ -111,16 +159,58 @@ class _MessageListState extends ConsumerState<MessageList> {
     }
   }
 
+  void _showPending() {
+    if (_pendingRows == 0 || _mouseDown) return;
+    ref.read(chatMessageLimitProvider(widget.thread).notifier).state +=
+        _pendingRows;
+    _pendingRows = 0;
+  }
+
+  void _onMouseUp() {
+    _mouseDown = false;
+    _showPending();
+    if (_scroll.hasClients) _onScrollMetrics(_scroll.position);
+  }
+
+  void _scrollToLatest() {
+    if (!_scroll.hasClients) return;
+    if (_scroll.offset > _kAnimateLimit) {
+      _scroll.jumpTo(0);
+    } else {
+      _scroll.animateTo(0, duration: _kScrollDuration, curve: Curves.easeOut);
+    }
+  }
+
+  /// Newer messages at the bottom: count them while the user reads older
+  /// ones, or follow them down when the user sent one (from any device).
+  void _onMessages(List<ChatMessage> before, List<ChatMessage> after) {
+    final t = widget.thread;
+    if (after.length > before.length) {
+      ref.read(chatControllerProvider).markRead(t.accountId, t.chatGid);
+    }
+    final newest = before.lastOrNull?.gid;
+    if (newest == null || after.isEmpty || after.last.gid == newest) return;
+    final at = after.indexWhere((m) => m.gid == newest);
+    if (at < 0) return;
+    final arrived = after.sublist(at + 1);
+    final self = ref.read(chatSelfUserIdProvider(t.accountId)).value;
+    if (arrived.any((m) => m.senderId == self)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToLatest());
+    } else if (_away) {
+      setState(() => _unseen += arrived.length);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = widget.thread;
-    ref.listen(chatMessagesProvider(t), (previous, next) {
-      final before = previous?.asData?.value.length ?? 0;
-      final after = next.asData?.value.length ?? 0;
-      if (after > before) {
-        ref.read(chatControllerProvider).markRead(t.accountId, t.chatGid);
-      }
-    });
+    ref.listen(
+      chatMessagesProvider(t),
+      (previous, next) =>
+          _onMessages(previous?.value ?? const [], next.value ?? const []),
+    );
+    // Kept alive for [_onMessages], which reads it.
+    ref.watch(chatSelfUserIdProvider(t.accountId));
     final messagesAsync = ref.watch(chatMessagesProvider(t));
     final users =
         ref.watch(chatUsersProvider(t.accountId)).asData?.value ??
@@ -134,139 +224,76 @@ class _MessageListState extends ConsumerState<MessageList> {
       return const AppInlineSpinner();
     }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
-    // Newest first (reversed list); a day divider follows the oldest message
-    // of each day, i.e. sits above it on screen. The header is the last item.
     final style = ChatStyle.of(
       ref.watch(appSettingsProvider.select((s) => s.chatAppearance)),
       context,
     );
-    // Styles without per-message times get a centered time separator after
-    // a pause (Messenger ~15 min, WeChat ~5 min).
-    final markerGap = style.separatorGap;
-    final items = <Object>[];
-    for (var index = messages.length - 1; index >= 0; index--) {
-      final message = messages[index];
-      items.add(message);
-      final previous = index > 0 ? messages[index - 1] : null;
-      if (previous == null ||
-          !DateUtils.isSameDay(previous.sentAt, message.sentAt)) {
-        items.add(DateUtils.dateOnly(message.sentAt));
-      } else if (markerGap != null &&
-          message.sentAt.difference(previous.sentAt) >= markerGap) {
-        items.add(_TimeMarker(message.sentAt));
-      }
-    }
-    return ColoredBox(
-      color: style.palette.background,
+    final items = chatListItems(messages, style.separatorGap);
+    // Lets a message keep its row (and state) when newer ones push it up.
+    final rows = {
+      for (final (i, item) in items.indexed)
+        if (item is ChatMessage) item.gid: i,
+    };
+    final list = Listener(
+      onPointerDown: (e) {
+        if (e.kind == PointerDeviceKind.mouse) _mouseDown = true;
+      },
+      onPointerUp: (_) => _onMouseUp(),
+      onPointerCancel: (_) => _onMouseUp(),
       child: NotificationListener<ScrollMetricsNotification>(
         onNotification: (n) => _onScrollMetrics(n.metrics),
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => _onScrollMetrics(n.metrics),
           child: ListView.builder(
+            controller: _scroll,
             reverse: true,
+            cacheExtent: _kCacheExtent,
             padding: EdgeInsets.symmetric(
               horizontal: context.spacing.xl5,
               vertical: context.spacing.xl3,
             ),
             itemCount: items.length + 1,
-            itemBuilder: (context, i) {
-              if (i == items.length) {
-                return _ListHeader(
-                  reachedStart: _reachedStart,
-                  failed: _loadFailed,
-                  onLoadOlder: _loadOlder,
-                );
-              }
-              final item = items[i];
-              if (item is DateTime) {
-                return ChatSeparator(
-                  style: style,
-                  label: chatDayLabel(context, item),
-                );
-              }
-              if (item is _TimeMarker) {
-                return ChatSeparator(
-                  style: style,
-                  label: DateFormat('HH:mm').format(item.at),
-                );
-              }
-              final message = item as ChatMessage;
-              final older = i + 1 < items.length ? items[i + 1] : null;
-              final newer = i > 0 ? items[i - 1] : null;
-              return MessageBubble(
-                key: ValueKey(message.gid),
-                chat: t,
-                message: message,
-                users: users,
-                firstOfRun: !_sameRun(older, message),
-                lastOfRun: !_sameRun(newer, message),
-                showSender: widget.showSenders,
-                thread: summaries[message.serverId],
-                onOpenThread: (id) => openReplyThread(ref, t, id),
-                onReply: (m) =>
-                    ref
-                            .read(
-                              chatReplyDraftProvider((
-                                chat: t,
-                                inThread: false,
-                              )).notifier,
-                            )
-                            .state =
-                        m,
-              );
-            },
+            findChildIndexCallback: (key) =>
+                key is ValueKey<String> ? rows[key.value] : null,
+            itemBuilder: (context, i) => i == items.length
+                ? MessageListHeader(
+                    reachedStart: _reachedStart,
+                    failed: _loadFailed,
+                    onLoadOlder: _loadOlder,
+                  )
+                : MessageListItem(
+                    key: switch (items[i]) {
+                      final ChatMessage m => ValueKey(m.gid),
+                      _ => null,
+                    },
+                    thread: t,
+                    items: items,
+                    index: i,
+                    style: style,
+                    users: users,
+                    summaries: summaries,
+                    showSenders: widget.showSenders,
+                  ),
           ),
         ),
       ),
     );
-  }
-}
-
-/// A centered time marker in the list.
-final class _TimeMarker {
-  const _TimeMarker(this.at);
-  final DateTime at;
-}
-
-/// Consecutive messages from one sender within a few minutes form a run:
-/// one name, one avatar, one timestamp, tighter spacing.
-bool _sameRun(Object? other, ChatMessage message) =>
-    other is ChatMessage &&
-    other.senderId == message.senderId &&
-    other.sentAt.difference(message.sentAt).abs() <= const Duration(minutes: 5);
-
-/// Top of the thread: a spinner while earlier messages load (they load on
-/// their own), a retry button after a failed load, or the start marker.
-class _ListHeader extends StatelessWidget {
-  const _ListHeader({
-    required this.reachedStart,
-    required this.failed,
-    required this.onLoadOlder,
-  });
-
-  final bool reachedStart;
-  final bool failed;
-  final VoidCallback onLoadOlder;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    if (!reachedStart && !failed) return const AppInlineSpinner();
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.xl),
-      child: Center(
-        child: reachedStart
-            ? Text(
-                l.chatBeginning,
-                style: context.typography.caption.copyWith(
-                  color: context.colors.textTertiary,
-                ),
-              )
-            : AppButton.textNeutral(
-                size: AppButtonSize.small,
-                onPressed: onLoadOlder,
-                child: Text(l.chatLoadOlder),
-              ),
+    final s = context.spacing;
+    return ColoredBox(
+      color: style.palette.background,
+      child: Stack(
+        children: [
+          list,
+          Positioned(
+            right: s.xl5,
+            bottom: s.xl3,
+            child: ScrollToLatestButton(
+              visible: _away,
+              unseen: _unseen,
+              onPressed: _scrollToLatest,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -511,6 +511,11 @@
   "chatSendFailed": "Not sent · Retry",
   "chatLoadOlder": "Load earlier messages",
   "chatBeginning": "Start of the conversation",
+  "chatScrollToLatest": "Jump to the latest message",
+  "chatNewMessages": "{count, plural, =1{1 new message} other{{count} new messages}}",
+  "@chatNewMessages": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "chatImage": "Image",
   "chatFile": "File",
   "chatUnsupportedMessage": "Unsupported message ({type})",
