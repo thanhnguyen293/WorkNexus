@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -10,16 +11,15 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
-import 'chat_appearance_menu.dart';
 import 'chat_avatar.dart';
+import 'chat_info_dialog.dart';
 import 'chat_labels.dart';
-import 'chat_layout.dart';
 import 'chat_notification_toggle.dart';
-import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
-/// one-to-one chats, the other person's account).
+/// one-to-one chats, the other person's account). Clicking them shows the
+/// chat or group info.
 class ChatThreadHeader extends ConsumerWidget {
   const ChatThreadHeader({
     super.key,
@@ -59,78 +59,101 @@ class ChatThreadHeader extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          ChatAvatar(
-            name: title,
-            imageUrl: avatar?.imageUrl,
-            label: avatar?.label,
-            background: avatar?.background,
-            presence: presence,
-            size: ChatAvatarSize.large,
-          ),
-          SizedBox(width: context.spacing.xl),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.titleLg.copyWith(
-                    color: c.textPrimary,
-                    fontWeight: FontWeight.w700,
+            child: _InfoTap(
+              onTap: chat == null
+                  ? null
+                  : () => showChatInfo(
+                      context,
+                      ref,
+                      thread: thread,
+                      chat: chat,
+                      users: users,
+                    ),
+              child: Row(
+                children: [
+                  ChatAvatar(
+                    name: title,
+                    imageUrl: avatar?.imageUrl,
+                    label: avatar?.label,
+                    background: avatar?.background,
+                    presence: presence,
+                    verified: oneToOne
+                        ? chatVerifiedBadge(context, users, chat?.peerUserId)
+                        : null,
+                    size: ChatAvatarSize.large,
                   ),
-                ),
-                if (subtitle != null)
-                  Row(
-                    children: [
-                      Icon(
-                        !oneToOne
-                            ? Icons.person_outline
-                            : presence != null
-                            ? Icons.circle
-                            : Icons.alternate_email,
-                        size: presence != null
-                            ? context.spacing.md
-                            : context.spacing.xl3,
-                        color: presence?.isAround ?? false
-                            ? c.success
-                            : c.textSecondary,
-                      ),
-                      SizedBox(width: context.spacing.xs),
-                      Text(
-                        subtitle,
-                        style: context.typography.secondary.copyWith(
-                          color: c.textSecondary,
+                  SizedBox(width: context.spacing.xl),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.typography.titleLg.copyWith(
+                            color: c.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ],
+                        if (subtitle != null)
+                          Row(
+                            children: [
+                              Icon(
+                                !oneToOne
+                                    ? PhosphorIconsLight.user
+                                    : presence != null
+                                    ? PhosphorIconsFill.circle
+                                    : PhosphorIconsLight.at,
+                                size: presence != null
+                                    ? context.spacing.md
+                                    : context.spacing.xl3,
+                                color: presence?.isAround ?? false
+                                    ? c.success
+                                    : c.textSecondary,
+                              ),
+                              SizedBox(width: context.spacing.xs),
+                              Text(
+                                subtitle,
+                                style: context.typography.secondary.copyWith(
+                                  color: c.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            tooltip: l.chatInfo,
-            isSelected:
-                effectiveSidePanel(
-                  ref,
-                  thread,
-                  infoRoom: ChatLayoutScope.of(context).infoRoom,
-                ) ==
-                ChatSidePanel.info,
-            onPressed: () => toggleChatSidePanel(
-              ref,
-              thread,
-              ChatSidePanel.info,
-              infoRoom: ChatLayoutScope.of(context).infoRoom,
-            ),
-            icon: Icon(Icons.info_outline_rounded, color: c.textSecondary),
           ),
           const ChatNotificationToggle(),
-          const ChatAppearanceMenu(),
         ],
       ),
     );
   }
+}
+
+/// The avatar and title: a click shows the chat (or group) info.
+class _InfoTap extends StatelessWidget {
+  const _InfoTap({required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: AppL10n.of(context).chatInfo,
+    child: MouseRegion(
+      cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: child,
+      ),
+    ),
+  );
 }

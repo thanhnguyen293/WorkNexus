@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
@@ -209,7 +210,7 @@ class _AttachmentChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.attach_file, size: 12, color: c.textTertiary),
+          Icon(PhosphorIconsLight.paperclip, size: 12, color: c.textTertiary),
           SizedBox(width: context.spacing.xs),
           Flexible(
             child: Text(

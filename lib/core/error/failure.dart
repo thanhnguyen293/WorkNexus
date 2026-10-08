@@ -61,6 +61,12 @@ class UntrustedCertificateFailure extends Failure {
   final String issuer;
 }
 
+/// The user stopped the operation (e.g. cancelled a download); not an error
+/// to report.
+class CancelledFailure extends Failure {
+  const CancelledFailure(super.message, {super.cause});
+}
+
 /// Anything not otherwise classified.
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure(super.message, {super.cause});

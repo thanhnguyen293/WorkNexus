@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
@@ -55,7 +56,11 @@ class TranslationLanguageControl extends StatelessWidget {
                   ),
                 ),
                 if (lang.code == selected.code)
-                  Icon(Icons.check, size: context.spacing.xl2, color: c.accent),
+                  Icon(
+                    PhosphorIconsLight.check,
+                    size: context.spacing.xl2,
+                    color: c.accent,
+                  ),
               ],
             ),
           ),
@@ -83,7 +88,7 @@ class TranslationLanguageControl extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.xs),
             Icon(
-              Icons.keyboard_arrow_down,
+              PhosphorIconsLight.caretDown,
               size: context.spacing.xl3,
               color: c.textSecondary,
             ),

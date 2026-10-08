@@ -14,6 +14,7 @@ import '../../domain/value_objects/github_issue_column.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../../domain/value_objects/github_pr_column.dart';
 import '../board_providers.dart';
+import 'board_horizontal_scroll.dart';
 import 'ticket_card.dart';
 
 /// The dedicated GitHub board: horizontally-scrolling lifecycle columns for the
@@ -28,20 +29,15 @@ class GitHubBoardView extends ConsumerWidget {
     final columns = ref.watch(githubKindProvider) == GitHubItemKind.pullRequest
         ? _prColumns(context, ref.watch(githubPrBoardProvider))
         : _issueColumns(context, ref.watch(githubIssueBoardProvider));
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.all(context.spacing.xl2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final col in columns) ...[
-              _GitHubColumn(data: col),
-              SizedBox(width: context.spacing.xl),
-            ],
+    return BoardHorizontalScroll(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final col in columns) ...[
+            _GitHubColumn(data: col),
+            SizedBox(width: context.spacing.xl),
           ],
-        ),
+        ],
       ),
     );
   }

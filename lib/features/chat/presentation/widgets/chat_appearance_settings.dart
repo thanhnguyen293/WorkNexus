@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/chat_appearance.dart';
@@ -14,27 +15,6 @@ import 'chat_wallpaper_picker.dart';
 
 const int _kColumns = 3;
 
-/// Header button opening the chat style picker: a preview card per style,
-/// the wallpaper and, for the messenger styles, whether own bubbles use the app's accent.
-/// Picks apply at once and the panel stays open to compare.
-class ChatAppearanceMenu extends StatelessWidget {
-  const ChatAppearanceMenu({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    return MenuAnchor(
-      menuChildren: const [_AppearancePanel()],
-      builder: (context, menu, _) => IconButton(
-        tooltip: l.chatAppearance,
-        isSelected: menu.isOpen,
-        onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-        icon: Icon(Icons.style_outlined, color: context.colors.textSecondary),
-      ),
-    );
-  }
-}
-
 /// Messenger names are brands and stay as they are in every language.
 String chatAppearanceLabel(AppL10n l, ChatAppearance a) => switch (a) {
   ChatAppearance.worknexus => l.chatAppearanceDefault,
@@ -45,8 +25,11 @@ String chatAppearanceLabel(AppL10n l, ChatAppearance a) => switch (a) {
   ChatAppearance.tbchat => 'TBChat',
 };
 
-class _AppearancePanel extends ConsumerWidget {
-  const _AppearancePanel();
+/// The chat's look, as a Quick Settings section: a preview card per style,
+/// the wallpaper shared by every style and, for the messenger styles,
+/// whether own bubbles use the app's accent. Picks apply at once.
+class ChatAppearanceSettings extends ConsumerWidget {
+  const ChatAppearanceSettings({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,22 +42,21 @@ class _AppearancePanel extends ConsumerWidget {
       ),
     );
     final settings = ref.read(appSettingsProvider.notifier);
-    final cardWidth = s.xl6 * 3.6;
-    return Padding(
-      padding: EdgeInsets.all(s.lg),
-      child: SizedBox(
-        width: cardWidth * _kColumns + s.lg * (_kColumns - 1),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l.chatAppearance,
-              style: context.typography.title.copyWith(color: c.textPrimary),
-            ),
-            SizedBox(height: s.lg),
-            Wrap(
-              spacing: s.lg,
-              runSpacing: s.lg,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.chatAppearance,
+          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+        ),
+        SizedBox(height: s.lg),
+        LayoutBuilder(
+          builder: (context, box) {
+            final cardWidth =
+                (box.maxWidth - s.md * (_kColumns - 1)) / _kColumns;
+            return Wrap(
+              spacing: s.md,
+              runSpacing: s.md,
               children: [
                 for (final a in ChatAppearance.values)
                   SizedBox(
@@ -87,33 +69,29 @@ class _AppearancePanel extends ConsumerWidget {
                     ),
                   ),
               ],
-            ),
-            _SectionDivider(),
-            const ChatWallpaperPicker(),
-            _SectionDivider(),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: primary,
-              // The default style already follows the app's colours.
-              onChanged: current == ChatAppearance.worknexus
-                  ? null
-                  : settings.setChatPrimaryBubbles,
-              title: Text(
-                l.chatPrimaryBubbles,
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-              subtitle: Text(
-                l.chatPrimaryBubblesHint,
-                style: context.typography.caption.copyWith(
-                  color: c.textSecondary,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
-      ),
+        const _SectionDivider(),
+        const ChatWallpaperPicker(),
+        const _SectionDivider(),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          value: primary,
+          // The default style already follows the app's colours.
+          onChanged: current == ChatAppearance.worknexus
+              ? null
+              : settings.setChatPrimaryBubbles,
+          title: Text(
+            l.chatPrimaryBubbles,
+            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+          ),
+          subtitle: Text(
+            l.chatPrimaryBubblesHint,
+            style: context.typography.caption.copyWith(color: c.textSecondary),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -121,6 +99,8 @@ class _AppearancePanel extends ConsumerWidget {
 /// A hairline with room around it, between the panel's sections (styles,
 /// wallpaper, bubble colour).
 class _SectionDivider extends StatelessWidget {
+  const _SectionDivider();
+
   @override
   Widget build(BuildContext context) => Divider(
     height: context.spacing.xl4 * 1.5,
@@ -164,9 +144,16 @@ class _StyleCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              SizedBox(
-                height: s.xl6 * 2.4,
-                child: ChatStylePreview(style: style),
+              // Laid out at the size it was designed for, scaled to the card.
+              AspectRatio(
+                aspectRatio: 3.4 / 2.4,
+                child: FittedBox(
+                  child: SizedBox(
+                    width: s.xl6 * 3.4,
+                    height: s.xl6 * 2.4,
+                    child: ChatStylePreview(style: style),
+                  ),
+                ),
               ),
               SizedBox(height: s.sm),
               Row(
@@ -181,7 +168,7 @@ class _StyleCard extends StatelessWidget {
                   ),
                   if (selected)
                     Icon(
-                      Icons.check_circle_rounded,
+                      PhosphorIconsFill.checkCircle,
                       size: s.xl3,
                       color: c.accent,
                     ),

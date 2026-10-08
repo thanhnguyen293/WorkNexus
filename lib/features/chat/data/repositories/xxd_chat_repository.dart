@@ -460,9 +460,16 @@ class XxdChatRepository implements ChatRepository {
     MessageContent content,
   ) => _attachments.localFile(accountId, _sessions[accountId], content);
 
-  /// Videos above this are not downloaded just to show a preview frame.
-  /// Bigger ones show their size and download on tap instead.
-  static const maxThumbnailSource = 20 * 1024 * 1024;
+  @override
+  void cancelDownload(String accountId, MessageContent content) =>
+      _attachments.cancel(accountId, content);
+
+  /// Videos up to this size download on their own, to show a preview
+  /// frame; bigger ones (all, at 0) show their size and download on tap.
+  int _videoAutoDownloadBytes = 20 * 1024 * 1024;
+
+  @override
+  void setVideoAutoDownloadLimit(int bytes) => _videoAutoDownloadBytes = bytes;
 
   @override
   Future<Result<Duration>> videoDuration(
@@ -484,7 +491,9 @@ class XxdChatRepository implements ChatRepository {
     String accountId,
     MessageContent video,
   ) async {
-    if (video case FileContent(:final size) when size > maxThumbnailSource) {
+    if (video case FileContent(
+      :final size,
+    ) when size > _videoAutoDownloadBytes) {
       // Downloaded on request since: a frame can be made from the file.
       if (!await _attachments.isCached(accountId, video)) {
         return const Err(NotFoundFailure('Video too large to preview'));
@@ -587,8 +596,12 @@ class XxdChatRepository implements ChatRepository {
   );
 
   @override
-  Future<Result<Uri>> zentaoProfileUri(String accountId) =>
-      _avatars.profileUri(_sessions[accountId]);
+  Future<Result<void>> setMyAvatar(String accountId, Uint8List image) async {
+    final result = await _avatars.setMyAvatar(_sessions[accountId], image);
+    if (result case Err()) return result;
+    // The new picture lives at a new URL, carried by the user list.
+    return refreshUsers(accountId);
+  }
 
   @override
   Future<Result<void>> refreshUsers(String accountId) async {

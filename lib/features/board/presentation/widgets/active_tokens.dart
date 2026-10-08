@@ -79,23 +79,28 @@ class ActiveTokens extends ConsumerWidget {
 
     if (tokens.isEmpty) return const SizedBox.shrink();
 
-    return Wrap(
-      spacing: context.spacing.sm,
-      runSpacing: context.spacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        ...tokens,
-        GestureDetector(
-          onTap: ctrl.clearAll,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-            child: Text(
-              l.clear,
-              style: context.typography.caption.copyWith(color: c.textTertiary),
+    // One line that scrolls sideways when the toolbar is narrow, rather than
+    // wrapping into a column of clipped chips.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        spacing: context.spacing.sm,
+        children: [
+          ...tokens,
+          GestureDetector(
+            onTap: ctrl.clearAll,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+              child: Text(
+                l.clear,
+                style: context.typography.caption.copyWith(
+                  color: c.textTertiary,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

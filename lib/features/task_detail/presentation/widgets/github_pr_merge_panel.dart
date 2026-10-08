@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -54,7 +55,11 @@ class GitHubPrMergePanel extends StatelessWidget {
             runSpacing: context.spacing.md,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Icon(Icons.info, size: context.spacing.xl4, color: c.info),
+              Icon(
+                PhosphorIconsFill.info,
+                size: context.spacing.xl4,
+                color: c.info,
+              ),
               Text(
                 l.prClosed,
                 style: context.typography.bodyStrong.copyWith(
@@ -87,7 +92,9 @@ class GitHubPrMergePanel extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Icon(
-                  needsUpdate ? Icons.do_not_disturb_on_outlined : Icons.info,
+                  needsUpdate
+                      ? PhosphorIconsLight.minusCircle
+                      : PhosphorIconsFill.info,
                   size: context.spacing.xl4,
                   color: needsUpdate ? c.warning : c.info,
                 ),

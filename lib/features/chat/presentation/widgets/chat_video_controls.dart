@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -73,20 +74,20 @@ class ChatVideoControls extends StatelessWidget {
                 Row(
                   children: [
                     ChatViewerButton(
-                      icon: Icons.replay_10_rounded,
+                      icon: PhosphorIconsLight.clockCounterClockwise,
                       tooltip: l.chatBack10,
                       onPressed: () =>
                           player.seekTo(v.position - kChatVideoSeekStep),
                     ),
                     ChatViewerButton(
                       icon: v.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
+                          ? PhosphorIconsFill.pause
+                          : PhosphorIconsFill.play,
                       tooltip: v.isPlaying ? l.chatPause : l.chatPlay,
                       onPressed: v.isPlaying ? player.pause : player.play,
                     ),
                     ChatViewerButton(
-                      icon: Icons.forward_10_rounded,
+                      icon: PhosphorIconsLight.clockClockwise,
                       tooltip: l.chatForward10,
                       onPressed: () =>
                           player.seekTo(v.position + kChatVideoSeekStep),
@@ -94,8 +95,8 @@ class ChatVideoControls extends StatelessWidget {
                     SizedBox(width: s.md),
                     ChatViewerButton(
                       icon: v.volume == 0
-                          ? Icons.volume_off_rounded
-                          : Icons.volume_up_rounded,
+                          ? PhosphorIconsLight.speakerSlash
+                          : PhosphorIconsLight.speakerHigh,
                       tooltip: v.volume == 0 ? l.chatUnmute : l.chatMute,
                       onPressed: () => player.setVolume(v.volume == 0 ? 1 : 0),
                     ),
@@ -133,13 +134,13 @@ class ChatVideoControls extends StatelessWidget {
                       ),
                     ),
                     ChatViewerButton(
-                      icon: Icons.repeat_rounded,
+                      icon: PhosphorIconsLight.repeat,
                       tooltip: l.chatLoop,
                       selected: v.isLooping,
                       onPressed: () => player.setLooping(!v.isLooping),
                     ),
                     ChatViewerButton(
-                      icon: Icons.fullscreen_rounded,
+                      icon: PhosphorIconsLight.cornersOut,
                       tooltip: l.chatFullScreen,
                       onPressed: onToggleFullScreen,
                     ),

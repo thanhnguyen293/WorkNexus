@@ -41,12 +41,22 @@ class MessageTranslationController
   @override
   Map<String, MessageTranslation> build() => const {};
 
-  Future<void> translate(ChatMessage message) async {
+  /// Translates [message], showing it as in progress at once. [ready]
+  /// (e.g. checking a translator is set up, which can take a moment) runs
+  /// after that; false stops without a translation.
+  Future<void> translate(
+    ChatMessage message, {
+    Future<bool> Function()? ready,
+  }) async {
     if (message.content is! TextContent ||
         state[message.gid]?.loading == true) {
       return;
     }
     _set(message.gid, const MessageTranslation(loading: true));
+    if (ready != null && !await ready()) {
+      _clear(message.gid);
+      return;
+    }
     final settings = ref.read(appSettingsProvider);
     final result = await getIt<TranslateChatMessage>()(
       message,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -65,7 +66,7 @@ class AssigneeChip extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.person_off_outlined, size: 13, color: c.textTertiary),
+          Icon(PhosphorIconsLight.userMinus, size: 13, color: c.textTertiary),
           SizedBox(width: context.spacing.xs),
           Text(
             l.unassigned,

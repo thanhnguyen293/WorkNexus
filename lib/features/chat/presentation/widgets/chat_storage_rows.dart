@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -93,7 +94,10 @@ class ChatStorageChatList extends ConsumerWidget {
                 ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.folder_outlined, color: c.textSecondary),
+                  leading: Icon(
+                    PhosphorIconsLight.folder,
+                    color: c.textSecondary,
+                  ),
                   title: Text(
                     l.chatStorageOther,
                     style: context.typography.body.copyWith(
@@ -159,7 +163,7 @@ class _ChatRow extends ConsumerWidget {
           IconButton(
             tooltip: AppL10n.of(context).chatDelete,
             onPressed: () => onClear(usage.accountId, usage.chatGid, title),
-            icon: Icon(Icons.delete_outline, color: c.textSecondary),
+            icon: Icon(PhosphorIconsLight.trash, color: c.textSecondary),
           ),
         ],
       ),

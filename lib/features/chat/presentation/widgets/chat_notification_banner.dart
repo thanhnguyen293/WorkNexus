@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -69,7 +70,7 @@ class _ChatNotificationBannerState
       padding: EdgeInsets.symmetric(horizontal: s.xl3, vertical: s.md),
       child: Row(
         children: [
-          Icon(Icons.notifications_off_outlined, color: c.warning, size: s.xl4),
+          Icon(PhosphorIconsLight.bellSlash, color: c.warning, size: s.xl4),
           SizedBox(width: s.lg),
           Expanded(
             child: Text(
@@ -92,7 +93,7 @@ class _ChatNotificationBannerState
                         .read(chatNotificationWarningDismissedProvider.notifier)
                         .state =
                     true,
-            icon: Icon(Icons.close_rounded, color: c.textSecondary),
+            icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
           ),
         ],
       ),

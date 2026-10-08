@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -108,7 +109,7 @@ class GitLabMrSidebar extends StatelessWidget {
         ),
         DetailSidebarSection(
           title: l.timeTracking,
-          trailingIcon: Icons.add,
+          trailingIcon: PhosphorIconsLight.plus,
           actionTooltip: l.editTimeTracking,
           editorTitle: l.timeTracking,
           editorBuilder: timeTrackingEditorBuilder,

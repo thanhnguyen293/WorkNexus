@@ -230,6 +230,8 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatSendMarkdown: r.chatSendMarkdown,
   chatNotifications: r.chatNotifications,
   chatCacheLimitMb: r.chatCacheLimitMb,
+  chatAutoDownloadVideos: r.chatAutoDownloadVideos,
+  chatAutoDownloadVideoMb: r.chatAutoDownloadVideoMb,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -256,6 +258,8 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatSendMarkdown: Value(s.chatSendMarkdown),
   chatNotifications: Value(s.chatNotifications),
   chatCacheLimitMb: Value(s.chatCacheLimitMb),
+  chatAutoDownloadVideos: Value(s.chatAutoDownloadVideos),
+  chatAutoDownloadVideoMb: Value(s.chatAutoDownloadVideoMb),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

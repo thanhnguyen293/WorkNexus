@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -145,7 +146,7 @@ class _Row extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.alternate_email_rounded,
+                    PhosphorIconsLight.at,
                     color: c.onAccent,
                     size: s.xl5,
                   ),
@@ -154,6 +155,7 @@ class _Row extends StatelessWidget {
                 ChatAvatar(
                   name: candidate.name,
                   imageUrl: chatAvatarUrl(users, candidate.userId),
+                  verified: chatVerifiedBadge(context, users, candidate.userId),
                   diameter: avatarSize,
                 ),
               SizedBox(width: s.xl),

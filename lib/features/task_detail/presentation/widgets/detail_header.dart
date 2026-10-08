@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -65,7 +66,7 @@ class DetailHeader extends ConsumerWidget {
               ),
               const Spacer(),
               DetailHeaderIconButton(
-                icon: Icons.sync,
+                icon: PhosphorIconsLight.arrowsClockwise,
                 tooltip: l.refresh,
                 onTap: () =>
                     ref.invalidate(ticketDetailSyncProvider(ticket.id)),
@@ -75,14 +76,14 @@ class DetailHeader extends ConsumerWidget {
                 DetailHeaderCopyLinkButton(url: ticket.url!),
                 SizedBox(width: context.spacing.md),
                 DetailHeaderIconButton(
-                  icon: Icons.open_in_new,
+                  icon: PhosphorIconsLight.arrowSquareOut,
                   tooltip: l.openInBrowser,
                   onTap: () => openExternally(ticket.url!),
                 ),
                 SizedBox(width: context.spacing.md),
               ],
               DetailHeaderIconButton(
-                icon: Icons.close,
+                icon: PhosphorIconsLight.x,
                 tooltip: l.close,
                 onTap: onClose,
               ),

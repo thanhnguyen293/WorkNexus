@@ -60,7 +60,10 @@ class DesktopWindowService {
   static WindowOptions windowOptionsFor({required bool isWindows}) {
     return WindowOptions(
       size: const Size(1440, 900),
-      minimumSize: const Size(1040, 640),
+      // Narrow enough to sit beside other windows: the chat collapses its
+      // list to avatars (nav rail + list + its 520px message column) and
+      // the board scrolls sideways.
+      minimumSize: const Size(680, 480),
       center: true,
       backgroundColor: const Color(0x00000000),
       skipTaskbar: false,

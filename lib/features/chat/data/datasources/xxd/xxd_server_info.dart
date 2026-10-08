@@ -34,6 +34,8 @@ final class XxdServerInfo {
     this.authToken,
     this.requestType = 'PATH_INFO',
     this.requestFix = '-',
+    this.serverTime,
+    this.authTokenWindow = 20,
   });
 
   /// Returns null when the reply carries no token (login rejected).
@@ -54,6 +56,8 @@ final class XxdServerInfo {
       authToken: json['authToken'] as String?,
       requestType: '${json['requestType'] ?? 'PATH_INFO'}',
       requestFix: '${json['requestFix'] ?? '-'}',
+      serverTime: _date(json['serverTime']),
+      authTokenWindow: _int(json['authTokenAuthWindow']) ?? 20,
     );
   }
 
@@ -74,6 +78,13 @@ final class XxdServerInfo {
   final String requestType;
   final String requestFix;
 
+  /// The server's clock when it answered, for keys that change over time.
+  final DateTime? serverTime;
+
+  /// Seconds an `im-authorize` key derived from [authToken] stays valid
+  /// (`authTokenAuthWindow`; 20 when the server does not say).
+  final int authTokenWindow;
+
   /// `socketUrl` when given, else `wss://<host>:<chatPort>/ws`.
   Uri socketUri(Uri server) => switch (socketUrl) {
     final url? => Uri.parse(url),
@@ -87,6 +98,17 @@ final class XxdServerInfo {
 
   static int? _int(Object? v) =>
       v is num ? v.toInt() : (v is String ? int.tryParse(v) : null);
+
+  /// Unix seconds or milliseconds, or a date string.
+  static DateTime? _date(Object? v) {
+    final n = _int(v);
+    if (n != null && n > 0) {
+      return DateTime.fromMillisecondsSinceEpoch(
+        n < 100000000000 ? n * 1000 : n,
+      );
+    }
+    return v is String ? DateTime.tryParse(v) : null;
+  }
 
   static bool _truthy(Object? v) =>
       v == true || (v is num && v != 0) || v == '1' || v == 'true';

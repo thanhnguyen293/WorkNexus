@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -75,9 +76,9 @@ class AttachmentViewerHeader extends StatelessWidget {
 
   IconData _iconFor(String? ext) {
     final e = ext?.toLowerCase() ?? '';
-    if (kVideoExts.contains(e)) return Icons.videocam_outlined;
-    if (kImageExts.contains(e)) return Icons.image_outlined;
-    return Icons.insert_drive_file_outlined;
+    if (kVideoExts.contains(e)) return PhosphorIconsLight.videoCamera;
+    if (kImageExts.contains(e)) return PhosphorIconsLight.image;
+    return PhosphorIconsLight.file;
   }
 }
 
@@ -114,7 +115,7 @@ class _DownloadButton extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2, color: tint),
               )
             else
-              Icon(Icons.download_outlined, size: 15, color: tint),
+              Icon(PhosphorIconsLight.downloadSimple, size: 15, color: tint),
             SizedBox(width: context.spacing.sm),
             Text(
               l.download,
@@ -149,7 +150,7 @@ class _CloseButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(context.radii.sm),
             border: Border.all(color: c.border),
           ),
-          child: Icon(Icons.close, size: 15, color: c.textSecondary),
+          child: Icon(PhosphorIconsLight.x, size: 15, color: c.textSecondary),
         ),
       ),
     );

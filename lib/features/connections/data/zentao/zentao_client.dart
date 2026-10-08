@@ -27,7 +27,7 @@ class ZenTaoClient {
     required this.account,
     required this.password,
     Dio? dio,
-  }) : baseUrl = _normalizeBase(baseUrl),
+  }) : _baseUrl = _normalizeBase(baseUrl),
        _dio = dio ?? Dio() {
     _dio.options
       ..connectTimeout = const Duration(seconds: 15)
@@ -56,11 +56,15 @@ class ZenTaoClient {
     );
   }
 
-  final String baseUrl;
+  String _baseUrl;
   final String account;
   final String password;
   final Dio _dio;
-  late final ZenTaoApi _api;
+  late ZenTaoApi _api;
+
+  /// The ZenTao web root (e.g. `https://host/zentao`). May change once, via
+  /// [detectBaseUrl], while an account is being added.
+  String get baseUrl => _baseUrl;
 
   /// The type-safe REST v1 client (token + retry handled by the interceptor).
   ZenTaoApi get api => _api;
@@ -81,6 +85,53 @@ class ZenTaoClient {
   }
 
   String get _v1 => '$baseUrl/api.php/v1';
+
+  /// Finds the web root that actually serves the REST v1 API and switches this
+  /// client to it, returning the chosen root.
+  ///
+  /// ZenTao is installed either at the server root (Docker images) or under
+  /// `/zentao` (ZBox / the default package), so users often enter just the
+  /// host. We try the entered URL first, then `<url>/zentao`. A candidate counts
+  /// as ZenTao when `POST /tokens` answers with JSON (even a 400 "bad login");
+  /// a wrong root returns an HTML 404. If no candidate matches, the entered URL
+  /// is kept so the regular login surfaces the real error.
+  Future<String> detectBaseUrl() async {
+    for (final candidate in candidateBaseUrls(_baseUrl)) {
+      if (await _servesApi(candidate)) {
+        if (candidate != _baseUrl) {
+          _baseUrl = candidate;
+          _api = ZenTaoApi(_dio, baseUrl: _v1);
+          _token = null;
+          _tokenExpiry = null;
+        }
+        break;
+      }
+    }
+    return _baseUrl;
+  }
+
+  /// Web roots to probe for [base], most likely first.
+  static List<String> candidateBaseUrls(String base) {
+    final normalized = _normalizeBase(base);
+    return [
+      normalized,
+      if (!normalized.endsWith('/zentao')) '$normalized/zentao',
+    ];
+  }
+
+  Future<bool> _servesApi(String base) async {
+    try {
+      final res = await _dio.post<dynamic>(
+        '$base/api.php/v1/tokens',
+        data: const <String, String>{},
+        options: Options(responseType: ResponseType.plain),
+      );
+      final type = res.headers.value(Headers.contentTypeHeader) ?? '';
+      return res.statusCode != 404 && type.contains('json');
+    } on DioException {
+      return false;
+    }
+  }
 
   bool get _tokenValid =>
       _token != null &&

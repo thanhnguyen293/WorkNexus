@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/chat_conversation.dart';
@@ -20,6 +20,7 @@ class ConversationTile extends StatelessWidget {
     required this.onTap,
     required this.avatar,
     this.presence,
+    this.verified,
     this.compact = false,
   });
 
@@ -38,6 +39,9 @@ class ConversationTile extends StatelessWidget {
   /// The other person's presence (one-to-one chats).
   final ChatPresence? presence;
 
+  /// The other person's "verified" check (one-to-one chats, leading roles).
+  final ChatVerifiedBadge? verified;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -49,6 +53,7 @@ class ConversationTile extends StatelessWidget {
       label: avatar.label,
       background: avatar.background,
       presence: presence,
+      verified: verified,
     );
     if (compact) {
       return Tooltip(
@@ -56,13 +61,9 @@ class ConversationTile extends StatelessWidget {
         waitDuration: const Duration(milliseconds: 400),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(context.radii.md),
           child: Container(
             padding: EdgeInsets.symmetric(vertical: context.spacing.md),
-            decoration: BoxDecoration(
-              color: selected ? c.selectionFill : Colors.transparent,
-              borderRadius: BorderRadius.circular(context.radii.md),
-            ),
+            color: selected ? c.selectionFill : Colors.transparent,
             child: Center(
               child: Stack(
                 clipBehavior: Clip.none,
@@ -81,15 +82,16 @@ class ConversationTile extends StatelessWidget {
         ),
       );
     }
+    // Square and edge to edge: the selection fills the whole row; the inner
+    // margin keeps the content where the list's own used to put it.
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(context.radii.md),
       child: Container(
-        padding: EdgeInsets.all(context.spacing.md),
-        decoration: BoxDecoration(
-          color: selected ? c.selectionFill : Colors.transparent,
-          borderRadius: BorderRadius.circular(context.radii.md),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.spacing.xl3,
+          vertical: context.spacing.md,
         ),
+        color: selected ? c.selectionFill : Colors.transparent,
         child: Row(
           children: [
             avatarWidget,
@@ -138,7 +140,7 @@ class ConversationTile extends StatelessWidget {
                       if (chat.muted) ...[
                         SizedBox(width: context.spacing.sm),
                         Icon(
-                          Icons.notifications_off_rounded,
+                          PhosphorIconsLight.bellSlash,
                           size: context.spacing.xl2,
                           color: c.textTertiary,
                         ),
@@ -146,7 +148,7 @@ class ConversationTile extends StatelessWidget {
                       if (chat.starred) ...[
                         SizedBox(width: context.spacing.sm),
                         Icon(
-                          Icons.push_pin_rounded,
+                          PhosphorIconsFill.pushPin,
                           size: context.spacing.xl2,
                           color: c.textTertiary,
                         ),

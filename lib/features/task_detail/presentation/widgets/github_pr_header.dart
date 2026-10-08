@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -88,7 +89,7 @@ class GitHubPrHeader extends StatelessWidget {
                   base != null &&
                   base.isNotEmpty)
                 Icon(
-                  Icons.arrow_forward,
+                  PhosphorIconsLight.arrowRight,
                   size: context.spacing.xl2,
                   color: c.textTertiary,
                 ),

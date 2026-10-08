@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -143,7 +144,11 @@ class _ClosedField extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.expand_more, size: 20, color: c.textTertiary),
+              Icon(
+                PhosphorIconsLight.caretDown,
+                size: 20,
+                color: c.textTertiary,
+              ),
             ],
           ),
         ),
@@ -306,7 +311,8 @@ class _OptionRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (selected) Icon(Icons.check, size: 16, color: c.accent),
+                if (selected)
+                  Icon(PhosphorIconsLight.check, size: 16, color: c.accent),
               ],
             ),
           ),

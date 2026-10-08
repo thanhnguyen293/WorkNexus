@@ -110,7 +110,8 @@ class Settings extends Table {
   RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
 
   /// Chat message layout style (`ChatAppearance` name).
-  TextColumn get chatAppearance => text().withDefault(const Constant('zalo'))();
+  TextColumn get chatAppearance =>
+      text().withDefault(const Constant('worknexus'))();
 
   /// Whether own bubbles in the messenger-like chat styles use the app's
   /// accent colour instead of the messenger's own.
@@ -119,7 +120,8 @@ class Settings extends Table {
 
   /// Chat wallpaper: '' = the style's own, 'none' = plain colour, otherwise
   /// the path of an image the user picked.
-  TextColumn get chatWallpaper => text().withDefault(const Constant(''))();
+  TextColumn get chatWallpaper =>
+      text().withDefault(const Constant('pattern'))();
 
   /// How much the wallpaper image is darkened (0–1), for readability.
   RealColumn get chatWallpaperDim => real().withDefault(const Constant(0.2))();
@@ -135,6 +137,13 @@ class Settings extends Table {
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
       integer().withDefault(const Constant(2048))();
+
+  /// Whether chat videos up to [chatAutoDownloadVideoMb] download on their
+  /// own (for their preview frame and instant playback).
+  BoolColumn get chatAutoDownloadVideos =>
+      boolean().withDefault(const Constant(true))();
+  IntColumn get chatAutoDownloadVideoMb =>
+      integer().withDefault(const Constant(20))();
   IntColumn get accentColorValue => integer().nullable()();
 
   /// JSON array of pinned ZenTao project keys (`"accountId:productId"`), shown at
@@ -350,7 +359,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 31;
+  int get schemaVersion => 32;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -446,6 +455,14 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('chat_users', column)) {
             await m.addColumn(chatUsers, add);
           }
+        }
+      }
+      if (from < 32) {
+        if (!await _hasColumn('settings', 'chat_auto_download_videos')) {
+          await m.addColumn(settings, settings.chatAutoDownloadVideos);
+        }
+        if (!await _hasColumn('settings', 'chat_auto_download_video_mb')) {
+          await m.addColumn(settings, settings.chatAutoDownloadVideoMb);
         }
       }
       if (from < 31) {

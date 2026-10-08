@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../domain/value_objects/message_content.dart';
@@ -40,10 +41,20 @@ Future<void> openAttachment(
   switch (result) {
     case Ok():
       if (isOnScreen(context)) await open();
+    // Stopped by the user: nothing to report.
+    case Err(failure: CancelledFailure()):
+      break;
     case Err(:final failure):
       showChatFailure(context, failure);
   }
 }
+
+/// Stops downloading an attachment opened with [openAttachment].
+void cancelAttachmentDownload(
+  WidgetRef ref, {
+  required String accountId,
+  required MessageContent content,
+}) => ref.read(chatControllerProvider).cancelDownload(accountId, content);
 
 /// Whether [context]'s widget is visible: on the top route and overlapping
 /// its scroll view's viewport.
@@ -64,6 +75,7 @@ Future<void> openChatFile(
   WidgetRef ref, {
   required String accountId,
   required FileContent file,
+  String? chatGid,
 }) => openAttachment(
   context,
   ref,
@@ -71,7 +83,12 @@ Future<void> openChatFile(
   content: file,
   open: () async {
     if (isVideoFile(file)) {
-      await ChatVideoDialog.show(context, accountId: accountId, video: file);
+      await ChatVideoDialog.show(
+        context,
+        accountId: accountId,
+        video: file,
+        chatGid: chatGid,
+      );
       return;
     }
     final path = await ref

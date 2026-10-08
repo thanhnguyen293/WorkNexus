@@ -13,6 +13,7 @@ import 'bubble_tail.dart';
 import 'chat_avatar.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
+import 'chat_panels.dart';
 import 'chat_style.dart';
 import 'chat_user_profile_dialog.dart';
 import 'message_actions.dart';
@@ -27,10 +28,9 @@ import 'thread_chip.dart';
 /// Widest an image or video is shown inline.
 const double _kMaxMediaWidth = 360;
 
-/// One message, drawn the way the user's chat style (WorkNexus, Telegram,
-/// Zalo, Messenger, WeChat) draws it: bubble colours and shape, tail, avatar
-/// size/shape/position, where the name, time and reply quote go.
-/// Consecutive messages from one sender form a run.
+/// One message, drawn the way the user's chat style draws it: bubble colours
+/// and shape, tail, avatar size/shape/position, where the name, time and
+/// reply quote go. Consecutive messages from one sender form a run.
 class MessageBubble extends ConsumerWidget {
   const MessageBubble({
     super.key,
@@ -59,10 +59,9 @@ class MessageBubble extends ConsumerWidget {
   final ThreadSummary? thread;
   final bool showQuote;
   final void Function(int messageId) onOpenThread;
-
-  /// Starts a reply to this message in the composer.
   final void Function(ChatMessage message) onReply;
 
+  bool get _inThread => message.replyToId != null || thread != null;
   bool get _hasQuote =>
       showQuote && message.replyToId != null && !message.deleted;
 
@@ -118,7 +117,7 @@ class MessageBubble extends ConsumerWidget {
             chat: chat,
             replyToId: message.replyToId!,
             users: users,
-            onTap: () => onOpenThread(message.replyToId!),
+            onTap: () => jumpToChatMessage(ref, chat, message.replyToId!),
           )
         : null;
     final body = MessageBody(accountId: chat.accountId, message: message);
@@ -226,7 +225,15 @@ class MessageBubble extends ConsumerWidget {
           ),
         MessageHoverActions(
           alignEnd: mine,
-          actions: messageActions(context, ref, message, onReply),
+          // Reply, and "open thread" for a message in one, as own buttons.
+          buttons: _inThread ? 2 : 1,
+          actions: messageActions(
+            context,
+            ref,
+            message,
+            onReply,
+            onOpenThread: _inThread ? onOpenThread : null,
+          ),
           child: ChatBubbleTheme(ink: ink, child: bubble),
         ),
         if (style.quote == ChatQuotePlacement.below && quote != null)
@@ -265,6 +272,7 @@ class MessageBubble extends ConsumerWidget {
               child: ChatAvatar(
                 name: name,
                 imageUrl: chatAvatarUrl(users, message.senderId),
+                verified: chatVerifiedBadge(context, users, message.senderId),
                 shape: style.avatarShape,
                 diameter: style.avatarSize,
               ),

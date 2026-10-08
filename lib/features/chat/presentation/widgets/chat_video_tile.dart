@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -57,7 +58,8 @@ class ChatVideoTile extends ConsumerWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  ColoredBox(color: c.skeleton),
+                  // Black until a frame is ready, as a player would be.
+                  ColoredBox(color: c.scrim),
                   if (frame != null) Image.memory(frame, fit: BoxFit.cover),
                   Positioned(
                     left: s.md,
@@ -84,7 +86,7 @@ class ChatVideoTile extends ConsumerWidget {
                       child: Padding(
                         padding: EdgeInsets.all(s.lg),
                         child: Icon(
-                          Icons.play_arrow_rounded,
+                          PhosphorIconsFill.play,
                           size: s.xl6,
                           color: c.onScrim,
                         ),

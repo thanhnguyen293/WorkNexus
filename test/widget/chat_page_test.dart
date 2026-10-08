@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
@@ -17,6 +18,8 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_st
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 /// In-memory [ChatRepository] that records the commands it receives.
@@ -61,8 +64,8 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
-  Future<Result<Uri>> zentaoProfileUri(String a) async =>
-      Ok(Uri.parse('https://example.com'));
+  Future<Result<void>> setMyAvatar(String a, Uint8List image) async =>
+      const Ok(null);
 
   @override
   Future<Result<void>> refreshUsers(String a) async => const Ok(null);
@@ -108,6 +111,12 @@ class _FakeChatRepository implements ChatRepository {
   @override
   Stream<double> watchDownloadProgress(String a, MessageContent c) =>
       const Stream.empty();
+
+  @override
+  void cancelDownload(String a, MessageContent c) {}
+
+  @override
+  void setVideoAutoDownloadLimit(int bytes) {}
 
   @override
   Future<bool> isAttachmentCached(String a, MessageContent c) async => true;
@@ -297,13 +306,18 @@ void main() {
 
   setUp(() => repo = _FakeChatRepository());
 
-  Future<void> pumpChat(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1400, 900);
+  Future<void> pumpChat(
+    WidgetTester tester, {
+    Size size = const Size(1400, 900),
+    String search = '',
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          chatSearchProvider.overrideWith((ref) => search),
           chatRepositoryProvider.overrideWithValue(repo),
           chatAccountsProvider.overrideWithValue(const [
             Account(
@@ -356,6 +370,17 @@ void main() {
     expect(find.text('VN Mobile Team'), findsNothing);
   });
 
+  testWidgets('a rebuilt chat list shows the search it filters by', (
+    tester,
+  ) async {
+    // Coming back from the board builds the list anew while the search is
+    // still set: the box must show the text still filtering it.
+    await pumpChat(tester, search: 'dyn');
+
+    expect(find.widgetWithText(TextField, 'dyn'), findsOneWidget);
+    expect(find.text('VN Mobile Team'), findsNothing);
+  });
+
   testWidgets('opening a chat refreshes it, marks it read, shows messages', (
     tester,
   ) async {
@@ -366,6 +391,31 @@ void main() {
     expect(find.text('xin chào', findRichText: true), findsOneWidget);
     expect(find.text('hi @Thanh', findRichText: true), findsWidgets);
     expect(find.text('Dyno'), findsWidgets, reason: 'sender shown in groups');
+  });
+
+  testWidgets('the header shows the chat info beside or as a dialog', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    expect(find.byIcon(PhosphorIconsLight.info), findsNothing);
+    expect(find.byType(ChatInfoPanel), findsOneWidget, reason: 'room beside');
+
+    await pumpChat(tester, size: const Size(900, 700));
+    expect(find.byType(ChatInfoPanel), findsNothing, reason: 'no room');
+    await tester.tap(find.byType(ChatThreadHeader));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byType(ChatInfoPanel),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byIcon(PhosphorIconsLight.x));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
   });
 
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {

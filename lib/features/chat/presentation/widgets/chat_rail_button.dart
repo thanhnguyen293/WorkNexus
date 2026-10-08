@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/widgets/app_rail_button.dart';
@@ -19,8 +20,8 @@ class ChatRailButton extends ConsumerWidget {
     if (ref.watch(chatAccountsProvider).isEmpty) return const SizedBox.shrink();
     final unread = ref.watch(chatUnreadTotalProvider);
     return AppRailButton(
-      icon: Icons.chat_bubble_outline_rounded,
-      selectedIcon: Icons.chat_bubble_rounded,
+      icon: PhosphorIconsLight.chatCircle,
+      selectedIcon: PhosphorIconsFill.chatCircle,
       label: AppL10n.of(context).chat,
       selected:
           ref.watch(chatOpenProvider) &&

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -74,7 +75,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
             children: [
               Container(width: 3, height: s.xl6 - s.md, color: c.accent),
               SizedBox(width: s.lg),
-              Icon(Icons.push_pin_rounded, size: s.xl3, color: c.accent),
+              Icon(PhosphorIconsFill.pushPin, size: s.xl3, color: c.accent),
               SizedBox(width: s.md),
               Expanded(
                 child: Column(
@@ -99,7 +100,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: c.textTertiary),
+              Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
             ],
           ),
         ),

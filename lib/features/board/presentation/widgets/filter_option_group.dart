@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -148,7 +149,11 @@ class _GroupSearchField extends StatelessWidget {
           fillColor: c.surfaceSubtle,
           hintText: l.filterSearchHint,
           hintStyle: context.typography.meta.copyWith(color: c.textTertiary),
-          prefixIcon: Icon(Icons.search, size: 14, color: c.textTertiary),
+          prefixIcon: Icon(
+            PhosphorIconsLight.magnifyingGlass,
+            size: 14,
+            color: c.textTertiary,
+          ),
           prefixIconConstraints: const BoxConstraints(
             minWidth: 26,
             minHeight: 26,

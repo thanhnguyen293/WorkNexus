@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -15,6 +16,7 @@ import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
 import 'chat_list_tabs.dart';
+import 'chat_self_avatar_button.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_storage_dialog.dart';
 import 'conversation_menu.dart';
@@ -78,7 +80,7 @@ class ConversationListPane extends ConsumerWidget {
                 tooltip: l.chatNewChat,
                 onPressed: () => NewChatDialog.show(context, accountId),
                 icon: Icon(
-                  Icons.edit_square,
+                  PhosphorIconsLight.notePencil,
                   size: context.spacing.xl4,
                   color: c.textSecondary,
                 ),
@@ -88,28 +90,24 @@ class ConversationListPane extends ConsumerWidget {
             const ChatAccountPicker(),
             Container(
               height: kChatHeaderHeight - context.borders.hairline,
-              padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
+              // The rows' own margin, so the avatars line up in one column.
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.xl3),
               alignment: Alignment.center,
               child: Row(
                 children: [
+                  ChatSelfAvatarButton(accountId: accountId),
+                  SizedBox(width: context.spacing.md),
                   Expanded(child: _SearchField(hint: l.chatSearch)),
-                  IconButton(
+                  SizedBox(width: context.spacing.xs),
+                  _HeaderButton(
                     tooltip: l.chatNewChat,
+                    icon: PhosphorIconsLight.notePencil,
                     onPressed: () => NewChatDialog.show(context, accountId),
-                    icon: Icon(
-                      Icons.edit_square,
-                      size: context.spacing.xl4,
-                      color: c.textSecondary,
-                    ),
                   ),
-                  IconButton(
+                  _HeaderButton(
                     tooltip: l.chatStorage,
+                    icon: PhosphorIconsLight.database,
                     onPressed: () => ChatStorageDialog.show(context),
-                    icon: Icon(
-                      Icons.storage_rounded,
-                      size: context.spacing.xl4,
-                      color: c.textSecondary,
-                    ),
                   ),
                 ],
               ),
@@ -134,10 +132,8 @@ class ConversationListPane extends ConsumerWidget {
                   text: query.isEmpty ? l.chatNoConversations : l.chatNoMatches,
                 ),
               ),
+              // Rows run edge to edge: the selection fills the whole row.
               _ => ListView.builder(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? context.spacing.sm : context.spacing.md,
-                ),
                 itemCount: visible.length,
                 itemBuilder: (context, i) {
                   final e = visible[i];
@@ -155,6 +151,9 @@ class ConversationListPane extends ConsumerWidget {
                       avatar: chatAvatarStyle(e.chat, users),
                       presence: e.chat.type == ChatType.one2one
                           ? chatPresenceOf(users, e.chat.peerUserId)
+                          : null,
+                      verified: e.chat.type == ChatType.one2one
+                          ? chatVerifiedBadge(context, users, e.chat.peerUserId)
                           : null,
                       selected: e.chat.gid == selected,
                       compact: compact,
@@ -187,40 +186,112 @@ class _SectionDivider extends StatelessWidget {
   );
 }
 
-class _SearchField extends ConsumerWidget {
+/// The chat search box. Its text lives in [chatSearchProvider] (the list
+/// filters by it), so a box rebuilt after switching views starts from that
+/// text rather than empty over a still-filtered list.
+class _SearchField extends ConsumerStatefulWidget {
   const _SearchField({required this.hint});
 
   final String hint;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends ConsumerState<_SearchField> {
+  late final _text = TextEditingController(text: ref.read(chatSearchProvider));
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final c = context.colors;
-    final border = OutlineInputBorder(
+    final s = context.spacing;
+    final shape = OutlineInputBorder(
       borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
+      borderSide: BorderSide.none,
     );
-    return TextField(
-      onChanged: (v) => ref.read(chatSearchProvider.notifier).state = v,
-      style: context.typography.secondary.copyWith(color: c.textPrimary),
-      decoration: InputDecoration(
-        isDense: true,
-        filled: true,
-        fillColor: c.background,
-        hintText: hint,
-        hintStyle: context.typography.secondary.copyWith(color: c.textTertiary),
-        prefixIcon: Icon(Icons.search, size: 15, color: c.textTertiary),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 30,
-          minHeight: 30,
+    return SizedBox(
+      height: s.xl6 * 0.8,
+      child: ValueListenableBuilder(
+        valueListenable: _text,
+        builder: (context, value, _) => TextField(
+          controller: _text,
+          onChanged: _search,
+          textAlignVertical: TextAlignVertical.center,
+          style: context.typography.secondary.copyWith(color: c.textPrimary),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: c.surfaceSubtle,
+            hintText: widget.hint,
+            hintStyle: context.typography.secondary.copyWith(
+              color: c.textTertiary,
+            ),
+            prefixIcon: Icon(
+              PhosphorIconsLight.magnifyingGlass,
+              size: s.xl2,
+              color: c.textTertiary,
+            ),
+            prefixIconConstraints: BoxConstraints(minWidth: s.xl6 * 0.8),
+            suffixIcon: value.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).clearButtonTooltip,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      _text.clear();
+                      _search('');
+                    },
+                    icon: Icon(
+                      PhosphorIconsLight.x,
+                      size: s.xl2,
+                      color: c.textTertiary,
+                    ),
+                  ),
+            contentPadding: EdgeInsets.zero,
+            border: shape,
+            enabledBorder: shape,
+            focusedBorder: shape.copyWith(
+              borderSide: BorderSide(color: c.accent),
+            ),
+          ),
         ),
-        contentPadding: EdgeInsets.symmetric(
-          vertical: context.spacing.sm,
-          horizontal: context.spacing.xs,
-        ),
-        border: border,
-        enabledBorder: border,
-        focusedBorder: border.copyWith(borderSide: BorderSide(color: c.accent)),
       ),
     );
   }
+
+  void _search(String text) =>
+      ref.read(chatSearchProvider.notifier).state = text;
+}
+
+/// A compact icon button beside the chat search box.
+class _HeaderButton extends StatelessWidget {
+  const _HeaderButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    visualDensity: VisualDensity.compact,
+    icon: Icon(
+      icon,
+      size: context.spacing.xl4,
+      color: context.colors.textSecondary,
+    ),
+  );
 }

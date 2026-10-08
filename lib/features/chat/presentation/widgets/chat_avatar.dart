@@ -1,14 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/contrast.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_role.dart';
 import 'chat_labels.dart';
+import 'chat_verified_legend.dart';
 
 /// Avatar sizes used by chat.
 enum ChatAvatarSize { small, medium, large }
+
+/// The "verified" check of a leading role: its colour and the role.
+typedef ChatVerifiedBadge = ({Color color, ChatRole role});
 
 /// Avatar outline: round, or a rounded square (WeChat).
 enum ChatAvatarShape { circle, roundedSquare }
@@ -26,7 +34,12 @@ class ChatAvatar extends StatelessWidget {
     this.presence,
     this.label,
     this.background,
+    this.verified,
   });
+
+  /// Draws a "verified" check (a leading role, see [chatVerifiedBadge]) at
+  /// the top right; hovering it explains it.
+  final ChatVerifiedBadge? verified;
 
   final String name;
 
@@ -86,28 +99,84 @@ class ChatAvatar extends StatelessWidget {
       ChatPresence.busy => c.error,
       ChatPresence.offline || null => null,
     };
-    if (dot == null) return picture;
+    if (dot == null && verified == null) return picture;
     final dotSize = (diameter * 0.3).clamp(s.md, s.xl3);
+    final checkSize = (diameter * 0.36).clamp(s.lg, s.xl5);
     return Stack(
       clipBehavior: Clip.none,
       children: [
         picture,
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Container(
-            width: dotSize,
-            height: dotSize,
-            decoration: BoxDecoration(
-              color: dot,
-              shape: BoxShape.circle,
-              border: Border.all(color: c.surface, width: dotSize * 0.18),
+        if (verified case (:final color, :final role))
+          Positioned(
+            right: -checkSize * 0.15,
+            top: -checkSize * 0.15,
+            // The glyph's check is a cut-out: a small white dot inside the
+            // badge (not a ring around it) makes it read white on any photo.
+            child: Tooltip(
+              richMessage: WidgetSpan(child: ChatVerifiedLegend(role: role)),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(context.radii.md),
+                border: Border.all(color: c.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: c.scrim.withValues(alpha: 0.18),
+                    blurRadius: s.xl4,
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.all(s.lg),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: checkSize * 0.5,
+                    height: checkSize * 0.5,
+                    decoration: BoxDecoration(
+                      color: c.onScrim,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Icon(
+                    PhosphorIconsFill.sealCheck,
+                    size: checkSize,
+                    color: color,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        if (dot != null)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: dotSize,
+              height: dotSize,
+              decoration: BoxDecoration(
+                color: dot,
+                shape: BoxShape.circle,
+                border: Border.all(color: c.surface, width: dotSize * 0.18),
+              ),
+            ),
+          ),
       ],
     );
   }
+}
+
+/// How strongly an initials avatar is tinted with its hue.
+const double _kInitialsTint = 0.22;
+
+/// The avatar hue for [name]: one of the theme's semantic colours, picked by
+/// a stable hash of the name (String.hashCode can differ between runs).
+Color _avatarHue(AppColors c, String name) {
+  final hues = [c.accent, c.success, c.warning, c.info, c.caution, c.error];
+  var hash = 0;
+  for (final unit in name.codeUnits) {
+    hash = (hash * 31 + unit) & 0x7fffffff;
+  }
+  return hues[hash % hues.length];
 }
 
 class _Initials extends StatelessWidget {
@@ -128,8 +197,18 @@ class _Initials extends StatelessWidget {
     final c = context.colors;
     final big = diameter > context.spacing.xl5;
     final custom = label != null && label!.trim().isNotEmpty;
+    // A hue of its own per name (stable across launches), so an avatar is
+    // told apart from its neighbours and from the selected row's tint.
+    // Opaque: a tinted fill would let the chat wallpaper show through.
+    final hue = _avatarHue(c, name);
+    final fill =
+        background ??
+        Color.alphaBlend(hue.withValues(alpha: _kInitialsTint), c.surface);
+    final ink = background == null
+        ? readableOn(hue, fill, towards: c.textPrimary)
+        : c.onAccent;
     return ColoredBox(
-      color: background ?? c.selectionFill,
+      color: Color.alphaBlend(fill, c.surface),
       child: Center(
         child: Text(
           custom ? label!.trim() : chatInitials(name),
@@ -138,10 +217,7 @@ class _Initials extends StatelessWidget {
               (big
                       ? context.typography.captionStrong
                       : context.typography.captionSm)
-                  .copyWith(
-                    color: background == null ? c.accent : c.onAccent,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  .copyWith(color: ink, fontWeight: FontWeight.w600),
         ),
       ),
     );

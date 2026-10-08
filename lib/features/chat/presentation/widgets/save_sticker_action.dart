@@ -29,30 +29,3 @@ Future<bool> saveImageAsSticker(
   }
   return result is Ok;
 }
-
-/// Right-click menu of an image in the chat: save it as a sticker.
-Future<void> showImageContextMenu(
-  BuildContext context,
-  WidgetRef ref, {
-  required Offset at,
-  required String accountId,
-  required ImageContent image,
-}) async {
-  final save = await showMenu<bool>(
-    context: context,
-    position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
-    items: [
-      PopupMenuItem(
-        value: true,
-        child: ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.add_reaction_outlined),
-          title: Text(AppL10n.of(context).chatSaveSticker),
-        ),
-      ),
-    ],
-  );
-  if (save != true || !context.mounted) return;
-  await saveImageAsSticker(context, ref, accountId: accountId, image: image);
-}

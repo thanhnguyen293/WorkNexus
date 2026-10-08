@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -30,11 +31,16 @@ class ChatInfoPanel extends ConsumerWidget {
     required this.thread,
     required this.chat,
     required this.users,
+    this.onClose,
   });
 
   final ChatThreadKey thread;
   final ChatConversation chat;
   final Map<int, ChatUser> users;
+
+  /// Closes it where it is shown as a dialog; beside the chat it closes
+  /// itself (and only in a narrow window).
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,54 +70,61 @@ class ChatInfoPanel extends ConsumerWidget {
     final details = [
       if (peer?.role case final role?)
         ChatDetailRow(
-          icon: Icons.badge_outlined,
+          icon: PhosphorIconsLight.identificationBadge,
           label: l.chatRole,
-          value: role,
+          value: chatRoleLabel(context, role),
+          spaced: false,
         ),
       if (peer?.email case final email?)
         ChatDetailRow(
-          icon: Icons.mail_outline,
+          icon: PhosphorIconsLight.envelopeSimple,
           label: l.chatEmail,
           value: email,
+          spaced: false,
         ),
       if (peer?.mobile case final mobile?)
         ChatDetailRow(
-          icon: Icons.smartphone,
+          icon: PhosphorIconsLight.deviceMobile,
           label: l.chatMobile,
           value: mobile,
+          spaced: false,
         ),
       if (peer?.phone case final phone?)
         ChatDetailRow(
-          icon: Icons.call_outlined,
+          icon: PhosphorIconsLight.phone,
           label: l.chatPhone,
           value: phone,
+          spaced: false,
         ),
       if (!oneToOne && chat.ownerAccount != null)
         ChatDetailRow(
-          icon: Icons.verified_user_outlined,
+          icon: PhosphorIconsLight.shieldCheck,
           label: l.chatOwner,
           value: owner?.realname ?? chat.ownerAccount ?? '',
+          spaced: false,
         ),
       if (!oneToOne && created != null)
         ChatDetailRow(
-          icon: Icons.event_outlined,
+          icon: PhosphorIconsLight.calendarBlank,
           label: l.chatCreatedOn,
           value: DateFormat.yMMMd(
             Localizations.localeOf(context).toString(),
           ).format(created),
+          spaced: false,
         ),
     ];
 
     return ChatSidePanelFrame(
       title: l.chatInfo,
       // With room the info panel stays: it only closes in a narrow window.
-      onClose: ChatLayoutScope.of(context).infoRoom
-          ? null
-          : () => closeChatSidePanel(ref, thread),
+      onClose:
+          onClose ??
+          (ChatLayoutScope.of(context).infoRoom
+              ? null
+              : () => closeChatSidePanel(ref, thread)),
       child: ListView(
-        padding: EdgeInsets.all(s.xl3),
+        padding: EdgeInsets.all(s.xl),
         children: [
-          SizedBox(height: s.md),
           Center(
             child: ChatAvatar(
               name: title,
@@ -120,6 +133,9 @@ class ChatInfoPanel extends ConsumerWidget {
               background: avatar.background,
               presence: oneToOne
                   ? chatPresenceOf(users, chat.peerUserId)
+                  : null,
+              verified: oneToOne
+                  ? chatVerifiedBadge(context, users, chat.peerUserId)
                   : null,
               diameter: s.xl6 * 2,
             ),
@@ -133,7 +149,7 @@ class ChatInfoPanel extends ConsumerWidget {
                   chat: chat,
                   title: title,
                 ),
-                icon: const Icon(Icons.photo_camera_outlined),
+                icon: const Icon(PhosphorIconsLight.camera),
                 label: Text(l.chatChangeGroupAvatar),
               ),
             ),
@@ -170,10 +186,14 @@ class ChatInfoPanel extends ConsumerWidget {
           ChatPanelCard(
             padding: EdgeInsets.zero,
             child: ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
+              visualDensity: VisualDensity.compact,
+              horizontalTitleGap: s.lg,
+              minLeadingWidth: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(context.radii.lg),
               ),
-              leading: Icon(Icons.push_pin_outlined, color: c.accent),
+              leading: Icon(PhosphorIconsLight.pushPin, color: c.accent),
               title: Text(
                 l.chatPinnedMessages,
                 style: context.typography.bodyStrong.copyWith(
@@ -189,7 +209,7 @@ class ChatInfoPanel extends ConsumerWidget {
                       color: c.textSecondary,
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: c.textTertiary),
+                  Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
                 ],
               ),
               onTap: () => toggleChatSidePanel(

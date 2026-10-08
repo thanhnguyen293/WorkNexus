@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -199,7 +200,11 @@ class _UserSearchBox extends StatelessWidget {
         fillColor: c.surfaceSubtle,
         hintText: hint,
         hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-        prefixIcon: Icon(Icons.search, size: 18, color: c.textTertiary),
+        prefixIcon: Icon(
+          PhosphorIconsLight.magnifyingGlass,
+          size: 18,
+          color: c.textTertiary,
+        ),
         prefixIconConstraints: BoxConstraints(minWidth: spacing.xl6),
         contentPadding: EdgeInsets.symmetric(vertical: spacing.lg),
         border: OutlineInputBorder(
@@ -242,7 +247,9 @@ class _ReviewerTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.check_box : Icons.check_box_outline_blank,
+              selected
+                  ? PhosphorIconsFill.checkSquare
+                  : PhosphorIconsLight.square,
               size: 18,
               color: selected ? c.accent : c.textTertiary,
             ),

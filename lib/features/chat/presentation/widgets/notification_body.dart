@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -82,8 +83,8 @@ class NotificationBody extends ConsumerWidget {
                     ),
                     icon: Icon(
                       i == 0 && n.url != null
-                          ? Icons.arrow_circle_right_outlined
-                          : Icons.open_in_new_rounded,
+                          ? PhosphorIconsLight.arrowCircleRight
+                          : PhosphorIconsLight.arrowSquareOut,
                       size: s.xl3,
                     ),
                     label: Text(link.label),

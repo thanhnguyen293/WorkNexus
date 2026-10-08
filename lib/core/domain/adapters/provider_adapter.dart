@@ -10,12 +10,17 @@ class ConnectionCheck {
     required this.ok,
     this.account,
     this.serverVersion,
+    this.baseUrl,
     this.error,
   });
 
   final bool ok;
   final String? account;
   final String? serverVersion;
+
+  /// The server URL the provider was actually reached at, when it differs from
+  /// (or refines) the one the user entered — e.g. ZenTao's `/zentao` web root.
+  final String? baseUrl;
   final String? error;
 }
 

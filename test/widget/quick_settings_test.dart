@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
@@ -11,6 +12,7 @@ import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/theme/fonts.dart';
+import 'package:work_nexus/core/widgets/quick_settings_side_panel.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/features/connections/presentation/settings_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -42,7 +44,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const _SettingsHarness(child: TitleBar()),
+        child: const _SettingsHarness(child: _ShellHarness()),
       ),
     );
     await tester.pumpAndSettle();
@@ -83,7 +85,7 @@ void main() {
     }
   });
 
-  testWidgets('detail layout toggle updates settings and keeps popover open', (
+  testWidgets('detail layout toggle updates settings and keeps panel open', (
     tester,
   ) async {
     final container = await pumpTitleBar(tester);
@@ -107,39 +109,28 @@ void main() {
     );
   });
 
-  testWidgets('quick settings uses the compact inspector treatment', (
-    tester,
-  ) async {
+  testWidgets('quick settings slides over the right edge', (tester) async {
     await pumpTitleBar(tester);
 
     final trigger = find.byKey(
       const ValueKey<String>('quick-settings-trigger'),
     );
-    final iconFinder = find.byIcon(Icons.settings_outlined);
+    final iconFinder = find.byIcon(PhosphorIconsLight.gear);
     expect(iconFinder, findsOneWidget);
-    final icon = tester.widget<Icon>(iconFinder);
-    expect(icon.size, 16);
-    expect(find.byIcon(Icons.tune), findsNothing);
+    expect(tester.widget<Icon>(iconFinder).size, 16);
     expect(tester.getSize(trigger), const Size(28, 28));
 
     await openQuickSettings(tester);
 
-    final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
-    expect(tester.getSize(panel).width, lessThanOrEqualTo(300));
-    // Compact popover: hosts the appearance controls (incl. the primary-color
-    // palette + radius) but stays short of a full settings page and its ~500px
-    // max height; scrolls if the viewport is shorter.
-    expect(tester.getSize(panel).height, lessThan(490));
-    expect(find.text('Appearance'), findsNothing);
+    final panel = tester.getRect(
+      find.byKey(const ValueKey<String>('quick-settings-side-panel')),
+    );
+    expect(panel.right, 1200);
+    expect(panel.width, lessThanOrEqualTo(400));
+    expect(panel.bottom, 900);
     expect(
       (tester.getCenter(find.text('Language')).dy -
               tester.getCenter(find.text('English')).dy)
-          .abs(),
-      lessThan(2),
-    );
-    expect(
-      (tester.getCenter(find.text('Theme')).dy -
-              tester.getCenter(find.text('Light')).dy)
           .abs(),
       lessThan(2),
     );
@@ -182,9 +173,7 @@ void main() {
     expect(gapBetween('Light', 'Dark'), greaterThanOrEqualTo(8));
   });
 
-  testWidgets('system font selection stays in the open popover', (
-    tester,
-  ) async {
+  testWidgets('system font selection stays in the open panel', (tester) async {
     final container = await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
@@ -205,14 +194,14 @@ void main() {
     );
   });
 
-  testWidgets('nested tooltip inside the popover lays out without errors', (
+  testWidgets('nested tooltip inside the panel lays out without errors', (
     tester,
   ) async {
     await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
     // Hovering the font picker shows its Tooltip — an OverlayPortal nested in
-    // the popover's overlay child, which needs the popover's paint transform
+    // the panel's overlay child, which needs the panel's paint transform
     // during layout.
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
@@ -222,15 +211,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(Tooltip), findsWidgets);
-
-    final trigger = tester.getRect(
-      find.byKey(const ValueKey<String>('quick-settings-trigger')),
-    );
-    final panel = tester.getRect(
-      find.byKey(const ValueKey<String>('quick-settings-panel')),
-    );
-    expect(panel.right, moreOrLessEquals(trigger.right));
-    expect(panel.top, moreOrLessEquals(trigger.bottom + 4));
   });
 
   testWidgets('System menu item previews the platform font', (tester) async {
@@ -258,7 +238,7 @@ void main() {
     expect(systemText.style?.fontFamily, expectedFamily);
   });
 
-  testWidgets('language changes immediately and keeps the popover open', (
+  testWidgets('language changes immediately and keeps the panel open', (
     tester,
   ) async {
     final container = await pumpTitleBar(tester);
@@ -275,7 +255,7 @@ void main() {
     );
   });
 
-  testWidgets('appearance changes immediately and keeps the popover open', (
+  testWidgets('appearance changes immediately and keeps the panel open', (
     tester,
   ) async {
     final container = await pumpTitleBar(tester);
@@ -291,13 +271,13 @@ void main() {
     );
   });
 
-  testWidgets('outside click closes the quick settings popover', (
+  testWidgets('a click outside closes the quick settings panel', (
     tester,
   ) async {
     await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
-    await tester.tapAt(const Offset(20, 100));
+    await tester.tapAt(const Offset(20, 300));
     await tester.pumpAndSettle();
 
     expect(
@@ -306,7 +286,22 @@ void main() {
     );
   });
 
-  testWidgets('second trigger click closes the quick settings popover', (
+  testWidgets('the close button closes the quick settings panel', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    await tester.tap(find.byIcon(PhosphorIconsLight.x));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('quick-settings-panel')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('second trigger click closes the quick settings panel', (
     tester,
   ) async {
     await pumpTitleBar(tester);
@@ -324,7 +319,7 @@ void main() {
     );
   });
 
-  testWidgets('Escape closes the quick settings popover', (tester) async {
+  testWidgets('Escape closes the quick settings panel', (tester) async {
     await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
@@ -337,13 +332,24 @@ void main() {
     );
   });
 
+  testWidgets('the title bar and panel fit the smallest window', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester, physicalSize: const Size(680, 480));
+    await openQuickSettings(tester);
+
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('quick settings panel stays within a short viewport', (
     tester,
   ) async {
     await pumpTitleBar(tester, physicalSize: const Size(1200, 200));
     await openQuickSettings(tester);
 
-    final panel = find.byKey(const ValueKey<String>('quick-settings-panel'));
+    final panel = find.byKey(
+      const ValueKey<String>('quick-settings-side-panel'),
+    );
 
     expect(tester.getRect(panel).bottom, lessThanOrEqualTo(200));
     expect(tester.takeException(), isNull);
@@ -401,4 +407,20 @@ class _SettingsHarness extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The title bar above the main area, with the Quick Settings panel over
+/// it — as the app shell lays them out.
+class _ShellHarness extends StatelessWidget {
+  const _ShellHarness();
+
+  @override
+  Widget build(BuildContext context) => const Column(
+    children: [
+      TitleBar(),
+      Expanded(
+        child: Stack(children: [SizedBox.expand(), QuickSettingsSidePanel()]),
+      ),
+    ],
+  );
 }

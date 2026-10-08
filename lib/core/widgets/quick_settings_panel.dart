@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,151 +13,113 @@ import 'quick_settings_color_control.dart';
 import 'quick_settings_font_control.dart';
 import 'quick_settings_radius_control.dart';
 
-/// Reactive controls for the app-wide language and appearance preferences.
+/// Reactive controls for the app-wide language and appearance preferences,
+/// laid out by [QuickSettingsSidePanel].
 class QuickSettingsPanel extends ConsumerWidget {
   const QuickSettingsPanel({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final settings = ref.watch(appSettingsProvider);
     final controller = ref.read(appSettingsProvider.notifier);
-    final panelWidth = context.spacing.xl6 * 7.5;
-    final availableWidth = math.max(
-      context.spacing.none,
-      MediaQuery.sizeOf(context).width - context.spacing.xl2,
-    );
-
-    return Container(
+    return Column(
       key: const ValueKey<String>('quick-settings-panel'),
-      width: math.min(panelWidth, availableWidth),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.xl,
-        vertical: context.spacing.xl,
-      ),
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(color: c.borderStrong),
-        boxShadow: [
-          BoxShadow(
-            color: c.scrim.withValues(alpha: 0.22),
-            blurRadius: context.spacing.xl6,
-            offset: Offset(context.spacing.none, context.spacing.xl2),
+      children: [
+        _SettingRow(
+          label: l.language,
+          control: _CompactSegmentedControl<String>(
+            value: settings.locale.languageCode,
+            options: {'en': l.english, 'vi': l.vietnamese},
+            onChanged: controller.setLanguageCode,
           ),
-        ],
-      ),
-      // Scrolls when the overlay caps the height on a short window.
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l.quickSettings,
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-            ),
-            SizedBox(height: context.spacing.md),
-            _SettingRow(
-              label: l.language,
-              control: _CompactSegmentedControl<String>(
-                value: settings.locale.languageCode,
-                options: {'en': l.english, 'vi': l.vietnamese},
-                onChanged: controller.setLanguageCode,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.theme,
-              control: _CompactSegmentedControl<AppThemeVariant>(
-                value: settings.variant,
-                options: {
-                  AppThemeVariant.light: l.themeLight,
-                  AppThemeVariant.dark: l.themeDark,
-                  AppThemeVariant.midnight: l.themeMidnight,
-                },
-                onChanged: controller.setVariant,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.surface,
-              control: _CompactSegmentedControl<SurfaceStyle>(
-                value: settings.surface,
-                options: {
-                  SurfaceStyle.flat: l.surfaceFlat,
-                  SurfaceStyle.outline: l.surfaceOutline,
-                },
-                onChanged: controller.setSurface,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.density,
-              control: _CompactSegmentedControl<AppDensity>(
-                value: settings.density,
-                options: {
-                  AppDensity.comfortable: l.densityComfortable,
-                  AppDensity.compact: l.densityCompact,
-                },
-                onChanged: controller.setDensity,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.detailLayout,
-              control: _CompactSegmentedControl<DetailLayout>(
-                value: settings.detailLayout,
-                options: {
-                  DetailLayout.twoPane: l.layoutTwoPane,
-                  DetailLayout.document: l.layoutDocument,
-                },
-                onChanged: controller.setDetailLayout,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.dateFormat,
-              control: _CompactSegmentedControl<DateDisplayFormat>(
-                value: settings.dateFormat,
-                options: {
-                  DateDisplayFormat.iso: l.dateFormatIso,
-                  DateDisplayFormat.dmy: l.dateFormatDmy,
-                  DateDisplayFormat.long: l.dateFormatLong,
-                },
-                onChanged: controller.setDateFormat,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.companyTint,
-              control: _CompactSegmentedControl<bool>(
-                value: settings.companyTint,
-                options: {false: l.settingOff, true: l.settingOn},
-                onChanged: controller.setCompanyTint,
-              ),
-            ),
-            SizedBox(height: context.spacing.xs),
-            _SettingRow(
-              label: l.font,
-              control: QuickSettingsFontControl(
-                tooltip: l.chooseUiFont,
-                systemLabel: l.systemFont,
-                value: settings.fontFamily,
-                onChanged: controller.setFontFamily,
-              ),
-            ),
-            SizedBox(height: context.spacing.md),
-            const QuickSettingsColorControl(),
-            SizedBox(height: context.spacing.xs),
-            const QuickSettingsRadiusControl(),
-          ],
         ),
-      ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.theme,
+          control: _CompactSegmentedControl<AppThemeVariant>(
+            value: settings.variant,
+            options: {
+              AppThemeVariant.light: l.themeLight,
+              AppThemeVariant.dark: l.themeDark,
+              AppThemeVariant.midnight: l.themeMidnight,
+            },
+            onChanged: controller.setVariant,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.surface,
+          control: _CompactSegmentedControl<SurfaceStyle>(
+            value: settings.surface,
+            options: {
+              SurfaceStyle.flat: l.surfaceFlat,
+              SurfaceStyle.outline: l.surfaceOutline,
+            },
+            onChanged: controller.setSurface,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.density,
+          control: _CompactSegmentedControl<AppDensity>(
+            value: settings.density,
+            options: {
+              AppDensity.comfortable: l.densityComfortable,
+              AppDensity.compact: l.densityCompact,
+            },
+            onChanged: controller.setDensity,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.detailLayout,
+          control: _CompactSegmentedControl<DetailLayout>(
+            value: settings.detailLayout,
+            options: {
+              DetailLayout.twoPane: l.layoutTwoPane,
+              DetailLayout.document: l.layoutDocument,
+            },
+            onChanged: controller.setDetailLayout,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.dateFormat,
+          control: _CompactSegmentedControl<DateDisplayFormat>(
+            value: settings.dateFormat,
+            options: {
+              DateDisplayFormat.iso: l.dateFormatIso,
+              DateDisplayFormat.dmy: l.dateFormatDmy,
+              DateDisplayFormat.long: l.dateFormatLong,
+            },
+            onChanged: controller.setDateFormat,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.companyTint,
+          control: _CompactSegmentedControl<bool>(
+            value: settings.companyTint,
+            options: {false: l.settingOff, true: l.settingOn},
+            onChanged: controller.setCompanyTint,
+          ),
+        ),
+        SizedBox(height: context.spacing.xs),
+        _SettingRow(
+          label: l.font,
+          control: QuickSettingsFontControl(
+            tooltip: l.chooseUiFont,
+            systemLabel: l.systemFont,
+            value: settings.fontFamily,
+            onChanged: controller.setFontFamily,
+          ),
+        ),
+        SizedBox(height: context.spacing.md),
+        const QuickSettingsColorControl(),
+        SizedBox(height: context.spacing.xs),
+        const QuickSettingsRadiusControl(),
+      ],
     );
   }
 }

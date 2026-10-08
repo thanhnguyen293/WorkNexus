@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,7 +34,7 @@ class WelcomeView extends StatelessWidget {
               ),
             ),
             child: Icon(
-              Icons.space_dashboard_outlined,
+              PhosphorIconsLight.squaresFour,
               size: 24,
               color: c.textTertiary,
             ),

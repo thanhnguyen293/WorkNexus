@@ -11,7 +11,12 @@ class ChatDetailRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.spaced = true,
   });
+
+  /// Keeps a gap above it (stacked rows in a dialog); false where the
+  /// container spaces the rows itself.
+  final bool spaced;
 
   final IconData icon;
   final String label;
@@ -22,7 +27,7 @@ class ChatDetailRow extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return Padding(
-      padding: EdgeInsets.only(top: s.xl),
+      padding: EdgeInsets.only(top: spaced ? s.xl : 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

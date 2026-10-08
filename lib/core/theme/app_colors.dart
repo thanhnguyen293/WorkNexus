@@ -7,6 +7,12 @@ import 'app_palette.dart';
 /// Roles are named by function (`background`, `surface`, `success`, …) rather
 /// than by hue, so call sites read intent, not implementation. Read it with the
 /// `context.colors` getter.
+/// "Verified" check colours by seniority (see [AppColors.verifiedLead]):
+/// the familiar social-app blue, then violet, then gold at the top.
+const Color kVerifiedLead = Color(0xFF1D9BF0);
+const Color kVerifiedManager = Color(0xFF8B5CF6);
+const Color kVerifiedExecutive = Color(0xFFF5B400);
+
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -36,6 +42,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onScrim,
     required this.onColorInk,
     required this.workspaceFallback,
+    this.verifiedLead = kVerifiedLead,
+    this.verifiedManager = kVerifiedManager,
+    this.verifiedExecutive = kVerifiedExecutive,
   });
 
   /// Maps a raw [AppPalette] onto the semantic color roles.
@@ -109,6 +118,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
 
+  /// The "verified" check beside a leading member's avatar, by seniority:
+  /// project/product leads, department managers, senior management. The same
+  /// in every theme.
+  final Color verifiedLead;
+  final Color verifiedManager;
+  final Color verifiedExecutive;
+
   // ---- color-mix helpers (see the design's CSS `color-mix`) ----
 
   /// `color-mix(in srgb, [c] pct%, transparent)` → [c] at [pct] alpha (0..1).
@@ -149,6 +165,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onScrim,
     Color? onColorInk,
     Color? workspaceFallback,
+    Color? verifiedLead,
+    Color? verifiedManager,
+    Color? verifiedExecutive,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -177,6 +196,9 @@ class AppColors extends ThemeExtension<AppColors> {
       onScrim: onScrim ?? this.onScrim,
       onColorInk: onColorInk ?? this.onColorInk,
       workspaceFallback: workspaceFallback ?? this.workspaceFallback,
+      verifiedLead: verifiedLead ?? this.verifiedLead,
+      verifiedManager: verifiedManager ?? this.verifiedManager,
+      verifiedExecutive: verifiedExecutive ?? this.verifiedExecutive,
     );
   }
 
@@ -211,6 +233,9 @@ class AppColors extends ThemeExtension<AppColors> {
       onScrim: c(onScrim, other.onScrim),
       onColorInk: c(onColorInk, other.onColorInk),
       workspaceFallback: c(workspaceFallback, other.workspaceFallback),
+      verifiedLead: c(verifiedLead, other.verifiedLead),
+      verifiedManager: c(verifiedManager, other.verifiedManager),
+      verifiedExecutive: c(verifiedExecutive, other.verifiedExecutive),
     );
   }
 }

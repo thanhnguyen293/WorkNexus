@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -102,7 +103,11 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
                       color: c.scrim.withValues(alpha: 0.55),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.play_arrow, color: c.onAccent, size: 34),
+                    child: Icon(
+                      PhosphorIconsFill.play,
+                      color: c.onAccent,
+                      size: 34,
+                    ),
                   ),
               ],
             ),
@@ -118,7 +123,9 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
           child: Row(
             children: [
               _ControlButton(
-                icon: playing ? Icons.pause : Icons.play_arrow,
+                icon: playing
+                    ? PhosphorIconsFill.pause
+                    : PhosphorIconsFill.play,
                 onTap: _toggle,
               ),
               SizedBox(width: context.spacing.md),

@@ -53,6 +53,7 @@ class ChatMemberList extends ConsumerWidget {
                       name: chatUserName(context, users, id),
                       imageUrl: chatAvatarUrl(users, id),
                       presence: chatPresenceOf(users, id),
+                      verified: chatVerifiedBadge(context, users, id),
                     ),
                     SizedBox(width: s.lg),
                     Expanded(

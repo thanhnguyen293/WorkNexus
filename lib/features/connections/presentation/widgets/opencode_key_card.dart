@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/opencode_credential.dart';
 import '../../../../core/error/result.dart';
@@ -65,7 +66,7 @@ class OpenCodeKeyCard extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.key_outlined, size: 16),
+                      const Icon(PhosphorIconsLight.key, size: 16),
                       SizedBox(width: context.spacing.sm),
                       Text(l.openCodeAddKey),
                     ],

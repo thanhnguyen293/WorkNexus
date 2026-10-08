@@ -16,6 +16,15 @@ void openReplyThread(WidgetRef ref, ChatThreadKey chat, int messageId) {
   ref.read(chatSidePanelProvider(chat).notifier).state = null;
 }
 
+/// Scrolls chat [chat]'s message list to [messageId] (loading older pages
+/// as needed) and highlights it.
+void jumpToChatMessage(WidgetRef ref, ChatThreadKey chat, int messageId) {
+  // Through null, so tapping the same quote again jumps again.
+  ref.read(chatJumpRequestProvider(chat).notifier)
+    ..state = null
+    ..state = messageId;
+}
+
 /// The panel shown beside chat [chat]: the one the user opened, else the
 /// info panel when there is room for it ([infoRoom]).
 ChatSidePanel? effectiveSidePanel(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -96,11 +97,20 @@ class XxdHttpDatasource {
     Uri uri, {
     String? pinnedFingerprint,
     void Function(int received, int? total)? onProgress,
+    Future<void>? cancel,
   }) async {
     XxdCertificate? rejected;
     final client = createPinnedHttpClient(
       pinnedFingerprint: pinnedFingerprint,
       onRejected: (cert) => rejected = cert,
+    );
+    // Closing the client aborts the transfer: the response stream then fails.
+    var cancelled = false;
+    unawaited(
+      cancel?.then((_) {
+        cancelled = true;
+        client.close(force: true);
+      }),
     );
     try {
       final response = await (await client.getUrl(
@@ -112,6 +122,7 @@ class XxdHttpDatasource {
         builder.add(chunk);
         onProgress?.call(builder.length, total);
       });
+      if (cancelled) return const Err(CancelledFailure('Download cancelled'));
       if (response.statusCode != HttpStatus.ok) {
         return Err(
           response.statusCode == HttpStatus.notFound
@@ -127,6 +138,9 @@ class XxdHttpDatasource {
       if (cert != null) return Err(untrustedCertificate(cert, e));
       return Err(NetworkFailure('TLS handshake with xxd failed', cause: e));
     } on Exception catch (e) {
+      if (cancelled) {
+        return Err(CancelledFailure('Download cancelled', cause: e));
+      }
       return Err(NetworkFailure('Attachment download failed', cause: e));
     } finally {
       client.close(force: true);

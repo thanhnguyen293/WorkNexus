@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -161,7 +162,7 @@ class _SliceError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off_outlined, size: 28, color: c.textTertiary),
+          Icon(PhosphorIconsLight.cloudSlash, size: 28, color: c.textTertiary),
           SizedBox(height: context.spacing.md),
           Text(
             message,

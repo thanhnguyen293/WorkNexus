@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../providers/sticker_providers.dart';
@@ -49,12 +51,18 @@ class ChatStickerGrid extends ConsumerWidget {
     Offset at,
   ) async {
     final l = AppL10n.of(context);
-    final remove = await showMenu<bool>(
-      context: context,
-      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
-      items: [PopupMenuItem(value: true, child: Text(l.chatRemoveSticker))],
+    final remove = await showAppContextMenu(
+      context,
+      at: at,
+      entries: [
+        AppMenuEntry(
+          icon: PhosphorIconsLight.trash,
+          label: l.chatRemoveSticker,
+          destructive: true,
+        ),
+      ],
     );
-    if (remove != true) return;
+    if (remove == null) return;
     final result = await ref.read(stickerControllerProvider).remove(sticker);
     if (result case Err(:final failure)) {
       if (context.mounted) showChatFailure(context, failure);
@@ -69,7 +77,7 @@ class ChatStickerGrid extends ConsumerWidget {
       tooltip: l.chatAddSticker,
       onTap: () => _add(context, ref),
       child: Icon(
-        Icons.add_photo_alternate_outlined,
+        PhosphorIconsLight.imageSquare,
         color: context.colors.textSecondary,
       ),
     );
@@ -103,7 +111,7 @@ class ChatStickerGrid extends ConsumerWidget {
         if (i < lead) return add;
         final sticker = stickers[i - lead];
         return GestureDetector(
-          onSecondaryTapUp: editable
+          onSecondaryTapDown: editable
               ? (d) => _remove(context, ref, sticker, d.globalPosition)
               : null,
           child: _Tile(
@@ -153,7 +161,7 @@ class _StickerImage extends StatelessWidget {
         (context.spacing.xl6 * 2 * MediaQuery.devicePixelRatioOf(context))
             .round();
     final broken = Icon(
-      Icons.broken_image_outlined,
+      PhosphorIconsLight.imageBroken,
       color: context.colors.textTertiary,
     );
     return sticker.custom

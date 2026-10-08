@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
@@ -118,7 +119,10 @@ void main() {
     // Sidebar sections expose inline "Edit" actions.
     expect(find.text('Edit'), findsWidgets);
     expect(
-      find.ancestor(of: find.byIcon(Icons.add), matching: find.byType(InkWell)),
+      find.ancestor(
+        of: find.byIcon(PhosphorIconsLight.plus),
+        matching: find.byType(InkWell),
+      ),
       findsOneWidget,
     );
     // A need_rebase MR surfaces the blocked merge state + honest composer.

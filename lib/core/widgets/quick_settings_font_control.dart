@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../settings/app_settings.dart';
 import '../theme/app_borders.dart';
@@ -73,7 +74,8 @@ class QuickSettingsFontControl extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (font == value) Icon(Icons.check, color: c.accent),
+                if (font == value)
+                  Icon(PhosphorIconsLight.check, color: c.accent),
               ],
             ),
           ),
@@ -100,7 +102,7 @@ class QuickSettingsFontControl extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.xs),
             Icon(
-              Icons.keyboard_arrow_down,
+              PhosphorIconsLight.caretDown,
               size: context.spacing.xl3,
               color: c.textSecondary,
             ),

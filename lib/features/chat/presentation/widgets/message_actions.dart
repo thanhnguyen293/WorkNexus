@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
@@ -14,15 +15,16 @@ import 'chat_snack.dart';
 import 'message_hover_actions.dart';
 import 'save_sticker_action.dart';
 
-/// The hover actions a message offers: reply, copy text, save an image as a
+/// The hover actions a message offers: reply, open its thread, copy text, save an image as a
 /// sticker, pin/unpin (where allowed) and — for your own recent messages — retract. Called from a
 /// bubble's build, so it watches what the pin action depends on.
 List<MessageAction> messageActions(
   BuildContext context,
   WidgetRef ref,
   ChatMessage message,
-  void Function(ChatMessage message) onReply,
-) {
+  void Function(ChatMessage message) onReply, {
+  void Function(int messageId)? onOpenThread,
+}) {
   final l = AppL10n.of(context);
   final controller = ref.read(chatControllerProvider);
   final serverId = message.serverId;
@@ -55,14 +57,23 @@ List<MessageAction> messageActions(
   return [
     if (serverId != null && !message.deleted)
       (
-        icon: Icons.format_quote_rounded,
+        icon: PhosphorIconsLight.quotes,
         tooltip: l.chatReply,
+        destructive: false,
         onTap: () => onReply(message),
+      ),
+    if (onOpenThread != null && serverId != null)
+      (
+        icon: PhosphorIconsLight.chats,
+        tooltip: l.chatOpenThread,
+        destructive: false,
+        onTap: () => onOpenThread(serverId),
       ),
     if (text != null)
       (
-        icon: Icons.content_copy_rounded,
+        icon: PhosphorIconsLight.copy,
         tooltip: l.chatCopy,
+        destructive: false,
         onTap: () => Clipboard.setData(
           ClipboardData(
             text: text.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
@@ -71,26 +82,32 @@ List<MessageAction> messageActions(
       ),
     if (text != null)
       (
-        icon: translated ? Icons.translate_rounded : Icons.g_translate_rounded,
+        icon: translated
+            ? PhosphorIconsLight.translate
+            : PhosphorIconsLight.translate,
         tooltip: translated ? l.chatShowOriginal : l.chatTranslate,
+        destructive: false,
         onTap: () async {
           final notifier = ref.read(
             messageTranslationControllerProvider.notifier,
           );
           if (translated) return notifier.hide(message);
-          // A stored translation needs no key; a new one does.
-          if (storedTranslation == null &&
-              !await ensureOpenCodeLinked(context, ref)) {
-            return;
-          }
-          await notifier.translate(message);
+          // "Translating…" shows at once; the key check (a CLI call that
+          // takes a moment) runs behind it. A stored translation needs none.
+          await notifier.translate(
+            message,
+            ready: storedTranslation == null
+                ? () => ensureOpenCodeLinked(context, ref)
+                : null,
+          );
         },
       ),
     if (message.content case final ImageContent image
         when serverId != null && !message.deleted)
       (
-        icon: Icons.add_reaction_outlined,
+        icon: PhosphorIconsLight.sticker,
         tooltip: l.chatSaveSticker,
+        destructive: false,
         onTap: () => saveImageAsSticker(
           context,
           ref,
@@ -100,8 +117,9 @@ List<MessageAction> messageActions(
       ),
     if (canPin)
       (
-        icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+        icon: pinned ? PhosphorIconsFill.pushPin : PhosphorIconsLight.pushPin,
         tooltip: pinned ? l.chatUnpin : l.chatPin,
+        destructive: false,
         onTap: () async {
           final result = await controller.setPinned(message, pinned: !pinned);
           if (result case Err(:final failure)) {
@@ -111,8 +129,9 @@ List<MessageAction> messageActions(
       ),
     if (controller.canRetract(message))
       (
-        icon: Icons.undo_rounded,
+        icon: PhosphorIconsLight.arrowCounterClockwise,
         tooltip: l.chatRetract,
+        destructive: true,
         onTap: () async {
           final result = await controller.retract(message);
           if (result case Err(:final failure)) {

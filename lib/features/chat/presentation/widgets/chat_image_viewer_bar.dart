@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -8,8 +9,9 @@ import '../../domain/value_objects/message_content.dart';
 import 'chat_labels.dart';
 import 'chat_media_viewer_bar.dart';
 
-/// The image viewer's top bar: name, position, size and dimensions; zoom,
-/// fit, rotate, copy, save, save as sticker, open-with and close.
+/// The image viewer's top bar: name, position, size and dimensions, then
+/// one-click groups — zoom, fit and rotate; copy, save, save as sticker and
+/// open-with — and close.
 class ChatImageViewerBar extends StatelessWidget {
   const ChatImageViewerBar({
     super.key,
@@ -62,7 +64,7 @@ class ChatImageViewerBar extends StatelessWidget {
       onClose: onClose,
       actions: [
         ChatViewerButton(
-          icon: Icons.zoom_out_rounded,
+          icon: PhosphorIconsLight.magnifyingGlassMinus,
           tooltip: l.chatZoomOut,
           onPressed: onZoomOut,
         ),
@@ -80,42 +82,42 @@ class ChatImageViewerBar extends StatelessWidget {
           ),
         ),
         ChatViewerButton(
-          icon: Icons.zoom_in_rounded,
+          icon: PhosphorIconsLight.magnifyingGlassPlus,
           tooltip: l.chatZoomIn,
           onPressed: onZoomIn,
         ),
         ChatViewerButton(
-          icon: Icons.fit_screen_outlined,
+          icon: PhosphorIconsLight.arrowsIn,
           tooltip: l.chatZoomFit,
           onPressed: onFit,
         ),
         ChatViewerButton(
-          icon: Icons.rotate_right_rounded,
+          icon: PhosphorIconsLight.arrowClockwise,
           tooltip: l.chatRotate,
           onPressed: onRotate,
         ),
-        SizedBox(width: s.md),
+        const ChatViewerDivider(),
         ChatViewerButton(
-          icon: Icons.copy_rounded,
+          icon: PhosphorIconsLight.copy,
           tooltip: l.chatCopyImage,
           onPressed: onCopy,
         ),
         ChatViewerButton(
-          icon: Icons.download_rounded,
+          icon: PhosphorIconsLight.downloadSimple,
           tooltip: l.chatSaveAs,
           onPressed: onSave,
         ),
         ChatViewerButton(
           icon: onSaveSticker == null
-              ? Icons.check_rounded
-              : Icons.add_reaction_outlined,
+              ? PhosphorIconsLight.check
+              : PhosphorIconsLight.sticker,
           tooltip: onSaveSticker == null
               ? l.chatStickerSaved
               : l.chatSaveSticker,
           onPressed: onSaveSticker,
         ),
         ChatViewerButton(
-          icon: Icons.open_in_new_rounded,
+          icon: PhosphorIconsLight.arrowSquareOut,
           tooltip: l.chatOpenWith,
           onPressed: onOpenExternally,
         ),

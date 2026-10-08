@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
@@ -78,12 +79,12 @@ const workspaceIconKeys = <String>[
 ];
 
 IconData? workspaceIconData(String? key) => switch (key) {
-  'briefcase' => Icons.work_outline,
-  'home' => Icons.home_outlined,
-  'building' => Icons.apartment,
-  'rocket' => Icons.rocket_launch_outlined,
-  'code' => Icons.code,
-  'storage' => Icons.storage_outlined,
+  'briefcase' => PhosphorIconsLight.briefcase,
+  'home' => PhosphorIconsLight.house,
+  'building' => PhosphorIconsLight.buildings,
+  'rocket' => PhosphorIconsLight.rocketLaunch,
+  'code' => PhosphorIconsLight.code,
+  'storage' => PhosphorIconsLight.database,
   _ => null,
 };
 
