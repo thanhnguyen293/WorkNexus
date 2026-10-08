@@ -18,8 +18,10 @@ import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
+import '../../features/chat/data/repositories/http_link_preview_repository.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/domain/repositories/link_preview_repository.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/sync/data/sync_service.dart';
@@ -112,8 +114,13 @@ abstract class ServiceModule {
           credentials: c,
           http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
         ),
+        http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
         onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
       );
+
+  @lazySingleton
+  LinkPreviewRepository get linkPreviewRepository =>
+      HttpLinkPreviewRepository();
 
   @lazySingleton
   AgentSessionRepository get agentSessionRepository =>

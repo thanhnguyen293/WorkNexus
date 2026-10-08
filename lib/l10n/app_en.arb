@@ -403,5 +403,96 @@
   "filterNoMatches": "No option matches",
   "savedFiltersLoadFailed": "Couldn't read your saved filters",
   "retry": "Retry",
-  "machineTranslationNote": "Machine translation · review before relying on it"
+  "machineTranslationNote": "Machine translation · review before relying on it",
+  "chat": "Chat",
+  "chatNoZentaoAccount": "Connect a ZenTao account in Integrations to use chat.",
+  "chatAccount": "Chat account",
+  "chatSearch": "Search chats",
+  "chatNoConversations": "No conversations yet",
+  "chatNoMatches": "No chat matches",
+  "chatSelectConversation": "Select a conversation",
+  "chatConnecting": "Connecting to ZenTao chat…",
+  "chatReconnecting": "Connection lost — retrying in {seconds}s",
+  "@chatReconnecting": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "chatOffline": "Chat is offline",
+  "chatConnect": "Connect",
+  "chatSignedOut": "Chat signed out: {reason}",
+  "@chatSignedOut": {
+    "placeholders": { "reason": { "type": "String" } }
+  },
+  "chatKicked": "Signed out because this account signed in somewhere else.",
+  "chatUntrusted": "The chat server certificate needs your confirmation.",
+  "chatReviewCertificate": "Review certificate",
+  "chatTrustTitle": "Trust the chat server certificate?",
+  "chatTrustBody": "{host} uses a self-signed certificate. Compare the fingerprint with your administrator before trusting it.",
+  "@chatTrustBody": {
+    "placeholders": { "host": { "type": "String" } }
+  },
+  "chatTrustFingerprint": "SHA-256 fingerprint",
+  "chatTrustIssuer": "Issued by",
+  "chatTrustAction": "Trust and connect",
+  "chatComposerHint": "Message — Enter to send, Shift+Enter for a new line",
+  "chatSend": "Send",
+  "chatSending": "Sending…",
+  "chatSendFailed": "Not sent · Retry",
+  "chatLoadOlder": "Load earlier messages",
+  "chatBeginning": "Start of the conversation",
+  "chatImage": "Image",
+  "chatFile": "File",
+  "chatUnsupportedMessage": "Unsupported message ({type})",
+  "@chatUnsupportedMessage": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "chatUntitled": "Untitled chat",
+  "chatUnknownUser": "User #{id}",
+  "@chatUnknownUser": {
+    "placeholders": { "id": { "type": "int" } }
+  },
+  "chatYou": "You",
+  "chatActionFailed": "Couldn't complete that: {reason}",
+  "@chatActionFailed": {
+    "placeholders": { "reason": { "type": "String" } }
+  },
+  "chatAttachmentFailed": "Couldn't load the attachment",
+  "chatReply": "Reply",
+  "chatRetract": "Retract",
+  "chatRetracted": "Message retracted",
+  "chatThread": "Thread",
+  "chatCloseThread": "Close thread",
+  "chatReplyHint": "Reply in thread",
+  "chatReplyMissing": "Original message not loaded",
+  "chatAttach": "Attach files",
+  "chatUploading": "Uploading…",
+  "chatCopy": "Copy text",
+  "chatReplies": "{count, plural, =1{1 reply} other{{count} replies}}",
+  "@chatReplies": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "chatRemoveAttachment": "Remove",
+  "chatPlayVideo": "Play video",
+  "chatOpenFile": "Open file",
+  "chatDownloading": "Downloading…",
+  "chatVideoFailed": "Couldn't play this video",
+  "chatSendFilesTitle": "{count, plural, =1{Send 1 file?} other{Send {count} files?}}",
+  "@chatSendFilesTitle": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "chatToday": "Today",
+  "chatYesterday": "Yesterday",
+  "chatSendImage": "Send images",
+  "chatMoreActions": "More",
+  "chatMembers": "{count, plural, =1{1 member} other{{count} members}}",
+  "@chatMembers": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "chatMessageTo": "Message {name}",
+  "@chatMessageTo": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "chatAppearance": "Chat style",
+  "chatAppearanceDefault": "WorkNexus",
+  "chatMarkdownOn": "Markdown on — messages are sent formatted",
+  "chatMarkdownOff": "Markdown off — messages are sent as plain text"
 }

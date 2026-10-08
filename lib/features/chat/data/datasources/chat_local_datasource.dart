@@ -72,6 +72,17 @@ class ChatLocalDatasource {
     );
   }
 
+  /// Moves the read marker forward (never back: a late echo from another
+  /// device must not resurrect unread messages).
+  Future<void> setLastReadIndex(String accountId, String gid, int index) =>
+      (_db.update(_db.chatConversations)..where(
+            (c) =>
+                c.accountId.equals(accountId) &
+                c.gid.equals(gid) &
+                c.lastReadIndex.isSmallerThanValue(index),
+          ))
+          .write(ChatConversationsCompanion(lastReadIndex: Value(index)));
+
   /// Conversations with their last message, most recently active first.
   Stream<List<(ChatConversationRow, ChatMessageRow?)>> watchConversations(
     String accountId,
@@ -112,6 +123,22 @@ class ChatLocalDatasource {
             ..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid)))
           .write(ChatMessagesCompanion(sendState: Value(state.name)));
 
+  /// Replaces a pending message's content (e.g. once its upload finished).
+  Future<void> setContent(
+    String accountId,
+    String gid, {
+    required String contentType,
+    required String content,
+  }) =>
+      (_db.update(
+        _db.chatMessages,
+      )..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid))).write(
+        ChatMessagesCompanion(
+          contentType: Value(contentType),
+          content: Value(content),
+        ),
+      );
+
   /// Marks messages still `pending` from before [before] as failed — they were
   /// interrupted (e.g. the app quit mid-send).
   Future<int> failStalePending(String accountId, DateTime before) =>
@@ -148,6 +175,33 @@ class ChatLocalDatasource {
       ..limit(limit);
     return query.watch().map((rows) => rows.reversed.toList());
   }
+
+  /// One message by its server id (null until it is stored locally).
+  Stream<ChatMessageRow?> watchMessageByServerId(
+    String accountId,
+    String cgid,
+    int serverId,
+  ) =>
+      (_db.select(_db.chatMessages)..where(
+            (m) =>
+                m.accountId.equals(accountId) &
+                m.cgid.equals(cgid) &
+                m.serverId.equals(serverId),
+          ))
+          .watch()
+          .map((rows) => rows.firstOrNull);
+
+  /// Every reply stored for a chat, oldest first (threads are built from it).
+  Stream<List<ChatMessageRow>> watchReplies(String accountId, String cgid) =>
+      (_db.select(_db.chatMessages)
+            ..where(
+              (m) =>
+                  m.accountId.equals(accountId) &
+                  m.cgid.equals(cgid) &
+                  m.replyToId.isNotNull(),
+            )
+            ..orderBy([(m) => OrderingTerm.asc(m.sentAt)]))
+          .watch();
 
   // ---- users -----------------------------------------------------------------
 

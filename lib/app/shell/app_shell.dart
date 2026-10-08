@@ -6,6 +6,7 @@ import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/board/presentation/board_page.dart';
+import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
 import 'resizable_sidebar.dart';
@@ -21,6 +22,7 @@ class AppShell extends ConsumerWidget {
     final c = context.colors;
     final assigned = ref.watch(ticketsProvider).asData?.value.length;
     final integrationsVisible = ref.watch(integrationsVisibleProvider);
+    final chatOpen = ref.watch(chatOpenProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -36,6 +38,8 @@ class AppShell extends ConsumerWidget {
                     Expanded(
                       child: integrationsVisible
                           ? const SettingsPage()
+                          : chatOpen
+                          ? const ChatPage()
                           : const BoardPage(),
                     ),
                   ],

@@ -4,6 +4,7 @@ import '../../domain/value_objects/chat_connection_status.dart';
 import '../datasources/xxd/xxd_connection.dart';
 import '../datasources/xxd/xxd_connection_state.dart';
 import '../datasources/xxd/xxd_packet.dart';
+import 'chat_packet_ingestor.dart';
 
 /// One account's live connection plus a write queue that applies packets to
 /// the DB strictly in arrival order.
@@ -16,6 +17,8 @@ class ChatSession {
   StreamSubscription<XxdConnectionState>? _states;
   Future<void> _tail = Future.value();
   void Function(Object, StackTrace)? _onError;
+
+  bool get isOnline => connection.state is XxdOnline;
 
   bool get isActive => switch (connection.state) {
     XxdStopped() || XxdDisconnected() => false,
@@ -38,6 +41,21 @@ class ChatSession {
     final run = _tail.then((_) => task());
     _tail = run.catchError((Object e, StackTrace s) => _onError?.call(e, s));
     return _tail;
+  }
+
+  /// Requests what the DB is missing. Fire-and-forget: the replies come back
+  /// as packets and are ingested like any other.
+  void fetchMissing(IngestFollowUp followUp) {
+    if (followUp.userIds.isNotEmpty) {
+      unawaited(
+        connection.request(
+          XxdRequest('usergetlist', params: [followUp.userIds.toList()]),
+        ),
+      );
+    }
+    for (final gid in followUp.chatGids) {
+      unawaited(connection.request(XxdRequest('chatgetbygid', params: [gid])));
+    }
   }
 
   Future<void> close() async {

@@ -17,6 +17,7 @@ import '../../core/domain/value_objects/priority.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/domain/value_objects/unified_status.dart';
 import '../../core/settings/app_settings.dart';
+import '../../core/settings/chat_appearance.dart';
 import '../../core/settings/pinned_execution.dart';
 import '../../core/theme/app_palette.dart';
 
@@ -218,6 +219,12 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
   pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
   sidebarWidth: r.sidebarWidth,
+  chatAppearance: _enumByName(
+    ChatAppearance.values,
+    r.chatAppearance,
+    ChatAppearance.worknexus,
+  ),
+  chatSendMarkdown: r.chatSendMarkdown,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -237,6 +244,8 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
   pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
   sidebarWidth: Value(s.sidebarWidth),
+  chatAppearance: Value(s.chatAppearance.name),
+  chatSendMarkdown: Value(s.chatSendMarkdown),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

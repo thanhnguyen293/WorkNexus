@@ -23,6 +23,23 @@ final openTicketIdProvider = NotifierProvider<OpenTicketController, String?>(
 /// Whether the Settings / Integrations view is showing (replaces the board).
 final settingsOpenProvider = StateProvider<bool>((ref) => false);
 
+/// Whether the ZenTao chat view replaces the board (settings still wins when
+/// both are open).
+final chatOpenProvider = StateProvider<bool>((ref) => false);
+
+/// Shows the board: closes the settings and chat views. Call from anything
+/// that selects a board (sidebar rows).
+void showBoardView(WidgetRef ref) {
+  ref.read(settingsOpenProvider.notifier).state = false;
+  ref.read(chatOpenProvider.notifier).state = false;
+}
+
+/// Shows the chat view.
+void showChatView(WidgetRef ref) {
+  ref.read(settingsOpenProvider.notifier).state = false;
+  ref.read(chatOpenProvider.notifier).state = true;
+}
+
 /// First-run onboarding state: when there is no workspace or no connected
 /// provider account yet, the app should open Integrations instead of an empty
 /// board.

@@ -40,6 +40,7 @@ class MarkdownText extends StatelessWidget {
     this.imageLoader,
     this.imageFallbackUrl,
     this.onOpenImage,
+    this.linkColor,
   });
 
   final String data;
@@ -56,6 +57,9 @@ class MarkdownText extends StatelessWidget {
 
   /// Opens the resolved fallback link externally (see [imageFallbackUrl]).
   final ImageExternalOpener? onOpenImage;
+
+  /// Link colour; defaults to the accent (override on accent backgrounds).
+  final Color? linkColor;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +93,7 @@ class MarkdownText extends StatelessWidget {
       linkBuilder: (context, label, url, style) => Text(
         label.toPlainText(),
         style: style.copyWith(
-          color: c.accent,
+          color: linkColor ?? c.accent,
           decoration: TextDecoration.underline,
         ),
       ),

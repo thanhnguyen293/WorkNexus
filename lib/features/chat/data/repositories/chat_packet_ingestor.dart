@@ -50,12 +50,22 @@ class ChatPacketIngestor {
             ?peerOf('${chat['gid']}', selfUserId),
           }),
         );
-      case 'messagesend':
+      // A retracted/edited message arrives whole (e.g. `deleted: true`).
+      case 'messagesend' || 'messageretract' || 'messageupdate':
         return storeMessages(
           accountId,
           _maps(data is Map ? [data] : data),
           selfUserId: selfUserId,
         );
+      case 'chatsetlastreadmessagebyindex':
+        // Pushed when this account reads a chat anywhere (including here).
+        if (data is Map && data['gid'] is String && data['id'] is num) {
+          await _local.setLastReadIndex(
+            accountId,
+            data['gid']! as String,
+            (data['id']! as num).toInt(),
+          );
+        }
       case 'usergetlist':
         await _local.upsertUsers([
           for (final u in _maps(data))

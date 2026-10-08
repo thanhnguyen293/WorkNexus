@@ -11,7 +11,11 @@ import 'workspace_tree_section.dart';
 /// settings toggle. Fills the width its parent gives it — the drag-to-resize
 /// width is owned by [ResizableSidebar] in the app shell.
 class SidebarView extends ConsumerWidget {
-  const SidebarView({super.key});
+  const SidebarView({super.key, this.footer = const []});
+
+  /// Extra entries above the settings toggle, supplied by the app shell (e.g.
+  /// chat) so this feature does not depend on others (CLAUDE.md 10.1).
+  final List<Widget> footer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,6 +38,7 @@ class SidebarView extends ConsumerWidget {
               child: const WorkspaceTreeSection(),
             ),
           ),
+          ...footer,
           const SettingsNav(),
         ],
       ),
