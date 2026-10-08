@@ -11,6 +11,20 @@ class VideoThumbnailer {
 
   static const _width = 480;
 
+  /// The frame made earlier for [videoPath], even if the video itself is
+  /// gone from the cache; null when there is none.
+  Future<Uint8List?> cachedThumbnailOf(String videoPath) async {
+    final cached = File('$videoPath.thumb.png');
+    try {
+      if (!await cached.exists()) return null;
+      // Mark as used so the cache keeps the frame.
+      await cached.setLastModified(DateTime.now());
+      return await cached.readAsBytes();
+    } on FileSystemException {
+      return null;
+    }
+  }
+
   Future<Uint8List?> thumbnailOf(String videoPath) async {
     final cached = File('$videoPath.thumb.png');
     if (await cached.exists()) return cached.readAsBytes();

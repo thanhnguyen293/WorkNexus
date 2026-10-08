@@ -118,6 +118,7 @@ class ChatSender {
     final file = _pendingUploads[gid];
     if (file == null) return _deliver(accountId, gid);
     final uploaded = await _attachments.upload(
+      accountId,
       _session(accountId),
       chatGid: chatGid,
       name: file.name,

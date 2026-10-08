@@ -1,27 +1,34 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/value_objects/message_content.dart';
+import '../datasources/chat_file_cache.dart';
 import '../datasources/image_header_size.dart';
 import '../datasources/xxd/xxd_connection_state.dart';
 import '../datasources/xxd/xxd_http_datasource.dart';
 import 'chat_session.dart';
 
-/// Downloads message attachments through the pinned xxd HTTPS client and
-/// keeps recent ones in a byte-bounded in-memory LRU.
+/// Downloads message attachments through the pinned xxd HTTPS client. Each
+/// is downloaded once into the on-disk [ChatFileCache]; recent ones are also
+/// kept in a byte-bounded in-memory LRU so scrolling does not re-read disk.
 class ChatAttachmentLoader {
-  ChatAttachmentLoader(this._http, {this.maxCacheBytes = 64 * 1024 * 1024});
+  ChatAttachmentLoader(
+    this._http,
+    this._files, {
+    this.maxCacheBytes = 64 * 1024 * 1024,
+  });
 
   final XxdHttpDatasource _http;
+  final ChatFileCache _files;
   final int maxCacheBytes;
   // Insertion-ordered map: re-inserting on a hit makes it an LRU.
   final _cache = <String, Uint8List>{};
   int _cachedBytes = 0;
 
   Future<Result<Uint8List>> load(
+    String accountId,
     ChatSession? session,
     MessageContent content, {
     bool thumbnail = false,
@@ -50,10 +57,15 @@ class ChatAttachmentLoader {
     final sessionId = xxd?.sessionId;
     // Only images the server made a preview for have a `thumb_` file.
     final thumb = thumbnail && content is ImageContent && content.hasThumb;
-    final key =
-        '${session?.connection.credentials.server}#$fileId${thumb ? '#thumb' : ''}';
+    final diskName = _diskName(fileId, name, thumbnail: thumb);
+    final key = '$accountId/$diskName';
     final cached = _cache.remove(key);
     if (cached != null) return Ok(_cache[key] = cached);
+    final onDisk = await _files.read(accountId, diskName);
+    if (onDisk != null) {
+      _remember(key, onDisk);
+      return Ok(onDisk);
+    }
     if (session == null || xxd == null || sessionId == null) {
       return const Err(NetworkFailure('Chat is offline'));
     }
@@ -71,45 +83,46 @@ class ChatAttachmentLoader {
       ),
       pinnedFingerprint: credentials.pinnedFingerprint,
     );
-    if (result case Ok(:final value)) _remember(key, value);
+    if (result case Ok(:final value)) {
+      _remember(key, value);
+      await _files.write(accountId, diskName, value);
+    }
     return result;
   }
 
-  /// The attachment as a local file (downloaded once into [cacheDir]), for
+  /// Where the attachment is (or would be) cached on disk; null when there
+  /// is no cache folder.
+  Future<String?> cachedPath(String accountId, MessageContent content) async {
+    final (fileId, name) = _fileOf(content);
+    final file = await _files.fileFor(accountId, _diskName(fileId, name));
+    return file?.path;
+  }
+
+  /// The attachment as a local file (downloaded once into the cache), for
   /// players and "open with" — which cannot use the pinned HTTPS client.
   Future<Result<String>> localFile(
+    String accountId,
     ChatSession? session,
     MessageContent content,
-    Directory cacheDir,
   ) async {
-    final (fileId, name) = switch (content) {
-      ImageContent(:final fileId, :final name) ||
-      FileContent(:final fileId, :final name) => (fileId, name),
-      _ => (0, ''),
-    };
-    final safeName = name.replaceAll(RegExp(r'[/\\:]'), '_');
-    final file = File('${cacheDir.path}/${fileId}_$safeName');
-    if (fileId > 0 && await file.exists() && await file.length() > 0) {
-      return Ok(file.path);
+    final (fileId, name) = _fileOf(content);
+    final diskName = _diskName(fileId, name);
+    if (fileId > 0) {
+      final cached = await _files.open(accountId, diskName);
+      if (cached != null) return Ok(cached.path);
     }
-    final bytes = await load(session, content);
-    switch (bytes) {
-      case Ok(:final value):
-        try {
-          await file.parent.create(recursive: true);
-          await file.writeAsBytes(value, flush: true);
-          return Ok(file.path);
-        } on FileSystemException catch (e) {
-          return Err(StorageFailure('Could not save the attachment', cause: e));
-        }
-      case Err(:final failure):
-        return Err(failure);
-    }
+    final bytes = await load(accountId, session, content);
+    if (bytes case Err(:final failure)) return Err(failure);
+    final file = await _files.open(accountId, diskName);
+    return file == null
+        ? const Err(StorageFailure('Could not save the attachment'))
+        : Ok(file.path);
   }
 
   /// Uploads [bytes] for chat [chatGid]; returns the message `contentType`
   /// and `content` (JSON) that point at the stored file.
   Future<Result<({String contentType, String content})>> upload(
+    String accountId,
     ChatSession? session, {
     required String chatGid,
     required String name,
@@ -146,7 +159,10 @@ class ChatAttachmentLoader {
     );
     switch (uploaded) {
       case Ok(:final value):
-        _remember('${credentials.server}#${value.id}', bytes);
+        // The sender's copy is the file: no need to download it back.
+        final diskName = _diskName(value.id, name);
+        _remember('$accountId/$diskName', bytes);
+        await _files.write(accountId, diskName, bytes);
         return Ok((
           contentType: isImageMime(mimeType) ? 'image' : 'file',
           content: jsonEncode({
@@ -164,6 +180,16 @@ class ChatAttachmentLoader {
         return Err(failure);
     }
   }
+
+  static (int, String) _fileOf(MessageContent content) => switch (content) {
+    ImageContent(:final fileId, :final name) ||
+    FileContent(:final fileId, :final name) => (fileId, name),
+    _ => (0, ''),
+  };
+
+  /// File ids are per server, and each account has its own cache folder.
+  static String _diskName(int fileId, String name, {bool thumbnail = false}) =>
+      '$fileId${thumbnail ? '_thumb' : ''}_$name';
 
   void _remember(String key, Uint8List bytes) {
     if (bytes.length > maxCacheBytes) return;
