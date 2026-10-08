@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/native.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -7,7 +9,12 @@ import '../../data/local/repositories/local_activity_repository.dart';
 import '../../data/local/repositories/local_comment_repository.dart';
 import '../../data/local/repositories/local_ticket_repository.dart';
 import '../../data/local/repositories/local_workspace_repository.dart';
+import '../../features/agents/data/datasources/opencode_auth_file.dart';
+import '../../features/agents/data/datasources/opencode_cli_runner.dart';
 import '../../features/agents/data/in_memory_agent_session_repository.dart';
+import '../../features/agents/data/repositories/opencode_auth_file_repository.dart';
+import '../../features/board/data/repositories/local_saved_filter_repository.dart';
+import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/sync/data/sync_service.dart';
@@ -17,10 +24,12 @@ import '../../features/translation/domain/adapters/translation_service.dart';
 import '../database/database.dart';
 import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
+import '../domain/adapters/opencode_cli.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
 import '../domain/repositories/comment_repository.dart';
 import '../domain/repositories/dev_link_repository.dart';
+import '../domain/repositories/opencode_auth_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
@@ -85,11 +94,35 @@ abstract class ServiceModule {
       LocalTranslationRepository(db);
 
   @lazySingleton
+  SavedFilterRepository savedFilterRepository(AppDatabase db) =>
+      LocalSavedFilterRepository(db);
+
+  @lazySingleton
   AgentSessionRepository get agentSessionRepository =>
       InMemoryAgentSessionRepository();
 
   @lazySingleton
   TranslationService get translationService => OpenCodeTranslationService();
+
+  @lazySingleton
+  OpenCodeCli get openCodeCli => const OpenCodeCliRunner();
+
+  @prod
+  @lazySingleton
+  OpenCodeAuthRepository get openCodeAuthRepository =>
+      const OpenCodeAuthFileRepository();
+
+  /// Tests read a throwaway path so they never see — let alone rewrite — the
+  /// developer's real OpenCode credentials.
+  @test
+  @lazySingleton
+  OpenCodeAuthRepository get testOpenCodeAuthRepository =>
+      OpenCodeAuthFileRepository(
+        OpenCodeAuthFile(
+          pathOverride:
+              '${Directory.systemTemp.path}/work_nexus_test_opencode_auth.json',
+        ),
+      );
 
   @lazySingleton
   SyncService syncService(AppDatabase db, CredentialStore credentials) =>

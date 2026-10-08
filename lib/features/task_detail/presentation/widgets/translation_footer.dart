@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/value_objects/translation_state.dart';
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -31,7 +32,7 @@ class TranslationFooter extends ConsumerWidget {
 
     final (AppButtonVariant variant, String label) = switch (state) {
       TranslationState.loading => (AppButtonVariant.filled, l.translating),
-      TranslationState.error => (AppButtonVariant.error, 'Retry'),
+      TranslationState.error => (AppButtonVariant.error, l.retry),
       TranslationState.none => (AppButtonVariant.filled, l.translate),
       _ => (AppButtonVariant.filledNeutral, l.retranslate),
     };
@@ -55,10 +56,21 @@ class TranslationFooter extends ConsumerWidget {
                 : () => translateWithOpenCode(context, ref, ticketId),
             child: Text(label),
           ),
+          // A run can outlast the user's patience (a queued model, a wedged
+          // CLI), so give them a way out instead of only the hard timeout.
+          if (loading) ...[
+            SizedBox(width: context.spacing.md),
+            AppButton.textNeutral(
+              onPressed: () => ref
+                  .read(translationControllerProvider.notifier)
+                  .cancel(ticketId),
+              child: Text(l.cancel),
+            ),
+          ],
           SizedBox(width: context.spacing.lg),
           Expanded(
             child: Text(
-              'Machine translation · review before relying on it',
+              l.machineTranslationNote,
               style: context.typography.captionSm.copyWith(
                 color: c.textTertiary,
                 height: 1.4,
@@ -79,9 +91,9 @@ class TranslationFooter extends ConsumerWidget {
   }
 }
 
-/// Runs a translation through OpenCode. If OpenCode isn't authenticated yet,
-/// shows guidance to run `opencode auth login` (we intentionally don't manage a
-/// provider key ourselves — that would bypass OpenCode's own usage tracking).
+/// Runs a translation through OpenCode. If OpenCode has no authenticated
+/// provider yet, points at Settings → OpenCode (or `opencode auth login`) rather
+/// than failing with a raw CLI error.
 Future<void> translateWithOpenCode(
   BuildContext context,
   WidgetRef ref,
@@ -101,13 +113,15 @@ Future<void> translateWithOpenCode(
       .translate(ticketId, force: true);
 }
 
-/// Explains how to link OpenCode when no provider is authenticated.
-class _OpenCodeNotLinkedDialog extends StatelessWidget {
+/// Explains how to link OpenCode when no provider is authenticated: paste a key
+/// in Settings, or run the CLI login for an OAuth provider.
+class _OpenCodeNotLinkedDialog extends ConsumerWidget {
   const _OpenCodeNotLinkedDialog();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     return AlertDialog(
       backgroundColor: c.surface,
       shape: RoundedRectangleBorder(
@@ -118,7 +132,7 @@ class _OpenCodeNotLinkedDialog extends StatelessWidget {
           Text('🔗', style: context.typography.title),
           SizedBox(width: context.spacing.md),
           Text(
-            'OpenCode not linked',
+            l.openCodeNotLinkedTitle,
             style: context.typography.title.copyWith(color: c.textPrimary),
           ),
         ],
@@ -130,9 +144,7 @@ class _OpenCodeNotLinkedDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'No authenticated OpenCode provider was found. Link one from your '
-              'terminal so translations run through your account and appear in '
-              'OpenCode usage:',
+              l.openCodeNotLinkedBody,
               style: context.typography.paragraph.copyWith(
                 color: c.textSecondary,
               ),
@@ -157,18 +169,22 @@ class _OpenCodeNotLinkedDialog extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: context.spacing.lg),
-            Text(
-              'Then retry Translate.',
-              style: context.typography.meta.copyWith(color: c.textTertiary),
-            ),
           ],
         ),
       ),
       actions: [
-        AppButton.filled(
+        AppButton.textNeutral(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Got it'),
+          child: Text(l.gotIt),
+        ),
+        SizedBox(width: context.spacing.md),
+        AppButton.filled(
+          onPressed: () {
+            Navigator.of(context).pop();
+            ref.read(openTicketIdProvider.notifier).close();
+            ref.read(settingsOpenProvider.notifier).state = true;
+          },
+          child: Text(l.openCodeOpenSettings),
         ),
       ],
     );

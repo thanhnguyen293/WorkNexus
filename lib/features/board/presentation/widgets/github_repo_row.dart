@@ -93,14 +93,17 @@ class GitHubRepoRow extends ConsumerWidget {
   /// repo, resets to the Issues kind, and switches to the GitHub view mode.
   void _select(WidgetRef ref) {
     ref.read(settingsOpenProvider.notifier).state = false;
-    // Drop any filters from the previous board (e.g. the ZenTao "my tickets"
-    // assignee), which don't apply to GitHub and would empty the board.
-    ref.read(filterStateProvider.notifier).clearAll();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).select(repo);
     ref.read(githubKindProvider.notifier).set(GitHubItemKind.issue);
     ref.read(viewModeProvider.notifier).set(ViewMode.github);
+    // This board's own filter, or none on a first visit — the previous board's
+    // filters (e.g. a ZenTao "my tickets" assignee) don't apply here and would
+    // empty the board.
+    ref
+        .read(filterStateProvider.notifier)
+        .openBoard(ref.read(boardKeyProvider));
   }
 }

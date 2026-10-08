@@ -8,7 +8,8 @@ import 'package:work_nexus/core/database/database.dart';
 /// Regression: a dev DB can be left half-migrated to schema v14 — the
 /// `translation_lang` column added, but `user_version` still 13 (e.g. an app
 /// killed mid-open). The v14 migration must be idempotent and not crash with
-/// "duplicate column name: translation_lang".
+/// "duplicate column name: translation_lang", and the later migrations have to
+/// run on top of it.
 void main() {
   test('v14 migration skips translation_lang when it already exists', () async {
     final dir = await Directory.systemTemp.createTemp('wn_mig_test');
@@ -36,6 +37,18 @@ void main() {
         sidebar_width REAL NOT NULL DEFAULT 290.0
       );
     ''');
+    // The v15 migration adds a column to `workspaces`, so the fixture needs
+    // that table too — a real v13 DB has every table, just older columns.
+    raw.execute('''
+      CREATE TABLE workspaces (
+        id TEXT NOT NULL PRIMARY KEY,
+        name TEXT NOT NULL,
+        short_code TEXT NOT NULL,
+        color_value INTEGER NOT NULL,
+        is_personal INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
     raw.execute("INSERT INTO settings (id) VALUES (0);");
     raw.execute('PRAGMA user_version = 13;');
     raw.dispose();
@@ -51,5 +64,10 @@ void main() {
     // Migration completed and bumped the version to current.
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.read<int>('user_version'), db.schemaVersion);
+
+    // …including v16's additions: the translation-model column and the saved
+    // filter presets table.
+    expect(row.translationModel, '');
+    expect(await db.select(db.savedFilters).get(), isEmpty);
   });
 }

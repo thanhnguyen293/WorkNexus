@@ -2,18 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/domain/adapters/opencode_cli.dart';
 import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
 import '../../../core/settings/app_settings.dart';
-import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/usecases/resolve_translation_state.dart';
 
-/// Whether OpenCode is authenticated (`opencode auth login` has been run). When
-/// true, translation uses OpenCode's own provider/auth so it shows in usage.
-final openCodeAuthedProvider = FutureProvider<bool>(
-  (ref) => const AgentRunner().hasOpenCodeAuth(),
+/// Whether OpenCode is authenticated (`opencode auth login` has been run, or a
+/// key was saved in Settings → OpenCode). When true, translation uses OpenCode's
+/// own provider/auth so it shows in usage.
+///
+/// `autoDispose` so each Translate re-asks the CLI: a key added in Settings has
+/// to take effect without an app restart.
+final openCodeAuthedProvider = FutureProvider.autoDispose<bool>(
+  (ref) => getIt<OpenCodeCli>().hasAuthenticatedProvider(),
 );
 
 /// The cached translation record for a ticket (reactive). The DB holds one
@@ -40,17 +44,31 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
   TranslationUiState stateFor(String ticketId) =>
       state[ticketId] ?? const TranslationUiState();
 
+  /// Tickets whose in-flight run the user cancelled. The pending future still
+  /// resolves (with a failure) — this is how we tell "the user stopped it" from
+  /// "it broke", so a cancel leaves no error banner behind.
+  final Set<String> _cancelled = <String>{};
+
   Future<void> translate(String ticketId, {bool force = false}) async {
     final ticket = ref.read(ticketByIdProvider(ticketId));
     if (ticket == null) return;
+    _cancelled.remove(ticketId);
     _set(ticketId, const TranslationUiState(loading: true));
+    final settings = ref.read(appSettingsProvider);
     final svc = getIt<TranslationService>();
     final res = await svc.translate(
       ticketId: ticketId,
       source: TicketSource(title: ticket.title, body: ticket.body),
       sourceHash: ticket.sourceHash,
-      targetLang: ref.read(appSettingsProvider).translationLang,
+      targetLang: settings.translationLang,
+      model: settings.translationModel.isEmpty
+          ? null
+          : settings.translationModel,
     );
+    if (_cancelled.remove(ticketId)) {
+      _set(ticketId, const TranslationUiState());
+      return;
+    }
     await res.fold(
       (record) async {
         await getIt<TranslationRepository>().saveTranslation(record);
@@ -60,6 +78,13 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
         _set(ticketId, TranslationUiState(error: failure.message));
       },
     );
+  }
+
+  /// Stops the in-flight translation for [ticketId] and drops back to idle.
+  Future<void> cancel(String ticketId) async {
+    if (!stateFor(ticketId).loading) return;
+    _cancelled.add(ticketId);
+    await getIt<TranslationService>().cancel(ticketId);
   }
 
   void _set(String ticketId, TranslationUiState value) =>

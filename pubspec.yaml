@@ -73,6 +73,9 @@ dependencies:
   logger: 2.7.0
 
   # Utilities
+  # path_provider: used directly by core/database to place the drift file in the
+  # application-support directory (drift_flutter pulls it in too).
+  path_provider: 2.1.6
   window_manager: 0.5.2
   uuid: 4.6.0
   collection: 1.19.1

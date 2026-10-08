@@ -82,7 +82,6 @@ class ProviderMineRow extends ConsumerWidget {
   /// the mine selection, sets the MR/PR kind, and switches the view mode.
   void _select(WidgetRef ref) {
     ref.read(settingsOpenProvider.notifier).state = false;
-    ref.read(filterStateProvider.notifier).clearAll();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     if (_isGitLab) {
@@ -96,5 +95,8 @@ class ProviderMineRow extends ConsumerWidget {
       ref.read(githubKindProvider.notifier).set(GitHubItemKind.pullRequest);
       ref.read(viewModeProvider.notifier).set(ViewMode.github);
     }
+    ref
+        .read(filterStateProvider.notifier)
+        .openBoard(ref.read(boardKeyProvider));
   }
 }

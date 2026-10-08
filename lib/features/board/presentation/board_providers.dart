@@ -1,19 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/ticket.dart';
-import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
-import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/synthetic_labels.dart';
 import '../../sync/data/sync_service.dart';
 import '../domain/entities/board_model.dart';
-import '../domain/entities/filter_state.dart';
 import '../domain/usecases/build_board.dart';
 import '../domain/usecases/build_github_issue_board.dart';
 import '../domain/usecases/build_github_pr_board.dart';
@@ -27,8 +22,14 @@ import '../domain/usecases/filter_tickets.dart';
 import '../domain/usecases/scope_provider_tickets.dart';
 import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
-import '../domain/value_objects/saved_view.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
+import 'filter_providers.dart';
+
+// The filter controller and the board-loading pulse live in their own files to
+// keep this one from growing further; re-exported so the many widgets that
+// already import `board_providers.dart` keep a single import for board state.
+export 'board_loading_provider.dart';
+export 'filter_providers.dart';
 
 /// [home] is the launch state: no source is selected yet, so the main area
 /// shows the welcome screen instead of a board. The user opens a real view by
@@ -57,109 +58,42 @@ class ViewModeController extends Notifier<ViewMode> {
   void set(ViewMode m) => state = m;
 }
 
-/// Active filter selection + intent methods (the design's filter interactions).
-class FilterController extends Notifier<FilterState> {
-  @override
-  FilterState build() => const FilterState();
-
-  void setWorkspace(String id) {
-    state = state.copyWith(workspaceId: id, accountIds: {}, projectIds: {});
-    ref.read(boardLoadingProvider.notifier).pulse();
+/// A stable identity for the board on screen — the key its filter is remembered
+/// under by [FilterController.openBoard]. Two boards share a key only when they
+/// are the same board; the view tabs within one board (bug browse type,
+/// issues/MRs) deliberately do not, so switching tabs keeps your filter.
+final boardKeyProvider = Provider<String>((ref) {
+  switch (ref.watch(viewModeProvider)) {
+    case ViewMode.home:
+      return 'home';
+    case ViewMode.board:
+      return 'board';
+    case ViewMode.list:
+      return 'list';
+    case ViewMode.zentaoBugs:
+      final product = ref.watch(selectedZenTaoProductProvider);
+      return product == null
+          ? 'zentao:bugs'
+          : 'zentao:bugs:${product.accountId}:${product.productId}';
+    case ViewMode.zentaoTasks:
+      final execution = ref.watch(selectedZenTaoExecutionProvider);
+      return execution == null
+          ? 'zentao:tasks'
+          : 'zentao:tasks:${execution.accountId}:${execution.executionId}';
+    case ViewMode.gitlab:
+      final project = ref.watch(selectedGitLabProjectProvider);
+      if (project == null) return 'gitlab';
+      return project.mine
+          ? 'gitlab:mine:${project.accountId}'
+          : 'gitlab:${project.accountId}:${project.projectId}';
+    case ViewMode.github:
+      final repo = ref.watch(selectedGitHubRepoProvider);
+      if (repo == null) return 'github';
+      return repo.mine
+          ? 'github:mine:${repo.accountId}'
+          : 'github:${repo.accountId}:${repo.repoId}';
   }
-
-  void setSavedView(SavedView v) => state = state.copyWith(savedView: v);
-  void setSearch(String q) => state = state.copyWith(search: q);
-
-  void toggleProvider(ProviderType p) =>
-      state = state.copyWith(providers: _toggle(state.providers, p));
-  void toggleAccount(String id) =>
-      state = state.copyWith(accountIds: _toggle(state.accountIds, id));
-  void toggleProject(String id) =>
-      state = state.copyWith(projectIds: _toggle(state.projectIds, id));
-  void toggleStatus(UnifiedStatus s) =>
-      state = state.copyWith(statuses: _toggle(state.statuses, s));
-  void togglePriority(Priority p) =>
-      state = state.copyWith(priorities: _toggle(state.priorities, p));
-  void toggleSeverity(int s) =>
-      state = state.copyWith(severities: _toggle(state.severities, s));
-  void toggleAssignee(String a) =>
-      state = state.copyWith(assignees: _toggle(state.assignees, a));
-  void toggleReviewer(String r) =>
-      state = state.copyWith(reviewers: _toggle(state.reviewers, r));
-  void toggleBugType(String t) =>
-      state = state.copyWith(bugTypes: _toggle(state.bugTypes, t));
-  void toggleResolution(String r) =>
-      state = state.copyWith(resolutions: _toggle(state.resolutions, r));
-
-  void clearAll() => state = state.copyWith(
-    providers: {},
-    accountIds: {},
-    projectIds: {},
-    statuses: {},
-    priorities: {},
-    severities: {},
-    assignees: {},
-    reviewers: {},
-    bugTypes: {},
-    resolutions: {},
-    search: '',
-  );
-
-  /// Resets the chip filters to just "assigned to me" — the default applied when
-  /// a ZenTao bug/task board opens. An empty [self] clears filters (shows all),
-  /// so a board still opens cleanly when "me" can't be resolved.
-  void showMine(String self) => state = state.copyWith(
-    providers: {},
-    accountIds: {},
-    projectIds: {},
-    statuses: {},
-    priorities: {},
-    severities: {},
-    assignees: self.isEmpty ? {} : {self},
-    reviewers: {},
-    bugTypes: {},
-    resolutions: {},
-    search: '',
-  );
-
-  Set<T> _toggle<T>(Set<T> set, T value) {
-    final next = Set<T>.of(set);
-    next.contains(value) ? next.remove(value) : next.add(value);
-    return next;
-  }
-}
-
-final filterStateProvider = NotifierProvider<FilterController, FilterState>(
-  FilterController.new,
-);
-
-/// Brief skeleton state on first load and workspace switches (design parity).
-class BoardLoading extends Notifier<bool> {
-  Timer? _timer;
-
-  @override
-  bool build() {
-    ref.onDispose(() => _timer?.cancel());
-    _schedule();
-    return true;
-  }
-
-  void pulse() {
-    state = true;
-    _schedule();
-  }
-
-  void _schedule() {
-    _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 480), () {
-      if (ref.mounted) state = false;
-    });
-  }
-}
-
-final boardLoadingProvider = NotifierProvider<BoardLoading, bool>(
-  BoardLoading.new,
-);
+});
 
 class TicketActionPending extends Notifier<Set<String>> {
   @override
