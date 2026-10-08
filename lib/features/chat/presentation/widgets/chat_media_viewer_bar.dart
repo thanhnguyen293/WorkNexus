@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// Top bar of the full-screen image and video viewers: name and details on
-/// the left (clear of macOS's window buttons), [actions] and close on the
-/// right.
+/// Top bar of the image and video viewers: name and details on the left,
+/// [actions] and close on the right.
 class ChatMediaViewerBar extends StatelessWidget {
   const ChatMediaViewerBar({
     super.key,
@@ -33,12 +32,7 @@ class ChatMediaViewerBar extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: c.scrim.withValues(alpha: 0.6)),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          s.xl3 + DesktopWindowService.windowButtonsInset,
-          s.sm,
-          s.xl3,
-          s.sm,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: s.xl3, vertical: s.sm),
         child: Row(
           children: [
             Expanded(
@@ -66,7 +60,7 @@ class ChatMediaViewerBar extends StatelessWidget {
             ...actions,
             SizedBox(width: s.md),
             ChatViewerButton(
-              icon: Icons.close_rounded,
+              icon: PhosphorIconsLight.x,
               tooltip: AppL10n.of(context).chatClosePanel,
               onPressed: onClose,
             ),
@@ -102,9 +96,27 @@ class ChatViewerButton extends StatelessWidget {
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      iconSize: context.spacing.xl4,
       color: selected ? c.accent : c.onScrim,
       disabledColor: c.onScrim.withValues(alpha: 0.35),
       icon: Icon(icon),
+    );
+  }
+}
+
+/// A short vertical rule between groups of viewer buttons.
+class ChatViewerDivider extends StatelessWidget {
+  const ChatViewerDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.spacing;
+    return Container(
+      width: 1,
+      height: s.xl4,
+      margin: EdgeInsets.symmetric(horizontal: s.md),
+      color: context.colors.onScrim.withValues(alpha: 0.25),
     );
   }
 }

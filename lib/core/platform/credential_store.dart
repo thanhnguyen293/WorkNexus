@@ -7,6 +7,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// `keychain-access-groups` entitlement (only present with a real dev-team
 /// signing identity), so ad-hoc/local builds hit `-34018 errSecMissingEntitlement`.
 /// The legacy login keychain needs no such entitlement.
+///
+/// Reads are cached for the app's lifetime: every keychain read of an item can
+/// raise a macOS "allow access" prompt (each rebuild of an ad-hoc signed app
+/// counts as a new app, so "Always Allow" does not stick), and sync, chat and
+/// link cards all read the same secrets — often at the same moment.
 class CredentialStore {
   CredentialStore([FlutterSecureStorage? storage])
     : _storage =
@@ -19,10 +24,26 @@ class CredentialStore {
 
   static String refFor(String accountId) => 'secret:$accountId';
 
-  Future<void> write(String ref, String secret) =>
-      _storage.write(key: ref, value: secret);
+  /// Secrets read or written so far, or the read still in flight, by ref.
+  final Map<String, Future<String?>> _cache = {};
 
-  Future<String?> read(String ref) => _storage.read(key: ref);
+  Future<void> write(String ref, String secret) async {
+    await _storage.write(key: ref, value: secret);
+    _cache[ref] = Future.value(secret);
+  }
 
-  Future<void> delete(String ref) => _storage.delete(key: ref);
+  Future<String?> read(String ref) => _cache.putIfAbsent(ref, () async {
+    try {
+      return await _storage.read(key: ref);
+    } catch (_) {
+      // A denied or failed read is asked again next time, not remembered.
+      _cache.remove(ref)?.ignore();
+      rethrow;
+    }
+  });
+
+  Future<void> delete(String ref) async {
+    _cache.remove(ref)?.ignore();
+    await _storage.delete(key: ref);
+  }
 }

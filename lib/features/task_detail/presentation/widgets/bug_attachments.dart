@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -121,8 +122,8 @@ class _AttachmentRow extends StatelessWidget {
               ),
               child: Icon(
                 _isViewable(attachment.extension)
-                    ? Icons.visibility_outlined
-                    : Icons.download_outlined,
+                    ? PhosphorIconsLight.eye
+                    : PhosphorIconsLight.downloadSimple,
                 size: 15,
                 color: c.textTertiary,
               ),
@@ -145,10 +146,11 @@ class _AttachmentRow extends StatelessWidget {
     const video = {'mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v'};
     const image = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'heic'};
     final e = ext?.toLowerCase() ?? '';
-    if (video.contains(e)) return Icons.videocam_outlined;
-    if (image.contains(e)) return Icons.image_outlined;
-    if (e == 'pdf') return Icons.picture_as_pdf_outlined;
-    if (e == 'zip' || e == 'rar' || e == '7z') return Icons.folder_zip_outlined;
-    return Icons.insert_drive_file_outlined;
+    if (video.contains(e)) return PhosphorIconsLight.videoCamera;
+    if (image.contains(e)) return PhosphorIconsLight.image;
+    if (e == 'pdf') return PhosphorIconsLight.filePdf;
+    if (e == 'zip' || e == 'rar' || e == '7z')
+      return PhosphorIconsLight.fileZip;
+    return PhosphorIconsLight.file;
   }
 }

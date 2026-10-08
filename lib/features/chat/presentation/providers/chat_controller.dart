@@ -120,15 +120,17 @@ class ChatController {
     image: image,
   );
 
-  /// The user's ZenTao profile link (pass-through).
-  Future<Result<Uri>> zentaoProfileUri(String accountId) =>
-      _repository.zentaoProfileUri(accountId);
+  /// Sets the user's own picture (pass-through; CLAUDE.md 2.4).
+  Future<Result<void>> setMyAvatar(String accountId, Uint8List image) =>
+      _repository.setMyAvatar(accountId, image);
 
   /// Loads every user of the server (pass-through; CLAUDE.md 2.4).
   Future<Result<void>> refreshUsers(String accountId) =>
       _repository.refreshUsers(accountId);
 
   void setCacheLimit(int bytes) => _repository.setCacheLimit(bytes);
+  void setVideoAutoDownloadLimit(int bytes) =>
+      _repository.setVideoAutoDownloadLimit(bytes);
 
   /// Deletes downloaded attachments of one chat, or all when [chatGid] is
   /// null (a pass-through; CLAUDE.md 2.4).
@@ -245,6 +247,10 @@ class ChatController {
     String accountId,
     MessageContent content,
   ) => _open(accountId: accountId, content: content);
+
+  /// Stops downloading an attachment the user opened.
+  void cancelDownload(String accountId, MessageContent content) =>
+      _repository.cancelDownload(accountId, content);
 
   Future<Result<Uint8List>> videoThumbnail(
     String accountId,

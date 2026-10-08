@@ -98,8 +98,12 @@ final lookupsProvider = Provider<Lookups>((ref) {
 /// key was saved in Settings → OpenCode). When true, translation uses OpenCode's
 /// own provider/auth so it shows in usage.
 ///
-/// `autoDispose` so each translation re-asks the CLI: a key added in Settings
-/// has to take effect without an app restart.
-final openCodeAuthedProvider = FutureProvider.autoDispose<bool>(
-  (ref) => getIt<OpenCodeCli>().hasAuthenticatedProvider(),
-);
+/// `autoDispose` so, until it is linked, each translation re-asks the CLI: a
+/// key added in Settings takes effect without an app restart.
+final openCodeAuthedProvider = FutureProvider.autoDispose<bool>((ref) async {
+  final authed = await getIt<OpenCodeCli>().hasAuthenticatedProvider();
+  // Asking runs the CLI (a second or two): once linked, the answer is kept
+  // rather than asked again on every translation.
+  if (authed) ref.keepAlive();
+  return authed;
+});

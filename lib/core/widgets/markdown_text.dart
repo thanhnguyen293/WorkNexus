@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -10,6 +11,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/fonts.dart';
+import '../util/markdown_normalize.dart';
 
 /// Loads the bytes for an inline image URL (e.g. via an authenticated client).
 typedef ImageBytesLoader = Future<Uint8List?> Function(String url);
@@ -78,7 +80,7 @@ class MarkdownText extends StatelessWidget {
       height: height,
       color: color ?? c.textPrimary,
     );
-    final text = data.trim();
+    final text = normalizeMarkdown(data.trim());
     if (text.isEmpty) {
       return Text('—', style: base.copyWith(color: c.textTertiary));
     }
@@ -203,7 +205,7 @@ class _MarkdownImageState extends State<_MarkdownImage> {
             return _frame(
               context,
               Icon(
-                Icons.broken_image_outlined,
+                PhosphorIconsLight.imageBroken,
                 color: c.textTertiary,
                 size: 22,
               ),
@@ -225,7 +227,7 @@ class _MarkdownImageState extends State<_MarkdownImage> {
               fit: BoxFit.contain,
               errorBuilder: (_, _, _) => _frame(
                 context,
-                Icon(Icons.broken_image_outlined, color: c.textTertiary),
+                Icon(PhosphorIconsLight.imageBroken, color: c.textTertiary),
               ),
             ),
           ),
@@ -277,14 +279,14 @@ class _ImageFallbackActionsState extends State<_ImageFallbackActions> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _FallbackChip(
-            icon: _copied ? Icons.check : Icons.link,
+            icon: _copied ? PhosphorIconsLight.check : PhosphorIconsLight.link,
             label: _copied ? l.linkCopied : l.copyLink,
             onTap: _copy,
           ),
           if (widget.onOpen != null) ...[
             Container(width: 1, height: 16, color: context.colors.border),
             _FallbackChip(
-              icon: Icons.open_in_new,
+              icon: PhosphorIconsLight.arrowSquareOut,
               label: l.openImageInBrowser,
               onTap: () => widget.onOpen!(widget.url),
             ),

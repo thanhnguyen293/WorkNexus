@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_controller.dart';
@@ -15,10 +15,11 @@ import 'chat_snack.dart';
 import 'chat_style.dart';
 import 'chat_wallpaper.dart';
 import 'list_extent_estimate.dart';
+import 'message_jump.dart';
 import 'message_list_header.dart';
 import 'message_list_item.dart';
+import 'message_list_view.dart';
 import 'scroll_to_latest_button.dart';
-import 'steady_extent_child_delegate.dart';
 
 /// The messages of one chat, newest at the bottom. Earlier messages load on
 /// their own as the user scrolls near the top. New messages arriving while it
@@ -47,9 +48,6 @@ const double _kAwayThreshold = 400;
 /// Further than this from the bottom, jumping is better than a long animation.
 const double _kAnimateLimit = 4000;
 
-/// Laying out far past the viewport steadies the estimated list length.
-const double _kCacheExtent = 2000;
-
 const Duration _kScrollDuration = Duration(milliseconds: 250);
 
 class _MessageListState extends ConsumerState<MessageList> {
@@ -77,6 +75,11 @@ class _MessageListState extends ConsumerState<MessageList> {
   /// Older messages fetched while the mouse was held, shown on release.
   int _pendingRows = 0;
 
+  final _jump = MessageJump();
+
+  /// The rows of the last build, for finding a message to jump to.
+  List<Object> _items = const [];
+
   @override
   void dispose() {
     _scroll.dispose();
@@ -100,12 +103,13 @@ class _MessageListState extends ConsumerState<MessageList> {
   /// Fires on scrolling and on content/viewport size changes, which also
   /// covers a first page too short to fill the screen.
   bool _onScrollMetrics(ScrollMetrics metrics) {
-    if (metrics.axis != Axis.vertical) return false;
     // Reversed list: 0 is the newest message.
-    final away = metrics.pixels > _kAwayThreshold;
-    if (away != _away) {
+    if ((metrics.pixels > _kAwayThreshold) != _away) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+        // Read again (several may be queued in one frame); not after dispose.
+        if (!mounted || !_scroll.hasClients) return;
+        final away = _scroll.position.pixels > _kAwayThreshold;
+        if (away == _away) return;
         setState(() {
           _away = away;
           if (!away) _unseen = 0;
@@ -165,6 +169,35 @@ class _MessageListState extends ConsumerState<MessageList> {
     _pendingRows = 0;
   }
 
+  /// Scrolls to message [serverId] (loading older pages) and highlights it.
+  Future<void> _jumpTo(int serverId) async {
+    final t = widget.thread;
+    ChatMessage? target;
+    for (var page = 0; target == null; page++) {
+      final shown = ref.read(chatMessagesProvider(t)).value ?? const [];
+      target = shown.where((m) => m.serverId == serverId).firstOrNull;
+      if (target != null) break;
+      if (_reachedStart || _loadFailed || page >= MessageJump.maxPages) {
+        showChatSnack(context, AppL10n.of(context).chatJumpNotFound);
+        return;
+      }
+      if (!_loadingOlder) await _loadOlder();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || widget.thread != t) return;
+    }
+    final found = await _jump.reveal(
+      _scroll,
+      gid: target.gid,
+      rows: () => _items,
+      rebuild: () => setState(() {}),
+    );
+    if (!mounted || !found) return;
+    await MessageJump.flash(
+      ref.read(chatHighlightedMessageProvider(t).notifier),
+      serverId,
+    );
+  }
+
   void _onMouseUp() {
     _mouseDown = false;
     _showPending();
@@ -173,11 +206,8 @@ class _MessageListState extends ConsumerState<MessageList> {
 
   void _scrollToLatest() {
     if (!_scroll.hasClients) return;
-    if (_scroll.offset > _kAnimateLimit) {
-      _scroll.jumpTo(0);
-    } else {
-      _scroll.animateTo(0, duration: _kScrollDuration, curve: Curves.easeOut);
-    }
+    if (_scroll.offset > _kAnimateLimit) return _scroll.jumpTo(0);
+    _scroll.animateTo(0, duration: _kScrollDuration, curve: Curves.easeOut);
   }
 
   /// Newer messages at the bottom: count them while the user reads older
@@ -208,6 +238,9 @@ class _MessageListState extends ConsumerState<MessageList> {
       (previous, next) =>
           _onMessages(previous?.value ?? const [], next.value ?? const []),
     );
+    ref.listen(chatJumpRequestProvider(t), (_, id) {
+      if (id != null) _jumpTo(id);
+    });
     // Kept alive for [_onMessages], which reads it.
     ref.watch(chatSelfUserIdProvider(t.accountId));
     final messagesAsync = ref.watch(chatMessagesProvider(t));
@@ -224,58 +257,25 @@ class _MessageListState extends ConsumerState<MessageList> {
     }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
     final style = ChatStyle.watch(ref, context);
-    final items = chatListItems(messages, style.separatorGap);
-    // Lets a message keep its row (and state) when newer ones push it up.
-    final rows = {
-      for (final (i, item) in items.indexed)
-        if (item is ChatMessage) item.gid: i,
-    };
-    final list = Listener(
-      onPointerDown: (e) {
-        if (e.kind == PointerDeviceKind.mouse) _mouseDown = true;
-      },
-      onPointerUp: (_) => _onMouseUp(),
-      onPointerCancel: (_) => _onMouseUp(),
-      child: NotificationListener<ScrollMetricsNotification>(
-        onNotification: (n) => _onScrollMetrics(n.metrics),
-        child: NotificationListener<ScrollUpdateNotification>(
-          onNotification: (n) => _onScrollMetrics(n.metrics),
-          child: ListView.custom(
-            controller: _scroll,
-            reverse: true,
-            cacheExtent: _kCacheExtent,
-            padding: EdgeInsets.symmetric(
-              horizontal: context.spacing.xl5,
-              vertical: context.spacing.xl3,
-            ),
-            childrenDelegate: SteadyExtentChildDelegate(
-              (context, i) => i == items.length
-                  ? MessageListHeader(
-                      reachedStart: _reachedStart,
-                      failed: _loadFailed,
-                      onLoadOlder: _loadOlder,
-                    )
-                  : MessageListItem(
-                      key: switch (items[i]) {
-                        final ChatMessage m => ValueKey(m.gid),
-                        _ => null,
-                      },
-                      thread: t,
-                      items: items,
-                      index: i,
-                      style: style,
-                      users: users,
-                      summaries: summaries,
-                      showSenders: widget.showSenders,
-                    ),
-              estimate: _extent,
-              childCount: items.length + 1,
-              findChildIndexCallback: (key) =>
-                  key is ValueKey<String> ? rows[key.value] : null,
-            ),
-          ),
-        ),
+    final items = _items = chatListItems(messages, style.separatorGap);
+    final list = MessageListView(
+      thread: t,
+      scroll: _scroll,
+      items: items,
+      style: style,
+      users: users,
+      summaries: summaries,
+      showSenders: widget.showSenders,
+      extent: _extent,
+      jump: _jump,
+      header: MessageListHeader(
+        reachedStart: _reachedStart,
+        failed: _loadFailed,
+        onLoadOlder: _loadOlder,
       ),
+      onMetrics: _onScrollMetrics,
+      onMouseDown: () => _mouseDown = true,
+      onMouseUp: _onMouseUp,
     );
     final s = context.spacing;
     return ChatBackground(

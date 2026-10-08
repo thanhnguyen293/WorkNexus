@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'message_context_menu.dart';
 
-/// One hover action on a message.
-typedef MessageAction = ({IconData icon, String tooltip, VoidCallback onTap});
+/// One action on a message, offered on hover and in its right-click menu.
+/// [destructive] ones (retract) are shown last, in the error colour.
+typedef MessageAction = ({
+  IconData icon,
+  String tooltip,
+  VoidCallback onTap,
+  bool destructive,
+});
 
 /// Zalo-style message actions: round buttons beside the bubble, level with
 /// its bottom edge, shown while the pointer is over the message — the
-/// first action (reply) as its own button, the rest under "…". They sit in
+/// first actions (reply, open thread) as buttons, the rest under "…". They sit in
 /// the bubble's row (outside the bubble, so they are clickable), keeping
 /// their space while hidden so nothing shifts on hover.
 class MessageHoverActions extends StatefulWidget {
@@ -19,10 +26,15 @@ class MessageHoverActions extends StatefulWidget {
     required this.child,
     required this.actions,
     required this.alignEnd,
+    this.buttons = 1,
   });
 
   final Widget child;
   final List<MessageAction> actions;
+
+  /// How many leading actions get a button of their own; the rest go under
+  /// "…".
+  final int buttons;
 
   /// Own messages (right side) get the buttons on their left.
   final bool alignEnd;
@@ -42,8 +54,8 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final actions = widget.actions;
     if (actions.isEmpty) return widget.child;
     final s = context.spacing;
-    final first = actions.first;
-    final rest = actions.skip(1).toList();
+    final own = actions.take(widget.buttons).toList();
+    final rest = actions.skip(widget.buttons).toList();
     final buttons = AnimatedOpacity(
       opacity: _hover || _menuOpen ? 1 : 0,
       duration: const Duration(milliseconds: 100),
@@ -54,23 +66,22 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _RoundButton(
-                icon: first.icon,
-                tooltip: first.tooltip,
-                onTap: first.onTap,
-              ),
+              for (final (i, a) in own.indexed) ...[
+                if (i > 0) SizedBox(width: s.sm),
+                _RoundButton(icon: a.icon, tooltip: a.tooltip, onTap: a.onTap),
+              ],
               if (rest.isNotEmpty) ...[
                 SizedBox(width: s.sm),
-                _MoreButton(
-                  actions: rest,
-                  onOpen: () => setState(() => _menuOpen = true),
-                  onClose: () => setState(() => _menuOpen = false),
-                ),
+                _MoreButton(onOpen: (at) => _openMenu(rest, at)),
               ],
             ],
           ),
         ),
       ),
+    );
+    final bubble = GestureDetector(
+      onSecondaryTapDown: (d) => _openMenu(widget.actions, d.globalPosition),
+      child: widget.child,
     );
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -79,10 +90,17 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: widget.alignEnd
-            ? [buttons, Flexible(child: widget.child)]
-            : [Flexible(child: widget.child), buttons],
+            ? [buttons, Flexible(child: bubble)]
+            : [Flexible(child: bubble), buttons],
       ),
     );
+  }
+
+  /// Keeps the hover buttons up while a menu of [actions] is open at [at].
+  Future<void> _openMenu(List<MessageAction> actions, Offset at) async {
+    setState(() => _menuOpen = true);
+    await showMessageContextMenu(context, actions: actions, at: at);
+    if (mounted) setState(() => _menuOpen = false);
   }
 }
 
@@ -121,52 +139,24 @@ class _RoundButton extends StatelessWidget {
   }
 }
 
-/// "…": the remaining actions as a menu.
+/// "…": opens the remaining actions as a menu just below the button.
 class _MoreButton extends StatelessWidget {
-  const _MoreButton({
-    required this.actions,
-    required this.onOpen,
-    required this.onClose,
-  });
+  const _MoreButton({required this.onOpen});
 
-  final List<MessageAction> actions;
-  final VoidCallback onOpen;
-  final VoidCallback onClose;
+  final void Function(Offset at) onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return PopupMenuButton<int>(
+    return _RoundButton(
+      icon: PhosphorIconsLight.dotsThree,
       tooltip: AppL10n.of(context).chatMoreActions,
-      onOpened: onOpen,
-      onCanceled: onClose,
-      onSelected: (i) {
-        onClose();
-        actions[i].onTap();
+      onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        onOpen(
+          box.localToGlobal(Offset(0, box.size.height + context.spacing.xs)),
+        );
       },
-      itemBuilder: (_) => [
-        for (final (i, a) in actions.indexed)
-          PopupMenuItem(
-            value: i,
-            child: Row(
-              children: [
-                Icon(a.icon, size: context.spacing.xl4, color: c.textSecondary),
-                SizedBox(width: context.spacing.lg),
-                Text(
-                  a.tooltip,
-                  style: context.typography.body.copyWith(color: c.textPrimary),
-                ),
-              ],
-            ),
-          ),
-      ],
-      child: const IgnorePointer(
-        child: _RoundButton(
-          icon: Icons.more_horiz_rounded,
-          tooltip: null,
-          onTap: null,
-        ),
-      ),
     );
   }
 }

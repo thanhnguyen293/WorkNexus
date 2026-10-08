@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
@@ -237,7 +238,7 @@ class _NoteToggle extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            internal ? Icons.lock_outline : Icons.public,
+            internal ? PhosphorIconsLight.lock : PhosphorIconsLight.globe,
             size: 14,
             color: c.textTertiary,
           ),

@@ -35,7 +35,11 @@ class _SearchBox extends StatelessWidget {
             fillColor: c.surfaceSubtle,
             hintText: hint,
             hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-            prefixIcon: Icon(Icons.search, size: 18, color: c.textTertiary),
+            prefixIcon: Icon(
+              PhosphorIconsLight.magnifyingGlass,
+              size: 18,
+              color: c.textTertiary,
+            ),
             prefixIconConstraints: BoxConstraints(minWidth: spacing.xl6),
             contentPadding: EdgeInsets.symmetric(vertical: spacing.lg),
             border: OutlineInputBorder(
@@ -109,7 +113,8 @@ class _OptionTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (selected) Icon(Icons.check, size: 16, color: c.accent),
+                if (selected)
+                  Icon(PhosphorIconsLight.check, size: 16, color: c.accent),
               ],
             ),
           ),

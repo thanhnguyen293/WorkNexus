@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -97,33 +98,59 @@ class ChatWallpaper extends StatelessWidget {
   );
 }
 
-/// Doodles of the pattern: work and everyday things, from Material icons.
+/// Doodles of the pattern: work and everyday things, as Phosphor's light
+/// line icons — one thin stroke weight, like Telegram's doodles.
 const _doodles = <IconData>[
-  Icons.chat_bubble_outline_rounded,
-  Icons.coffee_outlined,
-  Icons.rocket_launch_outlined,
-  Icons.lightbulb_outline_rounded,
-  Icons.bug_report_outlined,
-  Icons.music_note_rounded,
-  Icons.favorite_border_rounded,
-  Icons.star_border_rounded,
-  Icons.camera_alt_outlined,
-  Icons.headphones_outlined,
-  Icons.local_florist_outlined,
-  Icons.cake_outlined,
-  Icons.flight_outlined,
-  Icons.code_rounded,
-  Icons.push_pin_outlined,
-  Icons.pets_outlined,
-  Icons.cloud_outlined,
-  Icons.emoji_emotions_outlined,
-  Icons.sailing_outlined,
-  Icons.celebration_outlined,
+  PhosphorIconsLight.chatCircle,
+  PhosphorIconsLight.coffee,
+  PhosphorIconsLight.rocketLaunch,
+  PhosphorIconsLight.lightbulb,
+  PhosphorIconsLight.bug,
+  PhosphorIconsLight.musicNotes,
+  PhosphorIconsLight.heart,
+  PhosphorIconsLight.star,
+  PhosphorIconsLight.camera,
+  PhosphorIconsLight.headphones,
+  PhosphorIconsLight.flower,
+  PhosphorIconsLight.cake,
+  PhosphorIconsLight.airplaneTilt,
+  PhosphorIconsLight.code,
+  PhosphorIconsLight.pushPin,
+  PhosphorIconsLight.pawPrint,
+  PhosphorIconsLight.cloud,
+  PhosphorIconsLight.smiley,
+  PhosphorIconsLight.sailboat,
+  PhosphorIconsLight.confetti,
+  PhosphorIconsLight.paperPlaneTilt,
+  PhosphorIconsLight.gameController,
+  PhosphorIconsLight.bicycle,
+  PhosphorIconsLight.umbrella,
+  PhosphorIconsLight.moonStars,
+  PhosphorIconsLight.book,
+  PhosphorIconsLight.pencilSimple,
+  PhosphorIconsLight.gift,
+  PhosphorIconsLight.balloon,
+  PhosphorIconsLight.leaf,
+  PhosphorIconsLight.planet,
+  PhosphorIconsLight.ghost,
+  PhosphorIconsLight.cactus,
+  PhosphorIconsLight.pizza,
+  PhosphorIconsLight.iceCream,
+  PhosphorIconsLight.envelopeSimple,
+  PhosphorIconsLight.palette,
+  PhosphorIconsLight.guitar,
+  PhosphorIconsLight.butterfly,
+  PhosphorIconsLight.fish,
+  PhosphorIconsLight.anchor,
+  PhosphorIconsLight.cat,
+  PhosphorIconsLight.bell,
+  PhosphorIconsLight.laptop,
 ];
 
-/// Side of one pattern tile and how many doodles fit across it.
-const double _kTile = 320;
-const int _kCells = 5;
+/// Side of one pattern tile and how many doodles fit across it. Large and
+/// dense, so the repeat is hard to spot.
+const double _kTile = 448;
+const int _kCells = 8;
 
 class _WallpaperPainter extends CustomPainter {
   _WallpaperPainter({
@@ -168,17 +195,19 @@ class _WallpaperPainter extends CustomPainter {
     final cell = tile / _kCells;
     // The same arrangement in every tile; fixed seed so it never shifts.
     final random = math.Random(7);
+    // Each doodle before any repeats, so neighbours rarely match.
+    final order = [..._doodles]..shuffle(random);
     final marks = [
       for (var row = 0; row < _kCells; row++)
         for (var col = 0; col < _kCells; col++)
           (
-            icon: _doodles[random.nextInt(_doodles.length)],
+            icon: order[(row * _kCells + col) % order.length],
             at: Offset(
-              (col + 0.2 + random.nextDouble() * 0.6) * cell,
-              (row + 0.2 + random.nextDouble() * 0.6) * cell,
+              (col + 0.3 + random.nextDouble() * 0.4) * cell,
+              (row + 0.3 + random.nextDouble() * 0.4) * cell,
             ),
-            angle: (random.nextDouble() - 0.5) * 1.2,
-            size: cell * (0.38 + random.nextDouble() * 0.2),
+            angle: (random.nextDouble() - 0.5) * 0.7,
+            size: cell * (0.5 + random.nextDouble() * 0.1),
           ),
     ];
     final painters = [

@@ -14,6 +14,7 @@ import '../../domain/value_objects/gitlab_issue_column.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../../domain/value_objects/gitlab_mr_column.dart';
 import '../board_providers.dart';
+import 'board_horizontal_scroll.dart';
 import 'ticket_card.dart';
 
 /// The dedicated GitLab board: horizontally-scrolling lifecycle columns for the
@@ -27,20 +28,15 @@ class GitLabBoardView extends ConsumerWidget {
     final columns = ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
         ? _mrColumns(context, ref.watch(gitlabMrBoardProvider))
         : _issueColumns(context, ref.watch(gitlabIssueBoardProvider));
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.all(context.spacing.xl2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final col in columns) ...[
-              _GitLabColumn(data: col),
-              SizedBox(width: context.spacing.xl),
-            ],
+    return BoardHorizontalScroll(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final col in columns) ...[
+            _GitLabColumn(data: col),
+            SizedBox(width: context.spacing.xl),
           ],
-        ),
+        ],
       ),
     );
   }

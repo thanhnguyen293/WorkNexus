@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
+import 'cancel_download_button.dart';
 import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
 
@@ -45,7 +47,12 @@ class ChatMediaGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         for (final m in media)
-          _Thumb(accountId: accountId, content: m.content, images: images),
+          _Thumb(
+            accountId: accountId,
+            chatGid: m.chatGid,
+            content: m.content,
+            images: images,
+          ),
       ],
     );
   }
@@ -54,11 +61,13 @@ class ChatMediaGrid extends StatelessWidget {
 class _Thumb extends ConsumerWidget {
   const _Thumb({
     required this.accountId,
+    required this.chatGid,
     required this.content,
     required this.images,
   });
 
   final String accountId;
+  final String chatGid;
   final MessageContent content;
   final List<ImageContent> images;
 
@@ -89,12 +98,14 @@ class _Thumb extends ConsumerWidget {
             accountId: accountId,
             images: images,
             initialIndex: images.indexOf(image).clamp(0, images.length - 1),
+            chatGid: chatGid,
           ),
           final FileContent file => openChatFile(
             context,
             ref,
             accountId: accountId,
             file: file,
+            chatGid: chatGid,
           ),
           _ => null,
         },
@@ -106,7 +117,7 @@ class _Thumb extends ConsumerWidget {
             if (video)
               Center(
                 child: Icon(
-                  Icons.play_circle_fill_rounded,
+                  PhosphorIconsFill.playCircle,
                   color: c.onScrim,
                   size: context.spacing.xl5,
                 ),
@@ -133,12 +144,26 @@ class ChatFileRow extends ConsumerWidget {
     final date = DateFormat.yMd(
       Localizations.localeOf(context).toString(),
     ).format(message.sentAt);
+    final key = (accountId: message.accountId, content: file);
+    final downloading = ref.watch(
+      chatDownloadingProvider.select((d) => d.contains(key)),
+    );
+    final progress = downloading
+        ? ref.watch(chatDownloadProgressProvider(key)).value ?? 0
+        : null;
     return InkWell(
       borderRadius: BorderRadius.circular(context.radii.md),
-      onTap: () =>
-          openChatFile(context, ref, accountId: message.accountId, file: file),
+      onTap: downloading
+          ? null
+          : () => openChatFile(
+              context,
+              ref,
+              accountId: message.accountId,
+              file: file,
+              chatGid: message.chatGid,
+            ),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: s.sm, horizontal: s.xs),
+        padding: EdgeInsets.symmetric(vertical: s.sm),
         child: Row(
           children: [
             Container(
@@ -149,12 +174,20 @@ class ChatFileRow extends ConsumerWidget {
                 color: c.accent,
                 borderRadius: BorderRadius.circular(context.radii.md),
               ),
-              child: Text(
-                chatFileBadge(file.name),
-                style: context.typography.captionStrong.copyWith(
-                  color: c.onAccent,
-                ),
-              ),
+              child: downloading
+                  ? SizedBox.square(
+                      dimension: s.xl3,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: c.onAccent,
+                      ),
+                    )
+                  : Text(
+                      chatFileBadge(file.name),
+                      style: context.typography.captionStrong.copyWith(
+                        color: c.onAccent,
+                      ),
+                    ),
             ),
             SizedBox(width: s.lg),
             Expanded(
@@ -170,14 +203,32 @@ class ChatFileRow extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    '${formatFileSize(file.size)} · $date',
+                    progress == null
+                        ? '${formatFileSize(file.size)} · $date'
+                        : formatTransfer(file.size, progress),
                     style: context.typography.caption.copyWith(
                       color: c.textSecondary,
                     ),
                   ),
+                  if (progress != null) ...[
+                    SizedBox(height: s.xs),
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: s.xxs,
+                      borderRadius: BorderRadius.circular(context.radii.pill),
+                    ),
+                  ],
                 ],
               ),
             ),
+            if (downloading)
+              CancelDownloadButton(
+                onPressed: () => cancelAttachmentDownload(
+                  ref,
+                  accountId: message.accountId,
+                  content: file,
+                ),
+              ),
           ],
         ),
       ),

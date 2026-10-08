@@ -108,6 +108,10 @@ abstract class ChatRepository {
     MessageContent content,
   );
 
+  /// Stops downloading an attachment; [attachmentFile] then fails with a
+  /// `CancelledFailure`.
+  void cancelDownload(String accountId, MessageContent content);
+
   /// A still frame of a video attachment (downloads small videos to make
   /// it). Fails when the video is too large to fetch just for a preview or no
   /// frame can be extracted.
@@ -154,9 +158,9 @@ abstract class ChatRepository {
     Uint8List? image,
   });
 
-  /// The signed-in user's ZenTao profile (where their picture is changed),
-  /// as a link that opens signed in.
-  Future<Result<Uri>> zentaoProfileUri(String accountId);
+  /// Sets the signed-in user's own picture from [image] (any common image
+  /// format; cut to its centred square), then reloads users so it shows.
+  Future<Result<void>> setMyAvatar(String accountId, Uint8List image);
 
   /// Pins or unpins [chatGid] at the top of the chat list (synced with the
   /// server, so other clients see it too).
@@ -204,6 +208,10 @@ abstract class ChatRepository {
 
   /// The most disk space attachments may use; older ones are dropped first.
   void setCacheLimit(int bytes);
+
+  /// Largest video (bytes) downloaded on its own for its preview frame; 0
+  /// downloads none until clicked.
+  void setVideoAutoDownloadLimit(int bytes);
 
   /// User ids of a group's members (unknown users are fetched in the
   /// background and show up through [watchUsers]).

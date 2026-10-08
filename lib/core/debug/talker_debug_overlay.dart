@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../navigation/navigation_providers.dart';
@@ -108,7 +109,7 @@ class _TalkerDebugPanel extends ConsumerWidget {
             tooltip: 'Close',
             onPressed: () =>
                 ref.read(talkerDebugOpenProvider.notifier).state = false,
-            icon: const Icon(Icons.close),
+            icon: const Icon(PhosphorIconsLight.x),
           ),
         ),
       ),

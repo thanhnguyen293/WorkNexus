@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -116,12 +117,12 @@ class _PreviewRow extends StatelessWidget {
                     file.bytes,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>
-                        Icon(Icons.image_outlined, color: c.textSecondary),
+                        Icon(PhosphorIconsLight.image, color: c.textSecondary),
                   )
                 : Icon(
                     isVideoName(file.name)
-                        ? Icons.movie_outlined
-                        : Icons.insert_drive_file_outlined,
+                        ? PhosphorIconsLight.filmStrip
+                        : PhosphorIconsLight.file,
                     color: c.textSecondary,
                   ),
           ),
@@ -150,7 +151,7 @@ class _PreviewRow extends StatelessWidget {
           tooltip: AppL10n.of(context).chatRemoveAttachment,
           onPressed: onRemove,
           icon: Icon(
-            Icons.close,
+            PhosphorIconsLight.x,
             size: context.spacing.xl3,
             color: c.textSecondary,
           ),

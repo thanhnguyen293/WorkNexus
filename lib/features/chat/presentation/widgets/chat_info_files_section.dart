@@ -66,7 +66,7 @@ class ChatInfoFilesSection extends ConsumerWidget {
                 title: '${l.chatFiles} (${files.length})',
                 onSeeAll: files.isEmpty ? null : seeAll,
               ),
-              SizedBox(height: s.sm),
+              SizedBox(height: s.md),
               if (files.isEmpty)
                 AppInlineNote(text: l.chatNoFiles)
               else
@@ -99,8 +99,15 @@ class _Header extends StatelessWidget {
           ),
         ),
         if (onSeeAll != null)
+          // Compact, so the header is no taller than its title.
           TextButton(
             onPressed: onSeeAll,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
             child: Text(AppL10n.of(context).chatSeeAll),
           ),
       ],

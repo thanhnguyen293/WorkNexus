@@ -52,20 +52,17 @@ class AddConnectionController extends Notifier<AddConnectionState> {
       return false;
     }
 
-    final accountId =
-        'zt-${_slug(username)}-${intHash(baseUrl).toRadixString(16)}';
-    final credRef = CredentialStore.refFor(accountId);
-    final account = Account(
-      id: accountId,
+    // Probe first: the check resolves the real web root (users may omit the
+    // `/zentao` suffix), which is what gets stored. The probe's id is irrelevant.
+    final probe = Account(
+      id: 'zt-probe',
       workspaceId: targetWorkspaceId,
       providerType: ProviderType.zentao,
       handle: username.trim(),
       baseUrl: baseUrl.trim(),
-      credentialsRef: credRef,
     );
-
-    final adapter = buildProviderAdapter(account, password)!;
-    final check = await adapter.testConnection();
+    final check = await buildProviderAdapter(probe, password)!.testConnection();
+    final String resolvedBaseUrl;
     switch (check) {
       case Err(:final failure):
         state = AddConnectionState(error: failure.message);
@@ -75,7 +72,20 @@ class AddConnectionController extends Notifier<AddConnectionState> {
           state = AddConnectionState(error: value.error ?? 'Connection failed');
           return false;
         }
+        resolvedBaseUrl = value.baseUrl ?? baseUrl.trim();
     }
+
+    final accountId =
+        'zt-${_slug(username)}-${intHash(resolvedBaseUrl).toRadixString(16)}';
+    final credRef = CredentialStore.refFor(accountId);
+    final account = Account(
+      id: accountId,
+      workspaceId: targetWorkspaceId,
+      providerType: ProviderType.zentao,
+      handle: username.trim(),
+      baseUrl: resolvedBaseUrl,
+      credentialsRef: credRef,
+    );
 
     await getIt<CredentialStore>().write(credRef, password);
     await getIt<ConnectionRepository>().addAccount(account);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/markdown_normalize.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
@@ -106,7 +107,9 @@ class ChatTextBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (markdown)
+        // Many clients send everything as Markdown (`text`); a message
+        // without any of its syntax skips the far costlier renderer.
+        if (markdown && hasMarkdownSyntax(text))
           MarkdownText(
             text,
             fontSize: ink.fontSize,

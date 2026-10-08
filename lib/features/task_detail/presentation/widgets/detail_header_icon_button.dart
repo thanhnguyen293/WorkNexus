@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -83,7 +84,7 @@ class _DetailHeaderCopyLinkButtonState
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
     return DetailHeaderIconButton(
-      icon: _copied ? Icons.check : Icons.link,
+      icon: _copied ? PhosphorIconsLight.check : PhosphorIconsLight.link,
       tooltip: _copied ? l.linkCopied : l.copyLink,
       onTap: _copy,
     );

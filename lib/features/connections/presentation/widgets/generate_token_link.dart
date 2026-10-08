@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -29,7 +30,7 @@ class GenerateTokenLink extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.open_in_new, size: 12, color: c.accent),
+            Icon(PhosphorIconsLight.arrowSquareOut, size: 12, color: c.accent),
             SizedBox(width: context.spacing.xxs),
             Text(
               l.generateToken,

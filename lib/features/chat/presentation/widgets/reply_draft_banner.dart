@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -47,7 +48,7 @@ class ReplyDraftBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.format_quote_rounded, size: s.xl2, color: c.accent),
+          Icon(PhosphorIconsLight.quotes, size: s.xl2, color: c.accent),
           SizedBox(width: s.sm),
           Expanded(
             child: Column(
@@ -85,7 +86,7 @@ class ReplyDraftBanner extends ConsumerWidget {
           IconButton(
             tooltip: l.chatCancelReply,
             onPressed: onCancel,
-            icon: Icon(Icons.close_rounded, color: c.textSecondary),
+            icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
           ),
         ],
       ),

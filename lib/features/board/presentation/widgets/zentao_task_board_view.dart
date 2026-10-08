@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../domain/usecases/build_zentao_task_board.dart';
 import '../../domain/value_objects/zentao_task_column.dart';
 import '../board_providers.dart';
+import 'board_horizontal_scroll.dart';
 import 'ticket_card.dart';
 
 class ZenTaoTaskBoardView extends ConsumerWidget {
@@ -17,20 +18,15 @@ class ZenTaoTaskBoardView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final board = ref.watch(zentaoTaskBoardProvider);
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.all(context.spacing.xl2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final col in board.columns) ...[
-              _TaskColumn(column: col),
-              SizedBox(width: context.spacing.xl),
-            ],
+    return BoardHorizontalScroll(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final col in board.columns) ...[
+            _TaskColumn(column: col),
+            SizedBox(width: context.spacing.xl),
           ],
-        ),
+        ],
       ),
     );
   }

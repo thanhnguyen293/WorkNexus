@@ -9,7 +9,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
-import 'chat_composer.dart';
 import 'chat_side_panel_frame.dart';
 import 'message_bubble.dart';
 
@@ -52,10 +51,14 @@ class ReplyThreadPanel extends ConsumerWidget {
           null;
     }
 
+    // The panel has no composer: a reply is written in the chat's own.
     void reply(ChatMessage message) =>
         ref
                 .read(
-                  chatReplyDraftProvider((chat: chat, inThread: true)).notifier,
+                  chatReplyDraftProvider((
+                    chat: chat,
+                    inThread: false,
+                  )).notifier,
                 )
                 .state =
             message;
@@ -106,11 +109,6 @@ class ReplyThreadPanel extends ConsumerWidget {
                 ],
               ],
             ),
-          ),
-          ChatComposer(
-            thread: chat,
-            threadRootId: rootId,
-            hint: l.chatReplyHint,
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -10,6 +11,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/chat_doodle_palette.dart';
+import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/wallpaper_providers.dart';
 import 'chat_attachments.dart';
@@ -42,12 +44,18 @@ class ChatWallpaperPicker extends ConsumerWidget {
     Offset at,
   ) async {
     final l = AppL10n.of(context);
-    final remove = await showMenu<bool>(
-      context: context,
-      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
-      items: [PopupMenuItem(value: true, child: Text(l.chatWallpaperRemove))],
+    final remove = await showAppContextMenu(
+      context,
+      at: at,
+      entries: [
+        AppMenuEntry(
+          icon: PhosphorIconsLight.trash,
+          label: l.chatWallpaperRemove,
+          destructive: true,
+        ),
+      ],
     );
-    if (remove != true) return;
+    if (remove == null) return;
     final result = await ref.read(wallpaperControllerProvider).remove(path);
     if (result case Err(:final failure)) {
       if (context.mounted) showChatFailure(context, failure);
@@ -84,7 +92,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
             _Tile(
               label: l.chatWallpaperDefault,
               selected: !chatWallpaperIsPicture(current),
-              onTap: () => settings.setChatWallpaper(''),
+              onTap: () => settings.setChatWallpaper(kChatWallpaperPlain),
               child: ColoredBox(color: c.background),
             ),
             _Tile(
@@ -99,7 +107,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
             ),
             for (final path in images)
               GestureDetector(
-                onSecondaryTapUp: (d) =>
+                onSecondaryTapDown: (d) =>
                     _remove(context, ref, path, d.globalPosition),
                 child: _Tile(
                   selected: current == path,
@@ -109,7 +117,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
                     fit: BoxFit.cover,
                     cacheWidth: (s.xl6 * 4).round(),
                     errorBuilder: (_, _, _) => Icon(
-                      Icons.broken_image_outlined,
+                      PhosphorIconsLight.imageBroken,
                       color: c.textTertiary,
                     ),
                   ),
@@ -122,7 +130,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
               child: ColoredBox(
                 color: c.surfaceSubtle,
                 child: Icon(
-                  Icons.add_photo_alternate_outlined,
+                  PhosphorIconsLight.imageSquare,
                   color: c.textSecondary,
                 ),
               ),

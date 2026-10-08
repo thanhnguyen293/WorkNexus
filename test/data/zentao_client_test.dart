@@ -524,4 +524,59 @@ void main() {
     expect(comments.single.authorName, 'Thanh');
     expect(comments.single.body, contains('`auth.dart`'));
   });
+
+  group('detectBaseUrl', () {
+    ResponseBody html404() => ResponseBody.fromString(
+      '<h1>Not Found</h1>',
+      404,
+      headers: {
+        Headers.contentTypeHeader: ['text/html'],
+      },
+    );
+    ResponseBody badLogin() => ResponseBody.fromString(
+      jsonEncode({'error': 'bad login'}),
+      400,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+
+    test('appends /zentao when the host root has no API', () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path == '/zentao/api.php/v1/tokens') {
+          final body = opts.data;
+          if (body is Map && body.isEmpty) return badLogin();
+          return _json({'token': 'tok'});
+        }
+        return html404();
+      });
+      final client = _client(fake);
+
+      expect(await client.detectBaseUrl(), 'https://zentao.example.com/zentao');
+      expect(client.baseUrl, 'https://zentao.example.com/zentao');
+
+      await client.authenticate();
+      expect(fake.requests.last.uri.path, '/zentao/api.php/v1/tokens');
+    });
+
+    test('keeps the entered URL when it already serves the API', () async {
+      final fake = _FakeAdapter((_) => badLogin());
+      final client = _client(fake);
+
+      expect(await client.detectBaseUrl(), 'https://zentao.example.com');
+      expect(fake.requests, hasLength(1));
+    });
+
+    test('keeps the entered URL when no candidate serves the API', () async {
+      final client = _client(_FakeAdapter((_) => html404()));
+
+      expect(await client.detectBaseUrl(), 'https://zentao.example.com');
+    });
+
+    test('does not double the /zentao suffix', () {
+      expect(ZenTaoClient.candidateBaseUrls('host.example.com/zentao/'), [
+        'https://host.example.com/zentao',
+      ]);
+    });
+  });
 }

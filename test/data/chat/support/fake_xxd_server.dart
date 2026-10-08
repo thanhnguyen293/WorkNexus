@@ -31,6 +31,7 @@ class FakeXxdHttp extends XxdHttpDatasource {
     Uri uri, {
     String? pinnedFingerprint,
     void Function(int received, int? total)? onProgress,
+    Future<void>? cancel,
   }) async {
     downloads.add(uri);
     return Ok(downloadBytes);

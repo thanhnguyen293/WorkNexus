@@ -27,6 +27,9 @@ final settingsOpenProvider = StateProvider<bool>((ref) => false);
 /// both are open). The app opens on chat.
 final chatOpenProvider = StateProvider<bool>((ref) => true);
 
+/// Whether the Quick Settings panel is docked open at the window's right.
+final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
+
 /// Shows the board: closes the settings and chat views. Call from anything
 /// that selects a board (sidebar rows).
 void showBoardView(WidgetRef ref) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -39,7 +40,7 @@ class _ZenTaoActionsState extends ConsumerState<ZenTaoActions> {
       child: Row(
         children: [
           DetailActionButton(
-            icon: Icons.person_add_alt_1_outlined,
+            icon: PhosphorIconsLight.userPlus,
             label: l.assign,
             onTap: _busy
                 ? null
@@ -51,7 +52,7 @@ class _ZenTaoActionsState extends ConsumerState<ZenTaoActions> {
           if (isBug && !canReopen) ...[
             SizedBox(width: context.spacing.md),
             DetailActionButton(
-              icon: Icons.check_circle_outline,
+              icon: PhosphorIconsLight.checkCircle,
               label: l.resolve,
               onTap: _busy
                   ? null
@@ -64,7 +65,7 @@ class _ZenTaoActionsState extends ConsumerState<ZenTaoActions> {
           if (canReopen) ...[
             SizedBox(width: context.spacing.md),
             DetailActionButton(
-              icon: Icons.restart_alt,
+              icon: PhosphorIconsLight.arrowCounterClockwise,
               label: l.activate,
               onTap: _busy
                   ? null

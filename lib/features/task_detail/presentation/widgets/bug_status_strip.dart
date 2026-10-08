@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -33,21 +34,21 @@ class BugStatusStrip extends StatelessWidget {
       if (bug.confirmed == 1)
         TintedPill(
           color: c.success,
-          icon: Icons.check_circle_outline,
+          icon: PhosphorIconsLight.checkCircle,
           label: l.confirmed,
           pill: true,
         ),
       if ((bug.activatedCount ?? 0) > 0)
         TintedPill(
           color: c.warning,
-          icon: Icons.refresh,
+          icon: PhosphorIconsLight.arrowClockwise,
           label: l.reopenedTimes(bug.activatedCount!),
           pill: true,
         ),
       if (zentaoResolutionLabel(bug.resolution) != null)
         TintedPill(
           color: c.info,
-          icon: Icons.task_alt,
+          icon: PhosphorIconsLight.checkCircle,
           label: zentaoResolutionLabel(bug.resolution)!,
           pill: true,
         ),
@@ -61,10 +62,10 @@ class BugStatusStrip extends StatelessWidget {
   }
 
   IconData _statusIcon(String raw) => switch (raw.toLowerCase()) {
-    'active' => Icons.error_outline,
-    'resolved' => Icons.task_alt,
-    'closed' => Icons.check_circle_outline,
-    _ => Icons.circle_outlined,
+    'active' => PhosphorIconsLight.warningCircle,
+    'resolved' => PhosphorIconsLight.checkCircle,
+    'closed' => PhosphorIconsLight.checkCircle,
+    _ => PhosphorIconsLight.circle,
   };
 
   String _capitalize(String s) =>

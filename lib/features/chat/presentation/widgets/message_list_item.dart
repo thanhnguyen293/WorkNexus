@@ -1,6 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -57,6 +62,7 @@ class MessageListItem extends ConsumerWidget {
     required this.users,
     required this.summaries,
     required this.showSenders,
+    this.anchor,
   });
 
   final ChatThreadKey thread;
@@ -67,28 +73,36 @@ class MessageListItem extends ConsumerWidget {
   final Map<int, ThreadSummary> summaries;
   final bool showSenders;
 
+  /// Set on the row a jump is scrolling to, so it can be found once built.
+  final GlobalKey? anchor;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final item = items[index];
-    if (item is DateTime) {
-      return ChatSeparator(style: style, label: chatDayLabel(context, item));
-    }
-    if (item is ChatTimeMarker) {
-      return ChatSeparator(
-        style: style,
-        label: DateFormat('HH:mm').format(item.at),
+    final side = EdgeInsets.symmetric(horizontal: context.spacing.xl5);
+    if (item is DateTime || item is ChatTimeMarker) {
+      return Padding(
+        padding: side,
+        child: ChatSeparator(
+          style: style,
+          label: item is DateTime
+              ? chatDayLabel(context, item)
+              : DateFormat('HH:mm').format((item as ChatTimeMarker).at),
+        ),
       );
     }
     final message = item as ChatMessage;
     final older = index + 1 < items.length ? items[index + 1] : null;
     final newer = index > 0 ? items[index - 1] : null;
     final t = thread;
-    return MessageBubble(
+    final firstOfRun = !_sameRun(older, message);
+    final lastOfRun = !_sameRun(newer, message);
+    final bubble = MessageBubble(
       chat: t,
       message: message,
       users: users,
-      firstOfRun: !_sameRun(older, message),
-      lastOfRun: !_sameRun(newer, message),
+      firstOfRun: firstOfRun,
+      lastOfRun: lastOfRun,
       showSender: showSenders,
       thread: summaries[message.serverId],
       onOpenThread: (id) => openReplyThread(ref, t, id),
@@ -99,6 +113,70 @@ class MessageListItem extends ConsumerWidget {
                   )
                   .state =
               m,
+    );
+    return KeyedSubtree(
+      key: anchor,
+      child: _Highlight(
+        thread: t,
+        serverId: message.serverId,
+        // The bubble's own space above it, and the next one's below it.
+        gapAbove: firstOfRun ? style.groupGap : style.runGap,
+        gapBelow: lastOfRun ? style.groupGap : style.runGap,
+        child: Padding(padding: side, child: bubble),
+      ),
+    );
+  }
+}
+
+/// Stronger than the selection fill: it has to catch the eye after a jump.
+const double _kHighlightAlpha = 0.3;
+
+/// Tints the full-width row of the message just jumped to, fading out again.
+class _Highlight extends ConsumerWidget {
+  const _Highlight({
+    required this.thread,
+    required this.serverId,
+    required this.gapAbove,
+    required this.gapBelow,
+    required this.child,
+  });
+
+  final ChatThreadKey thread;
+  final int? serverId;
+  final double gapAbove;
+  final double gapBelow;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(
+      chatHighlightedMessageProvider(
+        thread,
+      ).select((id) => id != null && id == serverId),
+    );
+    // The same margin above and below the message: the tint starts inside
+    // the gap above it and runs as far into the next row's gap below it —
+    // never onto a neighbouring bubble.
+    final margin = [gapAbove, gapBelow, context.spacing.md].reduce(math.min);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: gapAbove - margin,
+          bottom: -margin,
+          child: IgnorePointer(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              color: on
+                  ? context.colors.accent.withValues(alpha: _kHighlightAlpha)
+                  : Colors.transparent,
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -9,6 +10,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
+import 'cancel_download_button.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_video_tile.dart';
@@ -43,6 +45,7 @@ class _FileBodyState extends ConsumerState<FileBody> {
     ref,
     accountId: widget.accountId,
     file: widget.file,
+    chatGid: widget.message.chatGid,
   );
 
   @override
@@ -68,6 +71,13 @@ class _FileBodyState extends ConsumerState<FileBody> {
       opening: downloading,
       needsDownload: cached == false && !downloading,
       onTap: _sent && !downloading ? _open : null,
+      onCancel: downloading
+          ? () => cancelAttachmentDownload(
+              ref,
+              accountId: widget.accountId,
+              content: widget.file,
+            )
+          : null,
       progress: uploading
           ? ref.watch(chatUploadProgressProvider(widget.message.gid)).value ?? 0
           : downloading
@@ -85,6 +95,7 @@ class _FileTile extends StatelessWidget {
     required this.onTap,
     this.needsDownload = false,
     this.progress,
+    this.onCancel,
   });
 
   final FileContent file;
@@ -94,6 +105,9 @@ class _FileTile extends StatelessWidget {
   final bool needsDownload;
   final VoidCallback? onTap;
   final double? progress;
+
+  /// Set while it downloads: shows a button that stops the download.
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +167,12 @@ class _FileTile extends StatelessWidget {
                         children: [
                           if (needsDownload)
                             Icon(
-                              Icons.download_rounded,
+                              PhosphorIconsLight.downloadSimple,
                               size: s.xl2,
                               color: ChatBubbleTheme.of(context).meta,
                             ),
                           Text(
-                            formatFileSize(file.size),
+                            formatTransfer(file.size, progress),
                             style: context.typography.caption.copyWith(
                               color: ChatBubbleTheme.of(context).meta,
                             ),
@@ -168,6 +182,11 @@ class _FileTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (onCancel case final cancel?)
+                  CancelDownloadButton(
+                    onPressed: cancel,
+                    color: ChatBubbleTheme.of(context).meta,
+                  ),
               ],
             ),
             if (progress case final value?) ...[

@@ -13,7 +13,7 @@ import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 
 /// The message a reply answers, quoted above the reply. Fetches it from the
-/// server when it is older than what is loaded. Tap opens the thread.
+/// server when it is older than what is loaded. Tap jumps to it in the chat.
 class ReplyQuote extends ConsumerStatefulWidget {
   const ReplyQuote({
     super.key,

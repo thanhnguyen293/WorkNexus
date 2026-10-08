@@ -76,12 +76,21 @@ final selectedChatAccountIdProvider = Provider<String?>((ref) {
 /// entry so unread counts are live before the chat view is opened.
 final chatAutoConnectProvider = Provider<void>((ref) {
   final controller = ref.watch(chatControllerProvider);
-  // Also applies the attachment cache limit from settings (here because
-  // this runs at launch, before the chat view is opened).
+  // Also applies the attachment cache and video auto-download limits from
+  // settings (here because this runs at launch, before the chat view is
+  // opened).
   controller.setCacheLimit(
     ref.watch(appSettingsProvider.select((s) => s.chatCacheLimitMb)) *
         1024 *
         1024,
+  );
+  final (autoVideos, autoVideoMb) = ref.watch(
+    appSettingsProvider.select(
+      (s) => (s.chatAutoDownloadVideos, s.chatAutoDownloadVideoMb),
+    ),
+  );
+  controller.setVideoAutoDownloadLimit(
+    autoVideos ? autoVideoMb * 1024 * 1024 : 0,
   );
   for (final account in ref.watch(chatAccountsProvider)) {
     controller.connect(account.id);
@@ -207,6 +216,16 @@ final chatMessageByIdProvider = StreamProvider.autoDispose
 final openReplyThreadProvider = StateProvider.family<int?, ChatThreadKey>(
   (ref, key) => null,
 );
+
+/// A message (server id) the chat's list should scroll to — set by tapping a
+/// reply's quote.
+final chatJumpRequestProvider = StateProvider.family<int?, ChatThreadKey>(
+  (ref, key) => null,
+);
+
+/// The message (server id) briefly highlighted after a jump to it.
+final chatHighlightedMessageProvider =
+    StateProvider.family<int?, ChatThreadKey>((ref, key) => null);
 
 /// Panels that can open beside a chat instead of a reply thread.
 enum ChatSidePanel { info, pinned, files }

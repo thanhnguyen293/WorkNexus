@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
@@ -50,7 +51,9 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  expanded ? Icons.expand_more : Icons.chevron_right,
+                  expanded
+                      ? PhosphorIconsLight.caretDown
+                      : PhosphorIconsLight.caretRight,
                   size: 14,
                   color: c.textTertiary,
                 ),
@@ -138,12 +141,18 @@ class _ProjectNode extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  expanded ? Icons.expand_more : Icons.chevron_right,
+                  expanded
+                      ? PhosphorIconsLight.caretDown
+                      : PhosphorIconsLight.caretRight,
                   size: 14,
                   color: c.textTertiary,
                 ),
                 SizedBox(width: context.spacing.xs),
-                Icon(Icons.folder_outlined, size: 13, color: c.textTertiary),
+                Icon(
+                  PhosphorIconsLight.folder,
+                  size: 13,
+                  color: c.textTertiary,
+                ),
                 SizedBox(width: context.spacing.sm),
                 Expanded(
                   child: Text(

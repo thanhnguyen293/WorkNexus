@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_borders.dart';
@@ -33,16 +34,16 @@ class AppNavRail extends ConsumerWidget {
         children: [
           const ChatRailButton(),
           AppRailButton(
-            icon: Icons.view_kanban_outlined,
-            selectedIcon: Icons.view_kanban_rounded,
+            icon: PhosphorIconsLight.kanban,
+            selectedIcon: PhosphorIconsFill.kanban,
             label: l.board,
             selected: !chat && !integrations,
             onTap: () => showBoardView(ref),
           ),
           const Spacer(),
           AppRailButton(
-            icon: Icons.settings_outlined,
-            selectedIcon: Icons.settings_rounded,
+            icon: PhosphorIconsLight.gear,
+            selectedIcon: PhosphorIconsLight.gear,
             label: l.integrations,
             selected: integrations,
             onTap: () =>

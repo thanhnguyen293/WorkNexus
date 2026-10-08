@@ -5,15 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
+import 'chat_image_stage.dart';
 import 'chat_image_viewer_bar.dart';
-import 'chat_media_viewer_bar.dart';
+import 'chat_media_strip.dart';
+import 'chat_media_viewer_frame.dart';
 import 'chat_snack.dart';
+import 'chat_video_dialog.dart';
 import 'save_sticker_action.dart';
 
 /// Zoom steps of the viewer's buttons and keys.
@@ -21,7 +22,7 @@ const double _kMinScale = 0.25;
 const double _kMaxScale = 8;
 const double _kZoomStep = 1.25;
 
-/// Full-screen image viewer: zoom (wheel, pinch, buttons, double-click),
+/// The image viewer, centred over the chat: zoom (wheel, pinch, buttons, double-click),
 /// pan, rotate, previous/next through the chat's images, copy, save and
 /// open in the default app. Keys: ←/→, +/−, 0 (fit), R (rotate), Esc.
 class ChatImageViewer extends ConsumerStatefulWidget {
@@ -30,24 +31,33 @@ class ChatImageViewer extends ConsumerStatefulWidget {
     required this.accountId,
     required this.images,
     required this.initialIndex,
+    this.chatGid,
   });
 
   final String accountId;
   final List<ImageContent> images;
   final int initialIndex;
 
+  /// The chat the images are from: its photos and videos then show in a
+  /// strip along the bottom, and previous/next go through all its photos.
+  final String? chatGid;
+
   static Future<void> show(
     BuildContext context, {
     required String accountId,
     required List<ImageContent> images,
     required int initialIndex,
+    String? chatGid,
   }) => showDialog<void>(
     context: context,
-    barrierColor: context.colors.scrim.withValues(alpha: 0.9),
+    barrierColor: context.colors.scrim.withValues(
+      alpha: kChatViewerBarrierAlpha,
+    ),
     builder: (_) => ChatImageViewer(
       accountId: accountId,
       images: images,
       initialIndex: initialIndex,
+      chatGid: chatGid,
     ),
   );
 
@@ -57,13 +67,14 @@ class ChatImageViewer extends ConsumerStatefulWidget {
 
 class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
   final _transform = TransformationController();
-  late int _index = widget.initialIndex;
+  late ImageContent _image = widget.images[widget.initialIndex];
   int _turns = 0;
+
+  /// The images previous/next go through: the chat's, once known.
+  List<ImageContent> _images = const [];
 
   /// Size of the image area (below the bar), for zooming about its centre.
   Size _viewport = Size.zero;
-
-  ImageContent get _image => widget.images[_index];
 
   @override
   void dispose() {
@@ -72,13 +83,28 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
   }
 
   void _go(int delta) {
-    final next = _index + delta;
-    if (next < 0 || next >= widget.images.length) return;
-    setState(() {
-      _index = next;
-      _turns = 0;
-      _transform.value = Matrix4.identity();
-    });
+    final next = indexOfChatMedia(_images, _image) + delta;
+    if (next >= 0 && next < _images.length) _show(_images[next]);
+  }
+
+  void _show(ImageContent image) => setState(() {
+    _image = image;
+    _turns = 0;
+    _transform.value = Matrix4.identity();
+  });
+
+  /// A strip pick: another photo shows here; a video opens the player in
+  /// this viewer's place.
+  void _pick(MessageContent media) {
+    if (media case final ImageContent image) return _show(image);
+    if (media is! FileContent) return;
+    final navigator = Navigator.of(context)..pop();
+    ChatVideoDialog.show(
+      navigator.context,
+      accountId: widget.accountId,
+      video: media,
+      chatGid: widget.chatGid,
+    );
   }
 
   void _zoom(double factor) {
@@ -149,9 +175,6 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    final l = AppL10n.of(context);
     final key = (
       accountId: widget.accountId,
       content: _image as MessageContent,
@@ -176,8 +199,18 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
     };
     final loading = full == null;
     final failed = full is Err;
-    final hasPrev = _index > 0;
-    final hasNext = _index < widget.images.length - 1;
+    final chatGid = widget.chatGid;
+    final thread = chatGid == null
+        ? null
+        : (accountId: widget.accountId, chatGid: chatGid);
+    final chatImages = thread == null
+        ? const <ImageContent>[]
+        : chatMediaOf(ref, thread).whereType<ImageContent>().toList();
+    final inChat = indexOfChatMedia(chatImages, _image);
+    _images = inChat >= 0 ? chatImages : widget.images;
+    final index = inChat >= 0 ? inChat : _images.indexOf(_image);
+    final hasPrev = index > 0;
+    final hasNext = index >= 0 && index < _images.length - 1;
 
     return CallbackShortcuts(
       bindings: {
@@ -193,13 +226,12 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
       },
       child: Focus(
         autofocus: true,
-        child: Dialog.fullscreen(
-          backgroundColor: Colors.transparent,
+        child: ChatMediaViewerFrame(
           child: Column(
             children: [
               ChatImageViewerBar(
                 image: _image,
-                position: '${_index + 1} / ${widget.images.length}',
+                position: '${index + 1} / ${_images.length}',
                 transform: _transform,
                 onZoomIn: () => _zoom(_kZoomStep),
                 onZoomOut: () => _zoom(1 / _kZoomStep),
@@ -217,73 +249,27 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     _viewport = constraints.biggest;
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: GestureDetector(
-                            onDoubleTap: () =>
-                                _transform.value.getMaxScaleOnAxis() > 1.01
-                                ? _fit()
-                                : _zoom(2),
-                            child: InteractiveViewer(
-                              transformationController: _transform,
-                              minScale: _kMinScale,
-                              maxScale: _kMaxScale,
-                              boundaryMargin: EdgeInsets.all(s.xl6 * 10),
-                              // Fitted, the image stays clear of the side
-                              // arrows; zoomed, it may use the whole area.
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: widget.images.length > 1
-                                      ? s.xl6 * 2
-                                      : s.xl3,
-                                  vertical: s.xl3,
-                                ),
-                                child: Center(
-                                  child: bytes == null
-                                      ? const SizedBox.shrink()
-                                      : RotatedBox(
-                                          quarterTurns: _turns,
-                                          child: Image.memory(
-                                            bytes,
-                                            gaplessPlayback: true,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (loading || failed)
-                          Center(
-                            child: failed
-                                ? Text(
-                                    l.chatAttachmentFailed,
-                                    style: context.typography.body.copyWith(
-                                      color: c.onScrim,
-                                    ),
-                                  )
-                                : CircularProgressIndicator(color: c.onScrim),
-                          ),
-                        if (hasPrev)
-                          ChatViewerSideArrow(
-                            alignment: Alignment.centerLeft,
-                            icon: Icons.chevron_left_rounded,
-                            tooltip: l.chatPrevious,
-                            onPressed: () => _go(-1),
-                          ),
-                        if (hasNext)
-                          ChatViewerSideArrow(
-                            alignment: Alignment.centerRight,
-                            icon: Icons.chevron_right_rounded,
-                            tooltip: l.chatNext,
-                            onPressed: () => _go(1),
-                          ),
-                      ],
+                    return ChatImageStage(
+                      transform: _transform,
+                      bytes: bytes,
+                      turns: _turns,
+                      minScale: _kMinScale,
+                      maxScale: _kMaxScale,
+                      roomForArrows: _images.length > 1,
+                      loading: loading,
+                      failed: failed,
+                      onDoubleTap: () =>
+                          _transform.value.getMaxScaleOnAxis() > 1.01
+                          ? _fit()
+                          : _zoom(2),
+                      onPrevious: hasPrev ? () => _go(-1) : null,
+                      onNext: hasNext ? () => _go(1) : null,
                     );
                   },
                 ),
               ),
+              if (thread != null)
+                ChatMediaStrip(thread: thread, current: _image, onPick: _pick),
             ],
           ),
         ),

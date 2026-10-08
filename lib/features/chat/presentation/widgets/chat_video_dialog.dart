@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/error/result.dart';
@@ -15,12 +16,15 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
+import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
+import 'chat_media_strip.dart';
 import 'chat_media_viewer_bar.dart';
+import 'chat_media_viewer_frame.dart';
 import 'chat_snack.dart';
 import 'chat_video_controls.dart';
 
-/// Full-screen player for a video sent in chat, in the image viewer's dark
+/// Player for a video sent in chat, centred over it in the image viewer's dark
 /// style. The file is played from the local cache: the platform player
 /// cannot trust xxd's pinned self-signed certificate. Click toggles play;
 /// keys: Space, ←/→ (±10 s), ↑/↓ (volume), M (mute), F (full screen), Esc.
@@ -29,19 +33,28 @@ class ChatVideoDialog extends ConsumerStatefulWidget {
     super.key,
     required this.accountId,
     required this.video,
+    this.chatGid,
   });
 
   final String accountId;
   final FileContent video;
 
+  /// The chat the video is from: its photos and videos then show in a strip
+  /// along the bottom to switch to.
+  final String? chatGid;
+
   static Future<void> show(
     BuildContext context, {
     required String accountId,
     required FileContent video,
+    String? chatGid,
   }) => showDialog<void>(
     context: context,
-    barrierColor: context.colors.scrim.withValues(alpha: 0.9),
-    builder: (_) => ChatVideoDialog(accountId: accountId, video: video),
+    barrierColor: context.colors.scrim.withValues(
+      alpha: kChatViewerBarrierAlpha,
+    ),
+    builder: (_) =>
+        ChatVideoDialog(accountId: accountId, video: video, chatGid: chatGid),
   );
 
   @override
@@ -53,6 +66,39 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   VideoPlayerController? _player;
   String? _path;
   String? _error;
+
+  /// The window went full screen for the video: the viewer fills it.
+  bool _fullScreen = false;
+
+  Future<void> _toggleFullScreen() async {
+    setState(() => _fullScreen = !_fullScreen);
+    await _window.toggleFullScreen();
+  }
+
+  /// A strip pick: the photo or video opens in this viewer's place.
+  void _pick(MessageContent media) {
+    if (indexOfChatMedia([widget.video], media) >= 0) return;
+    final navigator = Navigator.of(context)..pop();
+    switch (media) {
+      case final ImageContent image:
+        ChatImageViewer.show(
+          navigator.context,
+          accountId: widget.accountId,
+          images: [image],
+          initialIndex: 0,
+          chatGid: widget.chatGid,
+        );
+      case final FileContent video:
+        ChatVideoDialog.show(
+          navigator.context,
+          accountId: widget.accountId,
+          video: video,
+          chatGid: widget.chatGid,
+        );
+      default:
+        break;
+    }
+  }
 
   @override
   void initState() {
@@ -143,13 +189,12 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
             _volume(-0.1),
         const SingleActivator(LogicalKeyboardKey.keyM): () =>
             player?.setVolume(player.value.volume == 0 ? 1 : 0),
-        const SingleActivator(LogicalKeyboardKey.keyF):
-            _window.toggleFullScreen,
+        const SingleActivator(LogicalKeyboardKey.keyF): _toggleFullScreen,
       },
       child: Focus(
         autofocus: true,
-        child: Dialog.fullscreen(
-          backgroundColor: Colors.transparent,
+        child: ChatMediaViewerFrame(
+          expanded: _fullScreen,
           child: Column(
             children: [
               ChatMediaViewerBar(
@@ -163,12 +208,12 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                 onClose: () => Navigator.of(context).pop(),
                 actions: [
                   ChatViewerButton(
-                    icon: Icons.download_rounded,
+                    icon: PhosphorIconsLight.downloadSimple,
                     tooltip: l.chatSaveAs,
                     onPressed: path == null ? null : _save,
                   ),
                   ChatViewerButton(
-                    icon: Icons.open_in_new_rounded,
+                    icon: PhosphorIconsLight.arrowSquareOut,
                     tooltip: l.chatOpenWith,
                     onPressed: path == null ? null : () => openExternally(path),
                   ),
@@ -188,7 +233,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                       (null, _) => CircularProgressIndicator(color: c.onScrim),
                       (final VideoPlayerController p, _) => GestureDetector(
                         onTap: _togglePlay,
-                        onDoubleTap: _window.toggleFullScreen,
+                        onDoubleTap: _toggleFullScreen,
                         child: AspectRatio(
                           aspectRatio: p.value.aspectRatio,
                           child: VideoPlayer(p),
@@ -201,7 +246,13 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
               if (player != null)
                 ChatVideoControls(
                   player: player,
-                  onToggleFullScreen: _window.toggleFullScreen,
+                  onToggleFullScreen: _toggleFullScreen,
+                ),
+              if (widget.chatGid case final gid?)
+                ChatMediaStrip(
+                  thread: (accountId: widget.accountId, chatGid: gid),
+                  current: widget.video,
+                  onPick: _pick,
                 ),
             ],
           ),

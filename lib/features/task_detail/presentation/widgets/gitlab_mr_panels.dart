@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -59,7 +60,9 @@ class GitLabMrMergePanel extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Icon(
-                  needsRebase ? Icons.do_not_disturb_on_outlined : Icons.info,
+                  needsRebase
+                      ? PhosphorIconsLight.minusCircle
+                      : PhosphorIconsFill.info,
                   size: context.spacing.xl4,
                   color: needsRebase ? c.error : c.info,
                 ),

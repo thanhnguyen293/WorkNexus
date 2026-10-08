@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
@@ -51,7 +52,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
         runSpacing: context.spacing.md,
         children: [
           DetailActionButton(
-            icon: Icons.person_add_alt_1_outlined,
+            icon: PhosphorIconsLight.userPlus,
             label: l.assign,
             onTap: _busy
                 ? null
@@ -62,7 +63,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
           ),
           if (isPr && active)
             DetailActionButton(
-              icon: Icons.rate_review_outlined,
+              icon: PhosphorIconsLight.notePencil,
               label: l.reviewers,
               onTap: _busy
                   ? null
@@ -73,7 +74,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
             ),
           if (needsUpdate)
             DetailActionButton(
-              icon: Icons.sync,
+              icon: PhosphorIconsLight.arrowsClockwise,
               label: l.updateBranch,
               onTap: _busy
                   ? null
@@ -84,7 +85,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
             ),
           if (isPr && active)
             DetailActionButton(
-              icon: Icons.merge_type,
+              icon: PhosphorIconsLight.gitMerge,
               label: l.githubMerge,
               onTap: _busy
                   ? null
@@ -95,7 +96,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
             ),
           if (active)
             DetailActionButton(
-              icon: Icons.check_circle_outline,
+              icon: PhosphorIconsLight.checkCircle,
               label: l.close,
               onTap: _busy
                   ? null
@@ -106,7 +107,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
             ),
           if (isClosed)
             DetailActionButton(
-              icon: Icons.refresh,
+              icon: PhosphorIconsLight.arrowClockwise,
               label: l.githubReopen,
               onTap: _busy
                   ? null

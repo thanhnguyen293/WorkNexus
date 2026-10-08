@@ -23,6 +23,8 @@ dependencies:
 
   # UI / icons / fonts
   cupertino_icons: 1.0.9
+  # Thin line icons (MIT) for the chat's doodle background pattern.
+  phosphor_flutter: 2.1.0
   # Renders the bundled monochrome provider brand logos (assets/brands/*.svg),
   # tinted at draw time. Pure-Dart (vector_graphics) — no native-assets build
   # hook, so it does not affect build_runner.

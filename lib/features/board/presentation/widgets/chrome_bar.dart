@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -47,7 +48,8 @@ class ChromeBar extends ConsumerWidget {
         spacing: context.spacing.lg,
         children: [
           ?tabs,
-          const _SearchBox(),
+          // Gives way first on a narrow window, down to its minimum.
+          const Flexible(flex: 2, child: _SearchBox()),
           if (hasFilters)
             _FiltersButton(
               count: filter.activeTokenCount,
@@ -88,7 +90,11 @@ class _RefreshButton extends ConsumerWidget {
           ),
           child: busy
               ? const SidebarSyncIndicator()
-              : Icon(Icons.refresh, size: 16, color: c.textSecondary),
+              : Icon(
+                  PhosphorIconsLight.arrowClockwise,
+                  size: 16,
+                  color: c.textSecondary,
+                ),
         ),
       ),
     );
@@ -132,45 +138,51 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
     ref.listen(filterStateProvider.select((f) => f.search), (_, next) {
       if (next != controller.text) controller.text = next;
     });
-    return SizedBox(
-      width: 220,
-      height: 31,
-      child: TextField(
-        controller: controller,
-        onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
-        style: context.typography.secondary.copyWith(color: c.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: c.surface,
-          hintText: l.search,
-          hintStyle: context.typography.secondary.copyWith(
-            color: c.textTertiary,
-          ),
-          prefixIcon: Icon(Icons.search, size: 15, color: c.textTertiary),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 30,
-            minHeight: 30,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            vertical: context.spacing.sm,
-            horizontal: context.spacing.xs,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: context.borders.showOutline
-                ? BorderSide(color: c.border)
-                : BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: context.borders.showOutline
-                ? BorderSide(color: c.border)
-                : BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: BorderSide(color: c.accent),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+      child: SizedBox(
+        height: 31,
+        child: TextField(
+          controller: controller,
+          onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
+          style: context.typography.secondary.copyWith(color: c.textPrimary),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: c.surface,
+            hintText: l.search,
+            hintStyle: context.typography.secondary.copyWith(
+              color: c.textTertiary,
+            ),
+            prefixIcon: Icon(
+              PhosphorIconsLight.magnifyingGlass,
+              size: 15,
+              color: c.textTertiary,
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 30,
+              minHeight: 30,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              vertical: context.spacing.sm,
+              horizontal: context.spacing.xs,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(context.radii.md),
+              borderSide: context.borders.showOutline
+                  ? BorderSide(color: c.border)
+                  : BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(context.radii.md),
+              borderSide: context.borders.showOutline
+                  ? BorderSide(color: c.border)
+                  : BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(context.radii.md),
+              borderSide: BorderSide(color: c.accent),
+            ),
           ),
         ),
       ),

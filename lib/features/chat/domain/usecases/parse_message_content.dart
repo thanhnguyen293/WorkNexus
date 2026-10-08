@@ -113,6 +113,14 @@ class ParseMessageContent {
                 time: time,
                 mimeType: mime,
               );
+      case 'emotion':
+        // Newer official clients send a large emoji as its own content type,
+        // with the same `{type: emoji, content: :smile:}` payload (or, from
+        // some builds, just the shortname).
+        final inline = _object(content)?['content'] ?? content.trim();
+        if (inline is String && inline.isNotEmpty) {
+          return MessageContent.emoji(_decodeEmoji(inline));
+        }
       case 'notification':
         if (_object(content) case final json?) return _notification(json);
       case 'object':

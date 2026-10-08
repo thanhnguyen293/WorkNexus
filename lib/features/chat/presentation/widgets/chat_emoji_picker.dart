@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -68,7 +69,7 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
           ),
         ),
         icon: Icon(
-          Icons.emoji_emotions_outlined,
+          PhosphorIconsLight.smiley,
           color: menu.isOpen ? c.accent : c.textSecondary,
         ),
       ),

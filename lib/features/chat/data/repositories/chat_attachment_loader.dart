@@ -33,6 +33,17 @@ class ChatAttachmentLoader {
   final _inflight = <String, Future<Result<Uint8List>>>{};
   final _progress = StreamController<({String key, double done})>.broadcast();
 
+  /// Completed to abort the download in flight under the same key.
+  final _cancels = <String, Completer<void>>{};
+
+  /// Stops downloading [content]'s original file, if it is downloading; the
+  /// load then fails with a [CancelledFailure].
+  void cancel(String accountId, MessageContent content) {
+    final key = _keyOf(accountId, content);
+    final cancel = _cancels[key];
+    if (cancel != null && !cancel.isCompleted) cancel.complete();
+  }
+
   /// Download progress (0–1) of [content]'s original file.
   Stream<double> watchProgress(String accountId, MessageContent content) {
     final key = _keyOf(accountId, content);
@@ -119,6 +130,7 @@ class ChatAttachmentLoader {
           // callback would make whenComplete wait on itself forever.
         ).whenComplete(() {
           _inflight.remove(key);
+          _cancels.remove(key);
         });
   }
 
@@ -136,6 +148,7 @@ class ChatAttachmentLoader {
     required int? expected,
   }) async {
     final credentials = session.connection.credentials;
+    final cancel = _cancels[key] = Completer<void>();
     final result = await _http.download(
       _http.fileDownloadUri(
         server: credentials.server,
@@ -148,6 +161,7 @@ class ChatAttachmentLoader {
         thumbnail: thumb,
       ),
       pinnedFingerprint: credentials.pinnedFingerprint,
+      cancel: cancel.future,
       onProgress: (received, total) {
         final all = total ?? expected;
         if (all != null && all > 0) {

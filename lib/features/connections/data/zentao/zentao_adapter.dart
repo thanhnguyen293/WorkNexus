@@ -29,8 +29,9 @@ class ZenTaoAdapter implements ProviderAdapter {
   @override
   Future<Result<ConnectionCheck>> testConnection() async {
     return _guard(() async {
+      final baseUrl = await _client.detectBaseUrl();
       final account = await _client.authenticate();
-      return ConnectionCheck(ok: true, account: account);
+      return ConnectionCheck(ok: true, account: account, baseUrl: baseUrl);
     });
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -12,6 +12,7 @@ import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../providers/chat_providers.dart';
+import 'chat_attachments.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
 import 'chat_labels.dart';
@@ -59,15 +60,21 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
     if (mounted) navigator.pop();
   }
 
-  /// Pictures are changed in ZenTao web: open the profile, signed in.
-  Future<void> _openProfile() async {
-    final uri = await ref
+  bool _uploading = false;
+
+  /// Picks a picture and makes it the user's avatar right here.
+  Future<void> _changePicture() async {
+    final files = await pickChatAttachments(imagesOnly: true);
+    if (files.isEmpty || !mounted) return;
+    setState(() => _uploading = true);
+    final result = await ref
         .read(chatControllerProvider)
-        .zentaoProfileUri(widget.accountId);
+        .setMyAvatar(widget.accountId, files.first.bytes);
     if (!mounted) return;
-    switch (uri) {
-      case Ok(:final value):
-        await openExternally('$value');
+    setState(() => _uploading = false);
+    switch (result) {
+      case Ok():
+        showChatSnack(context, AppL10n.of(context).chatMyAvatarUpdated);
       case Err(:final failure):
         showChatFailure(context, failure);
     }
@@ -96,11 +103,17 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
-                child: ChatAvatar(
-                  name: name,
-                  imageUrl: user?.avatarUrl,
-                  presence: chatPresenceOf(users, widget.userId),
-                  diameter: s.xl6 * 2,
+                child: _EditableAvatar(
+                  editable: widget.userId == self && !_uploading,
+                  tooltip: l.chatChangeMyAvatar,
+                  onTap: _changePicture,
+                  child: ChatAvatar(
+                    name: name,
+                    imageUrl: user?.avatarUrl,
+                    presence: chatPresenceOf(users, widget.userId),
+                    verified: chatVerifiedBadge(context, users, widget.userId),
+                    diameter: s.xl6 * 2,
+                  ),
                 ),
               ),
               SizedBox(height: s.xl),
@@ -129,24 +142,27 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
               if (user?.role case final role?) ...[
                 SizedBox(height: s.md),
                 Center(
-                  child: TintedPill(color: c.accent, label: role),
+                  child: TintedPill(
+                    color: c.accent,
+                    label: chatRoleLabel(context, role),
+                  ),
                 ),
               ],
               if (user?.email case final email?)
                 ChatDetailRow(
-                  icon: Icons.mail_outline,
+                  icon: PhosphorIconsLight.envelopeSimple,
                   label: l.chatEmail,
                   value: email,
                 ),
               if (user?.mobile case final mobile?)
                 ChatDetailRow(
-                  icon: Icons.smartphone,
+                  icon: PhosphorIconsLight.deviceMobile,
                   label: l.chatMobile,
                   value: mobile,
                 ),
               if (user?.phone case final phone?)
                 ChatDetailRow(
-                  icon: Icons.call_outlined,
+                  icon: PhosphorIconsLight.phone,
                   label: l.chatPhone,
                   value: phone,
                 ),
@@ -155,7 +171,8 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 Tooltip(
                   message: l.chatChangeMyAvatarHint,
                   child: AppButton.outlinedNeutral(
-                    onPressed: _openProfile,
+                    isLoading: _uploading,
+                    onPressed: _uploading ? null : _changePicture,
                     child: Text(l.chatChangeMyAvatar),
                   ),
                 ),
@@ -201,4 +218,57 @@ class ChatProfileTap extends StatelessWidget {
       child: child,
     ),
   );
+}
+
+/// Own avatar in the profile: clickable, with a camera badge, to change it.
+class _EditableAvatar extends StatelessWidget {
+  const _EditableAvatar({
+    required this.editable,
+    required this.tooltip,
+    required this.onTap,
+    required this.child,
+  });
+
+  final bool editable;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!editable) return child;
+    final c = context.colors;
+    final s = context.spacing;
+    return Tooltip(
+      message: tooltip,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Stack(
+            children: [
+              child,
+              Positioned(
+                left: 0,
+                bottom: 0,
+                child: Container(
+                  padding: EdgeInsets.all(s.sm),
+                  decoration: BoxDecoration(
+                    color: c.accent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.surface, width: 2),
+                  ),
+                  child: Icon(
+                    PhosphorIconsLight.camera,
+                    size: s.xl3,
+                    color: c.onAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -30,10 +31,10 @@ class ChatNotificationToggle extends ConsumerWidget {
           ref.read(appSettingsProvider.notifier).setChatNotifications(!on),
       icon: Icon(
         blocked
-            ? Icons.notification_important_outlined
+            ? PhosphorIconsLight.bellSimpleRinging
             : on
-            ? Icons.notifications_none_rounded
-            : Icons.notifications_off_outlined,
+            ? PhosphorIconsLight.bell
+            : PhosphorIconsLight.bellSlash,
         color: blocked ? context.colors.warning : context.colors.textSecondary,
       ),
     );

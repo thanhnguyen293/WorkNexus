@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/value_objects/repo_change.dart';
 import '../../../../core/error/result.dart';
@@ -138,7 +139,9 @@ class _FileRowState extends State<_FileRow> {
                   ],
                   if (hasDiff)
                     Icon(
-                      _open ? Icons.expand_less : Icons.expand_more,
+                      _open
+                          ? PhosphorIconsLight.caretUp
+                          : PhosphorIconsLight.caretDown,
                       size: context.spacing.xl3,
                       color: c.textTertiary,
                     ),

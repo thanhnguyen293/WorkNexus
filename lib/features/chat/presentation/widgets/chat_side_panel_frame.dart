@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -68,7 +69,10 @@ class ChatSidePanelFrame extends StatelessWidget {
                   IconButton(
                     tooltip: AppL10n.of(context).chatBackToInfo,
                     onPressed: back,
-                    icon: Icon(Icons.arrow_back, color: c.textSecondary),
+                    icon: Icon(
+                      PhosphorIconsLight.arrowLeft,
+                      color: c.textSecondary,
+                    ),
                   ),
                 Expanded(
                   child: Text(
@@ -84,7 +88,7 @@ class ChatSidePanelFrame extends StatelessWidget {
                   IconButton(
                     tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
                     onPressed: close,
-                    icon: Icon(Icons.close, color: c.textSecondary),
+                    icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
                   ),
               ],
             ),
@@ -107,8 +111,8 @@ class ChatPanelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.spacing;
     return Container(
-      margin: EdgeInsets.only(bottom: s.xl),
-      padding: padding ?? EdgeInsets.all(s.xl3),
+      margin: EdgeInsets.only(bottom: s.md),
+      padding: padding ?? EdgeInsets.all(s.xl),
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(context.radii.lg),

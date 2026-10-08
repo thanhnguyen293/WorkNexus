@@ -33,4 +33,13 @@ void main() {
     );
     expect(content, const MessageContent.emoji('😄'));
   });
+
+  test('the newer "emotion" content type is a large emoji too', () {
+    const parse = ParseMessageContent();
+    expect(
+      parse('emotion', '{"type":"emoji","content":":thumbsup:"}'),
+      const MessageContent.emoji('👍'),
+    );
+    expect(parse('emotion', ':smile:'), const MessageContent.emoji('😄'));
+  });
 }

@@ -5,8 +5,11 @@ import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/quick_settings_side_panel.dart';
 import '../../features/board/presentation/board_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
+import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
@@ -15,7 +18,8 @@ import 'resizable_sidebar.dart';
 import 'title_bar.dart';
 
 /// Top-level window layout: custom title bar, sidebar + main area, and the
-/// right-side task-detail slide-over overlaid on top.
+/// right-side task-detail slide-over and Quick Settings panel overlaid on
+/// top.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
@@ -51,6 +55,12 @@ class AppShell extends ConsumerWidget {
                     ],
                   ),
                   const DetailOverlay(),
+                  const QuickSettingsSidePanel(
+                    sections: [
+                      ChatAppearanceSettings(),
+                      ChatAutoDownloadSettings(),
+                    ],
+                  ),
                   const TalkerDebugOverlay(),
                 ],
               ),

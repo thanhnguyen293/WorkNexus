@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
@@ -8,7 +9,9 @@ import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/resolve_chat_title.dart';
 import '../../domain/value_objects/chat_group_avatar.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_role.dart';
 import '../../domain/value_objects/message_content.dart';
+import 'chat_avatar.dart';
 
 /// `[@Display Name](@#userId)` — how xxd encodes a mention inside text.
 final chatMentionPattern = RegExp(r'\[@([^\]]+)\]\(@#(\d+)\)');
@@ -140,6 +143,13 @@ String formatFileSize(int bytes) {
   return '$bytes B';
 }
 
+/// A file's size, or — while it transfers ([progress] 0–1) — how much of it
+/// has moved: `12.3 MB / 364.2 MB`.
+String formatTransfer(int bytes, double? progress) => progress == null
+    ? formatFileSize(bytes)
+    : '${formatFileSize((bytes * progress.clamp(0, 1)).round())} / '
+          '${formatFileSize(bytes)}';
+
 /// A user's avatar URL, when they have one.
 String? chatAvatarUrl(Map<int, ChatUser> users, int? id) =>
     id == null ? null : users[id]?.avatarUrl;
@@ -238,6 +248,47 @@ Color? chatHexColor(String hex) {
 ChatPresence? chatPresenceOf(Map<int, ChatUser> users, int? id) {
   final status = users[id]?.status;
   return status == null ? null : ChatPresence.fromStatus(status);
+}
+
+/// A ZenTao role's official name; an admin-defined code stays as it is.
+String chatRoleLabel(BuildContext context, String role) {
+  final l = AppL10n.of(context);
+  return switch (ChatRole.fromCode(role)) {
+    ChatRole.dev => l.chatRoleDev,
+    ChatRole.qa => l.chatRoleQa,
+    ChatRole.pm => l.chatRolePm,
+    ChatRole.po => l.chatRolePo,
+    ChatRole.td => l.chatRoleTd,
+    ChatRole.pd => l.chatRolePd,
+    ChatRole.qd => l.chatRoleQd,
+    ChatRole.top => l.chatRoleTop,
+    ChatRole.others => l.chatRoleOthers,
+    null => role,
+  };
+}
+
+/// The "verified" check beside a user's avatar — the colour of their rank
+/// and their role, for the legend shown on hover; null for engineers,
+/// "others" and unknown roles.
+ChatVerifiedBadge? chatVerifiedBadge(
+  BuildContext context,
+  Map<int, ChatUser> users,
+  int? id,
+) {
+  final role = ChatRole.fromCode(users[id]?.role);
+  final rank = role?.rank;
+  if (role == null || rank == null) return null;
+  return (color: chatRankColor(context, rank), role: role);
+}
+
+/// The "verified" check colour of a rank.
+Color chatRankColor(BuildContext context, ChatRoleRank rank) {
+  final c = context.colors;
+  return switch (rank) {
+    ChatRoleRank.lead => c.verifiedLead,
+    ChatRoleRank.manager => c.verifiedManager,
+    ChatRoleRank.executive => c.verifiedExecutive,
+  };
 }
 
 /// "Online", "Away", "Busy" or "Offline".
