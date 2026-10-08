@@ -4,18 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import 'settings_nav.dart';
 import 'workspace_tree_section.dart';
 
-/// The left navigation rail: the workspace → ZenTao → projects tree and the
-/// settings toggle. Fills the width its parent gives it — the drag-to-resize
-/// width is owned by [ResizableSidebar] in the app shell.
+/// The board's side panel: the workspace → ZenTao → projects tree. Fills
+/// the width its parent gives it — the drag-to-resize width is owned by
+/// [ResizableSidebar] in the app shell; app-level destinations (chat,
+/// integrations) live in the shell's icon rail.
 class SidebarView extends ConsumerWidget {
-  const SidebarView({super.key, this.footer = const []});
-
-  /// Extra entries above the settings toggle, supplied by the app shell (e.g.
-  /// chat) so this feature does not depend on others (CLAUDE.md 10.1).
-  final List<Widget> footer;
+  const SidebarView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,8 +34,6 @@ class SidebarView extends ConsumerWidget {
               child: const WorkspaceTreeSection(),
             ),
           ),
-          ...footer,
-          const SettingsNav(),
         ],
       ),
     );
