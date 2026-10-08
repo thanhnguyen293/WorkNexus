@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:drift/drift.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/database.dart';
 import '../../../../core/error/failure.dart';
@@ -15,6 +13,7 @@ import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/message_content.dart';
+import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_local_datasource.dart';
 import '../datasources/video_thumbnailer.dart';
 import '../datasources/xxd/xxd_connection.dart';
@@ -46,6 +45,7 @@ class XxdChatRepository implements ChatRepository {
     required XxdConnectionFactory openConnection,
     required ChatErrorSink onError,
     required XxdHttpDatasource http,
+    ChatFileCache? files,
     VideoThumbnailer thumbnailer = const VideoThumbnailer(),
     ParseMessageContent parse = const ParseMessageContent(),
     DateTime Function() now = DateTime.now,
@@ -57,7 +57,10 @@ class XxdChatRepository implements ChatRepository {
        _ingestor = ChatPacketIngestor(local),
        _resolver = ChatCredentialsResolver(local, credentials),
        _history = ChatHistorySync(local, ChatPacketIngestor(local)),
-       _attachments = ChatAttachmentLoader(http),
+       _attachments = ChatAttachmentLoader(
+         http,
+         files ?? ChatFileCache.appDefault(),
+       ),
        _thumbnailer = thumbnailer;
 
   /// Messages still pending after this long are treated as interrupted.
@@ -323,7 +326,12 @@ class XxdChatRepository implements ChatRepository {
     String accountId,
     MessageContent content, {
     bool thumbnail = false,
-  }) => _attachments.load(_sessions[accountId], content, thumbnail: thumbnail);
+  }) => _attachments.load(
+    accountId,
+    _sessions[accountId],
+    content,
+    thumbnail: thumbnail,
+  );
 
   // ---- send --------------------------------------------------------------------
 
@@ -369,15 +377,7 @@ class XxdChatRepository implements ChatRepository {
   Future<Result<String>> attachmentFile(
     String accountId,
     MessageContent content,
-  ) async {
-    final Directory dir;
-    try {
-      dir = Directory('${(await getTemporaryDirectory()).path}/worknexus_chat');
-    } on Exception catch (e) {
-      return Err(StorageFailure('No temporary directory', cause: e));
-    }
-    return _attachments.localFile(_sessions[accountId], content, dir);
-  }
+  ) => _attachments.localFile(accountId, _sessions[accountId], content);
 
   /// Videos above this are not downloaded just to show a preview frame.
   static const maxThumbnailSource = 50 * 1024 * 1024;
@@ -389,6 +389,12 @@ class XxdChatRepository implements ChatRepository {
   ) async {
     if (video case FileContent(:final size) when size > maxThumbnailSource) {
       return const Err(NotFoundFailure('Video too large to preview'));
+    }
+    // A frame made earlier outlives the video in the cache: no download.
+    final cached = await _attachments.cachedPath(accountId, video);
+    if (cached != null) {
+      final frame = await _thumbnailer.cachedThumbnailOf(cached);
+      if (frame != null) return Ok(frame);
     }
     final path = await attachmentFile(accountId, video);
     switch (path) {
