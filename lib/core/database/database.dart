@@ -171,6 +171,73 @@ class SavedFilters extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Per-account ZenTao chat settings: an optional xxd address override, the
+/// pinned (trusted) certificate fingerprint, and the account's chat user id.
+@DataClassName('ChatAccountRow')
+class ChatAccounts extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get serverUrl => text().nullable()();
+  TextColumn get pinnedFingerprint => text().nullable()();
+  IntColumn get userId => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId};
+}
+
+/// A ZenTao chat conversation. Unread = [lastMessageIndex] − [lastReadIndex]
+/// (xxd's per-chat message indexes).
+@DataClassName('ChatConversationRow')
+class ChatConversations extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get gid => text()();
+  TextColumn get type => text()();
+  TextColumn get name => text()();
+  DateTimeColumn get lastActiveAt => dateTime().nullable()();
+  IntColumn get lastMessageId => integer().nullable()();
+  IntColumn get lastMessageIndex => integer().withDefault(const Constant(0))();
+  IntColumn get lastReadIndex => integer().withDefault(const Constant(0))();
+  BoolColumn get hidden => boolean().withDefault(const Constant(false))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {accountId, gid};
+}
+
+/// A ZenTao chat message. [gid] is the client-generated id; [serverId] is set
+/// once xxd stores it. [sendState] is `sent`, `pending` or `failed`.
+@DataClassName('ChatMessageRow')
+@TableIndex(name: 'chat_messages_by_chat', columns: {#accountId, #cgid, #sentAt})
+class ChatMessages extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get gid => text()();
+  TextColumn get cgid => text()();
+  IntColumn get serverId => integer().nullable()();
+  IntColumn get messageIndex => integer().nullable()();
+  IntColumn get senderId => integer()();
+  DateTimeColumn get sentAt => dateTime()();
+  TextColumn get contentType => text()();
+  TextColumn get content => text()();
+  TextColumn get sendState => text().withDefault(const Constant('sent'))();
+  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {accountId, gid};
+}
+
+/// A ZenTao user as seen by chat (names and avatars for senders and peers).
+@DataClassName('ChatUserRow')
+class ChatUsers extends Table {
+  TextColumn get accountId => text()();
+  IntColumn get userId => integer()();
+  TextColumn get account => text()();
+  TextColumn get realname => text()();
+  TextColumn get avatar => text().nullable()();
+  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {accountId, userId};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -182,6 +249,10 @@ class SavedFilters extends Table {
     Settings,
     Activities,
     SavedFilters,
+    ChatAccounts,
+    ChatConversations,
+    ChatMessages,
+    ChatUsers,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -195,7 +266,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -241,6 +312,13 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(settings, settings.translationModel);
         }
         await m.createTable(savedFilters);
+      }
+      if (from < 17) {
+        await m.createTable(chatAccounts);
+        await m.createTable(chatConversations);
+        await m.createTable(chatMessages);
+        await m.createIndex(chatMessagesByChat);
+        await m.createTable(chatUsers);
       }
     },
   );

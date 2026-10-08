@@ -35,7 +35,7 @@ Future<void> main(List<String> argv) async {
   final password = _readPassword();
   var pin = args['pin'];
   final listen = Duration(seconds: int.tryParse(args['listen'] ?? '') ?? 60);
-  const http = XxdHttpDatasource(clientVersion: '9.1.2');
+  const http = XxdHttpDatasource(clientVersion: kXxdClientVersion);
 
   while (true) {
     final connection = XxdConnection(
