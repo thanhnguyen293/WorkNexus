@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'database_location.dart';
+
 part 'database.g.dart';
 
 @DataClassName('WorkspaceRow')
@@ -99,6 +101,10 @@ class Settings extends Table {
   /// Target language tickets are machine-translated into (BCP-47 code). Distinct
   /// from [localeCode] (the app UI language). Defaults to Vietnamese.
   TextColumn get translationLang => text().withDefault(const Constant('vi'))();
+
+  /// The `provider/model` OpenCode translates with. Empty = OpenCode's own
+  /// default model.
+  TextColumn get translationModel => text().withDefault(const Constant(''))();
   TextColumn get fontFamily =>
       text().withDefault(const Constant('Space Grotesk'))();
   RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
@@ -152,6 +158,19 @@ class Translations extends Table {
   Set<Column> get primaryKey => {ticketId};
 }
 
+/// A user-named filter preset (the board's "Save filter"). [filterJson] is the
+/// serialized `FilterState`; see the board feature's saved-filter mapper.
+@DataClassName('SavedFilterRow')
+class SavedFilters extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get filterJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -162,14 +181,21 @@ class Translations extends Table {
     Translations,
     Settings,
     Activities,
+    SavedFilters,
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'worknexus'));
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openDefault());
+
+  static QueryExecutor _openDefault() => driftDatabase(
+    name: kDatabaseName,
+    native: const DriftNativeOptions(
+      databaseDirectory: resolveDatabaseDirectory,
+    ),
+  );
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -210,6 +236,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(workspaces, workspaces.iconKey);
         }
       }
+      if (from < 16) {
+        if (!await _hasColumn('settings', 'translation_model')) {
+          await m.addColumn(settings, settings.translationModel);
+        }
+        await m.createTable(savedFilters);
+      }
     },
   );
 
@@ -238,6 +270,15 @@ class AppDatabase extends _$AppDatabase {
             ..where((a) => a.ticketId.equals(ticketId))
             ..orderBy([(a) => OrderingTerm(expression: a.at)]))
           .watch();
+
+  /// The board's saved filter presets, newest first.
+  Stream<List<SavedFilterRow>> watchSavedFilters() =>
+      (select(savedFilters)..orderBy([
+            (f) =>
+                OrderingTerm(expression: f.createdAt, mode: OrderingMode.desc),
+          ]))
+          .watch();
+
   Stream<TranslationRow?> watchTranslation(String ticketId) => (select(
     translations,
   )..where((t) => t.ticketId.equals(ticketId))).watchSingleOrNull();

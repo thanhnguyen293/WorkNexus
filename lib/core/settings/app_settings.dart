@@ -47,6 +47,7 @@ class AppSettings {
     this.companyTint = false,
     this.locale = const Locale('en'),
     this.translationLang = kDefaultTranslationLang,
+    this.translationModel = '',
     this.fontFamily = kVietnamFont,
     this.componentRadius = kComponentRadiusDefault,
     this.accentColorValue,
@@ -71,6 +72,11 @@ class AppSettings {
   /// [kDefaultTranslationLang]. Distinct from [locale], which is the app's UI
   /// language.
   final String translationLang;
+
+  /// The `provider/model` OpenCode translates with (e.g. `opencode-go/glm-5.3`).
+  /// Empty means "leave it to OpenCode's own default model", which is the
+  /// behaviour before this setting existed.
+  final String translationModel;
 
   /// Pinned ZenTao project keys (`"accountId:productId"`) surfaced at the top of
   /// the sources tree. Persisted so pins survive restarts.
@@ -105,6 +111,7 @@ class AppSettings {
     bool? companyTint,
     Locale? locale,
     String? translationLang,
+    String? translationModel,
     String? fontFamily,
     double? componentRadius,
     Set<String>? pinnedProjects,
@@ -122,6 +129,7 @@ class AppSettings {
       companyTint: companyTint ?? this.companyTint,
       locale: locale ?? this.locale,
       translationLang: translationLang ?? this.translationLang,
+      translationModel: translationModel ?? this.translationModel,
       fontFamily: fontFamily ?? this.fontFamily,
       componentRadius: componentRadius ?? this.componentRadius,
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
@@ -188,6 +196,11 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setLocale(Locale l) => _set(state.copyWith(locale: l));
   void setTranslationLang(String code) =>
       _set(state.copyWith(translationLang: code));
+
+  /// Pins the OpenCode model used for translation; empty restores OpenCode's
+  /// own default.
+  void setTranslationModel(String model) =>
+      _set(state.copyWith(translationModel: model.trim()));
   void setFontFamily(String f) => _set(state.copyWith(fontFamily: f));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));

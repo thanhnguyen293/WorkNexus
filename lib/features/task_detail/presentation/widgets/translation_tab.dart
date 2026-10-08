@@ -33,6 +33,11 @@ class TranslationTab extends ConsumerWidget {
     final status = ref.watch(translationStatusProvider(ticket.id));
     final state = status.state;
     final record = status.record;
+    // Why the last run failed (a CLI/auth/model message from OpenCode), so the
+    // banner explains the actual problem instead of guessing at one.
+    final failure = ref.watch(
+      translationControllerProvider.select((m) => m[ticket.id]?.error),
+    );
     // The translated body carries the original's inline-image links, so give it
     // the same "open in browser" fallback (e.g. GitLab < 17.4 uploads).
     final imageFallback = ImageFallback.forTicket(
@@ -118,14 +123,13 @@ class TranslationTab extends ConsumerWidget {
             const SkeletonBox(width: double.infinity, height: 11),
           ],
           if (state == TranslationState.outdated)
-            banner(
-              c.warning,
-              'Original changed since last translation. Showing the earlier version.',
-            ),
+            banner(c.warning, l.translationOutdatedBanner),
           if (state == TranslationState.error)
             banner(
               c.error,
-              'Translation failed — OpenCode timed out. Retry to run it again.',
+              failure == null
+                  ? l.translationFailed
+                  : l.translationFailedWithReason(failure),
             ),
           if ((state == TranslationState.done ||
                   state == TranslationState.outdated) &&
