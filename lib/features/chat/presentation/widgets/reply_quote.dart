@@ -88,9 +88,7 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
                         : chatPreview(context, message),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.typography.caption.copyWith(
-                      color: ink.text.withValues(alpha: 0.75),
-                    ),
+                    style: context.typography.caption.copyWith(color: ink.text),
                   ),
                 ],
               ),
