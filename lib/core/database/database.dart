@@ -120,6 +120,10 @@ class Settings extends Table {
   /// Whether new chat messages raise a desktop notification.
   BoolColumn get chatNotifications =>
       boolean().withDefault(const Constant(true))();
+
+  /// Most disk space chat attachments may use, in MB.
+  IntColumn get chatCacheLimitMb =>
+      integer().withDefault(const Constant(2048))();
   IntColumn get accentColorValue => integer().nullable()();
 
   /// JSON array of pinned ZenTao project keys (`"accountId:productId"`), shown at
@@ -300,7 +304,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -351,7 +355,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(chatAccounts);
         await m.createTable(chatConversations);
         await m.createTable(chatMessages);
-        await m.createIndex(chatMessagesByChat);
+        // Tables use IF NOT EXISTS; the index does not. Guarded because the
+        // same DB file can be reopened after an older build has lowered its
+        // version (e.g. running another branch), re-running this step.
+        if (!await _hasIndex('chat_messages_by_chat')) {
+          await m.createIndex(chatMessagesByChat);
+        }
         await m.createTable(chatUsers);
       }
       if (from < 18) {
@@ -393,6 +402,11 @@ class AppDatabase extends _$AppDatabase {
           }
         }
       }
+      if (from < 23) {
+        if (!await _hasColumn('settings', 'chat_cache_limit_mb')) {
+          await m.addColumn(settings, settings.chatCacheLimitMb);
+        }
+      }
       if (from < 22) {
         if (!await _hasColumn('chat_conversations', 'admins_json')) {
           await m.addColumn(chatConversations, chatConversations.adminsJson);
@@ -404,6 +418,14 @@ class AppDatabase extends _$AppDatabase {
   /// Whether [table] already has [column]. Used to keep column-add migrations
   /// idempotent when a dev DB carries a column from a half-applied migration
   /// (added, but the schema version not yet bumped).
+  Future<bool> _hasIndex(String name) async {
+    final rows = await customSelect(
+      "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?",
+      variables: [Variable<String>(name)],
+    ).get();
+    return rows.isNotEmpty;
+  }
+
   Future<bool> _hasColumn(String table, String column) async {
     final rows = await customSelect(
       'SELECT 1 FROM pragma_table_info(?) WHERE name = ?',

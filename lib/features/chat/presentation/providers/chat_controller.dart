@@ -79,6 +79,13 @@ class ChatController {
   Future<Result<String>> openDirectChat(String accountId, int userId) =>
       _direct(accountId: accountId, userId: userId);
 
+  void setCacheLimit(int bytes) => _repository.setCacheLimit(bytes);
+
+  /// Deletes downloaded attachments of one chat, or all when [chatGid] is
+  /// null (a pass-through; CLAUDE.md 2.4).
+  Future<Result<void>> clearCache({String? accountId, String? chatGid}) =>
+      _repository.clearCache(accountId: accountId, chatGid: chatGid);
+
   /// Live messages from others; a pass-through stream (CLAUDE.md 2.4).
   Stream<ChatMessage> watchIncoming() => _repository.watchIncoming();
 

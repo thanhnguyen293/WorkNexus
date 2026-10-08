@@ -111,6 +111,11 @@ String _extension(String name) {
 
 /// Human-readable byte size.
 String formatFileSize(int bytes) {
+  if (bytes >= 1024 * 1024 * 1024) {
+    final gb = bytes / 1024 / 1024 / 1024;
+    // Whole sizes (limits like 2 GB) read better without ".0".
+    return '${gb == gb.roundToDouble() ? gb.toStringAsFixed(0) : gb.toStringAsFixed(1)} GB';
+  }
   if (bytes >= 1024 * 1024) {
     return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
   }
