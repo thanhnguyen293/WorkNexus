@@ -10,6 +10,10 @@ import '../../../../l10n/app_localizations.dart';
 /// Width of a panel beside the chat (info, pinned messages).
 const double kChatSidePanelWidth = 340;
 
+/// Height of the chat header and of every side panel's header, so their
+/// bottom borders line up (a large avatar plus vertical padding).
+const double kChatHeaderHeight = 68;
+
 /// The frame of a panel beside the chat: a titled header with a close
 /// button above [child].
 class ChatSidePanelFrame extends StatelessWidget {
@@ -18,8 +22,14 @@ class ChatSidePanelFrame extends StatelessWidget {
     required this.title,
     required this.onClose,
     required this.child,
+    this.width = kChatSidePanelWidth,
+    this.closeTooltip,
   });
 
+  final double width;
+
+  /// Close button tooltip; defaults to "Close".
+  final String? closeTooltip;
   final String title;
   final VoidCallback onClose;
   final Widget child;
@@ -29,7 +39,7 @@ class ChatSidePanelFrame extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return Container(
-      width: kChatSidePanelWidth,
+      width: width,
       decoration: BoxDecoration(
         color: c.background,
         border: Border(left: context.hairlineSide),
@@ -37,7 +47,8 @@ class ChatSidePanelFrame extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.fromLTRB(s.xl3, s.md, s.md, s.md),
+            height: kChatHeaderHeight,
+            padding: EdgeInsets.only(left: s.xl3, right: s.md),
             decoration: BoxDecoration(
               color: c.surface,
               border: Border(bottom: context.hairlineSide),
@@ -55,7 +66,7 @@ class ChatSidePanelFrame extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: AppL10n.of(context).chatClosePanel,
+                  tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
                   onPressed: onClose,
                   icon: Icon(Icons.close, color: c.textSecondary),
                 ),

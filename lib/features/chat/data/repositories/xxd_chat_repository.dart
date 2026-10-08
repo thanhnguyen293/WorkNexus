@@ -16,6 +16,7 @@ import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_local_datasource.dart';
+import '../datasources/video_duration_reader.dart';
 import '../datasources/video_thumbnailer.dart';
 import '../datasources/xxd/xxd_connection.dart';
 import '../datasources/xxd/xxd_connection_state.dart';
@@ -49,6 +50,7 @@ class XxdChatRepository implements ChatRepository {
     required XxdHttpDatasource http,
     ChatFileCache? files,
     VideoThumbnailer thumbnailer = const VideoThumbnailer(),
+    VideoDurationReader durations = const VideoDurationReader(),
     ParseMessageContent parse = const ParseMessageContent(),
     DateTime Function() now = DateTime.now,
   }) : _local = local,
@@ -60,7 +62,8 @@ class XxdChatRepository implements ChatRepository {
        _resolver = ChatCredentialsResolver(local, credentials),
        _history = ChatHistorySync(local, ChatPacketIngestor(local)),
        _files = files ?? ChatFileCache.appDefault(),
-       _thumbnailer = thumbnailer {
+       _thumbnailer = thumbnailer,
+       _durations = durations {
     _attachments = ChatAttachmentLoader(http, _files);
     _cache = ChatCacheManager(local, _files, _attachments, parse);
   }
@@ -80,6 +83,7 @@ class XxdChatRepository implements ChatRepository {
   final ChatFileCache _files;
   late final ChatAttachmentLoader _attachments;
   late final ChatCacheManager _cache;
+  final VideoDurationReader _durations;
   final VideoThumbnailer _thumbnailer;
   late final ChatSender _sender = ChatSender(
     local: _local,
@@ -420,6 +424,21 @@ class XxdChatRepository implements ChatRepository {
   /// Videos above this are not downloaded just to show a preview frame.
   /// Bigger ones show their size and download on tap instead.
   static const maxThumbnailSource = 20 * 1024 * 1024;
+
+  @override
+  Future<Result<Duration>> videoDuration(
+    String accountId,
+    MessageContent video,
+  ) async {
+    if (!await _attachments.isCached(accountId, video)) {
+      return const Err(NotFoundFailure('Video not downloaded'));
+    }
+    final path = await _attachments.cachedPath(accountId, video);
+    final duration = path == null ? null : await _durations.durationOf(path);
+    return duration == null
+        ? const Err(NotFoundFailure('Unknown video length'))
+        : Ok(duration);
+  }
 
   @override
   Future<Result<Uint8List>> videoThumbnail(

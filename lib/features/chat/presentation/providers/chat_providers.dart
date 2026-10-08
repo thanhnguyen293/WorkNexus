@@ -312,6 +312,20 @@ final chatVideoThumbnailProvider = FutureProvider.autoDispose
           .videoThumbnail(key.accountId, key.video);
     });
 
+/// Length of a downloaded video. Waits for the preview frame, whose making
+/// downloads small videos, and re-reads once a big one is downloaded on
+/// request.
+final chatVideoDurationProvider = FutureProvider.autoDispose
+    .family<Result<Duration>, ({String accountId, MessageContent video})>((
+      ref,
+      key,
+    ) async {
+      await ref.watch(chatVideoThumbnailProvider(key).future);
+      return ref
+          .watch(chatRepositoryProvider)
+          .videoDuration(key.accountId, key.video);
+    });
+
 /// Member count of a chat (header subtitle); refetched when the chat opens.
 final chatMemberCountProvider = FutureProvider.autoDispose
     .family<Result<int>, ChatThreadKey>(
