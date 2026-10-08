@@ -9,6 +9,8 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/desktop_notifier.dart';
+import '../../../../core/settings/app_settings.dart';
+import '../../domain/entities/chat_cache_usage.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -62,6 +64,13 @@ final selectedChatAccountIdProvider = Provider<String?>((ref) {
 /// entry so unread counts are live before the chat view is opened.
 final chatAutoConnectProvider = Provider<void>((ref) {
   final controller = ref.watch(chatControllerProvider);
+  // Also applies the attachment cache limit from settings (here because
+  // this runs at launch, before the chat view is opened).
+  controller.setCacheLimit(
+    ref.watch(appSettingsProvider.select((s) => s.chatCacheLimitMb)) *
+        1024 *
+        1024,
+  );
   for (final account in ref.watch(chatAccountsProvider)) {
     controller.connect(account.id);
   }
@@ -249,6 +258,12 @@ final chatDownloadProgressProvider = StreamProvider.autoDispose
 final chatDownloadingProvider = StateProvider<Set<ChatAttachmentKey>>(
   (ref) => const {},
 );
+
+/// Disk space used by chat attachments (re-read when the dialog opens).
+final chatCacheUsageProvider =
+    FutureProvider.autoDispose<Result<ChatCacheUsage>>(
+      (ref) => ref.watch(chatRepositoryProvider).cacheUsage(),
+    );
 
 /// User ids of a group's members.
 final chatMembersProvider = FutureProvider.autoDispose

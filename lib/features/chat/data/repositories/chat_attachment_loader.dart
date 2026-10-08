@@ -253,6 +253,30 @@ class ChatAttachmentLoader {
     }
   }
 
+  /// Drops attachments of [accountId] (all accounts when null) from memory.
+  void clearMemory({String? accountId}) {
+    _cache.removeWhere(
+      (key, _) => accountId == null || key.startsWith('$accountId/'),
+    );
+    _cachedBytes = _cache.values.fold(0, (sum, b) => sum + b.length);
+  }
+
+  /// Every on-disk name [content] may have: the original, the server's
+  /// thumbnail and a video's preview frame.
+  static List<String> diskNamesOf(MessageContent content) {
+    final (fileId, name) = _fileOf(content);
+    if (fileId <= 0) return const [];
+    final original = _diskName(fileId, name);
+    return [
+      for (final n in [
+        original,
+        _diskName(fileId, name, thumbnail: true),
+        '$original.thumb.png',
+      ])
+        ChatFileCache.diskName(n),
+    ];
+  }
+
   static (int, String) _fileOf(MessageContent content) => switch (content) {
     ImageContent(:final fileId, :final name) ||
     FileContent(:final fileId, :final name) => (fileId, name),

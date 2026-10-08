@@ -8,6 +8,7 @@ import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_cache_usage.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
@@ -49,6 +50,25 @@ class _FakeChatRepository implements ChatRepository {
 
   @override
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
+
+  @override
+  Future<Result<ChatCacheUsage>> cacheUsage() async => const Ok(
+    ChatCacheUsage(
+      totalBytes: 734003200,
+      limitBytes: 2147483648,
+      chats: [
+        ChatCacheChatUsage(accountId: 'acc', chatGid: 'g1', bytes: 524288000),
+        ChatCacheChatUsage(accountId: 'acc', chatGid: '31&40', bytes: 104857600),
+      ],
+    ),
+  );
+
+  @override
+  Future<Result<void>> clearCache({String? accountId, String? chatGid}) async =>
+      const Ok(null);
+
+  @override
+  void setCacheLimit(int bytes) {}
 
   @override
   Stream<double> watchDownloadProgress(String a, MessageContent c) =>

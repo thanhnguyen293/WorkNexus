@@ -6,6 +6,7 @@ import '../../../../core/database/database.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/credential_store.dart';
+import '../../domain/entities/chat_cache_usage.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -23,6 +24,7 @@ import '../datasources/xxd/xxd_packet.dart';
 import '../datasources/xxd/xxd_server_info.dart';
 import '../mappers/chat_mappers.dart';
 import 'chat_attachment_loader.dart';
+import 'chat_cache_manager.dart';
 import 'chat_credentials_resolver.dart';
 import 'chat_history_sync.dart';
 import 'chat_packet_ingestor.dart';
@@ -57,11 +59,11 @@ class XxdChatRepository implements ChatRepository {
        _ingestor = ChatPacketIngestor(local),
        _resolver = ChatCredentialsResolver(local, credentials),
        _history = ChatHistorySync(local, ChatPacketIngestor(local)),
-       _attachments = ChatAttachmentLoader(
-         http,
-         files ?? ChatFileCache.appDefault(),
-       ),
-       _thumbnailer = thumbnailer;
+       _files = files ?? ChatFileCache.appDefault(),
+       _thumbnailer = thumbnailer {
+    _attachments = ChatAttachmentLoader(http, _files);
+    _cache = ChatCacheManager(local, _files, _attachments, parse);
+  }
 
   /// Messages still pending after this long are treated as interrupted.
   static const pendingTimeout = Duration(minutes: 2);
@@ -75,7 +77,9 @@ class XxdChatRepository implements ChatRepository {
   final ChatPacketIngestor _ingestor;
   final ChatCredentialsResolver _resolver;
   final ChatHistorySync _history;
-  final ChatAttachmentLoader _attachments;
+  final ChatFileCache _files;
+  late final ChatAttachmentLoader _attachments;
+  late final ChatCacheManager _cache;
   final VideoThumbnailer _thumbnailer;
   late final ChatSender _sender = ChatSender(
     local: _local,
@@ -440,6 +444,16 @@ class XxdChatRepository implements ChatRepository {
         Ok(:final value) => Ok(value.length),
         Err(:final failure) => Err(failure),
       };
+
+  @override
+  Future<Result<ChatCacheUsage>> cacheUsage() => _cache.usage();
+
+  @override
+  Future<Result<void>> clearCache({String? accountId, String? chatGid}) =>
+      _cache.clear(accountId: accountId, chatGid: chatGid);
+
+  @override
+  void setCacheLimit(int bytes) => _cache.setLimit(bytes);
 
   @override
   Stream<double> watchDownloadProgress(

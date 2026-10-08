@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../../core/error/result.dart';
+import '../entities/chat_cache_usage.dart';
 import '../entities/chat_conversation.dart';
 import '../entities/chat_message.dart';
 import '../entities/chat_user.dart';
@@ -128,6 +129,16 @@ abstract class ChatRepository {
 
   /// Whether an attachment's original is already downloaded.
   Future<bool> isAttachmentCached(String accountId, MessageContent content);
+
+  /// Disk space used by downloaded attachments, per chat.
+  Future<Result<ChatCacheUsage>> cacheUsage();
+
+  /// Deletes downloaded attachments: of one chat, or all of them when
+  /// [chatGid] is null. Messages are kept; files download again on demand.
+  Future<Result<void>> clearCache({String? accountId, String? chatGid});
+
+  /// The most disk space attachments may use; older ones are dropped first.
+  void setCacheLimit(int bytes);
 
   /// User ids of a group's members (unknown users are fetched in the
   /// background and show up through [watchUsers]).
