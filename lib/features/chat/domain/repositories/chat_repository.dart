@@ -97,6 +97,13 @@ abstract class ChatRepository {
   /// A still frame of a video attachment (downloads small videos to make
   /// it). Fails when the video is too large to fetch just for a preview or no
   /// frame can be extracted.
+  /// Length of a video that is already downloaded (it is not downloaded
+  /// just for this).
+  Future<Result<Duration>> videoDuration(
+    String accountId,
+    MessageContent video,
+  );
+
   Future<Result<Uint8List>> videoThumbnail(
     String accountId,
     MessageContent video,

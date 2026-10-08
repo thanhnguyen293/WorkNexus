@@ -12,6 +12,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_preview_dialog.dart';
 import 'chat_attachments.dart';
+import 'chat_composer_toolbar.dart';
 import 'chat_snack.dart';
 import 'reply_draft_banner.dart';
 
@@ -159,7 +160,6 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     final c = context.colors;
     final l = AppL10n.of(context);
     final s = context.spacing;
-    final tool = c.textSecondary;
     ref.listen(chatReplyDraftProvider(_draftKey), (_, next) {
       if (next != null) _focus.requestFocus();
     });
@@ -167,116 +167,70 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     return Container(
       padding: EdgeInsets.fromLTRB(s.xl4, s.md, s.xl4, s.xl3),
       color: c.background,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
-        decoration: BoxDecoration(
-          color: c.surface,
-          border: Border.all(color: c.border),
-          borderRadius: BorderRadius.circular(context.radii.xl),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (draft != null)
-              ReplyDraftBanner(
-                message: draft,
-                accountId: widget.thread.accountId,
-                onCancel: () {
-                  _cancelReply();
-                  _focus.requestFocus();
-                },
-              ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+      child: ListenableBuilder(
+        listenable: _focus,
+        builder: (context, _) {
+          final focused = _focus.hasFocus;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            padding: EdgeInsets.fromLTRB(s.md, s.xs, s.md, s.sm),
+            decoration: BoxDecoration(
+              color: c.surface,
+              border: Border.all(color: focused ? c.accent : c.border),
+              borderRadius: BorderRadius.circular(context.radii.xl),
+              // A soft accent ring while typing.
+              boxShadow: [
+                if (focused)
+                  BoxShadow(
+                    color: c.accent.withValues(alpha: 0.15),
+                    spreadRadius: 3,
+                  ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  tooltip: l.chatSendImage,
-                  onPressed: () => _pick(imagesOnly: true),
-                  icon: Icon(Icons.image_outlined, color: tool),
-                ),
-                IconButton(
-                  tooltip: l.chatAttach,
-                  onPressed: _pick,
-                  icon: Icon(Icons.attach_file_rounded, color: tool),
-                ),
-                const _MarkdownToggle(),
-                SizedBox(width: s.xs),
-                Expanded(
-                  child: TextField(
-                    controller: _text,
-                    focusNode: _focus,
-                    autofocus: widget.threadRootId == null,
-                    minLines: 1,
-                    maxLines: 8,
-                    keyboardType: TextInputType.multiline,
-                    style: context.typography.body.copyWith(
-                      color: c.textPrimary,
+                if (draft != null)
+                  ReplyDraftBanner(
+                    message: draft,
+                    accountId: widget.thread.accountId,
+                    onCancel: () {
+                      _cancelReply();
+                      _focus.requestFocus();
+                    },
+                  ),
+                TextField(
+                  controller: _text,
+                  focusNode: _focus,
+                  autofocus: widget.threadRootId == null,
+                  minLines: 1,
+                  maxLines: 10,
+                  keyboardType: TextInputType.multiline,
+                  style: context.typography.body.copyWith(color: c.textPrimary),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: widget.hint ?? l.chatComposerHint,
+                    hintStyle: context.typography.body.copyWith(
+                      color: c.textTertiary,
                     ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: widget.hint ?? l.chatComposerHint,
-                      hintStyle: context.typography.body.copyWith(
-                        color: c.textTertiary,
-                      ),
-                      contentPadding: EdgeInsets.symmetric(vertical: s.lg),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: s.sm,
+                      vertical: s.lg,
                     ),
                   ),
                 ),
-                ValueListenableBuilder(
-                  valueListenable: _text,
-                  builder: (context, value, _) {
-                    final ready = value.text.trim().isNotEmpty;
-                    return Padding(
-                      padding: EdgeInsets.all(s.xs),
-                      child: Tooltip(
-                        message: l.chatComposerHint,
-                        child: Material(
-                          color: ready ? c.accent : c.surfaceSubtle,
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: ready ? _send : null,
-                            child: Padding(
-                              padding: EdgeInsets.all(s.md),
-                              child: Icon(
-                                Icons.arrow_upward_rounded,
-                                size: s.xl4,
-                                color: ready ? c.onAccent : c.textTertiary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                ChatComposerToolbar(
+                  text: _text,
+                  focused: focused,
+                  onPickImage: () => _pick(imagesOnly: true),
+                  onAttach: _pick,
+                  onSend: _send,
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Turns "send as Markdown" on and off (remembered in settings).
-class _MarkdownToggle extends ConsumerWidget {
-  const _MarkdownToggle();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final on = ref.watch(appSettingsProvider.select((s) => s.chatSendMarkdown));
-    final l = AppL10n.of(context);
-    final c = context.colors;
-    return IconButton(
-      tooltip: on ? l.chatMarkdownOn : l.chatMarkdownOff,
-      isSelected: on,
-      onPressed: () =>
-          ref.read(appSettingsProvider.notifier).setChatSendMarkdown(!on),
-      icon: Icon(
-        Icons.text_format_rounded,
-        color: on ? c.accent : c.textSecondary,
+          );
+        },
       ),
     );
   }

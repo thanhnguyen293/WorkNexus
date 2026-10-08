@@ -424,6 +424,8 @@
   "chatNext": "Ảnh sau",
   "chatCopied": "Đã sao chép",
   "chatSaved": "Đã lưu",
+  "chatSend": "Gửi",
+  "chatSendHint": "Enter để gửi · Shift+Enter để xuống dòng",
   "chatMedia": "Ảnh & video",
   "chatFiles": "File",
   "chatSeeAll": "Xem tất cả",

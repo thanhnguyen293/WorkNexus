@@ -15,6 +15,7 @@ import 'chat_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_notification_toggle.dart';
 import 'chat_panels.dart';
+import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
 /// one-to-one chats, the other person's account).
@@ -46,10 +47,8 @@ class ChatThreadHeader extends ConsumerWidget {
       _ => peer?.account,
     };
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.xl4,
-        vertical: context.spacing.xl,
-      ),
+      height: kChatHeaderHeight,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl4),
       decoration: BoxDecoration(
         color: c.surface,
         border: Border(bottom: context.hairlineSide),
@@ -64,6 +63,7 @@ class ChatThreadHeader extends ConsumerWidget {
           SizedBox(width: context.spacing.xl),
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
