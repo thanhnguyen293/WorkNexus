@@ -13,6 +13,7 @@ import 'chat_file_body.dart';
 import 'chat_image_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
+import 'chat_user_profile_dialog.dart';
 import 'link_preview_card.dart';
 import 'mention_text.dart';
 
@@ -42,6 +43,7 @@ class MessageBody extends StatelessWidget {
     }
     return switch (message.content) {
       TextContent(:final text, :final markdown) => _TextBody(
+        accountId: accountId,
         text: text,
         markdown: markdown || chatLooksLikeMarkdown(text),
       ),
@@ -73,8 +75,13 @@ class MessageBody extends StatelessWidget {
 /// Message text — Markdown or plain with mentions and links — followed by a
 /// preview of the first web page it links to.
 class _TextBody extends ConsumerWidget {
-  const _TextBody({required this.text, required this.markdown});
+  const _TextBody({
+    required this.accountId,
+    required this.text,
+    required this.markdown,
+  });
 
+  final String accountId;
   final String text;
   final bool markdown;
 
@@ -93,10 +100,18 @@ class _TextBody extends ConsumerWidget {
             height: 1.5,
             color: ink.text,
             linkColor: ink.link,
-            onLinkTap: (link) => openChatLink(ref, link),
+            isPlainLink: (link) => chatMentionUserId(link) != null,
+            onLinkTap: (link) => switch (chatMentionUserId(link)) {
+              final userId? => ChatUserProfileDialog.show(
+                context,
+                accountId: accountId,
+                userId: userId,
+              ),
+              null => openChatLink(ref, link),
+            },
           )
         else
-          MentionText(text),
+          MentionText(text, accountId: accountId),
         if (url != null) LinkPreviewCard(url: url),
       ],
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database.dart';
 import '../../../../core/error/failure.dart';
@@ -520,6 +521,51 @@ class XxdChatRepository implements ChatRepository {
           '',
           'one2one',
           [self, userId],
+          0,
+          false,
+        ],
+      ),
+    );
+    return switch (reply) {
+      Ok() => Ok(gid),
+      Err(:final failure) => Err(failure),
+    };
+  }
+
+  @override
+  Future<Result<void>> refreshUsers(String accountId) async {
+    final session = _sessions[accountId];
+    if (session == null) return const Err(NetworkFailure('Chat is offline'));
+    // An empty id list asks xxd for every user.
+    return _requestAndStore(
+      accountId,
+      session,
+      const XxdRequest('usergetlist', params: [<int>[]]),
+    );
+  }
+
+  @override
+  Future<Result<String>> createGroupChat(
+    String accountId, {
+    required String name,
+    required List<int> memberIds,
+  }) async {
+    final session = _sessions[accountId];
+    final self = session?.selfUserId;
+    if (session == null || self == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    final gid = const Uuid().v4();
+    final reply = await _requestAndStore(
+      accountId,
+      session,
+      XxdRequest(
+        'chatCreate',
+        params: [
+          gid,
+          name,
+          'group',
+          {self, ...memberIds}.toList(),
           0,
           false,
         ],

@@ -119,6 +119,17 @@ abstract class ChatRepository {
   /// not exist yet; returns its gid.
   Future<Result<String>> openDirectChat(String accountId, int userId);
 
+  /// Fetches every user of the server (for picking people to chat with).
+  Future<Result<void>> refreshUsers(String accountId);
+
+  /// Creates a group chat named [name] with [memberIds] (the signed-in user
+  /// is added); returns its gid.
+  Future<Result<String>> createGroupChat(
+    String accountId, {
+    required String name,
+    required List<int> memberIds,
+  });
+
   /// Pins or unpins message [serverId] in [chatGid] (one-to-one chats, or
   /// group owner/admins; the server checks).
   Future<Result<void>> setMessagePinned(

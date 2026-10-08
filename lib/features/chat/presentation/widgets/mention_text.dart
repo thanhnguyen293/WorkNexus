@@ -5,13 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
+import 'chat_user_profile_dialog.dart';
 
 /// Plain message text: `[@Name](@#id)` mentions as highlighted `@Name`, and
 /// web addresses as tappable links. Colours and size follow the bubble.
 class MentionText extends ConsumerStatefulWidget {
-  const MentionText(this.text, {super.key});
+  const MentionText(this.text, {super.key, required this.accountId});
 
   final String text;
+
+  /// Account of the chat (a mention opens that user's profile).
+  final String accountId;
 
   @override
   ConsumerState<MentionText> createState() => _MentionTextState();
@@ -55,7 +59,17 @@ class _MentionTextState extends ConsumerState<MentionText> {
       if (m.start > at) spans.add(TextSpan(text: text.substring(at, m.start)));
       final name = m.namedGroup('mention');
       if (name != null) {
-        spans.add(TextSpan(text: '@$name', style: mention));
+        final userId = int.parse(m.namedGroup('mentionId')!);
+        final recognizer = TapGestureRecognizer()
+          ..onTap = () => ChatUserProfileDialog.show(
+            context,
+            accountId: widget.accountId,
+            userId: userId,
+          );
+        _recognizers.add(recognizer);
+        spans.add(
+          TextSpan(text: '@$name', style: mention, recognizer: recognizer),
+        );
       } else {
         final url = m[0]!;
         final recognizer = TapGestureRecognizer()

@@ -8,6 +8,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'chat_panels.dart';
 import 'chat_shared_files.dart';
 import 'chat_side_panel_frame.dart';
 
@@ -34,8 +35,7 @@ class ChatFilesPanel extends ConsumerWidget {
     );
     return ChatSidePanelFrame(
       title: l.chatFilesAndMedia,
-      onClose: () =>
-          ref.read(chatSidePanelProvider(thread).notifier).state = null,
+      onClose: () => closeChatSidePanel(ref, thread),
       child: DefaultTabController(
         length: 2,
         child: Column(

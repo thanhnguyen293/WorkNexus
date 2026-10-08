@@ -63,7 +63,7 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
     }
     return ChatSidePanelFrame(
       title: l.chatPinnedMessages,
-      onClose: () => ref.read(chatSidePanelProvider(t).notifier).state = null,
+      onClose: () => closeChatSidePanel(ref, t),
       child: ids.isEmpty
           ? Padding(
               padding: EdgeInsets.all(context.spacing.xl3),

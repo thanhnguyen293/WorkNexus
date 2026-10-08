@@ -96,8 +96,7 @@ class ChatInfoPanel extends ConsumerWidget {
 
     return ChatSidePanelFrame(
       title: l.chatInfo,
-      onClose: () =>
-          ref.read(chatSidePanelProvider(thread).notifier).state = null,
+      onClose: () => closeChatSidePanel(ref, thread),
       child: ListView(
         padding: EdgeInsets.all(s.xl3),
         children: [

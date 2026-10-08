@@ -424,6 +424,15 @@
   "chatNext": "Next",
   "chatCopied": "Copied",
   "chatSaved": "Saved",
+  "chatSendLike": "Send a like",
+  "chatMention": "Mention someone",
+  "chatNewChat": "New chat",
+  "chatSearchPeople": "Search people",
+  "chatGroupName": "Group name",
+  "chatCreateGroup": "Create group",
+  "chatNoPeople": "No one found",
+  "chatNewChatHint": "Pick one person for a direct chat, or several for a group.",
+  "chatMentionAll": "Notify everyone",
   "chatSend": "Send",
   "chatSendHint": "Enter to send · Shift+Enter for a new line",
   "chatMedia": "Photos & videos",
@@ -553,7 +562,7 @@
   "@chatMembers": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "chatMessageTo": "Message {name}",
+  "chatMessageTo": "Type @ to mention, message {name}",
   "@chatMessageTo": {
     "placeholders": { "name": { "type": "String" } }
   },

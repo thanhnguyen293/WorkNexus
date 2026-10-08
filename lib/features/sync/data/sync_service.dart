@@ -7,10 +7,12 @@ import '../../../core/domain/adapters/github_pr_service.dart';
 import '../../../core/domain/adapters/gitlab_mr_adapter.dart';
 import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
+import '../../../core/domain/adapters/zentao_ticket_service.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
+import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
@@ -48,7 +50,8 @@ List<String> mergeDetailLabels(
 
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
-class SyncService implements GitLabMrService, GitHubPrService {
+class SyncService
+    implements GitLabMrService, GitHubPrService, ZenTaoTicketService {
   SyncService(
     this._db,
     this._credentials, {
@@ -406,6 +409,56 @@ class SyncService implements GitLabMrService, GitHubPrService {
         ];
         await _upsert(account, tagged);
         return Ok([for (final t in tagged) t.id]);
+    }
+  }
+
+  @override
+  Future<Result<String>> fetchZenTaoTicket({
+    required String host,
+    required String type,
+    required String id,
+  }) async {
+    final rows = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.providerType.equals(ProviderType.zentao.name))).get();
+    final account = rows
+        .map(accountFromRow)
+        .where((a) => Uri.tryParse(a.baseUrl ?? '')?.host == host)
+        .firstOrNull;
+    final credRef = account?.credentialsRef;
+    if (account == null || credRef == null) {
+      return const Err(NotFoundFailure('No ZenTao account for this link'));
+    }
+    final secret = await _credentials.read(credRef);
+    final adapter = secret == null ? null : _buildAdapter(account, secret);
+    if (adapter == null) {
+      return const Err(AuthFailure('ZenTao account is not signed in'));
+    }
+    // Only the type and id matter to the detail request; the rest is filled
+    // from the reply.
+    final stub = Ticket(
+      id: '${account.id}:$id',
+      accountId: account.id,
+      projectId: '${account.id}:$type',
+      providerType: ProviderType.zentao,
+      externalKey: id,
+      externalType: '${type[0].toUpperCase()}${type.substring(1)}',
+      title: '',
+      body: '',
+      priority: Priority.medium,
+      status: UnifiedStatus.todo,
+      providerStatus: '',
+      sourceHash: '',
+    );
+    final detail = await adapter.getTicket(stub);
+    switch (detail) {
+      case Ok(:final value):
+        await _db
+            .into(_db.tickets)
+            .insertOnConflictUpdate(ticketToCompanion(value));
+        return Ok(value.id);
+      case Err(:final failure):
+        return Err(failure);
     }
   }
 

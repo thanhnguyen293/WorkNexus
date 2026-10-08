@@ -14,8 +14,14 @@ final chatMentionPattern = RegExp(r'\[@([^\]]+)\]\(@#(\d+)\)');
 /// A mention (group `mention` = the name) or a web address, for rendering
 /// plain text.
 final chatTokenPattern = RegExp(
-  r'\[@(?<mention>[^\]]+)\]\(@#\d+\)|' + _urlPattern,
+  r'\[@(?<mention>[^\]]+)\]\(@#(?<mentionId>\d+)\)|' + _urlPattern,
 );
+
+/// The user id of a mention link target (`@#24`), else null.
+int? chatMentionUserId(String url) {
+  final m = RegExp(r'^@#(\d+)$').firstMatch(url.trim());
+  return m == null ? null : int.parse(m[1]!);
+}
 
 /// A web address, without trailing punctuation that ends the sentence.
 const _urlPattern =

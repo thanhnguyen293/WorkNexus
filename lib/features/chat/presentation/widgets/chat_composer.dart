@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
+import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -13,7 +13,9 @@ import '../providers/chat_providers.dart';
 import 'attachment_preview_dialog.dart';
 import 'chat_attachments.dart';
 import 'chat_composer_toolbar.dart';
+import 'chat_mention_overlay.dart';
 import 'chat_snack.dart';
+import 'mention_autocomplete.dart';
 import 'reply_draft_banner.dart';
 
 /// Message input: Enter sends, Shift+Enter inserts a new line. Pasting files
@@ -40,6 +42,13 @@ class ChatComposer extends ConsumerStatefulWidget {
 class _ChatComposerState extends ConsumerState<ChatComposer> {
   final _text = TextEditingController();
   late final _focus = FocusNode(onKeyEvent: _onKey);
+  final _mentions = MentionAutocomplete();
+
+  @override
+  void initState() {
+    super.initState();
+    _text.addListener(() => _mentions.update(_text.value));
+  }
 
   ChatComposerKey get _draftKey =>
       (chat: widget.thread, inThread: widget.threadRootId != null);
@@ -56,6 +65,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   void dispose() {
     _text.dispose();
     _focus.dispose();
+    _mentions.dispose();
     super.dispose();
   }
 
@@ -63,6 +73,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final keys = HardwareKeyboard.instance;
     final key = event.logicalKey;
+    if (_mentionKey(key)) return KeyEventResult.handled;
     if ((key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter) &&
         !keys.isShiftPressed) {
@@ -134,10 +145,53 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     }
   }
 
-  Future<void> _send() async {
-    final text = _text.text;
+  /// Types "@" at the cursor (after a space when needed) to start a
+  /// mention.
+  void _startMention() {
+    final value = _text.value;
+    final at = value.selection.isValid
+        ? value.selection.baseOffset
+        : value.text.length;
+    final before = value.text.substring(0, at);
+    final insert = before.isEmpty || before.endsWith(' ') ? '@' : ' @';
+    _text.value = TextEditingValue(
+      text: value.text.replaceRange(at, at, insert),
+      selection: TextSelection.collapsed(offset: at + insert.length),
+    );
+    _focus.requestFocus();
+  }
+
+  /// ↑/↓ pick, Enter/Tab insert, Esc close while suggestions are shown.
+  bool _mentionKey(LogicalKeyboardKey key) {
+    final visible = _mentions.visible;
+    if (_mentions.query == null || visible.isEmpty) return false;
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _mentions.move(1, visible.length);
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      _mentions.move(-1, visible.length);
+    } else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.tab) {
+      _mentions.insert(_text, visible[_mentions.highlight]);
+    } else if (key == LogicalKeyboardKey.escape) {
+      _mentions.dismiss();
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  /// Sends the input, or [quick] (e.g. a like) without touching it.
+  Future<void> _send([String? quick]) async {
+    final text = quick ?? _text.text;
     if (text.trim().isEmpty) return;
-    _text.clear();
+    final mentions = quick == null
+        ? Map.of(_mentions.mentions)
+        : <String, int>{};
+    if (quick == null) {
+      _text.clear();
+      _mentions.reset();
+    }
     final replyToId = _replyToId;
     _cancelReply();
     final t = widget.thread;
@@ -149,6 +203,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
           text,
           replyToId: replyToId,
           markdown: ref.read(appSettingsProvider).chatSendMarkdown,
+          mentions: mentions,
         );
     if (result case Err(:final failure)) {
       if (mounted) showChatFailure(context, failure);
@@ -164,73 +219,80 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       if (next != null) _focus.requestFocus();
     });
     final draft = ref.watch(chatReplyDraftProvider(_draftKey));
-    return Container(
-      padding: EdgeInsets.fromLTRB(s.xl4, s.md, s.xl4, s.xl3),
-      color: c.background,
-      child: ListenableBuilder(
-        listenable: _focus,
-        builder: (context, _) {
-          final focused = _focus.hasFocus;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            padding: EdgeInsets.fromLTRB(s.md, s.xs, s.md, s.sm),
-            decoration: BoxDecoration(
-              color: c.surface,
-              border: Border.all(color: focused ? c.accent : c.border),
-              borderRadius: BorderRadius.circular(context.radii.xl),
-              // A soft accent ring while typing.
-              boxShadow: [
-                if (focused)
-                  BoxShadow(
-                    color: c.accent.withValues(alpha: 0.15),
-                    spreadRadius: 3,
-                  ),
-              ],
+    // Zalo-style: a flat full-width bar, tools above the input line.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border(top: context.hairlineSide),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ChatComposerTools(
+            onPickImage: () => _pick(imagesOnly: true),
+            onAttach: _pick,
+            onMention: _startMention,
+          ),
+          Divider(height: 1, thickness: 1, color: c.border),
+          if (draft != null)
+            Padding(
+              padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, 0),
+              child: ReplyDraftBanner(
+                message: draft,
+                accountId: widget.thread.accountId,
+                onCancel: () {
+                  _cancelReply();
+                  _focus.requestFocus();
+                },
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (draft != null)
-                  ReplyDraftBanner(
-                    message: draft,
-                    accountId: widget.thread.accountId,
-                    onCancel: () {
-                      _cancelReply();
-                      _focus.requestFocus();
-                    },
-                  ),
-                TextField(
-                  controller: _text,
-                  focusNode: _focus,
-                  autofocus: widget.threadRootId == null,
-                  minLines: 1,
-                  maxLines: 10,
-                  keyboardType: TextInputType.multiline,
-                  style: context.typography.body.copyWith(color: c.textPrimary),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: widget.hint ?? l.chatComposerHint,
-                    hintStyle: context.typography.body.copyWith(
-                      color: c.textTertiary,
+          ChatMentionOverlay(
+            thread: widget.thread,
+            mentions: _mentions,
+            focus: _focus,
+            onPick: (candidate) {
+              _mentions.insert(_text, candidate);
+              _focus.requestFocus();
+            },
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(s.xl3, s.sm, s.lg, s.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _text,
+                      focusNode: _focus,
+                      autofocus: widget.threadRootId == null,
+                      minLines: 1,
+                      maxLines: 10,
+                      keyboardType: TextInputType.multiline,
+                      style: context.typography.body.copyWith(
+                        color: c.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        hintText: widget.hint ?? l.chatComposerHint,
+                        hintStyle: context.typography.body.copyWith(
+                          color: c.textTertiary,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: s.lg),
+                      ),
                     ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: s.sm,
-                      vertical: s.lg,
-                    ),
                   ),
-                ),
-                ChatComposerToolbar(
-                  text: _text,
-                  focused: focused,
-                  onPickImage: () => _pick(imagesOnly: true),
-                  onAttach: _pick,
-                  onSend: _send,
-                ),
-              ],
+                  SizedBox(width: s.md),
+                  ChatComposerSendButton(
+                    text: _text,
+                    onSend: _send,
+                    onLike: () => _send('👍'),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
