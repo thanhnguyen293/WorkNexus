@@ -30,6 +30,9 @@ abstract class ChatConversation with _$ChatConversation {
 
     /// Group owner's account and creation time (groups only).
     String? ownerAccount,
+
+    /// The group's avatar as stored (xxd JSON); see `ChatGroupAvatar`.
+    String? avatarJson,
     DateTime? createdAt,
   }) = _ChatConversation;
 }

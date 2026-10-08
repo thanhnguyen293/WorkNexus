@@ -8,6 +8,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import 'chat_layout.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
 import 'message_bubble.dart';
@@ -63,7 +64,14 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
     }
     return ChatSidePanelFrame(
       title: l.chatPinnedMessages,
-      onClose: () => closeChatSidePanel(ref, t),
+      onBack: () => backToChatInfo(
+        ref,
+        t,
+        infoRoom: ChatLayoutScope.of(context).infoRoom,
+      ),
+      onClose: ChatLayoutScope.of(context).infoRoom
+          ? null
+          : () => closeChatSidePanel(ref, t),
       child: ids.isEmpty
           ? Padding(
               padding: EdgeInsets.all(context.spacing.xl3),

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,6 +53,19 @@ class _FakeChatRepository implements ChatRepository {
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
 
   @override
+  Future<Result<void>> setGroupAvatar(
+    String a,
+    String c, {
+    String? text,
+    String? color,
+    Uint8List? image,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<Uri>> zentaoProfileUri(String a) async =>
+      Ok(Uri.parse('https://example.com'));
+
+  @override
   Future<Result<void>> refreshUsers(String a) async => const Ok(null);
 
   @override
@@ -76,7 +90,11 @@ class _FakeChatRepository implements ChatRepository {
       limitBytes: 2147483648,
       chats: [
         ChatCacheChatUsage(accountId: 'acc', chatGid: 'g1', bytes: 524288000),
-        ChatCacheChatUsage(accountId: 'acc', chatGid: '31&40', bytes: 104857600),
+        ChatCacheChatUsage(
+          accountId: 'acc',
+          chatGid: '31&40',
+          bytes: 104857600,
+        ),
       ],
     ),
   );

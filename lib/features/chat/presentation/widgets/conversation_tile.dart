@@ -5,6 +5,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/chat_conversation.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
 import 'unread_badge.dart';
@@ -17,20 +18,69 @@ class ConversationTile extends StatelessWidget {
     required this.title,
     required this.selected,
     required this.onTap,
-    this.avatarUrl,
+    required this.avatar,
+    this.presence,
+    this.compact = false,
   });
+
+  /// Avatar only (with the unread count on it), the title as a tooltip —
+  /// for the collapsed chat list.
+  final bool compact;
 
   final ChatConversation chat;
   final String title;
   final bool selected;
   final VoidCallback onTap;
-  final String? avatarUrl;
+
+  /// See `chatAvatarStyle`.
+  final ({String? imageUrl, String? label, Color? background}) avatar;
+
+  /// The other person's presence (one-to-one chats).
+  final ChatPresence? presence;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final last = chat.lastMessage;
     final unread = chat.unreadCount > 0;
+    final avatarWidget = ChatAvatar(
+      name: title,
+      imageUrl: avatar.imageUrl,
+      label: avatar.label,
+      background: avatar.background,
+      presence: presence,
+    );
+    if (compact) {
+      return Tooltip(
+        message: title,
+        waitDuration: const Duration(milliseconds: 400),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(context.radii.md),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: context.spacing.md),
+            decoration: BoxDecoration(
+              color: selected ? c.selectionFill : Colors.transparent,
+              borderRadius: BorderRadius.circular(context.radii.md),
+            ),
+            child: Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  avatarWidget,
+                  if (unread)
+                    Positioned(
+                      top: -context.spacing.xs,
+                      right: -context.spacing.sm,
+                      child: UnreadBadge(count: chat.unreadCount),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
@@ -42,7 +92,7 @@ class ConversationTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ChatAvatar(name: title, imageUrl: avatarUrl),
+            avatarWidget,
             SizedBox(width: context.spacing.lg),
             Expanded(
               child: Column(

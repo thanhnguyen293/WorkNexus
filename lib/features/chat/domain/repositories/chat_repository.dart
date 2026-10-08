@@ -130,6 +130,20 @@ abstract class ChatRepository {
     required List<int> memberIds,
   });
 
+  /// Sets a group's picture: an uploaded [image] (PNG/JPEG), or [text] on
+  /// [color] (`#RRGGBB`).
+  Future<Result<void>> setGroupAvatar(
+    String accountId,
+    String chatGid, {
+    String? text,
+    String? color,
+    Uint8List? image,
+  });
+
+  /// The signed-in user's ZenTao profile (where their picture is changed),
+  /// as a link that opens signed in.
+  Future<Result<Uri>> zentaoProfileUri(String accountId);
+
   /// Pins or unpins message [serverId] in [chatGid] (one-to-one chats, or
   /// group owner/admins; the server checks).
   Future<Result<void>> setMessagePinned(

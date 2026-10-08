@@ -13,6 +13,7 @@ import '../providers/chat_providers.dart';
 import 'chat_appearance_menu.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_layout.dart';
 import 'chat_notification_toggle.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
@@ -42,8 +43,11 @@ class ChatThreadHeader extends ConsumerWidget {
     final members = oneToOne
         ? null
         : ref.watch(chatMemberCountProvider(thread)).asData?.value;
+    final avatar = chat == null ? null : chatAvatarStyle(chat, users);
+    final presence = oneToOne ? chatPresenceOf(users, chat?.peerUserId) : null;
     final subtitle = switch (members) {
       Ok(:final value) => l.chatMembers(value),
+      _ when presence != null => chatPresenceLabel(context, presence),
       _ => peer?.account,
     };
     return Container(
@@ -57,7 +61,10 @@ class ChatThreadHeader extends ConsumerWidget {
         children: [
           ChatAvatar(
             name: title,
-            imageUrl: peer?.avatarUrl,
+            imageUrl: avatar?.imageUrl,
+            label: avatar?.label,
+            background: avatar?.background,
+            presence: presence,
             size: ChatAvatarSize.large,
           ),
           SizedBox(width: context.spacing.xl),
@@ -79,9 +86,17 @@ class ChatThreadHeader extends ConsumerWidget {
                   Row(
                     children: [
                       Icon(
-                        oneToOne ? Icons.alternate_email : Icons.person_outline,
-                        size: context.spacing.xl3,
-                        color: c.textSecondary,
+                        !oneToOne
+                            ? Icons.person_outline
+                            : presence != null
+                            ? Icons.circle
+                            : Icons.alternate_email,
+                        size: presence != null
+                            ? context.spacing.md
+                            : context.spacing.xl3,
+                        color: presence?.isAround ?? false
+                            ? c.success
+                            : c.textSecondary,
                       ),
                       SizedBox(width: context.spacing.xs),
                       Text(
@@ -98,9 +113,18 @@ class ChatThreadHeader extends ConsumerWidget {
           IconButton(
             tooltip: l.chatInfo,
             isSelected:
-                ref.watch(chatSidePanelProvider(thread)) == ChatSidePanel.info,
-            onPressed: () =>
-                toggleChatSidePanel(ref, thread, ChatSidePanel.info),
+                effectiveSidePanel(
+                  ref,
+                  thread,
+                  infoRoom: ChatLayoutScope.of(context).infoRoom,
+                ) ==
+                ChatSidePanel.info,
+            onPressed: () => toggleChatSidePanel(
+              ref,
+              thread,
+              ChatSidePanel.info,
+              infoRoom: ChatLayoutScope.of(context).infoRoom,
+            ),
             icon: Icon(Icons.info_outline_rounded, color: c.textSecondary),
           ),
           const ChatNotificationToggle(),

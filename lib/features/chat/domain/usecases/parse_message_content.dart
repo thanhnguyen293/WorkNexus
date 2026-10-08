@@ -66,7 +66,10 @@ class ParseMessageContent {
             time: _int(json?['time']) ?? 0,
             width: _int(json?['width']),
             height: _int(json?['height']),
-            inlineBase64: inline,
+            // Newer clients send a data URI (`data:image/png;base64,…`).
+            inlineBase64: inline.startsWith('data:')
+                ? inline.substring(inline.indexOf(',') + 1)
+                : inline,
           );
         }
         final id = _int(json?['id']);

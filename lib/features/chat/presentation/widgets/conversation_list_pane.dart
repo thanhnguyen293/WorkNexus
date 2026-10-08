@@ -19,9 +19,17 @@ import 'new_chat_dialog.dart';
 
 /// Left pane of the chat view: account picker, search and the chat list.
 class ConversationListPane extends ConsumerWidget {
-  const ConversationListPane({super.key, required this.accountId});
+  const ConversationListPane({
+    super.key,
+    required this.accountId,
+    this.compact = false,
+  });
 
   final String accountId;
+
+  /// Collapsed to avatars (narrow window): no account picker or search,
+  /// only the new-chat button above the list.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +39,10 @@ class ConversationListPane extends ConsumerWidget {
     final users =
         ref.watch(chatUsersProvider(accountId)).asData?.value ??
         const <int, ChatUser>{};
-    final query = ref.watch(chatSearchProvider).trim().toLowerCase();
+    // The search box is hidden when collapsed: show every chat then.
+    final query = compact
+        ? ''
+        : ref.watch(chatSearchProvider).trim().toLowerCase();
     final selected = ref.watch(selectedChatGidProvider(accountId));
 
     final visible =
@@ -53,37 +64,51 @@ class ConversationListPane extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(context.spacing.lg),
-            child: Column(
-              children: [
-                const ChatAccountPicker(),
-                Row(
-                  children: [
-                    Expanded(child: _SearchField(hint: l.chatSearch)),
-                    IconButton(
-                      tooltip: l.chatNewChat,
-                      onPressed: () => NewChatDialog.show(context, accountId),
-                      icon: Icon(
-                        Icons.edit_square,
-                        size: context.spacing.xl4,
-                        color: c.textSecondary,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: l.chatStorage,
-                      onPressed: () => ChatStorageDialog.show(context),
-                      icon: Icon(
-                        Icons.storage_rounded,
-                        size: context.spacing.xl4,
-                        color: c.textSecondary,
-                      ),
-                    ),
-                  ],
+          if (compact)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
+              child: IconButton(
+                tooltip: l.chatNewChat,
+                onPressed: () => NewChatDialog.show(context, accountId),
+                icon: Icon(
+                  Icons.edit_square,
+                  size: context.spacing.xl4,
+                  color: c.textSecondary,
                 ),
-              ],
+              ),
+            )
+          else
+            Padding(
+              padding: EdgeInsets.all(context.spacing.lg),
+              child: Column(
+                children: [
+                  const ChatAccountPicker(),
+                  Row(
+                    children: [
+                      Expanded(child: _SearchField(hint: l.chatSearch)),
+                      IconButton(
+                        tooltip: l.chatNewChat,
+                        onPressed: () => NewChatDialog.show(context, accountId),
+                        icon: Icon(
+                          Icons.edit_square,
+                          size: context.spacing.xl4,
+                          color: c.textSecondary,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l.chatStorage,
+                        onPressed: () => ChatStorageDialog.show(context),
+                        icon: Icon(
+                          Icons.storage_rounded,
+                          size: context.spacing.xl4,
+                          color: c.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
           Expanded(
             child: switch (chatsAsync) {
               AsyncError() => Center(
@@ -97,7 +122,9 @@ class ConversationListPane extends ConsumerWidget {
                 ),
               ),
               _ => ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? context.spacing.sm : context.spacing.md,
+                ),
                 itemCount: visible.length,
                 itemBuilder: (context, i) {
                   final e = visible[i];
@@ -105,8 +132,12 @@ class ConversationListPane extends ConsumerWidget {
                     key: ValueKey(e.chat.gid),
                     chat: e.chat,
                     title: e.title,
-                    avatarUrl: chatAvatarUrl(users, e.chat.peerUserId),
+                    avatar: chatAvatarStyle(e.chat, users),
+                    presence: e.chat.type == ChatType.one2one
+                        ? chatPresenceOf(users, e.chat.peerUserId)
+                        : null,
                     selected: e.chat.gid == selected,
+                    compact: compact,
                     onTap: () =>
                         ref
                             .read(selectedChatGidProvider(accountId).notifier)

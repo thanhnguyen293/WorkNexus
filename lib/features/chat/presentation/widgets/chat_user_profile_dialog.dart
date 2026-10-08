@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/result.dart';
+import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -8,11 +10,13 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
+import 'chat_snack.dart';
 
 /// A chat user's profile — avatar, name, role and contact details — with a
 /// button to message them directly.
@@ -55,6 +59,20 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
     if (mounted) navigator.pop();
   }
 
+  /// Pictures are changed in ZenTao web: open the profile, signed in.
+  Future<void> _openProfile() async {
+    final uri = await ref
+        .read(chatControllerProvider)
+        .zentaoProfileUri(widget.accountId);
+    if (!mounted) return;
+    switch (uri) {
+      case Ok(:final value):
+        await openExternally('$value');
+      case Err(:final failure):
+        showChatFailure(context, failure);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -81,6 +99,7 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 child: ChatAvatar(
                   name: name,
                   imageUrl: user?.avatarUrl,
+                  presence: chatPresenceOf(users, widget.userId),
                   diameter: s.xl6 * 2,
                 ),
               ),
@@ -94,7 +113,14 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
               ),
               if (user != null)
                 Text(
-                  '@${user.account}',
+                  [
+                    '@${user.account}',
+                    if (user.status != null)
+                      chatPresenceLabel(
+                        context,
+                        ChatPresence.fromStatus(user.status),
+                      ),
+                  ].join('  ·  '),
                   textAlign: TextAlign.center,
                   style: context.typography.secondary.copyWith(
                     color: c.textSecondary,
@@ -124,6 +150,16 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                   label: l.chatPhone,
                   value: phone,
                 ),
+              if (widget.userId == self) ...[
+                SizedBox(height: s.xl5),
+                Tooltip(
+                  message: l.chatChangeMyAvatarHint,
+                  child: AppButton.outlinedNeutral(
+                    onPressed: _openProfile,
+                    child: Text(l.chatChangeMyAvatar),
+                  ),
+                ),
+              ],
               if (widget.userId != self) ...[
                 SizedBox(height: s.xl5),
                 AppButton.filled(
