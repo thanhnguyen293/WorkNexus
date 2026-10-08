@@ -192,7 +192,15 @@ final openReplyThreadProvider = StateProvider.family<int?, ChatThreadKey>(
 );
 
 /// Panels that can open beside a chat instead of a reply thread.
-enum ChatSidePanel { info, pinned }
+enum ChatSidePanel { info, pinned, files }
+
+/// A chat's image and file messages stored locally, newest first.
+final chatAttachmentsProvider = StreamProvider.autoDispose
+    .family<List<ChatMessage>, ChatThreadKey>(
+      (ref, key) => ref
+          .watch(chatRepositoryProvider)
+          .watchAttachments(key.accountId, key.chatGid),
+    );
 
 final chatSidePanelProvider =
     StateProvider.family<ChatSidePanel?, ChatThreadKey>((ref, key) => null);

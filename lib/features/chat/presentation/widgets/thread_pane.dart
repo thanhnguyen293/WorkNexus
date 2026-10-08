@@ -7,6 +7,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer.dart';
+import 'chat_files_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_snack.dart';
@@ -101,6 +102,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               chat: chat,
               users: users,
             ),
+            ChatSidePanel.files => ChatFilesPanel(thread: t),
             null => const SizedBox.shrink(),
           },
       ],

@@ -41,6 +41,7 @@ class MarkdownText extends StatelessWidget {
     this.imageFallbackUrl,
     this.onOpenImage,
     this.linkColor,
+    this.onLinkTap,
   });
 
   final String data;
@@ -61,6 +62,9 @@ class MarkdownText extends StatelessWidget {
   /// Link colour; defaults to the accent (override on accent backgrounds).
   final Color? linkColor;
 
+  /// Handles a tapped link; null leaves it to the markdown renderer.
+  final void Function(String url)? onLinkTap;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -73,9 +77,11 @@ class MarkdownText extends StatelessWidget {
     if (text.isEmpty) {
       return Text('—', style: base.copyWith(color: c.textTertiary));
     }
+    final onLink = onLinkTap;
     return GptMarkdown(
       text,
       style: base,
+      onLinkTap: onLink == null ? null : (url, _) => onLink(url),
       // Keyed by URL so that when a body refresh (e.g. the detail sync landing
       // in drift) changes an image's URL, the old element's state — and the
       // failed/stale future memoized inside it — is discarded and the new URL
