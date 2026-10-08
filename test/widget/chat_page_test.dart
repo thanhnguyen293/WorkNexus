@@ -52,6 +52,10 @@ class _FakeChatRepository implements ChatRepository {
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
 
   @override
+  Stream<List<ChatMessage>> watchAttachments(String a, String c) =>
+      const Stream.empty();
+
+  @override
   Future<Result<ChatCacheUsage>> cacheUsage() async => const Ok(
     ChatCacheUsage(
       totalBytes: 734003200,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -64,6 +65,29 @@ class ChatSidePanelFrame extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
+    );
+  }
+}
+
+/// One section of the panel: a surface card with a hairline border.
+class ChatPanelCard extends StatelessWidget {
+  const ChatPanelCard({super.key, required this.child, this.padding});
+
+  final Widget child;
+  final EdgeInsets? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.spacing;
+    return Container(
+      margin: EdgeInsets.only(bottom: s.xl),
+      padding: padding ?? EdgeInsets.all(s.xl3),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        border: Border.fromBorderSide(context.hairlineSide),
+      ),
+      child: child,
     );
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/error/result.dart';
-import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -13,8 +11,6 @@ import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
-import 'chat_snack.dart';
-import 'chat_video_dialog.dart';
 import 'chat_video_tile.dart';
 
 /// A file message. A sent video is a preview frame with a play button that
@@ -42,33 +38,11 @@ class _FileBodyState extends ConsumerState<FileBody> {
   ChatAttachmentKey get _key =>
       (accountId: widget.accountId, content: widget.file);
 
-  /// Downloads first when needed; plays a video in-app, opens any other
-  /// file with the system's default app.
-  Future<void> _open() => openAttachment(
+  Future<void> _open() => openChatFile(
     context,
     ref,
     accountId: widget.accountId,
-    content: widget.file,
-    open: () async {
-      if (isVideoFile(widget.file)) {
-        await ChatVideoDialog.show(
-          context,
-          accountId: widget.accountId,
-          video: widget.file,
-        );
-        return;
-      }
-      final path = await ref
-          .read(chatControllerProvider)
-          .attachmentFile(widget.accountId, widget.file);
-      if (!mounted) return;
-      switch (path) {
-        case Ok(:final value):
-          await openExternally(value);
-        case Err(:final failure):
-          showChatFailure(context, failure);
-      }
-    },
+    file: widget.file,
   );
 
   @override

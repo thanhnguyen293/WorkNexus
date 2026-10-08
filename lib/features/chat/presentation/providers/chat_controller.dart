@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
@@ -7,6 +8,7 @@ import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/connect_chat.dart';
 import '../../domain/usecases/fetch_chat_messages.dart';
+import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/usecases/load_chat_attachment.dart';
 import '../../domain/usecases/load_older_messages.dart';
 import '../../domain/usecases/load_video_thumbnail.dart';
@@ -85,6 +87,10 @@ class ChatController {
   /// null (a pass-through; CLAUDE.md 2.4).
   Future<Result<void>> clearCache({String? accountId, String? chatGid}) =>
       _repository.clearCache(accountId: accountId, chatGid: chatGid);
+
+  /// The synced ZenTao ticket [url] points to, if any.
+  Ticket? linkedTicket(String url, List<Ticket> tickets) =>
+      const FindLinkedTicket()(url, tickets);
 
   /// Live messages from others; a pass-through stream (CLAUDE.md 2.4).
   Stream<ChatMessage> watchIncoming() => _repository.watchIncoming();

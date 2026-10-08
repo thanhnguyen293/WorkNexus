@@ -2,14 +2,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/labels.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/link_preview.dart';
 import '../providers/chat_providers.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
+import 'chat_links.dart';
 
 /// Fixed card size: the space is reserved as soon as a message has a link,
 /// so the list never jumps when the preview arrives (or turns out empty).
@@ -29,13 +31,29 @@ class LinkPreviewCard extends ConsumerWidget {
     final ink = ChatBubbleTheme.of(context);
     final s = context.spacing;
     final radius = BorderRadius.circular(context.radii.sm);
-    final state = ref.watch(chatLinkPreviewProvider(url));
+    // A link to a synced ZenTao ticket shows the ticket instead of fetching
+    // the (login-protected) page.
+    final ticket = watchLinkedTicket(ref, url);
+    final state = ticket == null
+        ? ref.watch(chatLinkPreviewProvider(url))
+        : AsyncData<LinkPreview?>(
+            LinkPreview(
+              url: url,
+              siteName:
+                  'ZenTao · ${ticket.externalType ?? ''} #${ticket.externalKey}',
+              title: ticket.title,
+              description: [
+                statusLabel(AppL10n.of(context), ticket.status),
+                ?ticket.assignee,
+              ].join(' · '),
+            ),
+          );
     final preview = state.asData?.value;
     final image = preview?.imageUrl;
     return Padding(
       padding: EdgeInsets.only(top: s.md),
       child: InkWell(
-        onTap: () => openExternally(url),
+        onTap: () => openChatLink(ref, url),
         borderRadius: radius,
         child: Container(
           height: _kCardHeight,

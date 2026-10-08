@@ -130,6 +130,9 @@ abstract class ChatRepository {
   /// Whether an attachment's original is already downloaded.
   Future<bool> isAttachmentCached(String accountId, MessageContent content);
 
+  /// A chat's image and file messages stored locally, newest first.
+  Stream<List<ChatMessage>> watchAttachments(String accountId, String chatGid);
+
   /// Disk space used by downloaded attachments, per chat.
   Future<Result<ChatCacheUsage>> cacheUsage();
 

@@ -298,6 +298,18 @@ class XxdChatRepository implements ChatRepository {
       );
 
   @override
+  Stream<List<ChatMessage>> watchAttachments(
+    String accountId,
+    String chatGid,
+  ) => withSelfUserId(
+    _local.watchSelfUserId(accountId),
+    _local.watchAttachments(accountId, chatGid),
+    (rows, self) => [
+      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
+    ],
+  );
+
+  @override
   Stream<List<ChatUser>> watchUsers(String accountId) => _local
       .watchUsers(accountId)
       .map((rows) => rows.map(userFromRow).toList());

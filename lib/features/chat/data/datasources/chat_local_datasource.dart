@@ -230,6 +230,22 @@ class ChatLocalDatasource {
             ..orderBy([(m) => OrderingTerm.asc(m.sentAt)]))
           .watch();
 
+  /// A chat's image and file messages (not retracted), newest first.
+  Stream<List<ChatMessageRow>> watchAttachments(
+    String accountId,
+    String cgid,
+  ) =>
+      (_db.select(_db.chatMessages)
+            ..where(
+              (m) =>
+                  m.accountId.equals(accountId) &
+                  m.cgid.equals(cgid) &
+                  m.contentType.isIn(const ['image', 'file']) &
+                  m.deleted.equals(false),
+            )
+            ..orderBy([(m) => OrderingTerm.desc(m.sentAt)]))
+          .watch();
+
   // ---- users -----------------------------------------------------------------
 
   Future<void> upsertUsers(List<ChatUsersCompanion> rows) =>

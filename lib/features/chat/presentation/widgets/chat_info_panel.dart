@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -14,6 +13,7 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
+import 'chat_info_files_section.dart';
 import 'chat_labels.dart';
 import 'chat_member_list.dart';
 import 'chat_panels.dart';
@@ -128,7 +128,7 @@ class ChatInfoPanel extends ConsumerWidget {
             ),
           SizedBox(height: s.xl4),
           if (details.isNotEmpty)
-            _Card(
+            ChatPanelCard(
               child: Column(
                 children: [
                   for (final (i, row) in details.indexed)
@@ -139,7 +139,7 @@ class ChatInfoPanel extends ConsumerWidget {
                 ],
               ),
             ),
-          _Card(
+          ChatPanelCard(
             padding: EdgeInsets.zero,
             child: ListTile(
               shape: RoundedRectangleBorder(
@@ -168,8 +168,9 @@ class ChatInfoPanel extends ConsumerWidget {
                   toggleChatSidePanel(ref, thread, ChatSidePanel.pinned),
             ),
           ),
+          ChatInfoFilesSection(thread: thread),
           if (!oneToOne)
-            _Card(
+            ChatPanelCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -190,29 +191,6 @@ class ChatInfoPanel extends ConsumerWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-/// One section of the panel: a surface card with a hairline border.
-class _Card extends StatelessWidget {
-  const _Card({required this.child, this.padding});
-
-  final Widget child;
-  final EdgeInsets? padding;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = context.spacing;
-    return Container(
-      margin: EdgeInsets.only(bottom: s.xl),
-      padding: padding ?? EdgeInsets.all(s.xl3),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        border: Border.fromBorderSide(context.hairlineSide),
-      ),
-      child: child,
     );
   }
 }
