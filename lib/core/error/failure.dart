@@ -40,6 +40,27 @@ class StorageFailure extends Failure {
   const StorageFailure(super.message, {super.cause});
 }
 
+/// The server presented a TLS certificate the system does not trust and that
+/// does not match the pinned fingerprint. Carries what the user needs to decide
+/// whether to trust it (trust-on-first-use).
+class UntrustedCertificateFailure extends Failure {
+  const UntrustedCertificateFailure(
+    super.message, {
+    required this.host,
+    required this.fingerprint,
+    required this.subject,
+    required this.issuer,
+    super.cause,
+  });
+
+  final String host;
+
+  /// SHA-256 of the DER certificate, `AB:CD:…` upper-case hex.
+  final String fingerprint;
+  final String subject;
+  final String issuer;
+}
+
 /// Anything not otherwise classified.
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure(super.message, {super.cause});
