@@ -32,6 +32,8 @@ class ChatStylePalette {
     this.quoteFill,
     this.outsideQuoteFill,
     this.outsideQuoteText,
+    this.wallpaper,
+    this.wallpaperInk,
   });
 
   /// The WorkNexus style follows the app theme.
@@ -49,6 +51,65 @@ class ChatStylePalette {
     outgoingQuoteBar: c.accent,
     separatorText: c.textTertiary,
   );
+
+  /// This palette with own bubbles in the app's accent [c] instead of the
+  /// messenger's colour. [solid] (Messenger) fills them with the accent and
+  /// light text; otherwise they get an accent tint over the incoming bubble
+  /// with normal text, so contrast stays as in the theme.
+  ChatStylePalette withPrimaryBubbles(
+    AppColors c, {
+    required bool solid,
+    required bool dark,
+  }) {
+    final tint = Color.alphaBlend(
+      c.accent.withValues(alpha: dark ? 0.32 : 0.16),
+      incomingBubble,
+    );
+    return ChatStylePalette(
+      background: background,
+      incomingBubble: incomingBubble,
+      incomingText: incomingText,
+      incomingMeta: incomingMeta,
+      incomingLink: incomingLink,
+      incomingQuoteBar: incomingQuoteBar,
+      incomingBorder: incomingBorder,
+      outgoingBubble: solid ? _readableFill(c.accent, c.onAccent) : tint,
+      outgoingText: solid ? c.onAccent : incomingText,
+      outgoingMeta: solid ? c.onAccent.withValues(alpha: 0.85) : incomingMeta,
+      outgoingLink: solid ? c.onAccent : c.accent,
+      outgoingQuoteBar: solid ? c.onAccent : c.accent,
+      outgoingBorder: outgoingBorder == null
+          ? null
+          : Color.alphaBlend(c.accent.withValues(alpha: 0.35), incomingBubble),
+      outgoingTicks: outgoingTicks == null ? null : c.accent,
+      separatorFill: separatorFill,
+      separatorText: separatorText,
+      nameColors: nameColors,
+      quoteFill: quoteFill,
+      outsideQuoteFill: outsideQuoteFill,
+      outsideQuoteText: outsideQuoteText,
+      wallpaper: wallpaper,
+      wallpaperInk: wallpaperInk,
+    );
+  }
+
+  /// [fill] darkened just enough for [ink] to read at 4.5:1 (a dark theme's
+  /// light accent under white text would not).
+  static Color _readableFill(Color fill, Color ink) {
+    double contrast(Color bg) {
+      final a = ink.computeLuminance();
+      final b = bg.computeLuminance();
+      return (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
+    }
+
+    var out = fill;
+    for (var shade = 0.08; contrast(out) < 4.5 && shade <= 0.6; shade += 0.08) {
+      out = Color.alphaBlend(_black.withValues(alpha: shade), fill);
+    }
+    return out;
+  }
+
+  static const _black = Color(0xFF000000);
 
   /// Chat area behind the messages.
   final Color background;
@@ -88,12 +149,28 @@ class ChatStylePalette {
   final Color? outsideQuoteFill;
   final Color? outsideQuoteText;
 
+  /// A wallpaper behind the messages (Telegram): the colours of a soft
+  /// four-corner gradient — top left, top right, bottom right, bottom left
+  /// — with [background] as their average. Null = flat [background].
+  final List<Color>? wallpaper;
+
+  /// Colour of the doodle pattern drawn over [wallpaper]; null = none.
+  final Color? wallpaperInk;
+
   /// Quote/card background inside a dark or saturated bubble: a darker
   /// inset keeps light text readable (a light tint would wash it out).
   static const darkInset = Color(0x2E000000);
 
   static const telegramDay = ChatStylePalette(
     background: Color(0xFFA9C08E),
+    // Telegram's default gradient wallpaper (green / sand).
+    wallpaper: [
+      Color(0xFFDBDDBB),
+      Color(0xFF6BA587),
+      Color(0xFFD5D88D),
+      Color(0xFF88B884),
+    ],
+    wallpaperInk: Color(0x1F1D3A1A),
     incomingBubble: Color(0xFFFFFFFF),
     incomingText: Color(0xFF000000),
     incomingMeta: Color(0xFF677887),
@@ -121,6 +198,13 @@ class ChatStylePalette {
 
   static const telegramNight = ChatStylePalette(
     background: Color(0xFF0B121B),
+    wallpaper: [
+      Color(0xFF14232F),
+      Color(0xFF0B141D),
+      Color(0xFF1A2A2C),
+      Color(0xFF0E1A22),
+    ],
+    wallpaperInk: Color(0x14FFFFFF),
     incomingBubble: Color(0xFF1E2C3A),
     incomingText: Color(0xFFF5F5F5),
     incomingMeta: Color(0xFF8493A1),

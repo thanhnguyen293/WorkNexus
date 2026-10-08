@@ -37,6 +37,9 @@ enum DateDisplayFormat {
 const double kSidebarWidthDefault = 290.0;
 
 /// App-wide appearance + language settings, persisted to drift (see `main`).
+/// [AppSettings.chatWallpaper] value for the style's plain colour.
+const kChatWallpaperPlain = 'none';
+
 @immutable
 class AppSettings {
   const AppSettings({
@@ -56,6 +59,9 @@ class AppSettings {
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
     this.chatAppearance = ChatAppearance.zalo,
+    this.chatPrimaryBubbles = false,
+    this.chatWallpaper = '',
+    this.chatWallpaperDim = 0.2,
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
     this.chatCacheLimitMb = 2048,
@@ -111,6 +117,15 @@ class AppSettings {
   final ChatAppearance chatAppearance;
 
   /// Send chat messages as Markdown (xxd `text`) instead of plain text.
+  /// Own bubbles in Telegram/Zalo/Messenger/WeChat styles use the accent.
+  final bool chatPrimaryBubbles;
+
+  /// '' = the chat style's own background, [kChatWallpaperPlain] = its plain
+  /// colour, otherwise the path of a wallpaper image.
+  final String chatWallpaper;
+
+  /// How much a wallpaper image is darkened (0–1).
+  final double chatWallpaperDim;
   final bool chatSendMarkdown;
 
   /// Show a desktop notification for new chat messages.
@@ -135,6 +150,9 @@ class AppSettings {
     List<PinnedExecution>? pinnedExecutions,
     double? sidebarWidth,
     ChatAppearance? chatAppearance,
+    bool? chatPrimaryBubbles,
+    String? chatWallpaper,
+    double? chatWallpaperDim,
     bool? chatSendMarkdown,
     bool? chatNotifications,
     int? chatCacheLimitMb,
@@ -157,6 +175,9 @@ class AppSettings {
       pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       chatAppearance: chatAppearance ?? this.chatAppearance,
+      chatPrimaryBubbles: chatPrimaryBubbles ?? this.chatPrimaryBubbles,
+      chatWallpaper: chatWallpaper ?? this.chatWallpaper,
+      chatWallpaperDim: chatWallpaperDim ?? this.chatWallpaperDim,
       chatSendMarkdown: chatSendMarkdown ?? this.chatSendMarkdown,
       chatNotifications: chatNotifications ?? this.chatNotifications,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
@@ -229,6 +250,12 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setFontFamily(String f) => _set(state.copyWith(fontFamily: f));
   void setChatAppearance(ChatAppearance a) =>
       _set(state.copyWith(chatAppearance: a));
+  void setChatWallpaper(String wallpaper) =>
+      _set(state.copyWith(chatWallpaper: wallpaper));
+  void setChatWallpaperDim(double dim) =>
+      _set(state.copyWith(chatWallpaperDim: dim.clamp(0, 0.8)));
+  void setChatPrimaryBubbles(bool on) =>
+      _set(state.copyWith(chatPrimaryBubbles: on));
   void setChatSendMarkdown(bool on) =>
       _set(state.copyWith(chatSendMarkdown: on));
   void setChatNotifications(bool on) =>

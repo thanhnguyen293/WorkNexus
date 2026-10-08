@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -190,8 +189,18 @@ class _FakeChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<int>> loadOlderMessages(String a, String chatGid) async =>
-      const Ok(0);
+  Future<Result<int>> loadOlderMessages(
+    String a,
+    String chatGid, {
+    int? beforeServerId,
+  }) async => const Ok(0);
+
+  @override
+  Future<Result<int>> countOlderMessages(
+    String a,
+    String chatGid, {
+    required DateTime before,
+  }) async => const Ok(0);
 
   @override
   Future<Result<void>> sendText(
@@ -245,6 +254,13 @@ class _FakeChatRepository implements ChatRepository {
     required Uint8List bytes,
     String? mimeType,
     int? replyToId,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setChatStarred(
+    String a,
+    String c, {
+    required bool starred,
   }) async => const Ok(null);
 
   @override

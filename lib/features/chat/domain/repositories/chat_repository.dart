@@ -43,7 +43,18 @@ abstract class ChatRepository {
 
   /// Fetches the page before the oldest stored message; returns how many
   /// messages arrived (0 = reached the beginning).
-  Future<Result<int>> loadOlderMessages(String accountId, String chatGid);
+  Future<Result<int>> loadOlderMessages(
+    String accountId,
+    String chatGid, {
+    int? beforeServerId,
+  });
+
+  /// How many messages of [chatGid] are stored locally from before [before].
+  Future<Result<int>> countOlderMessages(
+    String accountId,
+    String chatGid, {
+    required DateTime before,
+  });
 
   /// Shows the message immediately as pending, then sends it — as a reply to
   /// server message [replyToId] when given, as Markdown when [markdown].
@@ -146,6 +157,14 @@ abstract class ChatRepository {
   /// The signed-in user's ZenTao profile (where their picture is changed),
   /// as a link that opens signed in.
   Future<Result<Uri>> zentaoProfileUri(String accountId);
+
+  /// Pins or unpins [chatGid] at the top of the chat list (synced with the
+  /// server, so other clients see it too).
+  Future<Result<void>> setChatStarred(
+    String accountId,
+    String chatGid, {
+    required bool starred,
+  });
 
   /// Pins or unpins message [serverId] in [chatGid] (one-to-one chats, or
   /// group owner/admins; the server checks).

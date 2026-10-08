@@ -41,15 +41,19 @@ class ChatHistorySync {
     };
   }
 
-  /// Fetches the page before the oldest stored message; returns how many
-  /// older messages arrived.
+  /// Fetches the page before server message [before] (default: the oldest
+  /// stored one); returns how many older messages arrived. Pass the oldest
+  /// message *shown*: stored messages need not be contiguous (pinned ones and
+  /// reply parents are fetched by id), so the oldest stored one can sit far
+  /// before a gap.
   Future<Result<int>> loadOlder(
     ChatSession? session,
     String accountId,
-    String chatGid,
-  ) async {
+    String chatGid, {
+    int? before,
+  }) async {
     if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    final oldest = await _local.oldestServerId(accountId, chatGid);
+    final oldest = before ?? await _local.oldestServerId(accountId, chatGid);
     if (oldest == null) {
       final refreshed = await refresh(session, accountId, chatGid);
       return switch (refreshed) {

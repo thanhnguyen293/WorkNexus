@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
+import '../../../../core/widgets/merge_request_state_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_panel_header_actions.dart';
 
@@ -69,7 +71,10 @@ class GitHubPrHeader extends StatelessWidget {
             runSpacing: context.spacing.sm,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              _StatusPill(status: ticket.providerStatus),
+              MergeRequestStatePill(
+                status: ticket.providerStatus,
+                provider: ProviderType.github,
+              ),
               if ((entity.author ?? '').isNotEmpty)
                 Text(
                   l.mrRequestedToMerge(entity.author!),
@@ -96,46 +101,6 @@ class GitHubPrHeader extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final normalized = status.toLowerCase();
-    final (color, label) = switch (normalized) {
-      'merged' => (c.info, l.githubColMerged),
-      'closed' => (c.textTertiary, l.githubColClosed),
-      'draft' => (c.warning, l.githubColDraft),
-      _ => (c.success, l.githubColOpen),
-    };
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: c.mixT(color, 0.16),
-        borderRadius: BorderRadius.circular(context.radii.md),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.merge_type, size: context.spacing.xl2, color: color),
-          SizedBox(width: context.spacing.xs),
-          Text(
-            label,
-            style: context.typography.captionStrong.copyWith(color: color),
           ),
         ],
       ),

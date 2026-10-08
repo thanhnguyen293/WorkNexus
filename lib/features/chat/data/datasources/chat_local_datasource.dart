@@ -135,7 +135,18 @@ class ChatLocalDatasource {
             ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
           .write(ChatConversationsCompanion(pinnedJson: Value(pinnedJson)));
 
-  /// Conversations with their last message, most recently active first.
+  /// Pins or unpins a chat at the top of the list.
+  Future<void> setStarred(
+    String accountId,
+    String gid, {
+    required bool starred,
+  }) =>
+      (_db.update(_db.chatConversations)
+            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
+          .write(ChatConversationsCompanion(starred: Value(starred)));
+
+  /// Conversations with their last message: pinned ones first, then the
+  /// most recently active.
   Stream<List<(ChatConversationRow, ChatMessageRow?)>> watchConversations(
     String accountId,
   ) {
@@ -151,7 +162,10 @@ class ChatLocalDatasource {
             ),
           ])
           ..where(c.accountId.equals(accountId))
-          ..orderBy([OrderingTerm.desc(c.lastActiveAt)]);
+          ..orderBy([
+            OrderingTerm.desc(c.starred),
+            OrderingTerm.desc(c.lastActiveAt),
+          ]);
     return query.watch().map(
       (rows) => [for (final r in rows) (r.readTable(c), r.readTableOrNull(m))],
     );
@@ -213,6 +227,22 @@ class ChatLocalDatasource {
               ..where(m.accountId.equals(accountId) & m.cgid.equals(cgid)))
             .getSingle();
     return row.read(min);
+  }
+
+  /// How many stored messages of a chat were sent before [before].
+  Future<int> countOlder(String accountId, String cgid, DateTime before) async {
+    final m = _db.chatMessages;
+    final count = m.gid.count();
+    final row =
+        await (_db.selectOnly(m)
+              ..addColumns([count])
+              ..where(
+                m.accountId.equals(accountId) &
+                    m.cgid.equals(cgid) &
+                    m.sentAt.isSmallerThanValue(before),
+              ))
+            .getSingle();
+    return row.read(count) ?? 0;
   }
 
   /// The newest [limit] messages of a chat, oldest first.

@@ -119,6 +119,7 @@ void main() {
               'date': _t0 + 900,
             },
         ],
+        'chatstar' => {'gid': params[1], 'star': params[0]},
         'chatgetmessageinfo' => {'lastMessage': 120, 'messageCount': 120},
         'chatsetlastreadmessagebyindex' => {'gid': params[0], 'id': params[1]},
         'messagesync' => [
@@ -369,6 +370,36 @@ void main() {
     },
   );
 
+  test('pinning a chat moves it first; a push from elsewhere too', () async {
+    await repo.connect(_acc);
+    var chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final last = chats.last.gid;
+
+    final r = await repo.setChatStarred(_acc, last, starred: true);
+    expect(r, isA<Ok<void>>());
+    chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.first.gid == last && l.first.starred,
+    );
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatstar')['params'],
+      [true, last],
+    );
+
+    server.current.push({
+      'method': 'chatStar',
+      'result': 'success',
+      'data': {'gid': last, 'star': false},
+    });
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => !byGid(l, last)!.starred,
+    );
+  });
+
   test('a message in an unknown chat fetches that chat', () async {
     await repo.connect(_acc);
     await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
@@ -443,6 +474,38 @@ void main() {
       SendState.sent,
     );
   });
+
+  test(
+    'older pages start before the oldest shown message, across gaps',
+    () async {
+      await repo.connect(_acc);
+      await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+      expect((await repo.refreshMessages(_acc, 'g1')).isOk, isTrue);
+      // A far older message stored on its own (as a pinned message or reply
+      // parent is): history now has a gap between it and the newest page.
+      server.current.push({
+        'method': 'messagesend',
+        'result': 'success',
+        'data': [_msg(3)],
+      });
+      await eventually(
+        repo.watchMessages(_acc, 'g1', limit: 500),
+        (m) => m.any((x) => x.serverId == 3),
+      );
+
+      // Paging from the oldest *stored* message would find almost nothing.
+      expect(
+        (await repo.loadOlderMessages(
+          _acc,
+          'g1',
+          beforeServerId: 71,
+        )).valueOrNull,
+        50,
+      );
+      final stored = await repo.watchMessages(_acc, 'g1', limit: 500).first;
+      expect(stored.where((m) => m.serverId! < 71).length, 51);
+    },
+  );
 
   test('refresh then loadOlder page backwards through history', () async {
     await repo.connect(_acc);

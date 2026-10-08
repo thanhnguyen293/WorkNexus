@@ -53,6 +53,14 @@
   "syncedAgo": "Synced 2m ago",
   "justNow": "just now",
   "minutesAgo": "{count}m ago",
+  "hoursAgo": "{count}h ago",
+  "daysAgo": "{count}d ago",
+  "@hoursAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "@daysAgo": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "@minutesAgo": {
     "placeholders": { "count": { "type": "int" } }
   },
@@ -440,6 +448,18 @@
   "chatSendLike": "Send a like",
   "chatMention": "Mention someone",
   "chatEmoji": "Emoji",
+  "chatPinChat": "Pin chat",
+  "chatUnpinChat": "Unpin chat",
+  "chatMrLoading": "Loading status…",
+  "chatMrFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@chatMrFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "chatMrUnavailable": "Status unavailable — tap to open",
+  "chatMrNoAccount": "Connect an account for {host} to see its status",
+  "@chatMrNoAccount": {
+    "placeholders": { "host": { "type": "String" } }
+  },
   "chatBotName": "Xuanbot",
   "chatViewDetail": "View details",
   "chatNotificationsBlocked": "Notifications are turned off for WorkNexus in System Settings, so you won't be alerted to new messages.",
@@ -599,7 +619,15 @@
     "placeholders": { "name": { "type": "String" } }
   },
   "chatAppearance": "Chat style",
-  "chatAppearanceDefault": "WorkNexus",
+  "chatAppearanceDefault": "Default",
+  "chatPrimaryBubbles": "Use the accent colour for my bubbles",
+  "chatPrimaryBubblesHint": "Telegram, Zalo, Messenger and WeChat use the app's accent colour for your messages. The default style always follows the app's colours.",
+  "chatWallpaper": "Wallpaper",
+  "chatWallpaperStyle": "The style's own",
+  "chatWallpaperPlain": "Plain colour",
+  "chatWallpaperAdd": "Add an image",
+  "chatWallpaperRemove": "Remove wallpaper",
+  "chatWallpaperDim": "Darken",
   "chatMarkdownOn": "Markdown on — messages are sent formatted",
   "chatMarkdownOff": "Markdown off — messages are sent as plain text"
 }
