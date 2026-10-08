@@ -6,12 +6,17 @@ part 'message_content.freezed.dart';
 /// (see `ParseMessageContent`).
 @freezed
 sealed class MessageContent with _$MessageContent {
-  /// Plain text (`plain` or `text`). Mentions stay in their wire form
-  /// `[@Name](@#userId)`; rendering them is a presentation concern.
-  const factory MessageContent.text(String text) = TextContent;
+  /// Text. xxd's `text` content type is Markdown ([markdown]), `plain` is
+  /// literal. Mentions stay in their wire form `[@Name](@#userId)` (which is
+  /// also a Markdown link); rendering them is a presentation concern.
+  const factory MessageContent.text(
+    String text, {
+    @Default(false) bool markdown,
+  }) = TextContent;
 
-  /// An uploaded image. [time] is the upload time in milliseconds, which the
-  /// signed download URL needs.
+  /// An image. [time] is the upload time in milliseconds, which the signed
+  /// download URL needs. Small images are sent inline instead of uploaded:
+  /// then [inlineBase64] holds the bytes and [fileId] is 0.
   const factory MessageContent.image({
     required int fileId,
     required String name,
@@ -20,6 +25,10 @@ sealed class MessageContent with _$MessageContent {
     String? mimeType,
     int? width,
     int? height,
+    String? inlineBase64,
+
+    /// The server stored a smaller preview (`thumb_<name>`) to show inline.
+    @Default(false) bool hasThumb,
   }) = ImageContent;
 
   /// Any other uploaded file; same download rules as an image.

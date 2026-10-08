@@ -108,6 +108,14 @@ class Settings extends Table {
   TextColumn get fontFamily =>
       text().withDefault(const Constant('Space Grotesk'))();
   RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
+
+  /// Chat message layout style (`ChatAppearance` name).
+  TextColumn get chatAppearance =>
+      text().withDefault(const Constant('worknexus'))();
+
+  /// Whether chat messages are sent as Markdown.
+  BoolColumn get chatSendMarkdown =>
+      boolean().withDefault(const Constant(false))();
   IntColumn get accentColorValue => integer().nullable()();
 
   /// JSON array of pinned ZenTao project keys (`"accountId:productId"`), shown at
@@ -206,7 +214,10 @@ class ChatConversations extends Table {
 /// A ZenTao chat message. [gid] is the client-generated id; [serverId] is set
 /// once xxd stores it. [sendState] is `sent`, `pending` or `failed`.
 @DataClassName('ChatMessageRow')
-@TableIndex(name: 'chat_messages_by_chat', columns: {#accountId, #cgid, #sentAt})
+@TableIndex(
+  name: 'chat_messages_by_chat',
+  columns: {#accountId, #cgid, #sentAt},
+)
 class ChatMessages extends Table {
   TextColumn get accountId => text()();
   TextColumn get gid => text()();
@@ -218,6 +229,9 @@ class ChatMessages extends Table {
   TextColumn get contentType => text()();
   TextColumn get content => text()();
   TextColumn get sendState => text().withDefault(const Constant('sent'))();
+
+  /// Server id of the message this one replies to (`data.replyTo`).
+  IntColumn get replyToId => integer().nullable()();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
 
   @override
@@ -266,7 +280,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -319,6 +333,19 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(chatMessages);
         await m.createIndex(chatMessagesByChat);
         await m.createTable(chatUsers);
+      }
+      if (from < 18) {
+        if (!await _hasColumn('chat_messages', 'reply_to_id')) {
+          await m.addColumn(chatMessages, chatMessages.replyToId);
+        }
+      }
+      if (from < 19) {
+        if (!await _hasColumn('settings', 'chat_appearance')) {
+          await m.addColumn(settings, settings.chatAppearance);
+        }
+        if (!await _hasColumn('settings', 'chat_send_markdown')) {
+          await m.addColumn(settings, settings.chatSendMarkdown);
+        }
       }
     },
   );

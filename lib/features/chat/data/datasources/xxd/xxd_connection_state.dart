@@ -6,6 +6,8 @@ final class XxdSession {
     required this.user,
     required this.serverVersion,
     this.sessionId,
+    this.token = '',
+    this.uploadFileSize,
   });
 
   /// The `userlogin` reply data (`id`, `account`, `realname`, `avatar`, …).
@@ -15,10 +17,21 @@ final class XxdSession {
   /// HTTP session id from `syssessionid`; signs file downloads.
   final String? sessionId;
 
+  /// Session token from `serverInfo`; authorizes file uploads.
+  final String token;
+
+  /// Largest upload the server accepts, in bytes (null = unknown).
+  final int? uploadFileSize;
+
   int get userId => (user['id'] as num).toInt();
 
-  XxdSession withSessionId(String id) =>
-      XxdSession(user: user, serverVersion: serverVersion, sessionId: id);
+  XxdSession withSessionId(String id) => XxdSession(
+    user: user,
+    serverVersion: serverVersion,
+    sessionId: id,
+    token: token,
+    uploadFileSize: uploadFileSize,
+  );
 }
 
 /// Lifecycle of an xxd connection.

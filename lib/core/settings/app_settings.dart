@@ -5,6 +5,7 @@ import '../theme/app_palette.dart';
 import '../theme/app_radii.dart';
 import '../theme/fonts.dart';
 import '../util/translation_languages.dart';
+import 'chat_appearance.dart';
 import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
@@ -54,6 +55,8 @@ class AppSettings {
     this.pinnedProjects = const <String>{},
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
+    this.chatAppearance = ChatAppearance.worknexus,
+    this.chatSendMarkdown = false,
   });
 
   final AppThemeVariant variant;
@@ -102,6 +105,12 @@ class AppSettings {
   /// by the settings slider. Clamped to [kComponentRadiusMin]..[kComponentRadiusMax].
   final double componentRadius;
 
+  /// Message layout style of the chat view.
+  final ChatAppearance chatAppearance;
+
+  /// Send chat messages as Markdown (xxd `text`) instead of plain text.
+  final bool chatSendMarkdown;
+
   AppSettings copyWith({
     AppThemeVariant? variant,
     SurfaceStyle? surface,
@@ -117,6 +126,8 @@ class AppSettings {
     Set<String>? pinnedProjects,
     List<PinnedExecution>? pinnedExecutions,
     double? sidebarWidth,
+    ChatAppearance? chatAppearance,
+    bool? chatSendMarkdown,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -135,6 +146,8 @@ class AppSettings {
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
       pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
+      chatAppearance: chatAppearance ?? this.chatAppearance,
+      chatSendMarkdown: chatSendMarkdown ?? this.chatSendMarkdown,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -202,6 +215,10 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setTranslationModel(String model) =>
       _set(state.copyWith(translationModel: model.trim()));
   void setFontFamily(String f) => _set(state.copyWith(fontFamily: f));
+  void setChatAppearance(ChatAppearance a) =>
+      _set(state.copyWith(chatAppearance: a));
+  void setChatSendMarkdown(bool on) =>
+      _set(state.copyWith(chatSendMarkdown: on));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));
 

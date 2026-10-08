@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/settings/app_settings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/board/presentation/widgets/sidebar.dart';
+import '../../features/chat/presentation/widgets/chat_nav.dart';
 
 /// Bounds (logical px) the sidebar can be dragged between.
 const double _kSidebarMinWidth = 220.0;
@@ -39,7 +40,10 @@ class _ResizableSidebarState extends ConsumerState<ResizableSidebar> {
 
     return Row(
       children: [
-        SizedBox(width: width, child: const SidebarView()),
+        SizedBox(
+          width: width,
+          child: const SidebarView(footer: [ChatNav()]),
+        ),
         _ResizeHandle(
           onDelta: (dx) => setState(() {
             final current = _dragWidth ?? saved;
