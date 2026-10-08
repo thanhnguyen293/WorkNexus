@@ -1,0 +1,323 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
+import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
+import 'package:work_nexus/core/error/failure.dart';
+import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/theme/app_palette.dart';
+import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/l10n/app_localizations.dart';
+
+/// In-memory [ChatRepository] that records the commands it receives.
+class _FakeChatRepository implements ChatRepository {
+  ChatConnectionStatus status = const ChatConnectionStatus.online(
+    selfUserId: 40,
+  );
+  final calls = <String>[];
+
+  static final _at = DateTime(2026, 10, 8, 9, 30);
+
+  ChatMessage _msg(
+    String gid,
+    int sender,
+    String text, {
+    SendState state = SendState.sent,
+  }) => ChatMessage(
+    accountId: 'acc',
+    gid: gid,
+    chatGid: 'g1',
+    senderId: sender,
+    sentAt: _at,
+    content: MessageContent.text(text),
+    isMine: sender == 40,
+    sendState: state,
+  );
+
+  @override
+  Stream<ChatConnectionStatus> watchStatus(String accountId) =>
+      Stream.value(status);
+
+  @override
+  Stream<List<ChatConversation>> watchConversations(String accountId) =>
+      Stream.value([
+        ChatConversation(
+          accountId: 'acc',
+          gid: 'g1',
+          type: ChatType.group,
+          name: 'VN Mobile Team',
+          unreadCount: 3,
+          lastActiveAt: _at,
+          lastMessage: _msg('m2', 31, 'hi [@Thanh](@#40)'),
+        ),
+        ChatConversation(
+          accountId: 'acc',
+          gid: '31&40',
+          type: ChatType.one2one,
+          name: '',
+          peerUserId: 31,
+          lastActiveAt: _at,
+        ),
+      ]);
+
+  @override
+  Stream<List<ChatUser>> watchUsers(String accountId) => Stream.value(const [
+    ChatUser(accountId: 'acc', userId: 31, account: 'dyno', realname: 'Dyno'),
+  ]);
+
+  @override
+  Stream<List<ChatMessage>> watchMessages(
+    String accountId,
+    String chatGid, {
+    int limit = 50,
+  }) => Stream.value([
+    _msg('m1', 40, 'xin chào'),
+    _msg('m2', 31, 'hi [@Thanh](@#40)'),
+    _msg('m3', 40, 'lost', state: SendState.failed),
+  ]);
+
+  @override
+  Future<Result<void>> connect(String accountId) async {
+    calls.add('connect');
+    return const Ok(null);
+  }
+
+  @override
+  Future<void> disconnect(String accountId) async {}
+
+  @override
+  Future<Result<void>> trustCertificate(String a, String fingerprint) async {
+    calls.add('trust $fingerprint');
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> refreshMessages(String a, String chatGid) async {
+    calls.add('refresh $chatGid');
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<int>> loadOlderMessages(String a, String chatGid) async =>
+      const Ok(0);
+
+  @override
+  Future<Result<void>> sendText(
+    String a,
+    String chatGid,
+    String text, {
+    int? replyToId,
+    bool markdown = false,
+  }) async {
+    calls.add('send $chatGid $text');
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> retrySend(String a, String messageGid) async {
+    calls.add('retry $messageGid');
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> markRead(String a, String chatGid) async {
+    calls.add('read $chatGid');
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<Uint8List>> loadAttachment(
+    String a,
+    MessageContent c, {
+    bool thumbnail = false,
+  }) async => const Err(NotFoundFailure('none'));
+
+  // Members added after these tests were written; not exercised here yet.
+  @override
+  Stream<ChatMessage?> watchMessage(String a, String c, int id) =>
+      Stream.value(null);
+
+  @override
+  Stream<List<ChatMessage>> watchReplies(String a, String c) =>
+      Stream.value(const []);
+
+  @override
+  Future<Result<void>> fetchMessages(String a, String c, List<int> ids) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> sendFile(
+    String a,
+    String c, {
+    required String name,
+    required Uint8List bytes,
+    String? mimeType,
+    int? replyToId,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> retract(String a, String g) async => const Ok(null);
+
+  @override
+  Stream<double> watchUploadProgress(String g) => const Stream.empty();
+
+  @override
+  Future<Result<String>> attachmentFile(String a, MessageContent c) async =>
+      const Err(NotFoundFailure('none'));
+
+  @override
+  Future<Result<Uint8List>> videoThumbnail(String a, MessageContent v) async =>
+      const Err(NotFoundFailure('none'));
+
+  @override
+  Future<Result<int>> memberCount(String a, String c) async => const Ok(3);
+}
+
+void main() {
+  late _FakeChatRepository repo;
+
+  setUp(() => repo = _FakeChatRepository());
+
+  Future<void> pumpChat(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(repo),
+          chatAccountsProvider.overrideWithValue(const [
+            Account(
+              id: 'acc',
+              workspaceId: 'ws',
+              providerType: ProviderType.zentao,
+              handle: 'Thanh',
+            ),
+          ]),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          home: const Scaffold(body: ChatPage()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> openTeamChat(WidgetTester tester) async {
+    await tester.tap(find.text('VN Mobile Team'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('lists chats with titles, previews and unread counts', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+
+    expect(find.text('VN Mobile Team'), findsOneWidget);
+    expect(find.text('Dyno'), findsOneWidget, reason: '1:1 titled by peer');
+    expect(find.text('hi @Thanh'), findsOneWidget, reason: 'mention flattened');
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Select a conversation'), findsOneWidget);
+  });
+
+  testWidgets('search narrows the list', (tester) async {
+    await pumpChat(tester);
+
+    await tester.enterText(find.byType(TextField).first, 'dyn');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dyno'), findsOneWidget);
+    expect(find.text('VN Mobile Team'), findsNothing);
+  });
+
+  testWidgets('opening a chat refreshes it, marks it read, shows messages', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    expect(repo.calls, containsAllInOrder(['refresh g1', 'read g1']));
+    expect(find.text('xin chào', findRichText: true), findsOneWidget);
+    expect(find.text('hi @Thanh', findRichText: true), findsWidgets);
+    expect(find.text('Dyno'), findsWidgets, reason: 'sender shown in groups');
+  });
+
+  testWidgets('Enter sends, Shift+Enter does not', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    final composer = find.byType(TextField).last;
+
+    await tester.enterText(composer, 'first line');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.pumpAndSettle();
+    expect(repo.calls.where((c) => c.startsWith('send')), isEmpty);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('send g1 first line'));
+  });
+
+  testWidgets('a failed message can be retried', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    await tester.tap(find.text('Not sent · Retry'));
+    await tester.pumpAndSettle();
+
+    expect(repo.calls, contains('retry m3'));
+  });
+
+  testWidgets('an untrusted certificate can be reviewed and trusted', (
+    tester,
+  ) async {
+    repo.status = const ChatConnectionStatus.needsTrust(
+      host: 'zentao.example',
+      fingerprint: 'AE:C6:E8',
+      subject: 'CN=cnezsoft',
+      issuer: 'CN=cnezsoft',
+    );
+    await pumpChat(tester);
+
+    await tester.tap(find.text('Review certificate'));
+    await tester.pumpAndSettle();
+    expect(find.text('AE:C6:E8'), findsOneWidget);
+
+    await tester.tap(find.text('Trust and connect'));
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('trust AE:C6:E8'));
+    expect(find.text('AE:C6:E8'), findsNothing, reason: 'dialog closed');
+  });
+
+  testWidgets('being kicked explains why and offers to reconnect', (
+    tester,
+  ) async {
+    repo.status = const ChatConnectionStatus.signedOut(
+      message: 'x',
+      kicked: true,
+    );
+    await pumpChat(tester);
+
+    expect(find.textContaining('signed in somewhere else'), findsOneWidget);
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('connect'));
+  });
+}

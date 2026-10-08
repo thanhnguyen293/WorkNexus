@@ -92,7 +92,7 @@ class GitHubRepoRow extends ConsumerWidget {
   /// Opens this repo's board: clears any ZenTao/GitLab selection, selects the
   /// repo, resets to the Issues kind, and switches to the GitHub view mode.
   void _select(WidgetRef ref) {
-    ref.read(settingsOpenProvider.notifier).state = false;
+    showBoardView(ref);
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitLabProjectProvider.notifier).clear();

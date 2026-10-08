@@ -120,6 +120,7 @@ void main() {
             },
         ],
         'chatgetmessageinfo' => {'lastMessage': 120, 'messageCount': 120},
+        'chatsetlastreadmessagebyindex' => {'gid': params[0], 'id': params[1]},
         'messagesync' => [
           for (
             var id = params[1]! as int;
@@ -156,6 +157,7 @@ void main() {
         );
       },
       onError: (e, _) => errors.add(e),
+      http: http,
       now: () => now,
     );
   });
@@ -386,4 +388,80 @@ void main() {
       );
     },
   );
+
+  test('markRead clears unread locally and tells the server', () async {
+    await repo.connect(_acc);
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.unreadCount == 1,
+    );
+
+    expect((await repo.markRead(_acc, 'g1')).isOk, isTrue);
+
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.unreadCount == 0,
+    );
+    expect(
+      server.requests.lastWhere(
+        (r) => r['method'] == 'chatsetlastreadmessagebyindex',
+      )['params'],
+      ['g1', 100],
+    );
+  });
+
+  test('a read marker pushed from another device clears unread', () async {
+    await repo.connect(_acc);
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.unreadCount == 1,
+    );
+
+    server.current.push({
+      'method': 'chatsetlastreadmessagebyindex',
+      'result': 'success',
+      'data': {'gid': 'g1', 'id': 100},
+    });
+
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.unreadCount == 0,
+    );
+  });
+
+  test(
+    'loadAttachment downloads once through a signed URL, then caches',
+    () async {
+      await repo.connect(_acc);
+      await eventually(repo.watchStatus(_acc), (s) => s is ChatOnline);
+      // syssessionid arrives right after login.
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      const image = MessageContent.image(
+        fileId: 27338,
+        name: 'image.png',
+        size: 3,
+        time: 1790842835000,
+      );
+
+      final first = await repo.loadAttachment(_acc, image);
+      final second = await repo.loadAttachment(_acc, image);
+
+      expect(first.valueOrNull, [1, 2, 3]);
+      expect(second.valueOrNull, [1, 2, 3]);
+      final uri = http.downloads.single;
+      expect(uri.path, '/fileDownload');
+      expect(uri.queryParameters, containsPair('id', '27338'));
+      expect(uri.queryParameters, containsPair('gid', '40'));
+      expect(uri.queryParameters, containsPair('time', '1790842835'));
+      expect(uri.queryParameters['sid'], hasLength(32));
+    },
+  );
+
+  test('text messages have no attachment', () async {
+    final result = await repo.loadAttachment(
+      _acc,
+      const MessageContent.text('hi'),
+    );
+    expect(result.failureOrNull, isA<NotFoundFailure>());
+  });
 }

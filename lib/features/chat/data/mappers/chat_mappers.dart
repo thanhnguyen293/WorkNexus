@@ -64,8 +64,26 @@ ChatMessagesCompanion messageFromXxd(String accountId, Map<String, Object?> m) {
     ),
     sendState: Value(SendState.sent.name),
     deleted: Value(m['deleted'] == true),
+    replyToId: Value(replyToOf(m['data'])),
   );
 }
+
+/// `replyTo` from a message's `data` (a JSON string or an already-decoded map).
+int? replyToOf(Object? data) {
+  Object? decoded = data;
+  if (data is String && data.isNotEmpty) {
+    try {
+      decoded = jsonDecode(data);
+    } on FormatException {
+      return null;
+    }
+  }
+  return decoded is Map ? _int(decoded['replyTo']) : null;
+}
+
+/// The `data` field to send for a message (empty unless it is a reply).
+String messageDataFor({int? replyToId}) =>
+    replyToId == null ? '' : jsonEncode({'replyTo': replyToId});
 
 ChatUsersCompanion userFromXxd(String accountId, Map<String, Object?> u) {
   final avatar = u['avatar'];
@@ -126,6 +144,7 @@ ChatMessage messageFromRow(
   isMine: selfUserId != null && row.senderId == selfUserId,
   sendState: SendState.values.asNameMap()[row.sendState] ?? SendState.sent,
   serverId: row.serverId,
+  replyToId: row.replyToId,
   deleted: row.deleted,
 );
 

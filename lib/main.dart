@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fvp/fvp.dart' as fvp;
 import 'package:injectable/injectable.dart';
 
 import 'app/app.dart';
@@ -14,6 +15,13 @@ import 'features/sync/data/sync_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await const DesktopWindowService().initialize();
+  // The official video_player has no Windows/Linux implementation; fvp
+  // (libmdk) provides one there, so chat videos play in-app everywhere.
+  fvp.registerWith(
+    options: {
+      'platforms': ['windows', 'linux'],
+    },
+  );
 
   // Wire the object graph (repositories, services) for production via
   // injectable. The composition root constructs the drift database; retrieve it

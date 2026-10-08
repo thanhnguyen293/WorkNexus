@@ -84,6 +84,12 @@ dependencies:
   # ZenTao chat (xuanxuan/xxd) protocol: AES-256-CBC socket frames + md5 auth.
   pointycastle: 4.0.0
   crypto: 3.0.7
+  # Chat attachments: paste images/files from the clipboard, pick files.
+  pasteboard: 0.5.0
+  file_selector: 1.1.0
+  # video_player backend for Windows/Linux, where the official plugin has no
+  # implementation (registered in main.dart; macOS keeps AVFoundation).
+  fvp: 0.39.0
 
 dev_dependencies:
   flutter_test:

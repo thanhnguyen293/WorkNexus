@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
@@ -20,6 +21,19 @@ class FakeXxdHttp extends XxdHttpDatasource {
   final Result<XxdServerInfo> fallback;
   final Queue<Result<XxdServerInfo>> queued = Queue();
   int calls = 0;
+
+  /// Download requests, and the bytes [download] answers with.
+  final List<Uri> downloads = [];
+  Uint8List downloadBytes = Uint8List.fromList([1, 2, 3]);
+
+  @override
+  Future<Result<Uint8List>> download(
+    Uri uri, {
+    String? pinnedFingerprint,
+  }) async {
+    downloads.add(uri);
+    return Ok(downloadBytes);
+  }
 
   @override
   Future<Result<XxdServerInfo>> fetchServerInfo(XxdCredentials c) async {

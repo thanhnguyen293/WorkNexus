@@ -203,6 +203,8 @@ class XxdConnection {
           user: Map<String, Object?>.from(value.data! as Map),
           serverVersion: info.version,
           sessionId: _sessionId,
+          token: info.token,
+          uploadFileSize: info.uploadFileSize,
         );
         return Ok(session);
     }

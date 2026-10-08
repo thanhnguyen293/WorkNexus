@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import '../../../../../core/error/failure.dart';
 import '../../../../../core/error/result.dart';
@@ -87,6 +88,144 @@ class XxdHttpDatasource {
       ),
     );
   }
+
+  /// GETs [uri] (a `fileDownload` URL) through the pinned client.
+  Future<Result<Uint8List>> download(
+    Uri uri, {
+    String? pinnedFingerprint,
+  }) async {
+    XxdCertificate? rejected;
+    final client = createPinnedHttpClient(
+      pinnedFingerprint: pinnedFingerprint,
+      onRejected: (cert) => rejected = cert,
+    );
+    try {
+      final response = await (await client.getUrl(
+        uri,
+      )).close().timeout(const Duration(seconds: 60));
+      final builder = BytesBuilder(copy: false);
+      await response.forEach(builder.add);
+      if (response.statusCode != HttpStatus.ok) {
+        return Err(
+          response.statusCode == HttpStatus.notFound
+              ? const NotFoundFailure('Attachment not found')
+              : NetworkFailure(
+                  'Attachment download failed (HTTP ${response.statusCode})',
+                ),
+        );
+      }
+      return Ok(builder.takeBytes());
+    } on HandshakeException catch (e) {
+      final cert = rejected;
+      if (cert != null) return Err(untrustedCertificate(cert, e));
+      return Err(NetworkFailure('TLS handshake with xxd failed', cause: e));
+    } on Exception catch (e) {
+      return Err(NetworkFailure('Attachment download failed', cause: e));
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  /// Uploads a chat attachment: multipart POST `{server}/fileUpload` with the
+  /// session token (as the 9.x client does). Returns the stored file's id and
+  /// upload time (ms), which the message content must carry.
+  Future<Result<({int id, int time})>> upload({
+    required Uri server,
+    required String token,
+    required int userId,
+    required String chatGid,
+    required String fileName,
+    required Uint8List bytes,
+    String? mimeType,
+    String serverName = '',
+    String? pinnedFingerprint,
+    void Function(double sent)? onProgress,
+  }) async {
+    XxdCertificate? rejected;
+    final client = createPinnedHttpClient(
+      pinnedFingerprint: pinnedFingerprint,
+      onRejected: (cert) => rejected = cert,
+    );
+    final boundary = '----worknexus${DateTime.now().microsecondsSinceEpoch}';
+    String field(String name, String value) =>
+        '--$boundary\r\nContent-Disposition: form-data; name="$name"\r\n\r\n'
+        '$value\r\n';
+    final head = utf8.encode(
+      '${field('userID', '$userId')}${field('gid', chatGid)}'
+      '--$boundary\r\nContent-Disposition: form-data; name="file"; '
+      'filename="${fileName.replaceAll('"', '_')}"\r\n'
+      'Content-Type: ${mimeType ?? 'application/octet-stream'}\r\n\r\n',
+    );
+    final tail = utf8.encode('\r\n--$boundary--\r\n');
+    try {
+      final request = await client.postUrl(server.resolve('/fileUpload'));
+      request.headers
+        ..set(
+          HttpHeaders.contentTypeHeader,
+          'multipart/form-data; boundary=$boundary',
+        )
+        ..set('ServerName', serverName)
+        ..set('Authorization', token);
+      final total = head.length + bytes.length + tail.length;
+      request
+        ..contentLength = total
+        ..add(head);
+      // Written in chunks and flushed, so [onProgress] follows what has
+      // actually been handed to the socket.
+      const chunk = 64 * 1024;
+      for (var offset = 0; offset < bytes.length; offset += chunk) {
+        final end = offset + chunk < bytes.length
+            ? offset + chunk
+            : bytes.length;
+        request.add(Uint8List.sublistView(bytes, offset, end));
+        await request.flush();
+        onProgress?.call((head.length + end) / total);
+      }
+      request.add(tail);
+      final response = await request.close().timeout(
+        const Duration(minutes: 5),
+      );
+      final text = await response.transform(utf8.decoder).join();
+      return _parseUpload(response.statusCode, text);
+    } on HandshakeException catch (e) {
+      final cert = rejected;
+      if (cert != null) return Err(untrustedCertificate(cert, e));
+      return Err(NetworkFailure('TLS handshake with xxd failed', cause: e));
+    } on Exception catch (e) {
+      return Err(NetworkFailure('Upload failed', cause: e));
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Result<({int id, int time})> _parseUpload(int status, String text) {
+    Object? json;
+    try {
+      json = jsonDecode(text);
+    } on FormatException {
+      json = null;
+    }
+    // The file record is either the reply itself or its `data`.
+    final record = json is Map && json['data'] is Map ? json['data'] : json;
+    if (record is Map) {
+      final id = _int(record['id']);
+      if (id != null && id > 0) {
+        final time = _int(record['time']) ?? 0;
+        return Ok((id: id, time: time < 100000000000 ? time * 1000 : time));
+      }
+    }
+    final message = json is Map ? json['message'] : null;
+    return Err(
+      NetworkFailure(
+        message is String && message.isNotEmpty
+            ? message
+            : 'Upload rejected (HTTP $status)',
+      ),
+    );
+  }
+
+  static int? _int(Object? v) =>
+      v is num ? v.toInt() : (v is String ? int.tryParse(v) : null);
 
   /// Signed `fileDownload` URL for a file attached to a message. [fileTime] is
   /// the file's `time` in milliseconds, as carried in the message content.
