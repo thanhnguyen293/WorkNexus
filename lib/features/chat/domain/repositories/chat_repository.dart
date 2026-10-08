@@ -166,6 +166,14 @@ abstract class ChatRepository {
     required bool starred,
   });
 
+  /// Mutes or unmutes [chatGid]: no desktop notifications for it. Local only —
+  /// the server has no such setting.
+  Future<Result<void>> setChatMuted(
+    String accountId,
+    String chatGid, {
+    required bool muted,
+  });
+
   /// Pins or unpins message [serverId] in [chatGid] (one-to-one chats, or
   /// group owner/admins; the server checks).
   Future<Result<void>> setMessagePinned(

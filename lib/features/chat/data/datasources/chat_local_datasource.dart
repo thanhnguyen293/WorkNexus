@@ -145,6 +145,12 @@ class ChatLocalDatasource {
             ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
           .write(ChatConversationsCompanion(starred: Value(starred)));
 
+  /// Silences or restores notifications of a chat (this device only).
+  Future<void> setMuted(String accountId, String gid, {required bool muted}) =>
+      (_db.update(_db.chatConversations)
+            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
+          .write(ChatConversationsCompanion(muted: Value(muted)));
+
   /// Conversations with their last message: pinned ones first, then the
   /// most recently active.
   Stream<List<(ChatConversationRow, ChatMessageRow?)>> watchConversations(
@@ -322,4 +328,49 @@ class ChatLocalDatasource {
             ..where((c) => c.accountId.equals(accountId)))
           .watchSingleOrNull()
           .map((row) => row?.userId);
+
+  // ---- message translations --------------------------------------------------
+
+  Future<ChatMessageTranslationRow?> messageTranslation(
+    String accountId,
+    String gid,
+    String targetLang,
+  ) =>
+      (_db.select(_db.chatMessageTranslations)..where(
+            (t) =>
+                t.accountId.equals(accountId) &
+                t.gid.equals(gid) &
+                t.targetLang.equals(targetLang),
+          ))
+          .getSingleOrNull();
+
+  Stream<ChatMessageTranslationRow?> watchMessageTranslation(
+    String accountId,
+    String gid,
+    String targetLang,
+  ) =>
+      (_db.select(_db.chatMessageTranslations)..where(
+            (t) =>
+                t.accountId.equals(accountId) &
+                t.gid.equals(gid) &
+                t.targetLang.equals(targetLang),
+          ))
+          .watchSingleOrNull();
+
+  Future<void> setMessageTranslationVisible(
+    String accountId,
+    String gid,
+    String targetLang, {
+    required bool visible,
+  }) =>
+      (_db.update(_db.chatMessageTranslations)..where(
+            (t) =>
+                t.accountId.equals(accountId) &
+                t.gid.equals(gid) &
+                t.targetLang.equals(targetLang),
+          ))
+          .write(ChatMessageTranslationsCompanion(visible: Value(visible)));
+
+  Future<void> saveMessageTranslation(ChatMessageTranslationsCompanion row) =>
+      _db.into(_db.chatMessageTranslations).insertOnConflictUpdate(row);
 }

@@ -133,6 +133,54 @@ class OpenCodeTranslationService implements TranslationService {
     }
   }
 
+  @override
+  Future<Result<String>> translateText({
+    required String key,
+    required String text,
+    required String targetLang,
+    String? model,
+  }) async {
+    final path = await _runner.resolve('opencode', override: binaryOverride);
+    if (path == null) {
+      return const Err(AgentFailure('opencode not found on PATH'));
+    }
+    final home = Platform.isWindows
+        ? Platform.environment['USERPROFILE']
+        : Platform.environment['HOME'];
+    final chosenModel = _firstNonEmpty(model, this.model);
+    final language = translationLanguageFor(targetLang);
+    final prompt =
+        'Translate this chat message into natural ${language.englishName}. '
+        'Preserve code, identifiers, URLs, emoji, @mentions and Markdown. '
+        'Return ONLY the translation, with no preface or quotes.\n'
+        'Message: <<<$text>>>';
+    try {
+      final run = await _run(
+        ticketId: key,
+        path: path,
+        args: [
+          'run',
+          if (chosenModel != null) ...['-m', chosenModel],
+          prompt,
+        ],
+        cwd: workingDir ?? home ?? Directory.current.path,
+      );
+      if (run.timedOut) {
+        return Err(
+          AgentFailure('OpenCode did not answer within ${timeout.inSeconds}s.'),
+        );
+      }
+      if (run.exitCode != 0) return Err(AgentFailure(_exitMessage(run)));
+      final out = run.stdout.replaceAll(_ansiEscape, '').trim();
+      if (out.isEmpty) return Err(ParseFailure(_unparsableMessage(run)));
+      return Ok(out);
+    } catch (e) {
+      return Err(AgentFailure('OpenCode translation failed: $e', cause: e));
+    } finally {
+      _running.remove(key);
+    }
+  }
+
   /// Spawns the CLI and collects its output under [timeout]. `Process.run` has
   /// no deadline, so we drive the process ourselves and kill it when the timer
   /// fires — otherwise a stalled CLI hangs the caller forever.

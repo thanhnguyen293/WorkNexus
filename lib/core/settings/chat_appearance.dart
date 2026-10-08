@@ -17,4 +17,8 @@ enum ChatAppearance {
   /// WeChat: avatar beside every message on both sides, square bubbles,
   /// centered time stamps.
   wechat,
+
+  /// TBChat: deep-green own bubbles over a doodle wallpaper, name and time
+  /// inside a tailed bubble, no avatar beside the messages.
+  tbchat,
 }

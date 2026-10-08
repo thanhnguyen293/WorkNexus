@@ -657,6 +657,16 @@ class XxdChatRepository implements ChatRepository {
   }
 
   @override
+  Future<Result<void>> setChatMuted(
+    String accountId,
+    String chatGid, {
+    required bool muted,
+  }) async {
+    await _local.setMuted(accountId, chatGid, muted: muted);
+    return const Ok(null);
+  }
+
+  @override
   Future<Result<void>> setMessagePinned(
     String accountId,
     String chatGid,

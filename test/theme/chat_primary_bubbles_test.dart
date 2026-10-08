@@ -24,10 +24,12 @@ void main() {
     (AppThemeVariant.light, ChatStylePalette.telegramDay, false),
     (AppThemeVariant.light, ChatStylePalette.wechatLight, false),
     (AppThemeVariant.light, ChatStylePalette.messengerLight, true),
+    (AppThemeVariant.light, ChatStylePalette.tbchatLight, false),
     (AppThemeVariant.dark, ChatStylePalette.zaloDark, false),
     (AppThemeVariant.dark, ChatStylePalette.telegramNight, false),
     (AppThemeVariant.dark, ChatStylePalette.wechatDark, false),
     (AppThemeVariant.dark, ChatStylePalette.messengerDark, true),
+    (AppThemeVariant.dark, ChatStylePalette.tbchatDark, false),
   ];
 
   test('accent bubbles keep message text readable (≥ 4.5:1)', () {

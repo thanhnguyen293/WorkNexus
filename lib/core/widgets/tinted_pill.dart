@@ -48,12 +48,7 @@ class TintedPill extends StatelessWidget {
             Icon(icon, size: 12, color: color),
             SizedBox(width: context.spacing.xs),
           ],
-          Text(
-            label,
-            style: context.typography.badge.copyWith(
-              color: color,
-            ),
-          ),
+          Text(label, style: context.typography.badge.copyWith(color: color)),
         ],
       ),
     );

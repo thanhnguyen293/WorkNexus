@@ -209,11 +209,7 @@ class EditorFooter extends StatelessWidget {
 }
 
 class EditorMessage extends StatelessWidget {
-  const EditorMessage({
-    super.key,
-    required this.message,
-    this.isError = false,
-  });
+  const EditorMessage({super.key, required this.message, this.isError = false});
 
   final String message;
   final bool isError;

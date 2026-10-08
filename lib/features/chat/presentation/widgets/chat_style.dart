@@ -78,7 +78,12 @@ class ChatStyle {
     bool primaryBubbles = false,
   }) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final style = chatStyleSpec(appearance, context, dark: dark);
+    // The background is shared by every style (the chat wallpaper setting):
+    // a style only shapes and colours bubbles, avatars and separators.
+    final spec = chatStyleSpec(appearance, context, dark: dark);
+    final style = spec.withPalette(
+      spec.palette.withBackground(context.colors.background),
+    );
     if (!primaryBubbles || appearance == ChatAppearance.worknexus) {
       return style;
     }

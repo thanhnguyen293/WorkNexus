@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/platform/open_external.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/util/opencode_key_links.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../l10n/app_localizations.dart';
 import 'opencode_key_controller.dart';
@@ -107,6 +109,15 @@ class _OpenCodeKeyDialogState extends ConsumerState<OpenCodeKeyDialog> {
                 trailing: _RevealToggle(
                   obscured: _obscure,
                   onTap: () => setState(() => _obscure = !_obscure),
+                ),
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: AppButton.text(
+                  size: AppButtonSize.small,
+                  onPressed: () =>
+                      openExternally(openCodeKeyUrl(_provider.text)),
+                  child: Text(l.openCodeGetKey),
                 ),
               ),
               if (state.error != null) ...[

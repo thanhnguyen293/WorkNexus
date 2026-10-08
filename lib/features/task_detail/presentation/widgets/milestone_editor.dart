@@ -83,10 +83,7 @@ class _MilestoneEditorState extends State<MilestoneEditor> {
               if (result case Err<List<ProviderMilestoneOption>>(
                 :final failure,
               )) {
-                return EditorMessage(
-                  message: failure.message,
-                  isError: true,
-                );
+                return EditorMessage(message: failure.message, isError: true);
               }
               final options =
                   (result as Ok<List<ProviderMilestoneOption>>).value;

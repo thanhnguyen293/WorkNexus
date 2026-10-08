@@ -4,7 +4,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import 'chat_avatar.dart';
 import 'chat_style.dart';
-import 'chat_wallpaper.dart';
 
 /// A miniature chat in [style]: its background, a separator, an incoming
 /// bubble with an avatar and an own bubble, in the style's colours, corner
@@ -20,9 +19,9 @@ class ChatStylePreview extends StatelessWidget {
     final s = context.spacing;
     return ClipRRect(
       borderRadius: BorderRadius.circular(context.radii.md),
-      child: ChatWallpaper(
-        palette: p,
-        scale: 0.35,
+      // Styles share the chat background; the preview shows the bubbles.
+      child: ColoredBox(
+        color: p.background,
         child: Padding(
           padding: EdgeInsets.all(s.md),
           child: Column(

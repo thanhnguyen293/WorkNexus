@@ -134,10 +134,7 @@ class _UserPickerEditorState extends State<UserPickerEditor> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (result case Err<List<ProviderUser>>(:final failure)) {
-                return EditorMessage(
-                  message: failure.message,
-                  isError: true,
-                );
+                return EditorMessage(message: failure.message, isError: true);
               }
               final users = (result as Ok<List<ProviderUser>>).value;
               _initializeSelection(users);

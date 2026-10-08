@@ -16,7 +16,7 @@ class ShouldNotifyChatMessage {
   }) {
     if (!enabled || message.isMine || message.deleted) return false;
     if (conversation != null &&
-        (conversation.hidden || conversation.archived)) {
+        (conversation.hidden || conversation.archived || conversation.muted)) {
       return false;
     }
     final looking =

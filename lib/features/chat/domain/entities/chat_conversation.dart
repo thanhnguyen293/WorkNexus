@@ -25,6 +25,9 @@ abstract class ChatConversation with _$ChatConversation {
     /// Pinned to the top of the chat list.
     @Default(false) bool starred,
 
+    /// Notifications silenced (kept on this device only).
+    @Default(false) bool muted,
+
     /// Server ids of pinned messages, oldest pin first.
     @Default(<int>[]) List<int> pinnedMessageIds,
 

@@ -57,6 +57,18 @@ class _SearchableDropdownFieldState<T>
   double _fieldWidth = 260;
   int _highlighted = 0;
 
+  /// Placement decided on open: below the field unless the popover would not
+  /// fit there and there is more room above.
+  bool _openUpward = false;
+
+  /// Height the popover may take on its chosen side before hitting the edge
+  /// of the overlay, so a cramped side shrinks the list instead of clipping.
+  double? _availableHeight;
+
+  /// Rough height of the search box + divider, used only to estimate whether
+  /// the full popover fits below the field.
+  static const _searchBoxExtent = 64.0;
+
   @override
   void dispose() {
     _search.dispose();
@@ -77,6 +89,7 @@ class _SearchableDropdownFieldState<T>
   void _open() {
     final box = context.findRenderObject() as RenderBox?;
     _fieldWidth = box?.size.width ?? 260;
+    _placePopover(box);
     _search.clear();
     _query = '';
     final current = widget.value;
@@ -85,6 +98,27 @@ class _SearchableDropdownFieldState<T>
     _portal.show();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _searchFocus.requestFocus(),
+    );
+  }
+
+  void _placePopover(RenderBox? box) {
+    final overlay =
+        Overlay.maybeOf(context)?.context.findRenderObject() as RenderBox?;
+    if (box == null || overlay == null || !box.hasSize) {
+      _openUpward = false;
+      _availableHeight = null;
+      return;
+    }
+    final top = box.localToGlobal(Offset.zero, ancestor: overlay).dy;
+    // Gap between field and popover plus a margin to the overlay edge.
+    final inset = context.spacing.xs + context.spacing.md;
+    final below = overlay.size.height - (top + box.size.height) - inset;
+    final above = top - inset;
+    final needed = widget.maxListHeight + _searchBoxExtent;
+    _openUpward = below < needed && above > below;
+    _availableHeight = (_openUpward ? above : below).clamp(
+      0.0,
+      double.infinity,
     );
   }
 
@@ -148,6 +182,8 @@ class _SearchableDropdownFieldState<T>
       overlayChildBuilder: (context) => _PopupOverlay<T>(
         link: _link,
         fieldWidth: _fieldWidth,
+        openUpward: _openUpward,
+        availableHeight: _availableHeight,
         searchController: _search,
         searchFocus: _searchFocus,
         searchHint: widget.searchHint,

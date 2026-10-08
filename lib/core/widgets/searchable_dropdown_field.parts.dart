@@ -6,6 +6,8 @@ class _PopupOverlay<T> extends StatelessWidget {
   const _PopupOverlay({
     required this.link,
     required this.fieldWidth,
+    required this.openUpward,
+    required this.availableHeight,
     required this.searchController,
     required this.searchFocus,
     required this.searchHint,
@@ -24,6 +26,8 @@ class _PopupOverlay<T> extends StatelessWidget {
 
   final LayerLink link;
   final double fieldWidth;
+  final bool openUpward;
+  final double? availableHeight;
   final TextEditingController searchController;
   final FocusNode searchFocus;
   final String searchHint;
@@ -107,11 +111,19 @@ class _PopupOverlay<T> extends StatelessWidget {
         ),
         CompositedTransformFollower(
           link: link,
-          targetAnchor: Alignment.bottomLeft,
-          offset: Offset(0, spacing.xs),
+          targetAnchor: openUpward ? Alignment.topLeft : Alignment.bottomLeft,
+          followerAnchor: openUpward ? Alignment.bottomLeft : Alignment.topLeft,
+          offset: Offset(0, openUpward ? -spacing.xs : spacing.xs),
           child: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(width: fieldWidth, child: card),
+            alignment: openUpward ? Alignment.bottomLeft : Alignment.topLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: fieldWidth,
+                minWidth: fieldWidth,
+                maxHeight: availableHeight ?? double.infinity,
+              ),
+              child: card,
+            ),
           ),
         ),
       ],

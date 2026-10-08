@@ -65,6 +65,10 @@ ThemeData buildAppTheme({
     onError: Colors.white,
     surface: p.panel,
     onSurface: p.tx,
+    // Material 3 tints raised surfaces (menus, dialogs, panels, cards) with
+    // `surfaceTint`, which defaults to primary — that put an accent cast on
+    // every background. Surfaces stay the palette's neutral greys.
+    surfaceTint: Colors.transparent,
   );
 
   final platformTypography = Typography.material2021(

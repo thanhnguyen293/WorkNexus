@@ -30,8 +30,7 @@ class TimeTrackingEditor extends StatefulWidget {
   final VoidCallback onClose;
 
   @override
-  State<TimeTrackingEditor> createState() =>
-      _TimeTrackingEditorState();
+  State<TimeTrackingEditor> createState() => _TimeTrackingEditorState();
 }
 
 class _TimeTrackingEditorState extends State<TimeTrackingEditor> {

@@ -20,6 +20,7 @@ import '../../domain/repositories/link_preview_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/load_link_preview.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
+import '../../domain/value_objects/chat_list_tab.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_controller.dart';
 
@@ -124,6 +125,11 @@ final chatUnreadTotalProvider = Provider<int>((ref) {
 /// The open chat of each account.
 final selectedChatGidProvider = StateProvider.family<String?, String>(
   (ref, accountId) => null,
+);
+
+/// The tab selected above the chat list.
+final chatListTabProvider = StateProvider<ChatListTab>(
+  (ref) => ChatListTab.all,
 );
 
 /// The chat list filter text.
