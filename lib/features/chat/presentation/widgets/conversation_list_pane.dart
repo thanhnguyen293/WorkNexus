@@ -13,6 +13,7 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
+import 'chat_storage_dialog.dart';
 import 'conversation_tile.dart';
 
 /// Left pane of the chat view: account picker, search and the chat list.
@@ -56,7 +57,20 @@ class ConversationListPane extends ConsumerWidget {
             child: Column(
               children: [
                 const ChatAccountPicker(),
-                _SearchField(hint: l.chatSearch),
+                Row(
+                  children: [
+                    Expanded(child: _SearchField(hint: l.chatSearch)),
+                    IconButton(
+                      tooltip: l.chatStorage,
+                      onPressed: () => ChatStorageDialog.show(context),
+                      icon: Icon(
+                        Icons.storage_rounded,
+                        size: context.spacing.xl4,
+                        color: c.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

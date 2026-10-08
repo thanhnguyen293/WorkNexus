@@ -83,6 +83,27 @@ class ChatLocalDatasource {
           ))
           .write(ChatConversationsCompanion(lastReadIndex: Value(index)));
 
+  /// Ids of the accounts that have logged into chat.
+  Future<List<String>> chatAccountIds() async => [
+    for (final row in await _db.select(_db.chatAccounts).get()) row.accountId,
+  ];
+
+  /// Chat, content type and content of every image/file message.
+  Future<List<({String cgid, String contentType, String content})>>
+  attachmentMessages(String accountId) async {
+    final rows =
+        await (_db.select(_db.chatMessages)..where(
+              (m) =>
+                  m.accountId.equals(accountId) &
+                  m.contentType.isIn(const ['image', 'file']),
+            ))
+            .get();
+    return [
+      for (final r in rows)
+        (cgid: r.cgid, contentType: r.contentType, content: r.content),
+    ];
+  }
+
   /// Replaces a chat's pinned message ids ([pinnedJson] is a JSON array).
   Future<void> setPinned(String accountId, String gid, String pinnedJson) =>
       (_db.update(_db.chatConversations)

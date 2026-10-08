@@ -6,9 +6,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_labels.dart';
+import 'chat_media_viewer_bar.dart';
 
-/// The image viewer's top bar: name, size and position on the left; zoom,
-/// fit, rotate, copy, save, open-with and close on the right.
+/// The image viewer's top bar: name, position, size and dimensions; zoom,
+/// fit, rotate, copy, save, open-with and close.
 class ChatImageViewerBar extends StatelessWidget {
   const ChatImageViewerBar({
     super.key,
@@ -43,77 +44,69 @@ class ChatImageViewerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final ink = c.onScrim;
-    final dims = image.width != null && image.height != null
-        ? '${image.width}×${image.height}'
-        : null;
-    final meta = [
-      position,
-      if (image.size > 0) formatFileSize(image.size),
-      ?dims,
-    ].join('   ');
-    Widget button(IconData icon, String tooltip, VoidCallback? onPressed) =>
-        IconButton(
-          tooltip: tooltip,
-          onPressed: onPressed,
-          color: ink,
-          disabledColor: ink.withValues(alpha: 0.35),
-          icon: Icon(icon),
-        );
-
-    return DecoratedBox(
-      decoration: BoxDecoration(color: c.scrim.withValues(alpha: 0.55)),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: s.xl3, vertical: s.sm),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    image.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.bodyStrong.copyWith(color: ink),
-                  ),
-                  Text(
-                    meta,
-                    style: context.typography.caption.copyWith(
-                      color: ink.withValues(alpha: 0.75),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            button(Icons.zoom_out_rounded, l.chatZoomOut, onZoomOut),
-            ValueListenableBuilder(
-              valueListenable: transform,
-              builder: (context, matrix, _) => SizedBox(
-                width: s.xl6 * 1.4,
-                child: Text(
-                  '${(matrix.getMaxScaleOnAxis() * 100).round()}%',
-                  textAlign: TextAlign.center,
-                  style: context.typography.captionStrong.copyWith(color: ink),
-                ),
-              ),
-            ),
-            button(Icons.zoom_in_rounded, l.chatZoomIn, onZoomIn),
-            button(Icons.fit_screen_outlined, l.chatZoomFit, onFit),
-            button(Icons.rotate_right_rounded, l.chatRotate, onRotate),
-            SizedBox(width: s.md),
-            button(Icons.copy_rounded, l.chatCopyImage, onCopy),
-            button(Icons.download_rounded, l.chatSaveAs, onSave),
-            button(Icons.open_in_new_rounded, l.chatOpenWith, onOpenExternally),
-            SizedBox(width: s.md),
-            button(Icons.close_rounded, l.chatClosePanel, onClose),
-          ],
+    final w = image.width;
+    final h = image.height;
+    return ChatMediaViewerBar(
+      title: image.name,
+      details: [
+        position,
+        if (image.size > 0) formatFileSize(image.size),
+        if (w != null && h != null) '$w×$h',
+      ],
+      onClose: onClose,
+      actions: [
+        ChatViewerButton(
+          icon: Icons.zoom_out_rounded,
+          tooltip: l.chatZoomOut,
+          onPressed: onZoomOut,
         ),
-      ),
+        ValueListenableBuilder(
+          valueListenable: transform,
+          builder: (context, matrix, _) => SizedBox(
+            width: s.xl6 * 1.4,
+            child: Text(
+              '${(matrix.getMaxScaleOnAxis() * 100).round()}%',
+              textAlign: TextAlign.center,
+              style: context.typography.captionStrong.copyWith(
+                color: context.colors.onScrim,
+              ),
+            ),
+          ),
+        ),
+        ChatViewerButton(
+          icon: Icons.zoom_in_rounded,
+          tooltip: l.chatZoomIn,
+          onPressed: onZoomIn,
+        ),
+        ChatViewerButton(
+          icon: Icons.fit_screen_outlined,
+          tooltip: l.chatZoomFit,
+          onPressed: onFit,
+        ),
+        ChatViewerButton(
+          icon: Icons.rotate_right_rounded,
+          tooltip: l.chatRotate,
+          onPressed: onRotate,
+        ),
+        SizedBox(width: s.md),
+        ChatViewerButton(
+          icon: Icons.copy_rounded,
+          tooltip: l.chatCopyImage,
+          onPressed: onCopy,
+        ),
+        ChatViewerButton(
+          icon: Icons.download_rounded,
+          tooltip: l.chatSaveAs,
+          onPressed: onSave,
+        ),
+        ChatViewerButton(
+          icon: Icons.open_in_new_rounded,
+          tooltip: l.chatOpenWith,
+          onPressed: onOpenExternally,
+        ),
+      ],
     );
   }
 }

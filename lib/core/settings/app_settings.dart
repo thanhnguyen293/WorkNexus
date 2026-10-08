@@ -58,6 +58,7 @@ class AppSettings {
     this.chatAppearance = ChatAppearance.worknexus,
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
+    this.chatCacheLimitMb = 2048,
   });
 
   final AppThemeVariant variant;
@@ -115,6 +116,9 @@ class AppSettings {
   /// Show a desktop notification for new chat messages.
   final bool chatNotifications;
 
+  /// Most disk space downloaded chat attachments may use, in MB.
+  final int chatCacheLimitMb;
+
   AppSettings copyWith({
     AppThemeVariant? variant,
     SurfaceStyle? surface,
@@ -133,6 +137,7 @@ class AppSettings {
     ChatAppearance? chatAppearance,
     bool? chatSendMarkdown,
     bool? chatNotifications,
+    int? chatCacheLimitMb,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -154,6 +159,7 @@ class AppSettings {
       chatAppearance: chatAppearance ?? this.chatAppearance,
       chatSendMarkdown: chatSendMarkdown ?? this.chatSendMarkdown,
       chatNotifications: chatNotifications ?? this.chatNotifications,
+      chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -227,6 +233,8 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatSendMarkdown: on));
   void setChatNotifications(bool on) =>
       _set(state.copyWith(chatNotifications: on));
+  void setChatCacheLimitMb(int mb) =>
+      _set(state.copyWith(chatCacheLimitMb: mb));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));
 

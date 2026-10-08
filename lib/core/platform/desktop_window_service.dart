@@ -24,6 +24,24 @@ class DesktopWindowService {
     });
   }
 
+  /// Room to leave on the left of anything drawn at the very top of the
+  /// window: macOS draws its traffic-light buttons there (hidden title bar).
+  static double get windowButtonsInset => Platform.isMacOS ? 72 : 0;
+
+  /// Enters or leaves full screen (e.g. for a video).
+  Future<void> toggleFullScreen() async {
+    if (!isDesktop) return;
+    await windowManager.setFullScreen(!await windowManager.isFullScreen());
+  }
+
+  /// Leaves full screen if the window is in it.
+  Future<void> exitFullScreen() async {
+    if (!isDesktop) return;
+    if (await windowManager.isFullScreen()) {
+      await windowManager.setFullScreen(false);
+    }
+  }
+
   /// Whether the app window has keyboard focus (true off desktop, where the
   /// app is either in front or not running).
   Future<bool> isFocused() async {

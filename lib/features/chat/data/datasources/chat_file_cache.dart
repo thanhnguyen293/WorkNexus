@@ -15,11 +15,14 @@ import 'package:path_provider/path_provider.dart';
 class ChatFileCache {
   ChatFileCache({
     required Future<Directory> Function() root,
-    this.maxBytes = 2 * 1024 * 1024 * 1024,
+    int maxBytes = defaultMaxBytes,
     this.trimEvery = const Duration(minutes: 10),
     DateTime Function() now = DateTime.now,
   }) : _root = root,
-       _now = now;
+       _now = now,
+       _maxBytes = maxBytes;
+
+  static const defaultMaxBytes = 2 * 1024 * 1024 * 1024;
 
   /// Under the OS cache folder (`~/Library/Caches/<app>` on macOS,
   /// `%LOCALAPPDATA%` on Windows). Also removes the temp folder earlier
@@ -36,7 +39,16 @@ class ChatFileCache {
   );
 
   final Future<Directory> Function() _root;
-  final int maxBytes;
+  int _maxBytes;
+
+  /// The size limit; lowering it trims right away.
+  int get maxBytes => _maxBytes;
+  set maxBytes(int bytes) {
+    if (bytes <= 0 || bytes == _maxBytes) return;
+    final shrinking = bytes < _maxBytes;
+    _maxBytes = bytes;
+    if (shrinking) unawaited(trim());
+  }
 
   /// At most one automatic [trim] per this long.
   final Duration trimEvery;
@@ -150,6 +162,59 @@ class ChatFileCache {
       // Left for the OS to clean up.
     }
   }
+
+  /// Size of every cached file of [accountId], by name.
+  Future<Map<String, int>> sizes(String accountId) async {
+    final dir = (await fileFor(accountId, '_'))?.parent;
+    if (dir == null) return const {};
+    final result = <String, int>{};
+    try {
+      if (!await dir.exists()) return const {};
+      await for (final entity in dir.list()) {
+        if (entity is! File) continue;
+        result[entity.uri.pathSegments.last] = await entity.length();
+      }
+    } on FileSystemException {
+      return result;
+    }
+    return result;
+  }
+
+  /// Total size on disk, all accounts included.
+  Future<int> totalBytes() async {
+    final base = await _base();
+    var total = 0;
+    try {
+      if (base == null || !await base.exists()) return 0;
+      await for (final entity in base.list(recursive: true)) {
+        if (entity is File) total += await entity.length();
+      }
+    } on FileSystemException {
+      return total;
+    }
+    return total;
+  }
+
+  /// Deletes [names] of [accountId] (missing ones are ignored).
+  Future<void> delete(String accountId, Iterable<String> names) async {
+    for (final name in names) {
+      final file = await fileFor(accountId, name);
+      try {
+        if (file != null && await file.exists()) await file.delete();
+      } on FileSystemException {
+        // In use (a playing video): it goes with a later trim.
+      }
+    }
+  }
+
+  /// Deletes everything cached, for every account.
+  Future<void> clear() async {
+    final base = await _base();
+    if (base != null) await _deleteQuietly(base);
+  }
+
+  /// The on-disk name of [name] (as listed by [sizes]).
+  static String diskName(String name) => _safe(name);
 
   static String _safe(String name) =>
       name.replaceAll(RegExp(r'[/\\:*?"<>|\x00-\x1f]'), '_');

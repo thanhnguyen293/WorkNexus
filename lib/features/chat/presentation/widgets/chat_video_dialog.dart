@@ -1,22 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/desktop_window_service.dart';
+import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'chat_attachments.dart';
+import 'chat_labels.dart';
+import 'chat_media_viewer_bar.dart';
+import 'chat_snack.dart';
+import 'chat_video_controls.dart';
 
-/// Plays a video sent in chat. The file is downloaded through the chat
-/// connection first: the platform player cannot trust xxd's pinned
-/// self-signed certificate, so it plays from a local file.
+/// Full-screen player for a video sent in chat, in the image viewer's dark
+/// style. The file is played from the local cache: the platform player
+/// cannot trust xxd's pinned self-signed certificate. Click toggles play;
+/// keys: Space, ←/→ (±10 s), ↑/↓ (volume), M (mute), F (full screen), Esc.
 class ChatVideoDialog extends ConsumerStatefulWidget {
   const ChatVideoDialog({
     super.key,
@@ -33,6 +40,7 @@ class ChatVideoDialog extends ConsumerStatefulWidget {
     required FileContent video,
   }) => showDialog<void>(
     context: context,
+    barrierColor: context.colors.scrim.withValues(alpha: 0.9),
     builder: (_) => ChatVideoDialog(accountId: accountId, video: video),
   );
 
@@ -41,7 +49,9 @@ class ChatVideoDialog extends ConsumerStatefulWidget {
 }
 
 class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
+  final _window = const DesktopWindowService();
   VideoPlayerController? _player;
+  String? _path;
   String? _error;
 
   @override
@@ -71,7 +81,10 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
           await player.dispose();
           return;
         }
-        setState(() => _player = player);
+        setState(() {
+          _player = player;
+          _path = value;
+        });
         await player.play();
       case Err(:final failure):
         setState(() => _error = failure.message);
@@ -81,7 +94,34 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   @override
   void dispose() {
     _player?.dispose();
+    // Leaving the player leaves full screen too.
+    _window.exitFullScreen();
     super.dispose();
+  }
+
+  void _togglePlay() {
+    final p = _player;
+    if (p == null) return;
+    p.value.isPlaying ? p.pause() : p.play();
+  }
+
+  void _seek(Duration delta) {
+    final p = _player;
+    if (p != null) p.seekTo(p.value.position + delta);
+  }
+
+  void _volume(double delta) {
+    final p = _player;
+    if (p != null) p.setVolume((p.value.volume + delta).clamp(0, 1));
+  }
+
+  Future<void> _save() async {
+    final path = _path;
+    if (path == null) return;
+    final saved = AppL10n.of(context).chatSaved;
+    if (await saveAttachmentAs(path, widget.video.name) && mounted) {
+      showChatSnack(context, saved);
+    }
   }
 
   @override
@@ -89,71 +129,84 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
     final c = context.colors;
     final l = AppL10n.of(context);
     final player = _player;
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 640),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.xl),
+    final path = _path;
+    final size = player?.value.size;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.space): _togglePlay,
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+            _seek(-kChatVideoSeekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+            _seek(kChatVideoSeekStep),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): () => _volume(0.1),
+        const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+            _volume(-0.1),
+        const SingleActivator(LogicalKeyboardKey.keyM): () =>
+            player?.setVolume(player.value.volume == 0 ? 1 : 0),
+        const SingleActivator(LogicalKeyboardKey.keyF):
+            _window.toggleFullScreen,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Dialog.fullscreen(
+          backgroundColor: Colors.transparent,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                widget.video.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.title.copyWith(color: c.textPrimary),
+              ChatMediaViewerBar(
+                title: widget.video.name,
+                details: [
+                  if (widget.video.size > 0) formatFileSize(widget.video.size),
+                  if (size != null && size.width > 0)
+                    '${size.width.round()}×${size.height.round()}',
+                  if (player != null) formatVideoTime(player.value.duration),
+                ],
+                onClose: () => Navigator.of(context).pop(),
+                actions: [
+                  ChatViewerButton(
+                    icon: Icons.download_rounded,
+                    tooltip: l.chatSaveAs,
+                    onPressed: path == null ? null : _save,
+                  ),
+                  ChatViewerButton(
+                    icon: Icons.open_in_new_rounded,
+                    tooltip: l.chatOpenWith,
+                    onPressed: path == null ? null : () => openExternally(path),
+                  ),
+                ],
               ),
-              SizedBox(height: context.spacing.lg),
-              if (_error != null)
-                AppInlineNote(text: _error!, isError: true)
-              else if (player == null)
-                Column(
-                  children: [
-                    const AppInlineSpinner(),
-                    Text(
-                      l.chatDownloading,
-                      style: context.typography.caption.copyWith(
-                        color: c.textTertiary,
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.all(context.spacing.xl3),
+                  child: Center(
+                    child: switch ((player, _error)) {
+                      (_, final String error) => Text(
+                        error,
+                        style: context.typography.body.copyWith(
+                          color: c.onScrim,
+                        ),
                       ),
-                    ),
-                  ],
-                )
-              else ...[
-                Flexible(
-                  child: AspectRatio(
-                    aspectRatio: player.value.aspectRatio,
-                    child: VideoPlayer(player),
+                      (null, _) => CircularProgressIndicator(color: c.onScrim),
+                      (final VideoPlayerController p, _) => GestureDetector(
+                        onTap: _togglePlay,
+                        onDoubleTap: _window.toggleFullScreen,
+                        child: AspectRatio(
+                          aspectRatio: p.value.aspectRatio,
+                          child: VideoPlayer(p),
+                        ),
+                      ),
+                    },
                   ),
                 ),
-                VideoProgressIndicator(player, allowScrubbing: true),
-                _PlayPause(player: player),
-              ],
+              ),
+              if (player != null)
+                ChatVideoControls(
+                  player: player,
+                  onToggleFullScreen: _window.toggleFullScreen,
+                ),
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class _PlayPause extends StatelessWidget {
-  const _PlayPause({required this.player});
-
-  final VideoPlayerController player;
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder(
-    valueListenable: player,
-    builder: (context, value, _) => IconButton(
-      onPressed: value.isPlaying ? player.pause : player.play,
-      icon: Icon(
-        value.isPlaying ? Icons.pause : Icons.play_arrow,
-        color: context.colors.textPrimary,
-      ),
-    ),
-  );
 }

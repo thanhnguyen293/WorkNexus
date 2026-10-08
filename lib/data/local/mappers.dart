@@ -226,6 +226,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   ),
   chatSendMarkdown: r.chatSendMarkdown,
   chatNotifications: r.chatNotifications,
+  chatCacheLimitMb: r.chatCacheLimitMb,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -248,6 +249,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatAppearance: Value(s.chatAppearance.name),
   chatSendMarkdown: Value(s.chatSendMarkdown),
   chatNotifications: Value(s.chatNotifications),
+  chatCacheLimitMb: Value(s.chatCacheLimitMb),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

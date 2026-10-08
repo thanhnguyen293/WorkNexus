@@ -12,6 +12,7 @@ import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_image_viewer_bar.dart';
+import 'chat_media_viewer_bar.dart';
 import 'chat_snack.dart';
 
 /// Zoom steps of the viewer's buttons and keys.
@@ -58,6 +59,9 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
   late int _index = widget.initialIndex;
   int _turns = 0;
 
+  /// Size of the image area (below the bar), for zooming about its centre.
+  Size _viewport = Size.zero;
+
   ImageContent get _image => widget.images[_index];
 
   @override
@@ -79,8 +83,7 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
   void _zoom(double factor) {
     final current = _transform.value.getMaxScaleOnAxis();
     final target = (current * factor).clamp(_kMinScale, _kMaxScale);
-    final size = MediaQuery.sizeOf(context);
-    final center = Offset(size.width / 2, size.height / 2);
+    final center = Offset(_viewport.width / 2, _viewport.height / 2);
     // Zoom around the screen centre: move it to the origin, scale, move back.
     final focal = _transform.toScene(center);
     _transform.value = _transform.value.clone()
@@ -178,110 +181,94 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
         autofocus: true,
         child: Dialog.fullscreen(
           backgroundColor: Colors.transparent,
-          child: Stack(
+          child: Column(
             children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  onDoubleTap: () => _transform.value.getMaxScaleOnAxis() > 1.01
-                      ? _fit()
-                      : _zoom(2),
-                  child: InteractiveViewer(
-                    transformationController: _transform,
-                    minScale: _kMinScale,
-                    maxScale: _kMaxScale,
-                    boundaryMargin: EdgeInsets.all(s.xl6 * 10),
-                    child: Center(
-                      child: bytes == null
-                          ? const SizedBox.shrink()
-                          : RotatedBox(
-                              quarterTurns: _turns,
-                              child: Image.memory(bytes, gaplessPlayback: true),
+              ChatImageViewerBar(
+                image: _image,
+                position: '${_index + 1} / ${widget.images.length}',
+                transform: _transform,
+                onZoomIn: () => _zoom(_kZoomStep),
+                onZoomOut: () => _zoom(1 / _kZoomStep),
+                onFit: _fit,
+                onRotate: _rotate,
+                onCopy: full is Ok ? _copy : null,
+                onSave: _save,
+                onOpenExternally: _openExternally,
+                onClose: () => Navigator.of(context).pop(),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    _viewport = constraints.biggest;
+                    return Stack(
+                      children: [
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onDoubleTap: () =>
+                                _transform.value.getMaxScaleOnAxis() > 1.01
+                                ? _fit()
+                                : _zoom(2),
+                            child: InteractiveViewer(
+                              transformationController: _transform,
+                              minScale: _kMinScale,
+                              maxScale: _kMaxScale,
+                              boundaryMargin: EdgeInsets.all(s.xl6 * 10),
+                              // Fitted, the image stays clear of the side
+                              // arrows; zoomed, it may use the whole area.
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: widget.images.length > 1
+                                      ? s.xl6 * 2
+                                      : s.xl3,
+                                  vertical: s.xl3,
+                                ),
+                                child: Center(
+                                  child: bytes == null
+                                      ? const SizedBox.shrink()
+                                      : RotatedBox(
+                                          quarterTurns: _turns,
+                                          child: Image.memory(
+                                            bytes,
+                                            gaplessPlayback: true,
+                                          ),
+                                        ),
+                                ),
+                              ),
                             ),
-                    ),
-                  ),
-                ),
-              ),
-              if (loading || failed)
-                Center(
-                  child: failed
-                      ? Text(
-                          l.chatAttachmentFailed,
-                          style: context.typography.body.copyWith(
-                            color: c.onScrim,
                           ),
-                        )
-                      : CircularProgressIndicator(color: c.onScrim),
-                ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: ChatImageViewerBar(
-                  image: _image,
-                  position: '${_index + 1} / ${widget.images.length}',
-                  transform: _transform,
-                  onZoomIn: () => _zoom(_kZoomStep),
-                  onZoomOut: () => _zoom(1 / _kZoomStep),
-                  onFit: _fit,
-                  onRotate: _rotate,
-                  onCopy: full is Ok ? _copy : null,
-                  onSave: _save,
-                  onOpenExternally: _openExternally,
-                  onClose: () => Navigator.of(context).pop(),
+                        ),
+                        if (loading || failed)
+                          Center(
+                            child: failed
+                                ? Text(
+                                    l.chatAttachmentFailed,
+                                    style: context.typography.body.copyWith(
+                                      color: c.onScrim,
+                                    ),
+                                  )
+                                : CircularProgressIndicator(color: c.onScrim),
+                          ),
+                        if (hasPrev)
+                          ChatViewerSideArrow(
+                            alignment: Alignment.centerLeft,
+                            icon: Icons.chevron_left_rounded,
+                            tooltip: l.chatPrevious,
+                            onPressed: () => _go(-1),
+                          ),
+                        if (hasNext)
+                          ChatViewerSideArrow(
+                            alignment: Alignment.centerRight,
+                            icon: Icons.chevron_right_rounded,
+                            tooltip: l.chatNext,
+                            onPressed: () => _go(1),
+                          ),
+                      ],
+                    );
+                  },
                 ),
               ),
-              if (hasPrev)
-                _SideArrow(
-                  alignment: Alignment.centerLeft,
-                  icon: Icons.chevron_left_rounded,
-                  tooltip: l.chatPrevious,
-                  onPressed: () => _go(-1),
-                ),
-              if (hasNext)
-                _SideArrow(
-                  alignment: Alignment.centerRight,
-                  icon: Icons.chevron_right_rounded,
-                  tooltip: l.chatNext,
-                  onPressed: () => _go(1),
-                ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A round previous/next button on the viewer's left or right edge.
-class _SideArrow extends StatelessWidget {
-  const _SideArrow({
-    required this.alignment,
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final Alignment alignment;
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Align(
-      alignment: alignment,
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.xl4),
-        child: IconButton.filled(
-          tooltip: tooltip,
-          onPressed: onPressed,
-          style: IconButton.styleFrom(
-            backgroundColor: c.scrim.withValues(alpha: 0.5),
-            foregroundColor: c.onScrim,
-          ),
-          iconSize: context.spacing.xl6 * 0.8,
-          icon: Icon(icon),
         ),
       ),
     );
