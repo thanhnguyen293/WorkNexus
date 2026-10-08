@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../value_objects/message_content.dart';
+import 'decode_emoji.dart';
 
 /// Turns xxd's (`contentType`, `content`) pair into a [MessageContent].
 ///
@@ -49,12 +50,19 @@ class ParseMessageContent {
   MessageContent call(String contentType, String content) {
     switch (contentType) {
       case 'plain':
-        return MessageContent.text(repairMentions(content));
+        return MessageContent.text(_text(content));
       case 'text':
-        return MessageContent.text(repairMentions(content), markdown: true);
+        return MessageContent.text(_text(content), markdown: true);
       case 'image' || 'file':
         final json = _object(content);
         final inline = json?['content'];
+        // The official client's large emoji: `{type: emoji, content: :smile:}`.
+        if (contentType == 'image' &&
+            json?['type'] == 'emoji' &&
+            inline is String &&
+            inline.isNotEmpty) {
+          return MessageContent.text(_decodeEmoji(inline));
+        }
         if (contentType == 'image' &&
             json?['type'] == 'base64' &&
             inline is String &&
@@ -118,6 +126,10 @@ class ParseMessageContent {
     }
     return MessageContent.unsupported(contentType);
   }
+
+  static const _decodeEmoji = DecodeEmoji();
+
+  static String _text(String content) => _decodeEmoji(repairMentions(content));
 
   static Map<String, Object?>? _object(String content) {
     try {
