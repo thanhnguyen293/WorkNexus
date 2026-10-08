@@ -2,6 +2,15 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'message_content.freezed.dart';
 
+/// A button under a notification: open [url].
+@freezed
+abstract class NotificationAction with _$NotificationAction {
+  const factory NotificationAction({
+    required String label,
+    required String url,
+  }) = _NotificationAction;
+}
+
 /// What a chat message carries, parsed from xxd's `contentType` + `content`
 /// (see `ParseMessageContent`).
 @freezed
@@ -39,6 +48,23 @@ sealed class MessageContent with _$MessageContent {
     required int time,
     String? mimeType,
   }) = FileContent;
+
+  /// One emoji sent large, without a bubble (the official client's
+  /// emoticon message); [emoji] is the character itself.
+  const factory MessageContent.emoji(String emoji) = EmojiContent;
+
+  /// A notification from ZenTao or xuanbot (the bot chat): a [title] and
+  /// [subtitle] over Markdown [text], a link to the item ([url]) and
+  /// further [actions]. [sender] names who it is from when not the bot.
+  const factory MessageContent.notification({
+    String? title,
+    String? subtitle,
+    @Default('') String text,
+    @Default(true) bool markdown,
+    String? url,
+    @Default(<NotificationAction>[]) List<NotificationAction> actions,
+    String? sender,
+  }) = NotificationContent;
 
   /// A shared link card (`object` content of type `url`), e.g. a ZenTao task.
   const factory MessageContent.link({required String url, String? title}) =

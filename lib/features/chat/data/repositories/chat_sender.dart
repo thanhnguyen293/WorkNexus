@@ -52,22 +52,46 @@ class ChatSender {
     String text, {
     int? replyToId,
     bool markdown = false,
+  }) => _sendInline(
+    accountId,
+    chatGid,
+    contentType: markdown ? 'text' : 'plain',
+    content: text,
+    replyToId: replyToId,
+  );
+
+  /// The official client's emoticon message: an `image` whose content names
+  /// an emoji rather than a file.
+  Future<Result<void>> sendEmoji(
+    String accountId,
+    String chatGid,
+    String code,
+  ) => _sendInline(
+    accountId,
+    chatGid,
+    contentType: 'image',
+    content: jsonEncode({'type': 'emoji', 'content': code}),
+  );
+
+  /// Queues a message whose content needs no upload, then sends it.
+  Future<Result<void>> _sendInline(
+    String accountId,
+    String chatGid, {
+    required String contentType,
+    required String content,
+    int? replyToId,
   }) async {
     final gid = _uuid.v4();
-    final self =
-        _session(accountId)?.selfUserId ??
-        (await _local.chatAccount(accountId))?.userId ??
-        0;
     try {
       await _local.insertMessage(
         ChatMessagesCompanion.insert(
           accountId: accountId,
           gid: gid,
           cgid: chatGid,
-          senderId: self,
+          senderId: await _selfId(accountId),
           sentAt: _now(),
-          contentType: markdown ? 'text' : 'plain',
-          content: text,
+          contentType: contentType,
+          content: content,
           sendState: Value(SendState.pending.name),
           replyToId: Value(replyToId),
         ),

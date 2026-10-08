@@ -99,6 +99,48 @@ ChatMessagesCompanion messageFromXxd(String accountId, Map<String, Object?> m) {
   );
 }
 
+/// The chat ZenTao's notifications (xuanbot) land in: `<self>&xuanbot`.
+String xuanbotGid(int selfUserId) => '$selfUserId&xuanbot';
+
+/// The content type notifications are stored under (not an xxd one).
+const kNotificationContentType = 'notification';
+
+/// Notifications from `syncNotifications` as messages of the xuanbot chat,
+/// like the official client: one item, a list, or a map of them. Each keeps
+/// its whole payload (title, url, actions, …) as content; it has no server
+/// message id, so it cannot clash with a real one.
+List<ChatMessagesCompanion> notificationsFromXxd(
+  String accountId,
+  Object? data, {
+  required int selfUserId,
+}) {
+  final items = switch (data) {
+    final List<Object?> list => list,
+    final Map<Object?, Object?> map when map['cgid'] != null => [map],
+    final Map<Object?, Object?> map => map.values.toList(),
+    _ => const <Object?>[],
+  };
+  final bot = xuanbotGid(selfUserId);
+  return [
+    for (final item in items)
+      if (item is Map)
+        ChatMessagesCompanion(
+          accountId: Value(accountId),
+          gid: Value('${item['gid'] ?? 'notification-${item['id']}'}'),
+          cgid: Value(switch (item['cgid']) {
+            final String cgid when cgid.isNotEmpty && cgid != 'notification' =>
+              cgid,
+            _ => bot,
+          }),
+          senderId: const Value(0),
+          sentAt: Value(_date(item['date']) ?? DateTime.now()),
+          contentType: const Value(kNotificationContentType),
+          content: Value(jsonEncode(item)),
+          sendState: Value(SendState.sent.name),
+        ),
+  ];
+}
+
 /// `replyTo` from a message's `data` (a JSON string or an already-decoded map).
 int? replyToOf(Object? data) {
   Object? decoded = data;

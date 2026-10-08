@@ -73,6 +73,9 @@ abstract class ChatRepository {
     List<int> serverIds,
   );
 
+  /// Sends one emoji shown large; [code] is its wire form (`:thumbsup:`).
+  Future<Result<void>> sendEmoji(String accountId, String chatGid, String code);
+
   /// Uploads a file (images become image messages) and sends it, shown as
   /// pending meanwhile — as a reply to [replyToId] when given.
   Future<Result<void>> sendFile(

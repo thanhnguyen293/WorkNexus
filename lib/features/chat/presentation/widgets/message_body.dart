@@ -11,6 +11,7 @@ import '../../domain/value_objects/message_content.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_file_body.dart';
 import 'chat_image_body.dart';
+import 'notification_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
 import 'chat_user_profile_dialog.dart';
@@ -42,10 +43,22 @@ class MessageBody extends StatelessWidget {
       );
     }
     return switch (message.content) {
-      TextContent(:final text, :final markdown) => _TextBody(
+      TextContent(:final text, :final markdown) => ChatTextBody(
         accountId: accountId,
         text: text,
         markdown: markdown || chatLooksLikeMarkdown(text),
+      ),
+      // Large, without a bubble (the bubble treats it as media).
+      EmojiContent(:final emoji) => Text(
+        emoji,
+        style: context.typography.displayLg.copyWith(
+          fontSize: context.spacing.xl6 * 1.5,
+          height: 1.1,
+        ),
+      ),
+      final NotificationContent notification => NotificationBody(
+        accountId: accountId,
+        notification: notification,
       ),
       final ImageContent image => ChatImageBody(
         accountId: accountId,
@@ -74,21 +87,26 @@ class MessageBody extends StatelessWidget {
 
 /// Message text — Markdown or plain with mentions and links — followed by a
 /// preview of the first web page it links to.
-class _TextBody extends ConsumerWidget {
-  const _TextBody({
+class ChatTextBody extends ConsumerWidget {
+  const ChatTextBody({
+    super.key,
     required this.accountId,
     required this.text,
     required this.markdown,
+    this.linkPreview = true,
   });
 
   final String accountId;
   final String text;
   final bool markdown;
 
+  /// Show a card for the first web page linked.
+  final bool linkPreview;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ink = ChatBubbleTheme.of(context);
-    final url = chatFirstUrl(text);
+    final url = linkPreview ? chatFirstUrl(text) : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

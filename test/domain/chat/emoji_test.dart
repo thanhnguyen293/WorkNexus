@@ -26,11 +26,11 @@ void main() {
     expect(decode(encode(text)), text);
   });
 
-  test('the official large emoji shows as text', () {
+  test('the official large emoji is its own content', () {
     final content = const ParseMessageContent()(
       'image',
       '{"type":"emoji","content":":smile:"}',
     );
-    expect(content, const MessageContent.text('😄'));
+    expect(content, const MessageContent.emoji('😄'));
   });
 }

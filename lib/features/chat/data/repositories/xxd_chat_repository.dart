@@ -194,6 +194,13 @@ class XxdChatRepository implements ChatRepository {
     _status(accountId).set(status);
     if (s is XxdOnline) {
       session.selfUserId = s.session.userId;
+      // Notifications (and xuanbot) arrive as `syncNotifications` once
+      // asked for, as the official client does after signing in.
+      unawaited(
+        session.connection.request(
+          const XxdRequest('getNotification', params: []),
+        ),
+      );
       session.enqueue(
         () => _local.saveChatAccount(
           ChatAccountsCompanion(
@@ -395,6 +402,13 @@ class XxdChatRepository implements ChatRepository {
     replyToId: replyToId,
     markdown: markdown,
   );
+
+  @override
+  Future<Result<void>> sendEmoji(
+    String accountId,
+    String chatGid,
+    String code,
+  ) => _sender.sendEmoji(accountId, chatGid, code);
 
   @override
   Future<Result<void>> sendFile(

@@ -14,6 +14,7 @@ import 'chat_attachments.dart';
 import 'chat_image_viewer_bar.dart';
 import 'chat_media_viewer_bar.dart';
 import 'chat_snack.dart';
+import 'save_sticker_action.dart';
 
 /// Zoom steps of the viewer's buttons and keys.
 const double _kMinScale = 0.25;
@@ -95,6 +96,19 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
   void _fit() => _transform.value = Matrix4.identity();
 
   void _rotate() => setState(() => _turns = (_turns + 1) % 4);
+
+  /// Images saved as stickers while the viewer is open.
+  final _stickers = <ImageContent>{};
+
+  Future<void> _saveSticker(ImageContent image) async {
+    final saved = await saveImageAsSticker(
+      context,
+      ref,
+      accountId: widget.accountId,
+      image: image,
+    );
+    if (saved && mounted) setState(() => _stickers.add(image));
+  }
 
   Future<void> _copy() async {
     final l = AppL10n.of(context);
@@ -193,6 +207,9 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
                 onRotate: _rotate,
                 onCopy: full is Ok ? _copy : null,
                 onSave: _save,
+                onSaveSticker: _stickers.contains(_image)
+                    ? null
+                    : () => _saveSticker(_image),
                 onOpenExternally: _openExternally,
                 onClose: () => Navigator.of(context).pop(),
               ),

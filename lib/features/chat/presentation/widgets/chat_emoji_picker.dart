@@ -3,29 +3,22 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/value_objects/emoji_shortnames.dart';
+import '../providers/chat_providers.dart';
+import 'chat_emoji_panel.dart';
 
-const int _kColumns = 8;
-const int _kVisibleRows = 6;
-
-/// The emoji offered: those the server keeps (sent as Emojione shortnames,
-/// which the official client also renders), in the shortname list's order.
-/// Older symbols (❤ ✌) get the emoji variation selector, or macOS draws
-/// them as plain text glyphs.
-final List<String> _emoji = [
-  for (final rune in kEmojiShortnames.values)
-    rune > 0xFFFF
-        ? String.fromCharCode(rune)
-        : '${String.fromCharCode(rune)}\u{FE0F}',
-];
-
-/// Tool-row button opening an emoji grid; a pick is inserted at the cursor
-/// and the grid stays open for more.
+/// Tool-row button opening the emoji and sticker panel. Emoji are inserted
+/// at the cursor (the panel stays open for more); a sticker or large emoji
+/// is sent at once and closes it.
 class ChatEmojiButton extends StatefulWidget {
-  const ChatEmojiButton({super.key, required this.text, required this.focus});
+  const ChatEmojiButton({
+    super.key,
+    required this.thread,
+    required this.text,
+    required this.focus,
+  });
 
+  final ChatThreadKey thread;
   final TextEditingController text;
   final FocusNode focus;
 
@@ -53,10 +46,16 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
     final s = context.spacing;
     return MenuAnchor(
       controller: _menu,
-      // Back to typing once the grid closes.
+      // Back to typing once the panel closes.
       onClose: widget.focus.requestFocus,
       alignmentOffset: Offset(0, -s.xs),
-      menuChildren: [_EmojiGrid(onPick: _insert)],
+      menuChildren: [
+        ChatEmojiPanel(
+          thread: widget.thread,
+          onInsert: _insert,
+          onSent: _menu.close,
+        ),
+      ],
       builder: (context, menu, _) => IconButton(
         tooltip: AppL10n.of(context).chatEmoji,
         isSelected: menu.isOpen,
@@ -71,40 +70,6 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
         icon: Icon(
           Icons.emoji_emotions_outlined,
           color: menu.isOpen ? c.accent : c.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmojiGrid extends StatelessWidget {
-  const _EmojiGrid({required this.onPick});
-
-  final ValueChanged<String> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = context.spacing;
-    final cell = s.xl6;
-    return SizedBox(
-      width: cell * _kColumns + s.md * 2,
-      height: cell * _kVisibleRows + s.md * 2,
-      child: GridView.builder(
-        padding: EdgeInsets.all(s.md),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _kColumns,
-          mainAxisExtent: cell,
-        ),
-        itemCount: _emoji.length,
-        itemBuilder: (context, i) => InkWell(
-          borderRadius: BorderRadius.circular(context.radii.md),
-          onTap: () => onPick(_emoji[i]),
-          child: Center(
-            child: Text(
-              _emoji[i],
-              style: context.typography.titleLg.copyWith(height: 1),
-            ),
-          ),
         ),
       ),
     );

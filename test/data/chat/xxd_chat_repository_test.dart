@@ -325,6 +325,50 @@ void main() {
     );
   });
 
+  test(
+    'notifications land in the xuanbot chat, created when missing',
+    () async {
+      await repo.connect(_acc);
+      await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+      server.current.push({
+        'method': 'syncNotifications',
+        'result': 'success',
+        'data': [
+          {
+            'id': 5,
+            'title': 'Task #12 assigned to you',
+            'content': 'Please **review**',
+            'contentType': 'text',
+            'url': 'https://zentao.example/task-view-12.html',
+            'actions': [
+              {'label': 'Open', 'url': 'https://zentao.example/my'},
+            ],
+            'sender': {'id': 'zentao', 'realname': 'ZenTao'},
+            'date': _t0 + 950,
+          },
+        ],
+      });
+
+      final chats = await eventually(
+        repo.watchConversations(_acc),
+        (l) => byGid(l, '40&xuanbot') != null,
+      );
+      expect(byGid(chats, '40&xuanbot')?.type, ChatType.bot);
+      final messages = await eventually(
+        repo.watchMessages(_acc, '40&xuanbot'),
+        (m) => m.isNotEmpty,
+      );
+      final content = messages.single.content as NotificationContent;
+      expect(content.title, 'Task #12 assigned to you');
+      expect(content.text, 'Please **review**');
+      expect(content.url, 'https://zentao.example/task-view-12.html');
+      expect(content.actions.single.label, 'Open');
+      expect(content.sender, 'ZenTao');
+      expect(messages.single.senderId, 0);
+    },
+  );
+
   test('a message in an unknown chat fetches that chat', () async {
     await repo.connect(_acc);
     await eventually(repo.watchConversations(_acc), (l) => l.length == 2);

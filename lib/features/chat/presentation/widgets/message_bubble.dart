@@ -68,7 +68,7 @@ class MessageBubble extends ConsumerWidget {
   bool get _isMedia =>
       !message.deleted &&
       switch (message.content) {
-        ImageContent() => true,
+        ImageContent() || EmojiContent() => true,
         final FileContent f => isVideoFile(f) && f.fileId > 0,
         _ => false,
       };

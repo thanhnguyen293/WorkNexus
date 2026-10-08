@@ -10,9 +10,10 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'message_hover_actions.dart';
+import 'save_sticker_action.dart';
 
-/// The hover actions a message offers: reply, copy text, pin/unpin (where
-/// allowed) and — for your own recent messages — retract. Called from a
+/// The hover actions a message offers: reply, copy text, save an image as a
+/// sticker, pin/unpin (where allowed) and — for your own recent messages — retract. Called from a
 /// bubble's build, so it watches what the pin action depends on.
 List<MessageAction> messageActions(
   BuildContext context,
@@ -50,6 +51,18 @@ List<MessageAction> messageActions(
           ClipboardData(
             text: text.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
           ),
+        ),
+      ),
+    if (message.content case final ImageContent image
+        when serverId != null && !message.deleted)
+      (
+        icon: Icons.add_reaction_outlined,
+        tooltip: l.chatSaveSticker,
+        onTap: () => saveImageAsSticker(
+          context,
+          ref,
+          accountId: message.accountId,
+          image: image,
         ),
       ),
     if (canPin)

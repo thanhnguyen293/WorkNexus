@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../data/local/repositories/empty_dev_link_repository.dart';
 import '../../data/local/repositories/local_activity_repository.dart';
@@ -19,9 +21,11 @@ import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/http_link_preview_repository.dart';
+import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/repositories/link_preview_repository.dart';
+import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/sync/data/sync_service.dart';
@@ -122,6 +126,13 @@ abstract class ServiceModule {
         http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
         onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
       );
+
+  @lazySingleton
+  StickerRepository get stickerRepository => LocalStickerRepository(
+    bundle: rootBundle,
+    directory: () async =>
+        Directory('${(await getApplicationSupportDirectory()).path}/stickers'),
+  );
 
   @lazySingleton
   LinkPreviewRepository get linkPreviewRepository =>
