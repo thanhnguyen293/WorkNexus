@@ -5,8 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/util/labels.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/contrast.dart';
 import '../../domain/entities/link_preview.dart';
 import '../providers/chat_providers.dart';
 import 'chat_bubble_theme.dart';
@@ -31,23 +30,8 @@ class LinkPreviewCard extends ConsumerWidget {
     final ink = ChatBubbleTheme.of(context);
     final s = context.spacing;
     final radius = BorderRadius.circular(context.radii.sm);
-    // A link to a synced ZenTao ticket shows the ticket instead of fetching
-    // the (login-protected) page.
-    final ticket = watchLinkedTicket(ref, url);
-    final state = ticket == null
-        ? ref.watch(chatLinkPreviewProvider(url))
-        : AsyncData<LinkPreview?>(
-            LinkPreview(
-              url: url,
-              siteName:
-                  'ZenTao · ${ticket.externalType ?? ''} #${ticket.externalKey}',
-              title: ticket.title,
-              description: [
-                statusLabel(AppL10n.of(context), ticket.status),
-                ?ticket.assignee,
-              ].join(' · '),
-            ),
-          );
+    // ZenTao tickets and merge requests get their own live cards instead.
+    final state = ref.watch(chatLinkPreviewProvider(url));
     final preview = state.asData?.value;
     final image = preview?.imageUrl;
     return Padding(
@@ -105,7 +89,10 @@ class _Lines extends StatelessWidget {
     final p = preview;
     Text line(String text, TextStyle style) =>
         Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
-    final site = context.typography.captionStrong.copyWith(color: ink.link);
+    // On the card's own fill, which can be darker than the bubble.
+    final site = context.typography.captionStrong.copyWith(
+      color: readableOn(ink.link, ink.quoteSurface, towards: ink.text),
+    );
     final title = context.typography.bodyStrong.copyWith(color: ink.text);
     final body = context.typography.bodySm.copyWith(color: ink.text);
     return Column(

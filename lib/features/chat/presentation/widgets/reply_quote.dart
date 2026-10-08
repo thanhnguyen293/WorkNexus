@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/contrast.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
@@ -79,7 +80,11 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
                   Text(
                     chatUserName(context, widget.users, message.senderId),
                     style: context.typography.captionStrong.copyWith(
-                      color: ink.quoteBar,
+                      color: readableOn(
+                        ink.quoteBar,
+                        ink.quoteSurface,
+                        towards: ink.text,
+                      ),
                     ),
                   ),
                   Text(

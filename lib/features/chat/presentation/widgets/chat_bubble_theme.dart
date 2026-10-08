@@ -13,8 +13,9 @@ class ChatBubbleInk {
     required this.quoteBar,
     required this.quoteFill,
     required this.tileFill,
+    Color? quoteSurface,
     this.fontSize = 13,
-  });
+  }) : quoteSurface = quoteSurface ?? quoteFill;
 
   /// The app theme's ink, for content outside any styled bubble.
   factory ChatBubbleInk.fromTheme(BuildContext context) {
@@ -40,6 +41,11 @@ class ChatBubbleInk {
   /// Reply quote: the bar on its left edge and its background.
   final Color quoteBar;
   final Color quoteFill;
+
+  /// What a quote or link card actually shows as its background: [quoteFill]
+  /// blended over the bubble and the chat background (opaque), for checking
+  /// that coloured text on it stays readable.
+  final Color quoteSurface;
 
   /// Background of icon tiles (link and file cards) inside the bubble.
   final Color tileFill;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'contrast.dart';
 
 /// Colour tokens of one chat style ([ChatAppearance]) in one brightness.
 ///
@@ -30,26 +31,37 @@ class ChatStylePalette {
     this.nameColors,
     this.outgoingTicks,
     this.quoteFill,
+    this.outgoingQuoteFill,
     this.outsideQuoteFill,
     this.outsideQuoteText,
     this.wallpaper,
     this.wallpaperInk,
   });
 
-  /// The WorkNexus style follows the app theme.
+  /// The default style follows the app theme. Secondary text uses the
+  /// theme's secondary (not tertiary) ink, which keeps ≥ 4.5:1 on the tinted
+  /// own bubble; quotes and link cards are neutral — grey in incoming,
+  /// white in own bubbles — so they stand apart without a second tint.
   factory ChatStylePalette.fromTheme(AppColors c) => ChatStylePalette(
     background: c.background,
     incomingBubble: c.surface,
     incomingText: c.textPrimary,
-    incomingMeta: c.textTertiary,
+    incomingMeta: c.textSecondary,
     incomingLink: c.accent,
     incomingQuoteBar: c.accent,
     outgoingBubble: c.selectionFill,
     outgoingText: c.textPrimary,
-    outgoingMeta: c.textTertiary,
-    outgoingLink: c.accent,
+    outgoingMeta: c.textSecondary,
+    // The accent on the accent-tinted own bubble falls a little short.
+    outgoingLink: readableOn(
+      c.accent,
+      Color.alphaBlend(c.selectionFill, c.background),
+      towards: c.textPrimary,
+    ),
     outgoingQuoteBar: c.accent,
-    separatorText: c.textTertiary,
+    quoteFill: c.background,
+    outgoingQuoteFill: c.surface,
+    separatorText: c.textSecondary,
   );
 
   /// This palette with own bubbles in the app's accent [c] instead of the
@@ -86,6 +98,8 @@ class ChatStylePalette {
       separatorText: separatorText,
       nameColors: nameColors,
       quoteFill: quoteFill,
+      // outgoingQuoteFill is left out: it suits the messenger's own bubble,
+      // not the accent one.
       outsideQuoteFill: outsideQuoteFill,
       outsideQuoteText: outsideQuoteText,
       wallpaper: wallpaper,
@@ -96,14 +110,12 @@ class ChatStylePalette {
   /// [fill] darkened just enough for [ink] to read at 4.5:1 (a dark theme's
   /// light accent under white text would not).
   static Color _readableFill(Color fill, Color ink) {
-    double contrast(Color bg) {
-      final a = ink.computeLuminance();
-      final b = bg.computeLuminance();
-      return (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
-    }
-
     var out = fill;
-    for (var shade = 0.08; contrast(out) < 4.5 && shade <= 0.6; shade += 0.08) {
+    for (
+      var shade = 0.08;
+      contrastRatio(ink, out) < 4.5 && shade <= 0.6;
+      shade += 0.08
+    ) {
       out = Color.alphaBlend(_black.withValues(alpha: shade), fill);
     }
     return out;
@@ -143,6 +155,10 @@ class ChatStylePalette {
 
   /// Quote background; null = the quote bar colour at low opacity.
   final Color? quoteFill;
+
+  /// Quote/card background in outgoing bubbles, when it differs from
+  /// [quoteFill] (the default style: white on its tinted own bubbles).
+  final Color? outgoingQuoteFill;
 
   /// A reply quote shown outside the bubble (Messenger, WeChat): its box and
   /// text; null = the incoming bubble colour and [incomingMeta].
@@ -279,6 +295,9 @@ class ChatStylePalette {
     outgoingMeta: Color(0xFFF5F8FF),
     outgoingLink: Color(0xFFFFFFFF),
     outgoingQuoteBar: Color(0xFFFFFFFF),
+    // A deep navy card on the blue own bubble: state colours (green, red,
+    // purple) then read without being washed out to white.
+    outgoingQuoteFill: Color(0x66001A4D),
     separatorText: Color(0xFF65676B),
   );
 
@@ -294,6 +313,9 @@ class ChatStylePalette {
     outgoingMeta: Color(0xFFF5F8FF),
     outgoingLink: Color(0xFFFFFFFF),
     outgoingQuoteBar: Color(0xFFFFFFFF),
+    // A deep navy card on the blue own bubble: state colours (green, red,
+    // purple) then read without being washed out to white.
+    outgoingQuoteFill: Color(0x66001A4D),
     separatorText: Color(0xFFB0B3B8),
   );
 
@@ -310,6 +332,8 @@ class ChatStylePalette {
     outgoingLink: Color(0xFF2F4F1F),
     outgoingQuoteBar: Color(0xFF2F4F1F),
     quoteFill: Color(0x0F000000),
+    // A pale wash on the green own bubble: a dark tint turns it muddy.
+    outgoingQuoteFill: Color(0x99FFFFFF),
     separatorText: Color(0xFF686868),
     outsideQuoteFill: Color(0xFFDADADA),
     outsideQuoteText: Color(0xFF4C4C4C),
@@ -328,6 +352,7 @@ class ChatStylePalette {
     outgoingLink: Color(0xFF0A2E1D),
     outgoingQuoteBar: Color(0xFF071F13),
     quoteFill: Color(0x14000000),
+    outgoingQuoteFill: Color(0x4DFFFFFF),
     separatorText: Color(0xFF7C7C7C),
     outsideQuoteFill: Color(0xFF262626),
     outsideQuoteText: Color(0xFFB2B2B2),

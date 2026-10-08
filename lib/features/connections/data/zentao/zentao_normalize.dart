@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/util/content_hash.dart';
+import '../../../../core/util/html_entities.dart';
 import '../../../../core/util/zentao_labels.dart';
 import 'zentao_models.dart';
 
@@ -190,7 +191,10 @@ Ticket normalizeZenTao(
   required String baseUrl,
 }) {
   final id = e.idString;
-  final title = (type == ZenTaoType.task ? e.name : e.title)?.toString() ?? '';
+  // ZenTao sends titles HTML-escaped (`&quot;`).
+  final title = decodeHtmlEntities(
+    (type == ZenTaoType.task ? e.name : e.title)?.toString() ?? '',
+  );
   final rawBody =
       (switch (type) {
         ZenTaoType.bug => e.steps,

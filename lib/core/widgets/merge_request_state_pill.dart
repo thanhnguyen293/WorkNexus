@@ -23,17 +23,8 @@ class MergeRequestStatePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final l = AppL10n.of(context);
+    final (color, label) = mergeRequestState(context, status, provider);
     final gitlab = provider == ProviderType.gitlab;
-    final (color, label) = switch (status.toLowerCase()) {
-      'merged' => (c.info, gitlab ? l.gitlabColMerged : l.githubColMerged),
-      'closed' => (
-        c.textTertiary,
-        gitlab ? l.gitlabColClosed : l.githubColClosed,
-      ),
-      'draft' => (c.warning, gitlab ? l.gitlabColDraft : l.githubColDraft),
-      _ => (c.success, gitlab ? l.gitlabColOpen : l.githubColOpen),
-    };
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.sm,
@@ -60,4 +51,26 @@ class MergeRequestStatePill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Colour and wording of a merge request / pull request state (Open /
+/// Draft / Merged / Closed) from the provider's raw [status], worded the way
+/// [provider] words it.
+(Color, String) mergeRequestState(
+  BuildContext context,
+  String status,
+  ProviderType provider,
+) {
+  final c = context.colors;
+  final l = AppL10n.of(context);
+  final gitlab = provider == ProviderType.gitlab;
+  return switch (status.toLowerCase()) {
+    'merged' => (c.info, gitlab ? l.gitlabColMerged : l.githubColMerged),
+    'closed' => (
+      c.textTertiary,
+      gitlab ? l.gitlabColClosed : l.githubColClosed,
+    ),
+    'draft' => (c.warning, gitlab ? l.gitlabColDraft : l.githubColDraft),
+    _ => (c.success, gitlab ? l.gitlabColOpen : l.githubColOpen),
+  };
 }
