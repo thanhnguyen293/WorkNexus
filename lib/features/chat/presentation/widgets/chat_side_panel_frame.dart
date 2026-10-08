@@ -24,14 +24,20 @@ class ChatSidePanelFrame extends StatelessWidget {
     required this.child,
     this.width = kChatSidePanelWidth,
     this.closeTooltip,
+    this.onBack,
   });
+
+  /// Shows a back arrow before the title (sub-panels of the chat info).
+  final VoidCallback? onBack;
 
   final double width;
 
   /// Close button tooltip; defaults to "Close".
   final String? closeTooltip;
   final String title;
-  final VoidCallback onClose;
+
+  /// Null hides the close button (the info panel while there is room).
+  final VoidCallback? onClose;
   final Widget child;
 
   @override
@@ -48,13 +54,22 @@ class ChatSidePanelFrame extends StatelessWidget {
         children: [
           Container(
             height: kChatHeaderHeight,
-            padding: EdgeInsets.only(left: s.xl3, right: s.md),
+            padding: EdgeInsets.only(
+              left: onBack == null ? s.xl3 : s.xs,
+              right: s.md,
+            ),
             decoration: BoxDecoration(
               color: c.surface,
               border: Border(bottom: context.hairlineSide),
             ),
             child: Row(
               children: [
+                if (onBack case final back?)
+                  IconButton(
+                    tooltip: AppL10n.of(context).chatBackToInfo,
+                    onPressed: back,
+                    icon: Icon(Icons.arrow_back, color: c.textSecondary),
+                  ),
                 Expanded(
                   child: Text(
                     title,
@@ -65,11 +80,12 @@ class ChatSidePanelFrame extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton(
-                  tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
-                  onPressed: onClose,
-                  icon: Icon(Icons.close, color: c.textSecondary),
-                ),
+                if (onClose case final close?)
+                  IconButton(
+                    tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
+                    onPressed: close,
+                    icon: Icon(Icons.close, color: c.textSecondary),
+                  ),
               ],
             ),
           ),

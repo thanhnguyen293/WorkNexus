@@ -8,6 +8,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'chat_layout.dart';
 import 'chat_panels.dart';
 import 'chat_shared_files.dart';
 import 'chat_side_panel_frame.dart';
@@ -29,7 +30,13 @@ class ChatInfoFilesSection extends ConsumerWidget {
     final s = context.spacing;
     final all = ref.watch(chatAttachmentsProvider(thread)).value ?? const [];
     final (:media, :files) = splitChatAttachments(all);
-    void seeAll() => toggleChatSidePanel(ref, thread, ChatSidePanel.files);
+    final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    void seeAll() => toggleChatSidePanel(
+      ref,
+      thread,
+      ChatSidePanel.files,
+      infoRoom: infoRoom,
+    );
     return Column(
       children: [
         ChatPanelCard(

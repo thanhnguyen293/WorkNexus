@@ -217,6 +217,10 @@ class ChatConversations extends Table {
   /// Server ids of pinned messages, as a JSON array.
   TextColumn get pinnedJson => text().withDefault(const Constant('[]'))();
 
+  /// The group's avatar as xxd sends it (`{type, data}`), JSON; null =
+  /// none (initials are drawn).
+  TextColumn get avatarJson => text().nullable()();
+
   /// User ids of the group's admins, as a JSON array.
   TextColumn get adminsJson => text().withDefault(const Constant('[]'))();
 
@@ -271,6 +275,9 @@ class ChatUsers extends Table {
   TextColumn get phone => text().nullable()();
   TextColumn get role => text().nullable()();
 
+  /// Presence: `online`, `away`, `busy`, `offline`… (null = unknown).
+  TextColumn get status => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {accountId, userId};
 }
@@ -303,7 +310,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -399,6 +406,14 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('chat_users', column)) {
             await m.addColumn(chatUsers, add);
           }
+        }
+      }
+      if (from < 25) {
+        if (!await _hasColumn('chat_conversations', 'avatar_json')) {
+          await m.addColumn(chatConversations, chatConversations.avatarJson);
+        }
+        if (!await _hasColumn('chat_users', 'status')) {
+          await m.addColumn(chatUsers, chatUsers.status);
         }
       }
       if (from < 24) {

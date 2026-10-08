@@ -104,6 +104,19 @@ class ChatLocalDatasource {
     ];
   }
 
+  /// Sets a user's presence (`online`, `offline`…).
+  Future<void> setUserStatus(String accountId, int userId, String status) =>
+      (_db.update(_db.chatUsers)..where(
+            (u) => u.accountId.equals(accountId) & u.userId.equals(userId),
+          ))
+          .write(ChatUsersCompanion(status: Value(status)));
+
+  /// Sets a chat's avatar (xxd JSON).
+  Future<void> setChatAvatar(String accountId, String gid, String json) =>
+      (_db.update(_db.chatConversations)
+            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
+          .write(ChatConversationsCompanion(avatarJson: Value(json)));
+
   /// Replaces a chat's pinned message ids ([pinnedJson] is a JSON array).
   Future<void> setPinned(String accountId, String gid, String pinnedJson) =>
       (_db.update(_db.chatConversations)

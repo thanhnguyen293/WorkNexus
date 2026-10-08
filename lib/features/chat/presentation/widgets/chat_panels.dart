@@ -16,46 +16,45 @@ void openReplyThread(WidgetRef ref, ChatThreadKey chat, int messageId) {
   ref.read(chatSidePanelProvider(chat).notifier).state = null;
 }
 
+/// The panel shown beside chat [chat]: the one the user opened, else the
+/// info panel when there is room for it ([infoRoom]).
+ChatSidePanel? effectiveSidePanel(
+  WidgetRef ref,
+  ChatThreadKey chat, {
+  required bool infoRoom,
+}) =>
+    ref.watch(chatSidePanelProvider(chat)) ??
+    (infoRoom ? ChatSidePanel.info : null);
+
 /// Opens [panel] beside chat [chat] (closing a reply thread), or closes it
-/// when it is already open.
+/// when it is already open. With room, the info panel is always there, so
+/// "closing" anything returns to it.
 void toggleChatSidePanel(
   WidgetRef ref,
   ChatThreadKey chat,
-  ChatSidePanel panel,
-) {
+  ChatSidePanel panel, {
+  required bool infoRoom,
+}) {
   final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  notifier.state = notifier.state == panel ? null : panel;
+  final shown = notifier.state ?? (infoRoom ? ChatSidePanel.info : null);
+  notifier.state = shown == panel || (infoRoom && panel == ChatSidePanel.info)
+      ? null
+      : panel;
   ref.read(openReplyThreadProvider(chat).notifier).state = null;
-  if (panel == ChatSidePanel.info) {
-    ref.read(chatInfoAutoOpenProvider.notifier).state =
-        notifier.state == ChatSidePanel.info;
-  }
 }
 
-/// Closes the panel beside chat [chat]; closing the info panel also stops
-/// it opening by itself for the next chats.
-void closeChatSidePanel(WidgetRef ref, ChatThreadKey chat) {
-  final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  if (notifier.state == ChatSidePanel.info) {
-    ref.read(chatInfoAutoOpenProvider.notifier).state = false;
-  }
-  notifier.state = null;
-}
+/// From pinned messages or files back to the chat info.
+void backToChatInfo(
+  WidgetRef ref,
+  ChatThreadKey chat, {
+  required bool infoRoom,
+}) => ref.read(chatSidePanelProvider(chat).notifier).state = infoRoom
+    ? null
+    : ChatSidePanel.info;
 
-/// Least width of the chat area for the info panel to open by itself: the
-/// messages keep about 560 px beside the 340 px panel.
-const double kChatInfoAutoOpenWidth = 900;
-
-/// On opening a chat that is [width] wide: shows its info panel when the
-/// user has not turned that off, there is room, and nothing else is open
-/// beside it.
-void autoOpenChatInfo(WidgetRef ref, ChatThreadKey chat, double width) {
-  if (width < kChatInfoAutoOpenWidth) return;
-  if (!ref.read(chatInfoAutoOpenProvider)) return;
-  if (ref.read(openReplyThreadProvider(chat)) != null) return;
-  final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  notifier.state ??= ChatSidePanel.info;
-}
+/// Closes the panel beside chat [chat] (with room, the info panel stays).
+void closeChatSidePanel(WidgetRef ref, ChatThreadKey chat) =>
+    ref.read(chatSidePanelProvider(chat).notifier).state = null;
 
 /// Switches the chat view to the one-to-one chat with [userId] (created on
 /// the server if it does not exist yet).
