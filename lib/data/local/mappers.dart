@@ -222,7 +222,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatAppearance: _enumByName(
     ChatAppearance.values,
     r.chatAppearance,
-    ChatAppearance.worknexus,
+    ChatAppearance.zalo,
   ),
   chatSendMarkdown: r.chatSendMarkdown,
   chatNotifications: r.chatNotifications,

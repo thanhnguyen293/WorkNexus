@@ -110,8 +110,7 @@ class Settings extends Table {
   RealColumn get componentRadius => real().withDefault(const Constant(8.0))();
 
   /// Chat message layout style (`ChatAppearance` name).
-  TextColumn get chatAppearance =>
-      text().withDefault(const Constant('worknexus'))();
+  TextColumn get chatAppearance => text().withDefault(const Constant('zalo'))();
 
   /// Whether chat messages are sent as Markdown.
   BoolColumn get chatSendMarkdown =>
@@ -304,7 +303,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -401,6 +400,14 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(chatUsers, add);
           }
         }
+      }
+      if (from < 24) {
+        // Zalo became the default chat style; installs still on the old
+        // default follow it (the style menu changes it any time).
+        await customStatement(
+          "UPDATE settings SET chat_appearance = 'zalo' "
+          "WHERE chat_appearance = 'worknexus'",
+        );
       }
       if (from < 23) {
         if (!await _hasColumn('settings', 'chat_cache_limit_mb')) {
