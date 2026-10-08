@@ -47,6 +47,9 @@ class FakeXxdServer {
   final List<Map<String, Object?>> requests = [];
   bool rejectLogin = false;
 
+  /// Pushed as `chatgetlist` right after a successful login.
+  List<Map<String, Object?>> chats = [];
+
   /// Replies to methods other than login/ping; return null to stay silent.
   Map<String, Object?>? Function(Map<String, Object?> request)? onRequest;
 
@@ -82,7 +85,7 @@ class FakeXxdServer {
             'method': 'chatgetlist',
             'rid': req['rid'],
             'result': 'success',
-            'data': <Object?>[],
+            'data': chats,
           })
           ..push({
             'method': 'syssessionid',

@@ -15,6 +15,11 @@ import '../../features/agents/data/in_memory_agent_session_repository.dart';
 import '../../features/agents/data/repositories/opencode_auth_file_repository.dart';
 import '../../features/board/data/repositories/local_saved_filter_repository.dart';
 import '../../features/board/domain/repositories/saved_filter_repository.dart';
+import '../../features/chat/data/datasources/chat_local_datasource.dart';
+import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
+import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
+import '../../features/chat/data/repositories/xxd_chat_repository.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/sync/data/sync_service.dart';
@@ -22,6 +27,7 @@ import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
 import '../../features/translation/domain/adapters/translation_service.dart';
 import '../database/database.dart';
+import '../debug/app_talker.dart';
 import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/adapters/opencode_cli.dart';
@@ -96,6 +102,18 @@ abstract class ServiceModule {
   @lazySingleton
   SavedFilterRepository savedFilterRepository(AppDatabase db) =>
       LocalSavedFilterRepository(db);
+
+  @lazySingleton
+  ChatRepository chatRepository(AppDatabase db, CredentialStore credentials) =>
+      XxdChatRepository(
+        local: ChatLocalDatasource(db),
+        credentials: credentials,
+        openConnection: (c) => XxdConnection(
+          credentials: c,
+          http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
+        ),
+        onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
+      );
 
   @lazySingleton
   AgentSessionRepository get agentSessionRepository =>

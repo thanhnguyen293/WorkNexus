@@ -7,6 +7,10 @@ import 'xxd_server_info.dart';
 import 'xxd_signing.dart';
 import 'xxd_tls.dart';
 
+/// Client version reported to xxd. xxd 9.x rejects clients older than 5.0 and
+/// its `apiScheme` targets the 9.x client, whose protocol this code mirrors.
+const kXxdClientVersion = '9.1.2';
+
 /// HTTPS side of xxd: the `serverInfo` handshake and signed file URLs.
 class XxdHttpDatasource {
   const XxdHttpDatasource({
