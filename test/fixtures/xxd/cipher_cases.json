@@ -1,0 +1,25 @@
+{
+ "token": "0123456789abcdef0123456789abcdef",
+ "cases": [
+  {
+   "plain": "",
+   "cipherBase64": "OK6Do+3SKnHs8pZTnd9zIA=="
+  },
+  {
+   "plain": "a",
+   "cipherBase64": "x9Mz30xD/jhzyW8t5muZnQ=="
+  },
+  {
+   "plain": "exactly16bytes!!",
+   "cipherBase64": "7LQOLkOGVqMpWxe2hFQB2kVX9RDwFbJwu0IsLAVaV/k="
+  },
+  {
+   "plain": "{\"method\":\"ping\"}",
+   "cipherBase64": "K78SE3Y9myOvQfHPMY4kGTB/o4dBXBWE/HnorpNEzWw="
+  },
+  {
+   "plain": "Tiếng Việt và 中文 ✓Tiếng Việt và 中文 ✓Tiếng Việt và 中文 ✓Tiếng Việt và 中文 ✓Tiếng Việt và 中文 ✓",
+   "cipherBase64": "NOj1n8MroST3wqXOhCHedYGkNYpWFJEssgIo4f0/L1cuUWM4xCDXsBnqYdhpQldiV9UfOP2xKIn0w8gel5TyDAkwMJXZz9c4MXFh6HE3IRQslZl1Z4Y4FeT1Yb1sSDvdXU/ExtiOz6NBi/uaR90Pfd9fqTbt3cG3Ys7gctz0G3IEz0lZlpaHtvgnZiFhh0IWDbnlmnhd5JeWFTc1Q5Rlww=="
+  }
+ ]
+}

@@ -1,0 +1,1562 @@
+{
+ "$version": "7.2.0",
+ "basicChat": {
+  "props": [
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "createdDate",
+    "required": true,
+    "type": "date"
+   },
+   {
+    "name": "createdBy",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "ownedBy",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "id",
+    "type": "number"
+   },
+   {
+    "default": "",
+    "name": "name",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "lastActiveTime",
+    "type": "date"
+   },
+   {
+    "default": 0,
+    "name": "lastMessage",
+    "type": "number"
+   },
+   {
+    "default": false,
+    "name": "public",
+    "type": "boolean"
+   },
+   {
+    "default": 0,
+    "name": "archiveDate",
+    "type": "date"
+   },
+   {
+    "default": false,
+    "name": "star",
+    "type": "boolean"
+   },
+   {
+    "default": false,
+    "name": "freeze",
+    "type": "boolean"
+   },
+   {
+    "default": false,
+    "name": "mute",
+    "type": "boolean"
+   },
+   {
+    "default": false,
+    "name": "hide",
+    "type": "boolean"
+   },
+   {
+    "default": 0,
+    "name": "editedDate",
+    "type": "date"
+   },
+   {
+    "default": "group",
+    "map": [
+     "group",
+     "one2one",
+     "system",
+     "robot"
+    ],
+    "name": "type",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "dismissDate",
+    "type": "date"
+   },
+   {
+    "default": "",
+    "map": [
+     "",
+     "$ADMINS",
+     "$ALL"
+    ],
+    "name": "committers",
+    "type": "string"
+   },
+   {
+    "arrType": "number",
+    "default": [],
+    "name": "admins",
+    "type": "array"
+   },
+   {
+    "arrType": "number",
+    "default": [],
+    "name": "pinnedMessages",
+    "type": "array"
+   },
+   {
+    "default": 0,
+    "name": "lastReadMessage",
+    "type": "number"
+   },
+   {
+    "default": 0,
+    "name": "mergedDate",
+    "type": "date"
+   },
+   {
+    "arrType": "string",
+    "default": [],
+    "name": "mergedChats",
+    "type": "array"
+   },
+   {
+    "default": 0,
+    "name": "lastReadMessageIndex",
+    "type": "number"
+   },
+   {
+    "default": null,
+    "name": "lastMessageInfo",
+    "type": "any"
+   },
+   {
+    "default": false,
+    "name": "adminInvite",
+    "type": "boolean"
+   },
+   {
+    "default": null,
+    "name": "avatar",
+    "type": "any"
+   }
+  ],
+  "type": "object"
+ },
+ "basicChatList": {
+  "arrType": "basicChat",
+  "default": [],
+  "type": "array"
+ },
+ "basicMember": {
+  "props": [
+   {
+    "name": "id",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "account",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "status",
+    "type": "memberStatus"
+   },
+   {
+    "default": "",
+    "name": "realname",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "dept",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "basicPack": {
+  "props": [
+   {
+    "default": "",
+    "name": "rid",
+    "type": "string"
+   },
+   {
+    "default": "messageSend",
+    "map": [
+     "messagesend",
+     "syssessionid",
+     "usergetlist",
+     "chatgetlist",
+     "userlogin",
+     "userlogout",
+     "userupdate",
+     "usersyncsettings",
+     "userkickoff",
+     "messageretract",
+     "messageupdate",
+     "chattyping",
+     "chatcreate",
+     "chatrename",
+     "chatinvite",
+     "chatkick",
+     "chatjoin",
+     "chatleave",
+     "chatstar",
+     "chatunstar",
+     "chatmute",
+     "chatunmute",
+     "chatfreeze",
+     "chatunfreeze",
+     "chathide",
+     "chatarchive",
+     "chatdismiss",
+     "chatgethistory",
+     "chatgetpubliclist",
+     "chatsetcategory",
+     "chatrenamecategory",
+     "chatdeletecategory",
+     "chataddadmins",
+     "chatremoveadmins",
+     "chatsetcommitters",
+     "chatsetvisibility",
+     "chatsetconfig",
+     "chatsearch",
+     "chatsetavatar",
+     "chatsetlastreadmessage",
+     "chatsetlastreadmessagebyindex",
+     "syncusers",
+     "syncnotifications",
+     "syncofflinemessages",
+     "extensiongetlist",
+     "fileupload",
+     "filedownload",
+     "usersetdevicetoken",
+     "sysgetserverinfo",
+     "sysserverstart",
+     "ping"
+    ],
+    "name": "method",
+    "type": "string"
+   },
+   {
+    "default": "im",
+    "map": [
+     "",
+     "im",
+     "server",
+     "sys",
+     "chat",
+     "entry",
+     "user",
+     "extension"
+    ],
+    "name": "module",
+    "type": "string"
+   },
+   {
+    "default": "desktop",
+    "map": [
+     "desktop",
+     "mobile"
+    ],
+    "name": "device",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "chat": {
+  "extend": "basicChat",
+  "props": [
+   {
+    "arrType": "number",
+    "name": "members",
+    "required": true,
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "chatList": {
+  "arrType": "chat",
+  "default": [],
+  "type": "array"
+ },
+ "chatListResponsePack": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "required": true,
+    "type": "basicChatList"
+   }
+  ],
+  "type": "object"
+ },
+ "chatMemberDetail": {
+  "props": [
+   {
+    "name": "id",
+    "type": "number"
+   },
+   {
+    "name": "account",
+    "type": "string"
+   },
+   {
+    "name": "join",
+    "type": "date"
+   },
+   {
+    "name": "lastSeen",
+    "type": "date"
+   },
+   {
+    "name": "lastPost",
+    "type": "date"
+   },
+   {
+    "name": "isOwner",
+    "type": "boolean"
+   },
+   {
+    "name": "isAdmin",
+    "type": "boolean"
+   }
+  ],
+  "type": "object"
+ },
+ "chatMembers": {
+  "props": [
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "arrType": "number",
+    "name": "members",
+    "required": true,
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "chatMessage": {
+  "props": [
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "cgid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "user",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "date",
+    "required": true,
+    "type": "date"
+   },
+   {
+    "name": "content",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "id",
+    "type": "number"
+   },
+   {
+    "default": 0,
+    "name": "index",
+    "type": "number"
+   },
+   {
+    "default": "",
+    "name": "data",
+    "type": "any"
+   },
+   {
+    "default": "normal",
+    "map": [
+     "",
+     "normal",
+     "broadcast",
+     "notification"
+    ],
+    "name": "type",
+    "type": "string"
+   },
+   {
+    "default": "text",
+    "map": [
+     "",
+     "text",
+     "plain",
+     "image",
+     "file",
+     "emoticon",
+     "code",
+     "object"
+    ],
+    "name": "contentType",
+    "type": "string"
+   },
+   {
+    "default": false,
+    "name": "deleted",
+    "type": "boolean"
+   }
+  ],
+  "type": "object"
+ },
+ "chatMessageInfoPack": {
+  "props": [
+   {
+    "name": "lastMessage",
+    "type": "number"
+   },
+   {
+    "name": "messageCount",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "chatMessageList": {
+  "arrType": "chatMessage",
+  "default": [],
+  "type": "array"
+ },
+ "chatResponsePack": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "required": true,
+    "type": "chat"
+   }
+  ],
+  "type": "object"
+ },
+ "chatSearchResult": {
+  "props": [
+   {
+    "name": "id",
+    "type": "number"
+   },
+   {
+    "name": "gid",
+    "type": "string"
+   },
+   {
+    "name": "name",
+    "type": "string"
+   },
+   {
+    "name": "public",
+    "type": "boolean"
+   },
+   {
+    "name": "groupOwner",
+    "type": "number"
+   },
+   {
+    "name": "createdDate",
+    "type": "date"
+   },
+   {
+    "name": "archiveDate",
+    "type": "date"
+   },
+   {
+    "name": "lastActiveTime",
+    "type": "date"
+   },
+   {
+    "name": "userCount",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "chataddadminsResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatarchiveResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatchangeownershipResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatcreateResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatdismissResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatgetbygidResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatgethistoryResponse": {
+  "extend": "messageListResponsePack",
+  "props": [
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "chatgetlastmessageResponse": {
+  "type": "messageListResponsePack"
+ },
+ "chatgetlistResponse": {
+  "type": "chatListResponsePack"
+ },
+ "chatgetmemberdetailsResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "chatMemberDetail",
+    "name": "data",
+    "type": "array"
+   },
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "chatgetmembersResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "type": "chatMembers"
+   }
+  ],
+  "type": "object"
+ },
+ "chatgetmessageinfoResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "type": "chatMessageInfoPack"
+   }
+  ],
+  "type": "object"
+ },
+ "chatgetpubliclistResponse": {
+  "type": "chatListResponsePack"
+ },
+ "chatinviteResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatjoinResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatkickResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatleaveResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatremoveadminsResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatrenameResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatsearchResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "chatSearchResult",
+    "name": "data",
+    "type": "array"
+   },
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "chatsetavatarResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatsetcommittersResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatsetconfigResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatsetvisibilityResponse": {
+  "type": "chatResponsePack"
+ },
+ "chatstar": {
+  "props": [
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "star",
+    "required": true,
+    "type": "boolean"
+   }
+  ],
+  "type": "object"
+ },
+ "chatstarResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "required": true,
+    "type": "chatstar"
+   }
+  ],
+  "type": "object"
+ },
+ "chattypingRequest": {
+  "props": [
+   {
+    "default": "",
+    "name": "rid",
+    "type": "string"
+   },
+   {
+    "map": [],
+    "name": "cgid",
+    "type": "string"
+   },
+   {
+    "name": "users",
+    "type": "any"
+   },
+   {
+    "map": [],
+    "name": "typing",
+    "type": "boolean"
+   },
+   {
+    "name": "userID",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "conference": {
+  "props": [
+   {
+    "name": "cgid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "room",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "closed",
+    "map": [
+     "closed",
+     "open",
+     "notStarted"
+    ],
+    "name": "status",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "openedBy",
+    "type": "number"
+   },
+   {
+    "name": "openedDate",
+    "type": "date"
+   },
+   {
+    "name": "participants",
+    "type": "string"
+   },
+   {
+    "name": "invitee",
+    "type": "string"
+   },
+   {
+    "arrType": "conferenceAction",
+    "name": "actions",
+    "type": "array"
+   },
+   {
+    "name": "topic",
+    "type": "string"
+   },
+   {
+    "name": "startTime",
+    "type": "date"
+   },
+   {
+    "name": "endTime",
+    "type": "date"
+   },
+   {
+    "name": "password",
+    "type": "string"
+   },
+   {
+    "name": "type",
+    "type": "string"
+   },
+   {
+    "name": "number",
+    "type": "string"
+   },
+   {
+    "name": "subscribers",
+    "type": "string"
+   },
+   {
+    "name": "note",
+    "type": "string"
+   },
+   {
+    "name": "reminderTime",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "conferenceAction": {
+  "props": [
+   {
+    "name": "room",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "map": [
+     "create",
+     "join",
+     "close",
+     "leave",
+     "invite",
+     "publish"
+    ],
+    "name": "type",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "invitee",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "participants",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "date",
+    "required": true,
+    "type": "date"
+   },
+   {
+    "name": "user",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "default": "",
+    "name": "device",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "data",
+    "type": "string"
+   },
+   {
+    "arrType": "conferenceAction",
+    "name": "actions",
+    "type": "array"
+   },
+   {
+    "default": "",
+    "name": "number",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "date": {
+  "type": "number"
+ },
+ "entry/visitRequest": {
+  "extend": "requestPack",
+  "props": [
+   {
+    "name": "params",
+    "type": "any"
+   }
+  ],
+  "type": "object"
+ },
+ "errormessageResponse": {
+  "type": "messageResponsePack"
+ },
+ "extension": {
+  "props": [
+   {
+    "name": "name",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "entryID",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "md5",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "download",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "displayName",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "abbrName",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "webViewUrl",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "logo",
+    "type": "string"
+   },
+   {
+    "default": null,
+    "name": "data",
+    "type": "any"
+   },
+   {
+    "default": "",
+    "name": "optional",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "enable",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "extensionList": {
+  "arrType": "extension",
+  "default": [],
+  "type": "array"
+ },
+ "extensiongetlistResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "type": "extensionList"
+   }
+  ],
+  "type": "object"
+ },
+ "member": {
+  "props": [
+   {
+    "name": "id",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "account",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "status",
+    "type": "memberStatus"
+   },
+   {
+    "default": "",
+    "name": "realname",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "avatar",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "gender",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "dept",
+    "type": "number"
+   },
+   {
+    "default": "",
+    "name": "role",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "signed",
+    "type": "date"
+   },
+   {
+    "default": "",
+    "name": "email",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "mobile",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "phone",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "site",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "admin",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "realnames",
+    "type": "string"
+   },
+   {
+    "default": false,
+    "name": "deleted",
+    "type": "boolean"
+   },
+   {
+    "default": "",
+    "name": "weixin",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "address",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "qq",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "memberResponsePack": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "required": true,
+    "type": "member"
+   }
+  ],
+  "type": "object"
+ },
+ "memberStatus": {
+  "default": "offline",
+  "map": [
+   "",
+   "offline",
+   "online",
+   "busy",
+   "away",
+   "meeting"
+  ],
+  "type": "string"
+ },
+ "messageListRequestPack": {
+  "extend": "requestPack",
+  "props": [
+   {
+    "arrType": "sendingChatMessageList",
+    "name": "params",
+    "required": true,
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "messageListResponsePack": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "data",
+    "required": true,
+    "type": "chatMessageList"
+   }
+  ],
+  "type": "object"
+ },
+ "messageResponsePack": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "default": 0,
+    "name": "code",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "messagegetlistResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messagegetlistbyindexesResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messageretractRequest": {
+  "type": "messageListRequestPack"
+ },
+ "messageretractResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messagesendRequest": {
+  "type": "messageListRequestPack"
+ },
+ "messagesendResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messagesyncResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messagesyncidResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "number",
+    "name": "data",
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "messagesyncmissedResponse": {
+  "type": "messageListResponsePack"
+ },
+ "messagesyncsinceofflineResponse": {
+  "type": "messageListResponsePack"
+ },
+ "notification": {
+  "props": [
+   {
+    "name": "id",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "title",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "date",
+    "required": true,
+    "type": "date"
+   },
+   {
+    "name": "sender",
+    "required": true,
+    "type": "any"
+   },
+   {
+    "default": [],
+    "name": "actions",
+    "type": "any"
+   },
+   {
+    "default": "",
+    "name": "url",
+    "type": "string"
+   },
+   {
+    "default": "notification",
+    "name": "cgid",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "content",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "subtitle",
+    "type": "string"
+   },
+   {
+    "default": "text",
+    "map": [
+     "text",
+     "plain"
+    ],
+    "name": "contentType",
+    "type": "string"
+   },
+   {
+    "default": "notification",
+    "map": [
+     "notification"
+    ],
+    "name": "type",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "pager": {
+  "props": [
+   {
+    "default": "",
+    "name": "gid",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "recTotal",
+    "type": "number"
+   },
+   {
+    "default": 1,
+    "name": "pageID",
+    "type": "number"
+   },
+   {
+    "default": 50,
+    "name": "recPerPage",
+    "type": "number"
+   },
+   {
+    "name": "data",
+    "type": "any"
+   }
+  ],
+  "type": "object"
+ },
+ "requestPack": {
+  "extend": "basicPack",
+  "props": [
+   {
+    "arrType": "any",
+    "default": [],
+    "name": "params",
+    "type": "array"
+   },
+   {
+    "default": 0,
+    "name": "userID",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "default": "zh-cn",
+    "map": [
+     "zh-cn",
+     "zh-tw",
+     "en"
+    ],
+    "name": "lang",
+    "type": "string"
+   },
+   {
+    "default": "3.1.2",
+    "map": [
+     "4.0.beta3",
+     "4.0"
+    ],
+    "name": "version",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "responsePack": {
+  "extend": "basicPack",
+  "props": [
+   {
+    "name": "data",
+    "type": "any"
+   },
+   {
+    "default": "success",
+    "map": [
+     "success",
+     "fail"
+    ],
+    "name": "result",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "message",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "sendingChatMessage": {
+  "props": [
+   {
+    "name": "gid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "cgid",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "user",
+    "required": true,
+    "type": "number"
+   },
+   {
+    "name": "content",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "data",
+    "type": "string"
+   },
+   {
+    "default": "normal",
+    "map": [
+     "",
+     "normal",
+     "broadcast",
+     "notification"
+    ],
+    "name": "type",
+    "type": "string"
+   },
+   {
+    "default": "text",
+    "map": [
+     "",
+     "text",
+     "plain",
+     "image",
+     "file",
+     "emoticon",
+     "code",
+     "object"
+    ],
+    "name": "contentType",
+    "type": "string"
+   },
+   {
+    "default": 0,
+    "name": "date",
+    "type": "date"
+   },
+   {
+    "default": false,
+    "name": "deleted",
+    "type": "boolean"
+   }
+  ],
+  "type": "object"
+ },
+ "sendingChatMessageList": {
+  "arrType": "sendingChatMessage",
+  "type": "array"
+ },
+ "syncnotificationsResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "notification",
+    "name": "data",
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "syncofflinemessagesResponse": {
+  "type": "messageListResponsePack"
+ },
+ "syserrorResponse": {
+  "type": "messageResponsePack"
+ },
+ "sysgetdeptsResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "default": [],
+    "name": "roles",
+    "type": "any"
+   }
+  ],
+  "type": "object"
+ },
+ "syssessionidResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "sessionID",
+    "required": true,
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "userUpdateData": {
+  "props": [
+   {
+    "name": "account",
+    "required": true,
+    "type": "string"
+   },
+   {
+    "name": "status",
+    "type": "memberStatus"
+   },
+   {
+    "default": "",
+    "name": "password",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "address",
+    "type": "string"
+   },
+   {
+    "name": "gender",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "mobile",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "phone",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "qq",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "realname",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "weixin",
+    "type": "string"
+   },
+   {
+    "default": "",
+    "name": "email",
+    "type": "string"
+   }
+  ],
+  "type": "object"
+ },
+ "usergetbasiclistResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "basicMember",
+    "name": "data",
+    "required": true,
+    "type": "array"
+   },
+   {
+    "default": [],
+    "name": "roles",
+    "type": "any"
+   },
+   {
+    "default": [],
+    "name": "depts",
+    "type": "any"
+   },
+   {
+    "default": false,
+    "name": "basic",
+    "type": "boolean"
+   }
+  ],
+  "type": "object"
+ },
+ "usergetdeletedRequest": {
+  "type": "usergetlistRequest"
+ },
+ "usergetdeletedResponse": {
+  "type": "usergetlistResponse"
+ },
+ "usergetlistResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "member",
+    "name": "data",
+    "required": true,
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ },
+ "usergetlistbydeptResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "userkickoffResponse": {
+  "type": "messageResponsePack"
+ },
+ "userloginResponse": {
+  "type": "memberResponsePack"
+ },
+ "userlogoutResponse": {
+  "type": "memberResponsePack"
+ },
+ "usersearchResponse": {
+  "extend": "usergetlistResponse",
+  "props": [
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "usersearchidResponse": {
+  "extend": "responsePack",
+  "props": [
+   {
+    "arrType": "number",
+    "name": "data",
+    "type": "array"
+   },
+   {
+    "name": "pager",
+    "type": "pager"
+   }
+  ],
+  "type": "object"
+ },
+ "usersubscribeRequest": {
+  "props": [
+   {
+    "default": "",
+    "name": "rid",
+    "type": "string"
+   },
+   {
+    "default": "status",
+    "name": "type",
+    "type": "string"
+   },
+   {
+    "name": "objects",
+    "type": "any"
+   },
+   {
+    "name": "userID",
+    "type": "number"
+   }
+  ],
+  "type": "object"
+ },
+ "userupdateRequest": {
+  "extend": "requestPack",
+  "props": [
+   {
+    "arrType": "userUpdateData",
+    "name": "params",
+    "type": "array"
+   }
+  ],
+  "type": "object"
+ }
+}

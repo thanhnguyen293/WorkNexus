@@ -1,0 +1,670 @@
+{
+ "scheme": {
+  "$version": "edge-1",
+  "$omitDefaultProps": true,
+  "$validation": true,
+  "base": {
+   "type": "object",
+   "props": [
+    {
+     "name": "a",
+     "type": "string",
+     "default": "A"
+    },
+    {
+     "name": "b",
+     "type": "number"
+    },
+    {
+     "name": "c",
+     "type": "boolean",
+     "default": false
+    }
+   ]
+  },
+  "child": {
+   "type": "object",
+   "extend": "base",
+   "props": [
+    {
+     "name": "b",
+     "type": "string",
+     "default": "B"
+    },
+    {
+     "name": "d",
+     "type": "status"
+    }
+   ]
+  },
+  "status": {
+   "type": "string",
+   "map": [
+    "online",
+    "away",
+    "offline",
+    {
+     "custom": 1
+    }
+   ]
+  },
+  "kind": {
+   "type": "string",
+   "map": {
+    "7": "seven",
+    "n": "normal",
+    "b": "broadcast"
+   }
+  },
+  "alias": {
+   "type": "child"
+  },
+  "list": {
+   "type": "object",
+   "props": [
+    {
+     "name": "items",
+     "type": "array",
+     "arrType": "child"
+    },
+    {
+     "name": "tags",
+     "type": "array",
+     "arrType": "kind"
+    },
+    {
+     "name": "free",
+     "type": "any"
+    }
+   ]
+  },
+  "strict": {
+   "type": "object",
+   "props": [
+    {
+     "name": "id",
+     "type": "number",
+     "required": true
+    },
+    {
+     "name": "code",
+     "type": "string",
+     "match": "^[A-Z]+$"
+    }
+   ]
+  },
+  "requestPack": {
+   "type": "object",
+   "props": [
+    {
+     "name": "method",
+     "type": "string"
+    },
+    {
+     "name": "params",
+     "type": "any"
+    }
+   ]
+  }
+ },
+ "cases": [
+  {
+   "name": "base",
+   "input": {
+    "a": "A",
+    "b": 1,
+    "c": false
+   },
+   "encoded": [
+    "base",
+    [
+     "A",
+     1
+    ]
+   ],
+   "decoded": {
+    "a": "A",
+    "b": 1,
+    "c": false
+   }
+  },
+  {
+   "name": "base",
+   "input": {
+    "a": "x"
+   },
+   "encoded": [
+    "base",
+    [
+     "x",
+     null,
+     0
+    ]
+   ],
+   "decoded": {
+    "a": "x",
+    "b": null,
+    "c": false
+   }
+  },
+  {
+   "name": "base",
+   "input": {},
+   "encoded": [
+    "base",
+    [
+     "A",
+     null,
+     0
+    ]
+   ],
+   "decoded": {
+    "a": "A",
+    "b": null,
+    "c": false
+   }
+  },
+  {
+   "name": "base",
+   "input": {
+    "a": null,
+    "b": 2,
+    "c": true
+   },
+   "encoded": [
+    "base",
+    [
+     null,
+     2,
+     1
+    ]
+   ],
+   "decoded": {
+    "a": null,
+    "b": 2,
+    "c": true
+   }
+  },
+  {
+   "name": "base",
+   "input": {
+    "a": "A",
+    "c": null
+   },
+   "encoded": [
+    "base",
+    [
+     "A",
+     null,
+     2
+    ]
+   ],
+   "decoded": {
+    "a": "A",
+    "b": null,
+    "c": null
+   }
+  },
+  {
+   "name": "child",
+   "input": {
+    "a": "q",
+    "b": "B",
+    "c": true,
+    "d": "away"
+   },
+   "encoded": [
+    "child",
+    [
+     "q",
+     "B",
+     1,
+     1
+    ]
+   ],
+   "decoded": {
+    "a": "q",
+    "b": "B",
+    "c": true,
+    "d": "away"
+   }
+  },
+  {
+   "name": "child",
+   "input": {
+    "d": {
+     "custom": 1
+    }
+   },
+   "encoded": [
+    "child",
+    [
+     "A",
+     "B",
+     0,
+     3
+    ]
+   ],
+   "decoded": {
+    "a": "A",
+    "b": "B",
+    "c": false,
+    "d": {
+     "custom": 1
+    }
+   }
+  },
+  {
+   "name": "child",
+   "input": {
+    "d": "unknown-status"
+   },
+   "encoded": [
+    "child",
+    [
+     "A",
+     "B",
+     0,
+     "unknown-status"
+    ]
+   ],
+   "decoded": {
+    "a": "A",
+    "b": "B",
+    "c": false,
+    "d": "unknown-status"
+   }
+  },
+  {
+   "name": "alias",
+   "input": {
+    "a": "via alias",
+    "d": "offline"
+   },
+   "encoded": [
+    "alias",
+    [
+     "via alias",
+     "B",
+     0,
+     2
+    ]
+   ],
+   "decoded": {
+    "a": "via alias",
+    "b": "B",
+    "c": false,
+    "d": "offline"
+   }
+  },
+  {
+   "name": "kind",
+   "input": "broadcast",
+   "encoded": [
+    "kind",
+    "b"
+   ],
+   "decoded": "broadcast"
+  },
+  {
+   "name": "kind",
+   "input": "seven",
+   "encoded": [
+    "kind",
+    "7"
+   ],
+   "decoded": "seven"
+  },
+  {
+   "name": "kind",
+   "input": "other",
+   "encoded": [
+    "kind",
+    "other"
+   ],
+   "decoded": "other"
+  },
+  {
+   "name": "status",
+   "input": null,
+   "encoded": [
+    "status",
+    null
+   ],
+   "decoded": null
+  },
+  {
+   "name": "list",
+   "input": {
+    "items": [
+     {
+      "a": "i1"
+     },
+     {
+      "b": "B",
+      "d": "online"
+     }
+    ],
+    "tags": [
+     "normal",
+     "zzz"
+    ],
+    "free": {
+     "deep": [
+      1,
+      {
+       "x": null
+      }
+     ]
+    }
+   },
+   "encoded": [
+    "list",
+    [
+     [
+      [
+       "i1",
+       "B",
+       0
+      ],
+      [
+       "A",
+       "B",
+       0,
+       0
+      ]
+     ],
+     [
+      "n",
+      "zzz"
+     ],
+     {
+      "deep": [
+       1,
+       {
+        "x": null
+       }
+      ]
+     }
+    ]
+   ],
+   "decoded": {
+    "items": [
+     {
+      "a": "i1",
+      "b": "B",
+      "c": false
+     },
+     {
+      "a": "A",
+      "b": "B",
+      "c": false,
+      "d": "online"
+     }
+    ],
+    "tags": [
+     "normal",
+     "zzz"
+    ],
+    "free": {
+     "deep": [
+      1,
+      {
+       "x": null
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "list",
+   "input": {
+    "items": [],
+    "tags": []
+   },
+   "encoded": [
+    "list",
+    [
+     [],
+     []
+    ]
+   ],
+   "decoded": {
+    "items": [],
+    "tags": []
+   }
+  },
+  {
+   "name": "strict",
+   "input": {
+    "id": 5,
+    "code": "ABC"
+   },
+   "encoded": [
+    "strict",
+    [
+     5,
+     "ABC"
+    ]
+   ],
+   "decoded": {
+    "id": 5,
+    "code": "ABC"
+   }
+  },
+  {
+   "name": "strict",
+   "input": {
+    "code": "ABC"
+   },
+   "error": "JSONOptimizer: Data value of scheme type \"strict.id\" is required."
+  },
+  {
+   "name": "strict",
+   "input": {
+    "id": 5,
+    "code": "abc"
+   },
+   "error": "JSONOptimizer: Data value of scheme type \"strict.code\" is not match regex rule."
+  },
+  {
+   "name": "strict",
+   "input": {
+    "id": "not a number"
+   },
+   "error": "JSONOptimizer: Value actual type \"string\" is not match the type \"number\" of scheme \"strict.id\"."
+  },
+  {
+   "name": "unknownRequest",
+   "input": {
+    "method": "x",
+    "params": [
+     1
+    ]
+   },
+   "fallback": "requestPack",
+   "encoded": [
+    "unknownRequest",
+    [
+     "x",
+     [
+      1
+     ]
+    ]
+   ],
+   "decoded": {
+    "method": "x",
+    "params": [
+     1
+    ]
+   }
+  }
+ ],
+ "decodes": [
+  {
+   "encoded": [
+    "base",
+    [
+     "x",
+     "12.5abc",
+     "true"
+    ]
+   ],
+   "decoded": {
+    "a": "x",
+    "b": 12.5,
+    "c": true
+   }
+  },
+  {
+   "encoded": [
+    "base",
+    [
+     5,
+     "",
+     0
+    ]
+   ],
+   "decoded": {
+    "a": "5",
+    "b": 0,
+    "c": false
+   }
+  },
+  {
+   "encoded": [
+    "base",
+    [
+     true,
+     "nope",
+     "TRUE"
+    ]
+   ],
+   "decoded": {
+    "a": "true",
+    "b": null,
+    "c": true
+   }
+  },
+  {
+   "encoded": [
+    "base",
+    [
+     "only"
+    ]
+   ],
+   "decoded": {
+    "a": "only",
+    "c": false
+   }
+  },
+  {
+   "encoded": [
+    "child",
+    [
+     "a",
+     "b",
+     2,
+     "1"
+    ]
+   ],
+   "decoded": {
+    "a": "a",
+    "b": "b",
+    "c": null,
+    "d": "away"
+   }
+  },
+  {
+   "encoded": [
+    "child",
+    [
+     "a",
+     "b",
+     1,
+     3
+    ]
+   ],
+   "decoded": {
+    "a": "a",
+    "b": "b",
+    "c": true,
+    "d": {
+     "custom": 1
+    }
+   }
+  },
+  {
+   "encoded": [
+    "kind",
+    "7"
+   ],
+   "decoded": "seven"
+  },
+  {
+   "encoded": [
+    "kind",
+    7
+   ],
+   "decoded": "seven"
+  },
+  {
+   "encoded": [
+    "status",
+    "2"
+   ],
+   "decoded": "offline"
+  },
+  {
+   "encoded": [
+    "status",
+    2
+   ],
+   "decoded": "offline"
+  },
+  {
+   "encoded": [
+    "status",
+    9
+   ],
+   "decoded": "9"
+  },
+  {
+   "encoded": [
+    "list",
+    [
+     [
+      [
+       "a"
+      ]
+     ],
+     [
+      "n",
+      "b",
+      "x"
+     ],
+     "free"
+    ]
+   ],
+   "decoded": {
+    "items": [
+     {
+      "a": "a",
+      "b": "B",
+      "c": false
+     }
+    ],
+    "tags": [
+     "normal",
+     "broadcast",
+     "x"
+    ],
+    "free": "free"
+   }
+  }
+ ],
+ "index": {
+  "name": "kind",
+  "index": 6
+ }
+}

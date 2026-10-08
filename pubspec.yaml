@@ -78,6 +78,10 @@ dependencies:
   collection: 1.19.1
   intl: 0.20.2
 
+  # ZenTao chat (xuanxuan/xxd) protocol: AES-256-CBC socket frames + md5 auth.
+  pointycastle: 4.0.0
+  crypto: 3.0.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
