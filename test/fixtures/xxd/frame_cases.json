@@ -1,0 +1,81 @@
+{
+ "clientVersion": "9.1.2",
+ "lang": "vi",
+ "device": "desktop",
+ "cases": [
+  {
+   "request": {
+    "method": "userLogin",
+    "params": [
+     "",
+     "demo",
+     "e10adc3949ba59abbe56e057f20f883e",
+     {
+      "status": "online",
+      "simple": false
+     }
+    ],
+    "rid": "login_desktop_demo"
+   },
+   "serverName": "",
+   "text": "[\"userloginRequest\",[\"login_desktop_demo\",4,1,0,[\"\",\"demo\",\"e10adc3949ba59abbe56e057f20f883e\",{\"status\":\"online\",\"simple\":false}],0,\"vi\",\"9.1.2\"]]"
+  },
+  {
+   "request": {
+    "method": "chatGetMessageInfo",
+    "params": [
+     "54cc78e8-0000-4000-8000-000000000001"
+    ],
+    "userID": 40
+   },
+   "serverName": "",
+   "text": "[\"chatgetmessageinfoRequest\",[\"\",\"chatgetmessageinfo\",1,0,[\"54cc78e8-0000-4000-8000-000000000001\"],40,\"vi\",\"9.1.2\"]]"
+  },
+  {
+   "request": {
+    "method": "messageSync",
+    "params": [
+     "54cc78e8-0000-4000-8000-000000000001",
+     195017,
+     true,
+     10,
+     false
+    ],
+    "userID": 40,
+    "rid": "r-sync"
+   },
+   "serverName": "",
+   "text": "[\"messagesyncRequest\",[\"r-sync\",\"messagesync\",1,0,[\"54cc78e8-0000-4000-8000-000000000001\",195017,true,10,false],40,\"vi\",\"9.1.2\"]]"
+  },
+  {
+   "request": {
+    "method": "messagesend",
+    "params": [
+     [
+      {
+       "gid": "0b9f1d2e-0000-4000-8000-000000000002",
+       "cgid": "40&xuanbot",
+       "type": "normal",
+       "contentType": "plain",
+       "content": "xin chào 你好",
+       "user": 40,
+       "data": "",
+       "deleted": false
+      }
+     ]
+    ],
+    "userID": 40
+   },
+   "serverName": "",
+   "text": "[\"messagesendRequest\",[\"\",0,1,0,[[[\"0b9f1d2e-0000-4000-8000-000000000002\",\"40&xuanbot\",40,\"xin chào 你好\",\"\",1,2,0,0]]],40,\"vi\",\"9.1.2\"]]"
+  },
+  {
+   "request": {
+    "method": "ping",
+    "userID": 40
+   },
+   "serverName": "",
+   "text": "[\"pingRequest\",[\"\",50,1,0,[],40,\"vi\",\"9.1.2\"]]"
+  }
+ ]
+}
