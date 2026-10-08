@@ -13,6 +13,8 @@ import '../providers/chat_providers.dart';
 import 'chat_appearance_menu.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_notification_toggle.dart';
+import 'chat_panels.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
 /// one-to-one chats, the other person's account).
@@ -93,6 +95,15 @@ class ChatThreadHeader extends ConsumerWidget {
               ],
             ),
           ),
+          IconButton(
+            tooltip: l.chatInfo,
+            isSelected:
+                ref.watch(chatSidePanelProvider(thread)) == ChatSidePanel.info,
+            onPressed: () =>
+                toggleChatSidePanel(ref, thread, ChatSidePanel.info),
+            icon: Icon(Icons.info_outline_rounded, color: c.textSecondary),
+          ),
+          const ChatNotificationToggle(),
           const ChatAppearanceMenu(),
         ],
       ),

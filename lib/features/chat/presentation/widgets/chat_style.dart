@@ -233,15 +233,42 @@ class ChatStyle {
   ChatBubbleInk ink({required bool mine}) {
     final p = palette;
     final bar = mine ? p.outgoingQuoteBar : p.incomingQuoteBar;
+    final text = mine ? p.outgoingText : p.incomingText;
+    // Light ink on a dark or saturated bubble (Messenger's blue, night
+    // themes) needs a stronger tint for quotes and tiles to read as a
+    // separate area; dark ink on a pale bubble needs only a hint.
+    final strong =
+        Color.alphaBlend(
+          bubbleFill(mine: mine),
+          p.background,
+        ).computeLuminance() <
+        0.2;
     return ChatBubbleInk(
-      text: mine ? p.outgoingText : p.incomingText,
+      text: text,
       meta: mine ? p.outgoingMeta : p.incomingMeta,
       link: mine ? p.outgoingLink : p.incomingLink,
       quoteBar: bar,
-      quoteFill: p.quoteFill ?? bar.withValues(alpha: 0.12),
-      tileFill: (mine ? p.outgoingText : p.incomingText).withValues(
-        alpha: 0.06,
-      ),
+      quoteFill:
+          p.quoteFill ??
+          (strong ? ChatStylePalette.darkInset : bar.withValues(alpha: 0.12)),
+      tileFill: text.withValues(alpha: strong ? 0.16 : 0.06),
+      fontSize: fontSize,
+    );
+  }
+
+  /// Ink for a reply quote drawn outside the bubble, on the chat background
+  /// (Messenger above, WeChat below): a muted grey box, not the app accent,
+  /// so it reads as context rather than as a message of its own.
+  ChatBubbleInk outsideQuoteInk() {
+    final p = palette;
+    final text = p.outsideQuoteText ?? p.incomingMeta;
+    return ChatBubbleInk(
+      text: text,
+      meta: text,
+      link: p.incomingLink,
+      quoteBar: text,
+      quoteFill: p.outsideQuoteFill ?? p.incomingBubble,
+      tileFill: text.withValues(alpha: 0.06),
       fontSize: fontSize,
     );
   }

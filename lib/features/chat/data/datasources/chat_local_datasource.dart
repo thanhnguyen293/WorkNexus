@@ -83,6 +83,12 @@ class ChatLocalDatasource {
           ))
           .write(ChatConversationsCompanion(lastReadIndex: Value(index)));
 
+  /// Replaces a chat's pinned message ids ([pinnedJson] is a JSON array).
+  Future<void> setPinned(String accountId, String gid, String pinnedJson) =>
+      (_db.update(_db.chatConversations)
+            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
+          .write(ChatConversationsCompanion(pinnedJson: Value(pinnedJson)));
+
   /// Conversations with their last message, most recently active first.
   Stream<List<(ChatConversationRow, ChatMessageRow?)>> watchConversations(
     String accountId,

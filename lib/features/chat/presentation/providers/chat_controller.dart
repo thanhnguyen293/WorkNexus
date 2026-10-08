@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../../core/error/result.dart';
+import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
@@ -11,11 +12,14 @@ import '../../domain/usecases/load_older_messages.dart';
 import '../../domain/usecases/load_video_thumbnail.dart';
 import '../../domain/usecases/mark_chat_read.dart';
 import '../../domain/usecases/open_chat_attachment.dart';
+import '../../domain/usecases/open_direct_chat.dart';
+import '../../domain/usecases/pin_chat_message.dart';
 import '../../domain/usecases/refresh_chat_messages.dart';
 import '../../domain/usecases/retract_message.dart';
 import '../../domain/usecases/retry_send_message.dart';
 import '../../domain/usecases/send_chat_file.dart';
 import '../../domain/usecases/send_text_message.dart';
+import '../../domain/usecases/should_notify_chat_message.dart';
 import '../../domain/usecases/trust_chat_certificate.dart';
 import '../../domain/value_objects/message_content.dart';
 
@@ -23,7 +27,8 @@ import '../../domain/value_objects/message_content.dart';
 /// returned [Result] (CLAUDE.md 2.4, 11.3).
 class ChatController {
   ChatController(ChatRepository repository)
-    : _connect = ConnectChat(repository),
+    : _repository = repository,
+      _connect = ConnectChat(repository),
       _trust = TrustChatCertificate(repository),
       _send = SendTextMessage(repository),
       _retry = RetrySendMessage(repository),
@@ -35,7 +40,9 @@ class ChatController {
       _sendFile = SendChatFile(repository),
       _retract = RetractMessage(repository),
       _open = OpenChatAttachment(repository),
-      _thumbnail = LoadVideoThumbnail(repository);
+      _thumbnail = LoadVideoThumbnail(repository),
+      _pin = PinChatMessage(repository),
+      _direct = OpenDirectChat(repository);
 
   static const pageSize = 50;
 
@@ -52,9 +59,42 @@ class ChatController {
   final RetractMessage _retract;
   final OpenChatAttachment _open;
   final LoadVideoThumbnail _thumbnail;
+  final PinChatMessage _pin;
+  final OpenDirectChat _direct;
   final _threads = const BuildReplyThread();
+  final _shouldNotify = const ShouldNotifyChatMessage();
+  final ChatRepository _repository;
 
   Future<Result<void>> connect(String accountId) => _connect(accountId);
+
+  bool canPin(
+    ChatConversation chat, {
+    required int? selfUserId,
+    required String? selfAccount,
+  }) => _pin.canPin(chat, selfUserId: selfUserId, selfAccount: selfAccount);
+
+  Future<Result<void>> setPinned(ChatMessage message, {required bool pinned}) =>
+      _pin(message, pinned: pinned);
+
+  Future<Result<String>> openDirectChat(String accountId, int userId) =>
+      _direct(accountId: accountId, userId: userId);
+
+  /// Live messages from others; a pass-through stream (CLAUDE.md 2.4).
+  Stream<ChatMessage> watchIncoming() => _repository.watchIncoming();
+
+  bool shouldNotify(
+    ChatMessage message, {
+    required bool enabled,
+    required bool appFocused,
+    required ({String accountId, String chatGid})? visibleChat,
+    ChatConversation? conversation,
+  }) => _shouldNotify(
+    message,
+    enabled: enabled,
+    appFocused: appFocused,
+    visibleChat: visibleChat,
+    conversation: conversation,
+  );
 
   Future<Result<void>> trust(String accountId, String fingerprint) =>
       _trust(accountId: accountId, fingerprint: fingerprint);

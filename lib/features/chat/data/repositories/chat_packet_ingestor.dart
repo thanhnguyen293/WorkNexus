@@ -41,7 +41,7 @@ class ChatPacketIngestor {
             for (final c in chats) ?peerOf('${c['gid']}', selfUserId),
           }),
         );
-      case 'chatgetbygid':
+      case 'chatgetbygid' || 'chatcreate':
         if (data is! Map) break;
         final chat = Map<String, Object?>.from(data);
         await _storeChats(accountId, [chat]);
@@ -64,6 +64,15 @@ class ChatPacketIngestor {
             accountId,
             data['gid']! as String,
             (data['id']! as num).toInt(),
+          );
+        }
+      // Someone (un)pinned messages: the reply carries the full new list.
+      case 'chatpinmessages' || 'chatunpinmessages':
+        if (data is Map && data['cgid'] is String) {
+          await _local.setPinned(
+            accountId,
+            data['cgid']! as String,
+            pinnedJsonOf(data['allPinned']),
           );
         }
       case 'usergetlist':

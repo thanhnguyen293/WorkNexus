@@ -34,7 +34,35 @@ ChatConversationsCompanion conversationFromXxd(
       (_int(chat['archiveDate']) ?? 0) > 0 ||
           (_int(chat['dismissDate']) ?? 0) > 0,
     ),
+    pinnedJson: chat.containsKey('pinnedMessages')
+        ? Value(pinnedJsonOf(chat['pinnedMessages']))
+        : const Value.absent(),
+    adminsJson: chat.containsKey('admins')
+        ? Value(pinnedJsonOf(chat['admins']))
+        : const Value.absent(),
+    ownedBy: Value(_text(chat['ownedBy'])),
+    createdAt: Value(_date(chat['createdDate'])),
   );
+}
+
+/// A list of ids from xxd (pinned messages, admins) as stored JSON.
+String pinnedJsonOf(Object? pinned) => jsonEncode([
+  if (pinned is List)
+    for (final id in pinned) ?_int(id),
+]);
+
+List<int> _pinnedIds(String json) {
+  try {
+    final list = jsonDecode(json);
+    return list is List ? [for (final id in list) ?_int(id)] : const [];
+  } on FormatException {
+    return const [];
+  }
+}
+
+String? _text(Object? v) {
+  final s = v?.toString().trim();
+  return s == null || s.isEmpty ? null : s;
 }
 
 /// The chat's `lastMessageInfo`, when present (used as the list preview).
@@ -94,6 +122,10 @@ ChatUsersCompanion userFromXxd(String accountId, Map<String, Object?> u) {
     realname: Value('${u['realname'] ?? ''}'),
     avatar: Value(avatar is String && avatar.isNotEmpty ? avatar : null),
     deleted: Value(u['deleted'] == true),
+    email: Value(_text(u['email'])),
+    mobile: Value(_text(u['mobile'])),
+    phone: Value(_text(u['phone'])),
+    role: Value(_text(u['role'])),
   );
 }
 
@@ -127,6 +159,10 @@ ChatConversation conversationFromRow(
     peerUserId: type == ChatType.one2one ? peerOf(row.gid, selfUserId) : null,
     hidden: row.hidden,
     archived: row.archived,
+    pinnedMessageIds: _pinnedIds(row.pinnedJson),
+    adminIds: _pinnedIds(row.adminsJson),
+    ownerAccount: row.ownedBy,
+    createdAt: row.createdAt,
   );
 }
 
@@ -155,6 +191,10 @@ ChatUser userFromRow(ChatUserRow row) => ChatUser(
   realname: row.realname,
   avatarUrl: row.avatar,
   deleted: row.deleted,
+  email: row.email,
+  mobile: row.mobile,
+  phone: row.phone,
+  role: row.role,
 );
 
 ChatType _chatType(String type) =>

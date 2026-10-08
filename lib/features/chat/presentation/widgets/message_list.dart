@@ -15,6 +15,7 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
+import 'chat_panels.dart';
 import 'chat_separator.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
@@ -66,7 +67,8 @@ class _MessageListState extends ConsumerState<MessageList> {
         metrics.extentAfter < _kLoadOlderThreshold &&
         !_loadingOlder &&
         !_reachedStart &&
-        !_loadFailed) {
+        !_loadFailed &&
+        !ref.read(chatMessagesProvider(widget.thread)).isLoading) {
       // Not during layout: loading calls setState.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_loadingOlder) _loadOlder();
@@ -78,7 +80,7 @@ class _MessageListState extends ConsumerState<MessageList> {
   Future<void> _loadOlder() async {
     final t = widget.thread;
     final limit = ref.read(chatMessageLimitProvider(t).notifier);
-    final shown = ref.read(chatMessagesProvider(t)).asData?.value.length ?? 0;
+    final shown = ref.read(chatMessagesProvider(t)).value?.length ?? 0;
     // The local database may already hold more than is shown: page those in
     // without asking the server.
     if (shown >= limit.state) {
@@ -123,7 +125,11 @@ class _MessageListState extends ConsumerState<MessageList> {
     final users =
         ref.watch(chatUsersProvider(t.accountId)).asData?.value ??
         const <int, ChatUser>{};
-    final messages = messagesAsync.asData?.value ?? const <ChatMessage>[];
+    // `value`, not `asData`: while a bigger page loads (the limit grew) the
+    // provider is reloading and `asData` is null. Dropping to the spinner
+    // then would unmount the list, lose the scroll position and — with the
+    // fresh list near its top — trigger the next page, flashing forever.
+    final messages = messagesAsync.value ?? const <ChatMessage>[];
     if (messagesAsync.isLoading && messages.isEmpty) {
       return const AppInlineSpinner();
     }
@@ -264,12 +270,4 @@ class _ListHeader extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Opens the reply thread that [messageId] belongs to beside chat [chat].
-void openReplyThread(WidgetRef ref, ChatThreadKey chat, int messageId) {
-  final replies = ref.read(chatRepliesProvider(chat)).asData?.value ?? const [];
-  ref.read(openReplyThreadProvider(chat).notifier).state = ref
-      .read(chatControllerProvider)
-      .threadRootOf(messageId, replies);
 }
