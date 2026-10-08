@@ -103,18 +103,30 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
         borderRadius: BorderRadius.circular(context.radii.lg),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
+        constraints: const BoxConstraints(maxWidth: 440, maxHeight: 640),
         child: Padding(
-          padding: EdgeInsets.all(s.xl5),
+          padding: EdgeInsets.fromLTRB(s.xl5, s.xl3, s.xl5, s.xl5),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                l.chatNewChat,
-                style: context.typography.titleLg.copyWith(
-                  color: c.textPrimary,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.chatNewChat,
+                      style: context.typography.titleLg.copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l.chatCancel,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: c.textSecondary),
+                  ),
+                ],
               ),
               SizedBox(height: s.xs),
               Text(
@@ -127,10 +139,11 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
               if (group) ...[
                 TextField(
                   controller: _name,
-                  decoration: InputDecoration(
-                    labelText: l.chatGroupName,
-                    hintText: _defaultName(users),
-                    isDense: true,
+                  style: context.typography.body.copyWith(color: c.textPrimary),
+                  decoration: chatFieldDecoration(
+                    context,
+                    hint: '${l.chatGroupName} · ${_defaultName(users)}',
+                    icon: Icons.groups_outlined,
                   ),
                 ),
                 SizedBox(height: s.xl),

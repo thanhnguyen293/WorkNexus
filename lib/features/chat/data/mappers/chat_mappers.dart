@@ -41,6 +41,9 @@ ChatConversationsCompanion conversationFromXxd(
         ? Value(pinnedJsonOf(chat['admins']))
         : const Value.absent(),
     ownedBy: Value(_text(chat['ownedBy'])),
+    avatarJson: chat['avatar'] is Map
+        ? Value(jsonEncode(chat['avatar']))
+        : const Value.absent(),
     createdAt: Value(_date(chat['createdDate'])),
   );
 }
@@ -126,6 +129,9 @@ ChatUsersCompanion userFromXxd(String accountId, Map<String, Object?> u) {
     mobile: Value(_text(u['mobile'])),
     phone: Value(_text(u['phone'])),
     role: Value(_text(u['role'])),
+    status: u.containsKey('status')
+        ? Value(_text(u['status']))
+        : const Value.absent(),
   );
 }
 
@@ -162,6 +168,7 @@ ChatConversation conversationFromRow(
     pinnedMessageIds: _pinnedIds(row.pinnedJson),
     adminIds: _pinnedIds(row.adminsJson),
     ownerAccount: row.ownedBy,
+    avatarJson: row.avatarJson,
     createdAt: row.createdAt,
   );
 }
@@ -195,6 +202,7 @@ ChatUser userFromRow(ChatUserRow row) => ChatUser(
   mobile: row.mobile,
   phone: row.phone,
   role: row.role,
+  status: row.status,
 );
 
 ChatType _chatType(String type) =>

@@ -31,6 +31,9 @@ final class XxdServerInfo {
     this.apiScheme,
     this.uploadFileSize,
     this.backendUrl,
+    this.authToken,
+    this.requestType = 'PATH_INFO',
+    this.requestFix = '-',
   });
 
   /// Returns null when the reply carries no token (login rejected).
@@ -48,6 +51,9 @@ final class XxdServerInfo {
       apiScheme: scheme is Map ? Map<String, Object?>.from(scheme) : null,
       uploadFileSize: _int(json['uploadFileSize']),
       backendUrl: json['backendURL'] as String?,
+      authToken: json['authToken'] as String?,
+      requestType: '${json['requestType'] ?? 'PATH_INFO'}',
+      requestFix: '${json['requestFix'] ?? '-'}',
     );
   }
 
@@ -59,6 +65,14 @@ final class XxdServerInfo {
   final Map<String, Object?>? apiScheme;
   final int? uploadFileSize;
   final String? backendUrl;
+
+  /// Short-lived key for ZenTao web calls through `im-authorize`.
+  final String? authToken;
+
+  /// ZenTao URL style: `PATH_INFO` (`module-method-args.html`) or `GET`
+  /// (`index.php?m=&f=`), and the PATH_INFO separator.
+  final String requestType;
+  final String requestFix;
 
   /// `socketUrl` when given, else `wss://<host>:<chatPort>/ws`.
   Uri socketUri(Uri server) => switch (socketUrl) {

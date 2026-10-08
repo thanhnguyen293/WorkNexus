@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
+import 'chat_layout.dart';
 import 'chat_panels.dart';
 
 /// Under the chat header: the most recently pinned message and how many are
@@ -58,7 +59,12 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
     return Material(
       color: c.surface,
       child: InkWell(
-        onTap: () => toggleChatSidePanel(ref, t, ChatSidePanel.pinned),
+        onTap: () => toggleChatSidePanel(
+          ref,
+          t,
+          ChatSidePanel.pinned,
+          infoRoom: ChatLayoutScope.of(context).infoRoom,
+        ),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: s.xl4, vertical: s.md),
           decoration: BoxDecoration(

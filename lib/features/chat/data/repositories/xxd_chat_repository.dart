@@ -26,6 +26,7 @@ import '../datasources/xxd/xxd_packet.dart';
 import '../datasources/xxd/xxd_server_info.dart';
 import '../mappers/chat_mappers.dart';
 import 'chat_attachment_loader.dart';
+import 'chat_avatar_service.dart';
 import 'chat_cache_manager.dart';
 import 'chat_credentials_resolver.dart';
 import 'chat_history_sync.dart';
@@ -67,6 +68,7 @@ class XxdChatRepository implements ChatRepository {
        _durations = durations {
     _attachments = ChatAttachmentLoader(http, _files);
     _cache = ChatCacheManager(local, _files, _attachments, parse);
+    _avatars = ChatAvatarService(http);
   }
 
   /// Messages still pending after this long are treated as interrupted.
@@ -84,6 +86,7 @@ class XxdChatRepository implements ChatRepository {
   final ChatFileCache _files;
   late final ChatAttachmentLoader _attachments;
   late final ChatCacheManager _cache;
+  late final ChatAvatarService _avatars;
   final VideoDurationReader _durations;
   final VideoThumbnailer _thumbnailer;
   late final ChatSender _sender = ChatSender(
@@ -531,6 +534,26 @@ class XxdChatRepository implements ChatRepository {
       Err(:final failure) => Err(failure),
     };
   }
+
+  @override
+  Future<Result<void>> setGroupAvatar(
+    String accountId,
+    String chatGid, {
+    String? text,
+    String? color,
+    Uint8List? image,
+  }) => _avatars.setGroupAvatar(
+    _sessions[accountId],
+    chatGid,
+    send: (session, request) => _requestAndStore(accountId, session, request),
+    text: text,
+    color: color,
+    image: image,
+  );
+
+  @override
+  Future<Result<Uri>> zentaoProfileUri(String accountId) =>
+      _avatars.profileUri(_sessions[accountId]);
 
   @override
   Future<Result<void>> refreshUsers(String accountId) async {

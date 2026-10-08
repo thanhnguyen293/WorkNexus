@@ -10,6 +10,7 @@ import 'chat_composer.dart';
 import 'chat_files_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
+import 'chat_layout.dart';
 import 'chat_panels.dart';
 import 'chat_snack.dart';
 import 'chat_thread_header.dart';
@@ -33,11 +34,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final width = context.size?.width;
-      if (width != null) autoOpenChatInfo(ref, widget.thread, width);
-      _open();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _open());
   }
 
   Future<void> _open() async {
@@ -62,7 +59,11 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
         ref.watch(chatUsersProvider(t.accountId)).asData?.value ??
         const <int, ChatUser>{};
     final openThread = ref.watch(openReplyThreadProvider(t));
-    final sidePanel = ref.watch(chatSidePanelProvider(t));
+    final sidePanel = effectiveSidePanel(
+      ref,
+      t,
+      infoRoom: ChatLayoutScope.of(context).infoRoom,
+    );
     final pinned = chat?.pinnedMessageIds ?? const <int>[];
     return Row(
       children: [

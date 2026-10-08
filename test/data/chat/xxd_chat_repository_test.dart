@@ -181,7 +181,10 @@ void main() {
       repo.watchConversations(_acc),
       (l) => l.length == 2 && byGid(l, '31&40')?.peerUserId == 31,
     );
-    final users = await eventually(repo.watchUsers(_acc), (u) => u.isNotEmpty);
+    final users = await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 31),
+    );
 
     final group = byGid(chats, 'g1')!;
     expect(group.type, ChatType.group);
@@ -189,7 +192,8 @@ void main() {
     expect(group.lastMessage?.content, const MessageContent.text('hello'));
     expect(group.lastMessage?.isMine, isFalse);
     expect(chats.first.gid, 'g1', reason: 'most recently active first');
-    expect(users.single.realname, 'User 31');
+    // The login reply stores the signed-in user too.
+    expect(users.firstWhere((u) => u.userId == 31).realname, 'User 31');
     expect(
       await repo.watchStatus(_acc).first,
       const ChatConnectionStatus.online(selfUserId: 40),
@@ -233,7 +237,10 @@ void main() {
       'data': [_msg(102, user: 77)],
     };
     server.current.push(push);
-    await eventually(repo.watchMessages(_acc, 'g1'), (l) => l.last.gid == 'm102');
+    await eventually(
+      repo.watchMessages(_acc, 'g1'),
+      (l) => l.last.gid == 'm102',
+    );
     // A re-delivery of the same message is not new.
     server.current.push(push);
     await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -272,6 +279,50 @@ void main() {
       (l) => byGid(l, 'g1')?.pinnedMessageIds.length == 1,
     );
     expect(byGid(chats, 'g1')!.pinnedMessageIds, [101]);
+  });
+
+  test('sign-in/out pushes and avatar changes are stored', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+    server.current.push({
+      'method': 'userlogin',
+      'result': 'success',
+      'data': {
+        'id': 77,
+        'account': 'kyo',
+        'realname': 'Kyo',
+        'status': 'online',
+      },
+    });
+    await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 77 && x.status == 'online'),
+    );
+    server.current.push({
+      'method': 'userlogout',
+      'result': 'success',
+      'data': {'id': 77},
+    });
+    await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 77 && x.status == 'offline'),
+    );
+    server.current.push({
+      'method': 'chatsetavatar',
+      'result': 'success',
+      'data': {
+        'gid': 'g1',
+        'avatar': {
+          'type': 'text',
+          'data': {'bgColor': '#37C3A4', 'customText': 'VN'},
+        },
+      },
+    });
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.avatarJson?.contains('#37C3A4') ?? false,
+    );
   });
 
   test('a message in an unknown chat fetches that chat', () async {

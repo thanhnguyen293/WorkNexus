@@ -69,12 +69,17 @@ class _ChatMentionOverlayState extends State<ChatMentionOverlay> {
               left: anchor.left,
               width: math.min(anchor.width, context.spacing.xl6 * 9.5),
               bottom: info.overlaySize.height - anchor.top + context.spacing.sm,
-              child: ListenableBuilder(
-                listenable: widget.mentions,
-                builder: (context, _) => ChatMentionList(
-                  thread: widget.thread,
-                  mentions: widget.mentions,
-                  onPick: widget.onPick,
+              // Part of the input as far as taps go: clicking a suggestion
+              // must not unfocus the field (which would hide the card
+              // before the click lands).
+              child: TextFieldTapRegion(
+                child: ListenableBuilder(
+                  listenable: widget.mentions,
+                  builder: (context, _) => ChatMentionList(
+                    thread: widget.thread,
+                    mentions: widget.mentions,
+                    onPick: widget.onPick,
+                  ),
                 ),
               ),
             ),
