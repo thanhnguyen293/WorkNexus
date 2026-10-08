@@ -52,6 +52,10 @@ class _FakeChatRepository implements ChatRepository {
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
 
   @override
+  Future<Result<Duration>> videoDuration(String a, MessageContent v) async =>
+      const Ok(Duration(minutes: 1, seconds: 23));
+
+  @override
   Stream<List<ChatMessage>> watchAttachments(String a, String c) =>
       const Stream.empty();
 

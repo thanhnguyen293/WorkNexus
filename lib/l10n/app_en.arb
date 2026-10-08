@@ -424,6 +424,8 @@
   "chatNext": "Next",
   "chatCopied": "Copied",
   "chatSaved": "Saved",
+  "chatSend": "Send",
+  "chatSendHint": "Enter to send · Shift+Enter for a new line",
   "chatMedia": "Photos & videos",
   "chatFiles": "Files",
   "chatSeeAll": "See all",

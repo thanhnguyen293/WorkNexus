@@ -10,6 +10,7 @@ import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_download_badge.dart';
 import 'chat_labels.dart';
+import 'chat_video_controls.dart';
 
 /// A video as a 16:9 frame: its preview image (when one can be made), a play
 /// button, and the name and size along the bottom edge.
@@ -31,6 +32,12 @@ class ChatVideoTile extends ConsumerWidget {
     final s = context.spacing;
     final frame = switch (ref.watch(
       chatVideoThumbnailProvider((accountId: accountId, video: file)),
+    )) {
+      AsyncData(value: Ok(:final value)) => value,
+      _ => null,
+    };
+    final duration = switch (ref.watch(
+      chatVideoDurationProvider((accountId: accountId, video: file)),
     )) {
       AsyncData(value: Ok(:final value)) => value,
       _ => null,
@@ -61,22 +68,54 @@ class ChatVideoTile extends ConsumerWidget {
                       size: file.size,
                     ),
                   ),
+                  // Translucent dark disc with a white glyph: reads on any
+                  // frame, light or dark, without hiding it.
                   Center(
                     child: DecoratedBox(
                       decoration: ShapeDecoration(
-                        color: c.surface,
-                        shape: CircleBorder(side: BorderSide(color: c.border)),
+                        color: c.scrim.withValues(alpha: 0.45),
+                        shape: CircleBorder(
+                          side: BorderSide(
+                            color: c.onScrim.withValues(alpha: 0.7),
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                       child: Padding(
-                        padding: EdgeInsets.all(s.md),
+                        padding: EdgeInsets.all(s.lg),
                         child: Icon(
                           Icons.play_arrow_rounded,
-                          size: s.xl6 * 0.75,
-                          color: c.accent,
+                          size: s.xl6,
+                          color: c.onScrim,
                         ),
                       ),
                     ),
                   ),
+                  if (duration != null)
+                    Positioned(
+                      right: s.md,
+                      bottom: s.md,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: c.scrim.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(
+                            context.radii.pill,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: s.md,
+                            vertical: s.xxs,
+                          ),
+                          child: Text(
+                            formatVideoTime(duration),
+                            style: context.typography.captionStrong.copyWith(
+                              color: c.onScrim,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

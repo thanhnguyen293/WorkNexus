@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,6 +10,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer.dart';
+import 'chat_side_panel_frame.dart';
 import 'message_bubble.dart';
 
 /// Width of the thread panel beside the chat.
@@ -60,43 +60,13 @@ class ReplyThreadPanel extends ConsumerWidget {
                 .state =
             message;
 
-    return Container(
+    return ChatSidePanelFrame(
       width: _kThreadPanelWidth,
-      decoration: BoxDecoration(
-        color: c.background,
-        border: Border(left: context.hairlineSide),
-      ),
+      title: l.chatThread,
+      closeTooltip: l.chatCloseThread,
+      onClose: close,
       child: Column(
         children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              context.spacing.xl3,
-              context.spacing.md,
-              context.spacing.md,
-              context.spacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: c.surface,
-              border: Border(bottom: context.hairlineSide),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l.chatThread,
-                    style: context.typography.title.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: l.chatCloseThread,
-                  onPressed: close,
-                  icon: Icon(Icons.close, color: c.textSecondary),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(context.spacing.xl3),
