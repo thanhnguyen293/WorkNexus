@@ -38,7 +38,7 @@ List<MessageAction> messageActions(
   return [
     if (serverId != null && !message.deleted)
       (
-        icon: Icons.reply_rounded,
+        icon: Icons.format_quote_rounded,
         tooltip: l.chatReply,
         onTap: () => onReply(message),
       ),
