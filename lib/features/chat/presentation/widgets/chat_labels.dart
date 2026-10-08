@@ -6,6 +6,8 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/resolve_chat_title.dart';
+import '../../domain/value_objects/chat_group_avatar.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/message_content.dart';
 
 /// `[@Display Name](@#userId)` — how xxd encodes a mention inside text.
@@ -187,3 +189,55 @@ String _stripMarkdown(String text) => text
       (m) => m[1]!,
     )
     .replaceAll(RegExp(r'(\*\*|__|\*|~~|`)'), '');
+
+/// How a chat's avatar is drawn: a picture, or a text on a colour (groups
+/// that set one); null fields fall back to the title's initials.
+({String? imageUrl, String? label, Color? background}) chatAvatarStyle(
+  ChatConversation chat,
+  Map<int, ChatUser> users,
+) {
+  if (chat.type == ChatType.one2one) {
+    return (
+      imageUrl: chatAvatarUrl(users, chat.peerUserId),
+      label: null,
+      background: null,
+    );
+  }
+  return switch (ChatGroupAvatar.fromJson(chat.avatarJson)) {
+    ChatImageAvatar(:final url) => (
+      imageUrl: url,
+      label: null,
+      background: null,
+    ),
+    ChatTextAvatar(:final text, :final color) => (
+      imageUrl: null,
+      label: text,
+      background: chatHexColor(color),
+    ),
+    null => (imageUrl: null, label: null, background: null),
+  };
+}
+
+/// `#RRGGBB` from the server (a user's chosen group colour) as a [Color].
+Color? chatHexColor(String hex) {
+  final v = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
+  if (v == null || hex.replaceFirst('#', '').length != 6) return null;
+  return Color(0xFF000000 | v);
+}
+
+/// A user's presence (null when unknown).
+ChatPresence? chatPresenceOf(Map<int, ChatUser> users, int? id) {
+  final status = users[id]?.status;
+  return status == null ? null : ChatPresence.fromStatus(status);
+}
+
+/// "Online", "Away", "Busy" or "Offline".
+String chatPresenceLabel(BuildContext context, ChatPresence presence) {
+  final l = AppL10n.of(context);
+  return switch (presence) {
+    ChatPresence.online => l.chatOnline,
+    ChatPresence.away => l.chatAway,
+    ChatPresence.busy => l.chatBusy,
+    ChatPresence.offline => l.chatOffline,
+  };
+}

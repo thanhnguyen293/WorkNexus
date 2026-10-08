@@ -10,11 +10,14 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
+import 'chat_group_avatar_dialog.dart';
 import 'chat_info_files_section.dart';
 import 'chat_labels.dart';
+import 'chat_layout.dart';
 import 'chat_member_list.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
@@ -45,11 +48,16 @@ class ChatInfoPanel extends ConsumerWidget {
         .where((u) => u.account == chat.ownerAccount)
         .firstOrNull;
     final created = chat.createdAt;
+    final avatar = chatAvatarStyle(chat, users);
     final members = oneToOne
         ? null
         : ref.watch(chatMembersProvider(thread)).value;
     final subtitle = switch (members) {
       Ok(:final value) => l.chatMembers(value.length),
+      _ when peer?.status != null => chatPresenceLabel(
+        context,
+        ChatPresence.fromStatus(peer?.status),
+      ),
       _ => peer == null ? null : '@${peer.account}',
     };
 
@@ -96,7 +104,10 @@ class ChatInfoPanel extends ConsumerWidget {
 
     return ChatSidePanelFrame(
       title: l.chatInfo,
-      onClose: () => closeChatSidePanel(ref, thread),
+      // With room the info panel stays: it only closes in a narrow window.
+      onClose: ChatLayoutScope.of(context).infoRoom
+          ? null
+          : () => closeChatSidePanel(ref, thread),
       child: ListView(
         padding: EdgeInsets.all(s.xl3),
         children: [
@@ -104,10 +115,28 @@ class ChatInfoPanel extends ConsumerWidget {
           Center(
             child: ChatAvatar(
               name: title,
-              imageUrl: peer?.avatarUrl,
+              imageUrl: avatar.imageUrl,
+              label: avatar.label,
+              background: avatar.background,
+              presence: oneToOne
+                  ? chatPresenceOf(users, chat.peerUserId)
+                  : null,
               diameter: s.xl6 * 2,
             ),
           ),
+          if (!oneToOne && ref.watch(chatCanPinProvider(thread)))
+            Center(
+              child: TextButton.icon(
+                onPressed: () => ChatGroupAvatarDialog.show(
+                  context,
+                  thread: thread,
+                  chat: chat,
+                  title: title,
+                ),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: Text(l.chatChangeGroupAvatar),
+              ),
+            ),
           SizedBox(height: s.xl),
           SelectableText(
             title,
@@ -163,8 +192,12 @@ class ChatInfoPanel extends ConsumerWidget {
                   Icon(Icons.chevron_right, color: c.textTertiary),
                 ],
               ),
-              onTap: () =>
-                  toggleChatSidePanel(ref, thread, ChatSidePanel.pinned),
+              onTap: () => toggleChatSidePanel(
+                ref,
+                thread,
+                ChatSidePanel.pinned,
+                infoRoom: ChatLayoutScope.of(context).infoRoom,
+              ),
             ),
           ),
           ChatInfoFilesSection(thread: thread),

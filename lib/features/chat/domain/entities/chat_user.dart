@@ -16,5 +16,8 @@ abstract class ChatUser with _$ChatUser {
     String? mobile,
     String? phone,
     String? role,
+
+    /// xxd presence (`online`, `away`, `busy`, `offline`…).
+    String? status,
   }) = _ChatUser;
 }

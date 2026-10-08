@@ -93,6 +93,25 @@ class ChatController {
     memberIds: memberIds,
   );
 
+  /// Sets a group's picture (pass-through; CLAUDE.md 2.4).
+  Future<Result<void>> setGroupAvatar(
+    String accountId,
+    String chatGid, {
+    String? text,
+    String? color,
+    Uint8List? image,
+  }) => _repository.setGroupAvatar(
+    accountId,
+    chatGid,
+    text: text,
+    color: color,
+    image: image,
+  );
+
+  /// The user's ZenTao profile link (pass-through).
+  Future<Result<Uri>> zentaoProfileUri(String accountId) =>
+      _repository.zentaoProfileUri(accountId);
+
   /// Loads every user of the server (pass-through; CLAUDE.md 2.4).
   Future<Result<void>> refreshUsers(String accountId) =>
       _repository.refreshUsers(accountId);

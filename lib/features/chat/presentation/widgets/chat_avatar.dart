@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import 'chat_labels.dart';
 
 /// Avatar sizes used by chat.
@@ -22,9 +23,22 @@ class ChatAvatar extends StatelessWidget {
     this.size = ChatAvatarSize.medium,
     this.shape = ChatAvatarShape.circle,
     this.diameter,
+    this.presence,
+    this.label,
+    this.background,
   });
 
   final String name;
+
+  /// Draws a status dot (green online, amber away, red busy; none when
+  /// offline or unknown).
+  final ChatPresence? presence;
+
+  /// Text drawn instead of the initials (a group's text avatar).
+  final String? label;
+
+  /// Fill behind the initials/label (a group's text avatar colour).
+  final Color? background;
   final String? imageUrl;
   final ChatAvatarSize size;
   final ChatAvatarShape shape;
@@ -42,9 +56,14 @@ class ChatAvatar extends StatelessWidget {
           ChatAvatarSize.medium => s.xl6 * 0.9,
           ChatAvatarSize.large => s.xl6 * 1.1,
         };
-    final initials = _Initials(name: name, diameter: diameter);
+    final initials = _Initials(
+      name: name,
+      diameter: diameter,
+      label: label,
+      background: background,
+    );
     final url = imageUrl;
-    return SizedBox.square(
+    final picture = SizedBox.square(
       dimension: diameter,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(
@@ -60,29 +79,69 @@ class ChatAvatar extends StatelessWidget {
               ),
       ),
     );
+    final c = context.colors;
+    final dot = switch (presence) {
+      ChatPresence.online => c.success,
+      ChatPresence.away => c.warning,
+      ChatPresence.busy => c.error,
+      ChatPresence.offline || null => null,
+    };
+    if (dot == null) return picture;
+    final dotSize = (diameter * 0.3).clamp(s.md, s.xl3);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        picture,
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Container(
+            width: dotSize,
+            height: dotSize,
+            decoration: BoxDecoration(
+              color: dot,
+              shape: BoxShape.circle,
+              border: Border.all(color: c.surface, width: dotSize * 0.18),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
 class _Initials extends StatelessWidget {
-  const _Initials({required this.name, required this.diameter});
+  const _Initials({
+    required this.name,
+    required this.diameter,
+    this.label,
+    this.background,
+  });
 
   final String name;
   final double diameter;
+  final String? label;
+  final Color? background;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final big = diameter > context.spacing.xl5;
+    final custom = label != null && label!.trim().isNotEmpty;
     return ColoredBox(
-      color: c.selectionFill,
+      color: background ?? c.selectionFill,
       child: Center(
         child: Text(
-          chatInitials(name),
+          custom ? label!.trim() : chatInitials(name),
+          maxLines: 1,
           style:
               (big
                       ? context.typography.captionStrong
                       : context.typography.captionSm)
-                  .copyWith(color: c.accent, fontWeight: FontWeight.w600),
+                  .copyWith(
+                    color: background == null ? c.accent : c.onAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
         ),
       ),
     );

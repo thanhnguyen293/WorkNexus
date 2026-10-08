@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../../core/database/database.dart';
 import '../datasources/chat_local_datasource.dart';
 import '../datasources/xxd/xxd_packet.dart';
@@ -73,6 +75,29 @@ class ChatPacketIngestor {
             accountId,
             data['cgid']! as String,
             pinnedJsonOf(data['allPinned']),
+          );
+        }
+      // Someone signed in (their user record, with `status`) or out.
+      case 'userlogin':
+        if (data is Map && data['id'] != null) {
+          await _local.upsertUsers([
+            userFromXxd(accountId, Map<String, Object?>.from(data)),
+          ]);
+        }
+      case 'userlogout':
+        if (data is Map && data['id'] is num) {
+          await _local.setUserStatus(
+            accountId,
+            (data['id']! as num).toInt(),
+            'offline',
+          );
+        }
+      case 'chatsetavatar':
+        if (data is Map && data['gid'] is String && data['avatar'] is Map) {
+          await _local.setChatAvatar(
+            accountId,
+            data['gid']! as String,
+            jsonEncode(data['avatar']),
           );
         }
       case 'usergetlist':

@@ -202,10 +202,6 @@ final chatAttachmentsProvider = StreamProvider.autoDispose
           .watchAttachments(key.accountId, key.chatGid),
     );
 
-/// Whether opening a chat shows its info panel (when there is room). Turned
-/// off when the user closes the info panel, back on when they open it.
-final chatInfoAutoOpenProvider = StateProvider<bool>((ref) => true);
-
 final chatSidePanelProvider =
     StateProvider.family<ChatSidePanel?, ChatThreadKey>((ref, key) => null);
 
