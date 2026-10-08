@@ -69,6 +69,7 @@ class AppPalette {
     required this.skel,
     required this.skel2,
     required this.scrim,
+    required this.onScrim,
     required this.onColorInk,
     required this.workspaceFallback,
   });
@@ -99,6 +100,7 @@ class AppPalette {
   final Color skel; // skeleton base
   final Color skel2; // skeleton shimmer highlight
   final Color scrim; // modal / overlay scrim + shadow (black)
+  final Color onScrim; // text/icons over a scrim (image viewer, media badges)
   final Color onColorInk; // near-black text/icon on a saturated colored fill
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
@@ -132,6 +134,7 @@ class AppPalette {
     skel: Color.fromRGBO(0, 0, 0, .05),
     skel2: Color.fromRGBO(0, 0, 0, .09),
     scrim: Color(0xFF000000),
+    onScrim: Color(0xFFFFFFFF),
     onColorInk: Color(0xFF0B0D11),
     workspaceFallback: Color(0xFF888888),
   );
@@ -162,6 +165,7 @@ class AppPalette {
     skel: Color.fromRGBO(255, 255, 255, .05),
     skel2: Color.fromRGBO(255, 255, 255, .10),
     scrim: Color(0xFF000000),
+    onScrim: Color(0xFFFFFFFF),
     onColorInk: Color(0xFF0B0D11),
     workspaceFallback: Color(0xFF888888),
   );
@@ -193,6 +197,7 @@ class AppPalette {
     skel: Color.fromRGBO(255, 255, 255, .055),
     skel2: Color.fromRGBO(255, 255, 255, .11),
     scrim: Color(0xFF000000),
+    onScrim: Color(0xFFFFFFFF),
     onColorInk: Color(0xFF0B0D11),
     workspaceFallback: Color(0xFF888888),
   );

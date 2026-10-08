@@ -11,8 +11,9 @@ import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'message_hover_actions.dart';
 
-/// The hover actions a message offers: reply, copy text, and — for your own
-/// recent messages — retract.
+/// The hover actions a message offers: reply, copy text, pin/unpin (where
+/// allowed) and — for your own recent messages — retract. Called from a
+/// bubble's build, so it watches what the pin action depends on.
 List<MessageAction> messageActions(
   BuildContext context,
   WidgetRef ref,
@@ -22,6 +23,14 @@ List<MessageAction> messageActions(
   final l = AppL10n.of(context);
   final controller = ref.read(chatControllerProvider);
   final serverId = message.serverId;
+  final chat = (accountId: message.accountId, chatGid: message.chatGid);
+  final canPin =
+      serverId != null &&
+      !message.deleted &&
+      ref.watch(chatCanPinProvider(chat));
+  final pinned =
+      canPin &&
+      ref.watch(chatIsPinnedProvider((chat: chat, serverId: serverId)));
   final text = switch (message.content) {
     TextContent(:final text) when !message.deleted => text,
     _ => null,
@@ -42,6 +51,17 @@ List<MessageAction> messageActions(
             text: text.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
           ),
         ),
+      ),
+    if (canPin)
+      (
+        icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+        tooltip: pinned ? l.chatUnpin : l.chatPin,
+        onTap: () async {
+          final result = await controller.setPinned(message, pinned: !pinned);
+          if (result case Err(:final failure)) {
+            if (context.mounted) showChatFailure(context, failure);
+          }
+        },
       ),
     if (controller.canRetract(message))
       (

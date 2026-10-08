@@ -24,6 +24,21 @@ class DesktopWindowService {
     });
   }
 
+  /// Whether the app window has keyboard focus (true off desktop, where the
+  /// app is either in front or not running).
+  Future<bool> isFocused() async {
+    if (!isDesktop) return true;
+    return windowManager.isFocused();
+  }
+
+  /// Restores and focuses the window, e.g. after a notification click.
+  Future<void> bringToFront() async {
+    if (!isDesktop) return;
+    if (await windowManager.isMinimized()) await windowManager.restore();
+    await windowManager.show();
+    await windowManager.focus();
+  }
+
   static WindowOptions windowOptionsFor({required bool isWindows}) {
     return WindowOptions(
       size: const Size(1440, 900),

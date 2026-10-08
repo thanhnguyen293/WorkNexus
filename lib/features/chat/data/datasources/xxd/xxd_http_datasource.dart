@@ -90,9 +90,12 @@ class XxdHttpDatasource {
   }
 
   /// GETs [uri] (a `fileDownload` URL) through the pinned client.
+  /// Downloads [uri]; [onProgress] gets the bytes received and the total
+  /// (the response's length, else null).
   Future<Result<Uint8List>> download(
     Uri uri, {
     String? pinnedFingerprint,
+    void Function(int received, int? total)? onProgress,
   }) async {
     XxdCertificate? rejected;
     final client = createPinnedHttpClient(
@@ -104,7 +107,11 @@ class XxdHttpDatasource {
         uri,
       )).close().timeout(const Duration(seconds: 60));
       final builder = BytesBuilder(copy: false);
-      await response.forEach(builder.add);
+      final total = response.contentLength > 0 ? response.contentLength : null;
+      await response.forEach((chunk) {
+        builder.add(chunk);
+        onProgress?.call(builder.length, total);
+      });
       if (response.statusCode != HttpStatus.ok) {
         return Err(
           response.statusCode == HttpStatus.notFound

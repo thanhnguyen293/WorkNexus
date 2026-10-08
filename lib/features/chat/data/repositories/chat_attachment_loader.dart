@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -26,6 +27,33 @@ class ChatAttachmentLoader {
   // Insertion-ordered map: re-inserting on a hit makes it an LRU.
   final _cache = <String, Uint8List>{};
   int _cachedBytes = 0;
+
+  /// Downloads in flight by cache key, so a second tap or the inline view
+  /// and the viewer share one download.
+  final _inflight = <String, Future<Result<Uint8List>>>{};
+  final _progress = StreamController<({String key, double done})>.broadcast();
+
+  /// Download progress (0–1) of [content]'s original file.
+  Stream<double> watchProgress(String accountId, MessageContent content) {
+    final key = _keyOf(accountId, content);
+    return _progress.stream.where((p) => p.key == key).map((p) => p.done);
+  }
+
+  /// Whether [content]'s original is already here (memory or disk), i.e.
+  /// opening it needs no download.
+  Future<bool> isCached(String accountId, MessageContent content) async {
+    if (content is ImageContent && content.inlineBase64 != null) return true;
+    final key = _keyOf(accountId, content);
+    if (key == null) return false;
+    if (_cache.containsKey(key)) return true;
+    final (fileId, name) = _fileOf(content);
+    return await _files.open(accountId, _diskName(fileId, name)) != null;
+  }
+
+  static String? _keyOf(String accountId, MessageContent content) {
+    final (fileId, name) = _fileOf(content);
+    return fileId <= 0 ? null : '$accountId/${_diskName(fileId, name)}';
+  }
 
   Future<Result<Uint8List>> load(
     String accountId,
@@ -69,6 +97,44 @@ class ChatAttachmentLoader {
     if (session == null || xxd == null || sessionId == null) {
       return const Err(NetworkFailure('Chat is offline'));
     }
+    final expected = switch (content) {
+      ImageContent(:final size) ||
+      FileContent(:final size) => thumb || size <= 0 ? null : size,
+      _ => null,
+    };
+    return _inflight[key] ??=
+        _download(
+          accountId,
+          session,
+          xxd,
+          sessionId,
+          key: key,
+          diskName: diskName,
+          fileId: fileId,
+          name: name,
+          time: time,
+          thumb: thumb,
+          expected: expected,
+          // A block body: returning the removed future (this one) from the
+          // callback would make whenComplete wait on itself forever.
+        ).whenComplete(() {
+          _inflight.remove(key);
+        });
+  }
+
+  Future<Result<Uint8List>> _download(
+    String accountId,
+    ChatSession session,
+    XxdSession xxd,
+    String sessionId, {
+    required String key,
+    required String diskName,
+    required int fileId,
+    required String name,
+    required int time,
+    required bool thumb,
+    required int? expected,
+  }) async {
     final credentials = session.connection.credentials;
     final result = await _http.download(
       _http.fileDownloadUri(
@@ -82,6 +148,12 @@ class ChatAttachmentLoader {
         thumbnail: thumb,
       ),
       pinnedFingerprint: credentials.pinnedFingerprint,
+      onProgress: (received, total) {
+        final all = total ?? expected;
+        if (all != null && all > 0) {
+          _progress.add((key: key, done: (received / all).clamp(0, 1)));
+        }
+      },
     );
     if (result case Ok(:final value)) {
       _remember(key, value);

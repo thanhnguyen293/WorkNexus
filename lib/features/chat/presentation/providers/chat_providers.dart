@@ -8,6 +8,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -25,6 +26,11 @@ typedef ChatThreadKey = ({String accountId, String chatGid});
 
 final chatRepositoryProvider = Provider<ChatRepository>(
   (ref) => getIt<ChatRepository>(),
+);
+
+/// OS notifications for new messages.
+final desktopNotifierProvider = Provider<DesktopNotifier>(
+  (ref) => getIt<DesktopNotifier>(),
 );
 
 final chatControllerProvider = Provider<ChatController>(
@@ -122,11 +128,22 @@ final chatAttachmentProvider = FutureProvider.autoDispose
     .family<
       Result<Uint8List>,
       ({String accountId, MessageContent content, bool thumbnail})
-    >(
-      (ref, key) => ref
+    >((ref, key) async {
+      final result = await ref
           .watch(chatControllerProvider)
-          .loadAttachment(key.accountId, key.content, thumbnail: key.thumbnail),
-    );
+          .loadAttachment(key.accountId, key.content, thumbnail: key.thumbnail);
+      // Loading an original downloads it: refresh "is it downloaded?" so
+      // size badges go away.
+      if (!key.thumbnail && result is Ok && ref.mounted) {
+        ref.invalidate(
+          chatAttachmentCachedProvider((
+            accountId: key.accountId,
+            content: key.content,
+          )),
+        );
+      }
+      return result;
+    });
 
 /// Every reply in a chat (threads and "N replies" counts are built from it).
 final chatRepliesProvider = StreamProvider.autoDispose
@@ -165,6 +182,81 @@ final openReplyThreadProvider = StateProvider.family<int?, ChatThreadKey>(
   (ref, key) => null,
 );
 
+/// Panels that can open beside a chat instead of a reply thread.
+enum ChatSidePanel { info, pinned }
+
+final chatSidePanelProvider =
+    StateProvider.family<ChatSidePanel?, ChatThreadKey>((ref, key) => null);
+
+/// The signed-in chat user's id per account.
+final chatSelfUserIdProvider = StreamProvider.autoDispose.family<int?, String>(
+  (ref, accountId) =>
+      ref.watch(chatRepositoryProvider).watchSelfUserId(accountId),
+);
+
+/// Whether the signed-in user may pin messages in a chat.
+final chatCanPinProvider = Provider.autoDispose.family<bool, ChatThreadKey>((
+  ref,
+  key,
+) {
+  final chat = ref
+      .watch(chatConversationsProvider(key.accountId))
+      .value
+      ?.where((c) => c.gid == key.chatGid)
+      .firstOrNull;
+  if (chat == null) return false;
+  final self = ref.watch(chatSelfUserIdProvider(key.accountId)).value;
+  final users = ref.watch(chatUsersProvider(key.accountId)).value;
+  return ref
+      .watch(chatControllerProvider)
+      .canPin(chat, selfUserId: self, selfAccount: users?[self]?.account);
+});
+
+/// Whether message [serverId] is pinned in its chat.
+final chatIsPinnedProvider = Provider.autoDispose
+    .family<bool, ({ChatThreadKey chat, int serverId})>(
+      (ref, key) =>
+          ref
+              .watch(chatConversationsProvider(key.chat.accountId))
+              .value
+              ?.where((c) => c.gid == key.chat.chatGid)
+              .firstOrNull
+              ?.pinnedMessageIds
+              .contains(key.serverId) ??
+          false,
+    );
+
+/// An attachment of a chat account (the key of the download providers).
+typedef ChatAttachmentKey = ({String accountId, MessageContent content});
+
+/// Whether an attachment's original is already downloaded.
+final chatAttachmentCachedProvider = FutureProvider.autoDispose
+    .family<bool, ChatAttachmentKey>(
+      (ref, key) => ref
+          .watch(chatRepositoryProvider)
+          .isAttachmentCached(key.accountId, key.content),
+    );
+
+/// Download progress (0–1) of an attachment's original.
+final chatDownloadProgressProvider = StreamProvider.autoDispose
+    .family<double, ChatAttachmentKey>(
+      (ref, key) => ref
+          .watch(chatRepositoryProvider)
+          .watchDownloadProgress(key.accountId, key.content),
+    );
+
+/// Attachments being downloaded because the user tapped them.
+final chatDownloadingProvider = StateProvider<Set<ChatAttachmentKey>>(
+  (ref) => const {},
+);
+
+/// User ids of a group's members.
+final chatMembersProvider = FutureProvider.autoDispose
+    .family<Result<List<int>>, ChatThreadKey>(
+      (ref, key) =>
+          ref.watch(chatRepositoryProvider).members(key.accountId, key.chatGid),
+    );
+
 /// Which composer: the chat's own, or the one in its open reply thread.
 typedef ChatComposerKey = ({ChatThreadKey chat, bool inThread});
 
@@ -181,11 +273,21 @@ final chatUploadProgressProvider = StreamProvider.autoDispose
 
 /// Preview frame of a video message.
 final chatVideoThumbnailProvider = FutureProvider.autoDispose
-    .family<Result<Uint8List>, ({String accountId, MessageContent video})>(
-      (ref, key) => ref
+    .family<Result<Uint8List>, ({String accountId, MessageContent video})>((
+      ref,
+      key,
+    ) {
+      // Re-made once a video too big to preview is downloaded on request.
+      ref.watch(
+        chatAttachmentCachedProvider((
+          accountId: key.accountId,
+          content: key.video,
+        )),
+      );
+      return ref
           .watch(chatControllerProvider)
-          .videoThumbnail(key.accountId, key.video),
-    );
+          .videoThumbnail(key.accountId, key.video);
+    });
 
 /// Member count of a chat (header subtitle); refetched when the chat opens.
 final chatMemberCountProvider = FutureProvider.autoDispose

@@ -7,10 +7,13 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer.dart';
+import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'chat_thread_header.dart';
 import 'message_list.dart';
+import 'pinned_message_bar.dart';
+import 'pinned_messages_panel.dart';
 import 'reply_thread_panel.dart';
 
 /// Right pane: one open chat. Pulls the newest page and marks the chat read
@@ -53,12 +56,16 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
         ref.watch(chatUsersProvider(t.accountId)).asData?.value ??
         const <int, ChatUser>{};
     final openThread = ref.watch(openReplyThreadProvider(t));
+    final sidePanel = ref.watch(chatSidePanelProvider(t));
+    final pinned = chat?.pinnedMessageIds ?? const <int>[];
     return Row(
       children: [
         Expanded(
           child: Column(
             children: [
               ChatThreadHeader(thread: t, chat: chat, users: users),
+              if (pinned.isNotEmpty)
+                PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
               Expanded(
                 child: MessageList(
                   thread: t,
@@ -81,7 +88,21 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
             key: ValueKey('thread-$openThread'),
             chat: t,
             rootId: openThread,
-          ),
+          )
+        else if (chat != null)
+          switch (sidePanel) {
+            ChatSidePanel.info => ChatInfoPanel(
+              thread: t,
+              chat: chat,
+              users: users,
+            ),
+            ChatSidePanel.pinned => PinnedMessagesPanel(
+              thread: t,
+              chat: chat,
+              users: users,
+            ),
+            null => const SizedBox.shrink(),
+          },
       ],
     );
   }

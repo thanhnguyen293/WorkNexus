@@ -33,6 +33,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.skeleton,
     required this.skeletonHighlight,
     required this.scrim,
+    required this.onScrim,
     required this.onColorInk,
     required this.workspaceFallback,
   });
@@ -62,6 +63,7 @@ class AppColors extends ThemeExtension<AppColors> {
     skeleton: p.skel,
     skeletonHighlight: p.skel2,
     scrim: p.scrim,
+    onScrim: p.onScrim,
     onColorInk: p.onColorInk,
     workspaceFallback: p.workspaceFallback,
   );
@@ -102,6 +104,7 @@ class AppColors extends ThemeExtension<AppColors> {
 
   // ---- Utility ----
   final Color scrim; // modal / overlay scrim + shadow (black)
+  final Color onScrim; // text/icons over a scrim
   final Color onColorInk; // near-black text/icon on a saturated colored fill
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
@@ -143,6 +146,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? skeleton,
     Color? skeletonHighlight,
     Color? scrim,
+    Color? onScrim,
     Color? onColorInk,
     Color? workspaceFallback,
   }) {
@@ -170,6 +174,7 @@ class AppColors extends ThemeExtension<AppColors> {
       skeleton: skeleton ?? this.skeleton,
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
       scrim: scrim ?? this.scrim,
+      onScrim: onScrim ?? this.onScrim,
       onColorInk: onColorInk ?? this.onColorInk,
       workspaceFallback: workspaceFallback ?? this.workspaceFallback,
     );
@@ -203,6 +208,7 @@ class AppColors extends ThemeExtension<AppColors> {
       skeleton: c(skeleton, other.skeleton),
       skeletonHighlight: c(skeletonHighlight, other.skeletonHighlight),
       scrim: c(scrim, other.scrim),
+      onScrim: c(onScrim, other.onScrim),
       onColorInk: c(onColorInk, other.onColorInk),
       workspaceFallback: c(workspaceFallback, other.workspaceFallback),
     );

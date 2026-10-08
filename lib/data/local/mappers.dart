@@ -225,6 +225,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
     ChatAppearance.worknexus,
   ),
   chatSendMarkdown: r.chatSendMarkdown,
+  chatNotifications: r.chatNotifications,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -246,6 +247,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   sidebarWidth: Value(s.sidebarWidth),
   chatAppearance: Value(s.chatAppearance.name),
   chatSendMarkdown: Value(s.chatSendMarkdown),
+  chatNotifications: Value(s.chatNotifications),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

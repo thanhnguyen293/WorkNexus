@@ -7,6 +7,7 @@ import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/board/presentation/board_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
 import 'resizable_sidebar.dart';
@@ -24,32 +25,34 @@ class AppShell extends ConsumerWidget {
     final integrationsVisible = ref.watch(integrationsVisibleProvider);
     final chatOpen = ref.watch(chatOpenProvider);
 
-    return Scaffold(
-      backgroundColor: c.background,
-      body: Column(
-        children: [
-          TitleBar(assignedCount: assigned),
-          Expanded(
-            child: Stack(
-              children: [
-                Row(
-                  children: [
-                    const ResizableSidebar(),
-                    Expanded(
-                      child: integrationsVisible
-                          ? const SettingsPage()
-                          : chatOpen
-                          ? const ChatPage()
-                          : const BoardPage(),
-                    ),
-                  ],
-                ),
-                const DetailOverlay(),
-                const TalkerDebugOverlay(),
-              ],
+    return ChatNotificationListener(
+      child: Scaffold(
+        backgroundColor: c.background,
+        body: Column(
+          children: [
+            TitleBar(assignedCount: assigned),
+            Expanded(
+              child: Stack(
+                children: [
+                  Row(
+                    children: [
+                      const ResizableSidebar(),
+                      Expanded(
+                        child: integrationsVisible
+                            ? const SettingsPage()
+                            : chatOpen
+                            ? const ChatPage()
+                            : const BoardPage(),
+                      ),
+                    ],
+                  ),
+                  const DetailOverlay(),
+                  const TalkerDebugOverlay(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -42,6 +42,7 @@ import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
 import '../platform/credential_store.dart';
+import '../platform/desktop_notifier.dart';
 import 'service_locator.config.dart';
 
 /// The application's service locator (get_it), populated by injectable.
@@ -73,6 +74,9 @@ abstract class ServiceModule {
 
   @lazySingleton
   CredentialStore get credentialStore => CredentialStore();
+
+  @lazySingleton
+  DesktopNotifier get desktopNotifier => DesktopNotifier();
 
   @lazySingleton
   ConnectionRepository connectionRepository(AppDatabase db) =>

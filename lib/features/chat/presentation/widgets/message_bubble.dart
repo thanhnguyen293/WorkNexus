@@ -15,6 +15,7 @@ import 'chat_avatar.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_style.dart';
+import 'chat_user_profile_dialog.dart';
 import 'message_actions.dart';
 import 'message_body.dart';
 import 'message_footer.dart';
@@ -85,10 +86,14 @@ class MessageBubble extends ConsumerWidget {
         ? AppL10n.of(context).chatYou
         : chatUserName(context, users, message.senderId);
     final showName = !mine && showSender && firstOfRun;
-    final nameText = Text(
-      name,
-      style: context.typography.captionStrong.copyWith(
-        color: style.nameColor(message.senderId),
+    final nameText = ChatProfileTap(
+      accountId: chat.accountId,
+      userId: message.senderId,
+      child: Text(
+        name,
+        style: context.typography.captionStrong.copyWith(
+          color: style.nameColor(message.senderId),
+        ),
       ),
     );
     final showFooter = switch (style.time) {
@@ -130,15 +135,27 @@ class MessageBubble extends ConsumerWidget {
           BubbleTailKind.triangleTop => true,
         };
 
+    // Styles with tails keep the tail's width free on every message, tailed
+    // or not, so bubbles, media and outside quotes share one edge.
+    final gutter = style.tail == null
+        ? EdgeInsets.zero
+        : EdgeInsets.only(
+            left: mine ? 0 : BubbleTail.width,
+            right: mine ? BubbleTail.width : 0,
+          );
+
     final Widget bubble;
     if (media) {
-      bubble = ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _kMaxMediaWidth),
-        child: Column(
-          crossAxisAlignment: mine
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [body, ?footer],
+      bubble = Padding(
+        padding: gutter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _kMaxMediaWidth),
+          child: Column(
+            crossAxisAlignment: mine
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [body, ?footer],
+          ),
         ),
       );
     } else {
@@ -181,7 +198,7 @@ class MessageBubble extends ConsumerWidget {
                 mine: mine,
                 child: box,
               )
-            : box,
+            : Padding(padding: gutter, child: box),
       );
     }
 
@@ -196,10 +213,10 @@ class MessageBubble extends ConsumerWidget {
             child: nameText,
           ),
         if (style.quote == ChatQuotePlacement.above && quote != null)
-          Opacity(
-            opacity: 0.7,
+          ChatBubbleTheme(
+            ink: style.outsideQuoteInk(),
             child: Padding(
-              padding: EdgeInsets.only(bottom: s.xs),
+              padding: gutter.copyWith(bottom: s.xs),
               child: quote,
             ),
           ),
@@ -209,9 +226,12 @@ class MessageBubble extends ConsumerWidget {
           child: ChatBubbleTheme(ink: ink, child: bubble),
         ),
         if (style.quote == ChatQuotePlacement.below && quote != null)
-          Padding(
-            padding: EdgeInsets.only(top: s.xs),
-            child: quote,
+          ChatBubbleTheme(
+            ink: style.outsideQuoteInk(),
+            child: Padding(
+              padding: gutter.copyWith(top: s.xs),
+              child: quote,
+            ),
           ),
         if (thread case final summary? when message.serverId != null)
           Padding(
@@ -235,11 +255,15 @@ class MessageBubble extends ConsumerWidget {
     final slot = SizedBox(
       width: style.avatarSize,
       child: avatarVisible
-          ? ChatAvatar(
-              name: name,
-              imageUrl: chatAvatarUrl(users, message.senderId),
-              shape: style.avatarShape,
-              diameter: style.avatarSize,
+          ? ChatProfileTap(
+              accountId: chat.accountId,
+              userId: message.senderId,
+              child: ChatAvatar(
+                name: name,
+                imageUrl: chatAvatarUrl(users, message.senderId),
+                shape: style.avatarShape,
+                diameter: style.avatarSize,
+              ),
             )
           : null,
     );

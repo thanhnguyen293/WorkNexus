@@ -21,6 +21,10 @@ abstract class ChatRepository {
   /// Pins [fingerprint] for the account's chat server and reconnects.
   Future<Result<void>> trustCertificate(String accountId, String fingerprint);
 
+  /// Messages from other people as they arrive live (any account), after
+  /// they are stored. History syncs and your own messages are not included.
+  Stream<ChatMessage> watchIncoming();
+
   /// Conversations, most recently active first.
   Stream<List<ChatConversation>> watchConversations(String accountId);
 
@@ -99,6 +103,35 @@ abstract class ChatRepository {
 
   /// How many members a chat has (`chatGetMembers`).
   Future<Result<int>> memberCount(String accountId, String chatGid);
+
+  /// The signed-in user's id for [accountId] (null until logged in once).
+  Stream<int?> watchSelfUserId(String accountId);
+
+  /// The one-to-one chat with [userId], created on the server when it does
+  /// not exist yet; returns its gid.
+  Future<Result<String>> openDirectChat(String accountId, int userId);
+
+  /// Pins or unpins message [serverId] in [chatGid] (one-to-one chats, or
+  /// group owner/admins; the server checks).
+  Future<Result<void>> setMessagePinned(
+    String accountId,
+    String chatGid,
+    int serverId, {
+    required bool pinned,
+  });
+
+  /// Download progress (0–1) of an attachment's original file.
+  Stream<double> watchDownloadProgress(
+    String accountId,
+    MessageContent content,
+  );
+
+  /// Whether an attachment's original is already downloaded.
+  Future<bool> isAttachmentCached(String accountId, MessageContent content);
+
+  /// User ids of a group's members (unknown users are fetched in the
+  /// background and show up through [watchUsers]).
+  Future<Result<List<int>>> members(String accountId, String chatGid);
 
   /// Retracts (unsends) one of the account's own messages.
   Future<Result<void>> retract(String accountId, String messageGid);

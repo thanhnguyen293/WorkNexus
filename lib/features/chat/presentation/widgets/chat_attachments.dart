@@ -47,3 +47,16 @@ Future<List<ChatAttachment>?> readClipboardAttachments() async {
   }
   return null;
 }
+
+/// Asks where to save a downloaded attachment ([sourcePath]) and copies it
+/// there. Returns false when the user cancelled.
+Future<bool> saveAttachmentAs(String sourcePath, String suggestedName) async {
+  final target = await getSaveLocation(suggestedName: suggestedName);
+  if (target == null) return false;
+  await File(sourcePath).copy(target.path);
+  return true;
+}
+
+/// Puts an image on the clipboard.
+Future<void> copyImageToClipboard(Uint8List bytes) =>
+    Pasteboard.writeImage(bytes);

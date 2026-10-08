@@ -90,6 +90,8 @@ dependencies:
   # video_player backend for Windows/Linux, where the official plugin has no
   # implementation (registered in main.dart; macOS keeps AVFoundation).
   fvp: 0.39.0
+  # Desktop notifications for new chat messages (macOS, Windows, Linux).
+  flutter_local_notifications: 22.3.1
 
 dev_dependencies:
   flutter_test:
