@@ -94,14 +94,17 @@ class GitLabProjectRow extends ConsumerWidget {
   /// project, resets to Merge Requests, and switches to the GitLab view mode.
   void _select(WidgetRef ref) {
     ref.read(settingsOpenProvider.notifier).state = false;
-    // Drop any filters from the previous board (e.g. the ZenTao "my tickets"
-    // assignee), which don't apply to GitLab and would empty the board.
-    ref.read(filterStateProvider.notifier).clearAll();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedGitLabProjectProvider.notifier).select(project);
     ref.read(gitlabKindProvider.notifier).set(GitLabItemKind.mergeRequest);
     ref.read(viewModeProvider.notifier).set(ViewMode.gitlab);
+    // This board's own filter, or none on a first visit — the previous board's
+    // filters (e.g. a ZenTao "my tickets" assignee) don't apply here and would
+    // empty the board.
+    ref
+        .read(filterStateProvider.notifier)
+        .openBoard(ref.read(boardKeyProvider));
   }
 }

@@ -11,6 +11,7 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
+import 'package:work_nexus/features/connections/presentation/settings_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 import '../support/di_test_harness.dart';
@@ -327,7 +328,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final container = ProviderContainer();
+    // Stub the model list: the real provider shells out to the `opencode` CLI,
+    // which a widget test must never do (and would never settle).
+    final container = ProviderContainer(
+      overrides: [
+        openCodeModelsProvider.overrideWith((ref) async => const <String>[]),
+      ],
+    );
     addTearDown(container.dispose);
     await tester.pumpWidget(
       UncontrolledProviderScope(

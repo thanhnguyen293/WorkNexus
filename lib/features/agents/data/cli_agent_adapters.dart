@@ -78,26 +78,6 @@ class AgentRunner {
     return null;
   }
 
-  /// Whether OpenCode has at least one authenticated provider
-  /// (`opencode auth list`). Used to gate translation so we don't run a headless
-  /// prompt against an unauthenticated CLI.
-  Future<bool> hasOpenCodeAuth({String? override}) async {
-    final path = await resolve('opencode', override: override);
-    if (path == null) return false;
-    try {
-      final res = await Process.run(path, [
-        'auth',
-        'list',
-      ], runInShell: needsShell);
-      final out = '${res.stdout}${res.stderr}';
-      final m = RegExp(r'(\d+)\s+credential').firstMatch(out);
-      if (m != null) return (int.tryParse(m.group(1)!) ?? 0) > 0;
-      return out.contains('●'); // fallback: a provider bullet is present
-    } catch (_) {
-      return false;
-    }
-  }
-
   Future<Process> start(
     String executable,
     List<String> args, {
