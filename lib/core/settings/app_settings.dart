@@ -55,7 +55,7 @@ class AppSettings {
     this.pinnedProjects = const <String>{},
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
-    this.chatAppearance = ChatAppearance.worknexus,
+    this.chatAppearance = ChatAppearance.zalo,
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
     this.chatCacheLimitMb = 2048,
