@@ -36,6 +36,7 @@ class MessageBubble extends ConsumerWidget {
     required this.message,
     required this.users,
     required this.onOpenThread,
+    required this.onReply,
     this.firstOfRun = true,
     this.lastOfRun = true,
     this.showSender = true,
@@ -56,6 +57,9 @@ class MessageBubble extends ConsumerWidget {
   final ThreadSummary? thread;
   final bool showQuote;
   final void Function(int messageId) onOpenThread;
+
+  /// Starts a reply to this message in the composer.
+  final void Function(ChatMessage message) onReply;
 
   bool get _hasQuote =>
       showQuote && message.replyToId != null && !message.deleted;
@@ -171,7 +175,7 @@ class MessageBubble extends ConsumerWidget {
       bubble = ConstrainedBox(
         constraints: BoxConstraints(maxWidth: style.maxWidth),
         child: tailed
-            ? _WithTail(
+            ? BubbleWithTail(
                 kind: style.tail!,
                 color: style.bubbleFill(mine: mine),
                 mine: mine,
@@ -201,7 +205,7 @@ class MessageBubble extends ConsumerWidget {
           ),
         MessageHoverActions(
           alignEnd: mine,
-          actions: messageActions(context, ref, message, onOpenThread),
+          actions: messageActions(context, ref, message, onReply),
           child: ChatBubbleTheme(ink: ink, child: bubble),
         ),
         if (style.quote == ChatQuotePlacement.below && quote != null)
@@ -253,47 +257,6 @@ class MessageBubble extends ConsumerWidget {
           if (hasSlot && !mine) ...[slot, SizedBox(width: s.md)],
           Flexible(child: column),
           if (hasSlot && mine) ...[SizedBox(width: s.md), slot],
-        ],
-      ),
-    );
-  }
-}
-
-/// A bubble with its tail drawn just outside the avatar-side edge.
-class _WithTail extends StatelessWidget {
-  const _WithTail({
-    required this.kind,
-    required this.color,
-    required this.mine,
-    required this.child,
-  });
-
-  final BubbleTailKind kind;
-  final Color color;
-  final bool mine;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final tail = BubbleTail(kind: kind, color: color, pointsLeft: !mine);
-    final top = kind == BubbleTailKind.triangleTop;
-    return Padding(
-      // Room for the tail so it is not clipped by the row.
-      padding: EdgeInsets.only(
-        left: mine ? 0 : BubbleTail.width,
-        right: mine ? BubbleTail.width : 0,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child,
-          Positioned(
-            left: mine ? null : -BubbleTail.width,
-            right: mine ? -BubbleTail.width : null,
-            top: top ? 8 : null,
-            bottom: top ? null : 0,
-            child: tail,
-          ),
         ],
       ),
     );

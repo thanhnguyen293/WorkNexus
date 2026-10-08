@@ -165,6 +165,14 @@ final openReplyThreadProvider = StateProvider.family<int?, ChatThreadKey>(
   (ref, key) => null,
 );
 
+/// Which composer: the chat's own, or the one in its open reply thread.
+typedef ChatComposerKey = ({ChatThreadKey chat, bool inThread});
+
+/// The message a composer is replying to (null = not replying), shown above
+/// its input until the reply is sent or cancelled.
+final chatReplyDraftProvider =
+    StateProvider.family<ChatMessage?, ChatComposerKey>((ref, key) => null);
+
 /// Upload progress (0–1) of a pending file message, by message gid.
 final chatUploadProgressProvider = StreamProvider.autoDispose
     .family<double, String>(

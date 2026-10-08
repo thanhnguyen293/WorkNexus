@@ -13,20 +13,23 @@ import '../providers/chat_providers.dart';
 import 'attachment_preview_dialog.dart';
 import 'chat_attachments.dart';
 import 'chat_snack.dart';
+import 'reply_draft_banner.dart';
 
 /// Message input: Enter sends, Shift+Enter inserts a new line. Pasting files
 /// or an image (Cmd/Ctrl+V) sends them as attachments; the clip button picks
-/// files. With [replyToId] everything is sent as a reply in that thread.
+/// files. A message picked with "reply" is shown above the input and the
+/// next send answers it; inside a reply thread ([threadRootId]) sends answer
+/// the thread's root unless another message is picked.
 class ChatComposer extends ConsumerStatefulWidget {
   const ChatComposer({
     super.key,
     required this.thread,
-    this.replyToId,
+    this.threadRootId,
     this.hint,
   });
 
   final ChatThreadKey thread;
-  final int? replyToId;
+  final int? threadRootId;
   final String? hint;
 
   @override
@@ -36,6 +39,17 @@ class ChatComposer extends ConsumerStatefulWidget {
 class _ChatComposerState extends ConsumerState<ChatComposer> {
   final _text = TextEditingController();
   late final _focus = FocusNode(onKeyEvent: _onKey);
+
+  ChatComposerKey get _draftKey =>
+      (chat: widget.thread, inThread: widget.threadRootId != null);
+
+  /// What the next send replies to: the picked message, else the thread root.
+  int? get _replyToId =>
+      ref.read(chatReplyDraftProvider(_draftKey))?.serverId ??
+      widget.threadRootId;
+
+  void _cancelReply() =>
+      ref.read(chatReplyDraftProvider(_draftKey).notifier).state = null;
 
   @override
   void dispose() {
@@ -52,6 +66,11 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
             key == LogicalKeyboardKey.numpadEnter) &&
         !keys.isShiftPressed) {
       _send();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape &&
+        ref.read(chatReplyDraftProvider(_draftKey)) != null) {
+      _cancelReply();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyV &&
@@ -98,13 +117,15 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   Future<void> _sendFiles(List<ChatAttachment> files) async {
     final t = widget.thread;
     final controller = ref.read(chatControllerProvider);
+    final replyToId = _replyToId;
+    _cancelReply();
     for (final f in files) {
       final result = await controller.sendFile(
         t.accountId,
         t.chatGid,
         name: f.name,
         bytes: f.bytes,
-        replyToId: widget.replyToId,
+        replyToId: replyToId,
       );
       if (result case Err(:final failure)) {
         if (mounted) showChatFailure(context, failure);
@@ -116,6 +137,8 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     final text = _text.text;
     if (text.trim().isEmpty) return;
     _text.clear();
+    final replyToId = _replyToId;
+    _cancelReply();
     final t = widget.thread;
     final result = await ref
         .read(chatControllerProvider)
@@ -123,7 +146,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
           t.accountId,
           t.chatGid,
           text,
-          replyToId: widget.replyToId,
+          replyToId: replyToId,
           markdown: ref.read(appSettingsProvider).chatSendMarkdown,
         );
     if (result case Err(:final failure)) {
@@ -137,6 +160,10 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     final l = AppL10n.of(context);
     final s = context.spacing;
     final tool = c.textSecondary;
+    ref.listen(chatReplyDraftProvider(_draftKey), (_, next) {
+      if (next != null) _focus.requestFocus();
+    });
+    final draft = ref.watch(chatReplyDraftProvider(_draftKey));
     return Container(
       padding: EdgeInsets.fromLTRB(s.xl4, s.md, s.xl4, s.xl3),
       color: c.background,
@@ -147,68 +174,84 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
           border: Border.all(color: c.border),
           borderRadius: BorderRadius.circular(context.radii.xl),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              tooltip: l.chatSendImage,
-              onPressed: () => _pick(imagesOnly: true),
-              icon: Icon(Icons.image_outlined, color: tool),
-            ),
-            IconButton(
-              tooltip: l.chatAttach,
-              onPressed: _pick,
-              icon: Icon(Icons.attach_file_rounded, color: tool),
-            ),
-            const _MarkdownToggle(),
-            SizedBox(width: s.xs),
-            Expanded(
-              child: TextField(
-                controller: _text,
-                focusNode: _focus,
-                autofocus: widget.replyToId == null,
-                minLines: 1,
-                maxLines: 8,
-                keyboardType: TextInputType.multiline,
-                style: context.typography.body.copyWith(color: c.textPrimary),
-                decoration: InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  hintText: widget.hint ?? l.chatComposerHint,
-                  hintStyle: context.typography.body.copyWith(
-                    color: c.textTertiary,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(vertical: s.lg),
-                ),
+            if (draft != null)
+              ReplyDraftBanner(
+                message: draft,
+                accountId: widget.thread.accountId,
+                onCancel: () {
+                  _cancelReply();
+                  _focus.requestFocus();
+                },
               ),
-            ),
-            ValueListenableBuilder(
-              valueListenable: _text,
-              builder: (context, value, _) {
-                final ready = value.text.trim().isNotEmpty;
-                return Padding(
-                  padding: EdgeInsets.all(s.xs),
-                  child: Tooltip(
-                    message: l.chatComposerHint,
-                    child: Material(
-                      color: ready ? c.accent : c.surfaceSubtle,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: ready ? _send : null,
-                        child: Padding(
-                          padding: EdgeInsets.all(s.md),
-                          child: Icon(
-                            Icons.arrow_upward_rounded,
-                            size: s.xl4,
-                            color: ready ? c.onAccent : c.textTertiary,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                IconButton(
+                  tooltip: l.chatSendImage,
+                  onPressed: () => _pick(imagesOnly: true),
+                  icon: Icon(Icons.image_outlined, color: tool),
+                ),
+                IconButton(
+                  tooltip: l.chatAttach,
+                  onPressed: _pick,
+                  icon: Icon(Icons.attach_file_rounded, color: tool),
+                ),
+                const _MarkdownToggle(),
+                SizedBox(width: s.xs),
+                Expanded(
+                  child: TextField(
+                    controller: _text,
+                    focusNode: _focus,
+                    autofocus: widget.threadRootId == null,
+                    minLines: 1,
+                    maxLines: 8,
+                    keyboardType: TextInputType.multiline,
+                    style: context.typography.body.copyWith(
+                      color: c.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      hintText: widget.hint ?? l.chatComposerHint,
+                      hintStyle: context.typography.body.copyWith(
+                        color: c.textTertiary,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: s.lg),
+                    ),
+                  ),
+                ),
+                ValueListenableBuilder(
+                  valueListenable: _text,
+                  builder: (context, value, _) {
+                    final ready = value.text.trim().isNotEmpty;
+                    return Padding(
+                      padding: EdgeInsets.all(s.xs),
+                      child: Tooltip(
+                        message: l.chatComposerHint,
+                        child: Material(
+                          color: ready ? c.accent : c.surfaceSubtle,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: ready ? _send : null,
+                            child: Padding(
+                              padding: EdgeInsets.all(s.md),
+                              child: Icon(
+                                Icons.arrow_upward_rounded,
+                                size: s.xl4,
+                                color: ready ? c.onAccent : c.textTertiary,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

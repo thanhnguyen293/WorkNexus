@@ -463,6 +463,8 @@
   "chatCloseThread": "Close thread",
   "chatReplyHint": "Reply in thread",
   "chatReplyMissing": "Original message not loaded",
+  "chatReplyingTo": "Replying to",
+  "chatCancelReply": "Cancel reply",
   "chatAttach": "Attach files",
   "chatUploading": "Uploading…",
   "chatCopy": "Copy text",
