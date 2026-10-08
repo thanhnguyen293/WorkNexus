@@ -24,8 +24,8 @@ final openTicketIdProvider = NotifierProvider<OpenTicketController, String?>(
 final settingsOpenProvider = StateProvider<bool>((ref) => false);
 
 /// Whether the ZenTao chat view replaces the board (settings still wins when
-/// both are open).
-final chatOpenProvider = StateProvider<bool>((ref) => false);
+/// both are open). The app opens on chat.
+final chatOpenProvider = StateProvider<bool>((ref) => true);
 
 /// Shows the board: closes the settings and chat views. Call from anything
 /// that selects a board (sidebar rows).

@@ -10,6 +10,7 @@ import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
+import 'app_nav_rail.dart';
 import 'resizable_sidebar.dart';
 import 'title_bar.dart';
 
@@ -36,7 +37,10 @@ class AppShell extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const ResizableSidebar(),
+                      const AppNavRail(),
+                      // The workspace tree belongs to the board only.
+                      if (!integrationsVisible && !chatOpen)
+                        const ResizableSidebar(),
                       Expanded(
                         child: integrationsVisible
                             ? const SettingsPage()
