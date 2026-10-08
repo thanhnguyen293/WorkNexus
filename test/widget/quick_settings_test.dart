@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,6 +203,34 @@ void main() {
       find.byKey(const ValueKey<String>('quick-settings-panel')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('nested tooltip inside the popover lays out without errors', (
+    tester,
+  ) async {
+    await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    // Hovering the font picker shows its Tooltip — an OverlayPortal nested in
+    // the popover's overlay child, which needs the popover's paint transform
+    // during layout.
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.text('Be Vietnam Pro')));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(Tooltip), findsWidgets);
+
+    final trigger = tester.getRect(
+      find.byKey(const ValueKey<String>('quick-settings-trigger')),
+    );
+    final panel = tester.getRect(
+      find.byKey(const ValueKey<String>('quick-settings-panel')),
+    );
+    expect(panel.right, moreOrLessEquals(trigger.right));
+    expect(panel.top, moreOrLessEquals(trigger.bottom + 4));
   });
 
   testWidgets('System menu item previews the platform font', (tester) async {
