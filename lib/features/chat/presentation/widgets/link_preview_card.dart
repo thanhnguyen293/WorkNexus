@@ -89,9 +89,7 @@ class _Lines extends StatelessWidget {
         Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
     final site = context.typography.captionStrong.copyWith(color: ink.link);
     final title = context.typography.bodyStrong.copyWith(color: ink.text);
-    final body = context.typography.bodySm.copyWith(
-      color: ink.text.withValues(alpha: 0.75),
-    );
+    final body = context.typography.bodySm.copyWith(color: ink.text);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
