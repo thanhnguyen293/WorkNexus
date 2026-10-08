@@ -20,7 +20,6 @@ class QuickSettingsButton extends ConsumerStatefulWidget {
 
 class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
   final _controller = OverlayPortalController();
-  final _layerLink = LayerLink();
   final _triggerFocusNode = FocusNode();
   final _panelFocusNode = FocusNode();
   DateTime? _firstTapAt;
@@ -86,35 +85,6 @@ class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
     return KeyEventResult.ignored;
   }
 
-  double _panelMaxHeight(BuildContext context) {
-    final renderObject = _triggerFocusNode.context?.findRenderObject();
-    final trigger = renderObject is RenderBox ? renderObject : null;
-    if (trigger == null) {
-      return 0;
-    }
-
-    final triggerBottom =
-        trigger.localToGlobal(Offset.zero).dy + trigger.size.height;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final followerOffset = context.spacing.xs;
-    final bottomSpacing = context.spacing.xs;
-    final remainingHeight =
-        MediaQuery.sizeOf(context).height -
-        triggerBottom -
-        followerOffset -
-        bottomInset -
-        bottomSpacing;
-
-    return remainingHeight.clamp(0, context.spacing.xl6 * 12.5);
-  }
-
-  double _barrierTop() {
-    final renderObject = _triggerFocusNode.context?.findRenderObject();
-    final trigger = renderObject is RenderBox ? renderObject : null;
-    if (trigger == null) return 0;
-    return trigger.localToGlobal(Offset.zero).dy + trigger.size.height;
-  }
-
   @override
   void dispose() {
     _triggerFocusNode.dispose();
@@ -126,63 +96,98 @@ class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
   Widget build(BuildContext context) {
     final c = Theme.of(context).extension<AppColors>()!;
     final triggerSize = context.spacing.xl5 + context.spacing.xs;
-    return OverlayPortal(
+    // Positioned from the trigger's layout-time rect rather than a
+    // CompositedTransformFollower: nested overlays inside the panel (tooltips,
+    // popup menus) need a paint transform during layout, which a follower only
+    // establishes at compositing time.
+    return OverlayPortal.overlayChildLayoutBuilder(
       controller: _controller,
-      overlayChildBuilder: (context) => Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            top: _barrierTop(),
-            child: ModalBarrier(onDismiss: _hideAndRestoreFocus),
-          ),
-          Positioned(
-            left: context.spacing.none,
-            top: context.spacing.none,
-            child: CompositedTransformFollower(
-              link: _layerLink,
-              targetAnchor: Alignment.bottomRight,
-              followerAnchor: Alignment.topRight,
-              offset: Offset(context.spacing.none, context.spacing.xs),
-              child: Focus(
-                focusNode: _panelFocusNode,
-                onKeyEvent: _handlePanelKeyEvent,
-                child: const QuickSettingsPanel(),
-              ),
-            ),
-          ),
-        ],
+      overlayChildBuilder: (context, info) => _QuickSettingsOverlay(
+        anchor: MatrixUtils.transformRect(
+          info.childPaintTransform,
+          Offset.zero & info.childSize,
+        ),
+        overlaySize: info.overlaySize,
+        onDismiss: _hideAndRestoreFocus,
+        child: Focus(
+          focusNode: _panelFocusNode,
+          onKeyEvent: _handlePanelKeyEvent,
+          child: const QuickSettingsPanel(),
+        ),
       ),
-      child: CompositedTransformTarget(
-        link: _layerLink,
-        child: SizedBox.square(
-          key: const ValueKey<String>('quick-settings-trigger'),
-          dimension: triggerSize,
-          child: Tooltip(
-            message: AppL10n.of(context).quickSettings,
-            child: Semantics(
-              button: true,
-              label: AppL10n.of(context).quickSettings,
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: _isOpen ? c.selectionFill : null,
-                  borderRadius: BorderRadius.circular(context.radii.sm),
-                ),
-                child: InkWell(
-                  focusNode: _triggerFocusNode,
-                  onTap: _handleTriggerTap,
-                  hoverColor: c.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(context.radii.sm),
-                  child: Icon(
-                    Icons.settings_outlined,
-                    size: context.spacing.xl3,
-                    color: _isOpen ? c.accent : c.textTertiary,
-                  ),
+      child: SizedBox.square(
+        key: const ValueKey<String>('quick-settings-trigger'),
+        dimension: triggerSize,
+        child: Tooltip(
+          message: AppL10n.of(context).quickSettings,
+          child: Semantics(
+            button: true,
+            label: AppL10n.of(context).quickSettings,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: _isOpen ? c.selectionFill : null,
+                borderRadius: BorderRadius.circular(context.radii.sm),
+              ),
+              child: InkWell(
+                focusNode: _triggerFocusNode,
+                onTap: _handleTriggerTap,
+                hoverColor: c.surfaceSubtle,
+                borderRadius: BorderRadius.circular(context.radii.sm),
+                child: Icon(
+                  Icons.settings_outlined,
+                  size: context.spacing.xl3,
+                  color: _isOpen ? c.accent : c.textTertiary,
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Dismiss barrier below the title bar plus the panel, right-aligned under
+/// [anchor] and capped to the space left above the bottom edge.
+class _QuickSettingsOverlay extends StatelessWidget {
+  const _QuickSettingsOverlay({
+    required this.anchor,
+    required this.overlaySize,
+    required this.onDismiss,
+    required this.child,
+  });
+
+  final Rect anchor;
+  final Size overlaySize;
+  final VoidCallback onDismiss;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final gap = context.spacing.xs;
+    final top = anchor.bottom + gap;
+    final maxHeight =
+        (overlaySize.height -
+                top -
+                MediaQuery.paddingOf(context).bottom -
+                context.spacing.xs)
+            .clamp(context.spacing.none, context.spacing.xl6 * 12.5);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          top: anchor.bottom,
+          child: ModalBarrier(onDismiss: onDismiss),
+        ),
+        Positioned(
+          top: top,
+          right: overlaySize.width - anchor.right,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: child,
+          ),
+        ),
+      ],
     );
   }
 }
