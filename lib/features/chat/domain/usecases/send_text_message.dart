@@ -1,9 +1,11 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../repositories/chat_repository.dart';
+import 'encode_emoji.dart';
 
 /// Sends a text message, optionally as a reply in a thread. Surrounding whitespace is trimmed; a blank message is
-/// rejected rather than sent.
+/// rejected rather than sent. Emoji are encoded so the server keeps them
+/// (see [EncodeEmoji]).
 class SendTextMessage {
   const SendTextMessage(this._repository);
 
@@ -23,7 +25,7 @@ class SendTextMessage {
     return _repository.sendText(
       accountId,
       chatGid,
-      trimmed,
+      const EncodeEmoji()(trimmed),
       replyToId: replyToId,
       markdown: markdown,
     );

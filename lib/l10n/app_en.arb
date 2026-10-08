@@ -439,6 +439,7 @@
   "chatChangeMyAvatarHint": "Opens your ZenTao profile in the browser",
   "chatSendLike": "Send a like",
   "chatMention": "Mention someone",
+  "chatEmoji": "Emoji",
   "chatNewChat": "New chat",
   "chatSearchPeople": "Search people",
   "chatGroupName": "Group name",

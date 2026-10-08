@@ -18,11 +18,10 @@ import 'chat_snack.dart';
 import 'mention_autocomplete.dart';
 import 'reply_draft_banner.dart';
 
-/// Message input: Enter sends, Shift+Enter inserts a new line. Pasting files
-/// or an image (Cmd/Ctrl+V) sends them as attachments; the clip button picks
-/// files. A message picked with "reply" is shown above the input and the
-/// next send answers it; inside a reply thread ([threadRootId]) sends answer
-/// the thread's root unless another message is picked.
+/// Message input: Enter sends, Shift+Enter adds a line; pasted files or
+/// images are sent as attachments. A message picked with "reply" shows above
+/// the input and the next send answers it; in a reply thread
+/// ([threadRootId]) sends answer its root unless another message is picked.
 class ChatComposer extends ConsumerStatefulWidget {
   const ChatComposer({
     super.key,
@@ -233,6 +232,8 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
             onPickImage: () => _pick(imagesOnly: true),
             onAttach: _pick,
             onMention: _startMention,
+            text: _text,
+            focus: _focus,
           ),
           Divider(height: 1, thickness: 1, color: c.border),
           if (draft != null)

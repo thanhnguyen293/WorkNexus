@@ -7,17 +7,23 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'chat_emoji_picker.dart';
 
 /// The composer's tool row (above the input): send image, attach file,
-/// mention someone and the Markdown toggle.
+/// mention someone, emoji and the Markdown toggle.
 class ChatComposerTools extends StatelessWidget {
   const ChatComposerTools({
     super.key,
     required this.onPickImage,
     required this.onAttach,
     required this.onMention,
+    required this.text,
+    required this.focus,
   });
 
+  /// The input and its focus, for inserting emoji at the cursor.
+  final TextEditingController text;
+  final FocusNode focus;
   final VoidCallback onPickImage;
   final VoidCallback onAttach;
   final VoidCallback onMention;
@@ -45,6 +51,7 @@ class ChatComposerTools extends StatelessWidget {
             tooltip: l.chatMention,
             onPressed: onMention,
           ),
+          ChatEmojiButton(text: text, focus: focus),
           const _MarkdownToggle(),
         ],
       ),
