@@ -203,17 +203,39 @@ class XxdChatRepository implements ChatRepository {
 
   // ---- ingest ------------------------------------------------------------------
 
+  final _incoming = StreamController<ChatMessage>.broadcast();
+
+  @override
+  Stream<ChatMessage> watchIncoming() => _incoming.stream;
+
   Future<void> _ingest(
     String accountId,
     ChatSession session,
     XxdResponse packet,
   ) async {
+    final self = session.selfUserId;
+    // Only a live push of a message not stored before is "new": the reply to
+    // our own send, re-deliveries and retract/edit pushes are not.
+    final fresh = <String>[];
+    if (packet.isSuccess && packet.apiName == 'messagesend') {
+      final data = packet.data;
+      for (final m in data is List ? data : [data]) {
+        if (m is! Map || m['gid'] is! String || m['deleted'] == true) continue;
+        final gid = m['gid']! as String;
+        if (await _local.message(accountId, gid) == null) fresh.add(gid);
+      }
+    }
     final followUp = await _ingestor.ingest(
       accountId,
       packet,
-      selfUserId: session.selfUserId,
+      selfUserId: self,
     );
     session.fetchMissing(followUp);
+    for (final gid in fresh) {
+      final row = await _local.message(accountId, gid);
+      if (row == null || row.senderId == self) continue;
+      _incoming.add(messageFromRow(row, selfUserId: self, parse: _parse));
+    }
   }
 
   // ---- reads -------------------------------------------------------------------
@@ -380,7 +402,8 @@ class XxdChatRepository implements ChatRepository {
   ) => _attachments.localFile(accountId, _sessions[accountId], content);
 
   /// Videos above this are not downloaded just to show a preview frame.
-  static const maxThumbnailSource = 50 * 1024 * 1024;
+  /// Bigger ones show their size and download on tap instead.
+  static const maxThumbnailSource = 20 * 1024 * 1024;
 
   @override
   Future<Result<Uint8List>> videoThumbnail(
@@ -388,7 +411,10 @@ class XxdChatRepository implements ChatRepository {
     MessageContent video,
   ) async {
     if (video case FileContent(:final size) when size > maxThumbnailSource) {
-      return const Err(NotFoundFailure('Video too large to preview'));
+      // Downloaded on request since: a frame can be made from the file.
+      if (!await _attachments.isCached(accountId, video)) {
+        return const Err(NotFoundFailure('Video too large to preview'));
+      }
     }
     // A frame made earlier outlives the video in the cache: no download.
     final cached = await _attachments.cachedPath(accountId, video);
@@ -409,20 +435,135 @@ class XxdChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<int>> memberCount(String accountId, String chatGid) async {
+  Future<Result<int>> memberCount(String accountId, String chatGid) async =>
+      switch (await members(accountId, chatGid)) {
+        Ok(:final value) => Ok(value.length),
+        Err(:final failure) => Err(failure),
+      };
+
+  @override
+  Stream<double> watchDownloadProgress(
+    String accountId,
+    MessageContent content,
+  ) => _attachments.watchProgress(accountId, content);
+
+  @override
+  Future<bool> isAttachmentCached(String accountId, MessageContent content) =>
+      _attachments.isCached(accountId, content);
+
+  @override
+  Stream<int?> watchSelfUserId(String accountId) =>
+      _local.watchSelfUserId(accountId);
+
+  @override
+  Future<Result<String>> openDirectChat(String accountId, int userId) async {
+    final session = _sessions[accountId];
+    final self = session?.selfUserId;
+    if (session == null || self == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    // The official client sorts the ids as strings ("40" < "9").
+    final gid = (['$self', '$userId']..sort()).join('&');
+    if (await _local.conversation(accountId, gid) != null) return Ok(gid);
+    final reply = await _requestAndStore(
+      accountId,
+      session,
+      XxdRequest(
+        'chatCreate',
+        params: [
+          gid,
+          '',
+          'one2one',
+          [self, userId],
+          0,
+          false,
+        ],
+      ),
+    );
+    return switch (reply) {
+      Ok() => Ok(gid),
+      Err(:final failure) => Err(failure),
+    };
+  }
+
+  @override
+  Future<Result<void>> setMessagePinned(
+    String accountId,
+    String chatGid,
+    int serverId, {
+    required bool pinned,
+  }) async {
+    final session = _sessions[accountId];
+    final self = session?.selfUserId;
+    if (session == null || self == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    return _requestAndStore(
+      accountId,
+      session,
+      XxdRequest(
+        pinned ? 'chatPinMessages' : 'chatUnpinMessages',
+        params: [
+          chatGid,
+          [serverId],
+          self,
+        ],
+      ),
+    );
+  }
+
+  /// Sends [request] and writes its reply to the DB like a pushed packet.
+  Future<Result<void>> _requestAndStore(
+    String accountId,
+    ChatSession session,
+    XxdRequest request,
+  ) async {
+    final reply = await session.connection.request(request);
+    switch (reply) {
+      case Ok(:final value):
+        if (!value.isSuccess) {
+          return Err(UnexpectedFailure(value.message ?? 'The server refused'));
+        }
+        await session.enqueue(() => _ingest(accountId, session, value));
+        return const Ok(null);
+      case Err(:final failure):
+        return Err(failure);
+    }
+  }
+
+  @override
+  Future<Result<List<int>>> members(String accountId, String chatGid) async {
     final session = _sessions[accountId];
     if (session == null) return const Err(NetworkFailure('Chat is offline'));
     final reply = await session.connection.request(
       XxdRequest('chatGetMembers', params: [chatGid]),
     );
-    return switch (reply) {
-      Ok(:final value) => switch (value.data) {
-        final List<Object?> members => Ok(members.length),
-        {'members': final List<Object?> members} => Ok(members.length),
-        _ => const Err(ParseFailure('Unexpected chat members reply')),
-      },
-      Err(:final failure) => Err(failure),
-    };
+    final Object? data;
+    switch (reply) {
+      case Ok(:final value):
+        data = value.data;
+      case Err(:final failure):
+        return Err(failure);
+    }
+    final raw = data is Map ? data['members'] : data;
+    if (raw is! List) {
+      return const Err(ParseFailure('Unexpected chat members reply'));
+    }
+    // Members come as ids or as user objects depending on the server.
+    final ids = <int>[
+      for (final m in raw)
+        if (m is num)
+          m.toInt()
+        else if (m is String && int.tryParse(m) != null)
+          int.parse(m)
+        else if (m is Map && m['id'] is num)
+          (m['id']! as num).toInt(),
+    ];
+    final known = await _local.knownUserIds(accountId);
+    session.fetchMissing(
+      IngestFollowUp(userIds: ids.toSet().difference(known)),
+    );
+    return Ok(ids);
   }
 
   @override

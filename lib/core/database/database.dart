@@ -116,6 +116,10 @@ class Settings extends Table {
   /// Whether chat messages are sent as Markdown.
   BoolColumn get chatSendMarkdown =>
       boolean().withDefault(const Constant(false))();
+
+  /// Whether new chat messages raise a desktop notification.
+  BoolColumn get chatNotifications =>
+      boolean().withDefault(const Constant(true))();
   IntColumn get accentColorValue => integer().nullable()();
 
   /// JSON array of pinned ZenTao project keys (`"accountId:productId"`), shown at
@@ -207,6 +211,16 @@ class ChatConversations extends Table {
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
+  /// Server ids of pinned messages, as a JSON array.
+  TextColumn get pinnedJson => text().withDefault(const Constant('[]'))();
+
+  /// User ids of the group's admins, as a JSON array.
+  TextColumn get adminsJson => text().withDefault(const Constant('[]'))();
+
+  /// Account of the group's owner, and when the chat was created.
+  TextColumn get ownedBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {accountId, gid};
 }
@@ -248,6 +262,12 @@ class ChatUsers extends Table {
   TextColumn get avatar => text().nullable()();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
 
+  /// Profile details shown in the chat info panel.
+  TextColumn get email => text().nullable()();
+  TextColumn get mobile => text().nullable()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get role => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {accountId, userId};
 }
@@ -280,7 +300,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -345,6 +365,37 @@ class AppDatabase extends _$AppDatabase {
         }
         if (!await _hasColumn('settings', 'chat_send_markdown')) {
           await m.addColumn(settings, settings.chatSendMarkdown);
+        }
+      }
+      if (from < 20) {
+        if (!await _hasColumn('settings', 'chat_notifications')) {
+          await m.addColumn(settings, settings.chatNotifications);
+        }
+      }
+      if (from < 21) {
+        for (final (column, add) in [
+          ('pinned_json', chatConversations.pinnedJson),
+          ('owned_by', chatConversations.ownedBy),
+          ('created_at', chatConversations.createdAt),
+        ]) {
+          if (!await _hasColumn('chat_conversations', column)) {
+            await m.addColumn(chatConversations, add);
+          }
+        }
+        for (final (column, add) in [
+          ('email', chatUsers.email),
+          ('mobile', chatUsers.mobile),
+          ('phone', chatUsers.phone),
+          ('role', chatUsers.role),
+        ]) {
+          if (!await _hasColumn('chat_users', column)) {
+            await m.addColumn(chatUsers, add);
+          }
+        }
+      }
+      if (from < 22) {
+        if (!await _hasColumn('chat_conversations', 'admins_json')) {
+          await m.addColumn(chatConversations, chatConversations.adminsJson);
         }
       }
     },

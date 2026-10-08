@@ -57,6 +57,7 @@ class AppSettings {
     this.sidebarWidth = kSidebarWidthDefault,
     this.chatAppearance = ChatAppearance.worknexus,
     this.chatSendMarkdown = false,
+    this.chatNotifications = true,
   });
 
   final AppThemeVariant variant;
@@ -111,6 +112,9 @@ class AppSettings {
   /// Send chat messages as Markdown (xxd `text`) instead of plain text.
   final bool chatSendMarkdown;
 
+  /// Show a desktop notification for new chat messages.
+  final bool chatNotifications;
+
   AppSettings copyWith({
     AppThemeVariant? variant,
     SurfaceStyle? surface,
@@ -128,6 +132,7 @@ class AppSettings {
     double? sidebarWidth,
     ChatAppearance? chatAppearance,
     bool? chatSendMarkdown,
+    bool? chatNotifications,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -148,6 +153,7 @@ class AppSettings {
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       chatAppearance: chatAppearance ?? this.chatAppearance,
       chatSendMarkdown: chatSendMarkdown ?? this.chatSendMarkdown,
+      chatNotifications: chatNotifications ?? this.chatNotifications,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -219,6 +225,8 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatAppearance: a));
   void setChatSendMarkdown(bool on) =>
       _set(state.copyWith(chatSendMarkdown: on));
+  void setChatNotifications(bool on) =>
+      _set(state.copyWith(chatNotifications: on));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));
 

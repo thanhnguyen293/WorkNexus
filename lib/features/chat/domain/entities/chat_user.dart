@@ -12,5 +12,9 @@ abstract class ChatUser with _$ChatUser {
     required String realname,
     String? avatarUrl,
     @Default(false) bool deleted,
+    String? email,
+    String? mobile,
+    String? phone,
+    String? role,
   }) = _ChatUser;
 }

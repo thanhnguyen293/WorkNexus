@@ -221,6 +221,59 @@ void main() {
     expect(messages.last.gid, 'm101');
   });
 
+  test('a live message from someone else is announced once', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    final incoming = <String>[];
+    final sub = repo.watchIncoming().listen((m) => incoming.add(m.gid));
+
+    final push = {
+      'method': 'messagesend',
+      'result': 'success',
+      'data': [_msg(102, user: 77)],
+    };
+    server.current.push(push);
+    await eventually(repo.watchMessages(_acc, 'g1'), (l) => l.last.gid == 'm102');
+    // A re-delivery of the same message is not new.
+    server.current.push(push);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    await sub.cancel();
+    expect(incoming, ['m102']);
+  });
+
+  test('pin and unpin pushes replace the pinned list', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+    server.current.push({
+      'method': 'chatPinMessages',
+      'result': 'success',
+      'data': {
+        'cgid': 'g1',
+        'pinned': [101],
+        'allPinned': [100, 101],
+      },
+    });
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.pinnedMessageIds.length == 2,
+    );
+    server.current.push({
+      'method': 'chatUnpinMessages',
+      'result': 'success',
+      'data': {
+        'cgid': 'g1',
+        'unpinned': [100],
+        'allPinned': [101],
+      },
+    });
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, 'g1')?.pinnedMessageIds.length == 1,
+    );
+    expect(byGid(chats, 'g1')!.pinnedMessageIds, [101]);
+  });
+
   test('a message in an unknown chat fetches that chat', () async {
     await repo.connect(_acc);
     await eventually(repo.watchConversations(_acc), (l) => l.length == 2);

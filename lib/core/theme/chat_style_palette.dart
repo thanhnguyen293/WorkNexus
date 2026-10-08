@@ -30,6 +30,8 @@ class ChatStylePalette {
     this.nameColors,
     this.outgoingTicks,
     this.quoteFill,
+    this.outsideQuoteFill,
+    this.outsideQuoteText,
   });
 
   /// The WorkNexus style follows the app theme.
@@ -81,8 +83,17 @@ class ChatStylePalette {
   /// Quote background; null = the quote bar colour at low opacity.
   final Color? quoteFill;
 
+  /// A reply quote shown outside the bubble (Messenger, WeChat): its box and
+  /// text; null = the incoming bubble colour and [incomingMeta].
+  final Color? outsideQuoteFill;
+  final Color? outsideQuoteText;
+
+  /// Quote/card background inside a dark or saturated bubble: a darker
+  /// inset keeps light text readable (a light tint would wash it out).
+  static const darkInset = Color(0x2E000000);
+
   static const telegramDay = ChatStylePalette(
-    background: Color(0xFFD5DDB8),
+    background: Color(0xFFA9C08E),
     incomingBubble: Color(0xFFFFFFFF),
     incomingText: Color(0xFF000000),
     incomingMeta: Color(0xFF677887),
@@ -94,7 +105,7 @@ class ChatStylePalette {
     outgoingLink: Color(0xFF378124),
     outgoingQuoteBar: Color(0xFF377430),
     outgoingTicks: Color(0xFF4AA140),
-    separatorFill: Color(0xB32F4426),
+    separatorFill: Color(0xB3405A33),
     separatorText: Color(0xFFFFFFFF),
     nameColors: [
       Color(0xFFC03D33),
@@ -109,17 +120,17 @@ class ChatStylePalette {
   );
 
   static const telegramNight = ChatStylePalette(
-    background: Color(0xFF0E1621),
-    incomingBubble: Color(0xFF182533),
+    background: Color(0xFF0B121B),
+    incomingBubble: Color(0xFF1E2C3A),
     incomingText: Color(0xFFF5F5F5),
-    incomingMeta: Color(0xFF7C8C9B),
+    incomingMeta: Color(0xFF8493A1),
     incomingLink: Color(0xFF70BAF5),
-    incomingQuoteBar: Color(0xFF4CA1DD),
+    incomingQuoteBar: Color(0xFF429BDB),
     outgoingBubble: Color(0xFF2B5278),
     outgoingText: Color(0xFFFFFFFF),
     outgoingMeta: Color(0xFFA8C5E1),
     outgoingLink: Color(0xFF83CAFF),
-    outgoingQuoteBar: Color(0xFFB9DFFA),
+    outgoingQuoteBar: Color(0xFF65B9F4),
     outgoingTicks: Color(0xFF6BBFFF),
     separatorFill: Color(0xD5213040),
     separatorText: Color(0xFFFFFFFF),
@@ -160,13 +171,13 @@ class ChatStylePalette {
     incomingText: Color(0xFFE3E5E8),
     incomingMeta: Color(0xFF8B97A6),
     incomingLink: Color(0xFF4D9BFF),
-    incomingQuoteBar: Color(0xFF65A8FF),
+    incomingQuoteBar: Color(0xFF4D9BFF),
     incomingBorder: Color(0xFF353A40),
     outgoingBubble: Color(0xFF1B4A82),
     outgoingText: Color(0xFFF2F5F8),
     outgoingMeta: Color(0xFFA9C1E0),
     outgoingLink: Color(0xFF9CC8FF),
-    outgoingQuoteBar: Color(0xFFAED2FF),
+    outgoingQuoteBar: Color(0xFF9CC8FF),
     outgoingBorder: Color(0xFF245A99),
     separatorFill: Color(0xFF2A2E33),
     separatorText: Color(0xFFB8C2CE),
@@ -174,16 +185,16 @@ class ChatStylePalette {
 
   static const messengerLight = ChatStylePalette(
     background: Color(0xFFFFFFFF),
-    incomingBubble: Color(0xFFF0F0F0),
+    incomingBubble: Color(0xFFEBECEF),
     incomingText: Color(0xFF050505),
     incomingMeta: Color(0xFF65676B),
-    incomingLink: Color(0xFF0060FD),
-    incomingQuoteBar: Color(0xFF616367),
+    incomingLink: Color(0xFF005EF7),
+    incomingQuoteBar: Color(0xFF5E6064),
     outgoingBubble: Color(0xFF0866FF),
     outgoingText: Color(0xFFFFFFFF),
     outgoingMeta: Color(0xFFF5F8FF),
     outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFF111111),
+    outgoingQuoteBar: Color(0xFFFFFFFF),
     separatorText: Color(0xFF65676B),
   );
 
@@ -198,24 +209,26 @@ class ChatStylePalette {
     outgoingText: Color(0xFFFFFFFF),
     outgoingMeta: Color(0xFFF5F8FF),
     outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFF111111),
+    outgoingQuoteBar: Color(0xFFFFFFFF),
     separatorText: Color(0xFFB0B3B8),
   );
 
   static const wechatLight = ChatStylePalette(
-    background: Color(0xFFEDEDED),
+    background: Color(0xFFE8E8E8),
     incomingBubble: Color(0xFFFFFFFF),
     incomingText: Color(0xFF191919),
     incomingMeta: Color(0xFF767676),
     incomingLink: Color(0xFF576B95),
     incomingQuoteBar: Color(0xFF576B95),
-    outgoingBubble: Color(0xFF95EC69),
+    outgoingBubble: Color(0xFFADD897),
     outgoingText: Color(0xFF0F170A),
-    outgoingMeta: Color(0xFF426730),
+    outgoingMeta: Color(0xFF3D5E2C),
     outgoingLink: Color(0xFF2F4F1F),
     outgoingQuoteBar: Color(0xFF2F4F1F),
     quoteFill: Color(0x0F000000),
-    separatorText: Color(0xFF6B6B6B),
+    separatorText: Color(0xFF686868),
+    outsideQuoteFill: Color(0xFFDADADA),
+    outsideQuoteText: Color(0xFF4C4C4C),
   );
 
   static const wechatDark = ChatStylePalette(
@@ -225,12 +238,14 @@ class ChatStylePalette {
     incomingMeta: Color(0xFF939393),
     incomingLink: Color(0xFF8294AC),
     incomingQuoteBar: Color(0xFF7E91AA),
-    outgoingBubble: Color(0xFF3EB575),
-    outgoingText: Color(0xFF06120B),
-    outgoingMeta: Color(0xFF163E28),
-    outgoingLink: Color(0xFF0B3320),
-    outgoingQuoteBar: Color(0xFF0B3320),
+    outgoingBubble: Color(0xFF37A169),
+    outgoingText: Color(0xFF000000),
+    outgoingMeta: Color(0xFF102E1E),
+    outgoingLink: Color(0xFF0A2E1D),
+    outgoingQuoteBar: Color(0xFF071F13),
     quoteFill: Color(0x14000000),
     separatorText: Color(0xFF7C7C7C),
+    outsideQuoteFill: Color(0xFF262626),
+    outsideQuoteText: Color(0xFFB2B2B2),
   );
 }

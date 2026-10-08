@@ -48,6 +48,33 @@ class _FakeChatRepository implements ChatRepository {
       Stream.value(status);
 
   @override
+  Stream<ChatMessage> watchIncoming() => const Stream.empty();
+
+  @override
+  Stream<double> watchDownloadProgress(String a, MessageContent c) =>
+      const Stream.empty();
+
+  @override
+  Future<bool> isAttachmentCached(String a, MessageContent c) async => true;
+
+  @override
+  Stream<int?> watchSelfUserId(String a) => Stream.value(40);
+
+  @override
+  Future<Result<String>> openDirectChat(String a, int u) async => Ok('$u&40');
+
+  @override
+  Future<Result<void>> setMessagePinned(
+    String a,
+    String c,
+    int id, {
+    required bool pinned,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<List<int>>> members(String a, String c) async => const Ok([]);
+
+  @override
   Stream<List<ChatConversation>> watchConversations(String accountId) =>
       Stream.value([
         ChatConversation(

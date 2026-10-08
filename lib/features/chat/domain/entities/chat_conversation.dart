@@ -21,5 +21,15 @@ abstract class ChatConversation with _$ChatConversation {
     int? peerUserId,
     @Default(false) bool hidden,
     @Default(false) bool archived,
+
+    /// Server ids of pinned messages, oldest pin first.
+    @Default(<int>[]) List<int> pinnedMessageIds,
+
+    /// User ids of the group's admins (they and the owner may pin).
+    @Default(<int>[]) List<int> adminIds,
+
+    /// Group owner's account and creation time (groups only).
+    String? ownerAccount,
+    DateTime? createdAt,
   }) = _ChatConversation;
 }

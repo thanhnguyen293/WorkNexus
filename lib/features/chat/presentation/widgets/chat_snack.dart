@@ -12,3 +12,9 @@ void showChatFailure(BuildContext context, Failure failure) {
     ),
   );
 }
+
+/// A short confirmation (copied, saved, …).
+void showChatSnack(BuildContext context, String message) {
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+}
