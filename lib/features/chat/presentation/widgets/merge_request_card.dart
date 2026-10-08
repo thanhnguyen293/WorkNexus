@@ -1,32 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/open_external.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/badges.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/merge_request_state_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/parse_merge_request_link.dart';
 import '../providers/merge_request_providers.dart';
-import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
-import 'merge_request_card_parts.dart';
+import 'chat_link_card_frame.dart';
 
-/// Fixed card size, so the list does not jump when the state arrives.
-const double _kCardHeight = 112;
-const double _kCardMaxWidth = 460;
-
-/// A GitLab merge request / GitHub pull request linked in a message, with
-/// its live state: the state chip, `group/repo #12` and when it last
-/// changed; its title; the author and the size of the change (+lines,
-/// −lines, files). It is fetched through the connected account for the
+/// A GitLab merge request / GitHub pull request linked in a message, as a
+/// compact quote-like card with its live state: `Merged · group/repo !12 ·
+/// 2h ago`, the title, then `author · +lines −lines · files`. The bar takes
+/// the state's colour. It is fetched through the connected account for the
 /// link's host; a tap opens it beside the chat (or in the browser when it
 /// could not be loaded).
 class MergeRequestCard extends ConsumerWidget {
@@ -38,38 +31,41 @@ class MergeRequestCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final link = const ParseMergeRequestLink()(url);
     if (link == null) return const SizedBox.shrink();
-    final ink = ChatBubbleTheme.of(context);
-    final s = context.spacing;
     final fetch = ref.watch(chatMergeRequestFetchProvider(url));
     final ticket = ref.watch(chatMergeRequestProvider(url));
-    final radius = BorderRadius.circular(context.radii.lg);
-    return Padding(
-      padding: EdgeInsets.only(top: s.md),
-      child: InkWell(
-        borderRadius: radius,
-        onTap: () => ticket == null
-            ? openExternally(url)
-            : ref.read(openTicketIdProvider.notifier).open(ticket.id),
-        child: Container(
-          height: _kCardHeight,
-          constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
-          padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.lg),
-          decoration: BoxDecoration(
-            color: ink.quoteFill,
-            borderRadius: radius,
-            border: Border.all(color: ink.meta.withValues(alpha: 0.2)),
+    final state = ticket == null
+        ? null
+        : mergeRequestState(context, ticket.providerStatus, link.provider);
+    return ChatLinkCardFrame(
+      bar: state?.$1,
+      onTap: () => ticket == null
+          ? openExternally(url)
+          : ref.read(openTicketIdProvider.notifier).open(ticket.id),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ChatCardLine(
+            spans: [
+              if (state != null) chatCardStrong(context, state.$2, state.$1),
+              _reference(link),
+              if (ticket?.updatedAt case final updated?)
+                chatAgo(context, updated),
+            ],
           ),
-          child: ticket == null
-              ? _Pending(
-                  link: link,
-                  loading: fetch.isLoading,
-                  failure: switch (fetch.value) {
-                    Err(:final failure) => failure,
-                    _ => null,
-                  },
-                )
-              : _Details(link: link, ticket: ticket),
-        ),
+          if (ticket != null) ...[
+            ChatCardTitle(ticket.title),
+            _Footer(ticket: ticket),
+          ] else
+            _Note(
+              loading: fetch.isLoading,
+              host: link.host,
+              failure: switch (fetch.value) {
+                Err(:final failure) => failure,
+                _ => null,
+              },
+            ),
+        ],
       ),
     );
   }
@@ -80,98 +76,74 @@ String _reference(MergeRequestLink link) =>
     '${link.project} ${link.provider == ProviderType.gitlab ? '!' : '#'}'
     '${link.number}';
 
-class _Details extends StatelessWidget {
-  const _Details({required this.link, required this.ticket});
+/// `author · +1,867 −106 · 57 files`, as far as known.
+class _Footer extends StatelessWidget {
+  const _Footer({required this.ticket});
 
-  final MergeRequestLink link;
   final Ticket ticket;
 
   @override
   Widget build(BuildContext context) {
-    final ink = ChatBubbleTheme.of(context);
-    final s = context.spacing;
-    final meta = context.typography.secondary.copyWith(color: ink.meta);
-    final updated = ticket.updatedAt;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    final c = context.colors;
+    final l = AppL10n.of(context);
+    final (author, added, removed, files) = switch (ticket.providerEntity) {
+      GitLabItemEntity(
+        :final author,
+        :final additions,
+        :final deletions,
+        :final changedFiles,
+      ) =>
+        (author, additions, deletions, changedFiles),
+      GitHubItemEntity(
+        :final author,
+        :final additions,
+        :final deletions,
+        :final changedFiles,
+      ) =>
+        (author, additions, deletions, changedFiles),
+      _ => (null, null, null, null),
+    };
+    String count(int n) => MaterialLocalizations.of(context).formatDecimal(n);
+    final parts = <Object>[
+      ?author,
+      if (added != null && removed != null)
+        TextSpan(
           children: [
-            MergeRequestStatePill(
-              status: ticket.providerStatus,
-              provider: link.provider,
-            ),
-            SizedBox(width: s.md),
-            Expanded(
-              child: Text(
-                _reference(link),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: meta,
-              ),
-            ),
-            if (updated != null) Text(chatAgo(context, updated), style: meta),
+            chatCardStrong(context, '+${count(added)}', c.success),
+            const TextSpan(text: ' '),
+            chatCardStrong(context, '−${count(removed)}', c.error),
           ],
         ),
-        SizedBox(height: s.sm),
-        Expanded(
-          child: Text(
-            ticket.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: context.typography.bodyStrong.copyWith(color: ink.text),
-          ),
-        ),
-        MergeRequestFooter(ticket: ticket),
-      ],
-    );
+      if (files != null) l.chatMrFiles(files),
+    ];
+    return parts.isEmpty ? const SizedBox.shrink() : ChatCardLine(spans: parts);
   }
 }
 
-/// Before the MR/PR is known: the reference from the link and why there is
-/// no state yet.
-class _Pending extends StatelessWidget {
-  const _Pending({
-    required this.link,
+/// Why there is no state yet: loading, no account for the host, or failed.
+class _Note extends StatelessWidget {
+  const _Note({
     required this.loading,
+    required this.host,
     required this.failure,
   });
 
-  final MergeRequestLink link;
   final bool loading;
+  final String host;
   final Failure? failure;
 
   @override
   Widget build(BuildContext context) {
-    final ink = ChatBubbleTheme.of(context);
     final l = AppL10n.of(context);
-    final s = context.spacing;
     final failure = this.failure;
-    final note = loading
-        ? l.chatMrLoading
-        : failure is NotFoundFailure
-        ? l.chatMrNoAccount(link.host)
-        : l.chatMrUnavailable;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          children: [
-            ProviderBadge(link.provider, big: true),
-            SizedBox(width: s.md),
-            Expanded(
-              child: Text(
-                _reference(link),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.bodyStrong.copyWith(color: ink.text),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: s.sm),
-        Text(note, style: context.typography.bodySm.copyWith(color: ink.meta)),
+    return ChatCardLine(
+      spans: [
+        if (loading)
+          l.chatMrLoading
+        else if (failure is NotFoundFailure)
+          l.chatMrNoAccount(host)
+        else
+          l.chatMrUnavailable,
       ],
     );
   }

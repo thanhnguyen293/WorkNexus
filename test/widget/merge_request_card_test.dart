@@ -104,11 +104,14 @@ void main() {
       ),
     ).called(1);
     expect(find.text('Fix login token refresh'), findsOneWidget);
-    expect(find.text('Merged'), findsOneWidget);
-    expect(find.text('root/tbchat !3458'), findsOneWidget);
-    expect(find.text('kan'), findsOneWidget);
-    expect(find.text('12 files'), findsOneWidget);
-    expect(find.textContaining('+1,867'), findsOneWidget);
+    expect(find.textContaining('Merged', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('root/tbchat !3458', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.textContaining('kan', findRichText: true), findsOneWidget);
+    expect(find.textContaining('12 files', findRichText: true), findsOneWidget);
+    expect(find.textContaining('+1,867', findRichText: true), findsOneWidget);
 
     await tester.tap(find.byType(MergeRequestCard));
     expect(container.read(openTicketIdProvider), 'gl:mr:99');
@@ -130,10 +133,16 @@ void main() {
     final container = await pump(tester, tickets: const []);
 
     expect(
-      find.text('Connect an account for xddlabs.com to see its status'),
+      find.textContaining(
+        'Connect an account for xddlabs.com to see its status',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
-    expect(find.text('root/tbchat !3458'), findsOneWidget);
+    expect(
+      find.textContaining('root/tbchat !3458', findRichText: true),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox());
     container.dispose();
   });

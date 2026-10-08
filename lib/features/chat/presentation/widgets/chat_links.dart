@@ -1,26 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
-import '../../../../core/domain/adapters/zentao_ticket_service.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../providers/chat_providers.dart';
-
-/// Loads ZenTao tickets that chat links point to but the board has not
-/// synced.
-final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
-  (ref) => getIt<ZenTaoTicketService>(),
-);
-
-/// The synced ZenTao ticket [url] points to, if any (watched, so a card
-/// updates when the ticket syncs).
-Ticket? watchLinkedTicket(WidgetRef ref, String url) => ref
-    .watch(chatControllerProvider)
-    .linkedTicket(url, ref.watch(ticketsProvider).value ?? const []);
+import '../providers/zentao_link_providers.dart';
 
 /// Opens a link tapped in chat. A ZenTao bug/task/story opens in the detail
 /// panel beside the chat — fetched from ZenTao first when the board has not

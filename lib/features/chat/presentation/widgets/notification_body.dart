@@ -63,7 +63,6 @@ class NotificationBody extends ConsumerWidget {
               accountId: accountId,
               text: n.text,
               markdown: n.markdown,
-              linkPreview: false,
             ),
           ),
         if (links.isNotEmpty)

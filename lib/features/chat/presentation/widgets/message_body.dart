@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
-import '../../domain/usecases/parse_merge_request_link.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_file_body.dart';
@@ -15,9 +13,7 @@ import 'chat_image_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
 import 'chat_user_profile_dialog.dart';
-import 'link_preview_card.dart';
 import 'mention_text.dart';
-import 'merge_request_card.dart';
 import 'notification_body.dart';
 
 /// The content of a message, by content type.
@@ -72,9 +68,11 @@ class MessageBody extends StatelessWidget {
         message: message,
         file: file,
       ),
-      LinkContent(:final url, :final title) => _LinkCard(
-        url: url,
-        title: title,
+      // The link stays in the bubble; its preview shows under it.
+      LinkContent(:final url, :final title) => ChatTextBody(
+        accountId: accountId,
+        text: title == null || title == url ? url : '$title\n$url',
+        markdown: false,
       ),
       UnsupportedContent(:final contentType) => Text(
         l.chatUnsupportedMessage(contentType),
@@ -87,39 +85,23 @@ class MessageBody extends StatelessWidget {
   }
 }
 
-/// Most merge request cards one message shows.
-const int _kMaxMergeRequestCards = 4;
-
-/// Message text — Markdown or plain with mentions and links — followed by a
-/// preview of the first web page it links to.
+/// Message text — Markdown or plain with mentions and links. Link previews
+/// show under the bubble (`MessageLinkPreviews`).
 class ChatTextBody extends ConsumerWidget {
   const ChatTextBody({
     super.key,
     required this.accountId,
     required this.text,
     required this.markdown,
-    this.linkPreview = true,
   });
 
   final String accountId;
   final String text;
   final bool markdown;
 
-  /// Show a card for the first web page linked.
-  final bool linkPreview;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ink = ChatBubbleTheme.of(context);
-    final urls = linkPreview ? chatUrls(text) : const <String>[];
-    // Merge/pull requests get a live status card each (a few at most);
-    // the first other link gets the page preview.
-    const parseMr = ParseMergeRequestLink();
-    final mergeRequests = [
-      for (final u in urls)
-        if (parseMr(u) != null) u,
-    ].take(_kMaxMergeRequestCards);
-    final url = urls.where((u) => parseMr(u) == null).firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -143,61 +125,7 @@ class ChatTextBody extends ConsumerWidget {
           )
         else
           MentionText(text, accountId: accountId),
-        for (final mr in mergeRequests) MergeRequestCard(url: mr),
-        if (url != null) LinkPreviewCard(url: url),
       ],
-    );
-  }
-}
-
-/// A shared link: icon tile, title and the site it points to.
-class _LinkCard extends ConsumerWidget {
-  const _LinkCard({required this.url, this.title});
-
-  final String url;
-  final String? title;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ink = ChatBubbleTheme.of(context);
-    final s = context.spacing;
-    return InkWell(
-      onTap: () => openChatLink(ref, url),
-      borderRadius: BorderRadius.circular(context.radii.md),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: s.xl6,
-            height: s.xl6,
-            decoration: BoxDecoration(
-              color: ink.tileFill,
-              borderRadius: BorderRadius.circular(context.radii.md),
-            ),
-            child: Icon(Icons.link_rounded, color: ink.link),
-          ),
-          SizedBox(width: s.lg),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title ?? url,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.typography.bodyStrong.copyWith(
-                    color: ink.link,
-                  ),
-                ),
-                Text(
-                  chatLinkHost(url),
-                  style: context.typography.caption.copyWith(color: ink.meta),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

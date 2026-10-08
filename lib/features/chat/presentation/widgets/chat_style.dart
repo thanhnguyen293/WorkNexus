@@ -177,14 +177,20 @@ class ChatStyle {
           p.background,
         ).computeLuminance() <
         0.2;
+    final quoteFill =
+        (mine ? p.outgoingQuoteFill : null) ??
+        p.quoteFill ??
+        (strong ? ChatStylePalette.darkInset : bar.withValues(alpha: 0.12));
     return ChatBubbleInk(
       text: text,
       meta: mine ? p.outgoingMeta : p.incomingMeta,
       link: mine ? p.outgoingLink : p.incomingLink,
       quoteBar: bar,
-      quoteFill:
-          p.quoteFill ??
-          (strong ? ChatStylePalette.darkInset : bar.withValues(alpha: 0.12)),
+      quoteFill: quoteFill,
+      quoteSurface: Color.alphaBlend(
+        quoteFill,
+        Color.alphaBlend(bubbleFill(mine: mine), p.background),
+      ),
       tileFill: text.withValues(alpha: strong ? 0.16 : 0.06),
       fontSize: fontSize,
     );
@@ -202,6 +208,10 @@ class ChatStyle {
       link: p.incomingLink,
       quoteBar: text,
       quoteFill: p.outsideQuoteFill ?? p.incomingBubble,
+      quoteSurface: Color.alphaBlend(
+        p.outsideQuoteFill ?? p.incomingBubble,
+        p.background,
+      ),
       tileFill: text.withValues(alpha: 0.06),
       fontSize: fontSize,
     );

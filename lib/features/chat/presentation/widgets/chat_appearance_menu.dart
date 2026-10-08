@@ -87,9 +87,9 @@ class _AppearancePanel extends ConsumerWidget {
                   ),
               ],
             ),
-            SizedBox(height: s.lg),
+            _SectionDivider(),
             const ChatWallpaperPicker(),
-            SizedBox(height: s.md),
+            _SectionDivider(),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               value: primary,
@@ -115,6 +115,17 @@ class _AppearancePanel extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A hairline with room around it, between the panel's sections (styles,
+/// wallpaper, bubble colour).
+class _SectionDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Divider(
+    height: context.spacing.xl4 * 1.5,
+    thickness: 1,
+    color: context.colors.border,
+  );
 }
 
 class _StyleCard extends StatelessWidget {
