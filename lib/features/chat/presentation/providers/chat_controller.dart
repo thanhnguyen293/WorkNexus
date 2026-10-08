@@ -7,6 +7,8 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/connect_chat.dart';
+import '../../domain/usecases/create_group_chat.dart';
+import '../../domain/usecases/encode_mentions.dart';
 import '../../domain/usecases/fetch_chat_messages.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/usecases/load_chat_attachment.dart';
@@ -81,6 +83,20 @@ class ChatController {
   Future<Result<String>> openDirectChat(String accountId, int userId) =>
       _direct(accountId: accountId, userId: userId);
 
+  Future<Result<String>> createGroupChat(
+    String accountId, {
+    required String name,
+    required List<int> memberIds,
+  }) => CreateGroupChat(_repository)(
+    accountId: accountId,
+    name: name,
+    memberIds: memberIds,
+  );
+
+  /// Loads every user of the server (pass-through; CLAUDE.md 2.4).
+  Future<Result<void>> refreshUsers(String accountId) =>
+      _repository.refreshUsers(accountId);
+
   void setCacheLimit(int bytes) => _repository.setCacheLimit(bytes);
 
   /// Deletes downloaded attachments of one chat, or all when [chatGid] is
@@ -112,16 +128,19 @@ class ChatController {
   Future<Result<void>> trust(String accountId, String fingerprint) =>
       _trust(accountId: accountId, fingerprint: fingerprint);
 
+  /// Sends [text]; the `@Name` mentions in [mentions] (name → user id) are
+  /// encoded as xxd mention markup first.
   Future<Result<void>> send(
     String accountId,
     String chatGid,
     String text, {
     int? replyToId,
     bool markdown = false,
+    Map<String, int> mentions = const {},
   }) => _send(
     accountId: accountId,
     chatGid: chatGid,
-    text: text,
+    text: const EncodeMentions()(text, mentions),
     replyToId: replyToId,
     markdown: markdown,
   );

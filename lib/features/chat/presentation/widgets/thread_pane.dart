@@ -10,6 +10,7 @@ import 'chat_composer.dart';
 import 'chat_files_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
+import 'chat_panels.dart';
 import 'chat_snack.dart';
 import 'chat_thread_header.dart';
 import 'message_list.dart';
@@ -32,7 +33,11 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _open());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final width = context.size?.width;
+      if (width != null) autoOpenChatInfo(ref, widget.thread, width);
+      _open();
+    });
   }
 
   Future<void> _open() async {

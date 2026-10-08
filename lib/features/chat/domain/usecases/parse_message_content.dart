@@ -10,12 +10,48 @@ import '../value_objects/message_content.dart';
 class ParseMessageContent {
   const ParseMessageContent();
 
+  /// A mention wrapped again in a link to the same user (the official
+  /// client applied its mention markup twice):
+  /// `[[@Name](@#40)-tail](@#40)`.
+  static final _nested = RegExp(
+    r'\[\[@([^\]]+)\]\(@#(\d+)\)[^\[\]]*\]\(@#\2\)',
+  );
+
+  static final _mention = RegExp(r'\[@([^\]]+)\]\(@#\d+\)');
+  static final _nameStop = RegExp(r'[^A-Za-z0-9_]');
+
+  /// Undoes two quirks of the official client's mention markup: a mention
+  /// nested in another link to the same user (see [_nested]), and the rest
+  /// of a typed name left after the mention — it links only the start up
+  /// to the first symbol ("@Felix" of "@Felix-VN-Flutter"), giving
+  /// `[@Felix-VN-Flutter](@#35)-VN-Flutter`.
+  static String repairMentions(String text) {
+    final unwrapped = text.replaceAllMapped(
+      _nested,
+      (m) => '[@${m[1]}](@#${m[2]})',
+    );
+    final out = StringBuffer();
+    var at = 0;
+    for (final m in _mention.allMatches(unwrapped)) {
+      if (m.start < at) continue;
+      out.write(unwrapped.substring(at, m.end));
+      at = m.end;
+      final name = m[1]!;
+      final cut = name.indexOf(_nameStop);
+      if (cut > 0 && unwrapped.startsWith(name.substring(cut), at)) {
+        at += name.length - cut;
+      }
+    }
+    out.write(unwrapped.substring(at));
+    return out.toString();
+  }
+
   MessageContent call(String contentType, String content) {
     switch (contentType) {
       case 'plain':
-        return MessageContent.text(content);
+        return MessageContent.text(repairMentions(content));
       case 'text':
-        return MessageContent.text(content, markdown: true);
+        return MessageContent.text(repairMentions(content), markdown: true);
       case 'image' || 'file':
         final json = _object(content);
         final inline = json?['content'];

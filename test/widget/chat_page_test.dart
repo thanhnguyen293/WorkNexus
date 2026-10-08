@@ -52,6 +52,16 @@ class _FakeChatRepository implements ChatRepository {
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
 
   @override
+  Future<Result<void>> refreshUsers(String a) async => const Ok(null);
+
+  @override
+  Future<Result<String>> createGroupChat(
+    String a, {
+    required String name,
+    required List<int> memberIds,
+  }) async => const Ok('new');
+
+  @override
   Future<Result<Duration>> videoDuration(String a, MessageContent v) async =>
       const Ok(Duration(minutes: 1, seconds: 23));
 
