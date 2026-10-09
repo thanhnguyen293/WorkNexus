@@ -1,6 +1,8 @@
 {
   "@@locale": "vi",
   "appTitle": "Bảng công việc hợp nhất",
+  "trayOpenApp": "Mở WorkNexus",
+  "trayQuitApp": "Thoát WorkNexus",
   "board": "Bảng",
   "list": "Danh sách",
   "integrations": "Kết nối",
