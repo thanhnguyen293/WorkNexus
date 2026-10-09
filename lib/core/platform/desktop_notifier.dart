@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../config/app_config.dart';
 import '../debug/app_talker.dart';
 
 /// OS notifications (Notification Center, Windows toasts, freedesktop) so
@@ -12,17 +13,6 @@ import '../debug/app_talker.dart';
 class DesktopNotifier {
   DesktopNotifier({FlutterLocalNotificationsPlugin? plugin})
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
-
-  static const _appName = 'WorkNexus';
-
-  /// macOS bundle id (macos/Runner/Configs/AppInfo.xcconfig), to open this
-  /// app's page in System Settings → Notifications.
-  static const _macBundleId = 'com.worknexus.workNexus';
-
-  // Windows ties toasts to an AppUserModelID + COM activator GUID; both must
-  // stay stable across releases or Windows treats it as a different app.
-  static const _windowsAppId = 'WorkNexus.WorkNexus.Desktop';
-  static const _windowsGuid = 'c14901d9-c46d-4d26-9596-9c14e5a0e0b7';
 
   final FlutterLocalNotificationsPlugin _plugin;
   final _taps = StreamController<String>.broadcast();
@@ -42,19 +32,24 @@ class DesktopNotifier {
 
   Future<bool> _initialize() async {
     if (kIsWeb ||
-        !(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+        !(defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux)) {
       return false;
     }
     try {
       final ok = await _plugin.initialize(
-        settings: const InitializationSettings(
-          macOS: DarwinInitializationSettings(requestBadgePermission: false),
-          windows: WindowsInitializationSettings(
-            appName: _appName,
-            appUserModelId: _windowsAppId,
-            guid: _windowsGuid,
+        settings: InitializationSettings(
+          macOS: const DarwinInitializationSettings(
+            requestBadgePermission: false,
           ),
-          linux: LinuxInitializationSettings(defaultActionName: 'Open'),
+          windows: WindowsInitializationSettings(
+            appName: AppConfig.appName,
+            appUserModelId: AppConfig.windowsAppId,
+            guid: AppConfig.windowsGuid,
+            iconPath: _windowsIconPath(),
+          ),
+          linux: const LinuxInitializationSettings(defaultActionName: 'Open'),
         ),
         onDidReceiveNotificationResponse: (response) {
           final payload = response.payload;
@@ -63,7 +58,7 @@ class DesktopNotifier {
       );
       appTalker.info('Notifications: initialize -> $ok');
       return ok ?? false;
-    } on Exception catch (e, st) {
+    } catch (e, st) {
       appTalker.handle(e, st, 'Notifications: initialize failed');
       return false;
     }
@@ -105,7 +100,7 @@ class DesktopNotifier {
     try {
       await Process.run('open', [
         'x-apple.systempreferences:com.apple.Notifications-Settings.extension'
-            '?id=$_macBundleId',
+            '?id=${AppConfig.macBundleId}',
       ]);
     } on Exception catch (e, st) {
       appTalker.handle(e, st, 'Notifications: opening settings failed');
@@ -128,17 +123,56 @@ class DesktopNotifier {
     required String title,
     required String body,
     String? payload,
+    String? imageUrl,
   }) async {
     if (!await initialize()) {
       appTalker.warning('Notifications: not allowed, "$title" not shown');
       return;
     }
     try {
-      await _plugin.show(id: id, title: title, body: body, payload: payload);
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        payload: payload,
+        notificationDetails: _details(imageUrl),
+      );
       appTalker.info('Notifications: shown "$title"');
     } on Exception catch (e, st) {
       // Not worth interrupting the user over; the unread badge still shows.
       appTalker.handle(e, st, 'Notifications: show failed');
     }
+  }
+
+  /// The sender's picture in place of the app logo on a Windows toast. The
+  /// toast fetches the https URL itself; other platforms have no equivalent.
+  NotificationDetails? _details(String? imageUrl) {
+    final uri = imageUrl == null ? null : Uri.tryParse(imageUrl);
+    if (uri == null ||
+        !uri.hasScheme ||
+        defaultTargetPlatform != TargetPlatform.windows) {
+      return null;
+    }
+    return NotificationDetails(
+      windows: WindowsNotificationDetails(
+        images: [
+          WindowsImage(
+            uri,
+            altText: '',
+            placement: WindowsImagePlacement.appLogoOverride,
+            crop: WindowsImageCrop.circle,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The bundled app icon, shown beside the app name on a Windows toast; null
+  /// when the build has no such file (the toast then shows no icon).
+  static String? _windowsIconPath() {
+    if (kIsWeb || !Platform.isWindows) return null;
+    final dir = File(Platform.resolvedExecutable).parent.path;
+    final icon = File('$dir/data/flutter_assets/assets/tray/app_icon.png');
+    return icon.existsSync() ? icon.path : null;
   }
 }

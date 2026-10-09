@@ -10,7 +10,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import 'connection_controllers.dart';
-import 'widgets/connection_text_field.dart';
+import '../../../core/widgets/connection_text_field.dart';
 import 'widgets/workspace_picker.dart';
 
 /// Modal form for connecting a ZenTao account. The user types their own

@@ -1,6 +1,6 @@
 # WorkNexus
 
-**One place to read and act on every ticket.** WorkNexus is a local-first macOS
+**One place to read and act on every ticket.** WorkNexus is a local-first desktop
 workspace for developers who work across **ZenTao, GitLab, and GitHub**. It syncs
 provider data into a local SQLite read model, normalizes it as `Ticket`, and then
 shows each source with the workflow it actually uses: ZenTao bugs/tasks, GitLab
@@ -8,7 +8,7 @@ issues/MRs, and GitHub issues/PRs.
 
 <sub>🇬🇧 English · <a href="README.vi.md">🇻🇳 Tiếng Việt</a></sub>
 
-> **Status:** early development · macOS desktop · private project. Built with
+> **Status:** early development · Windows/macOS desktop · private project. Built with
 > Flutter/Dart on a feature-first Clean Architecture.
 
 ---
@@ -116,7 +116,7 @@ is not part of the default detail tab strip yet.
 
 | Area | Choice |
 |---|---|
-| Language / UI | Flutter 3.38.8 · Dart 3.10.7 (via **fvm**) |
+| Language / UI | Flutter 3.44.8 · Dart 3.12.2 (via **fvm**) |
 | State management | **Riverpod 3** with immutable **freezed** state |
 | Dependency injection | **get_it** + **injectable** in one composition root |
 | Local database | **drift** / SQLite with reactive `.watch()` streams |
@@ -173,7 +173,7 @@ lib/
 
 ### Prerequisites
 
-- **[fvm](https://fvm.app/)** with Flutter **3.38.8** / Dart **3.10.7**.
+- **[fvm](https://fvm.app/)** with Flutter **3.44.8** / Dart **3.12.2**.
 - **macOS** with Xcode command-line tools (primary desktop target).
 - Provider credentials:
   - ZenTao server URL, account, and password.

@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../config/app_config.dart';
+
 /// On-disk database name — the file is `<kDatabaseName>.sqlite`.
-const kDatabaseName = 'worknexus';
+const kDatabaseName = AppConfig.databaseName;
 
 /// Where the drift file lives: the application-support directory, a private
 /// per-app location the user never reorganises.

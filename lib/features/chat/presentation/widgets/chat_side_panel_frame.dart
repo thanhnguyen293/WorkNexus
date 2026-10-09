@@ -123,7 +123,7 @@ class ChatPanelCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(context.radii.lg),
         border: Border.fromBorderSide(context.hairlineSide),
       ),
-      child: child,
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }

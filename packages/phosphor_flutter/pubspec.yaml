@@ -1,0 +1,13 @@
+name: phosphor_flutter
+description: Compatibility adapter for phosphoricons_flutter.
+version: 2.1.1
+publish_to: none
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  phosphoricons_flutter: 1.1.1

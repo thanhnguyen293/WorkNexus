@@ -1,3 +1,7 @@
+// The fake CLI is a /bin/sh script, so these only run on POSIX hosts.
+@TestOn('mac-os || linux')
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

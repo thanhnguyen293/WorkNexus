@@ -5,7 +5,10 @@ import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/quick_settings_side_panel.dart';
+import '../../features/app_update/presentation/widgets/update_notification_listener.dart';
+import '../../features/app_update/presentation/widgets/update_settings_card.dart';
 import '../../features/board/presentation/board_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/providers/chat_providers.dart';
@@ -17,6 +20,7 @@ import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
+import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import 'app_nav_rail.dart';
 import 'resizable_sidebar.dart';
 import 'title_bar.dart';
@@ -34,58 +38,70 @@ class AppShell extends ConsumerWidget {
     final integrationsVisible = ref.watch(integrationsVisibleProvider);
     final chatOpen = ref.watch(chatOpenProvider);
 
-    return ChatNotificationListener(
-      child: Scaffold(
-        backgroundColor: c.background,
-        body: Column(
-          children: [
-            TitleBar(assignedCount: assigned),
-            Expanded(
-              child: Stack(
-                children: [
-                  const ZenTaoProfileStartup(),
-                  Row(
-                    children: [
-                      const AppNavRail(),
-                      // The workspace tree belongs to the board only.
-                      if (!integrationsVisible && !chatOpen)
-                        const ResizableSidebar(),
-                      Expanded(
-                        child: integrationsVisible
-                            ? const SettingsPage()
-                            : chatOpen
-                            ? ChatPage(
-                                onViewProfile: (dialogContext, accountId) {
-                                  for (final account in ref.read(
-                                    chatAccountsProvider,
-                                  )) {
-                                    if (account.id == accountId) {
-                                      ZenTaoProfileDialog.show(
-                                        dialogContext,
-                                        account,
-                                      );
-                                      break;
+    return UpdateNotificationListener(
+      child: ChatNotificationListener(
+        child: Scaffold(
+          backgroundColor: c.background,
+          body: Column(
+            children: [
+              TitleBar(assignedCount: assigned),
+              Expanded(
+                child: Stack(
+                  children: [
+                    const ZenTaoProfileStartup(),
+                    Row(
+                      children: [
+                        const AppNavRail(),
+                        // The workspace tree belongs to the board only.
+                        if (!integrationsVisible && !chatOpen)
+                          const ResizableSidebar(),
+                        Expanded(
+                          child: integrationsVisible
+                              ? SettingsPage(
+                                  footer: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const TranslationSettingsCard(),
+                                      SizedBox(height: context.spacing.xl4),
+                                      const UpdateSettingsCard(),
+                                    ],
+                                  ),
+                                )
+                              : chatOpen
+                              ? ChatPage(
+                                  onViewProfile: (dialogContext, accountId) {
+                                    for (final account in ref.read(
+                                      chatAccountsProvider,
+                                    )) {
+                                      if (account.id == accountId) {
+                                        ZenTaoProfileDialog.show(
+                                          dialogContext,
+                                          account,
+                                        );
+                                        break;
+                                      }
                                     }
-                                  }
-                                },
-                              )
-                            : const BoardPage(),
-                      ),
-                    ],
-                  ),
-                  const DetailOverlay(),
-                  const QuickSettingsSidePanel(
-                    sections: [
-                      ChatAppearanceSettings(),
-                      ChatAutoDownloadSettings(),
-                      ChatNotificationSettings(),
-                    ],
-                  ),
-                  const TalkerDebugOverlay(),
-                ],
+                                  },
+                                )
+                              : const BoardPage(),
+                        ),
+                      ],
+                    ),
+                    const DetailOverlay(),
+                    const QuickSettingsSidePanel(
+                      sections: [
+                        ChatAppearanceSettings(),
+                        ChatAutoDownloadSettings(),
+                        ChatNotificationSettings(),
+                      ],
+                    ),
+                    const TalkerDebugOverlay(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

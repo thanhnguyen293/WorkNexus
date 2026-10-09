@@ -24,9 +24,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Pin the repo's exact toolchain (Flutter 3.38.8 -> Dart 3.10.7).
+  # Pin the repo's exact toolchain (Flutter 3.44.8).
   # No fvm on CI; subosito downloads this exact version.
-  FLUTTER_VERSION: "3.38.8"
+  FLUTTER_VERSION: "3.44.8"
 
 jobs:
   # ───────────────────────────── macOS ─────────────────────────────
@@ -57,8 +57,17 @@ jobs:
 
       # Release build. No Apple cert on CI: the project defaults to ad-hoc
       # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
+      # Owner/repo come from the repository this workflow runs in, so upstream
+      # and forks each build an app that updates from their own releases.
+      - name: Point the build at this repository
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+          rm -f .env.bak
+
       - name: Build macOS (release, ad-hoc signed)
-        run: flutter build macos --release
+        run: flutter build macos --release --dart-define-from-file=.env
 
       # Zip the .app while preserving the bundle (use ditto, not plain zip).
       - name: Package .app
@@ -103,8 +112,17 @@ jobs:
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
 
+      # Owner/repo come from the repository this workflow runs in, so upstream
+      # and forks each build an app that updates from their own releases.
+      - name: Point the build at this repository
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+          rm -f .env.bak
+
       - name: Build Windows (release)
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define-from-file=.env
 
       # Zip the whole Release folder (exe + DLLs + data/ must stay together).
       - name: Package build output
@@ -139,6 +157,11 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # The in-app updater refuses a download whose hash is not listed here.
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum *.zip > SHA256SUMS.txt
+
       # Attach to the versioned release that release-please just published.
       # --clobber overwrites assets if the build is re-run for the same tag.
       - name: Attach assets to versioned release
@@ -146,7 +169,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" dist/*.zip \
+          gh release upload "${{ inputs.release_tag }}" dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --clobber
 
       # Delete the previous nightly release + its tag, then recreate at this
@@ -158,7 +181,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create nightly dist/*.zip \
+          gh release create nightly dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Nightly build (main)" \

@@ -13,7 +13,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
-import 'widgets/connection_text_field.dart';
+import '../../../core/widgets/connection_text_field.dart';
 import 'widgets/generate_token_link.dart';
 import 'widgets/workspace_picker.dart';
 

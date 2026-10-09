@@ -220,7 +220,7 @@ void main() {
     );
     expect(
       byGid(chat, 'g1')!.lastMessage?.content,
-      const MessageContent.text('new'),
+      const MessageContent.text('new', markdown: true),
     );
     final messages = await repo.watchMessages(_acc, 'g1').first;
     expect(messages.last.gid, 'm101');

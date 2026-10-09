@@ -10,7 +10,7 @@ void main() {
       parse('plain', 'hi [@Dyno](@#31)'),
       const MessageContent.text('hi [@Dyno](@#31)'),
     );
-    expect(parse('text', '1'), const MessageContent.text('1'));
+    expect(parse('text', '1'), const MessageContent.text('1', markdown: true));
   });
 
   test('image content as sent by the server', () {

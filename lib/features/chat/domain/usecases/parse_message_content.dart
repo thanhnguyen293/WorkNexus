@@ -83,23 +83,22 @@ class ParseMessageContent {
         final id = _int(json?['id']);
         final name = json?['name'];
         if (json == null || name is! String) break;
+        final size = _int(json['size']);
         if (id == null) {
-          // A file still uploading (no server id yet): show it by name.
-          return MessageContent.file(
-            fileId: 0,
-            name: name,
-            size: _int(json['size']) ?? 0,
-            time: 0,
-          );
+          // A file or image still uploading (no server id yet): show it by name.
+          if (size == null) break;
+          return contentType == 'image'
+              ? MessageContent.image(fileId: 0, name: name, size: size, time: 0)
+              : MessageContent.file(fileId: 0, name: name, size: size, time: 0);
         }
-        final size = _int(json['size']) ?? 0;
+        final totalSize = size ?? 0;
         final time = _int(json['time']) ?? 0;
         final mime = json['type'] is String ? json['type'] as String : null;
         return contentType == 'image'
             ? MessageContent.image(
                 fileId: id,
                 name: name,
-                size: size,
+                size: totalSize,
                 time: time,
                 mimeType: mime,
                 width: _int(json['width']),
@@ -109,7 +108,7 @@ class ParseMessageContent {
             : MessageContent.file(
                 fileId: id,
                 name: name,
-                size: size,
+                size: totalSize,
                 time: time,
                 mimeType: mime,
               );

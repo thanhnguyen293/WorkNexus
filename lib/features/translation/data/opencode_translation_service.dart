@@ -9,6 +9,7 @@ import '../../../core/util/content_hash.dart';
 import '../../../core/util/translation_languages.dart';
 import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
+import 'translation_prompts.dart';
 
 /// How long a single `opencode run` may take before we give up and kill it.
 ///
@@ -86,7 +87,7 @@ class OpenCodeTranslationService implements TranslationService {
     final cwd = workingDir ?? home ?? Directory.current.path;
     final language = translationLanguageFor(targetLang);
     final chosenModel = _firstNonEmpty(model, this.model);
-    final prompt = _buildPrompt(source, language.englishName);
+    final prompt = ticketPrompt(source, language.englishName);
     try {
       final run = await _run(
         ticketId: ticketId,
@@ -110,7 +111,7 @@ class OpenCodeTranslationService implements TranslationService {
       if (run.exitCode != 0) {
         return Err(AgentFailure(_exitMessage(run)));
       }
-      final parsed = _extractJson(run.stdout);
+      final parsed = extractTicketJson(run.stdout);
       if (parsed == null) {
         return Err(ParseFailure(_unparsableMessage(run)));
       }
@@ -149,11 +150,7 @@ class OpenCodeTranslationService implements TranslationService {
         : Platform.environment['HOME'];
     final chosenModel = _firstNonEmpty(model, this.model);
     final language = translationLanguageFor(targetLang);
-    final prompt =
-        'Translate this chat message into natural ${language.englishName}. '
-        'Preserve code, identifiers, URLs, emoji, @mentions and Markdown. '
-        'Return ONLY the translation, with no preface or quotes.\n'
-        'Message: <<<$text>>>';
+    final prompt = textPrompt(text, language.englishName);
     try {
       final run = await _run(
         ticketId: key,
@@ -253,24 +250,6 @@ class OpenCodeTranslationService implements TranslationService {
     if (first != null && first.isNotEmpty) return first;
     final second = b?.trim();
     return second != null && second.isNotEmpty ? second : null;
-  }
-
-  String _buildPrompt(TicketSource s, String languageName) =>
-      'Translate this software ticket into natural, technical $languageName. '
-      'Preserve code, identifiers, file paths, URLs and Markdown. '
-      'Return ONLY a JSON object with keys "title" and "body".\n'
-      'Title: <<<${s.title}>>>\nBody: <<<${s.body}>>>';
-
-  Map<String, dynamic>? _extractJson(String out) {
-    final start = out.indexOf('{');
-    final end = out.lastIndexOf('}');
-    if (start < 0 || end <= start) return null;
-    try {
-      final decoded = jsonDecode(out.substring(start, end + 1));
-      return decoded is Map<String, dynamic> ? decoded : null;
-    } catch (_) {
-      return null;
-    }
   }
 }
 
