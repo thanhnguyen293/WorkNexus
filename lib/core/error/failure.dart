@@ -1,6 +1,9 @@
 /// Domain-level error type. Data-layer exceptions are mapped to one of these so
 /// the application/presentation layers never depend on transport specifics.
-sealed class Failure {
+///
+/// Returned in a `Result`, not thrown across layers (rule 11.2). It is an
+/// [Exception] so a FutureProvider can rethrow one into its `AsyncValue.error`.
+sealed class Failure implements Exception {
   const Failure(this.message, {this.cause});
 
   final String message;
