@@ -1,4 +1,4 @@
-part of 'cli_agent_adapters.dart';
+import 'dart:io';
 
 /// Resolves CLI binaries (GUI apps on macOS don't inherit the shell PATH) and
 /// spawns them. The resolved path can be overridden per agent in Settings.

@@ -5,11 +5,11 @@ import 'dart:io';
 import '../../../core/domain/entities/agent_event.dart';
 import '../../../core/domain/entities/agent_session.dart';
 import '../../../core/domain/value_objects/agent_kind.dart';
+import '../../../core/platform/agent_runner.dart';
 import '../domain/adapters/coding_agent_adapter.dart';
 
-part 'cli_agent_adapters_runner.dart';
-part 'cli_agent_adapters_codex.dart';
 part 'cli_agent_adapters_claude_code.dart';
+part 'cli_agent_adapters_codex.dart';
 part 'cli_agent_adapters_opencode.dart';
 
 /// Shared subprocess+JSONL machinery for the CLI-backed agents.
