@@ -11,8 +11,10 @@ import '../../../../core/theme/app_typography.dart';
 
 part 'detail_sidebar_section_overlay.dart';
 
-typedef MetadataEditorBuilder =
-    Widget Function(BuildContext context, VoidCallback close);
+typedef MetadataEditorBuilder = Widget Function(
+  BuildContext context,
+  VoidCallback close,
+);
 
 class DetailSidebarSection extends StatefulWidget {
   const DetailSidebarSection({

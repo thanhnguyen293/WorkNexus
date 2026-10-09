@@ -31,8 +31,10 @@ import '../../features/chat/domain/repositories/message_translation_repository.d
 import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/chat/domain/repositories/wallpaper_repository.dart';
 import '../../features/chat/domain/usecases/translate_chat_message.dart';
+import '../../features/connections/data/adapter_connection_tester.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/data/repositories/local_zentao_profile_repository.dart';
+import '../../features/connections/domain/adapters/connection_tester.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/connections/domain/repositories/zentao_profile_repository.dart';
 import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
@@ -41,13 +43,13 @@ import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
-import '../../features/translation/domain/adapters/translation_service.dart';
 import '../database/database.dart';
 import '../debug/app_talker.dart';
 import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/adapters/merge_request_link_service.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/translation_service.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
@@ -112,6 +114,9 @@ abstract class ServiceModule {
   @lazySingleton
   UpdateZenTaoProfile updateZenTaoProfile(ZenTaoProfileRepository repository) =>
       UpdateZenTaoProfile(repository);
+
+  @lazySingleton
+  ConnectionTester get connectionTester => const AdapterConnectionTester();
 
   @lazySingleton
   TicketRepository ticketRepository(AppDatabase db) =>

@@ -222,9 +222,9 @@ void main() {
   });
 
   test('works end to end with the real apiScheme and AES', () async {
-    final scheme =
-        jsonDecode(File('test/fixtures/xxd/api_scheme.json').readAsStringSync())
-            as Map<String, Object?>;
+    final scheme = jsonDecode(
+      File('test/fixtures/xxd/api_scheme.json').readAsStringSync(),
+    ) as Map<String, Object?>;
     server = FakeXxdServer(scheme: scheme);
     http = FakeXxdHttp(serverInfoOk(scheme: scheme));
     server.onRequest = (req) => {

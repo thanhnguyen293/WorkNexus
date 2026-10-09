@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import 'assign_dialog.dart';
 import 'detail_action_button.dart';
 import 'resolve_dialog.dart';
@@ -70,10 +69,9 @@ class _ZenTaoActionsState extends ConsumerState<ZenTaoActions> {
               onTap: _busy
                   ? null
                   : () => _run(
-                      () => getIt<SyncService>().activateBug(
-                        ticket,
-                        build: 'trunk',
-                      ),
+                      () => ref
+                          .read(zenTaoBugServiceProvider)
+                          .activateBug(ticket, build: 'trunk'),
                       'Activated bug #${ticket.externalKey}',
                     ),
             ),

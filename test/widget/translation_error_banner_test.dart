@@ -9,8 +9,8 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/translation/translation_providers.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/translation_tab.dart';
-import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 /// Regression: the failed-translation banner used to claim "OpenCode timed out"
@@ -57,9 +57,8 @@ void main() {
           workspacesProvider.overrideWith((ref) => Stream.value(const [])),
           accountsProvider.overrideWith((ref) => Stream.value(const [])),
           projectsProvider.overrideWith((ref) => Stream.value(const [])),
-          translationRecordProvider(
-            _ticket.id,
-          ).overrideWith((ref) => Stream.value(null)),
+          translationRecordProvider(_ticket.id)
+              .overrideWith((ref) => Stream.value(null)),
           translationControllerProvider.overrideWith(
             () => _FailedTranslationController(message),
           ),

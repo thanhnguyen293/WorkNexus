@@ -7,16 +7,19 @@ import '../../../../core/debug/app_talker.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/network/zentao/zentao_client.dart';
 import '../../../../core/platform/credential_store.dart';
 import '../../domain/entities/zentao_department.dart';
 import '../../domain/entities/zentao_profile.dart';
 import '../../domain/entities/zentao_profile_update.dart';
 import '../../domain/repositories/zentao_profile_repository.dart';
 import '../mappers/zentao_profile_mapper.dart';
-import '../zentao/zentao_client.dart';
 
-typedef ZenTaoProfileClientFactory =
-    ZenTaoClient Function(String baseUrl, String account, String password);
+typedef ZenTaoProfileClientFactory = ZenTaoClient Function(
+  String baseUrl,
+  String account,
+  String password,
+);
 
 class LocalZenTaoProfileRepository implements ZenTaoProfileRepository {
   LocalZenTaoProfileRepository(

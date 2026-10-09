@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
@@ -13,7 +14,7 @@ import 'message_list_item.dart';
 import 'steady_extent_child_delegate.dart';
 
 /// Laying out far past the viewport steadies the estimated list length.
-const double _kCacheExtent = 2000;
+const ScrollCacheExtent _kCacheExtent = ScrollCacheExtent.pixels(2000);
 
 /// The reversed, lazily built list of [items] (newest first) under
 /// [header] (load older / start of chat), reporting scroll metrics and
@@ -70,7 +71,7 @@ class MessageListView extends StatelessWidget {
           child: ListView.custom(
             controller: scroll,
             reverse: true,
-            cacheExtent: _kCacheExtent,
+            scrollCacheExtent: _kCacheExtent,
             // Rows add their own side margins, so a highlighted row's tint
             // spans the full width.
             padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),

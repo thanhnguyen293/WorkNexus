@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/domain/adapters/translation_service.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
@@ -7,7 +8,6 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message_translatio
 import 'package:work_nexus/features/chat/domain/repositories/message_translation_repository.dart';
 import 'package:work_nexus/features/chat/domain/usecases/translate_chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
-import 'package:work_nexus/features/translation/domain/adapters/translation_service.dart';
 
 class _MockRepo extends Mock implements MessageTranslationRepository {}
 
@@ -60,18 +60,16 @@ void main() {
   test('showing a hidden stored translation marks it visible again', () async {
     final hidden = stored.copyWith(visible: false);
     when(() => repo.find('a', 'g1', 'vi')).thenAnswer((_) async => Ok(hidden));
-    when(
-      () => repo.setVisible('a', 'g1', 'vi', visible: true),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repo.setVisible('a', 'g1', 'vi', visible: true))
+        .thenAnswer((_) async => const Ok(null));
     final result = await translate(message, targetLang: 'vi');
     expect((result as Ok<ChatMessageTranslation>).value.visible, isTrue);
     verify(() => repo.setVisible('a', 'g1', 'vi', visible: true)).called(1);
   });
 
   test('translates, strips mentions and stores the result', () async {
-    when(
-      () => repo.find('a', 'g1', 'vi'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repo.find('a', 'g1', 'vi'))
+        .thenAnswer((_) async => const Ok(null));
     when(
       () => service.translateText(
         key: any(named: 'key'),
@@ -86,9 +84,8 @@ void main() {
   });
 
   test('a failed translation is not stored', () async {
-    when(
-      () => repo.find('a', 'g1', 'vi'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repo.find('a', 'g1', 'vi'))
+        .thenAnswer((_) async => const Ok(null));
     when(
       () => service.translateText(
         key: any(named: 'key'),

@@ -6,10 +6,10 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_adapter.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_client.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_models.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_normalize.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_adapter.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_client.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_models.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_normalize.dart';
 
 class _MockGitLabClient extends Mock implements GitLabClient {}
 
@@ -82,9 +82,8 @@ void main() {
 
       await adapter.closeMergeRequest(_ticket(externalType: 'MergeRequest'));
 
-      verify(
-        () => client.updateMergeRequest(ref, '42', stateEvent: 'close'),
-      ).called(1);
+      verify(() => client.updateMergeRequest(ref, '42', stateEvent: 'close'))
+          .called(1);
     },
   );
 
@@ -164,18 +163,15 @@ void main() {
     );
 
     expect(result, isA<Ok<bool>>());
-    verify(
-      () => client.updateMergeRequest(ref, '42', milestoneId: 0),
-    ).called(1);
+    verify(() => client.updateMergeRequest(ref, '42', milestoneId: 0))
+        .called(1);
   });
 
   test('updateTimeTracking sets estimate and adds spent time', () async {
-    when(
-      () => client.setMergeRequestTimeEstimate(any(), any(), any()),
-    ).thenAnswer((_) async {});
-    when(
-      () => client.addMergeRequestSpentTime(any(), any(), any()),
-    ).thenAnswer((_) async {});
+    when(() => client.setMergeRequestTimeEstimate(any(), any(), any()))
+        .thenAnswer((_) async {});
+    when(() => client.addMergeRequestSpentTime(any(), any(), any()))
+        .thenAnswer((_) async {});
 
     final result = await adapter.updateTimeTracking(
       _ticket(externalType: 'MergeRequest'),

@@ -36,11 +36,11 @@ void main() {
     getIt.registerSingleton<OpenCodeAuthRepository>(repository);
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
-  void stubCredentials(List<OpenCodeCredential> credentials) => when(
-    () => repository.listCredentials(),
-  ).thenAnswer((_) async => Ok(credentials));
+  void stubCredentials(List<OpenCodeCredential> credentials) =>
+      when(() => repository.listCredentials())
+          .thenAnswer((_) async => Ok(credentials));
 
   Future<void> pumpCard(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 900);

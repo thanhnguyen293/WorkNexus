@@ -3,8 +3,8 @@ import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/connections/data/github/github_models.dart';
-import 'package:work_nexus/features/connections/data/github/github_normalize.dart';
+import 'package:work_nexus/core/network/github/github_models.dart';
+import 'package:work_nexus/core/network/github/github_normalize.dart';
 
 const _acct = 'gh-acme';
 
@@ -64,9 +64,9 @@ GitHubPull _pull({
   mergedAt: mergedAt,
   mergeableState: 'clean',
   labels: _labels(labels),
-  requestedReviewers: [GitHubUser(login: 'rev', name: 'Rev Iewer')],
-  head: GitHubRef(ref: 'feature/x'),
-  base: GitHubRef(
+  requestedReviewers: [const GitHubUser(login: 'rev', name: 'Rev Iewer')],
+  head: const GitHubRef(ref: 'feature/x'),
+  base: const GitHubRef(
     ref: 'main',
     repo: GitHubRepo(fullName: 'octo/web'),
   ),
@@ -202,11 +202,8 @@ void main() {
     test('search-feed and rich normalizers agree on the ticket id', () {
       // The search feed sees the issue-id and the /pulls board sees the pull-id
       // (different global ids); keying on repo:pr:number makes them converge.
-      final a = normalizeGitHubPullFromIssue(
-        _prItem(number: 7),
-        accountId: _acct,
-      );
-      final b = normalizeGitHubPull(_pull(number: 7), accountId: _acct);
+      final a = normalizeGitHubPullFromIssue(_prItem(), accountId: _acct);
+      final b = normalizeGitHubPull(_pull(), accountId: _acct);
       expect(a.id, b.id);
       expect(a.id, 'gh-acme:octo/web:pr:7');
     });

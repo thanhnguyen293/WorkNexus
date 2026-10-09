@@ -41,8 +41,14 @@ class DesktopNotifier {
   }
 
   Future<bool> _initialize() async {
+    // The plugin picks its settings by defaultTargetPlatform, not the host OS
+    // (they differ under test), so gate on the same thing it does.
     if (kIsWeb ||
-        !(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+        !const {
+          TargetPlatform.macOS,
+          TargetPlatform.windows,
+          TargetPlatform.linux,
+        }.contains(defaultTargetPlatform)) {
       return false;
     }
     try {

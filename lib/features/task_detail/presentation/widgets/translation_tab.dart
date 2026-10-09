@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/translation_state.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -10,12 +10,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/translation/translation_providers.dart';
 import '../../../../core/util/translation_languages.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
-import '../../../translation/presentation/translation_providers.dart';
 import '../util/image_fallback.dart';
 import 'detail_scroll_body.dart';
 import 'section_label.dart';
@@ -151,8 +150,9 @@ class TranslationTab extends ConsumerWidget {
                   SizedBox(height: context.spacing.md),
                   MarkdownText(
                     record.translatedBody,
-                    imageLoader: (url) =>
-                        getIt<SyncService>().fetchTicketImage(ticket, url),
+                    imageLoader: (url) => ref
+                        .read(ticketDetailServiceProvider)
+                        .fetchTicketImage(ticket, url),
                     imageFallbackUrl: imageFallback.resolveUrl,
                     onOpenImage: imageFallback.open,
                   ),

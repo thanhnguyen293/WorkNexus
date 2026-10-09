@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,9 +28,8 @@ void main() {
     chats = _MockChatRepository();
     mine = Directory.systemTemp.createTempSync('stickers');
     sent = 0;
-    when(
-      () => chats.sendEmoji(any(), any(), any()),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => chats.sendEmoji(any(), any(), any()))
+        .thenAnswer((_) async => const Ok(null));
     when(
       () => chats.sendFile(
         any(),

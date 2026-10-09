@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/translation_record.dart';
+import 'package:work_nexus/core/domain/usecases/resolve_translation_state.dart';
 import 'package:work_nexus/core/domain/value_objects/translation_state.dart';
-import 'package:work_nexus/features/translation/domain/usecases/resolve_translation_state.dart';
 
 TranslationRecord _rec(String hash) => TranslationRecord(
   ticketId: 't',

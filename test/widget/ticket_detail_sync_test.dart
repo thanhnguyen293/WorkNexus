@@ -37,12 +37,11 @@ void main() {
     sync = _MockSyncService();
     await getIt.reset();
     getIt.registerSingleton<SyncService>(sync);
-    when(
-      () => sync.syncTicketDetail(any()),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => sync.syncTicketDetail(any()))
+        .thenAnswer((_) async => const Ok(null));
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   Future<ProviderContainer> container() async {
     final c = ProviderContainer(

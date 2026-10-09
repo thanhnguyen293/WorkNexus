@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_client.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_client.dart';
 
 /// A fake dio adapter that records requests and returns a canned response.
 class _FakeAdapter implements HttpClientAdapter {
@@ -200,39 +200,35 @@ void main() {
     },
   );
 
-  test(
-    'fetchBytes routes a bare /uploads link to the markdown uploads API with the PAT',
-    () async {
-      final fake = _FakeAdapter((_) => _image(png));
-      final client = _client(fake);
+  test('fetchBytes routes a bare /uploads link to the markdown uploads API with the PAT', () async {
+    final fake = _FakeAdapter((_) => _image(png));
+    final client = _client(fake);
 
-      final bytes = await client.fetchBytes(
-        '/uploads/11043117eeafd1cd26d74dbdcf8279a0/pasted_image_1778757174593.png',
-        projectPath: 'root/tbchat',
-        projectId: 42,
-      );
+    final bytes = await client.fetchBytes(
+      '/uploads/11043117eeafd1cd26d74dbdcf8279a0/pasted_image_1778757174593.png',
+      projectPath: 'root/tbchat',
+      projectId: 42,
+    );
 
-      expect(bytes, orderedEquals(png));
-      final req = fake.requests.single;
-      // The numeric project id is preferred, on the PAT-readable API endpoint —
-      // NOT the web `/root/tbchat/uploads/…` path (which needs a session cookie).
-      expect(
-        req.uri.path,
-        '/api/v4/projects/42/uploads/11043117eeafd1cd26d74dbdcf8279a0/'
-        'pasted_image_1778757174593.png',
-      );
-      expect(req.headers['PRIVATE-TOKEN'], 'pat123');
-    },
-  );
+    expect(bytes, orderedEquals(png));
+    final req = fake.requests.single;
+    // The numeric project id is preferred, on the PAT-readable API endpoint —
+    // NOT the web `/root/tbchat/uploads/…` path (which needs a session cookie).
+    expect(
+      req.uri.path,
+      '/api/v4/projects/42/uploads/11043117eeafd1cd26d74dbdcf8279a0/'
+      'pasted_image_1778757174593.png',
+    );
+    expect(req.headers['PRIVATE-TOKEN'], 'pat123');
+  });
 
   test(
     'fetchBytes falls back to the URL-encoded project path when no id is known',
     () async {
       final fake = _FakeAdapter((_) => _image(png));
 
-      await _client(
-        fake,
-      ).fetchBytes('/uploads/abc123/img.png', projectPath: 'group/web');
+      await _client(fake)
+          .fetchBytes('/uploads/abc123/img.png', projectPath: 'group/web');
 
       // `group/web` is a single, percent-encoded path segment (`group%2Fweb`).
       expect(
@@ -248,9 +244,8 @@ void main() {
     () async {
       final fake = _FakeAdapter((_) => _html());
 
-      final bytes = await _client(
-        fake,
-      ).fetchBytes('/uploads/abc123/img.png', projectId: 42);
+      final bytes = await _client(fake)
+          .fetchBytes('/uploads/abc123/img.png', projectId: 42);
 
       expect(bytes, isNull);
     },
@@ -261,9 +256,8 @@ void main() {
     () async {
       final fake = _FakeAdapter((_) => _image(png));
 
-      await _client(
-        fake,
-      ).fetchBytes('https://cdn.example.com/pic.png', projectId: 42);
+      await _client(fake)
+          .fetchBytes('https://cdn.example.com/pic.png', projectId: 42);
 
       final req = fake.requests.single;
       expect(req.uri.toString(), 'https://cdn.example.com/pic.png');

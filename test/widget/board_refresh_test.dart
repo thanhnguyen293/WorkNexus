@@ -35,7 +35,7 @@ void main() {
     getIt.registerSingleton<SyncService>(sync);
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   test('refreshing the bug board drops the cached tab and refetches', () async {
     when(
@@ -73,9 +73,8 @@ void main() {
   });
 
   test('refreshing the task board re-syncs the open execution', () async {
-    when(
-      () => sync.syncExecutionTasks(any()),
-    ).thenAnswer((_) async => const Ok(3));
+    when(() => sync.syncExecutionTasks(any()))
+        .thenAnswer((_) async => const Ok(3));
 
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -95,9 +94,8 @@ void main() {
   });
 
   test('a failed task-board refresh reports the failure', () async {
-    when(
-      () => sync.syncExecutionTasks(any()),
-    ).thenAnswer((_) async => const Err(NetworkFailure('offline')));
+    when(() => sync.syncExecutionTasks(any()))
+        .thenAnswer((_) async => const Err(NetworkFailure('offline')));
 
     final container = ProviderContainer();
     addTearDown(container.dispose);

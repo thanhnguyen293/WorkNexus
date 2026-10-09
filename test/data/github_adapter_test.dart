@@ -6,10 +6,10 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/github/github_adapter.dart';
-import 'package:work_nexus/features/connections/data/github/github_client.dart';
-import 'package:work_nexus/features/connections/data/github/github_models.dart';
-import 'package:work_nexus/features/connections/data/github/github_normalize.dart';
+import 'package:work_nexus/core/network/github/github_adapter.dart';
+import 'package:work_nexus/core/network/github/github_client.dart';
+import 'package:work_nexus/core/network/github/github_models.dart';
+import 'package:work_nexus/core/network/github/github_normalize.dart';
 
 class _MockGitHubClient extends Mock implements GitHubClient {}
 
@@ -42,9 +42,8 @@ void main() {
   const ref = 'octo/web';
 
   test('closeItem sets state=closed on the issues endpoint', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     final res = await adapter.closeItem(_ticket(externalType: 'Issue'));
 
@@ -53,9 +52,8 @@ void main() {
   });
 
   test('reopenItem sets state=open', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     await adapter.reopenItem(_ticket(externalType: 'Issue'));
 
@@ -63,9 +61,8 @@ void main() {
   });
 
   test('closeItem closes a PR via the same issues endpoint', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     await adapter.closeItem(_ticket(externalType: 'PullRequest'));
 
@@ -84,7 +81,7 @@ void main() {
     final res = await adapter.mergePull(_ticket(externalType: 'PullRequest'));
 
     expect(res, isA<Ok<bool>>());
-    verify(() => client.mergePull(ref, '42', mergeMethod: 'merge')).called(1);
+    verify(() => client.mergePull(ref, '42')).called(1);
   });
 
   test('listRepoAssignees maps, dedupes, and sorts by login', () async {

@@ -18,6 +18,10 @@ import 'chat_avatar.dart';
 export '../../domain/value_objects/chat_media_kind.dart'
     show isVideoFile, isVideoName;
 
+part 'chat_labels_files.dart';
+part 'chat_labels_people.dart';
+part 'chat_labels_time.dart';
+
 /// `[@Display Name](@#userId)` — how xxd encodes a mention inside text.
 final chatMentionPattern = RegExp(r'\[@([^\]]+)\]\(@#(\d+)\)');
 
@@ -57,28 +61,6 @@ final _markdownSignal = RegExp(
   multiLine: true,
 );
 
-/// A conversation's title, with a localized fallback.
-String chatTitle(
-  BuildContext context,
-  ChatConversation chat,
-  Map<int, ChatUser> users,
-) {
-  final resolved = const ResolveChatTitle()(chat, users);
-  if (resolved != null) return resolved;
-  final peer = chat.peerUserId;
-  final l = AppL10n.of(context);
-  return peer != null ? l.chatUnknownUser(peer) : l.chatUntitled;
-}
-
-/// A user's display name, with a localized fallback.
-String chatUserName(BuildContext context, Map<int, ChatUser> users, int id) {
-  final u = users[id];
-  // xxd's bot (xuanbot replies, ZenTao notifications) is user 0.
-  if (id == 0) return AppL10n.of(context).chatBotName;
-  if (u == null) return AppL10n.of(context).chatUnknownUser(id);
-  return u.realname.isNotEmpty ? u.realname : u.account;
-}
-
 /// One-line preview of a message for the chat list.
 String chatPreview(BuildContext context, ChatMessage message) {
   final l = AppL10n.of(context);
@@ -102,96 +84,8 @@ String chatPreview(BuildContext context, ChatMessage message) {
   };
 }
 
-/// Up to two initials for an avatar.
-String chatInitials(String name) {
-  final words = name
-      .trim()
-      .split(RegExp(r'[\s_\-]+'))
-      .where((w) => w.isNotEmpty);
-  final letters = words.take(2).map((w) => w.characters.first.toUpperCase());
-  final joined = letters.join();
-  return joined.isEmpty ? '?' : joined;
-}
-
-/// Whether a file to send is an image (gets a thumbnail in the preview).
-bool isImageAttachment(String name) => const {
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'webp',
-  'bmp',
-}.contains(_extension(name));
-
-String _extension(String name) {
-  final dot = name.lastIndexOf('.');
-  return dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
-}
-
-/// Human-readable byte size.
-String formatFileSize(int bytes) {
-  if (bytes >= 1024 * 1024 * 1024) {
-    final gb = bytes / 1024 / 1024 / 1024;
-    // Whole sizes (limits like 2 GB) read better without ".0".
-    return '${gb == gb.roundToDouble() ? gb.toStringAsFixed(0) : gb.toStringAsFixed(1)} GB';
-  }
-  if (bytes >= 1024 * 1024) {
-    return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
-  }
-  if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
-  return '$bytes B';
-}
-
-/// A file's size, or — while it transfers ([progress] 0–1) — how much of it
-/// has moved: `12.3 MB / 364.2 MB`.
-String formatTransfer(int bytes, double? progress) => progress == null
-    ? formatFileSize(bytes)
-    : '${formatFileSize((bytes * progress.clamp(0, 1)).round())} / '
-          '${formatFileSize(bytes)}';
-
-/// A user's avatar URL, when they have one.
-String? chatAvatarUrl(Map<int, ChatUser> users, int? id) =>
-    id == null ? null : users[id]?.avatarUrl;
-
-/// Day separator label: today / yesterday / a localized date.
-String chatDayLabel(BuildContext context, DateTime day, {DateTime? now}) {
-  final l = AppL10n.of(context);
-  final today = DateUtils.dateOnly(now ?? DateTime.now());
-  final d = DateUtils.dateOnly(day);
-  if (d == today) return l.chatToday;
-  if (d == today.subtract(const Duration(days: 1))) return l.chatYesterday;
-  final locale = Localizations.localeOf(context).toString();
-  return d.year == today.year
-      ? DateFormat.MMMMd(locale).format(d)
-      : DateFormat.yMMMMd(locale).format(d);
-}
-
-/// Compact time for the chat list: 10:05 today, "Yesterday", a weekday within
-/// the week, else a short date.
-String chatListTime(BuildContext context, DateTime? t, {DateTime? now}) {
-  if (t == null) return '';
-  final today = DateUtils.dateOnly(now ?? DateTime.now());
-  final day = DateUtils.dateOnly(t);
-  final locale = Localizations.localeOf(context).toString();
-  final age = today.difference(day).inDays;
-  if (age == 0) return DateFormat('HH:mm').format(t);
-  if (age == 1) return AppL10n.of(context).chatYesterday;
-  if (age < 7) return DateFormat.E(locale).format(t);
-  return t.year == today.year
-      ? DateFormat('dd/MM').format(t)
-      : DateFormat('dd/MM/yy').format(t);
-}
-
 /// The host of a URL, for link cards.
 String chatLinkHost(String url) => Uri.tryParse(url)?.host ?? url;
-
-/// Upper-case file extension for the file tile badge (max 4 chars).
-String chatFileBadge(String name) {
-  final dot = name.lastIndexOf('.');
-  if (dot < 0 || dot == name.length - 1) return 'FILE';
-  final ext = name.substring(dot + 1).toUpperCase();
-  return ext.length > 4 ? ext.substring(0, 4) : ext;
-}
 
 /// Markdown reduced to its words for one-line previews: code fences, list
 /// and heading markers, emphasis and plain link syntax are dropped (mention
@@ -234,99 +128,4 @@ String _stripMarkdown(String text) => text
     ),
     null => (imageUrl: null, label: null, background: null),
   };
-}
-
-/// `#RRGGBB` from the server (a user's chosen group colour) as a [Color].
-Color? chatHexColor(String hex) {
-  final v = int.tryParse(hex.replaceFirst('#', ''), radix: 16);
-  if (v == null || hex.replaceFirst('#', '').length != 6) return null;
-  return Color(0xFF000000 | v);
-}
-
-/// A user's presence (null when unknown).
-ChatPresence? chatPresenceOf(Map<int, ChatUser> users, int? id) {
-  final status = users[id]?.status;
-  return status == null ? null : ChatPresence.fromStatus(status);
-}
-
-/// Names for role codes admins often add beyond ZenTao's defaults, which
-/// the server sends no name for.
-String? _extraRoleName(AppL10n l, String code) => switch (code.toLowerCase()) {
-  'ui' || 'designer' => l.chatRoleUi,
-  'ux' => l.chatRoleUx,
-  'op' || 'ops' => l.chatRoleOp,
-  'opm' => l.chatRoleOpm,
-  'ba' => l.chatRoleBa,
-  'devops' => l.chatRoleDevops,
-  _ => null,
-};
-
-/// A ZenTao role's official name. A role an admin added takes a name of ours
-/// for common codes (`ui` → Designer), else the server's ([serverNames],
-/// code → name), else stays as its code.
-String chatRoleLabel(
-  BuildContext context,
-  String role, {
-  Map<String, String> serverNames = const {},
-}) {
-  final l = AppL10n.of(context);
-  return switch (ChatRole.fromCode(role)) {
-    ChatRole.dev => l.chatRoleDev,
-    ChatRole.qa => l.chatRoleQa,
-    ChatRole.pm => l.chatRolePm,
-    ChatRole.po => l.chatRolePo,
-    ChatRole.td => l.chatRoleTd,
-    ChatRole.pd => l.chatRolePd,
-    ChatRole.qd => l.chatRoleQd,
-    ChatRole.top => l.chatRoleTop,
-    ChatRole.others => l.chatRoleOthers,
-    null => _extraRoleName(l, role.trim()) ?? serverNames[role.trim()] ?? role,
-  };
-}
-
-/// The "verified" check beside a user's avatar — the colour of their rank
-/// and their role, for the legend shown on hover; null for engineers,
-/// "others" and unknown roles.
-ChatVerifiedBadge? chatVerifiedBadge(
-  BuildContext context,
-  Map<int, ChatUser> users,
-  int? id,
-) {
-  final role = users[id]?.role?.trim();
-  final rank = chatRoleRankOf(role);
-  if (role == null || rank == null) return null;
-  return (color: chatRankColor(context, rank), role: role);
-}
-
-/// The "verified" check colour of a rank.
-Color chatRankColor(BuildContext context, ChatRoleRank rank) {
-  final c = context.colors;
-  return switch (rank) {
-    ChatRoleRank.lead => c.verifiedLead,
-    ChatRoleRank.manager => c.verifiedManager,
-    ChatRoleRank.executive => c.verifiedExecutive,
-  };
-}
-
-/// "Online", "Away", "Busy" or "Offline".
-String chatPresenceLabel(BuildContext context, ChatPresence presence) {
-  final l = AppL10n.of(context);
-  return switch (presence) {
-    ChatPresence.online => l.chatOnline,
-    ChatPresence.away => l.chatAway,
-    ChatPresence.busy => l.chatBusy,
-    ChatPresence.offline => l.chatOffline,
-  };
-}
-
-/// How long ago [t] was, compactly: "just now", "5m ago", "2h ago", "3d
-/// ago", then the date.
-String chatAgo(BuildContext context, DateTime t, {DateTime? now}) {
-  final l = AppL10n.of(context);
-  final diff = (now ?? DateTime.now()).difference(t);
-  if (diff.inMinutes < 1) return l.justNow;
-  if (diff.inHours < 1) return l.minutesAgo(diff.inMinutes);
-  if (diff.inDays < 1) return l.hoursAgo(diff.inHours);
-  if (diff.inDays < 30) return l.daysAgo(diff.inDays);
-  return DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(t);
 }

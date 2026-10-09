@@ -7,7 +7,7 @@ version: 1.0.0+1
 
 environment:
   # No caret anywhere in this file (project rule): use explicit lower/upper bounds.
-  sdk: '>=3.10.7 <4.0.0'
+  sdk: '>=3.13.5 <4.0.0'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Dependency policy (project rule): versions are PINNED EXACTLY — no `^`.
@@ -22,68 +22,74 @@ dependencies:
     sdk: flutter
 
   # UI / icons / fonts
-  cupertino_icons: 1.0.9
-  # Thin line icons (MIT) for the chat's doodle background pattern.
-  phosphor_flutter: 2.1.0
+  # Phosphor line icons (MIT). Vendored 2.1.0, patched for Flutter 3.44+ where
+  # IconData is final (upstream has no fixed release) — see
+  # packages/phosphor_flutter/PATCH.md.
+  phosphor_flutter:
+    path: packages/phosphor_flutter
   # Renders the bundled monochrome provider brand logos (assets/brands/*.svg),
   # tinted at draw time. Pure-Dart (vector_graphics) — no native-assets build
   # hook, so it does not affect build_runner.
   flutter_svg: 2.3.0
   # Be Vietnam Pro (default UI font). Fetched from Google Fonts at first run and
-  # cached on disk; falls back to the bundled sans until then.
+  # cached on disk; falls back to the bundled sans until then. Held at 8.x: 9.x
+  # is built on the `material_ui` package, whose TextTheme is a different type
+  # from flutter/material's — it needs the app moved to material_ui first.
   google_fonts: 8.2.0
-  gpt_markdown: 1.1.8
+  gpt_markdown: 1.3.4
   html2md: 1.3.2
-  cached_network_image: 3.4.1
-  image_picker: 1.2.1
-  two_dimensional_scrollables: 0.5.3
+  cached_network_image: 4.0.4
+  image_picker: 1.2.4
+  two_dimensional_scrollables: 0.5.5
   # In-app attachment preview (repro videos). The macOS backend
   # (video_player_avfoundation) is a standard method-channel plugin — not a
   # native-assets/FFI build hook — so it does not affect build_runner.
-  video_player: 2.9.2
+  video_player: 2.14.1
 
   # State management & DI. injectable = annotation-driven registration on top of
   # get_it (codegen via injectable_generator below); resolves on this SDK with
-  # analyzer 8.x / build_runner 2.15.1.
-  flutter_riverpod: 3.3.2
-  get_it: 9.2.1
-  injectable: 2.7.1+4
+  # analyzer 14.x / build_runner 2.16.1.
+  flutter_riverpod: 3.4.3
+  get_it: 9.3.0
+  injectable: 3.0.0
 
   # Functional error handling (Either/Option) — pairs with core/error
   fpdart: 1.2.0
 
-  # Persistence (local-first source of truth). drift is capped: 2.34+ needs
-  # analyzer 13 / Dart 3.11 — this SDK is 3.10.7, so keep drift on 2.3x.
-  drift: 2.31.0
-  drift_flutter: 0.2.8
+  # Persistence (local-first source of truth).
+  drift: 2.35.2
+  drift_flutter: 0.3.1
 
-  # Networking / secure storage. flutter_secure_storage stays on 9.x: 10.x pulls
-  # `objective_c` (native-assets build hook) which breaks build_runner on this SDK.
-  dio: 5.10.0
-  talker_dio_logger: 5.1.16
-  talker_flutter: 5.1.16
+  # Networking / secure storage. flutter_secure_storage 11 reads what 9.x stored
+  # (verified on Windows); macOS keeps the legacy keychain, see CredentialStore.
+  dio: 5.11.1
+  talker_dio_logger: 5.1.20
+  talker_flutter: 5.1.20
   # Type-safe dio client generator for the ZenTao v1 REST API. Runtime
   # annotations only; the code generator is a dev_dependency below.
-  retrofit: 4.9.2
-  flutter_secure_storage: 9.2.4
+  retrofit: 4.10.0
+  flutter_secure_storage: 11.2.0
 
-  # Codegen annotations. json_annotation capped <4.12 (analyzer ceiling on this SDK).
+  # Codegen annotations. Keep json_annotation in step with json_serializable.
   freezed_annotation: 3.1.0
-  json_annotation: 4.9.0
+  json_annotation: 4.12.0
 
   # Logging — use instead of print (rule 11.3)
-  logger: 2.7.0
+  logger: 2.8.0
 
   # Utilities
   # path_provider: used directly by core/database to place the drift file in the
   # application-support directory (drift_flutter pulls it in too).
   path_provider: 2.1.6
   window_manager: 0.5.2
+  # Held at 0.5.x: 0.7 rebuilt it on `nativeapi` and deprecated the whole API
+  # DesktopTrayService uses; moving means rewriting the tray service and
+  # checking the tray menu by hand on Windows and macOS.
   tray_manager: 0.5.3
-  windows_single_instance: 1.1.0
+  windows_single_instance: 1.2.0
   uuid: 4.6.0
   collection: 1.19.1
-  intl: 0.20.2
+  intl: 0.20.3
 
   # ZenTao chat (xuanxuan/xxd) protocol: AES-256-CBC socket frames + md5 auth.
   pointycastle: 4.0.0
@@ -100,40 +106,41 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # On-device performance tests (integration_test/) and their timeline-summary
+  # driver (test_driver/). Run with `make perf`.
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
 
   flutter_lints: 6.0.0
 
-  # Codegen. build_runner capped at 2.15.1: 2.15.2+ requires Dart 3.11.
-  build_runner: 2.15.1
-  drift_dev: 2.31.0
-  freezed: 3.2.3
-  injectable_generator: 2.9.1
-  json_serializable: 6.11.2
+  # Codegen. Every generator here shares one analyzer, capped <14.3 by
+  # injectable_generator 3.1.3 (its lean_builder dep needs _fe_analyzer_shared
+  # <106). That caps build_runner at 2.16.1 (2.16.2+ needs analyzer 14.3+).
+  build_runner: 2.16.1
+  drift_dev: 2.35.1
+  freezed: 4.0.2
+  injectable_generator: 3.1.3
+  json_serializable: 6.14.1
   # Retrofit code generator (pairs with the `retrofit` runtime dep). Resolves
   # on this SDK (analyzer-compatible); re-verify codegen if bumped.
-  retrofit_generator: 10.2.7
+  retrofit_generator: 10.2.11
 
   # Testing
   mocktail: 1.0.5
+  # Raw SQLite handle for migration tests (builds an old-schema file directly).
+  # Same version drift resolves at runtime.
+  sqlite3: 3.7.0
 
   # Type-safe asset references (assets/brands/*.svg → Assets.brands.*). The
   # build_runner integration of flutter_gen; its generated output (lib/gen/) is
   # gitignored and rebuilt with the other codegen. Re-verify codegen if bumped.
   flutter_gen_runner: 5.15.0
 
-# ─────────────────────────────────────────────────────────────────────────────
-# path_provider_foundation >= 2.6 pulls `objective_c`, whose native-assets
-# `hook/build.dart` breaks `dart run build_runner` (AOT) on this Dart SDK
-# ("'dart compile' does not support build hooks"). Kept as a RANGE on purpose:
-# it must stay < 2.6 while letting the transitive resolver pick a patch.
-# Remove once build_runner tolerates build hooks on the pinned SDK.
-# ─────────────────────────────────────────────────────────────────────────────
-dependency_overrides:
-  path_provider_foundation: '>=2.4.0 <2.6.0'
-
 # NOTE: riverpod_lint + custom_lint are intentionally NOT added — they cannot
 # resolve on this toolchain (riverpod_lint needs analyzer ^7 or ^9, this SDK
-# pins analyzer 8.x; older custom_lint needs freezed_annotation 2.x). Rule
+# pins analyzer 14.x; older custom_lint needs freezed_annotation 2.x). Rule
 # enforcement lives in analysis_options.yaml via the built-in lint set instead.
 
 # flutter_gen: type-safe asset accessors. Output (lib/gen/) is gitignored and

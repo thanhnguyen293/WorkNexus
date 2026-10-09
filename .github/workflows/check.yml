@@ -1,0 +1,52 @@
+name: Check (analyze & test)
+
+# Static analysis and the unit/widget test suite on every pull request and
+# every push to main. Runs on Linux, so the POSIX-only tests (fake CLI
+# scripts under /bin/sh) run too. On-device perf tests (integration_test/)
+# need a desktop session and real accounts, so they stay manual: `make perf`.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in step with build.yml / .fvmrc.
+  FLUTTER_VERSION: "3.47.7"
+
+jobs:
+  check:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # *.g.dart / *.freezed.dart / *.config.dart are gitignored.
+      - name: Run code generation
+        run: dart run build_runner build
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test integration_test test_driver
+
+      # Any finding — error, warning or info — fails the build.
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test

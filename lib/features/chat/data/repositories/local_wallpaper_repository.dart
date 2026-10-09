@@ -10,8 +10,7 @@ const _imageExtensions = {'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'heic'};
 /// Wallpapers are files in [directory], named `<epoch ms>_<name>` so the
 /// newest sort first.
 class LocalWallpaperRepository implements WallpaperRepository {
-  LocalWallpaperRepository({required Future<Directory> Function() directory})
-    : _directory = directory;
+  LocalWallpaperRepository({required this._directory});
 
   final Future<Directory> Function() _directory;
 
@@ -40,7 +39,10 @@ class LocalWallpaperRepository implements WallpaperRepository {
       await dir.create(recursive: true);
       final safe = name.replaceAll(RegExp(r'[^\w.\-]'), '_');
       final file = File(
-        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_'
+        // The platform separator, so this path equals the one a later directory
+        // listing returns for the same file (it is the item's id).
+        '${dir.path}${Platform.pathSeparator}'
+        '${DateTime.now().millisecondsSinceEpoch}_'
         '${_isImage(safe) ? safe : '$safe.png'}',
       );
       await file.writeAsBytes(bytes, flush: true);

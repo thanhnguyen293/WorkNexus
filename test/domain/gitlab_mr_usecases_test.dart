@@ -35,9 +35,8 @@ void main() {
   setUp(() => service = _MockGitLabMrService());
 
   test('PostGitLabMrComment delegates one comment command', () async {
-    when(
-      () => service.postComment(_ticket, 'Looks good'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.postComment(_ticket, 'Looks good'))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await PostGitLabMrComment(service)(_ticket, 'Looks good');
 
@@ -46,9 +45,8 @@ void main() {
   });
 
   test('CloseGitLabMr delegates one close command', () async {
-    when(
-      () => service.closeGitLabItem(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.closeGitLabItem(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await CloseGitLabMr(service)(_ticket);
 
@@ -57,9 +55,8 @@ void main() {
   });
 
   test('ApproveGitLabMr delegates one approval command', () async {
-    when(
-      () => service.approveGitLabMr(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.approveGitLabMr(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await ApproveGitLabMr(service)(_ticket);
 
@@ -68,9 +65,8 @@ void main() {
   });
 
   test('MergeGitLabMr delegates one merge command', () async {
-    when(
-      () => service.mergeGitLabMr(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.mergeGitLabMr(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await MergeGitLabMr(service)(_ticket);
 
@@ -79,9 +75,8 @@ void main() {
   });
 
   test('RebaseGitLabMr delegates one rebase command', () async {
-    when(
-      () => service.rebaseGitLabMr(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.rebaseGitLabMr(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await RebaseGitLabMr(service)(_ticket);
 

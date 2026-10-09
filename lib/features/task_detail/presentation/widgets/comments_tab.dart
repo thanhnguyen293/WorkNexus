@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/repositories/comment_repository.dart';
@@ -17,7 +18,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../detail_providers.dart';
 import '../util/image_fallback.dart';
 import 'comment_tile.dart';
@@ -58,7 +58,6 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
           body: text,
           createdAt: DateTime.now(),
           origin: CommentOrigin.internalNote,
-          synced: true,
         ),
       );
       _ctrl.clear();
@@ -73,7 +72,9 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
     final messenger = ScaffoldMessenger.of(context);
     final failedMessage = AppL10n.of(context).commentPostFailed;
     setState(() => _posting = true);
-    final res = await getIt<SyncService>().postComment(ticket, text);
+    final res = await ref
+        .read(ticketDetailServiceProvider)
+        .postComment(ticket, text);
     if (!mounted) return;
     setState(() => _posting = false);
     switch (res) {
@@ -107,7 +108,9 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
 
     ImageBytesLoader? loader() => ticket == null
         ? null
-        : (url) => getIt<SyncService>().fetchTicketImage(ticket, url);
+        : (url) => ref
+              .read(ticketDetailServiceProvider)
+              .fetchTicketImage(ticket, url);
     // Comments share the ticket's provider context, so inline images get the
     // same "open in browser" fallback as the description (e.g. GitLab uploads).
     final imageFallback = ticket == null

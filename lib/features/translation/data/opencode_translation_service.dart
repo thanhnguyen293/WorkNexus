@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../../../core/domain/adapters/translation_service.dart';
 import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
+import '../../../core/platform/agent_runner.dart';
 import '../../../core/util/content_hash.dart';
 import '../../../core/util/translation_languages.dart';
-import '../../agents/data/cli_agent_adapters.dart';
-import '../domain/adapters/translation_service.dart';
 
 /// How long a single `opencode run` may take before we give up and kill it.
 ///
@@ -34,12 +34,12 @@ final RegExp _ansiEscape = RegExp(r'\x1B\[[0-9;]*[a-zA-Z]');
 /// bypass your OpenCode usage tracking.
 class OpenCodeTranslationService implements TranslationService {
   OpenCodeTranslationService({
-    AgentRunner runner = const AgentRunner(),
+    this._runner = const AgentRunner(),
     this.model,
     this.workingDir,
     this.binaryOverride,
     this.timeout = kOpenCodeTranslationTimeout,
-  }) : _runner = runner;
+  });
 
   final AgentRunner _runner;
 

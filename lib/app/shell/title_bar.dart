@@ -76,25 +76,3 @@ class TitleBar extends ConsumerWidget {
     return bar;
   }
 }
-
-class _SyncIndicator extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(color: c.success, shape: BoxShape.circle),
-        ),
-        SizedBox(width: context.spacing.xs),
-        Text(
-          AppL10n.of(context).syncedAgo,
-          style: context.typography.monoSm.copyWith(color: c.textTertiary),
-        ),
-      ],
-    );
-  }
-}

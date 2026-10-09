@@ -5,12 +5,12 @@ import 'package:work_nexus/features/chat/domain/value_objects/message_content.da
 void main() {
   const parse = ParseMessageContent();
 
-  test('plain and text are both text', () {
+  test('plain is literal text; text is Markdown', () {
     expect(
       parse('plain', 'hi [@Dyno](@#31)'),
       const MessageContent.text('hi [@Dyno](@#31)'),
     );
-    expect(parse('text', '1'), const MessageContent.text('1'));
+    expect(parse('text', '1'), const MessageContent.text('1', markdown: true));
   });
 
   test('image content as sent by the server', () {
@@ -56,13 +56,17 @@ void main() {
     );
   });
 
+  test('an attachment without a server id yet shows by name', () {
+    // Still uploading: no `id`, so it can't be fetched — but it isn't broken.
+    expect(
+      parse('image', '{"name":"x.png"}'),
+      const MessageContent.file(fileId: 0, name: 'x.png', size: 0, time: 0),
+    );
+  });
+
   test('malformed or unknown content degrades to unsupported', () {
     expect(
       parse('image', 'not json'),
-      const MessageContent.unsupported('image'),
-    );
-    expect(
-      parse('image', '{"name":"x.png"}'),
       const MessageContent.unsupported('image'),
     );
     expect(

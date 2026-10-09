@@ -3,14 +3,14 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
+import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_adapter.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_client.dart';
+import 'package:work_nexus/core/network/zentao/zentao_adapter.dart';
+import 'package:work_nexus/core/network/zentao/zentao_client.dart';
 
 /// A minimal ZenTao bug ticket for detail/comment fetches.
 Ticket _bugTicket() => const Ticket(
@@ -41,7 +41,7 @@ class _FakeAdapter implements HttpClientAdapter {
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<Uint8List>? requestStream,
-    Future? cancelFuture,
+    Future<void>? cancelFuture,
   ) async {
     requests.add(options);
     return handler(options);
@@ -65,6 +65,9 @@ ZenTaoClient _client(_FakeAdapter fake) {
     dio: dio,
   );
 }
+
+/// The value of an [Ok] result, typed from the [Result] (fails the test on Err).
+T _ok<T>(Result<T> result) => (result as Ok<T>).value;
 
 void main() {
   test('authenticate posts to /tokens and returns the account', () async {
@@ -121,8 +124,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
-      final tickets = (res as Ok).value.tickets;
+      expect(res, isA<Ok<Object?>>());
+      final tickets = _ok(res).tickets;
       expect(tickets.length, 1);
       final t = tickets.single;
       expect(t.providerType, ProviderType.zentao);
@@ -164,8 +167,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
-      final tickets = (res as Ok).value.tickets;
+      expect(res, isA<Ok<Object?>>());
+      final tickets = _ok(res).tickets;
       expect(tickets.map((t) => t.externalKey).toSet(), {'1871', '3259'});
     },
   );
@@ -192,8 +195,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.getTicket(_bugTicket());
 
-      expect(res, isA<Ok>());
-      final t = (res as Ok).value as Ticket;
+      expect(res, isA<Ok<Object?>>());
+      final t = _ok(res);
       expect(t.title, 'Login loops');
       expect(t.status, UnifiedStatus.review); // resolved → review
       // HTML became Markdown: bold + ordered list.
@@ -342,8 +345,8 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listUsers();
 
-    expect(res, isA<Ok>());
-    final users = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final users = _ok(res);
     expect(users.map((u) => u.displayName).toList(), ['Amy', 'Zoe']); // sorted
     expect(users.first.account, 'amy');
   });
@@ -365,8 +368,8 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listProducts();
 
-    expect(res, isA<Ok>());
-    final products = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final products = _ok(res);
     expect(products.map((p) => p.id).toList(), ['8', '9']);
     expect(products.map((p) => p.name).toList(), ['VN_Socialfi', 'VN_IM_Chat']);
   });
@@ -517,12 +520,114 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listComments(_bugTicket());
 
-    expect(res, isA<Ok>());
-    final comments = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final comments = _ok(res);
     // Only the `commented` action becomes a comment (the empty 'opened' drops).
     expect(comments.length, 1);
     expect(comments.single.authorName, 'Thanh');
     expect(comments.single.body, contains('`auth.dart`'));
+  });
+
+  test(
+    'detail, comments and activity fetched together share one request',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
+          return _json({
+            'id': 4302,
+            'title': 'Login loops',
+            'status': 'active',
+            'actions': [
+              {
+                'id': 1,
+                'action': 'commented',
+                'actor': 'thanh',
+                'comment': 'Looking into it',
+                'date': '2026-07-16 09:00:00',
+              },
+            ],
+          });
+        }
+        return _json(const {});
+      });
+      int detailRequests() => fake.requests
+          .where((r) => r.uri.path.endsWith('/api.php/v1/bugs/4302'))
+          .length;
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+      final (detail, comments, activity) = await (
+        adapter.getTicket(_bugTicket()),
+        adapter.listComments(_bugTicket()),
+        adapter.listActivity(_bugTicket()),
+      ).wait;
+
+      expect(detail, isA<Ok<Ticket>>());
+      expect(switch (comments) {
+        Ok(:final value) => value.length,
+        Err() => -1,
+      }, 1);
+      expect(activity, isA<Ok<Object>>());
+      expect(detailRequests(), 1);
+
+      // Only in-flight requests are shared: a later call fetches again.
+      await adapter.getTicket(_bugTicket());
+      expect(detailRequests(), 2);
+    },
+  );
+
+  group('fetchBytes retries only what looks like a lost session', () {
+    ResponseBody reply(int status, String contentType) =>
+        ResponseBody.fromBytes(
+          const [1, 2, 3],
+          status,
+          headers: {
+            Headers.contentTypeHeader: [contentType],
+            if (status == 302) 'location': ['/user-login.html'],
+          },
+        );
+
+    Future<({Uint8List? bytes, int fetches, int logins})> fetch(
+      ResponseBody Function(int attempt) image,
+    ) async {
+      var attempt = 0;
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/file-read-7.png')) return image(++attempt);
+        return _json(const {});
+      });
+      final bytes = await _client(fake).fetchBytes('file-read-7.png');
+      int count(String suffix) =>
+          fake.requests.where((r) => r.uri.path.endsWith(suffix)).length;
+      return (
+        bytes: bytes,
+        fetches: count('/file-read-7.png'),
+        logins: count('/tokens'),
+      );
+    }
+
+    test('a 404 fails at once, without a re-login', () async {
+      final r = await fetch((_) => reply(404, 'text/plain'));
+      expect(r.bytes, isNull);
+      expect(r.fetches, 1);
+      expect(r.logins, 1); // the initial sign-in only
+    });
+
+    test('a bounce right after login heals on the same session', () async {
+      final r = await fetch(
+        (n) => n == 1 ? reply(302, 'text/html') : reply(200, 'image/png'),
+      );
+      expect(r.bytes, [1, 2, 3]);
+      expect(r.fetches, 2);
+      expect(r.logins, 1);
+    });
+
+    test('a login page every time forces one fresh login', () async {
+      final r = await fetch((_) => reply(200, 'text/html'));
+      expect(r.bytes, isNull);
+      expect(r.fetches, 3);
+      expect(r.logins, 2);
+    });
   });
 
   group('detectBaseUrl', () {

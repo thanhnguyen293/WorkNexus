@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../../../../core/domain/adapters/opencode_cli.dart';
-import '../cli_agent_adapters.dart';
+import '../../../../core/platform/agent_runner.dart';
 
 /// [OpenCodeCli] backed by the real `opencode` binary.
 ///

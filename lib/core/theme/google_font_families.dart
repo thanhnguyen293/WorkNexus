@@ -26,3 +26,12 @@ final Map<String, GoogleFontFamily> kGoogleFontFamilies = {
     textTheme: (base) => GoogleFonts.geistMonoTextTheme(base),
   ),
 };
+
+/// The google-fonts-backed family named [family], or null when it isn't one —
+/// or when runtime fetching is off (tests): none of these families is bundled,
+/// so google_fonts could only fail to load them, asynchronously. Callers then
+/// treat the name like any other family and fall back.
+GoogleFontFamily? googleFontFamily(String family) =>
+    GoogleFonts.config.allowRuntimeFetching
+    ? kGoogleFontFamilies[family]
+    : null;

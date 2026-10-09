@@ -1,0 +1,2 @@
+# Vendored third-party code: analyze with the default rules only, so the app's
+# stricter lint set (../../analysis_options.yaml) does not apply here.

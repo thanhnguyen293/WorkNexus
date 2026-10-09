@@ -46,8 +46,12 @@ ThemeData buildAppTheme({
   final requestedFamily = fontFamily.trim();
   // Some families (Be Vietnam Pro, Geist Mono) are served by google_fonts under
   // a generated family name; the rest are bundled/system names used as-is.
-  final googleFont = kGoogleFontFamilies[requestedFamily];
-  final String? family = requestedFamily.isEmpty
+  final googleFont = googleFontFamily(requestedFamily);
+  final String? family =
+      requestedFamily.isEmpty ||
+          // A google-fonts family that can't be loaded: use the bundled sans.
+          (googleFont == null &&
+              kGoogleFontFamilies.containsKey(requestedFamily))
       ? kSansFont
       : requestedFamily == kSystemFont
       ? null

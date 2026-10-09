@@ -10,6 +10,8 @@ abstract interface class GitLabMrService {
 
   Future<Result<void>> closeGitLabItem(Ticket ticket);
 
+  Future<Result<void>> reopenGitLabItem(Ticket ticket);
+
   Future<Result<void>> approveGitLabMr(Ticket ticket);
 
   Future<Result<void>> mergeGitLabMr(Ticket ticket);

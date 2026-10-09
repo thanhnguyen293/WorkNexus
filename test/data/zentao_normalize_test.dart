@@ -3,8 +3,8 @@ import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_models.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_normalize.dart';
+import 'package:work_nexus/core/network/zentao/zentao_models.dart';
+import 'package:work_nexus/core/network/zentao/zentao_normalize.dart';
 
 void main() {
   group('status mapping', () {
@@ -156,6 +156,30 @@ void main() {
     final md = htmlToMarkdown(html);
     expect(md, contains('(https://z.example.com/zentao/file-read-18796.png)'));
     expect(md, isNot(contains('zentao/https://'))); // not mangled
+  });
+
+  test('list-endpoint {id.ext} image placeholders expand to file-read', () {
+    final task = normalizeZenTao(
+      ZenTaoEntity.fromJson(const {
+        'id': 5,
+        'name': 'Shot',
+        'desc':
+            '<p>see</p><img src="{19689.png}" alt="file-read-19689.png" />'
+            "<img src='https://z.example.com/zentao/file-read-7.jpg' />",
+      }),
+      type: ZenTaoType.task,
+      accountId: 'zt',
+      baseUrl: 'https://z.example.com/zentao/',
+    );
+    expect(
+      task.body,
+      contains('(https://z.example.com/zentao/file-read-19689.png)'),
+    );
+    expect(
+      task.body,
+      contains('(https://z.example.com/zentao/file-read-7.jpg)'),
+    );
+    expect(task.body, isNot(contains('{19689.png}')));
   });
 
   group('activity descriptions', () {

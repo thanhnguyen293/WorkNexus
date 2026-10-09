@@ -2,14 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/debug/app_talker.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/di/service_providers.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/workspace.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../core/util/content_hash.dart';
-import '../../sync/data/sync_service.dart';
-import '../data/provider_adapter_factory.dart';
+import '../domain/adapters/connection_tester.dart';
 import '../domain/repositories/connection_repository.dart';
 import '../domain/usecases/refresh_zentao_profile.dart';
 
@@ -63,7 +63,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
       handle: username.trim(),
       baseUrl: baseUrl.trim(),
     );
-    final check = await buildProviderAdapter(probe, password)!.testConnection();
+    final check = await getIt<ConnectionTester>().test(probe, password);
     final String resolvedBaseUrl;
     switch (check) {
       case Err(:final failure):
@@ -94,7 +94,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
     if (await getIt<RefreshZenTaoProfile>()(account) case Err(:final failure)) {
       appTalker.warning('ZenTao profile refresh failed: ${failure.message}');
     }
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await ref.read(sourceSyncServiceProvider).syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         // Account is connected but the first sync failed — keep it, surface the error.
@@ -143,7 +143,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
       handle: '',
       baseUrl: baseUrl.trim(),
     );
-    final check = await buildProviderAdapter(probe, token)!.testConnection();
+    final check = await getIt<ConnectionTester>().test(probe, token);
     final String username;
     switch (check) {
       case Err(:final failure):
@@ -173,7 +173,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
 
     await getIt<CredentialStore>().write(credRef, token);
     await getIt<ConnectionRepository>().addAccount(account);
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await ref.read(sourceSyncServiceProvider).syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         state = AddConnectionState(
@@ -221,7 +221,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
       handle: '',
       baseUrl: baseUrl.trim(),
     );
-    final check = await buildProviderAdapter(probe, token)!.testConnection();
+    final check = await getIt<ConnectionTester>().test(probe, token);
     final String username;
     switch (check) {
       case Err(:final failure):
@@ -251,7 +251,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
 
     await getIt<CredentialStore>().write(credRef, token);
     await getIt<ConnectionRepository>().addAccount(account);
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await ref.read(sourceSyncServiceProvider).syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         state = AddConnectionState(
