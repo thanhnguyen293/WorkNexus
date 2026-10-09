@@ -18,6 +18,10 @@ analyzer:
     - "**/*.freezed.dart"
     - "lib/l10n/app_localizations*.dart"
     - "build/**"
+    - windows/**
+    - macos/**
+    # Vendored third-party packages (analyzed with their own options).
+    - packages/**
 
   # Stronger type safety than the defaults.
   language:
