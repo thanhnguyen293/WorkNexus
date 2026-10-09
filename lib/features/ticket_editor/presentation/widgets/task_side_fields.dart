@@ -8,8 +8,8 @@ import '../../domain/usecases/validate_ticket_draft.dart';
 import '../../domain/value_objects/zentao_choices.dart';
 import '../providers/task_editor_controller.dart';
 import '../providers/ticket_editor_state.dart';
-import 'editor_field.dart';
 import 'editor_date_input.dart';
+import 'editor_field.dart';
 import 'editor_inputs.dart';
 import 'editor_level_input.dart';
 import 'editor_section.dart';
@@ -89,7 +89,7 @@ class TaskSideFields extends ConsumerWidget {
           icon: PhosphorIconsLight.tag,
           children: [
             EditorField(
-              label: l.fieldType,
+              label: l.fieldTaskType,
               required: true,
               missing: state.missing.contains(DraftField.type),
               child: OptionSelect(

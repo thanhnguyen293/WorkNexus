@@ -8,10 +8,10 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 /// An image in the rich-text editor at its chosen [width] (null = as wide as
-/// it fits). Hovering shows drag handles on the right edge and corner;
-/// dragging resizes it live and stores the width on release, so it is
-/// written back to ZenTao as `<img width>`. Double-clicking a handle fits it
-/// to the editor again.
+/// it fits). Hovering outlines it and shows a handle on its bottom-right
+/// corner; dragging the handle resizes it live (keeping its proportions) and
+/// stores the width on release, so it is written back to ZenTao as
+/// `<img width>`. Double-clicking the handle fits it to the editor again.
 class EditorImageFrame extends StatefulWidget {
   const EditorImageFrame({
     super.key,
@@ -22,10 +22,11 @@ class EditorImageFrame extends StatefulWidget {
 
   final double? width;
 
-  /// Stores the width; null when the editor is read-only (no handles).
+  /// Stores the width; null when the editor is read-only (no handle).
   final ValueChanged<double?>? onResize;
 
-  /// Builds the image at a width (null = fit).
+  /// Builds the image at a width (null = fit), with no padding of its own so
+  /// the outline hugs it.
   final Widget Function(double? width) builder;
 
   @override
@@ -69,65 +70,61 @@ class _EditorImageFrameState extends State<EditorImageFrame> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.spacing;
     final resize = widget.onResize;
     if (resize == null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: widget.builder(widget.width),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: s.sm),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: widget.builder(widget.width),
+        ),
       );
     }
     final c = context.colors;
-    final dragging = _dragWidth != null;
-    final active = _hover || dragging;
+    final active = _hover || _dragWidth != null;
     return LayoutBuilder(
-      builder: (context, box) => MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
+      builder: (context, box) => Padding(
+        padding: EdgeInsets.symmetric(vertical: s.sm),
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              DecoratedBox(
-                key: _imageKey,
-                position: DecorationPosition.foreground,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(context.radii.sm),
-                  border: Border.all(
-                    color: active ? c.accent : Colors.transparent,
-                    width: 2,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hover = true),
+            onExit: (_) => setState(() => _hover = false),
+            child: Stack(
+              children: [
+                DecoratedBox(
+                  key: _imageKey,
+                  position: DecorationPosition.foreground,
+                  decoration: BoxDecoration(
+                    // Matches the image's own rounded clip.
+                    borderRadius: BorderRadius.circular(context.radii.md),
+                    border: Border.all(
+                      color: active ? c.accent : Colors.transparent,
+                      width: 1.5,
+                    ),
                   ),
+                  child: widget.builder(_dragWidth ?? widget.width),
                 ),
-                child: widget.builder(_dragWidth ?? widget.width),
-              ),
-              if (active) ...[
-                for (final corner in [false, true])
+                if (active)
                   Positioned(
-                    // Inside the image: a handle past its edge gets no hits.
                     right: 0,
-                    top: corner ? null : 0,
                     bottom: 0,
-                    child: Align(
-                      alignment: corner
-                          ? Alignment.bottomCenter
-                          : Alignment.center,
-                      child: _Handle(
-                        corner: corner,
-                        onStart: _start,
-                        onUpdate: (d) => _update(d, box.maxWidth),
-                        onEnd: _end,
-                        onReset: () => resize(null),
-                      ),
+                    child: _CornerHandle(
+                      onStart: _start,
+                      onUpdate: (d) => _update(d, box.maxWidth),
+                      onEnd: _end,
+                      onReset: () => resize(null),
                     ),
                   ),
                 if (_dragWidth case final w?)
                   Positioned(
-                    top: context.spacing.sm,
-                    left: context.spacing.sm,
+                    top: s.sm,
+                    left: s.sm,
                     child: _SizeLabel('${w.round()} px'),
                   ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -135,17 +132,16 @@ class _EditorImageFrameState extends State<EditorImageFrame> {
   }
 }
 
-/// A grab handle on the image's edge (a bar) or corner (a square).
-class _Handle extends StatelessWidget {
-  const _Handle({
-    required this.corner,
+/// The small square on the image's bottom-right corner. Its hit area reaches
+/// further into the image than it shows, so it is easy to grab.
+class _CornerHandle extends StatelessWidget {
+  const _CornerHandle({
     required this.onStart,
     required this.onUpdate,
     required this.onEnd,
     required this.onReset,
   });
 
-  final bool corner;
   final GestureDragStartCallback onStart;
   final GestureDragUpdateCallback onUpdate;
   final VoidCallback onEnd;
@@ -159,28 +155,27 @@ class _Handle extends StatelessWidget {
       message: AppL10n.of(context).imageResizeHint,
       waitDuration: const Duration(milliseconds: 600),
       child: MouseRegion(
-        cursor: corner
-            ? SystemMouseCursors.resizeDownRight
-            : SystemMouseCursors.resizeLeftRight,
+        cursor: SystemMouseCursors.resizeDownRight,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           dragStartBehavior: DragStartBehavior.down,
-          onHorizontalDragStart: onStart,
-          onHorizontalDragUpdate: onUpdate,
-          onHorizontalDragEnd: (_) => onEnd(),
-          onHorizontalDragCancel: onEnd,
+          onPanStart: onStart,
+          onPanUpdate: onUpdate,
+          onPanEnd: (_) => onEnd(),
+          onPanCancel: onEnd,
           onDoubleTap: onReset,
           child: Padding(
-            padding: EdgeInsets.all(s.xs),
+            padding: EdgeInsets.only(left: s.md, top: s.md),
             child: Container(
-              width: corner ? s.xl : s.sm,
-              height: corner ? s.xl : s.xl6,
+              width: s.lg,
+              height: s.lg,
               decoration: BoxDecoration(
                 color: c.card,
-                borderRadius: BorderRadius.circular(
-                  corner ? context.radii.xs : context.radii.pill,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(context.radii.xs),
+                  bottomRight: Radius.circular(context.radii.md),
                 ),
-                border: Border.all(color: c.accent, width: 2),
+                border: Border.all(color: c.accent, width: 1.5),
               ),
             ),
           ),

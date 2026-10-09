@@ -39,18 +39,17 @@ void main() {
     return resized;
   }
 
-  /// The edge handle sits on the image's right edge, halfway down.
-  Offset edgeHandle(WidgetTester tester) {
-    final rect = tester.getRect(find.byKey(const Key('img')));
-    return Offset(rect.right - 6, rect.center.dy);
-  }
+  /// The handle sits on the image's bottom-right corner.
+  Offset cornerHandle(WidgetTester tester) =>
+      tester.getRect(find.byKey(const Key('img'))).bottomRight -
+      const Offset(4, 4);
 
-  testWidgets('dragging the edge resizes live and stores the width', (
+  testWidgets('dragging the corner resizes live and stores the width', (
     tester,
   ) async {
     final resized = await pump(tester);
 
-    final drag = await tester.startGesture(edgeHandle(tester));
+    final drag = await tester.startGesture(cornerHandle(tester));
     await drag.moveBy(const Offset(40, 0));
     await drag.moveBy(const Offset(60, 0));
     await tester.pump();
@@ -68,11 +67,11 @@ void main() {
   ) async {
     final resized = await pump(tester);
 
-    final drag = await tester.startGesture(edgeHandle(tester));
+    final drag = await tester.startGesture(cornerHandle(tester));
     await drag.moveBy(const Offset(-500, 0));
     await drag.up();
     await tester.pump();
-    final wide = await tester.startGesture(edgeHandle(tester));
+    final wide = await tester.startGesture(cornerHandle(tester));
     await wide.moveBy(const Offset(2000, 0));
     await wide.up();
     await tester.pump();
@@ -81,12 +80,14 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
-  testWidgets('double-clicking a handle fits the image again', (tester) async {
+  testWidgets('double-clicking the handle fits the image again', (
+    tester,
+  ) async {
     final resized = await pump(tester, width: 240);
 
-    await tester.tapAt(edgeHandle(tester));
+    await tester.tapAt(cornerHandle(tester));
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.tapAt(edgeHandle(tester));
+    await tester.tapAt(cornerHandle(tester));
     await tester.pumpAndSettle();
 
     expect(resized, [null]);
