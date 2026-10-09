@@ -74,6 +74,13 @@ class ChatController {
 
   Future<Result<void>> connect(String accountId) => _connect(accountId);
 
+  /// Drops the session and signs in again, so the server sends the chat
+  /// list afresh (after the local copy was cleared).
+  Future<Result<void>> reconnect(String accountId) async {
+    await _repository.disconnect(accountId);
+    return _connect(accountId);
+  }
+
   bool canPin(
     ChatConversation chat, {
     required int? selfUserId,

@@ -26,7 +26,7 @@ class EditorSection extends StatelessWidget {
     final s = context.spacing;
     return Container(
       margin: EdgeInsets.only(bottom: s.xl),
-      padding: EdgeInsets.fromLTRB(s.xl3, s.xl, s.xl3, s.xs),
+      padding: EdgeInsets.fromLTRB(s.xl, s.lg, s.xl, s.xxs),
       decoration: BoxDecoration(
         color: c.surface,
         borderRadius: BorderRadius.circular(context.radii.lg),
@@ -37,19 +37,19 @@ class EditorSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: s.xl3, color: c.textSecondary),
+              Icon(icon, size: s.xl2, color: c.textSecondary),
               SizedBox(width: s.md),
               Expanded(
                 child: Text(
                   title,
-                  style: context.typography.bodyStrong.copyWith(
+                  style: context.typography.bodySmStrong.copyWith(
                     color: c.textPrimary,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: s.xl),
+          SizedBox(height: s.lg),
           ...children,
         ],
       ),

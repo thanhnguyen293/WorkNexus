@@ -85,7 +85,7 @@ class _Chip extends StatelessWidget {
         onTap: onTap,
         borderRadius: radius,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.md),
+          padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -10,6 +10,7 @@ import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/navigation/ticket_editor_route.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_context_menu.dart';
 import '../../core/widgets/app_rail_button.dart';
 import '../../features/board/presentation/board_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -77,30 +78,42 @@ class NewTicketRailButton extends ConsumerWidget {
     if (choices.isEmpty) return const SizedBox.shrink();
     final severalAccounts = choices.map((c) => c.account.id).toSet().length > 1;
     final s = context.spacing;
+    final menu = ref.watch(newTicketMenuProvider);
     return MenuAnchor(
-      controller: ref.watch(newTicketMenuProvider),
+      controller: menu,
       // Beside the rail rather than over it.
       alignmentOffset: Offset(s.xl6 + s.sm, -s.xl6),
+      // The app's own menu card draws the surface; Material's stays bare.
+      style: const MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+        surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+        shadowColor: WidgetStatePropertyAll(Colors.transparent),
+        elevation: WidgetStatePropertyAll(0),
+        padding: WidgetStatePropertyAll(EdgeInsets.zero),
+      ),
       menuChildren: [
-        for (final choice in choices)
-          MenuItemButton(
-            leadingIcon: Icon(
-              choice.isBug
-                  ? PhosphorIconsLight.bug
-                  : PhosphorIconsLight.checkSquare,
-            ),
-            onPressed: () => _openEditor(ref, choice.route),
-            child: Text(
-              severalAccounts
-                  ? l.zentaoNewInAccount(
-                      choice.isBug ? l.newBug : l.newTask,
-                      choice.account.handle,
-                    )
-                  : choice.isBug
-                  ? l.newBug
-                  : l.newTask,
-            ),
-          ),
+        AppMenuPanel(
+          entries: [
+            for (final choice in choices)
+              AppMenuEntry(
+                icon: choice.isBug
+                    ? PhosphorIconsLight.bug
+                    : PhosphorIconsLight.checkSquare,
+                label: severalAccounts
+                    ? l.zentaoNewInAccount(
+                        choice.isBug ? l.newBug : l.newTask,
+                        choice.account.handle,
+                      )
+                    : choice.isBug
+                    ? l.newBug
+                    : l.newTask,
+              ),
+          ],
+          onSelected: (i) {
+            menu.close();
+            _openEditor(ref, choices[i].route);
+          },
+        ),
       ],
       builder: (context, menu, _) => AppRailButton(
         icon: PhosphorIconsLight.plusCircle,

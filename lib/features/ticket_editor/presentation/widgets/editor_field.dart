@@ -26,7 +26,7 @@ class EditorField extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return Padding(
-      padding: EdgeInsets.only(bottom: s.xl),
+      padding: EdgeInsets.only(bottom: s.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -45,7 +45,7 @@ class EditorField extends StatelessWidget {
               color: c.textSecondary,
             ),
           ),
-          SizedBox(height: s.sm),
+          SizedBox(height: s.xs),
           child,
           if (missing) ...[
             SizedBox(height: s.xs),

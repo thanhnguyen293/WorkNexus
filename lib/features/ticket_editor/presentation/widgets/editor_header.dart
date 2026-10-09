@@ -40,7 +40,7 @@ class EditorHeader extends StatelessWidget {
     final l = AppL10n.of(context);
     final message = error;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: s.xl3, vertical: s.lg),
+      padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.md),
       decoration: BoxDecoration(
         color: c.card,
         border: Border(bottom: context.hairlineSide),
@@ -49,15 +49,16 @@ class EditorHeader extends StatelessWidget {
         children: [
           IconButton(
             tooltip: l.close,
-            icon: Icon(PhosphorIconsLight.arrowLeft, size: s.xl4),
+            visualDensity: VisualDensity.compact,
+            icon: Icon(PhosphorIconsLight.arrowLeft, size: s.xl3),
             onPressed: onClose,
           ),
           SizedBox(width: s.md),
-          ZenTaoKindIcon(kind, large: true),
-          SizedBox(width: s.lg),
+          ZenTaoKindIcon(kind),
+          SizedBox(width: s.md),
           Text(
             title,
-            style: context.typography.title.copyWith(color: c.textPrimary),
+            style: context.typography.titleSm.copyWith(color: c.textPrimary),
           ),
           SizedBox(width: s.xl),
           Expanded(
@@ -71,16 +72,21 @@ class EditorHeader extends StatelessWidget {
                   ),
           ),
           SizedBox(width: s.xl),
-          AppButton.outlinedNeutral(onPressed: onClose, child: Text(l.cancel)),
+          AppButton.outlinedNeutral(
+            size: AppButtonSize.small,
+            onPressed: onClose,
+            child: Text(l.cancel),
+          ),
           SizedBox(width: s.md),
           AppButton.filled(
+            size: AppButtonSize.small,
             onPressed: onSave,
             isLoading: saving,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               spacing: s.sm,
               children: [
-                Icon(PhosphorIconsLight.floppyDisk, size: s.xl3),
+                Icon(PhosphorIconsLight.floppyDisk, size: s.xl2),
                 Text(l.save),
               ],
             ),

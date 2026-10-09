@@ -58,7 +58,7 @@ class BugMainFields extends ConsumerWidget {
               label: l.fieldSteps,
               child: RichTextEditor(
                 controller: steps,
-                minHeight: 320,
+                minHeight: 240,
                 imageLoader: (url) => ref
                     .read(zenTaoTicketEditorProvider)
                     .loadImage(route.accountId, url),

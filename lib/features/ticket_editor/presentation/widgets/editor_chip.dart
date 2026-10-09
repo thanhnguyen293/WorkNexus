@@ -35,7 +35,7 @@ class EditorChip extends StatelessWidget {
       style: context.typography.bodySm.copyWith(color: c.textPrimary),
     );
     return Container(
-      padding: EdgeInsets.fromLTRB(s.md, s.xxs, s.xxs, s.xxs),
+      padding: EdgeInsets.fromLTRB(s.md, 0, s.xxs, 0),
       decoration: BoxDecoration(
         color: c.mixT(c.accent, 0.08),
         borderRadius: BorderRadius.circular(context.radii.md),

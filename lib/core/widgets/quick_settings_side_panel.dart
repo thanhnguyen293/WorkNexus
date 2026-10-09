@@ -14,12 +14,18 @@ import 'quick_settings_segmented.dart';
 
 /// Quick Settings sliding over the window's right edge while
 /// [quickSettingsOpenProvider] is set (over the current view, not beside
-/// it). The app-wide controls and the chat's [chatSections] sit on separate
-/// tabs, each its own scroll. Escape, the close button or a click outside
-/// closes it.
+/// it). The app-wide controls (then [generalSections]) and the chat's
+/// [chatSections] sit on separate tabs, each its own scroll. Escape, the
+/// close button or a click outside closes it.
 class QuickSettingsSidePanel extends ConsumerWidget {
-  const QuickSettingsSidePanel({super.key, this.chatSections = const []});
+  const QuickSettingsSidePanel({
+    super.key,
+    this.generalSections = const [],
+    this.chatSections = const [],
+  });
 
+  /// Feature sections after the app-wide ones on the General tab.
+  final List<Widget> generalSections;
   final List<Widget> chatSections;
 
   @override
@@ -37,7 +43,11 @@ class QuickSettingsSidePanel extends ConsumerWidget {
         ),
         Align(
           alignment: Alignment.centerRight,
-          child: _Panel(onClose: close, chatSections: chatSections),
+          child: _Panel(
+            onClose: close,
+            generalSections: generalSections,
+            chatSections: chatSections,
+          ),
         ),
       ],
     );
@@ -50,9 +60,14 @@ const double _kScrimAlpha = 0.18;
 enum _Tab { general, chat }
 
 class _Panel extends ConsumerStatefulWidget {
-  const _Panel({required this.onClose, required this.chatSections});
+  const _Panel({
+    required this.onClose,
+    required this.generalSections,
+    required this.chatSections,
+  });
 
   final VoidCallback onClose;
+  final List<Widget> generalSections;
   final List<Widget> chatSections;
 
   @override
@@ -141,8 +156,13 @@ class _PanelState extends ConsumerState<_Panel> {
                   key: ValueKey<_Tab>(tab),
                   padding: EdgeInsets.all(s.xl),
                   child: switch (tab) {
-                    _Tab.general => const QuickSettingsPanel(),
-                    _Tab.chat => _ChatTab(sections: widget.chatSections),
+                    _Tab.general => _SectionList(
+                      sections: [
+                        const QuickSettingsPanel(),
+                        ...widget.generalSections,
+                      ],
+                    ),
+                    _Tab.chat => _SectionList(sections: widget.chatSections),
                   },
                 ),
               ),
@@ -154,9 +174,9 @@ class _PanelState extends ConsumerState<_Panel> {
   }
 }
 
-/// The chat's settings: one [QuickSettingsSection] per concern.
-class _ChatTab extends StatelessWidget {
-  const _ChatTab({required this.sections});
+/// A tab's sections, one [QuickSettingsSection] per concern.
+class _SectionList extends StatelessWidget {
+  const _SectionList({required this.sections});
 
   final List<Widget> sections;
 

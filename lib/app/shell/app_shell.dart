@@ -17,6 +17,8 @@ import '../../features/chat/presentation/widgets/chat_auto_download_settings.dar
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
 import '../../features/connections/presentation/settings_page.dart';
+import '../../features/connections/presentation/widgets/local_cache_card.dart';
+import '../../features/connections/presentation/widgets/local_cache_quick_settings.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
@@ -26,6 +28,7 @@ import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart'
 import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import 'app_nav_rail.dart';
 import 'new_ticket_menu.dart';
+import 'reload_after_cache_clear.dart';
 import 'resizable_sidebar.dart';
 import 'title_bar.dart';
 
@@ -73,6 +76,14 @@ class AppShell extends ConsumerWidget {
                                       const TranslationSettingsCard(),
                                       SizedBox(height: context.spacing.xl4),
                                       const UpdateSettingsCard(),
+                                      SizedBox(height: context.spacing.xl4),
+                                      LocalCacheCard(
+                                        onCleared: (sections) =>
+                                            reloadAfterCacheClear(
+                                              ref,
+                                              sections,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -102,8 +113,14 @@ class AppShell extends ConsumerWidget {
                     ),
                     NotificationsPanel(leftInset: AppNavRail.widthOf(context)),
                     const DetailOverlay(),
-                    const QuickSettingsSidePanel(
-                      chatSections: [
+                    QuickSettingsSidePanel(
+                      generalSections: [
+                        LocalCacheQuickSettings(
+                          onCleared: (sections) =>
+                              reloadAfterCacheClear(ref, sections),
+                        ),
+                      ],
+                      chatSections: const [
                         ChatAppearanceSettings(),
                         ChatAutoDownloadSettings(),
                         ChatNotificationSettings(),

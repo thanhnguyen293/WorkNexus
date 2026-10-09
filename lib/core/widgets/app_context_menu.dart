@@ -79,7 +79,10 @@ class _ContextMenuRoute extends PopupRoute<int> {
   ) {
     return CustomSingleChildLayout(
       delegate: _MenuLayout(anchor, margin: context.spacing.md),
-      child: _MenuPanel(entries: entries),
+      child: AppMenuPanel(
+        entries: entries,
+        onSelected: (i) => Navigator.of(context).pop(i),
+      ),
     );
   }
 
@@ -131,10 +134,20 @@ class _MenuLayout extends SingleChildLayoutDelegate {
       anchor != old.anchor || margin != old.margin;
 }
 
-class _MenuPanel extends StatelessWidget {
-  const _MenuPanel({required this.entries});
+/// The app's menu card: [entries] as compact rows on a raised panel. Shown
+/// by [showAppContextMenu], and usable as a [MenuAnchor]'s only child for a
+/// menu anchored to a button.
+class AppMenuPanel extends StatelessWidget {
+  const AppMenuPanel({
+    required this.entries,
+    required this.onSelected,
+    super.key,
+  });
 
   final List<AppMenuEntry> entries;
+
+  /// Called with the picked entry's index.
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +185,7 @@ class _MenuPanel extends StatelessWidget {
                     ),
                     color: c.border,
                   ),
-                _MenuItem(entry: e, onTap: () => Navigator.of(context).pop(i)),
+                _MenuItem(entry: e, onTap: () => onSelected(i)),
               ],
             ],
           ),
