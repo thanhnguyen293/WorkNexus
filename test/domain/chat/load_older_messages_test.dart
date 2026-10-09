@@ -69,4 +69,31 @@ void main() {
     expect(result.valueOrNull, 50);
     verify(() => repo.loadOlderMessages('a', 'g', beforeServerId: 71));
   });
+
+  test('in a jump window the server is asked, stored ones or not', () async {
+    when(
+      () => repo.loadOlderMessages(
+        any(),
+        any(),
+        beforeServerId: any(named: 'beforeServerId'),
+        inWindow: any(named: 'inWindow'),
+      ),
+    ).thenAnswer((_) async => const Ok(50));
+
+    final result = await LoadOlderMessages(repo)(
+      accountId: 'a',
+      chatGid: 'g',
+      oldestShown: oldest,
+      inWindow: true,
+    );
+
+    expect(result.valueOrNull, 50);
+    verifyNever(
+      () => repo.countOlderMessages(any(), any(), before: any(named: 'before')),
+    );
+    verify(
+      () =>
+          repo.loadOlderMessages('a', 'g', beforeServerId: 71, inWindow: true),
+    ).called(1);
+  });
 }

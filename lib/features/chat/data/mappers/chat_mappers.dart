@@ -246,6 +246,7 @@ ChatMessage messageFromRow(
   isMine: selfUserId != null && row.senderId == selfUserId,
   sendState: SendState.values.asNameMap()[row.sendState] ?? SendState.sent,
   serverId: row.serverId,
+  index: row.messageIndex,
   replyToId: row.replyToId,
   deleted: row.deleted,
 );

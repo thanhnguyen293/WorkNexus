@@ -153,6 +153,7 @@ class ChatPacketIngestor {
     String accountId,
     List<Map<String, Object?>> messages, {
     required int? selfUserId,
+    MessageLink link = MessageLink.keep,
   }) async {
     final valid = [
       for (final m in messages)
@@ -160,7 +161,7 @@ class ChatPacketIngestor {
     ];
     if (valid.isEmpty) return const IngestFollowUp();
     final rows = [for (final m in valid) messageFromXxd(accountId, m)];
-    await _local.upsertMessages(rows);
+    await _local.upsertMessages(rows, link: link);
 
     final unknownChats = <String>{};
     for (final row in rows) {

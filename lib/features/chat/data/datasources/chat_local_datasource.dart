@@ -2,12 +2,18 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/database/database.dart';
 import '../../domain/entities/chat_message.dart';
+import 'chat_timeline_datasource.dart';
+
+export 'chat_timeline_datasource.dart' show MessageLink;
 
 /// Drift access for chat (CLAUDE.md 3.4: SQL stays in `datasources/`).
 class ChatLocalDatasource {
   ChatLocalDatasource(this._db);
 
   final AppDatabase _db;
+
+  /// Queries over a chat's timeline and jump windows.
+  late final timeline = ChatTimelineDatasource(_db);
 
   // ---- accounts --------------------------------------------------------------
 
@@ -179,8 +185,27 @@ class ChatLocalDatasource {
 
   // ---- messages --------------------------------------------------------------
 
-  Future<void> upsertMessages(List<ChatMessagesCompanion> rows) =>
-      _db.batch((b) => b.insertAllOnConflictUpdate(_db.chatMessages, rows));
+  /// Stores [rows]; [link] says how they join the chat's timeline (see
+  /// [MessageLink]).
+  Future<void> upsertMessages(
+    List<ChatMessagesCompanion> rows, {
+    MessageLink link = MessageLink.keep,
+  }) => _db.batch((b) {
+    switch (link) {
+      case MessageLink.keep:
+        b.insertAllOnConflictUpdate(_db.chatMessages, rows);
+      case MessageLink.linked:
+        b.insertAllOnConflictUpdate(_db.chatMessages, [
+          for (final r in rows) r.copyWith(detached: const Value(false)),
+        ]);
+      case MessageLink.detached:
+        // New rows start detached; one already in the timeline stays there.
+        b.insertAll(_db.chatMessages, [
+          for (final r in rows) r.copyWith(detached: const Value(true)),
+        ], mode: InsertMode.insertOrIgnore);
+        b.insertAllOnConflictUpdate(_db.chatMessages, rows);
+    }
+  });
 
   Future<void> insertMessage(ChatMessagesCompanion row) =>
       _db.into(_db.chatMessages).insert(row);
@@ -245,6 +270,7 @@ class ChatLocalDatasource {
               ..where(
                 m.accountId.equals(accountId) &
                     m.cgid.equals(cgid) &
+                    m.detached.equals(false) &
                     m.sentAt.isSmallerThanValue(before),
               ))
             .getSingle();
@@ -258,7 +284,12 @@ class ChatLocalDatasource {
     required int limit,
   }) {
     final query = _db.select(_db.chatMessages)
-      ..where((m) => m.accountId.equals(accountId) & m.cgid.equals(cgid))
+      ..where(
+        (m) =>
+            m.accountId.equals(accountId) &
+            m.cgid.equals(cgid) &
+            m.detached.equals(false),
+      )
       ..orderBy([(m) => OrderingTerm.desc(m.sentAt)])
       ..limit(limit);
     return query.watch().map((rows) => rows.reversed.toList());

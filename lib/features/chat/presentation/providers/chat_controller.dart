@@ -13,6 +13,8 @@ import '../../domain/usecases/encode_mentions.dart';
 import '../../domain/usecases/fetch_chat_messages.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/usecases/load_chat_attachment.dart';
+import '../../domain/usecases/load_messages_around.dart';
+import '../../domain/usecases/load_newer_messages.dart';
 import '../../domain/usecases/load_older_messages.dart';
 import '../../domain/usecases/load_video_thumbnail.dart';
 import '../../domain/usecases/mark_chat_read.dart';
@@ -40,6 +42,8 @@ class ChatController {
       _retry = RetrySendMessage(repository),
       _refresh = RefreshChatMessages(repository),
       _older = LoadOlderMessages(repository),
+      _newer = LoadNewerMessages(repository),
+      _around = LoadMessagesAround(repository),
       _markRead = MarkChatRead(repository),
       _attachment = LoadChatAttachment(repository),
       _fetch = FetchChatMessages(repository),
@@ -58,6 +62,8 @@ class ChatController {
   final RetrySendMessage _retry;
   final RefreshChatMessages _refresh;
   final LoadOlderMessages _older;
+  final LoadNewerMessages _newer;
+  final LoadMessagesAround _around;
   final MarkChatRead _markRead;
   final LoadChatAttachment _attachment;
   final FetchChatMessages _fetch;
@@ -225,8 +231,34 @@ class ChatController {
     String accountId,
     String chatGid, {
     ChatMessage? oldestShown,
-  }) =>
-      _older(accountId: accountId, chatGid: chatGid, oldestShown: oldestShown);
+    bool inWindow = false,
+  }) => _older(
+    accountId: accountId,
+    chatGid: chatGid,
+    oldestShown: oldestShown,
+    inWindow: inWindow,
+  );
+
+  /// See [LoadNewerMessages]: extends a jump window towards the newest
+  /// message, joining it to the timeline at the end.
+  Future<Result<NewerMessages>> loadNewer(
+    String accountId,
+    String chatGid, {
+    required ChatMessage newestShown,
+    required int windowFrom,
+  }) => _newer(
+    accountId: accountId,
+    chatGid: chatGid,
+    newestShown: newestShown,
+    windowFrom: windowFrom,
+  );
+
+  /// See [LoadMessagesAround]: a jump window around message [serverId].
+  Future<Result<({int from, int to})?>> loadAround(
+    String accountId,
+    String chatGid,
+    int serverId,
+  ) => _around(accountId: accountId, chatGid: chatGid, serverId: serverId);
 
   Future<Result<void>> markRead(String accountId, String chatGid) =>
       _markRead(accountId: accountId, chatGid: chatGid);
