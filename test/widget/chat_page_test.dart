@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -293,8 +295,10 @@ class _FakeChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> sendEmoji(String a, String c, String code) async =>
-      const Ok(null);
+  Future<Result<void>> sendEmoji(String a, String c, String code) async {
+    calls.add('emoji $c $code');
+    return const Ok(null);
+  }
 
   @override
   Future<Result<void>> retract(String a, String g) async => const Ok(null);
@@ -375,6 +379,23 @@ void main() {
     );
     expect(find.text('3'), findsOneWidget);
     expect(find.text('Select a conversation'), findsOneWidget);
+  });
+
+  testWidgets('a chat row shows the hand cursor under the mouse', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(find.text('VN Mobile Team')));
+    await tester.pump();
+
+    expect(
+      RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
+      SystemMouseCursors.click,
+    );
   });
 
   testWidgets('search narrows the list', (tester) async {
@@ -553,6 +574,17 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(repo.calls, contains('send g1 first line'));
+  });
+
+  testWidgets('the like button sends a large emoji, not text', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    await tester.tap(find.byTooltip('Send a like'));
+    await tester.pumpAndSettle();
+
+    expect(repo.calls, contains('emoji g1 :thumbsup:'));
+    expect(repo.calls.where((c) => c.startsWith('send')), isEmpty);
   });
 
   testWidgets('a failed message can be retried', (tester) async {

@@ -170,9 +170,11 @@ class _ClosedField extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         borderRadius: BorderRadius.circular(context.radii.md),
-        child: Container(
+        // Ink, not Container, so the fill sits under the hover highlight.
+        child: Ink(
           decoration: BoxDecoration(
             color: c.surfaceSubtle,
             borderRadius: BorderRadius.circular(context.radii.md),

@@ -113,6 +113,7 @@ class _Row extends ConsumerWidget {
     final trStatus = ref.watch(translationStatusProvider(ticket.id)).state;
 
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
       child: Container(
         padding: EdgeInsets.fromLTRB(

@@ -84,6 +84,7 @@ class SidebarPinButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Padding(
@@ -172,6 +173,7 @@ class SidebarNavRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: Container(

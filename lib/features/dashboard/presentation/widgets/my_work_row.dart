@@ -44,6 +44,7 @@ class MyWorkRow extends ConsumerWidget {
       color: selected ? c.selectionFill : Colors.transparent,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
         borderRadius: BorderRadius.circular(context.radii.md),
         hoverColor: c.selectionFill,

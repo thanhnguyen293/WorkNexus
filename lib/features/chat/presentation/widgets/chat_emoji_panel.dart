@@ -142,6 +142,7 @@ class _EmojiGrid extends StatelessWidget {
       ),
       itemCount: _emoji.length,
       itemBuilder: (context, i) => InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         borderRadius: BorderRadius.circular(context.radii.md),
         onTap: () => onPick(_emoji[i]),
         child: Center(

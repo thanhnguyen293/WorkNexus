@@ -105,6 +105,30 @@ ThemeData buildAppTheme({
     tabBarTheme: TabBarThemeData(dividerColor: p.line, dividerHeight: 1),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
+    // Every InkWell / ListTile hover reads this. Flutter's default (~4% ink)
+    // is invisible on these flat surfaces, so point it at the hover token.
+    hoverColor: colors.hoverFill,
+    // Flutter 3.44 made Material's tappables default to an "adaptive" cursor:
+    // the hand on web only, the arrow on desktop. This is a desktop app whose
+    // controls are mostly flat and borderless, so put the hand back wherever
+    // a theme can carry it. InkWell has no theme; call sites pass
+    // `WidgetStateMouseCursor.clickable` themselves.
+    elevatedButtonTheme: const ElevatedButtonThemeData(style: _clickable),
+    filledButtonTheme: const FilledButtonThemeData(style: _clickable),
+    outlinedButtonTheme: const OutlinedButtonThemeData(style: _clickable),
+    textButtonTheme: const TextButtonThemeData(style: _clickable),
+    iconButtonTheme: const IconButtonThemeData(style: _clickable),
+    menuButtonTheme: const MenuButtonThemeData(style: _clickable),
+    segmentedButtonTheme: const SegmentedButtonThemeData(style: _clickable),
+    popupMenuTheme: const PopupMenuThemeData(
+      mouseCursor: WidgetStateMouseCursor.clickable,
+    ),
+    checkboxTheme: const CheckboxThemeData(
+      mouseCursor: WidgetStateMouseCursor.clickable,
+    ),
+    radioTheme: const RadioThemeData(
+      mouseCursor: WidgetStateMouseCursor.clickable,
+    ),
     scrollbarTheme: ScrollbarThemeData(
       thickness: const WidgetStatePropertyAll(8),
       thumbColor: WidgetStatePropertyAll(p.tx3.withValues(alpha: 0.4)),
@@ -128,3 +152,6 @@ ThemeData buildAppTheme({
     ],
   );
 }
+
+/// The hand over an enabled button, the arrow over a disabled one.
+const _clickable = ButtonStyle(mouseCursor: WidgetStateMouseCursor.clickable);

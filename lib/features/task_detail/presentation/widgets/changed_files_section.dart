@@ -98,6 +98,7 @@ class _FileRowState extends State<_FileRow> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: hasDiff ? () => setState(() => _open = !_open) : null,
             borderRadius: BorderRadius.circular(context.radii.sm),
             child: Padding(

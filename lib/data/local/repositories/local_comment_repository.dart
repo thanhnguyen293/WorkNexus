@@ -16,13 +16,6 @@ class LocalCommentRepository implements CommentRepository {
       .map((rows) => rows.map(commentFromRow).toList());
 
   @override
-  Future<void> addComment(Comment comment) async {
-    await _db
-        .into(_db.comments)
-        .insertOnConflictUpdate(commentToCompanion(comment));
-  }
-
-  @override
   Future<void> upsertComments(List<Comment> comments) async {
     if (comments.isEmpty) return;
     await _db.batch((b) {

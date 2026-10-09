@@ -1,9 +1,8 @@
 import '../entities/comment.dart';
 
-/// Comments + internal notes for a ticket. Posting to the provider is done by a
-/// use case via the [ProviderAdapter]; this stores the local view/cache.
+/// A ticket's provider comments. Posting goes to the provider (through the
+/// [ProviderAdapter]); this stores the synced copy the UI reads.
 abstract class CommentRepository {
   Stream<List<Comment>> watchComments(String ticketId);
-  Future<void> addComment(Comment comment);
   Future<void> upsertComments(List<Comment> comments);
 }

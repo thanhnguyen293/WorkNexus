@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/file_drop_target.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer.dart';
+import 'chat_file_send.dart';
 import 'chat_files_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
@@ -75,40 +77,53 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
       infoRoom: ChatLayoutScope.of(context).infoRoom,
     );
     final pinned = chat?.pinnedMessageIds ?? const <int>[];
-    final messages = Column(
-      children: [
-        ChatThreadHeader(thread: t, chat: chat, users: users),
-        if (pinned.isNotEmpty)
-          PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
-        Expanded(
-          // Behind the list rather than inside it, so it also shows while
-          // the messages load.
-          child: ChatBackground(
-            key: widget.backgroundKey,
-            child: ChatTextScale(
-              child: MessageList(
-                // The background is reused across chats; the list is not.
-                key: ValueKey(t),
-                thread: t,
-                showSenders: chat?.type != ChatType.one2one,
+    // Files dropped anywhere on the conversation go through the same send
+    // preview as picked ones.
+    final canSend = ref.watch(chatCanSendProvider(t));
+    final messages = FileDropTarget(
+      enabled: canSend,
+      hint: AppL10n.of(context).dropFilesToSend,
+      onDrop: (files) => previewAndSendChatFiles(
+        context,
+        ref,
+        draftKey: (chat: t, inThread: false),
+        files: files,
+      ),
+      child: Column(
+        children: [
+          ChatThreadHeader(thread: t, chat: chat, users: users),
+          if (pinned.isNotEmpty)
+            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+          Expanded(
+            // Behind the list rather than inside it, so it also shows while
+            // the messages load.
+            child: ChatBackground(
+              key: widget.backgroundKey,
+              child: ChatTextScale(
+                child: MessageList(
+                  // The background is reused across chats; the list is not.
+                  key: ValueKey(t),
+                  thread: t,
+                  showSenders: chat?.type != ChatType.one2one,
+                ),
               ),
             ),
           ),
-        ),
-        if (ref.watch(chatCanSendProvider(t)))
-          ChatTextScale(
-            child: ChatComposer(
-              thread: t,
-              hint: chat == null
-                  ? null
-                  : AppL10n.of(
-                      context,
-                    ).chatMessageTo(chatTitle(context, chat, users)),
-            ),
-          )
-        else
-          ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
-      ],
+          if (canSend)
+            ChatTextScale(
+              child: ChatComposer(
+                thread: t,
+                hint: chat == null
+                    ? null
+                    : AppL10n.of(
+                        context,
+                      ).chatMessageTo(chatTitle(context, chat, users)),
+              ),
+            )
+          else
+            ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
+        ],
+      ),
     );
     final Widget? panel = openThread != null
         ? ChatTextScale(

@@ -9,10 +9,14 @@
       }
     }
   },
+  "updateRestartToUpdate": "Khởi động lại để cập nhật lên {version}",
+  "@updateRestartToUpdate": {
+    "placeholders": { "version": { "type": "String" } }
+  },
   "trayOpenApp": "Mở WorkNexus",
   "trayQuitApp": "Thoát WorkNexus",
   "appUpdatesTitle": "Cập nhật ứng dụng",
-  "appUpdatesSubtitle": "Ứng dụng tự kiểm tra bản stable khi khởi động. Bạn cũng có thể kiểm tra ngay.",
+  "appUpdatesSubtitle": "Ứng dụng tự kiểm tra bản stable mỗi giờ và tải sẵn về. Khi đã sẵn sàng, nút phía trên Kết nối sẽ khởi động lại với phiên bản mới. Bạn cũng có thể kiểm tra ngay.",
   "checkForUpdates": "Kiểm tra cập nhật",
   "latestVersionInstalled": "Bạn đang dùng phiên bản stable mới nhất.",
   "updateCheckFailed": "Không kiểm tra được cập nhật. Hãy kiểm tra kết nối rồi thử lại.",
@@ -753,7 +757,7 @@
   "chatReadOnlyAdmins": "Chỉ quản trị viên mới được gửi tin nhắn trong đoạn chat này",
   "chatReadOnly": "Bạn không thể gửi tin nhắn trong đoạn chat này",
   "updateAction": "Cập nhật",
-  "updateRestartHint": "Bản cập nhật sẽ được tải, kiểm tra rồi WorkNexus khởi động lại với phiên bản mới.",
+  "updateReadyHint": "Đã tải và kiểm tra xong. WorkNexus sẽ khởi động lại với phiên bản mới khi bạn sẵn sàng.",
   "updateDownloading": "Đang tải bản cập nhật…",
   "updateRestarting": "Đang cài đặt — WorkNexus sẽ khởi động lại…",
   "updateLater": "Để sau",
@@ -865,5 +869,16 @@
   "datePickTomorrow": "Ngày mai",
   "datePickNextWeek": "Tuần sau",
   "imageResizeHint": "Kéo để đổi kích thước · nhấp đúp để vừa khung",
-  "fieldTaskType": "Loại task"
+  "fieldTaskType": "Loại task",
+  "editorTextColor": "Màu chữ",
+  "editorHighlightColor": "Màu nền chữ",
+  "editorInsertLink": "Chèn liên kết",
+  "editorEditLink": "Sửa liên kết",
+  "editorLinkText": "Văn bản hiển thị",
+  "editorLinkUrl": "Liên kết",
+  "editorLinkRemove": "Bỏ liên kết",
+  "editorLinkInvalid": "Nhập liên kết đầy đủ, vd. https://example.com",
+  "chatWithPerson": "Nhắn tin với {name}",
+  "dropFilesToSend": "Thả file để gửi",
+  "dropFilesToInsert": "Thả ảnh để chèn, file khác để đính kèm"
 }

@@ -194,6 +194,7 @@ class _MenuItem extends StatelessWidget {
     final s = context.spacing;
     final tint = entry.destructive ? c.error : null;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.sm),
       hoverColor: (tint ?? c.textPrimary).withValues(alpha: 0.08),

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_group_avatar.dart';
@@ -183,19 +184,20 @@ class _ChatGroupAvatarDialogState extends ConsumerState<ChatGroupAvatarDialog> {
                   runSpacing: s.md,
                   children: [
                     for (final hex in _kColors)
-                      InkWell(
-                        customBorder: const CircleBorder(),
+                      HoverSurface(
                         onTap: () => setState(() => _hex = hex),
-                        child: Container(
-                          width: s.xl6 * 0.8,
-                          height: s.xl6 * 0.8,
-                          decoration: BoxDecoration(
-                            color: chatHexColor(hex),
-                            shape: BoxShape.circle,
-                            border: hex == _hex
-                                ? Border.all(color: c.textPrimary, width: 2.5)
-                                : null,
-                          ),
+                        width: s.xl6 * 0.8,
+                        height: s.xl6 * 0.8,
+                        shape: BoxShape.circle,
+                        color: chatHexColor(hex),
+                        // The ring answers hover: a tint would shift the colour.
+                        tintOnHover: false,
+                        border: hex == _hex
+                            ? Border.all(color: c.textPrimary, width: 2.5)
+                            : null,
+                        hoverBorder: Border.all(
+                          color: hex == _hex ? c.textPrimary : c.borderStrong,
+                          width: 2.5,
                         ),
                       ),
                   ],

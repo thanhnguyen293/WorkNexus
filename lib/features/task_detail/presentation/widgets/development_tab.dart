@@ -15,6 +15,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/body_format.dart';
 import '../../../../core/util/html_to_markdown.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../agents/presentation/agent_providers.dart';
 import '../detail_providers.dart';
 import 'agent_sessions.dart';
@@ -145,22 +146,27 @@ class _DryRunToggle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final dry = ref.watch(dryRunAgentsProvider);
-    return GestureDetector(
-      onTap: () => ref.read(dryRunAgentsProvider.notifier).state = !dry,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            dry ? PhosphorIconsLight.flask : PhosphorIconsLight.lightning,
-            size: 13,
-            color: dry ? c.warning : c.success,
-          ),
-          SizedBox(width: context.spacing.xs),
-          Text(
-            dry ? 'Dry-run' : 'Live CLI',
-            style: context.typography.caption.copyWith(color: c.textSecondary),
-          ),
-        ],
+    return HoverRegion(
+      cursor: SystemMouseCursors.click,
+      builder: (context, hovered, _) => GestureDetector(
+        onTap: () => ref.read(dryRunAgentsProvider.notifier).state = !dry,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              dry ? PhosphorIconsLight.flask : PhosphorIconsLight.lightning,
+              size: 13,
+              color: dry ? c.warning : c.success,
+            ),
+            SizedBox(width: context.spacing.xs),
+            Text(
+              dry ? 'Dry-run' : 'Live CLI',
+              style: context.typography.caption.copyWith(
+                color: hovered ? c.textPrimary : c.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

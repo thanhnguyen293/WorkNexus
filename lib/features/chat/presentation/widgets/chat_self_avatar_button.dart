@@ -30,6 +30,7 @@ class ChatSelfAvatarButton extends ConsumerWidget {
     return Tooltip(
       message: AppL10n.of(context).chatMyProfile,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         customBorder: const CircleBorder(),
         onTap: () => ChatUserProfileDialog.show(
           context,

@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../domain/value_objects/zentao_choices.dart';
 
 /// The title's colour: none or one of ZenTao's swatches (`#rrggbb`).
@@ -25,31 +26,34 @@ class TitleColorInput extends StatelessWidget {
       spacing: s.sm,
       children: [
         for (final hex in ['', ...zentaoTitleColors])
-          InkWell(
-            customBorder: const CircleBorder(),
+          HoverSurface(
             onTap: () => onChanged(hex),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                // Colours from ZenTao's data, not the theme.
-                color: hex.isEmpty ? c.surfaceSubtle : _parse(hex),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: hex.toLowerCase() == value.toLowerCase()
-                      ? c.textPrimary
-                      : c.border,
-                  width: hex.toLowerCase() == value.toLowerCase() ? 2 : 1,
-                ),
-              ),
-              child: hex.isEmpty
-                  ? Icon(
-                      PhosphorIconsLight.prohibit,
-                      size: s.xl2,
-                      color: c.textTertiary,
-                    )
-                  : null,
+            width: size,
+            height: size,
+            shape: BoxShape.circle,
+            // Colours from ZenTao's data, not the theme.
+            color: hex.isEmpty ? c.surfaceSubtle : _parse(hex),
+            // The ring answers hover: a tint would shift the colour.
+            tintOnHover: false,
+            border: Border.all(
+              color: hex.toLowerCase() == value.toLowerCase()
+                  ? c.textPrimary
+                  : c.border,
+              width: hex.toLowerCase() == value.toLowerCase() ? 2 : 1,
             ),
+            hoverBorder: Border.all(
+              color: hex.toLowerCase() == value.toLowerCase()
+                  ? c.textPrimary
+                  : c.borderStrong,
+              width: hex.toLowerCase() == value.toLowerCase() ? 2 : 1,
+            ),
+            child: hex.isEmpty
+                ? Icon(
+                    PhosphorIconsLight.prohibit,
+                    size: s.xl2,
+                    color: c.textTertiary,
+                  )
+                : null,
           ),
       ],
     );

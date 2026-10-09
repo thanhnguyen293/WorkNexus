@@ -76,8 +76,7 @@ class DetailHeader extends ConsumerWidget {
                   tooltip: l.edit,
                   onTap: () {
                     // The editor takes the screen; the detail reopens on save.
-                    ref.read(openTicketIdProvider.notifier).close();
-                    ref.read(ticketEditorProvider.notifier).open(route);
+                    openTicketEditor(ref, route);
                   },
                 ),
                 SizedBox(width: context.spacing.md),

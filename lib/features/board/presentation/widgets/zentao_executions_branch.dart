@@ -41,6 +41,7 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
           onTap: () => ref
               .read(zentaoExecutionsExpandedProvider.notifier)
               .toggle(account.id),
@@ -131,6 +132,7 @@ class _ProjectNode extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
           onTap: () => ref
               .read(zentaoExecutionProjectsExpandedProvider.notifier)
               .toggle(key),

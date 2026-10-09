@@ -31,6 +31,7 @@ class DashboardRow extends StatelessWidget {
     final t = context.typography;
     final subtitle = this.subtitle;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
       hoverColor: c.selectionFill,

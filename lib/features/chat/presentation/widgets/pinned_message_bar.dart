@@ -62,6 +62,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
     return Material(
       color: c.surface,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: () => toggleChatSidePanel(
           ref,
           t,

@@ -89,9 +89,11 @@ class _OptionTile extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
           onTap: onTap,
           borderRadius: BorderRadius.circular(context.radii.sm),
-          child: Container(
+          // Ink, not Container, so the fill sits under the hover highlight.
+          child: Ink(
             decoration: BoxDecoration(
               color: fill,
               borderRadius: BorderRadius.circular(context.radii.sm),

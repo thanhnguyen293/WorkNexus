@@ -142,6 +142,7 @@ class _MemberRow extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       borderRadius: BorderRadius.circular(context.radii.md),
       onTap: () => ChatUserProfileDialog.show(
         context,

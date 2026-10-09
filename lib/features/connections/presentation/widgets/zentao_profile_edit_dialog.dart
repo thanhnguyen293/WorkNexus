@@ -178,6 +178,7 @@ class _ZenTaoProfileEditDialogState
                 style: context.typography.captionStrong,
               ),
               DropdownButtonFormField<int>(
+                mouseCursor: WidgetStateMouseCursor.clickable,
                 initialValue: _departmentId,
                 items: departmentOptions,
                 onChanged: busy
@@ -187,6 +188,7 @@ class _ZenTaoProfileEditDialogState
               SizedBox(height: s.lg),
               Text(l.profileRole, style: context.typography.captionStrong),
               DropdownButtonFormField<String>(
+                mouseCursor: WidgetStateMouseCursor.clickable,
                 initialValue: _roleCode,
                 items: [
                   for (final entry in roles.entries)

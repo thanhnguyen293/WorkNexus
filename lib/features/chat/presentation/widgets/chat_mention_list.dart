@@ -129,6 +129,7 @@ class _Row extends StatelessWidget {
     return Material(
       color: highlighted ? c.selectionFill : Colors.transparent,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         onHover: (inside) {
           if (inside) onHover();

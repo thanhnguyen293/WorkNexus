@@ -33,16 +33,13 @@ class CommentTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final internal = comment.origin == CommentOrigin.internalNote;
     return Container(
       margin: EdgeInsets.only(bottom: context.spacing.lg),
       padding: EdgeInsets.all(context.spacing.lg),
       decoration: BoxDecoration(
-        color: internal ? c.mixT(c.warning, 0.08) : c.surfaceSubtle,
+        color: c.surfaceSubtle,
         borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(
-          color: internal ? c.mixT(c.warning, 0.30) : c.border,
-        ),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,14 +52,6 @@ class CommentTile extends ConsumerWidget {
                   color: c.textPrimary,
                 ),
               ),
-              SizedBox(width: context.spacing.md),
-              if (internal)
-                Text(
-                  'note',
-                  style: context.typography.captionSm.copyWith(
-                    color: c.warning,
-                  ),
-                ),
               const Spacer(),
               Text(
                 formatWhen(

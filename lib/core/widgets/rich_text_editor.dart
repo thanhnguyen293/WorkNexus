@@ -9,7 +9,11 @@ import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
-import 'editor_image_frame.dart';
+import '../util/dropped_files.dart';
+import 'editor_color_button.dart';
+import 'editor_image_embed.dart';
+import 'editor_link_button.dart';
+import 'file_drop_target.dart';
 import 'html_editing_controller.dart';
 import 'inline_image.dart';
 
@@ -30,6 +34,7 @@ class RichTextEditor extends StatefulWidget {
     this.onUploadImage,
     this.minHeight = 220,
     this.placeholder,
+    this.onDropFiles,
   });
 
   final HtmlEditingController controller;
@@ -41,6 +46,11 @@ class RichTextEditor extends StatefulWidget {
   final EditorImageUploader? onUploadImage;
   final double minHeight;
   final String? placeholder;
+
+  /// Takes files dropped onto the editor that it can't show inline (anything
+  /// but an image, or every file without [onUploadImage]); dropping is off
+  /// when neither can take a file.
+  final ValueChanged<List<DroppedFile>>? onDropFiles;
 
   @override
   State<RichTextEditor> createState() => _RichTextEditorState();
@@ -89,11 +99,28 @@ class _RichTextEditorState extends State<RichTextEditor> {
       ],
     );
     if (file == null) return;
-    final url = await _upload(await file.readAsBytes(), file.name);
+    await _insertImage(await file.readAsBytes(), file.name);
+  }
+
+  /// Uploads an image and puts it at the cursor.
+  Future<void> _insertImage(Uint8List bytes, String name) async {
+    final url = await _upload(bytes, name);
     if (url == null || !mounted) return;
     final quill = widget.controller.quill;
     final at = quill.selection.baseOffset < 0 ? 0 : quill.selection.baseOffset;
     quill.replaceText(at, 0, BlockEmbed.image(url), null);
+  }
+
+  /// Images go inline (when they can be uploaded); the rest to [onDropFiles].
+  Future<void> _drop(List<DroppedFile> files) async {
+    final canUpload = widget.onUploadImage != null;
+    final split = splitDroppedImages(files);
+    final others = [...split.others, if (!canUpload) ...split.images];
+    if (others.isNotEmpty) widget.onDropFiles?.call(others);
+    if (!canUpload) return;
+    for (final image in split.images) {
+      await _insertImage(image.bytes, image.name);
+    }
   }
 
   @override
@@ -102,81 +129,109 @@ class _RichTextEditorState extends State<RichTextEditor> {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final quill = widget.controller.quill;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(color: c.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
-            color: c.surfaceSubtle,
-            child: QuillSimpleToolbar(
-              controller: quill,
-              config: QuillSimpleToolbarConfig(
-                color: c.surfaceSubtle,
-                sectionDividerColor: c.border,
-                buttonOptions: QuillSimpleToolbarButtonOptions(
-                  base: QuillToolbarBaseButtonOptions(
-                    iconSize: s.xl3,
-                    iconButtonFactor: 1.1,
-                    iconTheme: _toolbarIconTheme(context),
-                  ),
-                ),
-                multiRowsDisplay: true,
-                toolbarIconAlignment: WrapAlignment.start,
-                showFontFamily: false,
-                showFontSize: false,
-                showSmallButton: false,
-                showSearchButton: false,
-                showSubscript: false,
-                showSuperscript: false,
-                showClipboardCut: false,
-                showClipboardCopy: false,
-                showClipboardPaste: false,
-                customButtons: [
-                  if (widget.onUploadImage != null)
-                    QuillToolbarCustomButtonOptions(
-                      tooltip: l.insertImage,
-                      icon: _uploading
-                          ? SizedBox.square(
-                              dimension: s.xl3,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 1.6,
-                              ),
-                            )
-                          : Icon(PhosphorIconsLight.image, size: s.xl3),
-                      onPressed: _uploading ? null : _pickImage,
-                    ),
-                ],
-              ),
-            ),
-          ),
-          Divider(height: 1, color: c.border),
-          ConstrainedBox(
-            constraints: BoxConstraints(minHeight: widget.minHeight),
-            child: Padding(
-              padding: EdgeInsets.all(s.lg),
-              child: QuillEditor(
+    return FileDropTarget(
+      enabled: widget.onUploadImage != null || widget.onDropFiles != null,
+      hint: l.dropFilesToInsert,
+      onDrop: _drop,
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.circular(context.radii.md),
+          border: Border.all(color: c.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
+              color: c.surfaceSubtle,
+              child: QuillSimpleToolbar(
                 controller: quill,
-                focusNode: _focus,
-                scrollController: _scroll,
-                config: QuillEditorConfig(
-                  scrollable: false,
-                  minHeight: widget.minHeight,
-                  placeholder: widget.placeholder,
-                  embedBuilders: [
-                    _ImageEmbedBuilder(loader: widget.imageLoader),
+                config: QuillSimpleToolbarConfig(
+                  color: c.surfaceSubtle,
+                  sectionDividerColor: c.border,
+                  buttonOptions: QuillSimpleToolbarButtonOptions(
+                    base: QuillToolbarBaseButtonOptions(
+                      iconSize: s.xl3,
+                      iconButtonFactor: 1.1,
+                      iconTheme: _toolbarIconTheme(context),
+                    ),
+                    // Swatch drop-downs in place of quill's Material dialog. Quill
+                    // calls the builder through a dynamic-typed function, so its
+                    // parameters must be untyped (typed ones fail at runtime).
+                    color: QuillToolbarColorButtonOptions(
+                      childBuilder: (Object? _, Object? _) => EditorColorButton(
+                        controller: quill,
+                        isBackground: false,
+                        iconSize: s.xl3 * 1.1,
+                      ),
+                    ),
+                    linkStyle: QuillToolbarLinkStyleButtonOptions(
+                      childBuilder: (Object? _, Object? _) => EditorLinkButton(
+                        controller: quill,
+                        iconSize: s.xl3 * 1.1,
+                      ),
+                    ),
+                    backgroundColor: QuillToolbarColorButtonOptions(
+                      childBuilder: (Object? _, Object? _) => EditorColorButton(
+                        controller: quill,
+                        isBackground: true,
+                        iconSize: s.xl3 * 1.1,
+                      ),
+                    ),
+                  ),
+                  multiRowsDisplay: true,
+                  toolbarIconAlignment: WrapAlignment.start,
+                  showFontFamily: false,
+                  showFontSize: false,
+                  showSmallButton: false,
+                  showSearchButton: false,
+                  showSubscript: false,
+                  showSuperscript: false,
+                  showClipboardCut: false,
+                  showClipboardCopy: false,
+                  showClipboardPaste: false,
+                  customButtons: [
+                    if (widget.onUploadImage != null)
+                      QuillToolbarCustomButtonOptions(
+                        tooltip: l.insertImage,
+                        icon: _uploading
+                            ? SizedBox.square(
+                                dimension: s.xl3,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 1.6,
+                                ),
+                              )
+                            : Icon(PhosphorIconsLight.image, size: s.xl3),
+                        onPressed: _uploading ? null : _pickImage,
+                      ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            Divider(height: 1, color: c.border),
+            ConstrainedBox(
+              constraints: BoxConstraints(minHeight: widget.minHeight),
+              child: Padding(
+                padding: EdgeInsets.all(s.lg),
+                child: QuillEditor(
+                  controller: quill,
+                  focusNode: _focus,
+                  scrollController: _scroll,
+                  config: QuillEditorConfig(
+                    scrollable: false,
+                    minHeight: widget.minHeight,
+                    placeholder: widget.placeholder,
+                    embedBuilders: [
+                      EditorImageEmbedBuilder(loader: widget.imageLoader),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -204,45 +259,4 @@ QuillIconTheme _toolbarIconTheme(BuildContext context) {
       ),
     ),
   );
-}
-
-/// Shows an image in the editor: through the authenticated loader when one
-/// is given (ZenTao's images need the session), else from the network.
-class _ImageEmbedBuilder extends EmbedBuilder {
-  const _ImageEmbedBuilder({this.loader});
-
-  final ImageBytesLoader? loader;
-
-  @override
-  String get key => BlockEmbed.imageType;
-
-  @override
-  Widget build(BuildContext context, EmbedContext embedContext) {
-    final node = embedContext.node;
-    final url = node.value.data.toString();
-    final width = double.tryParse(
-      imageStyleWidth(node.style.attributes[Attribute.style.key]?.value) ?? '',
-    );
-    final load = loader;
-    return EditorImageFrame(
-      width: width,
-      onResize: embedContext.readOnly
-          ? null
-          : (w) => embedContext.controller.formatText(
-              node.documentOffset,
-              1,
-              StyleAttribute(w == null ? null : 'width:${w.round()}px'),
-            ),
-      builder: (w) => load == null
-          ? Image.network(url, width: w, fit: BoxFit.contain)
-          : InlineImage(
-              key: ValueKey(url),
-              url: url,
-              loader: load,
-              width: w,
-              // The frame spaces it, so its outline hugs the image.
-              padding: EdgeInsets.zero,
-            ),
-    );
-  }
 }

@@ -136,6 +136,7 @@ class _Tile extends StatelessWidget {
     final tile = Padding(
       padding: EdgeInsets.all(context.spacing.xs),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         borderRadius: BorderRadius.circular(context.radii.md),
         onTap: onTap,
         child: Padding(

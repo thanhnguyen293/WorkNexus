@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'hover_surface.dart';
 
 /// A row of color swatches for choosing the app primary color. The first swatch
 /// ("default") clears the override and follows the theme variant's accent.
@@ -69,25 +70,27 @@ class _Swatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final swatch = GestureDetector(
+    final swatch = HoverSurface(
       onTap: onTap,
+      shape: BoxShape.circle,
+      padding: const EdgeInsets.all(2),
+      // The ring answers hover, not a tint: a tint would shift the colour.
+      tintOnHover: false,
+      border: Border.all(
+        color: selected ? c.textPrimary : Colors.transparent,
+        width: 2,
+      ),
+      hoverBorder: Border.all(
+        color: selected ? c.textPrimary : c.borderStrong,
+        width: 2,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(2),
+        width: 16,
+        height: 16,
         decoration: BoxDecoration(
+          color: color,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: selected ? c.textPrimary : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(color: c.mixT(c.scrim, 0.12)),
-          ),
+          border: Border.all(color: c.mixT(c.scrim, 0.12)),
         ),
       ),
     );

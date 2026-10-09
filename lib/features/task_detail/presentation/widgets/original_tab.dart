@@ -23,6 +23,7 @@ import 'bug_description.dart';
 import 'bug_detail_sections.dart';
 import 'bug_people_row.dart';
 import 'bug_status_strip.dart';
+import 'comments_section.dart';
 import 'detail_field_rows.dart';
 import 'detail_scroll_body.dart';
 import 'provider_detail_sections.dart';
@@ -109,28 +110,30 @@ class OriginalTab extends ConsumerWidget {
         if (bug != null) ...[
           BugStatusStrip(ticket: ticket, bug: bug),
           SizedBox(height: context.spacing.xl2),
-          BugPeopleRow(bug: bug),
+          BugPeopleRow(bug: bug, accountId: ticket.accountId),
           SizedBox(height: context.spacing.xl3),
         ],
         SectionLabel(l.description),
         SizedBox(height: context.spacing.md),
-        if (bug != null)
-          BugDescription(
-            body: ticket.body,
-            html: html,
-            imageLoader: (url) =>
-                getIt<SyncService>().fetchTicketImage(ticket, url),
-            imageFallback: imageFallback,
-          )
-        else
-          RichBodyText(
-            ticket.body,
-            html: html,
-            imageLoader: (url) =>
-                getIt<SyncService>().fetchTicketImage(ticket, url),
-            imageFallbackUrl: imageFallback.resolveUrl,
-            onOpenImage: imageFallback.open,
-          ),
+        // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
+        SelectionArea(
+          child: bug != null
+              ? BugDescription(
+                  body: ticket.body,
+                  html: html,
+                  imageLoader: (url) =>
+                      getIt<SyncService>().fetchTicketImage(ticket, url),
+                  imageFallback: imageFallback,
+                )
+              : RichBodyText(
+                  ticket.body,
+                  html: html,
+                  imageLoader: (url) =>
+                      getIt<SyncService>().fetchTicketImage(ticket, url),
+                  imageFallbackUrl: imageFallback.resolveUrl,
+                  onOpenImage: imageFallback.open,
+                ),
+        ),
         if (subtasks.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl2),
           SubtaskList(ticket: ticket, subtasks: subtasks),
@@ -149,6 +152,10 @@ class OriginalTab extends ConsumerWidget {
           SizedBox(height: context.spacing.xl3),
           BugAttachments(ticket: ticket, attachments: bug.attachments),
         ],
+        SizedBox(height: context.spacing.xl3),
+        SectionLabel('${l.comments} & ${l.activity}'),
+        SizedBox(height: context.spacing.md),
+        CommentsSection(ticket: ticket, imageFallback: imageFallback),
       ],
     );
 

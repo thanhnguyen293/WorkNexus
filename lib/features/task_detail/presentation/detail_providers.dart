@@ -22,7 +22,7 @@ import '../domain/usecases/rebase_gitlab_mr.dart';
 import '../domain/usecases/reopen_github_item.dart';
 import '../domain/usecases/update_github_pr_branch.dart';
 
-enum DetailTab { original, translation, comments, development }
+enum DetailTab { original, translation, development }
 
 final gitLabMrServiceProvider = Provider<GitLabMrService>(
   (ref) => getIt<GitLabMrService>(),

@@ -57,6 +57,7 @@ class EditorChip extends StatelessWidget {
             Flexible(child: text),
           SizedBox(width: s.xxs),
           InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: onRemove,
             borderRadius: BorderRadius.circular(context.radii.sm),
             child: Padding(

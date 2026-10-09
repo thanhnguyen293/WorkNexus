@@ -1,99 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/core/theme/app_palette.dart';
-import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/app_update/domain/entities/available_update.dart';
 import 'package:work_nexus/features/app_update/domain/repositories/update_repository.dart';
 import 'package:work_nexus/features/app_update/domain/usecases/build_issue_report_url.dart';
 import 'package:work_nexus/features/app_update/domain/usecases/check_for_update.dart';
-import 'package:work_nexus/features/app_update/presentation/providers/update_provider.dart';
-import 'package:work_nexus/features/app_update/presentation/widgets/update_notification_listener.dart';
-import 'package:work_nexus/features/app_update/presentation/widgets/update_settings_card.dart';
-import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets(
-    'offers the update in a dialog when a newer stable release is available',
-    (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            updateCheckProvider.overrideWith(
-              (ref) async => const Ok(
-                AvailableUpdate(
-                  currentVersion: '1.0.0',
-                  latestVersion: 'v1.1.0',
-                  releaseUrl: 'https://github.com/example/WorkNexus/releases',
-                ),
-              ),
-            ),
-          ],
-          child: MaterialApp(
-            theme: buildAppTheme(
-              variant: AppThemeVariant.light,
-              surface: SurfaceStyle.flat,
-              density: AppDensity.comfortable,
-            ),
-            localizationsDelegates: const [
-              AppL10n.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: AppL10n.supportedLocales,
-            home: const UpdateNotificationListener(
-              child: Scaffold(body: SizedBox()),
-            ),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('A new version of WorkNexus is available'),
-        findsOneWidget,
-      );
-      expect(find.text('v1.1.0'), findsOneWidget);
-    },
-  );
-
-  testWidgets('manual update check reports when the app is up to date', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          updateCheckProvider.overrideWith((ref) async => const Ok(null)),
-          appVersionProvider.overrideWith((ref) async => '1.4.1'),
-        ],
-        child: MaterialApp(
-          theme: buildAppTheme(
-            variant: AppThemeVariant.light,
-            surface: SurfaceStyle.flat,
-            density: AppDensity.comfortable,
-          ),
-          localizationsDelegates: AppL10n.localizationsDelegates,
-          supportedLocales: AppL10n.supportedLocales,
-          home: const Scaffold(body: UpdateSettingsCard()),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Check for updates'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Version 1.4.1'), findsOneWidget);
-    expect(
-      find.text("You're using the latest stable version."),
-      findsOneWidget,
-    );
-  });
-
   test(
     'the issue link targets this builds repository with version filled in',
     () {

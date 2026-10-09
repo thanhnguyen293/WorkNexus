@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -39,7 +40,7 @@ class NewTicketButton extends ConsumerWidget {
     return SizedBox(
       height: kBoardToolbarControlHeight,
       child: FilledButton.icon(
-        onPressed: () => ref.read(ticketEditorProvider.notifier).open(route),
+        onPressed: () => openTicketEditor(ref, route),
         icon: Icon(PhosphorIconsLight.plus, size: context.spacing.xl3),
         label: Text(label),
       ),

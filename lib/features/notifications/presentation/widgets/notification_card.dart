@@ -53,6 +53,7 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: () => openNotification(context, ref, n),
             borderRadius: BorderRadius.circular(context.radii.lg),
             hoverColor: c.selectionFill,

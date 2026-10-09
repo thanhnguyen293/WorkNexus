@@ -6,6 +6,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/fonts.dart';
 import '../util/markdown_normalize.dart';
+import 'hover_surface.dart';
 import 'inline_image.dart';
 
 export 'inline_image.dart'
@@ -91,14 +92,23 @@ class MarkdownText extends StatelessWidget {
               onOpenImage: onOpenImage,
               width: width,
             ),
+      // gpt_markdown wraps a custom link in a bare GestureDetector, so the
+      // hand cursor (and, for plain links, the hover underline) is ours to add.
       linkBuilder: (context, label, url, style) {
         final plain = isPlainLink?.call(url) ?? false;
-        return Text(
-          label.toPlainText(),
-          style: style.copyWith(
-            color: linkColor ?? c.accent,
-            fontWeight: plain ? FontWeight.w600 : null,
-            decoration: plain ? TextDecoration.none : TextDecoration.underline,
+        return HoverRegion(
+          enabled: onLink != null,
+          cursor: SystemMouseCursors.click,
+          builder: (context, hovered, _) => Text(
+            label.toPlainText(),
+            style: style.copyWith(
+              color: linkColor ?? c.accent,
+              fontWeight: plain ? FontWeight.w600 : null,
+              decoration: plain && !hovered
+                  ? TextDecoration.none
+                  : TextDecoration.underline,
+              decorationColor: linkColor ?? c.accent,
+            ),
           ),
         );
       },

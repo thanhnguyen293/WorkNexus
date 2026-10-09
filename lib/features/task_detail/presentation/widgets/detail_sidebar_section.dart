@@ -152,6 +152,7 @@ class _SectionHeader extends StatelessWidget {
           Tooltip(
             message: actionTooltip ?? action!,
             child: InkWell(
+              mouseCursor: WidgetStateMouseCursor.clickable,
               onTap: onAction,
               borderRadius: BorderRadius.circular(context.radii.sm),
               child: Padding(
@@ -170,6 +171,7 @@ class _SectionHeader extends StatelessWidget {
           Tooltip(
             message: actionTooltip ?? title,
             child: InkWell(
+              mouseCursor: WidgetStateMouseCursor.clickable,
               onTap: onAction,
               borderRadius: BorderRadius.circular(context.radii.sm),
               child: Padding(

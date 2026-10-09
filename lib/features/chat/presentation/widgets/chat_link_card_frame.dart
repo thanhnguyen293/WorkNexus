@@ -4,6 +4,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/contrast.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import 'chat_bubble_theme.dart';
 
 const double _kCardMaxWidth = 420;
@@ -30,21 +31,15 @@ class ChatLinkCardFrame extends StatelessWidget {
     final radius = BorderRadius.circular(context.radii.sm);
     return Padding(
       padding: EdgeInsets.only(top: s.md),
-      child: InkWell(
-        borderRadius: radius,
+      child: HoverSurface(
         onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
-          padding: EdgeInsets.fromLTRB(s.lg, s.md, s.lg, s.md),
-          decoration: BoxDecoration(
-            color: ink.quoteFill,
-            borderRadius: radius,
-            border: Border(
-              left: BorderSide(color: bar ?? ink.quoteBar, width: 3),
-            ),
-          ),
-          child: child,
-        ),
+        constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
+        padding: EdgeInsets.fromLTRB(s.lg, s.md, s.lg, s.md),
+        color: ink.quoteFill,
+        hoverColor: ink.hoverFill,
+        borderRadius: radius,
+        border: Border(left: BorderSide(color: bar ?? ink.quoteBar, width: 3)),
+        child: child,
       ),
     );
   }

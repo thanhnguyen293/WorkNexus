@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../core/debug/debug_celebrate_button.dart';
 import '../../core/platform/desktop_window_service.dart';
 import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
@@ -82,6 +83,8 @@ class TitleBar extends ConsumerWidget {
                 : title,
           ),
           SizedBox(width: context.spacing.lg),
+          // Debug builds only (renders nothing in release).
+          const DebugCelebrateButton(),
           const QuickSettingsButton(),
           if (isWindows) ...[
             SizedBox(width: context.spacing.lg),

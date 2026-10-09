@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../di/providers.dart';
+import 'ticket_editor_route.dart';
 
 /// App-shell view state shared across features: which ticket's detail overlay is
 /// open, and whether the settings view replaces the board. Lives in the shared
@@ -42,11 +43,23 @@ final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
 /// view, which stays as it is).
 final notificationsPanelOpenProvider = StateProvider<bool>((ref) => false);
 
-/// Closes settings and the notifications panel and shows [view].
+/// Closes settings, the notifications panel and any open bug / task editor
+/// (which would otherwise keep covering the main area) and shows [view].
 void showMainView(WidgetRef ref, MainView view) {
+  ref.read(ticketEditorProvider.notifier).close();
   ref.read(settingsOpenProvider.notifier).state = false;
   ref.read(notificationsPanelOpenProvider.notifier).state = false;
   ref.read(mainViewProvider.notifier).state = view;
+}
+
+/// Opens the bug / task editor on [route]. It takes the whole main area, so
+/// whatever would sit over or beside it (settings, which would hide it, the
+/// notifications panel and the ticket detail) is closed first.
+void openTicketEditor(WidgetRef ref, TicketEditorRoute route) {
+  ref.read(settingsOpenProvider.notifier).state = false;
+  ref.read(notificationsPanelOpenProvider.notifier).state = false;
+  ref.read(openTicketIdProvider.notifier).close();
+  ref.read(ticketEditorProvider.notifier).open(route);
 }
 
 /// Shows the board. Call from anything that selects a board (sidebar rows).

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/zentao_labels.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'attachment_kinds.dart';
 
@@ -94,35 +95,30 @@ class _DownloadButton extends StatelessWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final tint = c.accent;
-    return InkWell(
+    return HoverSurface(
       onTap: onTap,
+      height: 28,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+      color: c.surfaceSubtle,
       borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Container(
-        height: 28,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          border: Border.all(color: c.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (saving)
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: tint),
-              )
-            else
-              Icon(PhosphorIconsLight.downloadSimple, size: 15, color: tint),
-            SizedBox(width: context.spacing.sm),
-            Text(
-              l.download,
-              style: context.typography.bodySm.copyWith(color: tint),
-            ),
-          ],
-        ),
+      border: Border.all(color: c.border),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (saving)
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: tint),
+            )
+          else
+            Icon(PhosphorIconsLight.downloadSimple, size: 15, color: tint),
+          SizedBox(width: context.spacing.sm),
+          Text(
+            l.download,
+            style: context.typography.bodySm.copyWith(color: tint),
+          ),
+        ],
       ),
     );
   }
@@ -138,20 +134,15 @@ class _CloseButton extends StatelessWidget {
     final c = context.colors;
     return Tooltip(
       message: AppL10n.of(context).close,
-      child: InkWell(
+      child: HoverSurface(
         onTap: onTap,
+        width: 28,
+        height: 28,
+        alignment: Alignment.center,
+        color: c.surfaceSubtle,
         borderRadius: BorderRadius.circular(context.radii.sm),
-        child: Container(
-          width: 28,
-          height: 28,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: c.surfaceSubtle,
-            borderRadius: BorderRadius.circular(context.radii.sm),
-            border: Border.all(color: c.border),
-          ),
-          child: Icon(PhosphorIconsLight.x, size: 15, color: c.textSecondary),
-        ),
+        border: Border.all(color: c.border),
+        child: Icon(PhosphorIconsLight.x, size: 15, color: c.textSecondary),
       ),
     );
   }

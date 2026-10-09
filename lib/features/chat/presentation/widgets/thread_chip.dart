@@ -38,6 +38,7 @@ class ThreadChip extends StatelessWidget {
       color: c.surface,
       shape: StadiumBorder(side: BorderSide(color: c.border)),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         customBorder: const StadiumBorder(),
         child: Padding(

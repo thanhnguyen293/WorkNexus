@@ -86,30 +86,33 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(
-          child: GestureDetector(
-            onTap: _toggle,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                ),
-                if (!playing)
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: c.scrim.withValues(alpha: 0.55),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      PhosphorIconsFill.play,
-                      color: c.onAccent,
-                      size: 34,
-                    ),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: _toggle,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
                   ),
-              ],
+                  if (!playing)
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: c.scrim.withValues(alpha: 0.55),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        PhosphorIconsFill.play,
+                        color: c.onAccent,
+                        size: 34,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -163,6 +166,7 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return InkResponse(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       radius: 22,
       child: Container(

@@ -77,6 +77,7 @@ class _ReposGroup extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
           onTap: () =>
               ref.read(githubReposExpandedProvider.notifier).toggle(accountId),
           borderRadius: BorderRadius.circular(context.radii.sm),

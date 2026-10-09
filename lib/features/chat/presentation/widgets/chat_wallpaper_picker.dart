@@ -12,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/chat_doodle_palette.dart';
 import '../../../../core/widgets/app_context_menu.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/wallpaper_providers.dart';
 import 'chat_attachments.dart';
@@ -183,22 +184,23 @@ class _Tile extends StatelessWidget {
     final s = context.spacing;
     final size = s.xl6 * 1.9;
     final radius = BorderRadius.circular(context.radii.md);
-    final tile = InkWell(
+    final tile = HoverSurface(
       onTap: onTap,
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(selected ? 2 : 1),
       borderRadius: radius,
-      child: Container(
-        width: size,
-        height: size,
-        padding: EdgeInsets.all(selected ? 2 : 1),
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          border: Border.all(
-            color: selected ? c.accent : c.border,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: ClipRRect(borderRadius: radius, child: child),
+      // The picture covers the fill, so the frame answers hover instead.
+      tintOnHover: false,
+      border: Border.all(
+        color: selected ? c.accent : c.border,
+        width: selected ? 2 : 1,
       ),
+      hoverBorder: Border.all(
+        color: selected ? c.accent : c.borderStrong,
+        width: selected ? 2 : 1,
+      ),
+      child: ClipRRect(borderRadius: radius, child: child),
     );
     final text = label;
     if (text == null) return tile;

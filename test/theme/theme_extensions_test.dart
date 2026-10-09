@@ -128,6 +128,27 @@ void main() {
       expect(c.textPrimary, AppPalette.light.tx);
     });
 
+    test('hoverFill is the palette ink at low alpha', () {
+      for (final p in [
+        AppPalette.light,
+        AppPalette.dark,
+        AppPalette.midnight,
+      ]) {
+        final c = AppColors.fromPalette(p);
+        expect(c.hoverFill.withValues(alpha: 1), p.tx.withValues(alpha: 1));
+        expect(c.hoverFill.a, inExclusiveRange(0, 0.15));
+      }
+    });
+
+    test('buildAppTheme points ThemeData.hoverColor at hoverFill', () {
+      final theme = buildAppTheme(
+        variant: AppThemeVariant.dark,
+        surface: SurfaceStyle.flat,
+        density: AppDensity.comfortable,
+      );
+      expect(theme.hoverColor, theme.extension<AppColors>()!.hoverFill);
+    });
+
     test('lerp interpolates colors between variants', () {
       final light = AppColors.fromPalette(AppPalette.light);
       final dark = AppColors.fromPalette(AppPalette.dark);

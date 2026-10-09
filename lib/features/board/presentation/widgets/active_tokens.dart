@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/zentao_labels.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 
@@ -87,16 +88,16 @@ class ActiveTokens extends ConsumerWidget {
         spacing: context.spacing.sm,
         children: [
           ...tokens,
-          GestureDetector(
+          HoverSurface(
             onTap: ctrl.clearAll,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-              child: Text(
-                l.clear,
-                style: context.typography.caption.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
+            borderRadius: BorderRadius.circular(context.radii.sm),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.md,
+              vertical: context.spacing.xs,
+            ),
+            child: Text(
+              l.clear,
+              style: context.typography.caption.copyWith(color: c.textTertiary),
             ),
           ),
         ],
@@ -114,43 +115,39 @@ class _Token extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
+    return HoverSurface(
       onTap: onRemove,
-      child: Container(
-        height: 31,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-        decoration: BoxDecoration(
-          color: c.selectionFill,
-          borderRadius: BorderRadius.circular(context.radii.sm),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (dotColor != null) ...[
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  borderRadius: BorderRadius.circular(context.radii.dot),
-                ),
-              ),
-              SizedBox(width: context.spacing.xs),
-            ],
-            Text(
-              label,
-              style: context.typography.caption.copyWith(
-                color: c.textPrimary,
-                fontWeight: FontWeight.w500,
+      height: 31,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+      color: c.selectionFill,
+      borderRadius: BorderRadius.circular(context.radii.sm),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dotColor != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: dotColor,
+                borderRadius: BorderRadius.circular(context.radii.dot),
               ),
             ),
             SizedBox(width: context.spacing.xs),
-            Text(
-              '✕',
-              style: context.typography.caption.copyWith(color: c.textTertiary),
-            ),
           ],
-        ),
+          Text(
+            label,
+            style: context.typography.caption.copyWith(
+              color: c.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(width: context.spacing.xs),
+          Text(
+            '✕',
+            style: context.typography.caption.copyWith(color: c.textTertiary),
+          ),
+        ],
       ),
     );
   }

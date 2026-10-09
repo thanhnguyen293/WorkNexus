@@ -92,6 +92,7 @@ class _Thumb extends ConsumerWidget {
       borderRadius: BorderRadius.circular(context.radii.sm),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: () => switch (content) {
           final ImageContent image => ChatImageViewer.show(
             context,
@@ -152,6 +153,7 @@ class ChatFileRow extends ConsumerWidget {
         ? ref.watch(chatDownloadProgressProvider(key)).value ?? 0
         : null;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       borderRadius: BorderRadius.circular(context.radii.md),
       onTap: downloading
           ? null

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/celebration_overlay.dart';
 import '../../../sync/data/sync_service.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
@@ -186,6 +187,10 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
     if (!mounted) return;
+    // Dropped into Resolved / Verify: the bug is fixed.
+    if (result.isOk && target == ZenTaoBugColumn.resolvedVerify) {
+      ref.read(celebrationProvider.notifier).celebrate();
+    }
     messenger.showSnackBar(
       SnackBar(content: Text(_snackMessage(result, resolution))),
     );

@@ -23,6 +23,7 @@ class ChatTabChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: Container(

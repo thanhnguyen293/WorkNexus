@@ -92,6 +92,7 @@ class _Row extends StatelessWidget {
     final s = context.spacing;
     final l = AppL10n.of(context);
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.md),

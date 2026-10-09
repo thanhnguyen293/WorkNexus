@@ -9,6 +9,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/util/zentao_labels.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_field_rows.dart';
 import 'section_label.dart';
@@ -155,16 +156,24 @@ class _EmptyFieldsToggle extends StatelessWidget {
     final c = context.colors;
     return Align(
       alignment: Alignment.centerLeft,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-          child: Text(
-            expanded
-                ? AppL10n.of(context).hideEmptyFields
-                : AppL10n.of(context).showEmptyFields(count),
-            style: context.typography.caption.copyWith(color: c.accent),
+      child: HoverRegion(
+        cursor: SystemMouseCursors.click,
+        builder: (context, hovered, _) => GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+            child: Text(
+              expanded
+                  ? AppL10n.of(context).hideEmptyFields
+                  : AppL10n.of(context).showEmptyFields(count),
+              style: context.typography.caption.copyWith(
+                color: c.accent,
+                // A text link underlines on hover.
+                decoration: hovered ? TextDecoration.underline : null,
+                decorationColor: c.accent,
+              ),
+            ),
           ),
         ),
       ),

@@ -19,6 +19,7 @@ class DashboardAccountPicker extends ConsumerWidget {
     return Tooltip(
       message: AppL10n.of(context).dashboardAccount,
       child: DropdownButton<String>(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         value: current.id,
         underline: const SizedBox.shrink(),
         style: context.typography.bodySm.copyWith(color: c.textPrimary),

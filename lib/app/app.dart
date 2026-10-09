@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/platform/desktop_app_lifecycle.dart';
 import '../core/settings/app_settings.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/celebration_overlay.dart';
 import '../l10n/app_localizations.dart';
 import 'shell/app_shell.dart';
 
@@ -54,6 +55,9 @@ class WorkNexusApp extends ConsumerWidget {
         componentRadius: settings.componentRadius,
         accentColorValue: settings.accentColorValue,
       ),
+      // Above the navigator, so a show also plays over an open dialog.
+      builder: (context, child) =>
+          CelebrationOverlay(child: child ?? const SizedBox.shrink()),
       home: const AppShell(),
     );
   }

@@ -61,6 +61,7 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
       color: c.selectionFill,
       borderRadius: radius,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: _opening ? null : _open,
         borderRadius: radius,
         child: Padding(

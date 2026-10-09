@@ -26,6 +26,7 @@ class _NonFixResolutionDialogState extends State<NonFixResolutionDialog> {
         style: context.typography.title.copyWith(color: c.textPrimary),
       ),
       content: DropdownButtonFormField<String>(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         initialValue: _resolution,
         isExpanded: true,
         dropdownColor: c.surface,

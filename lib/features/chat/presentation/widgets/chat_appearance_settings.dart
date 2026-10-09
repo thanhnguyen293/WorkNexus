@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_style.dart';
 import 'chat_style_preview.dart';
@@ -133,52 +134,51 @@ class _StyleCard extends StatelessWidget {
     return Semantics(
       selected: selected,
       button: true,
-      child: InkWell(
-        borderRadius: radius,
+      child: HoverSurface(
         onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.all(s.sm),
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            border: Border.all(
-              color: selected ? c.accent : c.border,
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              // Laid out at the size it was designed for, scaled to the card.
-              AspectRatio(
-                aspectRatio: 3.4 / 2.4,
-                child: FittedBox(
-                  child: SizedBox(
-                    width: s.xl6 * 3.4,
-                    height: s.xl6 * 2.4,
-                    child: ChatStylePreview(style: style),
-                  ),
+        padding: EdgeInsets.all(s.sm),
+        borderRadius: radius,
+        border: Border.all(
+          color: selected ? c.accent : c.border,
+          width: selected ? 2 : 1,
+        ),
+        hoverBorder: Border.all(
+          color: selected ? c.accent : c.borderStrong,
+          width: selected ? 2 : 1,
+        ),
+        child: Column(
+          children: [
+            // Laid out at the size it was designed for, scaled to the card.
+            AspectRatio(
+              aspectRatio: 3.4 / 2.4,
+              child: FittedBox(
+                child: SizedBox(
+                  width: s.xl6 * 3.4,
+                  height: s.xl6 * 2.4,
+                  child: ChatStylePreview(style: style),
                 ),
               ),
-              SizedBox(height: s.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      chatAppearanceLabel(AppL10n.of(context), appearance),
-                      style: context.typography.bodySmStrong.copyWith(
-                        color: selected ? c.accent : c.textPrimary,
-                      ),
+            ),
+            SizedBox(height: s.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    chatAppearanceLabel(AppL10n.of(context), appearance),
+                    style: context.typography.bodySmStrong.copyWith(
+                      color: selected ? c.accent : c.textPrimary,
                     ),
                   ),
-                  if (selected)
-                    Icon(
-                      PhosphorIconsFill.checkCircle,
-                      size: s.xl3,
-                      color: c.accent,
-                    ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                if (selected)
+                  Icon(
+                    PhosphorIconsFill.checkCircle,
+                    size: s.xl3,
+                    color: c.accent,
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );

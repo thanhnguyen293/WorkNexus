@@ -20,6 +20,7 @@ class GenerateTokenLink extends StatelessWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.sm),
       child: Padding(

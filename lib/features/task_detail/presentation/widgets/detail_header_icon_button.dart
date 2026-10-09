@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// The shared detail-panel header icon button — a 26×26 subtle-filled, bordered
@@ -28,20 +29,15 @@ class DetailHeaderIconButton extends StatelessWidget {
     final c = context.colors;
     return Tooltip(
       message: tooltip,
-      child: InkWell(
+      child: HoverSurface(
         onTap: onTap,
+        width: 26,
+        height: 26,
+        alignment: Alignment.center,
+        color: c.surfaceSubtle,
         borderRadius: BorderRadius.circular(context.radii.sm),
-        child: Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: c.surfaceSubtle,
-            borderRadius: BorderRadius.circular(context.radii.sm),
-            border: Border.all(color: c.border),
-          ),
-          child: Icon(icon, size: 15, color: c.textSecondary),
-        ),
+        border: Border.all(color: c.border),
+        child: Icon(icon, size: 15, color: c.textSecondary),
       ),
     );
   }

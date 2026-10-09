@@ -168,6 +168,7 @@ class _PersonRow extends StatelessWidget {
       color: picked ? c.selectionFill : Colors.transparent,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         borderRadius: BorderRadius.circular(context.radii.md),
         onTap: onTap,
         child: Padding(
@@ -274,6 +275,7 @@ class _PickedPill extends StatelessWidget {
             style: context.typography.secondary.copyWith(color: c.textPrimary),
           ),
           InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
             customBorder: const CircleBorder(),
             onTap: onRemove,
             child: Padding(

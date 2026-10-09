@@ -79,6 +79,7 @@ class _ProjectsGroup extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
           onTap: () => ref
               .read(zentaoProjectsExpandedProvider.notifier)
               .toggle(accountId),

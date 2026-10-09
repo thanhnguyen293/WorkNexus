@@ -105,6 +105,7 @@ class ChatStorageDialog extends ConsumerWidget {
                     ),
                   ),
                   DropdownButton<int>(
+                    mouseCursor: WidgetStateMouseCursor.clickable,
                     value: _kLimitsMb.contains(limitMb) ? limitMb : null,
                     underline: const SizedBox.shrink(),
                     items: [

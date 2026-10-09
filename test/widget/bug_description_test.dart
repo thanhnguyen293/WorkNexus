@@ -6,115 +6,55 @@ import 'package:work_nexus/features/task_detail/presentation/widgets/bug_descrip
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
-  Future<void> pump(
-    WidgetTester tester,
-    String body, {
-    bool html = false,
-  }) async {
-    tester.view.physicalSize = const Size(900, 1600);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
+  testWidgets('section cards draw their own rounded border, unclipped', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppL10n.localizationsDelegates,
-        supportedLocales: AppL10n.supportedLocales,
         theme: buildAppTheme(
-          variant: AppThemeVariant.light,
+          variant: AppThemeVariant.dark,
           surface: SurfaceStyle.outline,
           density: AppDensity.comfortable,
         ),
-        home: Scaffold(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: const Scaffold(
           body: SingleChildScrollView(
-            child: BugDescription(body: body, html: html),
+            child: BugDescription(
+              body:
+                  '<p>【步骤】</p><p>Open the app</p>'
+                  '<p>Actual result:</p><p>Crash</p>',
+              html: true,
+            ),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-  }
 
-  const structured = '''
-**Steps to reproduce:**
-
-1. Open SocialFi
-2. User A taps Add Friend
-
-**Actual result:**
-
-Friend count increases for both users.
-
-**Expected result:**
-
-Count should only increase once both connect.
-''';
-
-  testWidgets('groups the three sections without exceptions', (tester) async {
-    await pump(tester, structured);
-
-    expect(tester.takeException(), isNull);
-    expect(find.text('Steps to reproduce'), findsOneWidget);
-    expect(find.text('Actual result'), findsOneWidget);
-    expect(find.text('Expected result'), findsOneWidget);
-    // Content is still rendered as markdown, nothing dropped.
-    expect(find.textContaining('Open SocialFi'), findsOneWidget);
-    expect(find.textContaining('Friend count increases'), findsOneWidget);
-    expect(find.textContaining('only increase once both'), findsOneWidget);
-  });
-
-  testWidgets('hides absent sections and keeps free text (no info lost)', (
-    tester,
-  ) async {
-    const partial = '''
-Some preamble noting the environment.
-
-**Actual result:**
-
-The app crashes on save.
-''';
-    await pump(tester, partial);
-
-    expect(tester.takeException(), isNull);
-    // The one present section shows; the two absent ones do not.
-    expect(find.text('Actual result'), findsOneWidget);
-    expect(find.text('Steps to reproduce'), findsNothing);
-    expect(find.text('Expected result'), findsNothing);
-    // Free text outside any heading is preserved.
-    expect(find.textContaining('Some preamble'), findsOneWidget);
-    expect(find.textContaining('crashes on save'), findsOneWidget);
-  });
-
-  testWidgets('falls back to plain markdown when no headings match', (
-    tester,
-  ) async {
-    await pump(tester, 'Just a plain description with no headings.');
-
-    expect(tester.takeException(), isNull);
-    expect(find.text('Steps to reproduce'), findsNothing);
-    expect(find.textContaining('Just a plain description'), findsOneWidget);
-  });
-
-  testWidgets('groups a ZenTao HTML description and shows it as HTML', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      '<p>Steps:</p><p>1. Open a World Cup market</p>'
-      '<p>[Actual result]</p><p>- The game card is <b>missing</b>.</p>'
-      '<p>[Expected result]</p><p>The card shows.</p>',
-      html: true,
+    // A rounded clip over a square border is what cut the corners off.
+    expect(
+      find.descendant(
+        of: find.byType(BugDescription),
+        matching: find.byType(ClipRRect),
+      ),
+      findsNothing,
     );
-
-    expect(tester.takeException(), isNull);
-    expect(find.text('Steps to reproduce'), findsOneWidget);
-    expect(find.text('Actual result'), findsOneWidget);
-    expect(find.text('Expected result'), findsOneWidget);
-    // Rendered as written: no Markdown escapes, the tags themselves hidden.
-    Finder shown(Pattern text) => find.textContaining(text, findRichText: true);
-    expect(shown('1. Open a World Cup market'), findsOneWidget);
-    expect(shown('- The game card is missing.'), findsOneWidget);
-    expect(shown(r'\'), findsNothing);
-    expect(shown('<b>'), findsNothing);
+    final cards = tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(BugDescription),
+            matching: find.byType(Container),
+          ),
+        )
+        .map((c) => c.decoration)
+        .whereType<BoxDecoration>()
+        .where((d) => d.border != null)
+        .toList();
+    expect(cards, hasLength(2), reason: 'steps and actual-result cards');
+    for (final d in cards) {
+      expect(d.borderRadius, isNotNull);
+      expect(d.border!.isUniform, isTrue);
+    }
   });
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
@@ -62,6 +63,16 @@ class TaskMainFields extends ConsumerWidget {
                     .read(zenTaoTicketEditorProvider)
                     .loadImage(route.accountId, url),
                 onUploadImage: controller.uploadImage,
+                // Other dropped files join the attachments.
+                onDropFiles: (files) => controller.edit(
+                  (d) => d.copyWith(
+                    newFiles: [
+                      ...d.newFiles,
+                      for (final f in files)
+                        DraftFile(name: f.name, bytes: f.bytes),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

@@ -81,6 +81,7 @@ class _Chip extends StatelessWidget {
         side: BorderSide(color: selected ? c.mixT(color, 0.6) : c.border),
       ),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         borderRadius: radius,
         child: Padding(

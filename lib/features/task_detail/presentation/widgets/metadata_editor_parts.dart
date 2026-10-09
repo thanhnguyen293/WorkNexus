@@ -109,6 +109,7 @@ class EditorOptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(

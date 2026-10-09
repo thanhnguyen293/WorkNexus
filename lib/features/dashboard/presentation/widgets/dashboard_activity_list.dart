@@ -77,6 +77,7 @@ class _Activity extends ConsumerWidget {
     final opensTicket = kind != null && kind.isTicket && a.objectId.isNotEmpty;
     final name = a.objectName;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: opensTicket ? () => _open(context, ref, kind) : null,
       borderRadius: BorderRadius.circular(context.radii.md),
       hoverColor: c.selectionFill,
