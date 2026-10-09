@@ -10,10 +10,13 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
+import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/zentao_link_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/notification_body.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/zentao_ticket_card.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -45,8 +48,9 @@ void main() {
 
   Future<ProviderContainer> pump(
     WidgetTester tester,
-    Stream<List<Ticket>> tickets,
-  ) async {
+    Stream<List<Ticket>> tickets, {
+    Widget body = const ZenTaoTicketCard(url: _url),
+  }) async {
     final container = ProviderContainer(
       overrides: [
         zenTaoTicketServiceProvider.overrideWithValue(service),
@@ -65,7 +69,7 @@ void main() {
           ),
           localizationsDelegates: AppL10n.localizationsDelegates,
           supportedLocales: AppL10n.supportedLocales,
-          home: const Scaffold(body: ZenTaoTicketCard(url: _url)),
+          home: Scaffold(body: body),
         ),
       ),
     );
@@ -120,6 +124,54 @@ void main() {
       ),
     ).called(1);
     expect(find.text('Login button does nothing'), findsOneWidget);
+    await end(tester, container);
+  });
+
+  testWidgets('a bot notification about a ticket shows it as a card', (
+    tester,
+  ) async {
+    final container = await pump(
+      tester,
+      Stream.value([_bug]),
+      body: const NotificationBody(
+        accountId: 'acc',
+        notification: NotificationContent(
+          sender: 'ZenTao',
+          title: 'JunNg assigned 1 Bug',
+          subtitle: 'VN_Socialfi',
+          text: '#123 Login button does nothing',
+          markdown: false,
+          url: _url,
+        ),
+      ),
+    );
+
+    expect(find.text('ZenTao · VN_Socialfi'), findsOneWidget);
+    expect(find.text('JunNg assigned 1 Bug'), findsOneWidget);
+    // The card's live title, not the notification's text repeated.
+    expect(find.text('Login button does nothing'), findsOneWidget);
+    expect(find.textContaining('Thanh', findRichText: true), findsOneWidget);
+    await end(tester, container);
+  });
+
+  testWidgets('a ticket that cannot be loaded still shows its name', (
+    tester,
+  ) async {
+    when(
+      () => service.fetchZenTaoTicket(
+        host: any(named: 'host'),
+        type: any(named: 'type'),
+        id: any(named: 'id'),
+      ),
+    ).thenAnswer((_) async => const Err(NotFoundFailure('no account')));
+
+    final container = await pump(
+      tester,
+      Stream.value(const []),
+      body: const ZenTaoTicketCard(url: _url, fallbackTitle: 'Crash on launch'),
+    );
+
+    expect(find.text('Crash on launch'), findsOneWidget);
     await end(tester, container);
   });
 }
