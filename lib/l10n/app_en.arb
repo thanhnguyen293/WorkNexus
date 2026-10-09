@@ -901,5 +901,6 @@
   "datePickToday": "Today",
   "datePickTomorrow": "Tomorrow",
   "datePickNextWeek": "In a week",
-  "imageResizeHint": "Drag to resize · double-click to fit"
+  "imageResizeHint": "Drag to resize · double-click to fit",
+  "fieldTaskType": "Task type"
 }

@@ -827,5 +827,6 @@
   "datePickToday": "Hôm nay",
   "datePickTomorrow": "Ngày mai",
   "datePickNextWeek": "Tuần sau",
-  "imageResizeHint": "Kéo để đổi kích thước · nhấp đúp để vừa khung"
+  "imageResizeHint": "Kéo để đổi kích thước · nhấp đúp để vừa khung",
+  "fieldTaskType": "Loại task"
 }

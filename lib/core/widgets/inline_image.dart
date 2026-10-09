@@ -31,6 +31,7 @@ class InlineImage extends StatefulWidget {
     this.fallbackUrl,
     this.onOpenImage,
     this.width,
+    this.padding,
   });
 
   final String url;
@@ -38,6 +39,9 @@ class InlineImage extends StatefulWidget {
   final ImageUrlResolver? fallbackUrl;
   final ImageExternalOpener? onOpenImage;
   final double? width;
+
+  /// Space around the image; a little above and below by default.
+  final EdgeInsets? padding;
 
   @override
   State<InlineImage> createState() => InlineImageState();
@@ -101,7 +105,9 @@ class InlineImageState extends State<InlineImage> {
           );
         }
         return Container(
-          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+          padding:
+              widget.padding ??
+              EdgeInsets.symmetric(vertical: context.spacing.sm),
           // A chosen width is honoured as is; otherwise tall images are capped.
           constraints: widget.width == null
               ? const BoxConstraints(maxHeight: 400)

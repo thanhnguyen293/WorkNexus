@@ -235,7 +235,14 @@ class _ImageEmbedBuilder extends EmbedBuilder {
             ),
       builder: (w) => load == null
           ? Image.network(url, width: w, fit: BoxFit.contain)
-          : InlineImage(key: ValueKey(url), url: url, loader: load, width: w),
+          : InlineImage(
+              key: ValueKey(url),
+              url: url,
+              loader: load,
+              width: w,
+              // The frame spaces it, so its outline hugs the image.
+              padding: EdgeInsets.zero,
+            ),
     );
   }
 }
