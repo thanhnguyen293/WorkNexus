@@ -231,12 +231,15 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                         ),
                       ),
                       (null, _) => CircularProgressIndicator(color: c.onScrim),
-                      (final VideoPlayerController p, _) => GestureDetector(
-                        onTap: _togglePlay,
-                        onDoubleTap: _toggleFullScreen,
-                        child: AspectRatio(
-                          aspectRatio: p.value.aspectRatio,
-                          child: VideoPlayer(p),
+                      (final VideoPlayerController p, _) => MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: _togglePlay,
+                          onDoubleTap: _toggleFullScreen,
+                          child: AspectRatio(
+                            aspectRatio: p.value.aspectRatio,
+                            child: VideoPlayer(p),
+                          ),
                         ),
                       ),
                     },

@@ -110,6 +110,7 @@ class ChatImageBody extends ConsumerWidget {
       _ => ColoredBox(color: c.skeleton),
     };
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       borderRadius: radius,
       onTap: () => openAttachment(
         context,

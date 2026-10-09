@@ -61,6 +61,7 @@ class MessageFooter extends ConsumerWidget {
         style: style,
       ),
       SendState.failed => InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: () async {
           final result = await ref
               .read(chatControllerProvider)

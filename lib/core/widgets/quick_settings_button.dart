@@ -62,6 +62,7 @@ class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
               borderRadius: BorderRadius.circular(context.radii.sm),
             ),
             child: InkWell(
+              mouseCursor: WidgetStateMouseCursor.clickable,
               onTap: _handleTriggerTap,
               hoverColor: c.surfaceSubtle,
               borderRadius: BorderRadius.circular(context.radii.sm),

@@ -6,6 +6,7 @@ import 'package:injectable/injectable.dart';
 import 'app/app.dart';
 import 'core/database/database.dart';
 import 'core/di/service_locator.dart';
+import 'core/navigation/person_chip.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
 import 'core/platform/desktop_tray_service.dart';
@@ -13,6 +14,7 @@ import 'core/platform/desktop_window_service.dart';
 import 'core/settings/app_settings.dart';
 import 'data/local/database_seeder.dart';
 import 'data/local/mappers.dart';
+import 'features/chat/presentation/widgets/chat_person_chip.dart';
 import 'features/sync/data/sync_service.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -60,6 +62,16 @@ Future<void> main(List<String> arguments) async {
         initialAppSettingsProvider.overrideWithValue(initialSettings),
         settingsPersistProvider.overrideWithValue(
           (s) => db.saveSettings(appSettingsToCompanion(s)),
+        ),
+        // Ticket screens show people as chat knows them (photo, "verified",
+        // tap to chat) without importing the chat feature.
+        personChipBuilderProvider.overrideWithValue(
+          (context, {required accountId, required name, required avatarSize}) =>
+              ChatPersonChip(
+                accountId: accountId,
+                name: name,
+                avatarSize: avatarSize,
+              ),
         ),
       ],
       child: WorkNexusApp(lifecycle: lifecycle),

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/contrast.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
@@ -51,22 +52,20 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
       );
     }
     final message = original.asData?.value;
-    return InkWell(
-      onTap: widget.onTap,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Container(
-        margin: EdgeInsets.only(bottom: context.spacing.md),
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.md),
+      child: HoverSurface(
+        onTap: widget.onTap,
         padding: EdgeInsets.fromLTRB(
           context.spacing.lg,
           context.spacing.sm,
           context.spacing.lg,
           context.spacing.sm,
         ),
-        decoration: BoxDecoration(
-          color: ink.quoteFill,
-          borderRadius: BorderRadius.circular(context.radii.md),
-          border: Border(left: BorderSide(color: ink.quoteBar, width: 3)),
-        ),
+        color: ink.quoteFill,
+        hoverColor: ink.hoverFill,
+        borderRadius: BorderRadius.circular(context.radii.md),
+        border: Border(left: BorderSide(color: ink.quoteBar, width: 3)),
         child: message == null
             ? Text(
                 l.chatReplyMissing,

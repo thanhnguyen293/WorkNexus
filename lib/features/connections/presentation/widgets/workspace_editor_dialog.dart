@@ -11,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/hover_surface.dart';
 
 class WorkspaceEditorDialog extends StatefulWidget {
   const WorkspaceEditorDialog({super.key, required this.workspace});
@@ -189,20 +190,21 @@ class _ColorChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return InkWell(
+    return HoverSurface(
       onTap: onTap,
+      width: 34,
+      height: 28,
+      color: Color(value),
       borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Container(
-        width: 34,
-        height: 28,
-        decoration: BoxDecoration(
-          color: Color(value),
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          border: Border.all(
-            color: selected ? c.textPrimary : c.border,
-            width: selected ? 2 : 1,
-          ),
-        ),
+      // The outline answers hover, not a tint: a tint would shift the colour.
+      tintOnHover: false,
+      border: Border.all(
+        color: selected ? c.textPrimary : c.border,
+        width: selected ? 2 : 1,
+      ),
+      hoverBorder: Border.all(
+        color: selected ? c.textPrimary : c.borderStrong,
+        width: selected ? 2 : 1,
       ),
     );
   }

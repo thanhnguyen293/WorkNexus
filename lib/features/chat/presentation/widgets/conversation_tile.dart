@@ -63,11 +63,11 @@ class ConversationTile extends StatelessWidget {
       return Tooltip(
         message: title,
         waitDuration: const Duration(milliseconds: 400),
-        child: InkWell(
+        child: _TileInk(
+          selected: selected,
           onTap: onTap,
-          child: Container(
+          child: Padding(
             padding: EdgeInsets.symmetric(vertical: context.spacing.md),
-            color: selected ? c.selectionFill : Colors.transparent,
             child: Center(
               child: Stack(
                 clipBehavior: Clip.none,
@@ -88,14 +88,14 @@ class ConversationTile extends StatelessWidget {
     }
     // Square and edge to edge: the selection fills the whole row; the inner
     // margin keeps the content where the list's own used to put it.
-    return InkWell(
+    return _TileInk(
+      selected: selected,
       onTap: onTap,
-      child: Container(
+      child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: context.spacing.xl3,
           vertical: context.spacing.md,
         ),
-        color: selected ? c.selectionFill : Colors.transparent,
         child: Row(
           children: [
             avatarWidget,
@@ -187,4 +187,29 @@ class ConversationTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The row's own ink layer. The list pane paints an opaque surface between
+/// the tile and the app's Material, which would hide the InkWell's hover and
+/// splash; a local Material carries them (and the selection fill) instead.
+class _TileInk extends StatelessWidget {
+  const _TileInk({
+    required this.selected,
+    required this.onTap,
+    required this.child,
+  });
+
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: selected ? context.colors.selectionFill : Colors.transparent,
+    child: InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
+      onTap: onTap,
+      child: child,
+    ),
+  );
 }

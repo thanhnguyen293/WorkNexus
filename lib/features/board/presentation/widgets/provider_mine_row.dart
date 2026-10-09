@@ -49,6 +49,7 @@ class ProviderMineRow extends ConsumerWidget {
     return Opacity(
       opacity: loading ? 0.48 : 1,
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: loading ? null : () => _select(ref),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(

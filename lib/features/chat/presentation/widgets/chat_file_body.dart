@@ -137,6 +137,7 @@ class _FileTile extends StatelessWidget {
             ),
     );
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: ConstrainedBox(

@@ -140,37 +140,36 @@ class _Section extends StatelessWidget {
           ],
         ),
         SizedBox(height: context.spacing.md),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(context.radii.lg),
+        // The border is drawn rounded itself: a square one under a rounded
+        // clip loses its corners.
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: accent == null
+                ? c.surfaceSubtle
+                // Opaque 6% tint over the card surface (design's color-mix).
+                : c.mix(c.surfaceSubtle, accent, 0.06),
+            border: Border.all(color: c.border),
+            borderRadius: BorderRadius.circular(context.radii.lg),
+          ),
           child: accent == null
-              ? DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: c.surfaceSubtle,
-                    border: Border.all(color: c.border),
-                  ),
-                  child: padded,
-                )
-              // A colored left border can't combine with a borderRadius, so fill
-              // the (clipped, rounded) card with the accent color and inset the
-              // tinted body — the exposed accent stripe hugs the rounded edge.
-              : ColoredBox(
-                  color: accent,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: context.borders.accent),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        // Opaque 6% tint over the card surface (design's
-                        // color-mix), so the accent fill only shows as the strip.
-                        color: c.mix(c.surfaceSubtle, accent, 0.06),
-                        border: Border(
-                          top: BorderSide(color: c.border),
-                          right: BorderSide(color: c.border),
-                          bottom: BorderSide(color: c.border),
-                        ),
-                      ),
+              ? padded
+              // A coloured left edge can't be a side of a rounded border, so
+              // it is a strip laid over that edge, clipped to the rounding.
+              : Stack(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: context.borders.accent),
                       child: padded,
                     ),
-                  ),
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: context.borders.accent,
+                      child: ColoredBox(color: accent),
+                    ),
+                  ],
                 ),
         ),
       ],

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -70,17 +71,19 @@ class EditorHeader extends StatelessWidget {
                   ),
           ),
           SizedBox(width: s.xl),
-          TextButton(onPressed: onClose, child: Text(l.cancel)),
+          AppButton.outlinedNeutral(onPressed: onClose, child: Text(l.cancel)),
           SizedBox(width: s.md),
-          FilledButton.icon(
-            onPressed: saving ? null : onSave,
-            icon: saving
-                ? SizedBox.square(
-                    dimension: s.xl2,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(PhosphorIconsLight.floppyDisk, size: s.xl3),
-            label: Text(l.save),
+          AppButton.filled(
+            onPressed: onSave,
+            isLoading: saving,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: s.sm,
+              children: [
+                Icon(PhosphorIconsLight.floppyDisk, size: s.xl3),
+                Text(l.save),
+              ],
+            ),
           ),
         ],
       ),

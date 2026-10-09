@@ -240,6 +240,7 @@ class _ReviewerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: () => onChanged(!selected),
       borderRadius: BorderRadius.circular(context.radii.sm),
       child: Padding(

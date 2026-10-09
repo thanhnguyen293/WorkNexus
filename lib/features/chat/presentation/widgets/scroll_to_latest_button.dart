@@ -40,6 +40,7 @@ class ScrollToLatestButton extends StatelessWidget {
             shadowColor: c.scrim,
             shape: CircleBorder(side: BorderSide(color: c.border)),
             child: InkWell(
+              mouseCursor: WidgetStateMouseCursor.clickable,
               customBorder: const CircleBorder(),
               onTap: onPressed,
               child: SizedBox.square(

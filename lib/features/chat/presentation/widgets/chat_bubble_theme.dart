@@ -50,6 +50,11 @@ class ChatBubbleInk {
   /// Background of icon tiles (link and file cards) inside the bubble.
   final Color tileFill;
 
+  /// Pointer-hover tint for the cards inside the bubble (quotes, link cards):
+  /// the bubble's own ink at low alpha, the in-bubble twin of
+  /// `AppColors.hoverFill`, so it reads on every chat style's bubble colour.
+  Color get hoverFill => text.withValues(alpha: 0.06);
+
   /// Message text size of the active chat style.
   final double fontSize;
 }

@@ -30,6 +30,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.accent,
     required this.selectionFill,
     required this.selectionBorder,
+    required this.hoverFill,
     required this.success,
     required this.warning,
     required this.error,
@@ -63,6 +64,11 @@ class AppColors extends ThemeExtension<AppColors> {
     accent: p.accent,
     selectionFill: p.sel,
     selectionBorder: p.selLine,
+    // Pointer-hover tint: the palette's ink at low alpha, so it darkens light
+    // surfaces and lightens dark ones. Dark themes need a touch more to read.
+    hoverFill: p.tx.withValues(
+      alpha: p.brightness == Brightness.dark ? 0.08 : 0.06,
+    ),
     success: p.green,
     warning: p.amber,
     error: p.red,
@@ -98,6 +104,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color accent; // brand accent
   final Color selectionFill; // selection background (accent, low alpha)
   final Color selectionBorder; // selection border (accent, mid alpha)
+  final Color hoverFill; // pointer-hover tint over any surface (ink, low alpha)
 
   // ---- Feedback / status ----
   final Color success; // done / synced
@@ -153,6 +160,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? accent,
     Color? selectionFill,
     Color? selectionBorder,
+    Color? hoverFill,
     Color? success,
     Color? warning,
     Color? error,
@@ -184,6 +192,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accent: accent ?? this.accent,
       selectionFill: selectionFill ?? this.selectionFill,
       selectionBorder: selectionBorder ?? this.selectionBorder,
+      hoverFill: hoverFill ?? this.hoverFill,
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
@@ -221,6 +230,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accent: c(accent, other.accent),
       selectionFill: c(selectionFill, other.selectionFill),
       selectionBorder: c(selectionBorder, other.selectionBorder),
+      hoverFill: c(hoverFill, other.hoverFill),
       success: c(success, other.success),
       warning: c(warning, other.warning),
       error: c(error, other.error),

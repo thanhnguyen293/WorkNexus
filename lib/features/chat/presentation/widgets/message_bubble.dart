@@ -18,6 +18,7 @@ import 'chat_style.dart';
 import 'chat_user_profile_dialog.dart';
 import 'message_actions.dart';
 import 'message_body.dart';
+import 'message_bubble_box.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
 import 'message_link_previews.dart';
@@ -156,52 +157,41 @@ class MessageBubble extends ConsumerWidget {
         ),
       );
     } else {
-      final border = style.bubbleBorder(mine: mine);
-      final box = DecoratedBox(
-        decoration: BoxDecoration(
-          color: style.bubbleFill(mine: mine),
-          border: border == null ? null : Border.all(color: border),
-          borderRadius: style.corners(
-            mine: mine,
-            firstOfRun: firstOfRun,
-            lastOfRun: lastOfRun,
-            withTail: tailed,
-          ),
+      final box = MessageBubbleBox(
+        fill: style.bubbleFill(mine: mine),
+        hoverFill: ink.hoverFill,
+        borderColor: style.bubbleBorder(mine: mine),
+        borderRadius: style.corners(
+          mine: mine,
+          firstOfRun: firstOfRun,
+          lastOfRun: lastOfRun,
+          withTail: tailed,
         ),
-        child: Padding(
-          padding: style.padding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showName && style.name == ChatNamePlacement.insideBubble)
-                Padding(
-                  padding: EdgeInsets.only(bottom: s.xxs),
-                  child: nameText,
-                ),
-              if (style.quote == ChatQuotePlacement.inside) ?quote,
-              body,
-              MessageTranslationView(
-                accountId: chat.accountId,
-                gid: message.gid,
+        padding: style.padding,
+        mine: mine,
+        tail: tailed ? style.tail : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showName && style.name == ChatNamePlacement.insideBubble)
+              Padding(
+                padding: EdgeInsets.only(bottom: s.xxs),
+                child: nameText,
               ),
-              // Compact previews of the links, under the text.
-              MessageLinkPreviews(message: message),
-              ?footer,
-            ],
-          ),
+            if (style.quote == ChatQuotePlacement.inside) ?quote,
+            body,
+            MessageTranslationView(accountId: chat.accountId, gid: message.gid),
+            // Compact previews of the links, under the text.
+            MessageLinkPreviews(message: message),
+            ?footer,
+          ],
         ),
       );
       bubble = ConstrainedBox(
         constraints: BoxConstraints(maxWidth: style.maxWidth),
-        child: tailed
-            ? BubbleWithTail(
-                kind: style.tail!,
-                color: style.bubbleFill(mine: mine),
-                mine: mine,
-                child: box,
-              )
-            : Padding(padding: gutter, child: box),
+        // A tailed box makes its own room for the tail.
+        child: tailed ? box : Padding(padding: gutter, child: box),
       );
     }
 

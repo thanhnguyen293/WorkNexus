@@ -166,6 +166,7 @@ class _Tab extends StatelessWidget {
     final s = context.spacing;
     final t = context.typography;
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.sm),

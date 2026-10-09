@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 
 /// A labeled group of filter chips (uppercase heading + wrapped chips). Shared by
 /// the popover's facet and generic filter sections.
@@ -60,48 +61,42 @@ class FilterOptionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
+    return HoverSurface(
       onTap: onTap,
-      child: Container(
-        height: 26,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
-        decoration: BoxDecoration(
-          color: active ? c.selectionFill : c.surfaceSubtle,
-          borderRadius: BorderRadius.circular(context.radii.pill),
-          border: context.borders.showOutline
-              ? Border.all(color: c.border)
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (dotColor != null) ...[
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: context.spacing.xs),
-            ],
-            Text(
-              label,
-              style: context.typography.meta.copyWith(
-                fontWeight: FontWeight.w500,
-                color: active ? c.textPrimary : c.textSecondary,
+      height: 26,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
+      color: active ? c.selectionFill : c.surfaceSubtle,
+      borderRadius: BorderRadius.circular(context.radii.pill),
+      border: context.borders.showOutline ? Border.all(color: c.border) : null,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dotColor != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
               ),
             ),
-            if (count != null) ...[
-              SizedBox(width: context.spacing.xs),
-              Text(
-                '$count',
-                style: context.typography.meta.copyWith(color: c.textTertiary),
-              ),
-            ],
+            SizedBox(width: context.spacing.xs),
           ],
-        ),
+          Text(
+            label,
+            style: context.typography.meta.copyWith(
+              fontWeight: FontWeight.w500,
+              color: active ? c.textPrimary : c.textSecondary,
+            ),
+          ),
+          if (count != null) ...[
+            SizedBox(width: context.spacing.xs),
+            Text(
+              '$count',
+              style: context.typography.meta.copyWith(color: c.textTertiary),
+            ),
+          ],
+        ],
       ),
     );
   }

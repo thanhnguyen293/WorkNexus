@@ -45,6 +45,7 @@ class ChatVideoTile extends ConsumerWidget {
     };
     final radius = BorderRadius.circular(context.radii.lg);
     return InkWell(
+      mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: radius,
       child: Column(

@@ -25,6 +25,7 @@ class ItemDescription extends StatelessWidget {
         ),
       );
     }
-    return MarkdownText(ticket.body);
+    // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
+    return SelectionArea(child: MarkdownText(ticket.body));
   }
 }
