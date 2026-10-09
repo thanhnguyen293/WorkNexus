@@ -10,6 +10,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/network/api_paging.dart';
+import '../../../../core/util/in_flight.dart';
 import '../../../../core/util/synthetic_labels.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
@@ -519,18 +520,14 @@ class ZenTaoAdapter implements ProviderAdapter {
 
   /// Detail fetches in flight, keyed by type + id. Opening a ticket asks for
   /// its detail, comments and activity at once — all read from this one
-  /// payload — so concurrent callers share a single request. Entries are
-  /// dropped on completion, so a later call always refetches.
-  final _detailsInFlight = <String, Future<ZenTaoEntity>>{};
+  /// payload — so concurrent callers share a single request; a later call
+  /// still refetches.
+  final _detailsInFlight = InFlight<String, ZenTaoEntity>();
 
-  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) {
-    final key = '${_typeOf(ticket).pathSegment}-${ticket.externalKey}';
-    // Block body: whenComplete awaits a returned Future, and `remove` would
-    // hand back this very future — it would wait on itself forever.
-    return _detailsInFlight[key] ??= _loadDetail(ticket).whenComplete(() {
-      _detailsInFlight.remove(key);
-    });
-  }
+  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) => _detailsInFlight.run(
+    '${_typeOf(ticket).pathSegment}-${ticket.externalKey}',
+    () => _loadDetail(ticket),
+  );
 
   /// Fetches a ticket's full detail (with its embedded `actions`), preferring
   /// REST v1 and falling back to the classic `{type}-view-{id}.json` endpoint
