@@ -12,6 +12,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/body_format.dart';
+import '../../../../core/util/html_to_markdown.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../agents/presentation/agent_providers.dart';
 import '../detail_providers.dart';
@@ -116,7 +118,8 @@ class DevelopmentTab extends ConsumerWidget {
                         kind: kind,
                         workingDir: Directory.current.path,
                         prompt:
-                            'Work on ticket ${ticket.externalKey}: ${ticket.title}\n\n${ticket.body}',
+                            'Work on ticket ${ticket.externalKey}: ${ticket.title}\n\n'
+                            '${isHtmlBody(ticket.providerType, ticket.body) ? htmlToMarkdown(ticket.body) : ticket.body}',
                       ),
                   child: Text('▶ ${kind.displayName}'),
                 ),

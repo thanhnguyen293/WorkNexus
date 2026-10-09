@@ -3,6 +3,21 @@ import 'package:work_nexus/core/util/markdown_normalize.dart';
 
 void main() {
   group('normalizeMarkdown', () {
+    test('resolves backslash escapes the renderer would show', () {
+      expect(
+        normalizeMarkdown(
+          r'1\. Open a market'
+          '\n'
+          r'\- Missing \[card\]',
+        ),
+        '1. Open a market\n- Missing [card]',
+      );
+    });
+
+    test('an escaped asterisk stays a mark, not emphasis', () {
+      expect(normalizeMarkdown(r'a \*b\* c'), 'a ∗b∗ c');
+    });
+
     test('__bold__ becomes **bold**, snake_case and code stay', () {
       expect(
         normalizeMarkdown('__Ad :)__ and some_var__x `__code__`'),

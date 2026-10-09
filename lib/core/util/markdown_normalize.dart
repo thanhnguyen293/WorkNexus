@@ -44,6 +44,14 @@ final _definitionItem = RegExp(r'^ {0,3}(?::|\s~)\s+(\S.*)$');
 /// `[^id]` (a footnote reference) or `^[text]` (an inline footnote).
 final _footnoteRef = RegExp(r'\[\^([^\]]+)\]|\^\[([^\]]+)\]');
 
+/// `\*`, `\[`, `1\.`… — a backslash escaping an ASCII punctuation mark.
+final _escape = RegExp(r'\\([!-/:-@\[-`{-~])');
+
+/// Where an escaped mark waits, in the Private Use Area, while the line's
+/// other rewrites run — so they cannot read it as syntax.
+const _escapedBase = 0xE000;
+final _escaped = RegExp('[\uE021-\uE07E]');
+
 const _superscripts = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 
 /// Footnotes in the order they are first referenced.
@@ -140,8 +148,14 @@ String _normalizeLine(
   final quote = _emptyQuote.firstMatch(line);
   // A no-break space gives the line content, so it stays a quoted blank.
   if (quote != null) return '${quote[1]}\u00A0';
+  // The renderer has no backslash escapes and would show the backslashes
+  // (ZenTao's HTML, converted to Markdown, escapes every `1.`, `-` and `[`).
+  final escaped = line.replaceAllMapped(
+    _escape,
+    (m) => String.fromCharCode(_escapedBase + m[1]!.codeUnitAt(0)),
+  );
   // Odd parts are inline code spans: left as they are.
-  final parts = line
+  final parts = escaped
       .replaceFirstMapped(_plusBullet, (m) => '${m[1]}-${m[2]}')
       .split('`');
   for (var i = 0; i < parts.length; i += 2) {
@@ -159,7 +173,12 @@ String _normalizeLine(
         .replaceAllMapped(_underscoreBold, (m) => '**${m[1]}**')
         .replaceAllMapped(_underscoreItalic, (m) => '*${m[1]}*');
   }
-  return parts.join('`');
+  return parts.join('`').replaceAllMapped(_escaped, (m) {
+    final mark = String.fromCharCode(m[0]!.codeUnitAt(0) - _escapedBase);
+    // A literal `*` would still pair up into emphasis; the asterisk operator
+    // looks the same and does not.
+    return mark == '*' ? '\u2217' : mark;
+  });
 }
 
 final _markdownSyntax = RegExp(

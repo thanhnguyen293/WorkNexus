@@ -42,6 +42,19 @@ List<ZenTaoAction> zentaoActions(Object? raw) {
   ];
 }
 
+/// A parent task's `children` — a list, or an id-keyed object — in id order.
+List<ZenTaoEntity> zentaoChildren(Object? raw) {
+  final values = switch (raw) {
+    final List<Object?> list => list,
+    final Map<Object?, Object?> map => map.values.toList(),
+    _ => const <Object?>[],
+  };
+  return [
+    for (final e in values)
+      if (e is Map) ZenTaoEntity.fromJson(Map<String, dynamic>.from(e)),
+  ]..sort((a, b) => (zentaoInt(a.id) ?? 0).compareTo(zentaoInt(b.id) ?? 0));
+}
+
 /// ZenTao returns `files` as an id-keyed object (`{ "7931": {...}, ... }`);
 /// normalize it to a list, ordered by ascending id (upload order).
 List<ZenTaoFile> zentaoFiles(Object? raw) {
@@ -331,6 +344,9 @@ class ZenTaoEntity {
     this.projectName,
     this.executionName,
     this.storyTitle,
+    this.parent,
+    this.parentName,
+    this.children = const [],
     this.taskName,
     this.planName,
     this.product,
@@ -382,6 +398,17 @@ class ZenTaoEntity {
   final Object? projectName;
   final Object? executionName;
   final Object? storyTitle;
+
+  /// A task's parent task id: > 0 on a subtask (0 none, -1 a parent itself).
+  @JsonKey(fromJson: zentaoInt)
+  final int? parent;
+
+  /// The parent task's name, given with a subtask's detail.
+  final Object? parentName;
+
+  /// A parent task's subtasks, given with its detail.
+  @JsonKey(fromJson: zentaoChildren)
+  final List<ZenTaoEntity> children;
   final Object? taskName;
   final Object? planName;
   final Object? product;

@@ -33,6 +33,11 @@ dependencies:
   google_fonts: 8.2.0
   gpt_markdown: 1.1.8
   html2md: 1.3.2
+  # ZenTao descriptions and comments are HTML (its rich-text editor): rendered
+  # as HTML rather than converted to Markdown. Pure Dart, no native code.
+  flutter_widget_from_html_core: 0.17.4
+  # Splits a ZenTao bug's HTML into its steps / actual / expected sections.
+  html: 0.15.6
   cached_network_image: 3.4.1
   image_picker: 1.2.1
   two_dimensional_scrollables: 0.5.3

@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../value_objects/unified_status.dart';
+
 part 'provider_entity.freezed.dart';
 part 'provider_entity.g.dart';
 
@@ -48,6 +50,14 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     DateTime? lastEditedDate,
     @Default(<TicketAttachment>[]) List<TicketAttachment> attachments,
   }) = ZenTaoBugEntity;
+
+  /// Structured metadata for a ZenTao task: its parent, when it is a subtask,
+  /// and its subtasks, when it is a parent.
+  const factory TicketProviderEntity.zentaoTask({
+    String? parentId,
+    String? parentName,
+    @Default(<TicketSubtask>[]) List<TicketSubtask> subtasks,
+  }) = ZenTaoTaskEntity;
 
   /// Structured metadata for a GitLab issue or merge request. MR-only fields
   /// (branches, merge status, draft, reviewers) are null on issues.
@@ -102,6 +112,21 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
 
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>
       _$TicketProviderEntityFromJson(json);
+}
+
+/// One subtask of a parent task, as listed on the parent.
+@freezed
+abstract class TicketSubtask with _$TicketSubtask {
+  const factory TicketSubtask({
+    required String id,
+    required String title,
+    required UnifiedStatus status,
+    int? priority,
+    String? assignee,
+  }) = _TicketSubtask;
+
+  factory TicketSubtask.fromJson(Map<String, dynamic> json) =>
+      _$TicketSubtaskFromJson(json);
 }
 
 /// A file attached to a provider ticket (screenshot, screen recording, log).

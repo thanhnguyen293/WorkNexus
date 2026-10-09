@@ -10,7 +10,8 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
-import '../../../../core/widgets/markdown_text.dart';
+import '../../../../core/widgets/inline_image.dart';
+import '../../../../core/widgets/rich_body_text.dart';
 import '../util/image_fallback.dart';
 
 /// A single comment bubble in the merged comments/activity timeline.
@@ -18,10 +19,14 @@ class CommentTile extends ConsumerWidget {
   const CommentTile(
     this.comment, {
     super.key,
+    this.html = false,
     this.imageLoader,
     this.imageFallback,
   });
   final Comment comment;
+
+  /// Whether the comment is HTML (see `isHtmlBody`).
+  final bool html;
   final ImageBytesLoader? imageLoader;
   final ImageFallback? imageFallback;
 
@@ -74,8 +79,9 @@ class CommentTile extends ConsumerWidget {
             ],
           ),
           SizedBox(height: context.spacing.sm),
-          MarkdownText(
+          RichBodyText(
             comment.body,
+            html: html,
             fontSize: 12.5,
             height: 1.5,
             imageLoader: imageLoader,

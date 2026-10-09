@@ -6,7 +6,11 @@ import 'package:work_nexus/features/task_detail/presentation/widgets/bug_descrip
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
-  Future<void> pump(WidgetTester tester, String body) async {
+  Future<void> pump(
+    WidgetTester tester,
+    String body, {
+    bool html = false,
+  }) async {
     tester.view.physicalSize = const Size(900, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -22,7 +26,9 @@ void main() {
           density: AppDensity.comfortable,
         ),
         home: Scaffold(
-          body: SingleChildScrollView(child: BugDescription(body: body)),
+          body: SingleChildScrollView(
+            child: BugDescription(body: body, html: html),
+          ),
         ),
       ),
     );
@@ -87,5 +93,28 @@ The app crashes on save.
     expect(tester.takeException(), isNull);
     expect(find.text('Steps to reproduce'), findsNothing);
     expect(find.textContaining('Just a plain description'), findsOneWidget);
+  });
+
+  testWidgets('groups a ZenTao HTML description and shows it as HTML', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      '<p>Steps:</p><p>1. Open a World Cup market</p>'
+      '<p>[Actual result]</p><p>- The game card is <b>missing</b>.</p>'
+      '<p>[Expected result]</p><p>The card shows.</p>',
+      html: true,
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Steps to reproduce'), findsOneWidget);
+    expect(find.text('Actual result'), findsOneWidget);
+    expect(find.text('Expected result'), findsOneWidget);
+    // Rendered as written: no Markdown escapes, the tags themselves hidden.
+    Finder shown(Pattern text) => find.textContaining(text, findRichText: true);
+    expect(shown('1. Open a World Cup market'), findsOneWidget);
+    expect(shown('- The game card is missing.'), findsOneWidget);
+    expect(shown(r'\'), findsNothing);
+    expect(shown('<b>'), findsNothing);
   });
 }

@@ -5,6 +5,7 @@ import '../../features/agents/data/cli_agent_adapters.dart';
 import '../../features/agents/data/mock_coding_agent_adapter.dart';
 import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/ticket.dart';
@@ -107,3 +108,9 @@ final openCodeAuthedProvider = FutureProvider.autoDispose<bool>((ref) async {
   if (authed) ref.keepAlive();
   return authed;
 });
+
+/// Loads a ZenTao ticket the board has not synced (one linked in chat, a
+/// subtask's parent) so it can open in the detail panel.
+final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
+  (ref) => getIt<ZenTaoTicketService>(),
+);

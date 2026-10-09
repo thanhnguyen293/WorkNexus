@@ -29,6 +29,8 @@
   "provider": "Provider",
   "account": "Account",
   "project": "Project",
+  "parentTask": "Parent task",
+  "subtasks": "Subtasks",
   "status": "Status",
   "priority": "Priority",
   "assignee": "Assignee",

@@ -7,6 +7,8 @@ import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
 import '../../../core/settings/app_settings.dart';
+import '../../../core/util/body_format.dart';
+import '../../../core/util/html_to_markdown.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/usecases/resolve_translation_state.dart';
 
@@ -48,7 +50,13 @@ class TranslationController extends Notifier<Map<String, TranslationUiState>> {
     final svc = getIt<TranslationService>();
     final res = await svc.translate(
       ticketId: ticketId,
-      source: TicketSource(title: ticket.title, body: ticket.body),
+      // Sent and translated as Markdown, whatever the source's format.
+      source: TicketSource(
+        title: ticket.title,
+        body: isHtmlBody(ticket.providerType, ticket.body)
+            ? htmlToMarkdown(ticket.body)
+            : ticket.body,
+      ),
       sourceHash: ticket.sourceHash,
       targetLang: settings.translationLang,
       model: settings.translationModel.isEmpty
