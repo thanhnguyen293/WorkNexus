@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
-import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
 
 /// ZenTao bug resolution codes → labels (ZenTao's own set).
@@ -49,13 +48,15 @@ class _ResolveDialogState extends ConsumerState<ResolveDialog> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     setState(() => _busy = true);
-    final res = await getIt<SyncService>().resolveBug(
-      widget.ticket,
-      resolution: _resolution!,
-      build: _build.text,
-      assignee: _assignee,
-      comment: _note.text,
-    );
+    final res = await ref
+        .read(zenTaoBugServiceProvider)
+        .resolveBug(
+          widget.ticket,
+          resolution: _resolution!,
+          build: _build.text,
+          assignee: _assignee,
+          comment: _note.text,
+        );
     if (!mounted) return;
     navigator.pop();
     messenger.showSnackBar(

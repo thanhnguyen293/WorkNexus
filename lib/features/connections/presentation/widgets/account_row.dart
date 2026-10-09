@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
@@ -13,14 +14,14 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../../domain/repositories/connection_repository.dart';
 
 /// The GitLab instance version for an account (e.g. `16.3.8`), shown on its
 /// connected-accounts row. Null for non-GitLab accounts or when unavailable.
 final gitlabServerVersionProvider = FutureProvider.autoDispose
     .family<String?, String>(
-      (ref, accountId) => getIt<SyncService>().gitlabServerVersion(accountId),
+      (ref, accountId) =>
+          ref.watch(sourceSyncServiceProvider).gitlabServerVersion(accountId),
     );
 
 /// One connected account: provider, handle, the server it talks to, and its
@@ -156,7 +157,7 @@ class AccountRow extends ConsumerWidget {
     messenger.showSnackBar(
       SnackBar(content: Text('Syncing ${account.handle}…')),
     );
-    final res = await getIt<SyncService>().syncAccount(account);
+    final res = await ref.read(sourceSyncServiceProvider).syncAccount(account);
     final msg = switch (res) {
       Ok(:final value) => 'Synced $value tickets from ${account.handle}',
       Err(:final failure) => 'Sync failed: ${failure.message}',

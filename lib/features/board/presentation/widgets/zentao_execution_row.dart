@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
@@ -14,7 +14,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 
@@ -136,7 +135,9 @@ class ZenTaoExecutionRow extends ConsumerWidget {
           ref.read(boardKeyProvider),
           selfHandle: ref.read(zentaoSelfHandleProvider(execution.accountId)),
         );
-    final res = await getIt<SyncService>().syncExecutionTasks(execution);
+    final res = await ref
+        .read(sourceSyncServiceProvider)
+        .syncExecutionTasks(execution);
     ref.read(zentaoExecutionSyncingProvider.notifier).finish();
     if (res case Err()) {
       messenger.showSnackBar(SnackBar(content: Text(failedMessage)));

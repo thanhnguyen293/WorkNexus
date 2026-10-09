@@ -1,13 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
-import '../../../core/di/service_locator.dart';
+import '../../../core/di/service_providers.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/synthetic_labels.dart';
-import '../../sync/data/sync_service.dart';
 import '../domain/entities/board_model.dart';
 import '../domain/usecases/build_board.dart';
 import '../domain/usecases/build_github_issue_board.dart';
@@ -173,11 +172,13 @@ final zentaoBugTabSliceProvider = FutureProvider.autoDispose<Set<String>>((
   final product = ref.watch(selectedZenTaoProductProvider);
   if (product == null) return const <String>{};
   final tab = ref.watch(zentaoBugTabProvider);
-  final res = await getIt<SyncService>().syncProductBugsTab(
-    accountId: product.accountId,
-    productId: product.productId,
-    browseType: tab.code,
-  );
+  final res = await ref
+      .watch(sourceSyncServiceProvider)
+      .syncProductBugsTab(
+        accountId: product.accountId,
+        productId: product.productId,
+        browseType: tab.code,
+      );
   switch (res) {
     case Ok(:final value):
       return value.toSet();
@@ -276,7 +277,9 @@ final zentaoProductsProvider =
       ref,
       accountId,
     ) async {
-      final res = await getIt<SyncService>().listProducts(accountId);
+      final res = await ref
+          .watch(sourceSyncServiceProvider)
+          .listProducts(accountId);
       switch (res) {
         case Ok(:final value):
           return value;
@@ -290,7 +293,9 @@ final zentaoProjectsProvider =
       ref,
       accountId,
     ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
+      final res = await ref
+          .watch(sourceSyncServiceProvider)
+          .listProjects(accountId);
       switch (res) {
         case Ok(:final value):
           return value;
@@ -317,10 +322,9 @@ final zentaoExecutionsProvider =
       ref,
       key,
     ) async {
-      final res = await getIt<SyncService>().listProjectExecutions(
-        key.accountId,
-        key.projectId,
-      );
+      final res = await ref
+          .watch(sourceSyncServiceProvider)
+          .listProjectExecutions(key.accountId, key.projectId);
       switch (res) {
         case Ok(:final value):
           return value;
@@ -415,7 +419,9 @@ final gitlabProjectsProvider =
       ref,
       accountId,
     ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
+      final res = await ref
+          .watch(sourceSyncServiceProvider)
+          .listProjects(accountId);
       switch (res) {
         case Ok(:final value):
           return value;
@@ -433,11 +439,13 @@ final gitlabItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
   final project = ref.watch(selectedGitLabProjectProvider);
   if (project == null || project.mine) return const <String>{};
   final kind = ref.watch(gitlabKindProvider);
-  final res = await getIt<SyncService>().syncGitLabProjectItems(
-    accountId: project.accountId,
-    projectId: project.projectId,
-    mergeRequests: kind == GitLabItemKind.mergeRequest,
-  );
+  final res = await ref
+      .watch(sourceSyncServiceProvider)
+      .syncGitLabProjectItems(
+        accountId: project.accountId,
+        projectId: project.projectId,
+        mergeRequests: kind == GitLabItemKind.mergeRequest,
+      );
   switch (res) {
     case Ok(:final value):
       return value.toSet();
@@ -454,7 +462,9 @@ final gitlabMineSliceProvider = FutureProvider.autoDispose<Set<String>>((
 ) async {
   final selection = ref.watch(selectedGitLabProjectProvider);
   if (selection == null || !selection.mine) return const <String>{};
-  final res = await getIt<SyncService>().syncGitLabMine(selection.accountId);
+  final res = await ref
+      .watch(sourceSyncServiceProvider)
+      .syncGitLabMine(selection.accountId);
   switch (res) {
     case Ok(:final value):
       return value.toSet();
@@ -748,7 +758,9 @@ final githubReposProvider =
       ref,
       accountId,
     ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
+      final res = await ref
+          .watch(sourceSyncServiceProvider)
+          .listProjects(accountId);
       switch (res) {
         case Ok(:final value):
           return value;
@@ -766,11 +778,13 @@ final githubItemsSliceProvider = FutureProvider.autoDispose<Set<String>>((
   final repo = ref.watch(selectedGitHubRepoProvider);
   if (repo == null || repo.mine) return const <String>{};
   final kind = ref.watch(githubKindProvider);
-  final res = await getIt<SyncService>().syncGitHubRepoItems(
-    accountId: repo.accountId,
-    repoId: repo.repoId,
-    pullRequests: kind == GitHubItemKind.pullRequest,
-  );
+  final res = await ref
+      .watch(sourceSyncServiceProvider)
+      .syncGitHubRepoItems(
+        accountId: repo.accountId,
+        repoId: repo.repoId,
+        pullRequests: kind == GitHubItemKind.pullRequest,
+      );
   switch (res) {
     case Ok(:final value):
       return value.toSet();
@@ -787,7 +801,9 @@ final githubMineSliceProvider = FutureProvider.autoDispose<Set<String>>((
 ) async {
   final selection = ref.watch(selectedGitHubRepoProvider);
   if (selection == null || !selection.mine) return const <String>{};
-  final res = await getIt<SyncService>().syncGitHubMine(selection.accountId);
+  final res = await ref
+      .watch(sourceSyncServiceProvider)
+      .syncGitHubMine(selection.accountId);
   switch (res) {
     case Ok(:final value):
       return value.toSet();

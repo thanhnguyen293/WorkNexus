@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
 
 /// Assigns a ticket to a provider user, with an optional note.
@@ -31,11 +30,9 @@ class _AssignDialogState extends ConsumerState<AssignDialog> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     setState(() => _busy = true);
-    final res = await getIt<SyncService>().assignTicket(
-      widget.ticket,
-      assignee: _assignee!,
-      comment: _note.text,
-    );
+    final res = await ref
+        .read(ticketDetailServiceProvider)
+        .assignTicket(widget.ticket, assignee: _assignee!, comment: _note.text);
     if (!mounted) return;
     navigator.pop();
     messenger.showSnackBar(

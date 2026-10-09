@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -11,7 +11,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
 
 /// Multi-select reviewer picker for a GitLab MR / GitHub PR. Candidates are the
@@ -76,10 +75,9 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     setState(() => _busy = true);
-    final res = await getIt<SyncService>().setReviewers(
-      widget.ticket,
-      _selected.toList(),
-    );
+    final res = await ref
+        .read(ticketDetailServiceProvider)
+        .setReviewers(widget.ticket, _selected.toList());
     if (!mounted) return;
     navigator.pop();
     messenger.showSnackBar(

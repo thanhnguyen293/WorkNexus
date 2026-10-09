@@ -7,6 +7,9 @@ import '../../../core/domain/adapters/github_pr_service.dart';
 import '../../../core/domain/adapters/gitlab_mr_adapter.dart';
 import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
+import '../../../core/domain/adapters/source_sync_service.dart';
+import '../../../core/domain/adapters/ticket_detail_service.dart';
+import '../../../core/domain/adapters/zentao_bug_service.dart';
 import '../../../core/domain/adapters/zentao_ticket_service.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/project.dart';
@@ -52,7 +55,13 @@ List<String> mergeDetailLabels(
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
 class SyncService
-    implements GitLabMrService, GitHubPrService, ZenTaoTicketService {
+    implements
+        SourceSyncService,
+        TicketDetailService,
+        ZenTaoBugService,
+        ZenTaoTicketService,
+        GitLabMrService,
+        GitHubPrService {
   SyncService(
     this._db,
     this._credentials, {
@@ -76,6 +85,7 @@ class SyncService
   final AttachmentFileCache _attachmentCache;
 
   /// Returns the number of tickets synced, or a [Failure].
+  @override
   Future<Result<int>> syncAccount(Account account) async {
     final ref = account.credentialsRef;
     if (ref == null) {
@@ -104,6 +114,7 @@ class SyncService
     }
   }
 
+  @override
   Future<Result<List<ProviderProduct>>> listProducts(String accountId) async {
     final adapter = await _adapterFor(accountId);
     if (adapter == null) {
@@ -140,6 +151,7 @@ class SyncService
   /// returns the ids of the bugs in that tab so the board can show just that
   /// slice. Successful tab slices are cached briefly per account/product/tab so
   /// switching back and forth does not immediately hit ZenTao again.
+  @override
   Future<Result<List<String>>> syncProductBugsTab({
     required String accountId,
     required String productId,
@@ -160,6 +172,7 @@ class SyncService
   /// Drops the cached slice for one bug tab so the next [syncProductBugsTab]
   /// goes to the server — a manual board refresh must not replay a TTL-cached
   /// answer.
+  @override
   void invalidateProductBugsTab({
     required String accountId,
     required String productId,
@@ -195,6 +208,7 @@ class SyncService
     }
   }
 
+  @override
   Future<Result<List<ProviderProject>>> listProjects(String accountId) async {
     final adapter = await _adapterFor(accountId);
     if (adapter == null) {
@@ -203,6 +217,7 @@ class SyncService
     return adapter.listProjects();
   }
 
+  @override
   Future<Result<List<ProviderExecution>>> listProjectExecutions(
     String accountId,
     String projectId,
@@ -214,6 +229,7 @@ class SyncService
     return adapter.listProjectExecutions(projectId);
   }
 
+  @override
   Future<Result<int>> syncExecutionTasks(ProviderExecution execution) async {
     final cacheKey = '${execution.accountId}:${execution.id}';
     return _cached(
@@ -225,6 +241,7 @@ class SyncService
 
   /// Drops the cached task slice for one execution so the next
   /// [syncExecutionTasks] goes to the server (manual board refresh).
+  @override
   void invalidateExecutionTasks({
     required String accountId,
     required String executionId,
@@ -279,6 +296,7 @@ class SyncService
   /// renders just that slice. Mirrors [syncProductBugsTab] for GitLab; routes
   /// through the concrete [GitLabAdapter] (GitLab-specific fetch, not on the
   /// shared interface).
+  @override
   Future<Result<List<String>>> syncGitLabProjectItems({
     required String accountId,
     required String projectId,
@@ -318,6 +336,7 @@ class SyncService
   /// renders just that slice. Mirrors [syncGitLabProjectItems] for GitHub; routes
   /// through the concrete [GitHubAdapter] (GitHub-specific fetch, not on the
   /// shared interface). [repoId] is the `owner/name` slug.
+  @override
   Future<Result<List<String>>> syncGitHubRepoItems({
     required String accountId,
     required String repoId,
@@ -356,6 +375,7 @@ class SyncService
   /// synthetic `gitlab-mine:<accountId>` label, upserts them into drift, and
   /// returns their ids. The label lets the board render this slice from the DB
   /// when offline (the slice id set reconciles it once a sync succeeds).
+  @override
   Future<Result<List<String>>> syncGitLabMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -387,6 +407,7 @@ class SyncService
   /// `github-mine:<accountId>` label, upserts them, and returns their ids. The
   /// label lets the board render this slice from the DB when offline (the slice
   /// id set reconciles it once a sync succeeds).
+  @override
   Future<Result<List<String>>> syncGitHubMine(String accountId) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -469,6 +490,7 @@ class SyncService
   /// A no-op for tickets whose account has no stored credentials (e.g. seeded
   /// demo data) — the panel just shows the already-cached content. Network
   /// failures are swallowed so opening a card never throws; cached data stays.
+  @override
   Future<Result<void>> syncTicketDetail(Ticket ticket) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -688,6 +710,7 @@ class SyncService
   );
 
   /// Resolves a bug, then refreshes its cached detail/status/history.
+  @override
   Future<Result<void>> resolveBug(
     Ticket ticket, {
     required String resolution,
@@ -724,6 +747,7 @@ class SyncService
   }
 
   /// Activates/reopens a bug, then refreshes its cached detail/status/history.
+  @override
   Future<Result<void>> activateBug(
     Ticket ticket, {
     String? build,
@@ -762,6 +786,7 @@ class SyncService
   /// Confirms a New/Unconfirmed bug (ZenTao `confirmed = 1`), then refreshes its
   /// cached detail/status. The bug stays `active`, moving from New/Unconfirmed
   /// into Confirmed/To Fix.
+  @override
   Future<Result<void>> confirmBug(
     Ticket ticket, {
     String? assignee,
@@ -810,6 +835,7 @@ class SyncService
   }
 
   /// Reopens a GitLab issue or MR, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> reopenGitLabItem(Ticket ticket) {
     final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
     final optimistic = ticket.copyWith(
@@ -1082,6 +1108,7 @@ class SyncService
   /// into a per-session temp cache and returns the local file path, so the
   /// in-app viewer can display images/videos directly. Returns null if the
   /// account lacks credentials or the download fails.
+  @override
   Future<String?> cacheAttachment(Ticket ticket, TicketAttachment att) async {
     final client = await _zenClientFor(ticket.accountId);
     if (client == null) return null;
@@ -1104,6 +1131,7 @@ class SyncService
 
   /// Copies an already-[cachedPath] attachment into the user's Downloads folder
   /// and reveals it in Finder. Returns the saved path, or null on failure.
+  @override
   Future<String?> saveAttachmentToDownloads(
     String cachedPath,
     String name,
@@ -1157,6 +1185,7 @@ class SyncService
   /// The GitLab instance version for [accountId] (e.g. `16.3.8`), or null when
   /// it isn't a GitLab account / is unavailable. Surfaced on the connected-
   /// accounts row.
+  @override
   Future<String?> gitlabServerVersion(String accountId) async {
     final client = await _gitlabClientFor(accountId);
     if (client == null) return null;

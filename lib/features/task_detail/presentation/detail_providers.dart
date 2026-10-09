@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/di/service_providers.dart';
 import '../../../core/domain/adapters/github_pr_service.dart';
 import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/entities/activity_event.dart';
@@ -10,7 +11,6 @@ import '../../../core/domain/entities/dev_link.dart';
 import '../../../core/domain/repositories/activity_repository.dart';
 import '../../../core/domain/repositories/comment_repository.dart';
 import '../../../core/domain/repositories/dev_link_repository.dart';
-import '../../sync/data/sync_service.dart';
 import '../domain/usecases/approve_gitlab_mr.dart';
 import '../domain/usecases/close_github_item.dart';
 import '../domain/usecases/close_gitlab_mr.dart';
@@ -105,5 +105,5 @@ final ticketDetailSyncProvider = FutureProvider.autoDispose
     .family<void, String>((ref, id) async {
       final ticket = ref.read(ticketByIdProvider(id));
       if (ticket == null) return;
-      await getIt<SyncService>().syncTicketDetail(ticket);
+      await ref.watch(ticketDetailServiceProvider).syncTicketDetail(ticket);
     });

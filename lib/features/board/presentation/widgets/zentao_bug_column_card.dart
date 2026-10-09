@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -9,7 +9,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../sync/data/sync_service.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
@@ -167,11 +166,9 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
-      result = await getIt<SyncService>().resolveBug(
-        ticket,
-        resolution: resolution,
-        build: 'trunk',
-      );
+      result = await ref
+          .read(zenTaoBugServiceProvider)
+          .resolveBug(ticket, resolution: resolution, build: 'trunk');
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
@@ -188,7 +185,9 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     try {
       // A reopened bug is active + confirmed → it lands in Confirmed/To Fix
       // (activateBug's default optimistic status).
-      result = await getIt<SyncService>().activateBug(ticket, build: 'trunk');
+      result = await ref
+          .read(zenTaoBugServiceProvider)
+          .activateBug(ticket, build: 'trunk');
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
@@ -205,7 +204,7 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     try {
       // Confirming keeps the bug active + assigned to me → it lands in
       // Confirmed/To Fix (confirmBug's optimistic status).
-      result = await getIt<SyncService>().confirmBug(ticket);
+      result = await ref.read(zenTaoBugServiceProvider).confirmBug(ticket);
     } finally {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }

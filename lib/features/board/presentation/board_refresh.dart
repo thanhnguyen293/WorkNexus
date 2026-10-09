@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/service_locator.dart';
+import '../../../core/di/service_providers.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
+import '../../../core/domain/adapters/source_sync_service.dart';
 import '../../../core/error/result.dart';
-import '../../sync/data/sync_service.dart';
 import 'board_providers.dart';
 
 /// Whether the active board is fetching from its provider — drives the toolbar
@@ -35,14 +35,14 @@ final boardRefreshingProvider = Provider<bool>((ref) {
 /// Refresh.
 ///
 /// Invalidating the slice provider is enough for GitLab/GitHub, but the ZenTao
-/// slices are TTL-cached inside [SyncService], so their cache entry is dropped
+/// slices are TTL-cached by the [SourceSyncService], so their cache entry is dropped
 /// first: without that, a refresh inside the TTL window would replay the cached
 /// ids and never reach the server.
 class RefreshBoard {
   const RefreshBoard(this._ref, this._sync);
 
   final Ref _ref;
-  final SyncService _sync;
+  final SourceSyncService _sync;
 
   /// Returns [Err] only for a failure this call can observe (the task board's
   /// direct sync). Slice fetches report their own failure through the board's
@@ -111,5 +111,5 @@ class RefreshBoard {
 }
 
 final refreshBoardProvider = Provider<RefreshBoard>(
-  (ref) => RefreshBoard(ref, getIt<SyncService>()),
+  (ref) => RefreshBoard(ref, ref.watch(sourceSyncServiceProvider)),
 );
