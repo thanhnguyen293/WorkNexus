@@ -103,15 +103,23 @@ class MarkdownText extends StatelessWidget {
               onOpenImage: onOpenImage,
               width: width,
             ),
-      linkBuilder: (context, label, url, style) {
-        final plain = isPlainLink?.call(url) ?? false;
-        return Text(
-          label.toPlainText(),
-          style: style.copyWith(
-            color: linkColor ?? c.accent,
-            fontWeight: plain ? FontWeight.w600 : null,
-            decoration: plain ? TextDecoration.none : TextDecoration.underline,
-          ),
+      // A span (not a widget) so a link wraps and selects with its sentence;
+      // the label is rebuilt in our link style, the tap stays the package's.
+      inlineLinkBuilder: (link) {
+        final plain = isPlainLink?.call(link.url) ?? false;
+        return link.defaultSpan(
+          children: [
+            TextSpan(
+              text: link.label,
+              style: (link.config.style ?? const TextStyle()).copyWith(
+                color: linkColor ?? c.accent,
+                fontWeight: plain ? FontWeight.w600 : null,
+                decoration: plain
+                    ? TextDecoration.none
+                    : TextDecoration.underline,
+              ),
+            ),
+          ],
         );
       },
       codeBuilder: (context, name, code, closed) => Container(
