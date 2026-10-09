@@ -220,7 +220,8 @@ void main() {
     );
     expect(
       byGid(chat, 'g1')!.lastMessage?.content,
-      const MessageContent.text('new'),
+      // `text` is the official client's Markdown content type.
+      const MessageContent.text('new', markdown: true),
     );
     final messages = await repo.watchMessages(_acc, 'g1').first;
     expect(messages.last.gid, 'm101');
