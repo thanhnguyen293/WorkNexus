@@ -7,7 +7,7 @@ TEST ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help doctor get outdated codegen watch format analyze test verify run build-macos build-macos-release build-windows-release build-linux-release clean reset
+.PHONY: help doctor get outdated codegen watch format analyze test perf verify run build-macos build-macos-release build-windows-release build-linux-release clean reset
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nWorkNexus targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -35,6 +35,9 @@ analyze: ## Run static analysis.
 
 test: ## Run tests. Use TEST=path/or/name to target a subset.
 	$(FLUTTER) test $(TEST)
+
+perf: ## Profile the issue detail screen on DEVICE (needs a connected ZenTao account; quit the app first).
+	$(FLUTTER) drive --profile -d $(DEVICE) --driver=test_driver/integration_test.dart --target=integration_test/issue_detail_perf_test.dart
 
 verify: format analyze test ## Format, analyze, and run tests.
 
