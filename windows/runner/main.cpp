@@ -7,36 +7,52 @@
 
 namespace {
 
-// Per-user lock so a second launch hands focus to the running window instead
-// of opening another one (two instances would fight over the same database).
-constexpr const wchar_t kSingleInstanceMutex[] =
-    L"Local\\WorkNexus.WorkNexus.Desktop.SingleInstance";
-// Must match win32_window.cpp's class name and DesktopWindowService's title.
-constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
-constexpr const wchar_t kWindowTitle[] = L"WorkNexus";
+constexpr wchar_t kSingleInstanceMutexName[] = L"Local\\WorkNexus";
+constexpr wchar_t kWindowClassName[] = L"WORKNEXUS_RUNNER_WIN32_WINDOW";
 
-void FocusRunningInstance() {
-  HWND existing = ::FindWindow(kWindowClassName, kWindowTitle);
-  if (existing == nullptr) return;
-  if (::IsIconic(existing)) {
-    ::ShowWindow(existing, SW_RESTORE);
-  } else {
-    ::ShowWindow(existing, SW_SHOW);
+HWND FindMainWindow() {
+  for (int attempt = 0; attempt < 50; ++attempt) {
+    HWND window = FindWindowW(kWindowClassName, nullptr);
+    if (window != nullptr) {
+      return window;
+    }
+    Sleep(100);
   }
-  ::SetForegroundWindow(existing);
+  return nullptr;
+}
+
+void FocusExistingWindow() {
+  HWND window = FindMainWindow();
+  if (window == nullptr) {
+    return;
+  }
+
+  ShowWindow(window, IsIconic(window) ? SW_RESTORE : SW_SHOW);
+  if (!SetForegroundWindow(window)) {
+    // Windows may block foreground promotion from a background process.
+    // Flash the taskbar icon so the user is still notified.
+    FLASHWINFO fi{};
+    fi.cbSize = sizeof(fi);
+    fi.hwnd = window;
+    fi.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+    fi.uCount = 3;
+    FlashWindowEx(&fi);
+  }
 }
 
 }  // namespace
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
-  // Held for the process lifetime; Windows releases it on exit.
   HANDLE instance_mutex =
-      ::CreateMutex(nullptr, TRUE, kSingleInstanceMutex);
-  if (instance_mutex != nullptr &&
-      ::GetLastError() == ERROR_ALREADY_EXISTS) {
-    FocusRunningInstance();
-    ::CloseHandle(instance_mutex);
+      CreateMutexW(nullptr, TRUE, kSingleInstanceMutexName);
+  const DWORD mutex_error = GetLastError();
+  if (instance_mutex == nullptr) {
+    return EXIT_FAILURE;
+  }
+  if (mutex_error == ERROR_ALREADY_EXISTS) {
+    FocusExistingWindow();
+    CloseHandle(instance_mutex);
     return EXIT_SUCCESS;
   }
 
@@ -61,6 +77,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(L"WorkNexus", origin, size)) {
+    ReleaseMutex(instance_mutex);
+    CloseHandle(instance_mutex);
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
@@ -72,5 +90,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   }
 
   ::CoUninitialize();
+  ReleaseMutex(instance_mutex);
+  CloseHandle(instance_mutex);
   return EXIT_SUCCESS;
 }

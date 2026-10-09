@@ -1,37 +1,44 @@
 name: Build (macOS & Windows)
 
-# Automatically build the app for macOS and Windows on every push to main.
-# Can also be triggered manually from the Actions tab (workflow_dispatch), or
-# called by another workflow (workflow_call) — release-please calls it with a
-# release_tag to attach the build zips to a versioned GitHub Release.
+# Release Please maintains the stable release PR on main. Desktop builds run
+# only when it creates a new stable release; ordinary pushes don't rebuild.
 on:
   push:
     branches: [main]
   workflow_dispatch:
-  workflow_call:
-    inputs:
-      release_tag:
-        description: "Attach the build zips to this existing release tag instead of refreshing nightly."
-        type: string
-        required: false
-        default: ""
 
-# Back-to-back pushes to main cancel the older run and keep only the newest.
-# The versioned-release build (workflow_call with a tag) gets its own group so
-# it never cancels — or gets cancelled by — the nightly push build on main.
+# Do not cancel release publication midway when another commit is pushed.
 concurrency:
-  group: build-${{ github.ref }}-${{ inputs.release_tag || 'nightly' }}
-  cancel-in-progress: true
+  group: release-build-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  # Pin the repo's exact toolchain (Flutter 3.38.8 -> Dart 3.10.7).
+  # Pin the repo's exact toolchain (Flutter 3.44.8 -> Dart 3.12.2).
   # No fvm on CI; subosito downloads this exact version.
-  FLUTTER_VERSION: "3.38.8"
+  FLUTTER_VERSION: "3.44.8"
 
 jobs:
+  release-please:
+    name: Release PR / publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   # ───────────────────────────── macOS ─────────────────────────────
   build-macos:
     name: Build macOS
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -57,8 +64,17 @@ jobs:
 
       # Release build. No Apple cert on CI: the project defaults to ad-hoc
       # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
+      # Owner/repo come from the repository this workflow runs in, so a fork
+      # and upstream each build an app that updates from their own releases.
+      - name: Point the build at this repository
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+          rm -f .env.bak
+
       - name: Build macOS (release, ad-hoc signed)
-        run: flutter build macos --release
+        run: flutter build macos --release --dart-define-from-file=.env
 
       # Zip the .app while preserving the bundle (use ditto, not plain zip).
       - name: Package .app
@@ -76,6 +92,8 @@ jobs:
   # ──────────────────────────── Windows ────────────────────────────
   build-windows:
     name: Build Windows
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -103,8 +121,17 @@ jobs:
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
 
+      # Owner/repo come from the repository this workflow runs in, so a fork
+      # and upstream each build an app that updates from their own releases.
+      - name: Point the build at this repository
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+          rm -f .env.bak
+
       - name: Build Windows (release)
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define-from-file=.env
 
       # Zip the whole Release folder (exe + DLLs + data/ must stay together).
       - name: Package build output
@@ -119,18 +146,16 @@ jobs:
           if-no-files-found: error
 
   # ───────────────────── Publish build artifacts ─────────────────────
-  # Runs after both builds succeed. Collects the two zips, then either:
-  #   • release_tag set (called by release-please) → attach zips to that
-  #     versioned release (vX.Y.Z, changelog already written by release-please);
-  #   • otherwise → refresh the single moving `nightly` pre-release on main.
-  # Only publishes from main or a workflow_call (not a dispatch on a branch).
+  # Runs only for a newly-created stable release and retains only the latest.
   release:
     name: Publish release assets
-    needs: [build-macos, build-windows]
+    needs: [release-please, build-macos, build-windows]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || inputs.release_tag != ''
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      needs.release-please.outputs.release_created == 'true'
     permissions:
-      contents: write # required to create/replace the release and move its tag
+      contents: write
     steps:
       # Pull both build artifacts flat into dist/ (no per-artifact subfolders).
       - name: Download build artifacts
@@ -139,28 +164,35 @@ jobs:
           path: dist
           merge-multiple: true
 
-      # Attach to the versioned release that release-please just published.
-      # --clobber overwrites assets if the build is re-run for the same tag.
+      # The in-app updater refuses a download whose hash is not listed here.
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum *.zip > SHA256SUMS.txt
+
+      # Attach the binaries to the versioned release created by Release Please.
       - name: Attach assets to versioned release
-        if: inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" dist/*.zip \
+          gh release upload "${{ needs.release-please.outputs.tag_name }}" dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --clobber
 
-      # Delete the previous nightly release + its tag, then recreate at this
-      # commit — the reliable way to make `nightly` a moving pointer. The
-      # `|| true` covers the very first run when nightly does not exist yet.
-      - name: Publish/refresh nightly release
-        if: inputs.release_tag == ''
+      # Retain only the newest published stable release.
+      - name: Delete older stable releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create nightly dist/*.zip \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "Nightly build (main)" \
-            --notes "Automated build from main @ ${GITHUB_SHA:0:7} ($(date -u +'%Y-%m-%d %H:%M UTC'))." \
-            --prerelease
+          set -euo pipefail
+          stable_tags="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/releases" \
+            | jq -s 'add | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at) | reverse | map(.tag_name) | .[]')"
+          latest_tag="$(printf '%s\n' "$stable_tags" | sed -n '1p')"
+          if [[ -z "$latest_tag" ]]; then
+            echo "No published stable release to retain."
+            exit 0
+          fi
+
+          while IFS= read -r tag; do
+            [[ -z "$tag" || "$tag" == "$latest_tag" ]] && continue
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes
+          done <<< "$stable_tags"

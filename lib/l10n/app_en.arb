@@ -1,8 +1,21 @@
 {
   "@@locale": "en",
   "appTitle": "Unified Task Board",
+  "updateAvailable": "WorkNexus {version} is available.",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "trayOpenApp": "Open WorkNexus",
   "trayQuitApp": "Quit WorkNexus",
+  "appUpdatesTitle": "App updates",
+  "appUpdatesSubtitle": "Stable updates are checked automatically when the app starts. You can also check now.",
+  "checkForUpdates": "Check for updates",
+  "latestVersionInstalled": "You're using the latest stable version.",
+  "updateCheckFailed": "Couldn't check for updates. Check your connection and try again.",
   "board": "Board",
   "list": "List",
   "integrations": "Integrations",
@@ -693,5 +706,13 @@
   "chatStorageFiles": "Files",
   "chatStorageManage": "Manage",
   "chatReadOnlyAdmins": "Only admins can send messages in this chat",
-  "chatReadOnly": "You can't send messages in this chat"
+  "chatReadOnly": "You can't send messages in this chat",
+  "updateAction": "Update",
+  "updateRestartHint": "The update downloads, is verified, then WorkNexus restarts into the new version.",
+  "updateDownloading": "Downloading the update…",
+  "updateRestarting": "Installing — WorkNexus will restart…",
+  "updateLater": "Later",
+  "updateRestartNow": "Update & restart",
+  "updateInstallFailed": "The update could not be installed automatically. Download it from the release page instead.",
+  "updateOpenReleasePage": "Open release page"
 }

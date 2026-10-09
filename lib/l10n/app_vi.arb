@@ -1,8 +1,21 @@
 {
   "@@locale": "vi",
   "appTitle": "Bảng công việc hợp nhất",
+  "updateAvailable": "Đã có phiên bản WorkNexus {version} mới.",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "trayOpenApp": "Mở WorkNexus",
   "trayQuitApp": "Thoát WorkNexus",
+  "appUpdatesTitle": "Cập nhật ứng dụng",
+  "appUpdatesSubtitle": "Ứng dụng tự kiểm tra bản stable khi khởi động. Bạn cũng có thể kiểm tra ngay.",
+  "checkForUpdates": "Kiểm tra cập nhật",
+  "latestVersionInstalled": "Bạn đang dùng phiên bản stable mới nhất.",
+  "updateCheckFailed": "Không kiểm tra được cập nhật. Hãy kiểm tra kết nối rồi thử lại.",
   "board": "Bảng",
   "list": "Danh sách",
   "integrations": "Kết nối",
@@ -640,5 +653,13 @@
   "chatStorageFiles": "File",
   "chatStorageManage": "Quản lý",
   "chatReadOnlyAdmins": "Chỉ quản trị viên mới được gửi tin nhắn trong đoạn chat này",
-  "chatReadOnly": "Bạn không thể gửi tin nhắn trong đoạn chat này"
+  "chatReadOnly": "Bạn không thể gửi tin nhắn trong đoạn chat này",
+  "updateAction": "Cập nhật",
+  "updateRestartHint": "Bản cập nhật sẽ được tải, kiểm tra rồi WorkNexus khởi động lại với phiên bản mới.",
+  "updateDownloading": "Đang tải bản cập nhật…",
+  "updateRestarting": "Đang cài đặt — WorkNexus sẽ khởi động lại…",
+  "updateLater": "Để sau",
+  "updateRestartNow": "Cập nhật & khởi động lại",
+  "updateInstallFailed": "Không thể tự động cài bản cập nhật. Hãy tải về từ trang phát hành.",
+  "updateOpenReleasePage": "Mở trang phát hành"
 }

@@ -10,18 +10,19 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quick_settings_button.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The custom 34px window title bar: draggable, hosts the app title, a sync
-/// indicator, and Quick Settings. Native traffic-lights show on the left
-/// (macOS), so we reserve room for them.
+/// The custom 34px window title bar: draggable, hosts the app title and
+/// Quick Settings. macOS traffic lights and Windows caption buttons stay clear.
 class TitleBar extends ConsumerWidget {
   const TitleBar({super.key, this.assignedCount});
 
   final int? assignedCount;
+  static const _windowsCaptionButtonsWidth = 46.0 * 3;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final l10n = AppL10n.of(context);
+    final isWindows = DesktopWindowService.isWindows;
     final title = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -60,8 +61,15 @@ class TitleBar extends ConsumerWidget {
       padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
       child: Row(
         children: [
-          // Reserve space for the macOS traffic-light buttons.
-          if (DesktopWindowService.isDesktop) const SizedBox(width: 60),
+          if (DesktopWindowService.isDesktop)
+            SizedBox(
+              width: isWindows
+                  ? _windowsCaptionButtonsWidth +
+                        context.spacing.lg * 2 +
+                        context.spacing.xl5 +
+                        context.spacing.xs
+                  : 60.0,
+            ),
           Expanded(
             child: DesktopWindowService.isDesktop
                 ? DragToMoveArea(child: title)
@@ -69,32 +77,20 @@ class TitleBar extends ConsumerWidget {
           ),
           SizedBox(width: context.spacing.lg),
           const QuickSettingsButton(),
+          if (isWindows) ...[
+            SizedBox(width: context.spacing.lg),
+            SizedBox(
+              width: _windowsCaptionButtonsWidth,
+              child: WindowCaption(
+                backgroundColor: c.titleBar,
+                brightness: Theme.of(context).brightness,
+              ),
+            ),
+          ],
         ],
       ),
     );
 
     return bar;
-  }
-}
-
-class _SyncIndicator extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(color: c.success, shape: BoxShape.circle),
-        ),
-        SizedBox(width: context.spacing.xs),
-        Text(
-          AppL10n.of(context).syncedAgo,
-          style: context.typography.monoSm.copyWith(color: c.textTertiary),
-        ),
-      ],
-    );
   }
 }

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../config/app_config.dart';
 import '../debug/app_talker.dart';
 
 /// OS notifications (Notification Center, Windows toasts, freedesktop) so
@@ -12,17 +13,6 @@ import '../debug/app_talker.dart';
 class DesktopNotifier {
   DesktopNotifier({FlutterLocalNotificationsPlugin? plugin})
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
-
-  static const _appName = 'WorkNexus';
-
-  /// macOS bundle id (macos/Runner/Configs/AppInfo.xcconfig), to open this
-  /// app's page in System Settings → Notifications.
-  static const _macBundleId = 'com.worknexus.workNexus';
-
-  // Windows ties toasts to an AppUserModelID + COM activator GUID; both must
-  // stay stable across releases or Windows treats it as a different app.
-  static const _windowsAppId = 'WorkNexus.WorkNexus.Desktop';
-  static const _windowsGuid = 'c14901d9-c46d-4d26-9596-9c14e5a0e0b7';
 
   final FlutterLocalNotificationsPlugin _plugin;
   final _taps = StreamController<String>.broadcast();
@@ -42,7 +32,9 @@ class DesktopNotifier {
 
   Future<bool> _initialize() async {
     if (kIsWeb ||
-        !(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) {
+        !(defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux)) {
       return false;
     }
     try {
@@ -50,9 +42,9 @@ class DesktopNotifier {
         settings: const InitializationSettings(
           macOS: DarwinInitializationSettings(requestBadgePermission: false),
           windows: WindowsInitializationSettings(
-            appName: _appName,
-            appUserModelId: _windowsAppId,
-            guid: _windowsGuid,
+            appName: AppConfig.appName,
+            appUserModelId: AppConfig.windowsAppId,
+            guid: AppConfig.windowsGuid,
           ),
           linux: LinuxInitializationSettings(defaultActionName: 'Open'),
         ),
@@ -63,7 +55,7 @@ class DesktopNotifier {
       );
       appTalker.info('Notifications: initialize -> $ok');
       return ok ?? false;
-    } on Exception catch (e, st) {
+    } catch (e, st) {
       appTalker.handle(e, st, 'Notifications: initialize failed');
       return false;
     }
@@ -105,7 +97,7 @@ class DesktopNotifier {
     try {
       await Process.run('open', [
         'x-apple.systempreferences:com.apple.Notifications-Settings.extension'
-            '?id=$_macBundleId',
+            '?id=${AppConfig.macBundleId}',
       ]);
     } on Exception catch (e, st) {
       appTalker.handle(e, st, 'Notifications: opening settings failed');
