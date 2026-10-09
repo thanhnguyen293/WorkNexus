@@ -451,10 +451,17 @@ class ZenTaoClient {
   /// ZenTao can bounce the classic channel's first hit while the freshly minted
   /// v1 token warms up server-side), then once on a FRESH login (session truly
   /// invalidated). Off-server URLs carry no session, so they get no retry.
+  ///
+  /// Only a response that looks like a session problem — a redirect, 401/403,
+  /// or an HTML page (the login form) — is retried. Anything else (404, a
+  /// non-image file where an image was asked for) fails at once: retrying it
+  /// can't help, and the forced re-login would rotate the session under every
+  /// other request in flight.
   Future<Uint8List?> _authedBytes(String url, {required bool imageOnly}) async {
     final base = Uri.parse('$baseUrl/');
     final resolved = base.resolveUri(Uri.parse(url));
     final onServer = resolved.host == base.host;
+    var sessionSuspect = false;
 
     Future<Uint8List?> attempt(String token) async {
       final target = onServer
@@ -485,16 +492,22 @@ class ZenTaoClient {
           (!imageOnly || contentType.startsWith('image'))) {
         return Uint8List.fromList(data);
       }
+      final status = res.statusCode ?? 0;
+      sessionSuspect =
+          (status >= 300 && status < 400) ||
+          status == 401 ||
+          status == 403 ||
+          (status == 200 && contentType.startsWith('text/html'));
       return null;
     }
 
     final token = await _ensureToken();
     var bytes = await attempt(token);
-    if (bytes == null && onServer) {
+    if (bytes == null && onServer && sessionSuspect) {
       // Same session, second chance (classic-channel warm-up after login).
       bytes = await attempt(token);
     }
-    if (bytes == null && onServer) {
+    if (bytes == null && onServer && sessionSuspect) {
       // Session presumed dead — force a fresh login (concurrent recoveries
       // share the one in-flight /tokens request) and try once more.
       await authenticate();

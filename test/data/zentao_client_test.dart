@@ -573,6 +573,60 @@ void main() {
     },
   );
 
+  group('fetchBytes retries only what looks like a lost session', () {
+    ResponseBody reply(int status, String contentType) =>
+        ResponseBody.fromBytes(
+          const [1, 2, 3],
+          status,
+          headers: {
+            Headers.contentTypeHeader: [contentType],
+            if (status == 302) 'location': ['/user-login.html'],
+          },
+        );
+
+    Future<({Uint8List? bytes, int fetches, int logins})> fetch(
+      ResponseBody Function(int attempt) image,
+    ) async {
+      var attempt = 0;
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/file-read-7.png')) return image(++attempt);
+        return _json(const {});
+      });
+      final bytes = await _client(fake).fetchBytes('file-read-7.png');
+      int count(String suffix) =>
+          fake.requests.where((r) => r.uri.path.endsWith(suffix)).length;
+      return (
+        bytes: bytes,
+        fetches: count('/file-read-7.png'),
+        logins: count('/tokens'),
+      );
+    }
+
+    test('a 404 fails at once, without a re-login', () async {
+      final r = await fetch((_) => reply(404, 'text/plain'));
+      expect(r.bytes, isNull);
+      expect(r.fetches, 1);
+      expect(r.logins, 1); // the initial sign-in only
+    });
+
+    test('a bounce right after login heals on the same session', () async {
+      final r = await fetch(
+        (n) => n == 1 ? reply(302, 'text/html') : reply(200, 'image/png'),
+      );
+      expect(r.bytes, [1, 2, 3]);
+      expect(r.fetches, 2);
+      expect(r.logins, 1);
+    });
+
+    test('a login page every time forces one fresh login', () async {
+      final r = await fetch((_) => reply(200, 'text/html'));
+      expect(r.bytes, isNull);
+      expect(r.fetches, 3);
+      expect(r.logins, 2);
+    });
+  });
+
   group('detectBaseUrl', () {
     ResponseBody html404() => ResponseBody.fromString(
       '<h1>Not Found</h1>',
