@@ -17,7 +17,9 @@ class CredentialStore {
     : _storage =
           storage ??
           const FlutterSecureStorage(
-            mOptions: MacOsOptions(useDataProtectionKeyChain: false),
+            // The legacy file-based keychain (v9's default; v11 defaults to
+            // the data-protection keychain), so existing items are still found.
+            mOptions: MacOsOptions(usesDataProtectionKeychain: false),
           );
 
   final FlutterSecureStorage _storage;
