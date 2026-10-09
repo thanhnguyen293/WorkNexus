@@ -98,6 +98,9 @@ class _ChatNotificationListenerState
           id: Object.hash(accountId, message.chatGid) & 0x7fffffff,
           title: chat == null ? sender : chatTitle(context, chat, users),
           body: direct ? preview : '$sender: $preview',
+          imageUrl:
+              (chat == null ? null : chatAvatarStyle(chat, users).imageUrl) ??
+              chatAvatarUrl(users, message.senderId),
           payload: jsonEncode({
             'a': accountId,
             'c': message.chatGid,

@@ -10,7 +10,7 @@ import '../../../core/util/opencode_key_links.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../l10n/app_localizations.dart';
 import 'opencode_key_controller.dart';
-import 'widgets/connection_text_field.dart';
+import '../../../core/widgets/connection_text_field.dart';
 
 /// Modal form for adding or replacing the API key OpenCode uses for one
 /// provider. Passing [providerId] pins the provider and turns this into a

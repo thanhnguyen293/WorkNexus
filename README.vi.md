@@ -1,14 +1,14 @@
 # WorkNexus
 
-**Một nơi để đọc và xử lý mọi ticket.** WorkNexus là workspace desktop theo
-hướng local-first trên macOS, dành cho developer phải theo dõi công việc ở nhiều
+**Một nơi để đọc và xử lý mọi ticket.** WorkNexus là workspace desktop local-first,
+dành cho developer phải theo dõi công việc ở nhiều
 nguồn như **ZenTao, GitLab và GitHub**. App đồng bộ dữ liệu về SQLite cục bộ,
 chuẩn hóa thành `Ticket`, rồi hiển thị theo đúng luồng làm việc của từng nguồn:
 bug/task ZenTao, issue/MR GitLab, issue/PR GitHub.
 
 <sub><a href="README.md">🇬🇧 English</a> · 🇻🇳 Tiếng Việt</sub>
 
-> **Trạng thái:** đang phát triển giai đoạn đầu · desktop macOS · dự án nội bộ.
+> **Trạng thái:** đang phát triển giai đoạn đầu · desktop Windows/macOS · dự án nội bộ.
 > Viết bằng Flutter/Dart theo Clean Architecture feature-first.
 
 ---
@@ -118,7 +118,7 @@ strip mặc định của panel chi tiết.
 
 | Mảng | Lựa chọn |
 |---|---|
-| Ngôn ngữ / UI | Flutter 3.38.8 · Dart 3.10.7 (qua **fvm**) |
+| Ngôn ngữ / UI | Flutter 3.44.8 · Dart 3.12.2 (qua **fvm**) |
 | State management | **Riverpod 3** với state bất biến bằng **freezed** |
 | Dependency injection | **get_it** + **injectable** trong một composition root |
 | CSDL cục bộ | **drift** / SQLite với stream `.watch()` reactive |
@@ -175,7 +175,7 @@ lib/
 
 ### Yêu cầu
 
-- **[fvm](https://fvm.app/)** với Flutter **3.38.8** / Dart **3.10.7**.
+- **[fvm](https://fvm.app/)** với Flutter **3.44.8** / Dart **3.12.2**.
 - **macOS** kèm Xcode command-line tools (desktop target chính).
 - Thông tin đăng nhập cho provider:
   - ZenTao: server URL, account và mật khẩu.

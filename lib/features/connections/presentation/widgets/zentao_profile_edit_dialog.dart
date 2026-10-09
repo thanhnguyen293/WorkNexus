@@ -14,7 +14,7 @@ import '../../domain/entities/zentao_profile.dart';
 import '../../domain/entities/zentao_profile_update.dart';
 import '../providers/zentao_profile_edit_controller.dart';
 import '../providers/zentao_profile_providers.dart';
-import 'connection_text_field.dart';
+import '../../../../core/widgets/connection_text_field.dart';
 
 class ZenTaoProfileEditDialog extends ConsumerStatefulWidget {
   const ZenTaoProfileEditDialog({

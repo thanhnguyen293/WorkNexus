@@ -39,8 +39,9 @@ class LocalWallpaperRepository implements WallpaperRepository {
       final dir = await _directory();
       await dir.create(recursive: true);
       final safe = name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+      final sep = Platform.pathSeparator;
       final file = File(
-        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_'
+        '${dir.path}$sep${DateTime.now().millisecondsSinceEpoch}_'
         '${_isImage(safe) ? safe : '$safe.png'}',
       );
       await file.writeAsBytes(bytes, flush: true);
@@ -54,9 +55,12 @@ class LocalWallpaperRepository implements WallpaperRepository {
   Future<Result<void>> remove(String path) async {
     try {
       final dir = await _directory();
-      final file = File(path);
+      final sep = Platform.pathSeparator;
+      final normPath = path.replaceAll('/', sep).replaceAll('\\', sep);
+      final normDirPath = dir.path.replaceAll('/', sep).replaceAll('\\', sep);
+      final file = File(normPath);
       // Only files this repository keeps.
-      if (file.parent.path != dir.path) {
+      if (file.parent.path != normDirPath) {
         return const Err(UnexpectedFailure('Not a saved wallpaper'));
       }
       if (file.existsSync()) await file.delete();

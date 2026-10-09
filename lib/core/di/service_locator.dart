@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -15,6 +16,14 @@ import '../../features/agents/data/datasources/opencode_auth_file.dart';
 import '../../features/agents/data/datasources/opencode_cli_runner.dart';
 import '../../features/agents/data/in_memory_agent_session_repository.dart';
 import '../../features/agents/data/repositories/opencode_auth_file_repository.dart';
+import '../../features/app_update/data/datasources/github_release_datasource.dart';
+import '../../features/app_update/data/datasources/macos_update_installer.dart';
+import '../../features/app_update/data/datasources/windows_update_installer.dart';
+import '../../features/app_update/data/repositories/github_update_repository.dart';
+import '../../features/app_update/domain/repositories/update_repository.dart';
+import '../../features/app_update/domain/usecases/check_for_update.dart';
+import '../../features/app_update/domain/usecases/download_update.dart';
+import '../../features/app_update/domain/usecases/install_update.dart';
 import '../../features/board/data/repositories/local_saved_filter_repository.dart';
 import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
@@ -39,9 +48,15 @@ import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
 import '../../features/connections/domain/usecases/update_zentao_profile.dart';
 import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
+import '../../features/translation/data/api_translation_service.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
+import '../../features/translation/data/repositories/credential_translation_api_config_repository.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
+import '../../features/translation/data/routing_translation_service.dart';
 import '../../features/translation/domain/adapters/translation_service.dart';
+import '../../features/translation/domain/entities/translation_api_config.dart';
+import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
+import '../config/app_config.dart';
 import '../database/database.dart';
 import '../debug/app_talker.dart';
 import '../domain/adapters/github_pr_service.dart';
@@ -80,6 +95,44 @@ Future<void> configureDependencies(String environment) async =>
 /// in-memory instance without touching the production wiring.
 @module
 abstract class ServiceModule {
+  @lazySingleton
+  GitHubReleaseDatasource get githubReleaseDatasource =>
+      GitHubReleaseDatasource(
+        Dio(
+          BaseOptions(
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
+          ),
+        ),
+      );
+
+  @lazySingleton
+  UpdateRepository updateRepository(
+    GitHubReleaseDatasource releaseDatasource,
+  ) => GitHubUpdateRepository(
+    releases: releaseDatasource,
+    installer: Platform.isWindows
+        ? const WindowsUpdateInstaller()
+        : Platform.isMacOS
+        ? const MacosUpdateInstaller()
+        : null,
+    stagingRoot: () async => Directory(
+      '${(await getTemporaryDirectory()).path}/${AppConfig.databaseName}-update',
+    ),
+  );
+
+  @lazySingleton
+  CheckForUpdate checkForUpdate(UpdateRepository repository) =>
+      CheckForUpdate(repository);
+
+  @lazySingleton
+  DownloadUpdate downloadUpdate(UpdateRepository repository) =>
+      DownloadUpdate(repository);
+
+  @lazySingleton
+  InstallUpdate installUpdate(UpdateRepository repository) =>
+      InstallUpdate(repository);
+
   @prod
   @lazySingleton
   AppDatabase get database => AppDatabase();
@@ -186,7 +239,22 @@ abstract class ServiceModule {
       InMemoryAgentSessionRepository();
 
   @lazySingleton
-  TranslationService get translationService => OpenCodeTranslationService();
+  TranslationApiConfigRepository translationApiConfigRepository(
+    CredentialStore credentials,
+  ) => CredentialTranslationApiConfigRepository(credentials);
+
+  @lazySingleton
+  TranslationService translationService(
+    TranslationApiConfigRepository configs,
+  ) {
+    Future<TranslationApiConfig?> config() async =>
+        (await configs.load()).valueOrNull;
+    return RoutingTranslationService(
+      api: ApiTranslationService(Dio(), config),
+      openCode: OpenCodeTranslationService(),
+      config: config,
+    );
+  }
 
   @lazySingleton
   OpenCodeCli get openCodeCli => const OpenCodeCliRunner();

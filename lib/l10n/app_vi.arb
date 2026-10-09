@@ -1,8 +1,21 @@
 {
   "@@locale": "vi",
   "appTitle": "Bảng công việc hợp nhất",
+  "updateAvailable": "Đã có phiên bản WorkNexus {version} mới.",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "trayOpenApp": "Mở WorkNexus",
   "trayQuitApp": "Thoát WorkNexus",
+  "appUpdatesTitle": "Cập nhật ứng dụng",
+  "appUpdatesSubtitle": "Ứng dụng tự kiểm tra bản stable khi khởi động. Bạn cũng có thể kiểm tra ngay.",
+  "checkForUpdates": "Kiểm tra cập nhật",
+  "latestVersionInstalled": "Bạn đang dùng phiên bản stable mới nhất.",
+  "updateCheckFailed": "Không kiểm tra được cập nhật. Hãy kiểm tra kết nối rồi thử lại.",
   "board": "Bảng",
   "list": "Danh sách",
   "integrations": "Kết nối",
@@ -673,5 +686,34 @@
   "chatStorageFiles": "File",
   "chatStorageManage": "Quản lý",
   "chatReadOnlyAdmins": "Chỉ quản trị viên mới được gửi tin nhắn trong đoạn chat này",
-  "chatReadOnly": "Bạn không thể gửi tin nhắn trong đoạn chat này"
+  "chatReadOnly": "Bạn không thể gửi tin nhắn trong đoạn chat này",
+  "updateAction": "Cập nhật",
+  "updateRestartHint": "Bản cập nhật sẽ được tải, kiểm tra rồi WorkNexus khởi động lại với phiên bản mới.",
+  "updateDownloading": "Đang tải bản cập nhật…",
+  "updateRestarting": "Đang cài đặt — WorkNexus sẽ khởi động lại…",
+  "updateLater": "Để sau",
+  "updateRestartNow": "Cập nhật & khởi động lại",
+  "updateInstallFailed": "Không thể tự động cài bản cập nhật. Hãy tải về từ trang phát hành.",
+  "updateOpenReleasePage": "Mở trang phát hành",
+  "translationApiSection": "Dịch bằng API key",
+  "translationApiSubtitle": "Dùng key của bạn (Gemini, Groq, OpenRouter, Ollama chạy local…) thay cho OpenCode CLI. Key được lưu trong keychain của hệ điều hành.",
+  "translationApiProvider": "Nhà cung cấp",
+  "translationApiBaseUrl": "API base URL",
+  "translationApiModel": "Model",
+  "translationApiKey": "API key",
+  "translationApiGetKey": "Lấy key",
+  "translationApiUse": "Dịch bằng key này",
+  "translationApiUseHint": "Tắt: bản dịch lại đi qua OpenCode.",
+  "translationApiSave": "Lưu",
+  "translationApiRemove": "Xoá key",
+  "translationApiLoadFailed": "Không đọc được key dịch đã lưu.",
+  "updateDialogHeadline": "Đã có phiên bản WorkNexus mới",
+  "appVersionLabel": "Phiên bản",
+  "reportIssue": "Báo cáo vấn đề",
+  "reportIssueHint": "Gặp lỗi? Mở issue trên GitHub, đã điền sẵn phiên bản của bạn.",
+  "translationSection": "Dịch thuật",
+  "updateManualInstall": "Hãy tải phiên bản này từ trang phát hành.",
+  "translationApiCustom": "Tuỳ chỉnh (tương thích OpenAI)",
+  "translationApiBaseUrlHint": "https://api.example.com/v1",
+  "translationApiSaveFailed": "Không lưu được key dịch."
 }
