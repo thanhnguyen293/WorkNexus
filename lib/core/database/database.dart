@@ -341,6 +341,15 @@ class ChatUsers extends Table {
   Set<Column> get primaryKey => {accountId, userId};
 }
 
+@DataClassName('ZenTaoProfileRow')
+class ZenTaoProfiles extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get profileJson => text()();
+
+  @override
+  Set<Column> get primaryKey => {accountId};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -356,6 +365,7 @@ class ChatUsers extends Table {
     ChatConversations,
     ChatMessages,
     ChatUsers,
+    ZenTaoProfiles,
     ChatMessageTranslations,
   ],
 )
@@ -376,6 +386,7 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
+      if (from < 33) await m.createTable(zenTaoProfiles);
       // from < 2: create the settings table at its *current* schema (which
       // already includes fontFamily), so skip the addColumn below.
       if (from < 2) {

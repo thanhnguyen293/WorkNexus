@@ -9,6 +9,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_rail_button.dart';
 import '../../features/chat/presentation/widgets/chat_rail_button.dart';
 import '../../l10n/app_localizations.dart';
+import 'profile_menu_button.dart';
 
 /// The app's narrow left rail: the main destinations (board, chat) on top
 /// and integrations at the bottom. The board's workspace tree is a separate
@@ -32,6 +33,7 @@ class AppNavRail extends ConsumerWidget {
       padding: EdgeInsets.symmetric(vertical: s.lg),
       child: Column(
         children: [
+          const ProfileMenuButton(),
           const ChatRailButton(),
           AppRailButton(
             icon: PhosphorIconsLight.kanban,

@@ -176,6 +176,75 @@ class ZenTaoClient {
     return _token!;
   }
 
+  /// Raw `GET /user` response for inspecting the signed-in user's profile.
+  Future<Map<String, dynamic>> userInfo() async {
+    final res = await _dio.get<dynamic>('$_v1/user');
+    if ((res.statusCode ?? 0) >= 400) {
+      throw DioException.badResponse(
+        statusCode: res.statusCode!,
+        requestOptions: res.requestOptions,
+        response: res,
+      );
+    }
+    final json = _responseMap(res.data);
+    appTalker.info('ZenTao GET /user JSON: ${jsonEncode(json)}');
+    return json;
+  }
+
+  Future<List<Map<String, dynamic>>> departments() async {
+    final res = await _dio.get<dynamic>('$_v1/departments');
+    if ((res.statusCode ?? 0) >= 400) {
+      throw DioException.badResponse(
+        statusCode: res.statusCode!,
+        requestOptions: res.requestOptions,
+        response: res,
+      );
+    }
+    final data = res.data;
+    final decoded = data is String ? jsonDecode(data) : data;
+    final items = decoded is List
+        ? decoded
+        : decoded is Map
+        ? decoded['departments']
+        : null;
+    if (items is! List) {
+      throw const FormatException('ZenTao departments response is not a list');
+    }
+    return [
+      for (final item in items)
+        if (item is Map) Map<String, dynamic>.from(item),
+    ];
+  }
+
+  /// Updates the signed-in user through ZenTao REST v1.
+  Future<Map<String, dynamic>> updateUser(
+    int userId,
+    Map<String, dynamic> fields,
+  ) async {
+    final response = await _dio.put<dynamic>(
+      '$_v1/users/$userId',
+      data: fields,
+      options: Options(contentType: Headers.jsonContentType),
+    );
+    if ((response.statusCode ?? 0) >= 400) {
+      throw DioException.badResponse(
+        statusCode: response.statusCode!,
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    }
+    final updated = _responseMap(response.data);
+    if (updated['status'] == 'fail' || updated['result'] == 'fail') {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        message:
+            updated['message']?.toString() ?? 'ZenTao rejected profile update',
+      );
+    }
+    return updated;
+  }
+
   /// Product list used by the ZenTao Sources tab.
   Future<ZenTaoProductsResponse> products({
     required int page,

@@ -49,6 +49,9 @@ class LocalConnectionRepository implements ConnectionRepository {
         accounts.map((a) => a.credentialsRef).whereType<String>(),
       );
       if (accountIds.isNotEmpty) {
+        await (_db.delete(
+          _db.zenTaoProfiles,
+        )..where((p) => p.accountId.isIn(accountIds))).go();
         final ticketIds = await (_db.select(
           _db.tickets,
         )..where((t) => t.accountId.isIn(accountIds))).map((t) => t.id).get();
@@ -81,6 +84,9 @@ class LocalConnectionRepository implements ConnectionRepository {
   @override
   Future<void> removeAccount(String id) async {
     await _db.transaction(() async {
+      await (_db.delete(
+        _db.zenTaoProfiles,
+      )..where((p) => p.accountId.equals(id))).go();
       // Remove the account's projects, tickets, and the account itself.
       final projectIds = await (_db.select(
         _db.projects,
