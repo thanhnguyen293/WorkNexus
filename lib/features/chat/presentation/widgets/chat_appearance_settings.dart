@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_style.dart';
 import 'chat_style_preview.dart';
+import 'chat_text_size_setting.dart';
 import 'chat_wallpaper_picker.dart';
 
 const int _kColumns = 3;
@@ -72,6 +73,8 @@ class ChatAppearanceSettings extends ConsumerWidget {
             );
           },
         ),
+        const _SectionDivider(),
+        const ChatTextSizeSetting(),
         const _SectionDivider(),
         const ChatWallpaperPicker(),
         const _SectionDivider(),

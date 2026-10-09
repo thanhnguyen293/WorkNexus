@@ -146,6 +146,9 @@ class Settings extends Table {
   /// own (for their preview frame and instant playback).
   BoolColumn get chatAutoDownloadVideos =>
       boolean().withDefault(const Constant(true))();
+
+  /// How much the chat's text is scaled (1.0: as designed).
+  RealColumn get chatTextScale => real().withDefault(const Constant(1.0))();
   IntColumn get chatAutoDownloadVideoMb =>
       integer().withDefault(const Constant(20))();
   IntColumn get accentColorValue => integer().nullable()();
@@ -367,7 +370,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 34;
+  int get schemaVersion => 35;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -463,6 +466,11 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('chat_users', column)) {
             await m.addColumn(chatUsers, add);
           }
+        }
+      }
+      if (from < 35) {
+        if (!await _hasColumn('settings', 'chat_text_scale')) {
+          await m.addColumn(settings, settings.chatTextScale);
         }
       }
       if (from < 34) {

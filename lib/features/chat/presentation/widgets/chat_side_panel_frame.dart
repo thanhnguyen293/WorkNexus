@@ -15,6 +15,11 @@ const double kChatSidePanelWidth = 340;
 /// bottom borders line up (a large avatar plus vertical padding).
 const double kChatHeaderHeight = 68;
 
+/// Height of the strip right under a header — the pinned-message bar beside
+/// the messages, the role tabs of the members panel — border included, so
+/// they line up too.
+const double kChatSubHeaderHeight = 56;
+
 /// The frame of a panel beside the chat: a titled header with a close
 /// button above [child].
 class ChatSidePanelFrame extends StatelessWidget {

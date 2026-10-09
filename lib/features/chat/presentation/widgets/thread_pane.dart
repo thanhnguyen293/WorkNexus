@@ -16,6 +16,7 @@ import 'chat_panels.dart';
 import 'chat_read_only_bar.dart';
 import 'chat_side_panel_host.dart';
 import 'chat_snack.dart';
+import 'chat_text_scale.dart';
 import 'chat_thread_header.dart';
 import 'chat_wallpaper.dart';
 import 'message_list.dart';
@@ -84,32 +85,38 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
           // the messages load.
           child: ChatBackground(
             key: widget.backgroundKey,
-            child: MessageList(
-              // The background is reused across chats; the list is not.
-              key: ValueKey(t),
-              thread: t,
-              showSenders: chat?.type != ChatType.one2one,
+            child: ChatTextScale(
+              child: MessageList(
+                // The background is reused across chats; the list is not.
+                key: ValueKey(t),
+                thread: t,
+                showSenders: chat?.type != ChatType.one2one,
+              ),
             ),
           ),
         ),
         if (ref.watch(chatCanSendProvider(t)))
-          ChatComposer(
-            thread: t,
-            hint: chat == null
-                ? null
-                : AppL10n.of(
-                    context,
-                  ).chatMessageTo(chatTitle(context, chat, users)),
+          ChatTextScale(
+            child: ChatComposer(
+              thread: t,
+              hint: chat == null
+                  ? null
+                  : AppL10n.of(
+                      context,
+                    ).chatMessageTo(chatTitle(context, chat, users)),
+            ),
           )
         else
           ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
       ],
     );
     final Widget? panel = openThread != null
-        ? ReplyThreadPanel(
-            key: ValueKey('thread-$openThread'),
-            chat: t,
-            rootId: openThread,
+        ? ChatTextScale(
+            child: ReplyThreadPanel(
+              key: ValueKey('thread-$openThread'),
+              chat: t,
+              rootId: openThread,
+            ),
           )
         : chat == null
         ? null
@@ -119,10 +126,8 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               chat: chat,
               users: users,
             ),
-            ChatSidePanel.pinned => PinnedMessagesPanel(
-              thread: t,
-              chat: chat,
-              users: users,
+            ChatSidePanel.pinned => ChatTextScale(
+              child: PinnedMessagesPanel(thread: t, chat: chat, users: users),
             ),
             ChatSidePanel.files => ChatFilesPanel(thread: t),
             ChatSidePanel.members => ChatMembersPanel(
