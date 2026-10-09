@@ -61,18 +61,14 @@ class FilterController extends Notifier<FilterState> {
   /// Boards used to wipe the filter on every switch, so glancing at another
   /// project cost you a filter you had just built. Now each board keeps its own:
   /// returning restores what you left, and only a board's *first* visit gets the
-  /// default — no chip filters, plus "assigned to me" when [selfHandle] is a
-  /// known account handle (how ZenTao boards open).
-  void openBoard(String key, {String selfHandle = ''}) {
-    final cleared = _cleared(state);
+  /// default: no chip filters.
+  void openBoard(String key) {
     final next = const SwitchBoardFilter()(
       memory: _memory,
       fromKey: _activeKey,
       toKey: key,
       current: state,
-      initial: selfHandle.isEmpty
-          ? cleared
-          : cleared.copyWith(assignees: {selfHandle}),
+      initial: _cleared(state),
     );
     _memory
       ..clear()

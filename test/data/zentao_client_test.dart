@@ -579,4 +579,55 @@ void main() {
       ]);
     });
   });
+
+  test(
+    'listProductBugsPage fetches one page of a bug view and its total',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.contains('bug-browse-')) {
+          return _json({
+            'status': 'success',
+            'data': jsonEncode({
+              'bugs': {
+                '12': {'id': 12, 'title': 'A', 'status': 'resolved'},
+                '11': {'id': 11, 'title': 'B', 'status': 'resolved'},
+              },
+              'pager': {'recTotal': 5},
+            }),
+          });
+        }
+        return _json(const {});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+      final second = await adapter.listProductBugsPage(
+        '4',
+        browseType: 'toclosed',
+        page: 2,
+        limit: 2,
+      );
+      final last = await adapter.listProductBugsPage(
+        '4',
+        browseType: 'toclosed',
+        page: 3,
+        limit: 2,
+      );
+
+      expect(
+        fake.requests.map((r) => r.uri.path).where((p) => p.contains('bug')),
+        [
+          contains('bug-browse-4-0-toclosed-0-id_desc-0-2-2.json'),
+          contains('bug-browse-4-0-toclosed-0-id_desc-0-2-3.json'),
+        ],
+      );
+      final page = (second as Ok<BugPage>).value;
+      expect(page.tickets.map((t) => t.externalKey), ['12', '11']);
+      expect(page.tickets.first.labels, contains('zentao-product:4'));
+      expect(page.total, 5);
+      expect(page.hasMore, isTrue);
+      // ZenTao answers past the end with page 1 again: the total ends it.
+      expect((last as Ok<BugPage>).value.hasMore, isFalse);
+    },
+  );
 }

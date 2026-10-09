@@ -128,14 +128,10 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
     ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
     ref.read(zentaoExecutionSyncingProvider.notifier).start(execution);
-    // Restore this board's own filter; a first visit defaults to the current
-    // user's tickets.
+    // Restore this board's own filter; a first visit opens unfiltered.
     ref
         .read(filterStateProvider.notifier)
-        .openBoard(
-          ref.read(boardKeyProvider),
-          selfHandle: ref.read(zentaoSelfHandleProvider(execution.accountId)),
-        );
+        .openBoard(ref.read(boardKeyProvider));
     final res = await getIt<SyncService>().syncExecutionTasks(execution);
     ref.read(zentaoExecutionSyncingProvider.notifier).finish();
     if (res case Err()) {

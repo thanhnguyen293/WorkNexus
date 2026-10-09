@@ -13,7 +13,7 @@ import 'board_providers.dart';
 final boardRefreshingProvider = Provider<bool>((ref) {
   switch (ref.watch(viewModeProvider)) {
     case ViewMode.zentaoBugs:
-      return ref.watch(zentaoBugTabSliceProvider).isLoading;
+      return ref.watch(zentaoBugSliceProvider).isLoading;
     case ViewMode.zentaoTasks:
       return ref.watch(zentaoExecutionSyncingProvider) != null;
     case ViewMode.gitlab:
@@ -34,10 +34,10 @@ final boardRefreshingProvider = Provider<bool>((ref) {
 /// Re-fetches the active board's slice from its provider — the toolbar's manual
 /// Refresh.
 ///
-/// Invalidating the slice provider is enough for GitLab/GitHub, but the ZenTao
-/// slices are TTL-cached inside [SyncService], so their cache entry is dropped
-/// first: without that, a refresh inside the TTL window would replay the cached
-/// ids and never reach the server.
+/// Invalidating the slice provider is enough for GitLab/GitHub and the bug
+/// board, but the ZenTao task slices are TTL-cached inside [SyncService], so
+/// their cache entry is dropped first: without that, a refresh inside the TTL
+/// window would replay the cached ids and never reach the server.
 class RefreshBoard {
   const RefreshBoard(this._ref, this._sync);
 
@@ -50,14 +50,8 @@ class RefreshBoard {
   Future<Result<void>> call() async {
     switch (_ref.read(viewModeProvider)) {
       case ViewMode.zentaoBugs:
-        final product = _ref.read(selectedZenTaoProductProvider);
-        if (product == null) return const Ok(null);
-        _sync.invalidateProductBugsTab(
-          accountId: product.accountId,
-          productId: product.productId,
-          browseType: _ref.read(zentaoBugTabProvider).code,
-        );
-        _ref.invalidate(zentaoBugTabSliceProvider);
+        // Starts every column's view over from its first page.
+        _ref.invalidate(zentaoBugStreamsProvider);
         return const Ok(null);
       case ViewMode.zentaoTasks:
         return _refreshExecutionTasks();

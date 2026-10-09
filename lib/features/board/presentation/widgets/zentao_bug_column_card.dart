@@ -15,6 +15,7 @@ import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
 import 'non_fix_resolution_dialog.dart';
 import 'ticket_card.dart';
+import 'zentao_bug_column_footer.dart';
 import 'zentao_bug_column_parts.dart';
 
 /// One draggable status column on the ZenTao bug board. Dropping a card here
@@ -36,6 +37,9 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final col = widget.column;
+    final more = ref.watch(
+      zentaoBugColumnStreamProvider(col.column).select((s) => s.hasMore),
+    );
     return DragTarget<Ticket>(
       onWillAcceptWithDetails: (details) {
         final accepted = _canDrop(details.data, col.column);
@@ -79,7 +83,7 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
                       ),
                     ),
                     SizedBox(width: context.spacing.md),
-                    BugColumnCountBadge(col.count),
+                    BugColumnCountBadge(col.count, more: more),
                   ],
                 ),
               ),
@@ -91,8 +95,14 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
                     context.spacing.sm,
                     context.spacing.md,
                   ),
-                  itemCount: col.tickets.length,
+                  itemCount: col.tickets.length + (more ? 1 : 0),
                   itemBuilder: (context, i) {
+                    if (i == col.tickets.length) {
+                      return ZenTaoBugColumnFooter(
+                        column: col.column,
+                        empty: col.tickets.isEmpty,
+                      );
+                    }
                     final ticket = col.tickets[i];
                     return Draggable<Ticket>(
                       data: ticket,

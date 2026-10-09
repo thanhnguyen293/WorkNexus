@@ -32,6 +32,20 @@ class TicketPage {
   final String? nextCursor;
 }
 
+/// One page of a server-side bug view: its bugs, the view's [total] across
+/// every page, and whether a further page exists.
+class BugPage {
+  const BugPage({
+    required this.tickets,
+    required this.total,
+    required this.hasMore,
+  });
+
+  final List<Ticket> tickets;
+  final int total;
+  final bool hasMore;
+}
+
 /// A user that a ticket can be assigned to.
 class ProviderUser {
   const ProviderUser({
@@ -144,6 +158,16 @@ abstract class ProviderAdapter {
   Future<Result<TicketPage>> listProductBugs(
     String productId, {
     String? browseType,
+  });
+
+  /// One [page] (1-based, [limit] bugs each, newest first) of a product's
+  /// server-side bug view [browseType] — for boards that page each column's
+  /// view on demand rather than loading every bug up front.
+  Future<Result<BugPage>> listProductBugsPage(
+    String productId, {
+    required String browseType,
+    required int page,
+    required int limit,
   });
 
   /// Projects available to this account (each groups executions).

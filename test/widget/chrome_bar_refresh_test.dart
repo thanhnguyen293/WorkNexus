@@ -78,25 +78,28 @@ void main() {
     await disposeTree(tester);
   });
 
-  testWidgets('a narrow toolbar with filter chips does not overflow', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(420, 200);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await pump(tester);
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(ChromeBar)),
-    );
-    container.read(filterStateProvider.notifier)
-      ..toggleAssignee('Thanh')
-      ..toggleAssignee('Someone with a long name');
-    await tester.pump();
+  testWidgets(
+    'a narrow toolbar folds its filter chips into the filters count',
+    (tester) async {
+      tester.view.physicalSize = const Size(420, 200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await pump(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ChromeBar)),
+      );
+      container.read(filterStateProvider.notifier)
+        ..toggleAssignee('Thanh')
+        ..toggleAssignee('Someone with a long name');
+      await tester.pump();
 
-    expect(tester.takeException(), isNull);
-    expect(find.text('Thanh'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      // The chips give way to the search; the filters button counts them.
+      expect(find.text('Thanh'), findsNothing);
+      expect(find.text('2'), findsOneWidget);
 
-    await disposeTree(tester);
-  });
+      await disposeTree(tester);
+    },
+  );
 }

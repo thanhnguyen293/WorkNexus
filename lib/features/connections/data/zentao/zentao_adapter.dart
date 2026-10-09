@@ -296,6 +296,47 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
+  Future<Result<BugPage>> listProductBugsPage(
+    String productId, {
+    required String browseType,
+    required int page,
+    required int limit,
+  }) async {
+    return _guard(() async {
+      final res = await _client.classicProductBugs(
+        productId,
+        browseType: browseType,
+        recPerPage: limit,
+        pageID: page,
+      );
+      // ZenTao's pager answers a page past the end with the first page again,
+      // so "more" comes from the view's total, never from a page being full.
+      final hasMore = page * limit < res.total;
+      return BugPage(
+        total: res.total,
+        hasMore: hasMore,
+        tickets: [
+          for (final bug in res.bugs)
+            if (bug.idString.isNotEmpty)
+              _productBug(
+                normalizeZenTao(
+                  bug,
+                  type: ZenTaoType.bug,
+                  accountId: accountId,
+                  baseUrl: _client.baseUrl,
+                ),
+                productId,
+              ),
+        ],
+      );
+    });
+  }
+
+  Ticket _productBug(Ticket ticket, String productId) => ticket.copyWith(
+    labels: [...ticket.labels, zentaoProductLabel(productId)],
+  );
+
+  @override
   Future<Result<List<ProviderProject>>> listProjects() async {
     return _guard(() async {
       const limit = kDefaultApiPageLimit;

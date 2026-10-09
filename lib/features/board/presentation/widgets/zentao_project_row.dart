@@ -44,7 +44,7 @@ class ZenTaoProjectRow extends ConsumerWidget {
         selected?.accountId == product.accountId &&
         selected?.productId == product.id;
     // While this product is the open board and its active tab is fetching.
-    final loading = active && ref.watch(zentaoBugTabSliceProvider).isLoading;
+    final loading = active && ref.watch(zentaoBugSliceProvider).isLoading;
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
@@ -105,10 +105,10 @@ class ZenTaoProjectRow extends ConsumerWidget {
   }
 
   /// Opens this product's bug board and resets to the default tab. The board's
-  /// `zentaoBugTabSliceProvider` reacts to the selection + tab and streams the
-  /// chosen browse type's bugs into the DB, which the board reads reactively.
+  /// `zentaoBugStreamsProvider` reacts to the selection and pages each column's
+  /// view into the DB, which the board reads reactively.
   /// Leaves any open settings view and hands the filter to this board's memory —
-  /// on a first visit that means the current user's tickets.
+  /// a first visit opens unfiltered.
   void _select(WidgetRef ref) {
     showBoardView(ref);
     ref.read(selectedGitLabProjectProvider.notifier).clear();
@@ -121,9 +121,6 @@ class ZenTaoProjectRow extends ConsumerWidget {
     // derived from it.
     ref
         .read(filterStateProvider.notifier)
-        .openBoard(
-          ref.read(boardKeyProvider),
-          selfHandle: ref.read(zentaoSelfHandleProvider(product.accountId)),
-        );
+        .openBoard(ref.read(boardKeyProvider));
   }
 }
