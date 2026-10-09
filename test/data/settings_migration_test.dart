@@ -51,7 +51,7 @@ void main() {
     ''');
     raw.execute("INSERT INTO settings (id) VALUES (0);");
     raw.execute('PRAGMA user_version = 13;');
-    raw.dispose();
+    raw.close();
 
     // Opening runs the migration; the guard must skip the duplicate add.
     final db = AppDatabase(NativeDatabase(file));

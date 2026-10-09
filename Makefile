@@ -22,10 +22,10 @@ outdated: ## Show dependency upgrade information.
 	$(FLUTTER) pub outdated
 
 codegen: ## Generate freezed/json/drift/retrofit sources once.
-	$(FLUTTER) pub run build_runner build --delete-conflicting-outputs
+	$(FLUTTER) pub run build_runner build
 
 watch: ## Watch and regenerate generated Dart sources.
-	$(FLUTTER) pub run build_runner watch --delete-conflicting-outputs
+	$(FLUTTER) pub run build_runner watch
 
 format: ## Format Dart source and tests.
 	$(DART) format lib test

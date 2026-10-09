@@ -24,9 +24,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Pin the repo's exact toolchain (Flutter 3.38.8 -> Dart 3.10.7).
+  # Pin the repo's exact toolchain (Flutter 3.47.7 -> Dart 3.13.5).
   # No fvm on CI; subosito downloads this exact version.
-  FLUTTER_VERSION: "3.38.8"
+  FLUTTER_VERSION: "3.47.7"
 
 jobs:
   # ───────────────────────────── macOS ─────────────────────────────
@@ -53,7 +53,7 @@ jobs:
       # Codegen (freezed / drift / injectable / retrofit / json) — required
       # because *.g.dart / *.freezed.dart / *.config.dart are gitignored.
       - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build
 
       # Release build. No Apple cert on CI: the project defaults to ad-hoc
       # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
@@ -101,7 +101,7 @@ jobs:
         run: flutter pub get
 
       - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build
 
       - name: Build Windows (release)
         run: flutter build windows --release

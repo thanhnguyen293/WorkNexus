@@ -245,33 +245,38 @@ class _PanelLink extends StatelessWidget {
     final s = context.spacing;
     return ChatPanelCard(
       padding: EdgeInsets.zero,
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
-        visualDensity: VisualDensity.compact,
-        horizontalTitleGap: s.lg,
-        minLeadingWidth: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(context.radii.lg),
-        ),
-        leading: Icon(icon, color: c.accent),
-        title: Text(
-          label,
-          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (count case final n?)
-              Text(
-                '$n',
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textSecondary,
+      // The card paints its own fill, so the tile needs a Material of its own
+      // above it for the ink splash to show.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
+          visualDensity: VisualDensity.compact,
+          horizontalTitleGap: s.lg,
+          minLeadingWidth: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(context.radii.lg),
+          ),
+          leading: Icon(icon, color: c.accent),
+          title: Text(
+            label,
+            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (count case final n?)
+                Text(
+                  '$n',
+                  style: context.typography.bodyStrong.copyWith(
+                    color: c.textSecondary,
+                  ),
                 ),
-              ),
-            Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
-          ],
+              Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
+            ],
+          ),
+          onTap: onTap,
         ),
-        onTap: onTap,
       ),
     );
   }
