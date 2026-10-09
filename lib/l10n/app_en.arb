@@ -898,11 +898,8 @@
   "editorSectionClassification": "Classification",
   "editorSectionAssignment": "Assignment & schedule",
   "editorSectionMore": "More",
-  "imageSizeSmall": "Small",
-  "imageSizeMedium": "Medium",
-  "imageSizeLarge": "Large",
-  "imageSizeOriginal": "Fit",
   "datePickToday": "Today",
   "datePickTomorrow": "Tomorrow",
-  "datePickNextWeek": "In a week"
+  "datePickNextWeek": "In a week",
+  "imageResizeHint": "Drag to resize · double-click to fit"
 }

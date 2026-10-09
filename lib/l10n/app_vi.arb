@@ -824,11 +824,8 @@
   "editorSectionClassification": "Phân loại",
   "editorSectionAssignment": "Phân công & thời hạn",
   "editorSectionMore": "Khác",
-  "imageSizeSmall": "Nhỏ",
-  "imageSizeMedium": "Vừa",
-  "imageSizeLarge": "Lớn",
-  "imageSizeOriginal": "Vừa khung",
   "datePickToday": "Hôm nay",
   "datePickTomorrow": "Ngày mai",
-  "datePickNextWeek": "Tuần sau"
+  "datePickNextWeek": "Tuần sau",
+  "imageResizeHint": "Kéo để đổi kích thước · nhấp đúp để vừa khung"
 }
