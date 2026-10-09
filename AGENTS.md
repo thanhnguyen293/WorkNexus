@@ -1,4 +1,4 @@
-# WorkNexus — Project Engineering Rules
+# **Partial** — `Failure` implements `Exception` (providers rethrow it into `AsyncValue.error`); no `print` left (11.3); the ZenTao/GitLab/GitHub layers map transport errors to `Failure`. **Remaining:** some data-layer `try/catch` still swallows errors instead of returning a `Failure`. |
 
 Authoritative engineering rules for this repository. They govern how code is
 structured, split, and named. When a change conflicts with a rule, follow the
@@ -78,7 +78,10 @@ features/<feature>/
 
 - **5.1 MUST** — `core/` holds cross-cutting concerns only: `theme/` (design
   tokens), `widgets/` (design-system components), `error/`, `util/`,
-  `usecase/` (base), `database/` (drift infra), `platform/`.
+  `usecase/` (base), `database/` (drift infra), `network/` (provider API
+  integrations: ZenTao/GitLab/GitHub clients, adapters, normalizers),
+  `platform/`, `di/` (composition root), and shared app state read by ≥ 2
+  features (`navigation/`, `translation/`, `agents/`).
 - **5.2 EXCEPTION** — `core/domain/` MAY hold **entities / value objects shared
   by ≥ 2 features** (e.g. `Ticket`, `Workspace`, `Project`) as a deliberate
   *shared kernel*. It is **not** a dumping ground for every entity.
@@ -218,18 +221,21 @@ features/<feature>/
 ## Appendix A — Current violations / tech debt
 
 Reference for incremental cleanup. Not required to fix immediately; do not add
-new violations. **Status column updated after the 2026-07-17 refactor pass**, and
-again after the theming pass that split the design system into function-specific
-`ThemeExtension`s (A9).
+new violations. **Status column updated after the 2026-07-17 refactor pass**,
+after the theming pass that split the design system into function-specific
+`ThemeExtension`s (A9), and again after the 2026-10-09 boundaries pass (A1, A5,
+A7, A8; plus the ≤300/≤400-line splits — `SyncService`, `board_providers`,
+`database`, the provider integrations and the chat data layer are now libraries
+with one `part` per responsibility).
 
 | # | Original state | Rules | Status |
 |---|---|---|---|
-| A1 | `core/domain/` held single-feature entities/interfaces alongside the shared kernel | 1.1, 5.2, 5.3 | **Mostly done** — moved to owning features: board (`board_model`, `filter_state`, `saved_view`), `connection_repository`, `coding_agent_adapter`, `translation_service`. `Ticket`/`Workspace`/`Project` + other ≥2-feature types stay in `core/domain` per 5.2. **Remaining:** `translation_record` + `translation_repository` (still consumed by legacy `data/fixtures` + `data/local/mappers`; move with the `lib/data` dissolution). |
+| A1 | `core/domain/` held single-feature entities/interfaces alongside the shared kernel | 1.1, 5.2, 5.3 | **Done** — moved to owning features: board (`board_model`, `filter_state`, `saved_view`), `connection_repository`. `translation_service`, `coding_agent_adapter` and `resolve_translation_state` went back to the shared kernel once their consumers became shared state (`core/translation`, `core/agents`) used by several features — so `translation_record`/`translation_repository` legitimately stay in `core/domain` (5.2), like `Ticket`/`Workspace`/`Project`. |
 | A2 | `data/local/local_repositories.dart` was **one file** of 6 repos | 3.1, 3.2 | **Done** — split one-file-per-repo under `data/local/repositories/`; `LocalTranslationRepository` moved to `translation/data/repositories/`. |
 | A3 | `task_detail/.../detail_panel.dart` was **1216 lines**, 19 classes | 6.1 | **Done** — split into 12 files under `task_detail/presentation/widgets/` (all ≤173 lines); `_uppercaseLabel` → `SectionLabel` widget. |
 | A4 | `sidebar.dart` 660 · `settings_page.dart` 345 · `chrome_bar.dart` 345 · `ticket_actions.dart` 388 | 6.1 | **Done** — all split into child-widget files ≤300 lines. |
-| A5 | `agents`, `connections`, `task_detail` have **no use cases**; presentation calls repos/adapters directly | 2.3, 2.4 | **Not addressed** — still open; intertwined with A7 remaining (introduce use cases so presentation stops calling other features' providers). |
+| A5 | `agents`, `connections`, `task_detail` have **no use cases**; presentation calls repos/adapters directly | 2.3, 2.4 | **Mostly done** — presentation no longer calls data-layer classes: it reads domain ports through providers in the composition root (`core/di/service_providers.dart`: `SourceSyncService`, `TicketDetailService`, `ZenTaoBugService`; `ConnectionTester` for connections) — the 2.4 pass-through EXCEPTION. **Remaining:** derivation logic still inside board providers (the scoped-tickets / filter providers) should move into use cases (12.2). |
 | A6 | `board` had **no `data/`**; impl in shared `data/local` | 1.4, 3.1 | **Partial** — `board/domain/` now exists (entities + value objects + use cases). Ticket/Workspace repos are shared-kernel impls (kept in `data/local/repositories/` per 5.4). |
-| A7 | `translation → agents/data`, `sync → connections/data`, `task_detail → board + agents + translation` (incl. `show statusLabel`) | 1.3, 10.1 | **Partial** — `statusLabel`/`priorityName` lifted to `core/util/labels.dart` (10.3); `openTicketIdProvider` + `settingsOpenProvider` moved to `core/navigation/` (removed `task_detail→board`, `board→connections`). **Remaining:** `board`/`task_detail` presentation still read `agents`/`translation` providers; `translation→agents/data`; `sync→connections/data`; `ticket_card→task_detail`. Fix via shared-kernel contracts + use cases (with A5). |
-| A8 | `Result`/`Failure` under-used; ad-hoc `try/catch` | 11.1–11.3 | **Not addressed** — `settings`/`ticket_actions`/`translation` already use `Result`; broaden it, and drop the `print` in `core/widgets/markdown_text.dart` (11.3). |
+| A7 | `translation → agents/data`, `sync → connections/data`, `task_detail → board + agents + translation` (incl. `show statusLabel`) | 1.3, 10.1 | **Done** — no feature imports another feature's internals, and no presentation file imports `data/`: `statusLabel`/`priorityName` in `core/util/labels.dart`; `openTicketIdProvider`/`settingsOpenProvider` in `core/navigation/`; translation/agent providers in `core/translation/`, `core/agents/`; `AgentRunner` in `core/platform/`; the ZenTao/GitLab/GitHub integrations in `core/network/`. |
+| A8 | `Result`/`Failure` under-used; ad-hoc `try/catch` | 11.1–11.3 | **Partial** — `Failure` implements `Exception` (board providers rethrow it into `AsyncValue.error`); no `print` left (11.3); the provider integrations map transport errors to `Failure`. **Remaining:** some data-layer `try/catch` still swallows errors where it should return a `Failure`. |
 | A9 | Hardcoded colors: `detail_panel`, `sidebar`, others | 7.1, 7.2 | **Done** — the monolithic `AppTokens` is split into five function-named `ThemeExtension`s: `AppColors` (semantic roles — `background`/`surface`/`success`/`warning`/`error`/…), `AppTypography` (named text ramp), `AppSpacing`, `AppRadii`, `AppBorders` — read via `context.colors/.typography/.spacing/.radii/.borders`; all built + registered in `core/theme/app_theme.dart`. All 38 call sites migrated; `AppTokens` deleted. Scrim/on-color-ink/workspace-fallback are now palette tokens, `Colors.white`→`onAccent`. No raw `Color(0x…)`/`Colors.*` in presentation except the `Colors.transparent` no-fill sentinel and data-driven `Color(ws.colorValue)`. Inline `TextStyle` + magic spacing/radius replaced by tokens (only the parameterized `markdown_text` rendering primitive keeps caller-supplied sizes). |
