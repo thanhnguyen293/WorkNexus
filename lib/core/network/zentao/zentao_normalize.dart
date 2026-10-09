@@ -1,13 +1,13 @@
 import 'package:html2md/html2md.dart' as html2md;
 
-import '../../../../core/domain/entities/provider_entity.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/priority.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/domain/value_objects/unified_status.dart';
-import '../../../../core/util/content_hash.dart';
-import '../../../../core/util/html_entities.dart';
-import '../../../../core/util/zentao_labels.dart';
+import '../../domain/entities/provider_entity.dart';
+import '../../domain/entities/ticket.dart';
+import '../../domain/value_objects/priority.dart';
+import '../../domain/value_objects/provider_type.dart';
+import '../../domain/value_objects/unified_status.dart';
+import '../../util/content_hash.dart';
+import '../../util/html_entities.dart';
+import '../../util/zentao_labels.dart';
 import 'zentao_models.dart';
 
 /// ZenTao object kinds we import.

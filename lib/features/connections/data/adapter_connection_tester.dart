@@ -2,8 +2,8 @@ import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
+import '../../../core/network/provider_adapter_factory.dart';
 import '../domain/adapters/connection_tester.dart';
-import 'provider_adapter_factory.dart';
 
 /// [ConnectionTester] backed by a throwaway provider adapter.
 class AdapterConnectionTester implements ConnectionTester {

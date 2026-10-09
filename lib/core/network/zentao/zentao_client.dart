@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
-import '../../../../core/debug/app_talker.dart';
-import '../../../../core/network/api_paging.dart';
+import '../../debug/app_talker.dart';
+import '../api_paging.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
 import 'zentao_models.dart';

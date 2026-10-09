@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
-import '../../../../core/debug/app_talker.dart';
-import '../../../../core/network/api_paging.dart';
+import '../../debug/app_talker.dart';
+import '../api_paging.dart';
 import 'github_models.dart';
 
 /// HTTP transport for the GitHub REST API, bound to one account's base URL +

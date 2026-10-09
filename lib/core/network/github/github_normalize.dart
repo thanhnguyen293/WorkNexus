@@ -1,10 +1,10 @@
-import '../../../../core/domain/entities/provider_entity.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/priority.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/domain/value_objects/unified_status.dart';
-import '../../../../core/util/content_hash.dart';
-import '../../../../core/util/priority_labels.dart';
+import '../../domain/entities/provider_entity.dart';
+import '../../domain/entities/ticket.dart';
+import '../../domain/value_objects/priority.dart';
+import '../../domain/value_objects/provider_type.dart';
+import '../../domain/value_objects/unified_status.dart';
+import '../../util/content_hash.dart';
+import '../../util/priority_labels.dart';
 import 'github_models.dart';
 
 /// The GitHub object kinds we import. [label] is stored as the ticket's

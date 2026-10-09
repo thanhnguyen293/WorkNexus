@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/connections/data/github/github_client.dart';
+import 'package:work_nexus/core/network/github/github_client.dart';
 
 class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter(this.handler);

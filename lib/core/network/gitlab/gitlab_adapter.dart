@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/domain/adapters/gitlab_mr_adapter.dart';
-import '../../../../core/domain/adapters/provider_adapter.dart';
-import '../../../../core/domain/entities/activity_event.dart';
-import '../../../../core/domain/entities/comment.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/domain/value_objects/repo_change.dart';
-import '../../../../core/error/failure.dart';
-import '../../../../core/error/result.dart';
+import '../../domain/adapters/gitlab_mr_adapter.dart';
+import '../../domain/adapters/provider_adapter.dart';
+import '../../domain/entities/activity_event.dart';
+import '../../domain/entities/comment.dart';
+import '../../domain/entities/ticket.dart';
+import '../../domain/value_objects/provider_type.dart';
+import '../../domain/value_objects/repo_change.dart';
+import '../../error/failure.dart';
+import '../../error/result.dart';
 import 'gitlab_client.dart';
 import 'gitlab_models.dart';
 import 'gitlab_normalize.dart';
