@@ -58,7 +58,7 @@ class TaskMainFields extends ConsumerWidget {
               label: l.description,
               child: RichTextEditor(
                 controller: desc,
-                minHeight: 320,
+                minHeight: 240,
                 imageLoader: (url) => ref
                     .read(zenTaoTicketEditorProvider)
                     .loadImage(route.accountId, url),

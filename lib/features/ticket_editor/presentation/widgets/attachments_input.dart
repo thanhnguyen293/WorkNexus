@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'editor_chip.dart';
 
@@ -62,10 +63,17 @@ class AttachmentsInput extends StatelessWidget {
                 if (x != f) x,
             ]),
           ),
-        TextButton.icon(
+        AppButton.text(
+          size: AppButtonSize.extraSmall,
           onPressed: _add,
-          icon: Icon(PhosphorIconsLight.plus, size: s.xl2),
-          label: Text(AppL10n.of(context).addFiles),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: s.xs,
+            children: [
+              Icon(PhosphorIconsLight.plus, size: s.xl2),
+              Text(AppL10n.of(context).addFiles),
+            ],
+          ),
         ),
       ],
     );

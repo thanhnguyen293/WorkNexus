@@ -51,8 +51,9 @@ class OptionMultiSelect extends StatelessWidget {
     final radius = BorderRadius.circular(context.radii.md);
     return HoverSurface(
       onTap: () => _pick(context),
-      constraints: BoxConstraints(minHeight: s.xl6),
-      padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.sm),
+      // As tall as a one-line select, chips included.
+      constraints: BoxConstraints(minHeight: s.xl6 - s.sm),
+      padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.xs),
       color: c.surfaceSubtle,
       borderRadius: radius,
       border: Border.all(color: c.border),
@@ -83,7 +84,7 @@ class OptionMultiSelect extends StatelessWidget {
           ),
           Icon(
             PhosphorIconsLight.caretDown,
-            size: s.xl3,
+            size: s.xl2,
             color: c.textTertiary,
           ),
         ],

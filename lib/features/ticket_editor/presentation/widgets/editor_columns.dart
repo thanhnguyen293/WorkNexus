@@ -20,15 +20,15 @@ class EditorColumns extends StatelessWidget {
       builder: (context, box) {
         final wide = box.maxWidth >= _twoColumns;
         return SingleChildScrollView(
-          padding: EdgeInsets.all(s.xl5),
+          padding: EdgeInsets.all(s.xl3),
           child: wide
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: main),
-                    SizedBox(width: s.xl5),
+                    SizedBox(width: s.xl3),
                     SizedBox(
-                      width: (box.maxWidth * 0.32).clamp(340.0, 440.0),
+                      width: (box.maxWidth * 0.3).clamp(300.0, 380.0),
                       child: side,
                     ),
                   ],
@@ -37,7 +37,7 @@ class EditorColumns extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     main,
-                    SizedBox(height: s.xl5),
+                    SizedBox(height: s.xl3),
                     side,
                   ],
                 ),
