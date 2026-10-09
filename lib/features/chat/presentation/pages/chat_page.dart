@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -13,7 +14,9 @@ import '../widgets/thread_pane.dart';
 
 /// The ZenTao chat view: connection banner, chat list and the open thread.
 class ChatPage extends ConsumerStatefulWidget {
-  const ChatPage({super.key});
+  const ChatPage({super.key, this.onViewProfile});
+
+  final OpenAccountProfile? onViewProfile;
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -57,6 +60,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         child: ConversationListPane(
                           accountId: accountId,
                           compact: layout.compactList,
+                          onViewProfile: widget.onViewProfile,
                         ),
                       ),
                       Expanded(

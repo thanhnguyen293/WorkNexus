@@ -380,7 +380,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -561,6 +561,32 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(chatConversations, chatConversations.adminsJson);
         }
       }
+      // Versions 32–35 were used on parallel branches. After a rebase, a DB
+      // can report the latest version while still missing another branch's
+      // tables or columns. Reconcile them once before any row is read.
+      if (from < 36) {
+        if (!await _hasTable('zen_tao_profiles')) {
+          await m.createTable(zenTaoProfiles);
+        }
+        for (final (name, column) in [
+          ('chat_auto_download_videos', settings.chatAutoDownloadVideos),
+          ('chat_auto_download_video_mb', settings.chatAutoDownloadVideoMb),
+          ('chat_notify_while_viewing', settings.chatNotifyWhileViewing),
+          ('chat_text_scale', settings.chatTextScale),
+        ]) {
+          if (!await _hasColumn('settings', name)) {
+            await m.addColumn(settings, column);
+          }
+        }
+        if (!await _hasColumn('chat_conversations', 'committers')) {
+          await m.addColumn(chatConversations, chatConversations.committers);
+        }
+        // An older branch may have created this column as nullable.
+        await customStatement(
+          'UPDATE settings SET chat_notify_while_viewing = 0 '
+          'WHERE chat_notify_while_viewing IS NULL',
+        );
+      }
     },
   );
 
@@ -570,6 +596,14 @@ class AppDatabase extends _$AppDatabase {
   Future<bool> _hasIndex(String name) async {
     final rows = await customSelect(
       "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?",
+      variables: [Variable<String>(name)],
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  Future<bool> _hasTable(String name) async {
+    final rows = await customSelect(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
       variables: [Variable<String>(name)],
     ).get();
     return rows.isNotEmpty;

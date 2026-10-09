@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -28,9 +29,11 @@ class ConversationListPane extends ConsumerWidget {
     super.key,
     required this.accountId,
     this.compact = false,
+    this.onViewProfile,
   });
 
   final String accountId;
+  final OpenAccountProfile? onViewProfile;
 
   /// Collapsed to avatars (narrow window): no account picker or search,
   /// only the new-chat button above the list.
@@ -94,7 +97,10 @@ class ConversationListPane extends ConsumerWidget {
               alignment: Alignment.center,
               child: Row(
                 children: [
-                  ChatSelfAvatarButton(accountId: accountId),
+                  ChatSelfAvatarButton(
+                    accountId: accountId,
+                    onViewProfile: onViewProfile,
+                  ),
                   SizedBox(width: context.spacing.md),
                   Expanded(child: ChatSearchField(hint: l.chatSearch)),
                   SizedBox(width: context.spacing.xs),
