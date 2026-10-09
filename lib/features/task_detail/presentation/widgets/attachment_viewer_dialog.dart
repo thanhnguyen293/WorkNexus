@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -12,7 +12,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import 'attachment_kinds.dart';
 import 'attachment_video_view.dart';
 import 'attachment_viewer_header.dart';
@@ -59,10 +58,9 @@ class _AttachmentViewerDialogState
   }
 
   Future<String?> _load() async {
-    final path = await getIt<SyncService>().cacheAttachment(
-      widget.ticket,
-      widget.attachment,
-    );
+    final path = await ref
+        .read(ticketDetailServiceProvider)
+        .cacheAttachment(widget.ticket, widget.attachment);
     if (mounted) {
       setState(() {
         _path = path;
@@ -80,10 +78,9 @@ class _AttachmentViewerDialogState
     final path = _path ?? await _pathFuture;
     final saved = path == null
         ? null
-        : await getIt<SyncService>().saveAttachmentToDownloads(
-            path,
-            widget.attachment.title,
-          );
+        : await ref
+              .read(ticketDetailServiceProvider)
+              .saveAttachmentToDownloads(path, widget.attachment.title);
     if (!mounted) return;
     setState(() => _saving = false);
     final l = AppL10n.of(context);

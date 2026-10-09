@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -15,7 +15,6 @@ import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/label_chips.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../util/image_fallback.dart';
 import 'bug_attachments.dart';
 import 'bug_description.dart';
@@ -98,15 +97,17 @@ class OriginalTab extends ConsumerWidget {
         if (bug != null)
           BugDescription(
             body: ticket.body,
-            imageLoader: (url) =>
-                getIt<SyncService>().fetchTicketImage(ticket, url),
+            imageLoader: (url) => ref
+                .read(ticketDetailServiceProvider)
+                .fetchTicketImage(ticket, url),
             imageFallback: imageFallback,
           )
         else
           MarkdownText(
             ticket.body,
-            imageLoader: (url) =>
-                getIt<SyncService>().fetchTicketImage(ticket, url),
+            imageLoader: (url) => ref
+                .read(ticketDetailServiceProvider)
+                .fetchTicketImage(ticket, url),
             imageFallbackUrl: imageFallback.resolveUrl,
             onOpenImage: imageFallback.open,
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/di/service_providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -11,14 +11,13 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 
 /// Users the ticket can be (re)assigned to, fetched from its provider.
 final providerUsersProvider = FutureProvider.family<List<ProviderUser>, String>(
   (ref, ticketId) async {
     final ticket = ref.read(ticketByIdProvider(ticketId));
     if (ticket == null) return const [];
-    final res = await getIt<SyncService>().listUsers(ticket);
+    final res = await ref.watch(ticketDetailServiceProvider).listUsers(ticket);
     return res.fold((v) => v, (_) => const <ProviderUser>[]);
   },
 );

@@ -31,8 +31,10 @@ import '../../features/chat/domain/repositories/message_translation_repository.d
 import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/chat/domain/repositories/wallpaper_repository.dart';
 import '../../features/chat/domain/usecases/translate_chat_message.dart';
+import '../../features/connections/data/adapter_connection_tester.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/data/repositories/local_zentao_profile_repository.dart';
+import '../../features/connections/domain/adapters/connection_tester.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/connections/domain/repositories/zentao_profile_repository.dart';
 import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
@@ -112,6 +114,9 @@ abstract class ServiceModule {
   @lazySingleton
   UpdateZenTaoProfile updateZenTaoProfile(ZenTaoProfileRepository repository) =>
       UpdateZenTaoProfile(repository);
+
+  @lazySingleton
+  ConnectionTester get connectionTester => const AdapterConnectionTester();
 
   @lazySingleton
   TicketRepository ticketRepository(AppDatabase db) =>

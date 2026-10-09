@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
+import '../detail_providers.dart';
 import 'assign_dialog.dart';
 import 'detail_action_button.dart';
 import 'reviewers_dialog.dart';
@@ -79,7 +78,9 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
               onTap: _busy
                   ? null
                   : () => _run(
-                      () => getIt<SyncService>().updateGitHubPrBranch(ticket),
+                      () => ref
+                          .read(gitHubPrServiceProvider)
+                          .updateGitHubPrBranch(ticket),
                       'Updated #${ticket.externalKey}',
                     ),
             ),
@@ -90,7 +91,9 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
               onTap: _busy
                   ? null
                   : () => _run(
-                      () => getIt<SyncService>().mergeGitHubPr(ticket),
+                      () => ref
+                          .read(gitHubPrServiceProvider)
+                          .mergeGitHubPr(ticket),
                       'Merged #${ticket.externalKey}',
                     ),
             ),
@@ -101,7 +104,9 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
               onTap: _busy
                   ? null
                   : () => _run(
-                      () => getIt<SyncService>().closeGitHubItem(ticket),
+                      () => ref
+                          .read(gitHubPrServiceProvider)
+                          .closeGitHubItem(ticket),
                       'Closed #${ticket.externalKey}',
                     ),
             ),
@@ -112,7 +117,9 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
               onTap: _busy
                   ? null
                   : () => _run(
-                      () => getIt<SyncService>().reopenGitHubItem(ticket),
+                      () => ref
+                          .read(gitHubPrServiceProvider)
+                          .reopenGitHubItem(ticket),
                       'Reopened #${ticket.externalKey}',
                     ),
             ),
