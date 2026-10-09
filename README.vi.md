@@ -13,6 +13,22 @@ bug/task ZenTao, issue/MR GitLab, issue/PR GitHub.
 
 ---
 
+## Bảng phong thần
+
+Vinh danh những người có code đã được merge vào `main`. 🏆
+
+| | Contributor | Đóng góp nổi bật |
+|:-:|---|---|
+| <a href="https://github.com/thanhnguyen293"><img src="https://github.com/thanhnguyen293.png" width="64" alt="thanhnguyen293"/></a> | **[Thanh Nguyen](https://github.com/thanhnguyen293)** | 🥇 Người khởi tạo & maintainer — kiến trúc, providers, board, task detail |
+| <a href="https://github.com/phungbuuquang"><img src="https://github.com/phungbuuquang.png" width="64" alt="phungbuuquang"/></a> | **[Michael (phungbuuquang)](https://github.com/phungbuuquang)** | 🥈 Menu tray desktop, hoàn thiện cửa sổ & profile (Windows/macOS) |
+| <img src="https://github.com/identicons/dyno.png" width="64" alt="Dyno"/> | **Dyno** | 🥉 Updater trong app, dịch bằng API key, cấu hình build theo env |
+
+<a href="https://github.com/thanhnguyen293/WorkNexus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=thanhnguyen293/WorkNexus" alt="Contributors"/>
+</a>
+
+---
+
 ## Vì sao có WorkNexus?
 
 Công việc thường nằm rải rác ở nhiều hệ thống quản lý khác nhau. WorkNexus gom
