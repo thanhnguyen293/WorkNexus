@@ -5,9 +5,9 @@ import 'dart:io';
 import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
+import '../../../core/platform/agent_runner.dart';
 import '../../../core/util/content_hash.dart';
 import '../../../core/util/translation_languages.dart';
-import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
 
 /// How long a single `opencode run` may take before we give up and kill it.
