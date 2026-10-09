@@ -29,7 +29,14 @@ Future<void> resetTestLocator(AppDatabase db) async {
 /// timers fire inside the test's async zone. Call at the end of a `testWidgets`
 /// body that pumped a drift-backed UI; otherwise those timers linger and the
 /// test fails with "A Timer is still pending" at teardown.
+///
+/// It also lets real I/O the UI started (files, plugin channels) finish and
+/// runs its continuations: one that touches drift after the body ends would
+/// keep the database busy, and `db.close()` in tearDown would wait forever.
 Future<void> disposeTree(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 300)),
+  );
   await tester.pump(const Duration(seconds: 1));
 }

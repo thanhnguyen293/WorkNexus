@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/app.dart';
 import 'package:work_nexus/core/database/database.dart';
+import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
+import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/data/local/database_seeder.dart';
+import 'package:work_nexus/features/board/presentation/board_providers.dart';
 
 import 'support/di_test_harness.dart';
 
@@ -26,7 +29,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ProviderScope(child: WorkNexusApp()));
+    await tester.pumpWidget(_boardApp());
     // Advance past the initial loading skeleton timer.
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -68,8 +71,28 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(const ProviderScope(child: WorkNexusApp()));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            chatOpenProvider.overrideWith((ref) => false),
+            // The ZenTao groups list the server's products/projects, which
+            // can't load here; stub them empty so the headers render.
+            zentaoProductsProvider.overrideWith(
+              (ref, accountId) async => const <ProviderProduct>[],
+            ),
+            zentaoProjectsProvider.overrideWith(
+              (ref, accountId) async => const <ProviderProject>[],
+            ),
+          ],
+          child: const WorkNexusApp(),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 600));
+
+      // Riverpod delivers the stubbed lists after a real async turn; let it
+      // land, then rebuild.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await tester.pump();
 
       // The ZenTao node renders beneath its workspace in the tree.
       expect(find.text('ZenTao'), findsOneWidget);
@@ -88,3 +111,9 @@ void main() {
     },
   );
 }
+
+/// The app opens on chat; the board tests start on the board instead.
+Widget _boardApp() => ProviderScope(
+  overrides: [chatOpenProvider.overrideWith((ref) => false)],
+  child: const WorkNexusApp(),
+);
