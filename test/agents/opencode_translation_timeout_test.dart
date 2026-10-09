@@ -1,3 +1,8 @@
+// The fake `opencode` is a `/bin/sh -c` script, so this runs on POSIX hosts
+// only (CI runs it on Linux).
+@TestOn('posix')
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
