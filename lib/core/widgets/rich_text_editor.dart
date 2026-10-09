@@ -144,7 +144,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
+              padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.xxs),
               color: c.surfaceSubtle,
               child: QuillSimpleToolbar(
                 controller: quill,
@@ -153,7 +153,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
                   sectionDividerColor: c.border,
                   buttonOptions: QuillSimpleToolbarButtonOptions(
                     base: QuillToolbarBaseButtonOptions(
-                      iconSize: s.xl3,
+                      iconSize: s.xl2,
                       iconButtonFactor: 1.1,
                       iconTheme: _toolbarIconTheme(context),
                     ),
@@ -164,20 +164,20 @@ class _RichTextEditorState extends State<RichTextEditor> {
                       childBuilder: (Object? _, Object? _) => EditorColorButton(
                         controller: quill,
                         isBackground: false,
-                        iconSize: s.xl3 * 1.1,
+                        iconSize: s.xl2 * 1.1,
                       ),
                     ),
                     linkStyle: QuillToolbarLinkStyleButtonOptions(
                       childBuilder: (Object? _, Object? _) => EditorLinkButton(
                         controller: quill,
-                        iconSize: s.xl3 * 1.1,
+                        iconSize: s.xl2 * 1.1,
                       ),
                     ),
                     backgroundColor: QuillToolbarColorButtonOptions(
                       childBuilder: (Object? _, Object? _) => EditorColorButton(
                         controller: quill,
                         isBackground: true,
-                        iconSize: s.xl3 * 1.1,
+                        iconSize: s.xl2 * 1.1,
                       ),
                     ),
                   ),
@@ -198,12 +198,12 @@ class _RichTextEditorState extends State<RichTextEditor> {
                         tooltip: l.insertImage,
                         icon: _uploading
                             ? SizedBox.square(
-                                dimension: s.xl3,
+                                dimension: s.xl2,
                                 child: const CircularProgressIndicator(
                                   strokeWidth: 1.6,
                                 ),
                               )
-                            : Icon(PhosphorIconsLight.image, size: s.xl3),
+                            : Icon(PhosphorIconsLight.image, size: s.xl2),
                         onPressed: _uploading ? null : _pickImage,
                       ),
                   ],
@@ -246,15 +246,25 @@ QuillIconTheme _toolbarIconTheme(BuildContext context) {
       borderRadius: BorderRadius.circular(context.radii.sm),
     ),
   );
+  // Material's 40–48px touch targets spread the toolbar over two rows on a
+  // desktop form; a snug button per glyph keeps it to one. A minimum, not a
+  // fixed size: the paragraph-style picker shares this theme and is wider.
+  final side = context.spacing.xl6 * 0.7;
+  final style = ButtonStyle(
+    shape: shape,
+    minimumSize: WidgetStatePropertyAll(Size.square(side)),
+    padding: WidgetStatePropertyAll(EdgeInsets.all(context.spacing.xs)),
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    visualDensity: VisualDensity.compact,
+  );
   return QuillIconTheme(
     iconButtonUnselectedData: IconButtonData(
       color: c.textSecondary,
-      style: ButtonStyle(shape: shape),
+      style: style,
     ),
     iconButtonSelectedData: IconButtonData(
       color: c.accent,
-      style: ButtonStyle(
-        shape: shape,
+      style: style.copyWith(
         backgroundColor: WidgetStatePropertyAll(c.mixT(c.accent, 0.14)),
       ),
     ),

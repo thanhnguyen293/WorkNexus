@@ -41,9 +41,12 @@ import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/chat/domain/repositories/wallpaper_repository.dart';
 import '../../features/chat/domain/usecases/translate_chat_message.dart';
 import '../../features/connections/data/local_connection_repository.dart';
+import '../../features/connections/data/repositories/drift_local_cache_repository.dart';
 import '../../features/connections/data/repositories/local_zentao_profile_repository.dart';
 import '../../features/connections/domain/repositories/connection_repository.dart';
+import '../../features/connections/domain/repositories/local_cache_repository.dart';
 import '../../features/connections/domain/repositories/zentao_profile_repository.dart';
+import '../../features/connections/domain/usecases/clear_local_cache.dart';
 import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
 import '../../features/connections/domain/usecases/update_zentao_profile.dart';
 import '../../features/dashboard/data/datasources/dashboard_local_datasource.dart';
@@ -162,6 +165,14 @@ abstract class ServiceModule {
   @lazySingleton
   ConnectionRepository connectionRepository(AppDatabase db) =>
       LocalConnectionRepository(db);
+
+  @lazySingleton
+  LocalCacheRepository localCacheRepository(AppDatabase db) =>
+      DriftLocalCacheRepository(db);
+
+  @lazySingleton
+  ClearLocalCache clearLocalCache(LocalCacheRepository repository) =>
+      ClearLocalCache(repository);
 
   @lazySingleton
   ZenTaoProfileRepository zenTaoProfileRepository(

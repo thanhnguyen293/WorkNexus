@@ -20,7 +20,7 @@ InputDecoration editorInputDecoration(BuildContext context, {String? hint}) {
     fillColor: c.surfaceSubtle,
     hintText: hint,
     hintStyle: context.typography.bodySm.copyWith(color: c.textTertiary),
-    contentPadding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.lg),
+    contentPadding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.md),
     border: border(c.border),
     enabledBorder: border(c.border),
     focusedBorder: border(c.accent),
@@ -74,7 +74,7 @@ class _EditorTextInputState extends State<EditorTextInput> {
       inputFormatters: widget.numeric
           ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))]
           : null,
-      style: (widget.big ? type.bodyStrong : type.bodySm).copyWith(
+      style: (widget.big ? type.bodySmStrong : type.bodySm).copyWith(
         color: context.colors.textPrimary,
       ),
       decoration: editorInputDecoration(context, hint: widget.hint),

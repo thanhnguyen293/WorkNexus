@@ -182,7 +182,7 @@ class _ClosedField extends StatelessWidget {
           ),
           padding: EdgeInsets.symmetric(
             horizontal: spacing.lg,
-            vertical: spacing.lg,
+            vertical: spacing.md,
           ),
           child: Row(
             children: [
@@ -191,14 +191,14 @@ class _ClosedField extends StatelessWidget {
                   hasValue ? label! : hintText,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.typography.body.copyWith(
+                  style: context.typography.bodySm.copyWith(
                     color: hasValue ? c.textPrimary : c.textTertiary,
                   ),
                 ),
               ),
               Icon(
                 PhosphorIconsLight.caretDown,
-                size: 20,
+                size: spacing.xl2,
                 color: c.textTertiary,
               ),
             ],
