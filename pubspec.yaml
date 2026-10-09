@@ -48,7 +48,7 @@ dependencies:
 
   # State management & DI. injectable = annotation-driven registration on top of
   # get_it (codegen via injectable_generator below); resolves on this SDK with
-  # analyzer 13.x / build_runner 2.16.1.
+  # analyzer 14.x / build_runner 2.16.1.
   flutter_riverpod: 3.4.3
   get_it: 9.3.0
   injectable: 3.0.0
@@ -115,13 +115,12 @@ dev_dependencies:
 
   flutter_lints: 6.0.0
 
-  # Codegen. Every generator here shares one analyzer, capped <14 by
+  # Codegen. Every generator here shares one analyzer, capped <14.3 by
   # injectable_generator 3.1.3 (its lean_builder dep needs _fe_analyzer_shared
-  # <106). That caps build_runner at 2.16.1 (2.16.2+ needs analyzer 14.3+) and
-  # freezed at 4.0.1 (4.0.2 needs analyzer 14).
+  # <106). That caps build_runner at 2.16.1 (2.16.2+ needs analyzer 14.3+).
   build_runner: 2.16.1
   drift_dev: 2.35.1
-  freezed: 4.0.1
+  freezed: 4.0.2
   injectable_generator: 3.1.3
   json_serializable: 6.14.1
   # Retrofit code generator (pairs with the `retrofit` runtime dep). Resolves
@@ -141,7 +140,7 @@ dev_dependencies:
 
 # NOTE: riverpod_lint + custom_lint are intentionally NOT added — they cannot
 # resolve on this toolchain (riverpod_lint needs analyzer ^7 or ^9, this SDK
-# pins analyzer 13.x; older custom_lint needs freezed_annotation 2.x). Rule
+# pins analyzer 14.x; older custom_lint needs freezed_annotation 2.x). Rule
 # enforcement lives in analysis_options.yaml via the built-in lint set instead.
 
 # flutter_gen: type-safe asset accessors. Output (lib/gen/) is gitignored and
