@@ -6,15 +6,20 @@ import 'package:injectable/injectable.dart';
 import 'app/app.dart';
 import 'core/database/database.dart';
 import 'core/di/service_locator.dart';
+import 'core/platform/desktop_app_lifecycle.dart';
+import 'core/platform/desktop_single_instance_service.dart';
+import 'core/platform/desktop_tray_service.dart';
 import 'core/platform/desktop_window_service.dart';
 import 'core/settings/app_settings.dart';
 import 'data/local/database_seeder.dart';
 import 'data/local/mappers.dart';
 import 'features/sync/data/sync_service.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await const DesktopWindowService().initialize();
+  const window = DesktopWindowService();
+  await const DesktopSingleInstanceService().initialize(arguments, window);
+  await window.initialize();
   // The official video_player has no Windows/Linux implementation; fvp
   // (libmdk) provides one there, so chat videos play in-app everywhere.
   fvp.registerWith(
@@ -41,6 +46,11 @@ Future<void> main() async {
   final initialSettings = settingsRow == null
       ? const AppSettings()
       : appSettingsFromRow(settingsRow);
+  final lifecycle = DesktopAppLifecycle(
+    window: window,
+    tray: DesktopTrayService(),
+  );
+  await lifecycle.initialize(initialSettings.locale);
 
   runApp(
     ProviderScope(
@@ -52,7 +62,7 @@ Future<void> main() async {
           (s) => db.saveSettings(appSettingsToCompanion(s)),
         ),
       ],
-      child: const WorkNexusApp(),
+      child: WorkNexusApp(lifecycle: lifecycle),
     ),
   );
 }
