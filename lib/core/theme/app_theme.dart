@@ -100,6 +100,9 @@ ThemeData buildAppTheme({
         : VisualDensity.standard,
     textTheme: baseText,
     dividerColor: p.line,
+    // Every tab bar's baseline is the app's hairline, not Material's darker
+    // outline colour.
+    tabBarTheme: TabBarThemeData(dividerColor: p.line, dividerHeight: 1),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     scrollbarTheme: ScrollbarThemeData(

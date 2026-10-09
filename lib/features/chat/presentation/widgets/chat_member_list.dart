@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -10,10 +11,12 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/usecases/order_chat_roles.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_role_tabs.dart';
+import 'chat_side_panel_frame.dart';
 import 'chat_user_profile_dialog.dart';
 
 /// A group's members: avatar, name, account and role, the owner marked and
@@ -53,16 +56,27 @@ class _ChatMemberListState extends ConsumerState<ChatMemberList> {
       AsyncData(value: Ok(:final value)) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, s.sm),
-            child: ChatRoleTabs(
-              serverNames: roleNames,
-              roles: [for (final id in value) users[id]?.role],
-              selected: _role,
-              onSelect: (role) => setState(() => _role = role),
+          // On the header's colour and as tall as the pinned-message bar
+          // beside it, its bottom border included; none for a single role.
+          if (const OrderChatRoles()([
+                for (final id in value) users[id]?.role,
+              ]).length >
+              1)
+            Container(
+              height: kChatSubHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: s.xl),
+              alignment: Alignment.centerLeft,
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                border: Border(bottom: context.hairlineSide),
+              ),
+              child: ChatRoleTabs(
+                serverNames: roleNames,
+                roles: [for (final id in value) users[id]?.role],
+                selected: _role,
+                onSelect: (role) => setState(() => _role = role),
+              ),
             ),
-          ),
-          Divider(height: 1, thickness: 1, color: context.colors.border),
           // The list scrolls on its own under the tabs: a shorter tab does
           // not move anything above it.
           Expanded(

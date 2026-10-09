@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -12,6 +13,7 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_side_panel_frame.dart';
 
 /// Under the chat header: the most recently pinned message and how many are
 /// pinned. Tap lists them all beside the chat.
@@ -67,18 +69,28 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
           infoRoom: ChatLayoutScope.of(context).infoRoom,
         ),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: s.xl4, vertical: s.md),
+          height: kChatSubHeaderHeight,
+          padding: EdgeInsets.symmetric(horizontal: s.xl4),
           decoration: BoxDecoration(
             border: Border(bottom: context.hairlineSide),
           ),
           child: Row(
             children: [
-              Container(width: 3, height: s.xl6 - s.md, color: c.accent),
+              // A rounded accent bar as tall as the two lines beside it.
+              Container(
+                width: 3,
+                height: s.xl6 * 0.85,
+                decoration: BoxDecoration(
+                  color: c.accent,
+                  borderRadius: BorderRadius.circular(context.radii.pill),
+                ),
+              ),
               SizedBox(width: s.lg),
               Icon(PhosphorIconsFill.pushPin, size: s.xl3, color: c.accent),
-              SizedBox(width: s.md),
+              SizedBox(width: s.lg),
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -100,7 +112,12 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                   ],
                 ),
               ),
-              Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
+              SizedBox(width: s.md),
+              Icon(
+                PhosphorIconsLight.caretRight,
+                size: s.xl4,
+                color: c.textTertiary,
+              ),
             ],
           ),
         ),
