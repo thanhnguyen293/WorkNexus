@@ -26,6 +26,7 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 /// In-memory [ChatRepository] that records the commands it receives.
@@ -214,7 +215,44 @@ class _FakeChatRepository implements ChatRepository {
     String a,
     String chatGid, {
     int? beforeServerId,
+    bool inWindow = false,
   }) async => const Ok(0);
+
+  @override
+  Stream<List<ChatMessage>> watchMessagesInRange(
+    String a,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
+  }) => Stream.value([
+    _msg('old1', 31, 'the very first message', serverId: 1).copyWith(index: 1),
+    _msg('old2', 40, 'the second one', serverId: 2).copyWith(index: 2),
+  ]);
+
+  @override
+  Future<Result<({int from, int to})?>> loadMessagesAround(
+    String a,
+    String chatGid,
+    int serverId,
+  ) async {
+    calls.add('around $serverId');
+    return const Ok((from: 1, to: 2));
+  }
+
+  @override
+  Future<Result<int>> loadNewerMessages(
+    String a,
+    String chatGid, {
+    required int afterServerId,
+  }) async => const Ok(0);
+
+  @override
+  Future<Result<int?>> joinWindowToTimeline(
+    String a,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
+  }) async => const Ok(null);
 
   @override
   Future<Result<int>> countOlderMessages(
@@ -557,6 +595,41 @@ void main() {
     expect(container.read(chatJumpRequestProvider(thread)), isNull);
     expect(highlighted, contains(502));
     await tester.pumpAndSettle(const Duration(seconds: 3));
+  });
+
+  testWidgets('a jump far back shows a window around the message, and the '
+      'latest-messages button leaves it', (tester) async {
+    await pumpChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const thread = (accountId: 'acc', chatGid: 'g1');
+    await openTeamChat(tester);
+    expect(find.text('the very first message'), findsNothing);
+
+    container.read(chatJumpRequestProvider(thread).notifier).state = 1;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(repo.calls, contains('around 1'));
+    expect(
+      container.read(chatMessageWindowProvider(thread)),
+      isA<AroundWindow>(),
+    );
+    expect(find.text('the very first message'), findsOneWidget);
+    // The newest messages are not part of the window.
+    expect(find.text('xin chào'), findsNothing);
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    await tester.tap(find.byType(ScrollToLatestButton));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(chatMessageWindowProvider(thread)),
+      isA<LiveWindow>(),
+    );
+    expect(find.text('xin chào'), findsOneWidget);
+    expect(find.text('the very first message'), findsNothing);
   });
 
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {

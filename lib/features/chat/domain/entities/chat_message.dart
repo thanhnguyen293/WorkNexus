@@ -22,6 +22,9 @@ abstract class ChatMessage with _$ChatMessage {
     @Default(SendState.sent) SendState sendState,
     int? serverId,
 
+    /// Its place in the chat (1, 2, 3, …), from xxd; null while pending.
+    int? index,
+
     /// Server id of the message this one replies to.
     int? replyToId,
     @Default(false) bool deleted,

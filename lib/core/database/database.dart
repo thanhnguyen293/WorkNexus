@@ -297,6 +297,13 @@ class ChatMessages extends Table {
   IntColumn get replyToId => integer().nullable()();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
 
+  /// Stored on its own — a reply's parent, a pinned message, a page around
+  /// a jump target — not as part of the run of history that reaches the
+  /// newest message. The timeline skips these until a page joins them up,
+  /// so a lone old message never sits on top of the latest ones as if
+  /// nothing came between.
+  BoolColumn get detached => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {accountId, gid};
 }
@@ -416,7 +423,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 39;
+  int get schemaVersion => 40;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -601,6 +608,12 @@ class AppDatabase extends _$AppDatabase {
       // profiles on one, the dashboard on another). After a rebase, a DB can
       // report the latest version while still missing another branch's tables
       // or columns. Reconcile them once before any row is read.
+      if (from < 40) {
+        if (!await _hasColumn('chat_messages', 'detached')) {
+          await m.addColumn(chatMessages, chatMessages.detached);
+        }
+        await _detachBeyondFirstGap();
+      }
       if (from < 39) {
         if (!await _hasColumn('settings', 'theme_follows_system')) {
           await m.addColumn(settings, settings.themeFollowsSystem);
@@ -653,6 +666,45 @@ class AppDatabase extends _$AppDatabase {
       variables: [Variable<String>(name)],
     ).get();
     return rows.isNotEmpty;
+  }
+
+  /// Marks, per chat, the stored messages past the first break in their
+  /// indexes (walking back from the newest) as detached: history stored
+  /// before that flag existed may already hold lone reply parents.
+  Future<void> _detachBeyondFirstGap() async {
+    final rows = await customSelect(
+      'SELECT account_id, cgid, message_index FROM chat_messages '
+      'WHERE message_index IS NOT NULL '
+      'ORDER BY account_id, cgid, message_index DESC',
+    ).get();
+    String? chat;
+    int? previous;
+    final cuts = <(String, String, int)>[];
+    var cutDone = false;
+    for (final row in rows) {
+      final accountId = row.read<String>('account_id');
+      final cgid = row.read<String>('cgid');
+      final index = row.read<int>('message_index');
+      final key = '$accountId\u0000$cgid';
+      if (key != chat) {
+        chat = key;
+        previous = null;
+        cutDone = false;
+      }
+      if (cutDone) continue;
+      if (previous != null && index < previous - 1) {
+        cuts.add((accountId, cgid, index));
+        cutDone = true;
+      }
+      previous = index;
+    }
+    for (final (accountId, cgid, below) in cuts) {
+      await customStatement(
+        'UPDATE chat_messages SET detached = 1 '
+        'WHERE account_id = ? AND cgid = ? AND message_index <= ?',
+        [accountId, cgid, below],
+      );
+    }
   }
 
   Future<bool> _hasColumn(String table, String column) async {

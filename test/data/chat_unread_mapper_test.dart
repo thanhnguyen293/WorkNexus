@@ -28,6 +28,7 @@ ChatMessageRow _last(int sender) => ChatMessageRow(
   content: 'hi',
   sendState: 'sent',
   deleted: false,
+  detached: false,
 );
 
 void main() {

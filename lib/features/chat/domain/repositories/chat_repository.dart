@@ -29,7 +29,9 @@ abstract class ChatRepository {
   /// Conversations, most recently active first.
   Stream<List<ChatConversation>> watchConversations(String accountId);
 
-  /// The newest [limit] messages of a chat, oldest first.
+  /// The newest [limit] messages of a chat's timeline, oldest first —
+  /// without messages stored on their own (reply parents, pinned ones, jump
+  /// windows) that no page has joined to it yet.
   Stream<List<ChatMessage>> watchMessages(
     String accountId,
     String chatGid, {
@@ -41,12 +43,49 @@ abstract class ChatRepository {
   /// Fetches the newest page of a chat from the server.
   Future<Result<void>> refreshMessages(String accountId, String chatGid);
 
+  /// The stored messages with an index in [fromIndex]–[toIndex] (a jump
+  /// window), oldest first.
+  Stream<List<ChatMessage>> watchMessagesInRange(
+    String accountId,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
+  });
+
   /// Fetches the page before the oldest stored message; returns how many
-  /// messages arrived (0 = reached the beginning).
+  /// messages arrived (0 = reached the beginning). [inWindow]: the page
+  /// extends a jump window rather than the timeline.
   Future<Result<int>> loadOlderMessages(
     String accountId,
     String chatGid, {
     int? beforeServerId,
+    bool inWindow = false,
+  });
+
+  /// Fetches the pages around server message [serverId] as a jump window;
+  /// returns its index span, or null when it cannot be placed.
+  Future<Result<({int from, int to})?>> loadMessagesAround(
+    String accountId,
+    String chatGid,
+    int serverId,
+  );
+
+  /// Fetches the page after server message [afterServerId] into a jump
+  /// window; returns how many newer messages arrived (0 = the newest).
+  Future<Result<int>> loadNewerMessages(
+    String accountId,
+    String chatGid, {
+    required int afterServerId,
+  });
+
+  /// Joins jump window [fromIndex]–[toIndex] to the timeline when it reaches
+  /// it; returns how many timeline messages there then are from [fromIndex]
+  /// on, or null when it does not reach it.
+  Future<Result<int?>> joinWindowToTimeline(
+    String accountId,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
   });
 
   /// How many messages of [chatGid] are stored locally from before [before].

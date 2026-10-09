@@ -23,6 +23,9 @@ import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_list_tab.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_controller.dart';
+import 'chat_message_window.dart';
+
+export 'chat_message_window.dart';
 
 /// One open thread: which account, which chat.
 typedef ChatThreadKey = ({String accountId, String chatGid});
@@ -144,17 +147,30 @@ final chatListTabProvider = StateProvider<ChatListTab>(
 /// The chat list filter text.
 final chatSearchProvider = StateProvider<String>((ref) => '');
 
-/// How many of the newest messages a thread shows; grows as older pages load.
-final chatMessageLimitProvider = StateProvider.family<int, ChatThreadKey>(
-  (ref, key) => ChatController.pageSize,
-);
+/// Which messages a thread shows: the newest ones (growing as older pages
+/// load), or a window around a message jumped to far back. Dropped when the
+/// thread closes, so a chat always reopens on its newest messages.
+final chatMessageWindowProvider = StateProvider.autoDispose
+    .family<ChatMessageWindow, ChatThreadKey>(
+      (ref, key) => const LiveWindow(ChatController.pageSize),
+    );
 
 final chatMessagesProvider = StreamProvider.autoDispose
     .family<List<ChatMessage>, ChatThreadKey>((ref, key) {
-      final limit = ref.watch(chatMessageLimitProvider(key));
-      return ref
-          .watch(chatRepositoryProvider)
-          .watchMessages(key.accountId, key.chatGid, limit: limit);
+      final repository = ref.watch(chatRepositoryProvider);
+      return switch (ref.watch(chatMessageWindowProvider(key))) {
+        LiveWindow(:final limit) => repository.watchMessages(
+          key.accountId,
+          key.chatGid,
+          limit: limit,
+        ),
+        AroundWindow(:final from, :final to) => repository.watchMessagesInRange(
+          key.accountId,
+          key.chatGid,
+          fromIndex: from,
+          toIndex: to,
+        ),
+      };
     });
 
 /// Attachment bytes (images), kept as a [Result] so a failed download renders
