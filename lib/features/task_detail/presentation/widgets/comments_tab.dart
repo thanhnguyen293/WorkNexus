@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/util/body_format.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/repositories/comment_repository.dart';
@@ -145,6 +146,12 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
                         return e.comment != null
                             ? CommentTile(
                                 e.comment!,
+                                html:
+                                    ticket != null &&
+                                    isHtmlBody(
+                                      ticket.providerType,
+                                      e.comment!.body,
+                                    ),
                                 imageLoader: loader(),
                                 imageFallback: imageFallback,
                               )

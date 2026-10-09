@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -17,6 +18,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 import '../ticket_actions.dart';
 import 'detail_header_icon_button.dart';
+import 'parent_task_link.dart';
 
 /// The detail panel header: workspace + provider identity, title, actions.
 class DetailHeader extends ConsumerWidget {
@@ -110,6 +112,18 @@ class DetailHeader extends ConsumerWidget {
               ],
             ],
           ),
+          // A subtask names its parent right above its own title.
+          if (ticket.providerEntity case ZenTaoTaskEntity(
+            :final parentId?,
+            :final parentName,
+          )) ...[
+            SizedBox(height: context.spacing.md),
+            ParentTaskLink(
+              ticket: ticket,
+              parentId: parentId,
+              parentName: parentName,
+            ),
+          ],
           SizedBox(height: context.spacing.md),
           Text(
             ticket.title,

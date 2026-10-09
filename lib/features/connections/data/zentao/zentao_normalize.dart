@@ -1,5 +1,3 @@
-import 'package:html2md/html2md.dart' as html2md;
-
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/priority.dart';
@@ -63,25 +61,6 @@ UnifiedStatus mapZenTaoStatus(ZenTaoType type, String raw, {int? confirmed}) {
 Priority mapZenTaoPriority(int? pri) {
   if (pri == null || pri == 0) return Priority.medium;
   return Priority.fromLevel((pri - 1).clamp(0, 3));
-}
-
-/// Converts ZenTao's rich-text HTML (bug steps / task desc / story spec /
-/// comments) into Markdown for the unified renderer. Falls back to a plain-text
-/// strip if conversion throws. Plain/empty input passes through unchanged.
-///
-/// Note: we deliberately do NOT use html2md's `imageBaseUrl` — it prepends the
-/// base even to already-absolute `src`s (producing `.../base/https://.../x.png`).
-/// ZenTao emits absolute image URLs, and relative ones are resolved later by the
-/// authenticated image loader.
-String htmlToMarkdown(String html) {
-  final s = html.trim();
-  if (s.isEmpty) return '';
-  if (!s.contains('<')) return s; // already plain text / markdown
-  try {
-    return html2md.convert(s).replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
-  } catch (_) {
-    return stripHtml(s);
-  }
 }
 
 /// Crudely strips HTML tags + decodes a few entities for a plaintext body.
@@ -205,7 +184,8 @@ Ticket normalizeZenTao(
   final normalizedBase = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;
-  final body = htmlToMarkdown(rawBody);
+  // Kept as ZenTao's editor wrote it (HTML), and shown as HTML.
+  final body = rawBody.trim();
   final rawStatus = e.status?.toString() ?? '';
   final status = mapZenTaoStatus(type, rawStatus, confirmed: e.confirmed);
 
@@ -245,11 +225,35 @@ Ticket normalizeZenTao(
     updatedAt: parseZenTaoDate(e.lastEditedDate),
     providerEntity: switch (type) {
       ZenTaoType.bug => _zentaoBugEntity(e, resolution, normalizedBase),
+      ZenTaoType.task when (e.parent ?? 0) > 0 || e.children.isNotEmpty =>
+        _zentaoTaskEntity(e),
       ZenTaoType.task || ZenTaoType.story => null,
     },
     sourceHash: contentHash(title, body),
   );
 }
+
+/// A task's place in its family: its parent (a subtask) or its subtasks (a
+/// parent task).
+TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
+    TicketProviderEntity.zentaoTask(
+      parentId: (e.parent ?? 0) > 0 ? '${e.parent}' : null,
+      parentName: _text(e.parentName),
+      subtasks: [
+        for (final child in e.children)
+          if (child.idString.isNotEmpty)
+            TicketSubtask(
+              id: child.idString,
+              title: decodeHtmlEntities(child.name?.toString() ?? ''),
+              status: mapZenTaoStatus(
+                ZenTaoType.task,
+                child.status?.toString() ?? '',
+              ),
+              priority: child.pri,
+              assignee: accountName(child.assignedTo),
+            ),
+      ],
+    );
 
 TicketProviderEntity _zentaoBugEntity(
   ZenTaoEntity e,

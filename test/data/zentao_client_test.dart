@@ -170,38 +170,36 @@ void main() {
     },
   );
 
-  test(
-    'getTicket fetches v1 detail and converts HTML steps to Markdown',
-    () async {
-      final fake = _FakeAdapter((opts) {
-        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-        if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
-          return _json({
-            'id': 4302,
-            'title': 'Login loops',
-            'status': 'resolved',
-            'pri': 2,
-            'steps':
-                '<p>Open <strong>login</strong></p><ol><li>step one</li></ol>',
-            'productName': 'ERP',
-          });
-        }
-        return _json(const {});
-      });
+  test('getTicket fetches v1 detail and keeps its HTML steps', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
+        return _json({
+          'id': 4302,
+          'title': 'Login loops',
+          'status': 'resolved',
+          'pri': 2,
+          'steps':
+              '<p>Open <strong>login</strong></p><ol><li>step one</li></ol>',
+          'productName': 'ERP',
+        });
+      }
+      return _json(const {});
+    });
 
-      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-      final res = await adapter.getTicket(_bugTicket());
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.getTicket(_bugTicket());
 
-      expect(res, isA<Ok>());
-      final t = (res as Ok).value as Ticket;
-      expect(t.title, 'Login loops');
-      expect(t.status, UnifiedStatus.review); // resolved → review
-      // HTML became Markdown: bold + ordered list.
-      expect(t.body, contains('**login**'));
-      expect(t.body, contains('step one'));
-      expect(t.body, isNot(contains('<')));
-    },
-  );
+    expect(res, isA<Ok>());
+    final t = (res as Ok).value as Ticket;
+    expect(t.title, 'Login loops');
+    expect(t.status, UnifiedStatus.review); // resolved → review
+    // Kept as HTML, to be shown as HTML.
+    expect(
+      t.body,
+      '<p>Open <strong>login</strong></p><ol><li>step one</li></ol>',
+    );
+  });
 
   // The write actions use the classic `index.php` channel — this ZenTao build
   // has no `/bugs/{id}/<action>` REST endpoints (they 404).
@@ -522,7 +520,7 @@ void main() {
     // Only the `commented` action becomes a comment (the empty 'opened' drops).
     expect(comments.length, 1);
     expect(comments.single.authorName, 'Thanh');
-    expect(comments.single.body, contains('`auth.dart`'));
+    expect(comments.single.body, '<p>Fixed in <code>auth.dart</code></p>');
   });
 
   group('detectBaseUrl', () {

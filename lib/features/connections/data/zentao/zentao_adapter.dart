@@ -134,7 +134,8 @@ class ZenTaoAdapter implements ProviderAdapter {
             id: '${ticket.id}:${a.id ?? comments.length}',
             ticketId: ticket.id,
             authorName: accountName(a.actor) ?? 'unknown',
-            body: htmlToMarkdown(body),
+            // HTML, as written in ZenTao's editor.
+            body: body,
             createdAt: parseZenTaoDate(a.date) ?? DateTime.now(),
           ),
         );

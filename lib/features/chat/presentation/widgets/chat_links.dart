@@ -6,7 +6,6 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../providers/chat_providers.dart';
-import '../providers/zentao_link_providers.dart';
 
 /// Opens a link tapped in chat. A ZenTao bug/task/story opens in the detail
 /// panel beside the chat — fetched from ZenTao first when the board has not

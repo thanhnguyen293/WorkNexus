@@ -9,11 +9,12 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/util/body_format.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/priority_labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/label_chips.dart';
-import '../../../../core/widgets/markdown_text.dart';
+import '../../../../core/widgets/rich_body_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../util/image_fallback.dart';
@@ -26,6 +27,7 @@ import 'detail_field_rows.dart';
 import 'detail_scroll_body.dart';
 import 'provider_detail_sections.dart';
 import 'section_label.dart';
+import 'subtask_list.dart';
 
 /// The "Original" tab — the ticket's source description plus typed metadata.
 ///
@@ -46,6 +48,7 @@ class OriginalTab extends ConsumerWidget {
     final account = lookups.accounts[ticket.accountId];
     final ws = account == null ? null : lookups.workspaces[account.workspaceId];
     final imageFallback = ImageFallback.forTicket(ticket, account);
+    final html = isHtmlBody(ticket.providerType, ticket.body);
     final bug = switch (ticket.providerEntity) {
       final ZenTaoBugEntity b => b,
       _ => null,
@@ -58,10 +61,26 @@ class OriginalTab extends ConsumerWidget {
       final GitHubItemEntity e => e,
       _ => null,
     };
+    final subtasks = switch (ticket.providerEntity) {
+      ZenTaoTaskEntity(:final subtasks) => subtasks,
+      _ => const <TicketSubtask>[],
+    };
+    // A subtask's parent: its name as ZenTao gave it, else as synced here.
+    final parent = switch (ticket.providerEntity) {
+      ZenTaoTaskEntity(:final parentId?, :final parentName) => [
+        '#$parentId',
+        ?(parentName ??
+            ref
+                .watch(ticketByIdProvider('${ticket.accountId}:$parentId'))
+                ?.title),
+      ].join(' · '),
+      _ => null,
+    };
     final labels = visibleUserLabels(ticket.labels);
     final labelColors = labelColorsOf(ticket);
     final meta = <(String, String)>[
       (l.project, lookups.projects[ticket.projectId]?.name ?? ''),
+      if (parent != null) (l.parentTask, parent),
       (l.account, account?.handle ?? ''),
       (l.workspace, ws?.isPersonal == true ? l.personal : (ws?.name ?? '')),
       (l.status, statusLabel(l, ticket.status)),
@@ -98,18 +117,24 @@ class OriginalTab extends ConsumerWidget {
         if (bug != null)
           BugDescription(
             body: ticket.body,
+            html: html,
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
             imageFallback: imageFallback,
           )
         else
-          MarkdownText(
+          RichBodyText(
             ticket.body,
+            html: html,
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
             imageFallbackUrl: imageFallback.resolveUrl,
             onOpenImage: imageFallback.open,
           ),
+        if (subtasks.isNotEmpty) ...[
+          SizedBox(height: context.spacing.xl2),
+          SubtaskList(ticket: ticket, subtasks: subtasks),
+        ],
         if (labels.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl2),
           SectionLabel(l.labels),

@@ -29,6 +29,8 @@
   "provider": "Nguồn",
   "account": "Tài khoản",
   "project": "Dự án",
+  "parentTask": "Task cha",
+  "subtasks": "Task con",
   "status": "Trạng thái",
   "priority": "Ưu tiên",
   "assignee": "Người phụ trách",

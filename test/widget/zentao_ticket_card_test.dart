@@ -15,7 +15,6 @@ import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
-import 'package:work_nexus/features/chat/presentation/providers/zentao_link_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/notification_body.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/zentao_ticket_card.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';

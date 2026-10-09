@@ -3,18 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
-import '../../../../core/domain/adapters/zentao_ticket_service.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
-
-/// Loads ZenTao tickets that chat links point to but the board has not
-/// synced.
-final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
-  (ref) => getIt<ZenTaoTicketService>(),
-);
 
 /// How long a fetched ticket is trusted before a card seen again fetches it
 /// anew.

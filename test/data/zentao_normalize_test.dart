@@ -4,6 +4,7 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/features/connections/data/zentao/zentao_models.dart';
+import 'package:work_nexus/core/util/html_to_markdown.dart';
 import 'package:work_nexus/features/connections/data/zentao/zentao_normalize.dart';
 
 void main() {
@@ -97,8 +98,9 @@ void main() {
     expect(t.status, UnifiedStatus.todo); // active + confirmed=1
     expect(t.priority, Priority.urgent); // pri 1
     expect(t.severity, 2);
-    expect(t.body, contains('duplicate SKU')); // html stripped
-    expect(t.body, isNot(contains('<b>')));
+    // Kept as ZenTao's editor wrote it: HTML, shown as HTML.
+    expect(t.body, contains('duplicate SKU'));
+    expect(t.body, contains('<b>'));
     // Assignee is the account handle (login), not realname, so it stays stable
     // across the bug LIST (bare string) vs DETAIL ({account, realname}) shapes.
     expect(t.assignee, 'mobile2');
@@ -283,5 +285,80 @@ void main() {
       expect(parsed.files, isEmpty);
       expect(parsed.note, 'Reopening this ticket.');
     });
+  });
+
+  test('a subtask keeps its parent task', () {
+    final t = normalizeZenTao(
+      ZenTaoEntity.fromJson({
+        'id': 12167,
+        'name': 'mobile',
+        'status': 'wait',
+        'parent': '12160',
+        'parentName': 'Chat feature',
+      }),
+      type: ZenTaoType.task,
+      accountId: 'ztB',
+      baseUrl: 'https://z',
+    );
+
+    expect(
+      t.providerEntity,
+      const TicketProviderEntity.zentaoTask(
+        parentId: '12160',
+        parentName: 'Chat feature',
+      ),
+    );
+  });
+
+  test('a task with no parent, or that is a parent, has none', () {
+    for (final parent in [0, -1]) {
+      final t = normalizeZenTao(
+        ZenTaoEntity.fromJson({'id': 1, 'name': 'x', 'parent': parent}),
+        type: ZenTaoType.task,
+        accountId: 'ztB',
+        baseUrl: 'https://z',
+      );
+      expect(t.providerEntity, isNull, reason: '$parent');
+    }
+  });
+
+  test('a parent task lists its subtasks', () {
+    final t = normalizeZenTao(
+      ZenTaoEntity.fromJson({
+        'id': 12165,
+        'name': 'Notification layer display',
+        'parent': -1,
+        'children': {
+          '12167': {
+            'id': 12167,
+            'name': 'mobile',
+            'status': 'wait',
+            'pri': 3,
+            'assignedTo': {'account': 'thanh', 'realname': 'Thanh'},
+          },
+          '12166': {'id': 12166, 'name': 'test', 'status': 'doing'},
+        },
+      }),
+      type: ZenTaoType.task,
+      accountId: 'ztB',
+      baseUrl: 'https://z',
+    );
+
+    final entity = t.providerEntity! as ZenTaoTaskEntity;
+    expect(entity.parentId, isNull);
+    expect(entity.subtasks, const [
+      TicketSubtask(
+        id: '12166',
+        title: 'test',
+        status: UnifiedStatus.inprogress,
+      ),
+      TicketSubtask(
+        id: '12167',
+        title: 'mobile',
+        status: UnifiedStatus.todo,
+        priority: 3,
+        assignee: 'Thanh',
+      ),
+    ]);
   });
 }
