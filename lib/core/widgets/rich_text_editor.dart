@@ -233,14 +233,9 @@ class _ImageEmbedBuilder extends EmbedBuilder {
               1,
               StyleAttribute(w == null ? null : 'width:${w.round()}px'),
             ),
-      child: load == null
-          ? Image.network(url, width: width, fit: BoxFit.contain)
-          : InlineImage(
-              key: ValueKey(url),
-              url: url,
-              loader: load,
-              width: width,
-            ),
+      builder: (w) => load == null
+          ? Image.network(url, width: w, fit: BoxFit.contain)
+          : InlineImage(key: ValueKey(url), url: url, loader: load, width: w),
     );
   }
 }
