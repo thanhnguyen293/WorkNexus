@@ -36,6 +36,13 @@ import 'chat_packet_ingestor.dart';
 import 'chat_sender.dart';
 import 'chat_session.dart';
 
+part 'xxd_chat_repository_connection.dart';
+part 'xxd_chat_repository_reads.dart';
+part 'xxd_chat_repository_send.dart';
+part 'xxd_chat_repository_attachments.dart';
+part 'xxd_chat_repository_members.dart';
+part 'xxd_chat_repository_chats.dart';
+
 /// Opens an [XxdConnection] for the given credentials (injected for tests).
 typedef XxdConnectionFactory = XxdConnection Function(XxdCredentials);
 
@@ -45,8 +52,36 @@ typedef ChatErrorSink = void Function(Object error, StackTrace stack);
 
 /// [ChatRepository] over xxd. One connection per ZenTao account; every packet
 /// is written to drift by [ChatPacketIngestor] and the UI watches drift.
-class XxdChatRepository implements ChatRepository {
+class XxdChatRepository extends _XxdChatCore
+    with
+        _ChatConnection,
+        _ChatReads,
+        _ChatSending,
+        _ChatAttachments,
+        _ChatMembers,
+        _ChatActions {
   XxdChatRepository({
+    required super.local,
+    required super.credentials,
+    required super.openConnection,
+    required super.onError,
+    required super.http,
+    super.files,
+    super.thumbnailer,
+    super.durations,
+    super.parse,
+    super.now,
+  });
+
+  /// Messages still pending after this long are treated as interrupted.
+  static const pendingTimeout = Duration(minutes: 2);
+  static const pageSize = ChatHistorySync.pageSize;
+}
+
+/// State and helpers every part of [XxdChatRepository] shares: the injected
+/// collaborators, the live sessions, packet ingest and request-and-store.
+abstract class _XxdChatCore implements ChatRepository {
+  _XxdChatCore({
     required ChatLocalDatasource local,
     required CredentialStore credentials,
     required this._openConnection,
@@ -67,10 +102,6 @@ class XxdChatRepository implements ChatRepository {
     _cache = ChatCacheManager(local, _files, _attachments, parse);
     _avatars = ChatAvatarService(http);
   }
-
-  /// Messages still pending after this long are treated as interrupted.
-  static const pendingTimeout = Duration(minutes: 2);
-  static const pageSize = ChatHistorySync.pageSize;
 
   final ChatLocalDatasource _local;
   final XxdConnectionFactory _openConnection;
@@ -94,127 +125,6 @@ class XxdChatRepository implements ChatRepository {
     now: _now,
   );
   final _sessions = <String, ChatSession>{};
-
-  final _statuses = <String, StatusChannel>{};
-
-  // ---- connection --------------------------------------------------------------
-
-  @override
-  Stream<ChatConnectionStatus> watchStatus(String accountId) =>
-      _status(accountId).watch();
-
-  @override
-  Future<Result<void>> connect(String accountId) async {
-    final existing = _sessions[accountId];
-    if (existing != null && existing.isActive) return const Ok(null);
-    await _closeSession(accountId);
-
-    final credentials = await _resolver.resolve(accountId);
-    final XxdCredentials creds;
-    switch (credentials) {
-      case Ok(:final value):
-        creds = value;
-      case Err(:final failure):
-        _status(accountId)
-            .set(ChatConnectionStatus.signedOut(message: failure.message));
-        return Err(failure);
-    }
-    await _local.failStalePending(accountId, _now().subtract(pendingTimeout));
-
-    final connection = _openConnection(creds);
-    final session = ChatSession(connection);
-    _sessions[accountId] = session;
-    session.listen(
-      onPacket: (p) => session.enqueue(() => _ingest(accountId, session, p)),
-      onState: (s) => _onState(accountId, session, s),
-      onError: _onError,
-    );
-    final result = await connection.start();
-    return switch (result) {
-      Ok() => const Ok(null),
-      Err(:final failure) => Err(failure),
-    };
-  }
-
-  @override
-  Future<void> disconnect(String accountId) async {
-    await _closeSession(accountId);
-    _status(accountId).set(const ChatConnectionStatus.offline());
-  }
-
-  @override
-  Future<Result<void>> trustCertificate(
-    String accountId,
-    String fingerprint,
-  ) async {
-    try {
-      await _local.saveChatAccount(
-        ChatAccountsCompanion(
-          accountId: Value(accountId),
-          pinnedFingerprint: Value(fingerprint),
-        ),
-      );
-    } on Exception catch (e) {
-      return Err(StorageFailure('Could not save the certificate', cause: e));
-    }
-    await _closeSession(accountId);
-    return connect(accountId);
-  }
-
-  void _onState(String accountId, ChatSession session, XxdConnectionState s) {
-    if (_sessions[accountId] != session) return;
-    final status = switch (s) {
-      XxdDisconnected() => const ChatConnectionStatus.offline(),
-      XxdConnecting() => const ChatConnectionStatus.connecting(),
-      XxdOnline(:final session) => ChatConnectionStatus.online(
-        selfUserId: session.userId,
-      ),
-      XxdReconnecting(:final delay, :final lastFailure) =>
-        ChatConnectionStatus.reconnecting(
-          retryIn: delay,
-          reason: lastFailure.message,
-        ),
-      XxdStopped(failure: final UntrustedCertificateFailure f) =>
-        ChatConnectionStatus.needsTrust(
-          host: f.host,
-          fingerprint: f.fingerprint,
-          subject: f.subject,
-          issuer: f.issuer,
-        ),
-      XxdStopped(:final failure, :final kicked) =>
-        ChatConnectionStatus.signedOut(
-          message: failure.message,
-          kicked: kicked,
-        ),
-    };
-    _status(accountId).set(status);
-    if (s is XxdOnline) {
-      session.selfUserId = s.session.userId;
-      // Notifications (and xuanbot) arrive as `syncNotifications` once
-      // asked for, as the official client does after signing in.
-      unawaited(
-        session.connection.request(
-          const XxdRequest('getNotification', params: []),
-        ),
-      );
-      session.enqueue(
-        () => _local.saveChatAccount(
-          ChatAccountsCompanion(
-            accountId: Value(accountId),
-            userId: Value(s.session.userId),
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _closeSession(String accountId) async {
-    final session = _sessions.remove(accountId);
-    await session?.close();
-  }
-
-  StatusChannel _status(String accountId) =>
-      _statuses.putIfAbsent(accountId, StatusChannel.new);
 
   // ---- ingest ------------------------------------------------------------------
 
@@ -253,506 +163,6 @@ class XxdChatRepository implements ChatRepository {
     }
   }
 
-  // ---- reads -------------------------------------------------------------------
-
-  @override
-  Stream<List<ChatConversation>> watchConversations(String accountId) =>
-      withSelfUserId(
-        _local.watchSelfUserId(accountId),
-        _local.watchConversations(accountId),
-        (rows, self) => [
-          for (final (conv, last) in rows)
-            conversationFromRow(
-              conv,
-              lastMessage: last,
-              selfUserId: self,
-              parse: _parse,
-            ),
-        ],
-      );
-
-  @override
-  Stream<List<ChatMessage>> watchMessages(
-    String accountId,
-    String chatGid, {
-    int limit = pageSize,
-  }) => withSelfUserId(
-    _local.watchSelfUserId(accountId),
-    _local.watchMessages(accountId, chatGid, limit: limit),
-    (rows, self) => [
-      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
-    ],
-  );
-
-  @override
-  Stream<ChatMessage?> watchMessage(
-    String accountId,
-    String chatGid,
-    int serverId,
-  ) => withSelfUserId(
-    _local.watchSelfUserId(accountId),
-    _local.watchMessageByServerId(accountId, chatGid, serverId),
-    (row, self) => row == null
-        ? null
-        : messageFromRow(row, selfUserId: self, parse: _parse),
-  );
-
-  @override
-  Stream<List<ChatMessage>> watchReplies(String accountId, String chatGid) =>
-      withSelfUserId(
-        _local.watchSelfUserId(accountId),
-        _local.watchReplies(accountId, chatGid),
-        (rows, self) => [
-          for (final r in rows)
-            messageFromRow(r, selfUserId: self, parse: _parse),
-        ],
-      );
-
-  @override
-  Stream<List<ChatMessage>> watchAttachments(
-    String accountId,
-    String chatGid,
-  ) => withSelfUserId(
-    _local.watchSelfUserId(accountId),
-    _local.watchAttachments(accountId, chatGid),
-    (rows, self) => [
-      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
-    ],
-  );
-
-  @override
-  Stream<List<ChatUser>> watchUsers(String accountId) => _local
-      .watchUsers(accountId)
-      .map((rows) => rows.map(userFromRow).toList());
-
-  // ---- history & read state ----------------------------------------------------
-
-  @override
-  Future<Result<void>> refreshMessages(String accountId, String chatGid) =>
-      _history.refresh(_sessions[accountId], accountId, chatGid);
-
-  @override
-  Future<Result<int>> loadOlderMessages(
-    String accountId,
-    String chatGid, {
-    int? beforeServerId,
-  }) => _history.loadOlder(
-    _sessions[accountId],
-    accountId,
-    chatGid,
-    before: beforeServerId,
-  );
-
-  @override
-  Future<Result<int>> countOlderMessages(
-    String accountId,
-    String chatGid, {
-    required DateTime before,
-  }) async {
-    try {
-      return Ok(await _local.countOlder(accountId, chatGid, before));
-    } on Exception catch (e) {
-      return Err(StorageFailure('Could not read stored messages', cause: e));
-    }
-  }
-
-  @override
-  Future<Result<void>> fetchMessages(
-    String accountId,
-    String chatGid,
-    List<int> serverIds,
-  ) => _history.fetchByIds(_sessions[accountId], accountId, chatGid, serverIds);
-
-  @override
-  Future<Result<void>> markRead(String accountId, String chatGid) async {
-    final ChatConversationRow? row;
-    try {
-      row = await _local.conversation(accountId, chatGid);
-      if (row == null || row.lastReadIndex >= row.lastMessageIndex) {
-        return const Ok(null);
-      }
-      await _local.setLastReadIndex(accountId, chatGid, row.lastMessageIndex);
-    } on Exception catch (e) {
-      return Err(StorageFailure('Could not mark the chat read', cause: e));
-    }
-    final session = _sessions[accountId];
-    // Offline: read locally now; the server keeps its own value until the
-    // chat is read again while connected.
-    if (session == null || !session.isOnline) return const Ok(null);
-    final reply = await session.connection.request(
-      XxdRequest(
-        'chatSetLastReadMessageByIndex',
-        params: [chatGid, row.lastMessageIndex],
-      ),
-    );
-    return switch (reply) {
-      Ok() => const Ok(null),
-      Err(:final failure) => Err(failure),
-    };
-  }
-
-  @override
-  Future<Result<Uint8List>> loadAttachment(
-    String accountId,
-    MessageContent content, {
-    bool thumbnail = false,
-  }) => _attachments.load(
-    accountId,
-    _sessions[accountId],
-    content,
-    thumbnail: thumbnail,
-  );
-
-  // ---- send --------------------------------------------------------------------
-
-  @override
-  Future<Result<void>> sendText(
-    String accountId,
-    String chatGid,
-    String text, {
-    int? replyToId,
-    bool markdown = false,
-  }) => _sender.sendText(
-    accountId,
-    chatGid,
-    text,
-    replyToId: replyToId,
-    markdown: markdown,
-  );
-
-  @override
-  Future<Result<void>> sendEmoji(
-    String accountId,
-    String chatGid,
-    String code,
-  ) => _sender.sendEmoji(accountId, chatGid, code);
-
-  @override
-  Future<Result<void>> sendFile(
-    String accountId,
-    String chatGid, {
-    required String name,
-    required Uint8List bytes,
-    String? mimeType,
-    int? replyToId,
-  }) => _sender.sendFile(
-    accountId,
-    chatGid,
-    name: name,
-    bytes: bytes,
-    mimeType: mimeType,
-    replyToId: replyToId,
-  );
-
-  @override
-  Stream<double> watchUploadProgress(String messageGid) => _sender
-      .uploadProgress
-      .where((p) => p.gid == messageGid)
-      .map((p) => p.sent);
-
-  @override
-  Future<Result<String>> attachmentFile(
-    String accountId,
-    MessageContent content,
-  ) => _attachments.localFile(accountId, _sessions[accountId], content);
-
-  /// Role names by account, asked once per session.
-  final _roleNames = <String, Map<String, String>>{};
-
-  @override
-  Future<Result<Map<String, String>>> roleNames(String accountId) async {
-    if (_roleNames[accountId] case final names?) return Ok(names);
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The official client's `sysgetdepts`: departments and the role list.
-    appTalker.info('Chat roles: asking sysgetdepts');
-    final reply = await session.connection.request(
-      const XxdRequest('sysgetdepts'),
-    );
-    final Object? roles;
-    switch (reply) {
-      // The official client reads `data.roles` (beside `data.depts`); the
-      // reply's own `roles` field is left empty by xxd 9.
-      case Ok(:final value):
-        final data = _decodeRoles(value.data);
-        final nested = data is Map ? _decodeRoles(data['roles']) : null;
-        roles = nested is Map && nested.isNotEmpty
-            ? nested
-            : _decodeRoles(value.raw['roles']);
-        appTalker.info(
-          'Chat roles: sysgetdepts data keys '
-          '${data is Map ? data.keys.toList() : data.runtimeType}; '
-          'roles: $roles',
-        );
-      case Err(:final failure):
-        appTalker.warning(
-          'Chat roles: sysgetdepts failed — ${failure.message}',
-        );
-        return Err(failure);
-    }
-    final names = <String, String>{
-      if (roles is Map)
-        for (final MapEntry(:key, :value) in roles.entries)
-          if (value is String && value.trim().isNotEmpty)
-            '$key'.trim(): value.trim(),
-    };
-    return Ok(_roleNames[accountId] = names);
-  }
-
-  /// A map as sent, or the same map as a JSON string (as xxd may send it).
-  static Object? _decodeRoles(Object? roles) {
-    if (roles is! String) return roles;
-    try {
-      return jsonDecode(roles);
-    } on FormatException {
-      return null;
-    }
-  }
-
-  @override
-  void cancelDownload(String accountId, MessageContent content) =>
-      _attachments.cancel(accountId, content);
-
-  /// Videos up to this size download on their own, to show a preview
-  /// frame; bigger ones (all, at 0) show their size and download on tap.
-  int _videoAutoDownloadBytes = 20 * 1024 * 1024;
-
-  @override
-  void setVideoAutoDownloadLimit(int bytes) => _videoAutoDownloadBytes = bytes;
-
-  @override
-  Future<Result<Duration>> videoDuration(
-    String accountId,
-    MessageContent video,
-  ) async {
-    if (!await _attachments.isCached(accountId, video)) {
-      return const Err(NotFoundFailure('Video not downloaded'));
-    }
-    final path = await _attachments.cachedPath(accountId, video);
-    final duration = path == null ? null : await _durations.durationOf(path);
-    return duration == null
-        ? const Err(NotFoundFailure('Unknown video length'))
-        : Ok(duration);
-  }
-
-  @override
-  Future<Result<Uint8List>> videoThumbnail(
-    String accountId,
-    MessageContent video,
-  ) async {
-    if (video case FileContent(:final size)
-        when size > _videoAutoDownloadBytes) {
-      // Downloaded on request since: a frame can be made from the file.
-      if (!await _attachments.isCached(accountId, video)) {
-        return const Err(NotFoundFailure('Video too large to preview'));
-      }
-    }
-    // A frame made earlier outlives the video in the cache: no download.
-    final cached = await _attachments.cachedPath(accountId, video);
-    if (cached != null) {
-      final frame = await _thumbnailer.cachedThumbnailOf(cached);
-      if (frame != null) return Ok(frame);
-    }
-    final path = await attachmentFile(accountId, video);
-    switch (path) {
-      case Ok(:final value):
-        final frame = await _thumbnailer.thumbnailOf(value);
-        return frame == null
-            ? const Err(NotFoundFailure('No preview frame'))
-            : Ok(frame);
-      case Err(:final failure):
-        return Err(failure);
-    }
-  }
-
-  @override
-  Future<Result<int>> memberCount(String accountId, String chatGid) async =>
-      switch (await members(accountId, chatGid)) {
-        Ok(:final value) => Ok(value.length),
-        Err(:final failure) => Err(failure),
-      };
-
-  @override
-  Future<Result<ChatCacheUsage>> cacheUsage() => _cache.usage();
-
-  @override
-  Future<Result<void>> clearCache({String? accountId, String? chatGid}) =>
-      _cache.clear(accountId: accountId, chatGid: chatGid);
-
-  @override
-  void setCacheLimit(int bytes) => _cache.setLimit(bytes);
-
-  @override
-  Stream<double> watchDownloadProgress(
-    String accountId,
-    MessageContent content,
-  ) => _attachments.watchProgress(accountId, content);
-
-  @override
-  Future<bool> isAttachmentCached(String accountId, MessageContent content) =>
-      _attachments.isCached(accountId, content);
-
-  @override
-  Stream<int?> watchSelfUserId(String accountId) =>
-      _local.watchSelfUserId(accountId);
-
-  @override
-  Future<Result<String>> openDirectChat(String accountId, int userId) async {
-    final session = _sessions[accountId];
-    final self = session?.selfUserId;
-    if (session == null || self == null) {
-      return const Err(NetworkFailure('Chat is offline'));
-    }
-    // The official client sorts the ids as strings ("40" < "9").
-    final gid = (['$self', '$userId']..sort()).join('&');
-    if (await _local.conversation(accountId, gid) != null) return Ok(gid);
-    final reply = await _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(
-        'chatCreate',
-        params: [
-          gid,
-          '',
-          'one2one',
-          [self, userId],
-          0,
-          false,
-        ],
-      ),
-    );
-    return switch (reply) {
-      Ok() => Ok(gid),
-      Err(:final failure) => Err(failure),
-    };
-  }
-
-  @override
-  Future<Result<void>> setGroupAvatar(
-    String accountId,
-    String chatGid, {
-    String? text,
-    String? color,
-    Uint8List? image,
-  }) => _avatars.setGroupAvatar(
-    _sessions[accountId],
-    chatGid,
-    send: (session, request) => _requestAndStore(accountId, session, request),
-    text: text,
-    color: color,
-    image: image,
-  );
-
-  @override
-  Future<Result<void>> setMyAvatar(String accountId, Uint8List image) async {
-    final result = await _avatars.setMyAvatar(_sessions[accountId], image);
-    if (result case Err()) return result;
-    // The new picture lives at a new URL, carried by the user list.
-    return refreshUsers(accountId);
-  }
-
-  @override
-  Future<Result<void>> refreshUsers(String accountId) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // An empty id list asks xxd for every user.
-    return _requestAndStore(
-      accountId,
-      session,
-      const XxdRequest('usergetlist', params: [<int>[]]),
-    );
-  }
-
-  @override
-  Future<Result<String>> createGroupChat(
-    String accountId, {
-    required String name,
-    required List<int> memberIds,
-  }) async {
-    final session = _sessions[accountId];
-    final self = session?.selfUserId;
-    if (session == null || self == null) {
-      return const Err(NetworkFailure('Chat is offline'));
-    }
-    final gid = const Uuid().v4();
-    final reply = await _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(
-        'chatCreate',
-        params: [
-          gid,
-          name,
-          'group',
-          {self, ...memberIds}.toList(),
-          0,
-          false,
-        ],
-      ),
-    );
-    return switch (reply) {
-      Ok() => Ok(gid),
-      Err(:final failure) => Err(failure),
-    };
-  }
-
-  @override
-  Future<Result<void>> setChatStarred(
-    String accountId,
-    String chatGid, {
-    required bool starred,
-  }) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // Moves at once; the server's reply confirms it (or the change is undone).
-    await _local.setStarred(accountId, chatGid, starred: starred);
-    final result = await _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatStar', params: [starred, chatGid]),
-    );
-    if (result is Err) {
-      await _local.setStarred(accountId, chatGid, starred: !starred);
-    }
-    return result;
-  }
-
-  @override
-  Future<Result<void>> setChatMuted(
-    String accountId,
-    String chatGid, {
-    required bool muted,
-  }) async {
-    await _local.setMuted(accountId, chatGid, muted: muted);
-    return const Ok(null);
-  }
-
-  @override
-  Future<Result<void>> setMessagePinned(
-    String accountId,
-    String chatGid,
-    int serverId, {
-    required bool pinned,
-  }) async {
-    final session = _sessions[accountId];
-    final self = session?.selfUserId;
-    if (session == null || self == null) {
-      return const Err(NetworkFailure('Chat is offline'));
-    }
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(
-        pinned ? 'chatPinMessages' : 'chatUnpinMessages',
-        params: [
-          chatGid,
-          [serverId],
-          self,
-        ],
-      ),
-    );
-  }
-
   /// Sends [request] and writes its reply to the DB like a pushed packet.
   Future<Result<void>> _requestAndStore(
     String accountId,
@@ -771,47 +181,4 @@ class XxdChatRepository implements ChatRepository {
         return Err(failure);
     }
   }
-
-  @override
-  Future<Result<List<int>>> members(String accountId, String chatGid) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    final reply = await session.connection.request(
-      XxdRequest('chatGetMembers', params: [chatGid]),
-    );
-    final Object? data;
-    switch (reply) {
-      case Ok(:final value):
-        data = value.data;
-      case Err(:final failure):
-        return Err(failure);
-    }
-    final raw = data is Map ? data['members'] : data;
-    if (raw is! List) {
-      return const Err(ParseFailure('Unexpected chat members reply'));
-    }
-    // Members come as ids or as user objects depending on the server.
-    final ids = <int>[
-      for (final m in raw)
-        if (m is num)
-          m.toInt()
-        else if (m is String && int.tryParse(m) != null)
-          int.parse(m)
-        else if (m is Map && m['id'] is num)
-          (m['id']! as num).toInt(),
-    ];
-    final known = await _local.knownUserIds(accountId);
-    session.fetchMissing(
-      IngestFollowUp(userIds: ids.toSet().difference(known)),
-    );
-    return Ok(ids);
-  }
-
-  @override
-  Future<Result<void>> retract(String accountId, String messageGid) =>
-      _sender.retract(accountId, messageGid);
-
-  @override
-  Future<Result<void>> retrySend(String accountId, String messageGid) =>
-      _sender.retrySend(accountId, messageGid);
 }
