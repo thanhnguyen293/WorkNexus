@@ -337,6 +337,31 @@ class ZenTaoAdapter implements ProviderAdapter {
     labels: [...ticket.labels, zentaoProductLabel(productId)],
   );
 
+  /// The raw view of the web notification menu (`allMessages` by day).
+  Future<Result<Map<String, dynamic>>> fetchMessages() =>
+      _guard(_client.messages);
+
+  /// Runs a classic message action, e.g. `ajaxMarkRead-all`.
+  Future<Result<void>> messageAction(String action) =>
+      _guard(() => _client.messageAction(action));
+
+  /// The raw `GET /user?fields=…` reply (profile + "my work" blocks) that the
+  /// dashboard is built from.
+  Future<Result<Map<String, dynamic>>> fetchUserInfo({
+    required String fields,
+    required int limit,
+  }) async {
+    final res = await _guard(
+      () => _client.userInfo(fields: fields, limit: limit),
+    );
+    // The client lets 4xx through as data; an error body has no profile.
+    if (res case Ok(:final value) when value['profile'] is! Map) {
+      final error = value['error'] ?? value['message'] ?? 'no profile';
+      return Err(AuthFailure('ZenTao user info unavailable: $error'));
+    }
+    return res;
+  }
+
   @override
   Future<Result<List<ProviderProject>>> listProjects() async {
     return _guard(() async {

@@ -38,6 +38,12 @@ dependencies:
   flutter_widget_from_html_core: 0.17.4
   # Splits a ZenTao bug's HTML into its steps / actual / expected sections.
   html: 0.15.6
+  # Rich-text editing of ZenTao descriptions (its web editor's features), with
+  # HTML in and out. Pure Dart apart from quill_native_bridge's clipboard
+  # method channel.
+  flutter_quill: 11.5.0
+  flutter_quill_delta_from_html: 1.5.3
+  vsc_quill_delta_to_html: 1.0.5
   cached_network_image: 3.4.1
   image_picker: 1.2.1
   two_dimensional_scrollables: 0.5.3

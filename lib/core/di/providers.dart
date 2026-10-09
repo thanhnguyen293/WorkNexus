@@ -5,6 +5,7 @@ import '../../features/agents/data/cli_agent_adapters.dart';
 import '../../features/agents/data/mock_coding_agent_adapter.dart';
 import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
@@ -113,4 +114,9 @@ final openCodeAuthedProvider = FutureProvider.autoDispose<bool>((ref) async {
 /// subtask's parent) so it can open in the detail panel.
 final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
   (ref) => getIt<ZenTaoTicketService>(),
+);
+
+/// Creates and edits ZenTao bugs and tasks through ZenTao's own forms.
+final zenTaoTicketEditorProvider = Provider<ZenTaoTicketEditor>(
+  (ref) => getIt<ZenTaoTicketEditor>(),
 );

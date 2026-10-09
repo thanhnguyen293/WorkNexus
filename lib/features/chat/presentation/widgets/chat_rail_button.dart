@@ -4,9 +4,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/widgets/app_rail_button.dart';
+import '../../../../core/widgets/unread_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
-import 'unread_badge.dart';
 
 /// The chat destination of the app rail, with the total unread count. Also
 /// keeps every ZenTao account logged into chat (and the cache limit

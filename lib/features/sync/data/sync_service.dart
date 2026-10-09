@@ -28,6 +28,7 @@ import '../../connections/data/gitlab/gitlab_adapter.dart';
 import '../../connections/data/gitlab/gitlab_client.dart';
 import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
+import '../../connections/data/zentao/zentao_adapter.dart';
 import '../../connections/data/zentao/zentao_client.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
@@ -167,6 +168,53 @@ class SyncService
       return const Err(AuthFailure('No stored credentials for this account'));
     }
     return adapter.listProjects();
+  }
+
+  /// [syncAccount] by id: fetches every ticket assigned to the account's user
+  /// (all pages) into drift. Returns how many were synced.
+  Future<Result<int>> syncAccountById(String accountId) async {
+    final row = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (row == null) return const Err(NotFoundFailure('No such account'));
+    return syncAccount(accountFromRow(row));
+  }
+
+  /// The raw ZenTao web-notification view for [accountId] (pooled client).
+  Future<Result<Map<String, dynamic>>> fetchZenTaoMessages(
+    String accountId,
+  ) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! ZenTaoAdapter) {
+      return const Err(AuthFailure('No signed-in ZenTao account'));
+    }
+    return adapter.fetchMessages();
+  }
+
+  /// Runs ZenTao message [action] (e.g. `ajaxMarkRead-12`) for [accountId].
+  Future<Result<void>> zenTaoMessageAction(
+    String accountId,
+    String action,
+  ) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! ZenTaoAdapter) {
+      return const Err(AuthFailure('No signed-in ZenTao account'));
+    }
+    return adapter.messageAction(action);
+  }
+
+  /// The raw ZenTao `GET /user?fields=…` reply for [accountId], through the
+  /// account's pooled client so it shares (rather than rotates) the session.
+  Future<Result<Map<String, dynamic>>> fetchZenTaoUserInfo(
+    String accountId, {
+    required String fields,
+    required int limit,
+  }) async {
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! ZenTaoAdapter) {
+      return const Err(AuthFailure('No signed-in ZenTao account'));
+    }
+    return adapter.fetchUserInfo(fields: fields, limit: limit);
   }
 
   Future<Result<List<ProviderExecution>>> listProjectExecutions(
@@ -1093,6 +1141,11 @@ class SyncService
         account: account.handle,
         password: secret,
       );
+
+  /// The account's pooled ZenTao client (null without stored credentials), for
+  /// work beyond syncing — such as ZenTao's bug and task forms.
+  Future<ZenTaoClient?> zenTaoClientFor(String accountId) =>
+      _zenClientFor(accountId);
 
   Future<ZenTaoClient?> _zenClientFor(String accountId) async {
     final cached = _zenClients[accountId];

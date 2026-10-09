@@ -297,13 +297,13 @@ TicketProviderEntity _zentaoBugEntity(
   closedDate: parseZenTaoDate(e.closedDate),
   lastEditedBy: accountName(e.lastEditedBy),
   lastEditedDate: parseZenTaoDate(e.lastEditedDate),
-  attachments: _attachments(e, baseUrl),
+  attachments: zentaoAttachments(e, baseUrl),
 );
 
 /// Maps ZenTao's id-keyed `files` map onto domain [TicketAttachment]s. Prefers
 /// the payload's absolute `url`; falls back to the classic
 /// `{base}/file-download-{id}.{ext}` when it's missing.
-List<TicketAttachment> _attachments(ZenTaoEntity e, String baseUrl) {
+List<TicketAttachment> zentaoAttachments(ZenTaoEntity e, String baseUrl) {
   final base = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;

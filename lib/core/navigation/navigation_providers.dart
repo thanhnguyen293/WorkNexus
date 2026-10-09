@@ -23,25 +23,37 @@ final openTicketIdProvider = NotifierProvider<OpenTicketController, String?>(
 /// Whether the Settings / Integrations view is showing (replaces the board).
 final settingsOpenProvider = StateProvider<bool>((ref) => false);
 
-/// Whether the ZenTao chat view replaces the board (settings still wins when
-/// both are open). The app opens on chat.
-final chatOpenProvider = StateProvider<bool>((ref) => true);
+/// The app's main destinations, picked from the left rail.
+enum MainView { dashboard, chat, board }
+
+/// Which main view fills the window (settings still wins when open). The app
+/// opens on chat.
+final mainViewProvider = StateProvider<MainView>((ref) => MainView.chat);
+
+/// Whether the ZenTao chat view is the main view.
+final chatOpenProvider = Provider<bool>(
+  (ref) => ref.watch(mainViewProvider) == MainView.chat,
+);
 
 /// Whether the Quick Settings panel is docked open at the window's right.
 final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
 
-/// Shows the board: closes the settings and chat views. Call from anything
-/// that selects a board (sidebar rows).
-void showBoardView(WidgetRef ref) {
+/// Whether the notifications panel is open beside the rail (over the current
+/// view, which stays as it is).
+final notificationsPanelOpenProvider = StateProvider<bool>((ref) => false);
+
+/// Closes settings and the notifications panel and shows [view].
+void showMainView(WidgetRef ref, MainView view) {
   ref.read(settingsOpenProvider.notifier).state = false;
-  ref.read(chatOpenProvider.notifier).state = false;
+  ref.read(notificationsPanelOpenProvider.notifier).state = false;
+  ref.read(mainViewProvider.notifier).state = view;
 }
 
+/// Shows the board. Call from anything that selects a board (sidebar rows).
+void showBoardView(WidgetRef ref) => showMainView(ref, MainView.board);
+
 /// Shows the chat view.
-void showChatView(WidgetRef ref) {
-  ref.read(settingsOpenProvider.notifier).state = false;
-  ref.read(chatOpenProvider.notifier).state = true;
-}
+void showChatView(WidgetRef ref) => showMainView(ref, MainView.chat);
 
 /// First-run onboarding state: when there is no workspace or no connected
 /// provider account yet, the app should open Integrations instead of an empty

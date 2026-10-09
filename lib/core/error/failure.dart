@@ -68,6 +68,18 @@ class CancelledFailure extends Failure {
 }
 
 /// Anything not otherwise classified.
+/// The provider refused what was sent: [fields] maps each rejected field (as
+/// the provider names it) to why.
+class ValidationFailure extends Failure {
+  const ValidationFailure(
+    super.message, {
+    this.fields = const <String, String>{},
+    super.cause,
+  });
+
+  final Map<String, String> fields;
+}
+
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure(super.message, {super.cause});
 }

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart'
+    show FlutterQuillLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/desktop_app_lifecycle.dart';
@@ -40,6 +42,8 @@ class WorkNexusApp extends ConsumerWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
+        // The rich-text editor's toolbar tooltips and dialogs.
+        FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: AppL10n.supportedLocales,
       theme: buildAppTheme(

@@ -102,7 +102,10 @@ class InlineImageState extends State<InlineImage> {
         }
         return Container(
           padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-          constraints: const BoxConstraints(maxHeight: 400),
+          // A chosen width is honoured as is; otherwise tall images are capped.
+          constraints: widget.width == null
+              ? const BoxConstraints(maxHeight: 400)
+              : null,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(context.radii.md),
             child: Image.memory(

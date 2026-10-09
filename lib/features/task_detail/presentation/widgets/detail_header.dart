@@ -5,6 +5,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
+import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -67,6 +70,18 @@ class DetailHeader extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
+              if (_editRoute(ticket) case final route?) ...[
+                DetailHeaderIconButton(
+                  icon: PhosphorIconsLight.pencilSimple,
+                  tooltip: l.edit,
+                  onTap: () {
+                    // The editor takes the screen; the detail reopens on save.
+                    ref.read(openTicketIdProvider.notifier).close();
+                    ref.read(ticketEditorProvider.notifier).open(route);
+                  },
+                ),
+                SizedBox(width: context.spacing.md),
+              ],
               DetailHeaderIconButton(
                 icon: PhosphorIconsLight.arrowsClockwise,
                 tooltip: l.refresh,
@@ -136,4 +151,22 @@ class DetailHeader extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The editor for a ZenTao bug or task; null for anything else.
+TicketEditorRoute? _editRoute(Ticket ticket) {
+  if (ticket.providerType != ProviderType.zentao) return null;
+  return switch (ticket.externalType?.toLowerCase()) {
+    'bug' => EditBugRoute(
+      accountId: ticket.accountId,
+      bugId: ticket.externalKey,
+      ticketId: ticket.id,
+    ),
+    'task' => EditTaskRoute(
+      accountId: ticket.accountId,
+      taskId: ticket.externalKey,
+      ticketId: ticket.id,
+    ),
+    _ => null,
+  };
 }

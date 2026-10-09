@@ -4,11 +4,11 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/unread_badge.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
-import 'unread_badge.dart';
 
 /// One row of the chat list: avatar, title, last message, time and unread.
 class ConversationTile extends StatelessWidget {
