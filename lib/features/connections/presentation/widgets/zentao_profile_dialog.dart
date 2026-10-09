@@ -70,9 +70,8 @@ class ZenTaoProfileDialog extends ConsumerWidget {
                       icon: Icon(Icons.edit_outlined, color: c.textSecondary),
                     ),
                   IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .closeButtonTooltip,
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(Icons.close, color: c.textSecondary),
                   ),
@@ -193,9 +192,8 @@ String? _date(String? raw, bool includeTime) {
   if (raw == null) return null;
   final parsed = DateTime.tryParse(raw);
   if (parsed == null) return raw;
-  return DateFormat(
-    includeTime ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd',
-  ).format(parsed.isUtc ? parsed.toLocal() : parsed);
+  return DateFormat(includeTime ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd')
+      .format(parsed.isUtc ? parsed.toLocal() : parsed);
 }
 
 class _ProfileSection extends StatelessWidget {
