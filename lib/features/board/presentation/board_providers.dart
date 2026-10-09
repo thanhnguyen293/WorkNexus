@@ -24,12 +24,14 @@ import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 import 'filter_providers.dart';
+import 'zentao_bug_streams.dart';
 
 // The filter controller and the board-loading pulse live in their own files to
 // keep this one from growing further; re-exported so the many widgets that
 // already import `board_providers.dart` keep a single import for board state.
 export 'board_loading_provider.dart';
 export 'filter_providers.dart';
+export 'zentao_bug_streams.dart';
 
 /// [home] is the launch state: no source is selected yet, so the main area
 /// shows the welcome screen instead of a board. The user opens a real view by
@@ -163,29 +165,6 @@ final zentaoBugTabProvider =
       ZenTaoBugTabController.new,
     );
 
-/// The active bug tab's server slice: the ids of the bugs ZenTao returns for the
-/// selected product + [zentaoBugTabProvider] browse type. Refetched on every tab
-/// switch (autoDispose + reactive deps), and upserts those bugs into drift so
-/// the board still renders from the DB (local-first). Empty off a product board.
-final zentaoBugTabSliceProvider = FutureProvider.autoDispose<Set<String>>((
-  ref,
-) async {
-  final product = ref.watch(selectedZenTaoProductProvider);
-  if (product == null) return const <String>{};
-  final tab = ref.watch(zentaoBugTabProvider);
-  final res = await getIt<SyncService>().syncProductBugsTab(
-    accountId: product.accountId,
-    productId: product.productId,
-    browseType: tab.code,
-  );
-  switch (res) {
-    case Ok(:final value):
-      return value.toSet();
-    case Err(:final failure):
-      throw failure;
-  }
-});
-
 class ZenTaoExecutionSelection {
   const ZenTaoExecutionSelection({
     required this.accountId,
@@ -298,17 +277,6 @@ final zentaoProjectsProvider =
           throw failure;
       }
     });
-
-/// The connected ZenTao user's account handle (login) for [accountId] — the exact
-/// value `Ticket.assignee` normalizes to (see `accountHandle` in the ZenTao
-/// normalizer) — used as the default "my tickets" board filter. Empty when
-/// unknown, in which case the board opens unfiltered.
-final zentaoSelfHandleProvider = Provider.family<String, String>((
-  ref,
-  accountId,
-) {
-  return ref.watch(lookupsProvider).accounts[accountId]?.handle ?? '';
-});
 
 typedef ZenTaoExecutionsKey = ({String accountId, String projectId});
 
@@ -541,10 +509,10 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
         )
         .toList();
   } else if (product != null) {
-    // The active bug tab's server slice (ids), or null while it is still
-    // loading / has failed — offline-first: fall back to the cached bugs tagged
-    // with this product's label, then reconcile once the slice resolves.
-    final slice = ref.watch(zentaoBugTabSliceProvider).asData?.value;
+    // The bugs the board's views have loaded (ids), or null while their first
+    // pages are loading / have failed — offline-first: fall back to the cached
+    // bugs tagged with this product's label, then reconcile once they arrive.
+    final slice = ref.watch(zentaoBugSliceProvider).asData?.value;
     tickets = const ScopeProviderTickets()(
       tickets: tickets,
       accountId: product.accountId,
@@ -646,8 +614,11 @@ final boardProvider = Provider<BoardModel>(
   (ref) => const BuildBoard()(ref.watch(_boardQueryProvider)),
 );
 
+/// The bug board's columns; Closed only on the All tab.
 final zentaoBugBoardProvider = Provider<ZenTaoBugBoardModel>(
-  (ref) => const BuildZenTaoBugBoard()(ref.watch(_boardQueryProvider)),
+  (ref) => BuildZenTaoBugBoard(
+    includeClosed: ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all,
+  )(ref.watch(_boardQueryProvider)),
 );
 
 final zentaoTaskBoardProvider = Provider<ZenTaoTaskBoardModel>(

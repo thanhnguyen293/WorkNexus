@@ -37,39 +37,41 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  test('refreshing the bug board drops the cached tab and refetches', () async {
+  test('refreshing the bug board reloads every view from page 1', () async {
     when(
-      () => sync.syncProductBugsTab(
+      () => sync.syncProductBugsPage(
         accountId: any(named: 'accountId'),
         productId: any(named: 'productId'),
         browseType: any(named: 'browseType'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
       ),
-    ).thenAnswer((_) async => const Ok(['zentao:bug:4808']));
+    ).thenAnswer(
+      (_) async => const Ok(BugPage(tickets: [], total: 0, hasMore: false)),
+    );
 
     final container = ProviderContainer();
     addTearDown(container.dispose);
     container.read(viewModeProvider.notifier).set(ViewMode.zentaoBugs);
     container.read(selectedZenTaoProductProvider.notifier).select(_product);
-    container.listen(zentaoBugTabSliceProvider, (_, _) {});
-    await container.read(zentaoBugTabSliceProvider.future);
+    container.listen(zentaoBugSliceProvider, (_, _) {});
+    await pumpEventQueue();
 
     await container.read(refreshBoardProvider)();
-    await container.read(zentaoBugTabSliceProvider.future);
+    container.read(zentaoBugSliceProvider);
+    await pumpEventQueue();
 
-    verify(
-      () => sync.invalidateProductBugsTab(
-        accountId: 'zentao',
-        productId: '4',
-        browseType: 'unclosed',
-      ),
-    ).called(1);
-    verify(
-      () => sync.syncProductBugsTab(
-        accountId: 'zentao',
-        productId: '4',
-        browseType: 'unclosed',
-      ),
-    ).called(2);
+    for (final view in ['unconfirmed', 'unresolved', 'toclosed']) {
+      verify(
+        () => sync.syncProductBugsPage(
+          accountId: 'zentao',
+          productId: '4',
+          browseType: view,
+          page: 1,
+          limit: any(named: 'limit'),
+        ),
+      ).called(2);
+    }
   });
 
   test('refreshing the task board re-syncs the open execution', () async {

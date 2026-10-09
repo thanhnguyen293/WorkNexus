@@ -15,20 +15,14 @@ void main() {
   FilterController controller() => container.read(filterStateProvider.notifier);
   FilterState filter() => container.read(filterStateProvider);
 
-  test('a ZenTao board opens on "my tickets" the first time', () {
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
-
-    expect(filter().assignees, {'thanh'});
-  });
-
-  test('an unknown self handle opens the board unfiltered', () {
+  test('a board opens unfiltered the first time', () {
     controller().openBoard('zentao:bugs:a:1');
 
     expect(filter().hasActiveFilters, isFalse);
   });
 
   test('switching boards does not carry the previous filter over', () {
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
     controller().toggleStatus(UnifiedStatus.blocked);
 
     controller().openBoard('gitlab:a:9');
@@ -37,28 +31,27 @@ void main() {
   });
 
   test('coming back restores the filter that board was left with', () {
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
     controller().toggleStatus(UnifiedStatus.blocked);
     controller().openBoard('gitlab:a:9');
 
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
 
-    expect(filter().assignees, {'thanh'});
     expect(filter().statuses, {UnifiedStatus.blocked});
   });
 
   test('re-selecting the open board keeps its filter', () {
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
     controller().clearAll();
 
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
 
     expect(filter().hasActiveFilters, isFalse);
   });
 
   test('applying a preset replaces the criteria but keeps the workspace', () {
     controller().setWorkspace('ws-1');
-    controller().openBoard('zentao:bugs:a:1', selfHandle: 'thanh');
+    controller().openBoard('zentao:bugs:a:1');
 
     controller().applyPreset(
       const FilterState(statuses: {UnifiedStatus.review}),

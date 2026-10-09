@@ -26,9 +26,16 @@ class ZenTaoBugBoardModel {
 }
 
 class BuildZenTaoBugBoard extends UseCase<ZenTaoBugBoardModel, BoardQuery> {
-  const BuildZenTaoBugBoard({this.filter = const FilterTickets()});
+  const BuildZenTaoBugBoard({
+    this.filter = const FilterTickets(),
+    this.includeClosed = true,
+  });
 
   final FilterTickets filter;
+
+  /// Whether the board has a Closed column (the All tab) — without it (the
+  /// Unclosed tab) closed bugs are left off the board.
+  final bool includeClosed;
 
   @override
   ZenTaoBugBoardModel call(BoardQuery q) {
@@ -42,10 +49,11 @@ class BuildZenTaoBugBoard extends UseCase<ZenTaoBugBoardModel, BoardQuery> {
     return ZenTaoBugBoardModel(
       columns: [
         for (final column in ZenTaoBugColumn.columns)
-          ZenTaoBugBoardColumn(
-            column: column,
-            tickets: byColumn[column]!..sort(_byPriorityThenUpdated),
-          ),
+          if (includeClosed || column != ZenTaoBugColumn.closed)
+            ZenTaoBugBoardColumn(
+              column: column,
+              tickets: byColumn[column]!..sort(_byPriorityThenUpdated),
+            ),
       ],
     );
   }

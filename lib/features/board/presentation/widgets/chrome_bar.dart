@@ -13,6 +13,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import '../board_refresh.dart';
 import 'active_tokens.dart';
+import 'board_view_tabs.dart';
 import 'sidebar_primitives.dart';
 
 /// Whether the advanced-filter popover is open.
@@ -35,34 +36,54 @@ class ChromeBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        // The board canvas color (not the sidebar's surface) so the toolbar
-        // reads as part of the board and doesn't blend into the sidebar.
-        color: c.background,
+        // The card colour: set apart from the board canvas below it and from
+        // the sidebar's surface beside it.
+        color: c.card,
         border: Border(bottom: context.hairlineSide),
       ),
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.xl2,
         vertical: context.spacing.md,
       ),
-      child: Row(
-        spacing: context.spacing.lg,
-        children: [
-          ?tabs,
-          // Gives way first on a narrow window, down to its minimum.
-          const Flexible(flex: 2, child: _SearchBox()),
-          if (hasFilters)
-            _FiltersButton(
-              count: filter.activeTokenCount,
-              onTap: () =>
-                  ref.read(advFilterOpenProvider.notifier).update((v) => !v),
-            ),
-          const Expanded(child: ActiveTokens()),
-          const _RefreshButton(),
-        ],
+      // Wide: the search takes a bounded share of the width (not a flex share,
+      // whose unused part would sit empty), the filter tokens the rest, and
+      // refresh the far end. Narrow: the tokens give way to the search and the
+      // filters button keeps just its icon and count.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < _kNarrowToolbar;
+          const search = _SearchBox();
+          return Row(
+            spacing: context.spacing.lg,
+            children: [
+              ?tabs,
+              if (narrow)
+                const Expanded(child: search)
+              else
+                SizedBox(
+                  width: (constraints.maxWidth * 0.22).clamp(160, 280),
+                  child: search,
+                ),
+              if (hasFilters)
+                _FiltersButton(
+                  count: filter.activeTokenCount,
+                  compact: narrow,
+                  onTap: () => ref
+                      .read(advFilterOpenProvider.notifier)
+                      .update((v) => !v),
+                ),
+              if (!narrow) const Expanded(child: ActiveTokens()),
+              const _RefreshButton(),
+            ],
+          );
+        },
       ),
     );
   }
 }
+
+/// Below this toolbar width the filter tokens are left off.
+const _kNarrowToolbar = 640.0;
 
 /// Re-fetches the active board from its provider, bypassing the slice cache.
 /// Shows a spinner and ignores taps while that fetch is in flight.
@@ -80,8 +101,8 @@ class _RefreshButton extends ConsumerWidget {
         onTap: busy ? null : () => _refresh(context, ref),
         borderRadius: BorderRadius.circular(context.radii.md),
         child: Container(
-          width: 31,
-          height: 31,
+          width: kBoardToolbarControlHeight,
+          height: kBoardToolbarControlHeight,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: c.surface,
@@ -138,51 +159,48 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
     ref.listen(filterStateProvider.select((f) => f.search), (_, next) {
       if (next != controller.text) controller.text = next;
     });
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
-      child: SizedBox(
-        height: 31,
-        child: TextField(
-          controller: controller,
-          onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
-          style: context.typography.secondary.copyWith(color: c.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surface,
-            hintText: l.search,
-            hintStyle: context.typography.secondary.copyWith(
-              color: c.textTertiary,
-            ),
-            prefixIcon: Icon(
-              PhosphorIconsLight.magnifyingGlass,
-              size: 15,
-              color: c.textTertiary,
-            ),
-            prefixIconConstraints: const BoxConstraints(
-              minWidth: 30,
-              minHeight: 30,
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              vertical: context.spacing.sm,
-              horizontal: context.spacing.xs,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: context.borders.showOutline
-                  ? BorderSide(color: c.border)
-                  : BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: context.borders.showOutline
-                  ? BorderSide(color: c.border)
-                  : BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.accent),
-            ),
+    return SizedBox(
+      height: kBoardToolbarControlHeight,
+      child: TextField(
+        controller: controller,
+        onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
+        style: context.typography.secondary.copyWith(color: c.textPrimary),
+        decoration: InputDecoration(
+          isDense: true,
+          filled: true,
+          fillColor: c.surface,
+          hintText: l.search,
+          hintStyle: context.typography.secondary.copyWith(
+            color: c.textTertiary,
+          ),
+          prefixIcon: Icon(
+            PhosphorIconsLight.magnifyingGlass,
+            size: 15,
+            color: c.textTertiary,
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 30,
+            minHeight: 30,
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            vertical: context.spacing.sm,
+            horizontal: context.spacing.xs,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(context.radii.md),
+            borderSide: context.borders.showOutline
+                ? BorderSide(color: c.border)
+                : BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(context.radii.md),
+            borderSide: context.borders.showOutline
+                ? BorderSide(color: c.border)
+                : BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(context.radii.md),
+            borderSide: BorderSide(color: c.accent),
           ),
         ),
       ),
@@ -191,31 +209,72 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
 }
 
 class _FiltersButton extends StatelessWidget {
-  const _FiltersButton({required this.count, required this.onTap});
+  const _FiltersButton({
+    required this.count,
+    required this.onTap,
+    this.compact = false,
+  });
   final int count;
   final VoidCallback onTap;
+
+  /// Leaves the label off (a narrow toolbar).
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
-    return GestureDetector(
+    final active = count > 0;
+    final color = active ? c.accent : c.textSecondary;
+    final radius = BorderRadius.circular(context.radii.md);
+    return InkWell(
       onTap: onTap,
+      borderRadius: radius,
       child: Container(
-        height: 31,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
-        alignment: Alignment.center,
+        height: kBoardToolbarControlHeight,
+        padding: EdgeInsets.symmetric(horizontal: compact ? s.md : s.lg),
         decoration: BoxDecoration(
-          color: count > 0 ? c.selectionFill : c.surface,
-          borderRadius: BorderRadius.circular(context.radii.md),
+          color: active ? c.selectionFill : c.surface,
+          borderRadius: radius,
           border: context.cardBorder,
         ),
-        child: Text(
-          '⚑ ${l.filters}${count > 0 ? ' · $count' : ''}',
-          style: context.typography.bodySm.copyWith(
-            fontWeight: FontWeight.w500,
-            color: count > 0 ? c.accent : c.textSecondary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              active ? PhosphorIconsFill.funnel : PhosphorIconsLight.funnel,
+              size: s.xl3,
+              color: color,
+            ),
+            if (!compact) ...[
+              SizedBox(width: s.sm),
+              Text(
+                l.filters,
+                style: context.typography.bodySm.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+            if (active) ...[
+              SizedBox(width: s.sm),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: s.sm),
+                decoration: BoxDecoration(
+                  color: c.accent,
+                  borderRadius: BorderRadius.circular(context.radii.pill),
+                ),
+                child: Text(
+                  '$count',
+                  style: context.typography.monoXs.copyWith(
+                    color: c.onAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

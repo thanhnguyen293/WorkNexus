@@ -34,9 +34,12 @@ class BugColumnDot extends StatelessWidget {
 
 /// Ticket-count pill shown at the trailing edge of a bug column header.
 class BugColumnCountBadge extends StatelessWidget {
-  const BugColumnCountBadge(this.count, {super.key});
+  const BugColumnCountBadge(this.count, {super.key, this.more = false});
 
   final int count;
+
+  /// Whether the column can load more than [count] (shown as "count+").
+  final bool more;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +57,7 @@ class BugColumnCountBadge extends StatelessWidget {
         border: context.cardBorder,
       ),
       child: Text(
-        '$count',
+        more ? '$count+' : '$count',
         style: context.typography.monoSm.copyWith(color: c.textTertiary),
       ),
     );

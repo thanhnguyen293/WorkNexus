@@ -55,13 +55,9 @@ class SyncService
   SyncService(
     this._db,
     this._credentials, {
-    TimedSliceCache<List<String>>? zentaoBugTabCache,
     TimedSliceCache<int>? zentaoExecutionTaskCache,
     AttachmentFileCache? attachmentCache,
-  }) : _zentaoBugTabCache =
-           zentaoBugTabCache ??
-           TimedSliceCache<List<String>>(ttl: zentaoTabCacheTtl),
-       _zentaoExecutionTaskCache =
+  }) : _zentaoExecutionTaskCache =
            zentaoExecutionTaskCache ??
            TimedSliceCache<int>(ttl: zentaoTabCacheTtl),
        _attachmentCache = attachmentCache ?? AttachmentFileCache();
@@ -70,7 +66,6 @@ class SyncService
 
   final AppDatabase _db;
   final CredentialStore _credentials;
-  final TimedSliceCache<List<String>> _zentaoBugTabCache;
   final TimedSliceCache<int> _zentaoExecutionTaskCache;
   final AttachmentFileCache _attachmentCache;
 
@@ -133,42 +128,17 @@ class SyncService
     }
   }
 
-  /// Fetches one ZenTao bug **tab** ([browseType]) for a product — a server-side
-  /// filtered view (unclosed / assigned-to-me / resolved-by-me / …) — upserts
-  /// its bugs into drift (local-first: the board still renders from the DB), and
-  /// returns the ids of the bugs in that tab so the board can show just that
-  /// slice. Successful tab slices are cached briefly per account/product/tab so
-  /// switching back and forth does not immediately hit ZenTao again.
-  Future<Result<List<String>>> syncProductBugsTab({
+  /// Fetches one [page] of a product's ZenTao bug view [browseType] (newest
+  /// first), upserts its bugs into drift — local-first: the board renders from
+  /// the DB — and returns the page so the board can tell which bugs belong to
+  /// the view and whether more follow. Not cached: the board keeps the pages it
+  /// has loaded and asks again only to load more or to refresh.
+  Future<Result<BugPage>> syncProductBugsPage({
     required String accountId,
     required String productId,
     required String browseType,
-  }) async {
-    final cacheKey = '$accountId:$productId:$browseType';
-    return _cached(
-      cache: _zentaoBugTabCache,
-      key: cacheKey,
-      load: () => _syncProductBugsTabUncached(
-        accountId: accountId,
-        productId: productId,
-        browseType: browseType,
-      ),
-    );
-  }
-
-  /// Drops the cached slice for one bug tab so the next [syncProductBugsTab]
-  /// goes to the server — a manual board refresh must not replay a TTL-cached
-  /// answer.
-  void invalidateProductBugsTab({
-    required String accountId,
-    required String productId,
-    required String browseType,
-  }) => _zentaoBugTabCache.invalidate('$accountId:$productId:$browseType');
-
-  Future<Result<List<String>>> _syncProductBugsTabUncached({
-    required String accountId,
-    required String productId,
-    required String browseType,
+    required int page,
+    required int limit,
   }) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -181,17 +151,14 @@ class SyncService
     if (adapter == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
-    final res = await adapter.listProductBugs(
+    final res = await adapter.listProductBugsPage(
       productId,
       browseType: browseType,
+      page: page,
+      limit: limit,
     );
-    switch (res) {
-      case Err(:final failure):
-        return Err(failure);
-      case Ok(:final value):
-        await _upsert(account, value.tickets);
-        return Ok([for (final t in value.tickets) t.id]);
-    }
+    if (res case Ok(:final value)) await _upsert(account, value.tickets);
+    return res;
   }
 
   Future<Result<List<ProviderProject>>> listProjects(String accountId) async {
@@ -275,7 +242,7 @@ class SyncService
   /// Fetches one GitLab project's recent issues OR merge requests (chosen by
   /// [mergeRequests]), tags each with a synthetic `gitlab-project:<id>` label,
   /// upserts them into drift (local-first), and returns their ids so the board
-  /// renders just that slice. Mirrors [syncProductBugsTab] for GitLab; routes
+  /// renders just that slice. Mirrors the ZenTao bug board for GitLab; routes
   /// through the concrete [GitLabAdapter] (GitLab-specific fetch, not on the
   /// shared interface).
   Future<Result<List<String>>> syncGitLabProjectItems({

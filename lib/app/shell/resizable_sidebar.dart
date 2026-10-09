@@ -9,7 +9,8 @@ import '../../features/board/presentation/widgets/sidebar.dart';
 const double _kSidebarMinWidth = 220.0;
 const double _kSidebarMaxWidth = 520.0;
 
-/// Width of the invisible grab strip on the sidebar's right edge.
+/// Width of the invisible grab strip along the inside of the sidebar's right
+/// edge.
 const double _kHandleWidth = 8.0;
 
 /// Width of the accent line shown while the grab strip is hovered/dragged.
@@ -37,25 +38,37 @@ class _ResizableSidebarState extends ConsumerState<ResizableSidebar> {
         .clamp(_kSidebarMinWidth, _kSidebarMaxWidth)
         .toDouble();
 
-    return Row(
-      children: [
-        SizedBox(width: width, child: const SidebarView()),
-        _ResizeHandle(
-          onDelta: (dx) => setState(() {
-            final current = _dragWidth ?? saved;
-            _dragWidth = (current + dx)
-                .clamp(_kSidebarMinWidth, _kSidebarMaxWidth)
-                .toDouble();
-          }),
-          onEnd: () {
-            final next = _dragWidth;
-            _dragWidth = null;
-            if (next != null) {
-              ref.read(appSettingsProvider.notifier).setSidebarWidth(next);
-            }
-          },
-        ),
-      ],
+    // The grab strip lies over the sidebar's right edge instead of beside it,
+    // so the sidebar meets the board with just its hairline between them.
+    return SizedBox(
+      width: width,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const SidebarView(),
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: _kHandleWidth,
+            child: _ResizeHandle(
+              onDelta: (dx) => setState(() {
+                final current = _dragWidth ?? saved;
+                _dragWidth = (current + dx)
+                    .clamp(_kSidebarMinWidth, _kSidebarMaxWidth)
+                    .toDouble();
+              }),
+              onEnd: () {
+                final next = _dragWidth;
+                _dragWidth = null;
+                if (next != null) {
+                  ref.read(appSettingsProvider.notifier).setSidebarWidth(next);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -95,7 +108,9 @@ class _ResizeHandleState extends State<_ResizeHandle> {
         child: SizedBox(
           width: _kHandleWidth,
           height: double.infinity,
-          child: Center(
+          // The accent line sits on the sidebar's edge, over its hairline.
+          child: Align(
+            alignment: Alignment.centerRight,
             child: SizedBox(
               width: _kHandleLineWidth,
               height: double.infinity,

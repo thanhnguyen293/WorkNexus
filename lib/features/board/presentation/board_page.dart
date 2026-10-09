@@ -45,7 +45,7 @@ class BoardPage extends ConsumerWidget {
     // The active ZenTao bug tab's fetch status (null off the bug board). Each tab
     // is its own server call, so a tab switch re-enters loading here.
     final bugSlice = mode == ViewMode.zentaoBugs
-        ? ref.watch(zentaoBugTabSliceProvider)
+        ? ref.watch(zentaoBugSliceProvider)
         : null;
     // The account-wide "my MRs/PRs" boards reuse the GitLab/GitHub views but
     // fetch a different slice and hide the kind tabs (they are MR/PR-only).
@@ -100,7 +100,9 @@ class BoardPage extends ConsumerWidget {
       body = _SliceError(message: AppL10n.of(context).gitlabItemsLoadFailed);
     } else if (githubSlice != null && githubSlice.hasError && count == 0) {
       body = _SliceError(message: AppL10n.of(context).githubItemsLoadFailed);
-    } else if (count == 0) {
+    } else if (count == 0 &&
+        !(mode == ViewMode.zentaoBugs && ref.watch(zentaoBugHasMoreProvider))) {
+      // A bug board whose columns can load more stays up, so they can.
       body = const EmptyState();
     } else {
       body = switch (mode) {

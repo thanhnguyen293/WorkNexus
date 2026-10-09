@@ -170,6 +170,14 @@ class GitHubAdapter implements ProviderAdapter {
   }) async => const Ok(TicketPage(tickets: <Ticket>[]));
 
   @override
+  Future<Result<BugPage>> listProductBugsPage(
+    String productId, {
+    required String browseType,
+    required int page,
+    required int limit,
+  }) async => const Ok(BugPage(tickets: <Ticket>[], total: 0, hasMore: false));
+
+  @override
   Future<Result<List<ProviderProject>>> listProjects() async {
     return _guard(() async {
       final repos = await _client.repos();

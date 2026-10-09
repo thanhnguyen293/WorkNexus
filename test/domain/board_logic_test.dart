@@ -11,6 +11,7 @@ import 'package:work_nexus/features/board/domain/usecases/build_zentao_task_boar
 import 'package:work_nexus/features/board/domain/usecases/filter_tickets.dart';
 import 'package:work_nexus/features/board/domain/value_objects/saved_view.dart';
 import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_column.dart';
+import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_stream.dart';
 import 'package:work_nexus/features/board/domain/value_objects/zentao_task_column.dart';
 
 Ticket _t({
@@ -409,6 +410,39 @@ void main() {
       expect(board.column(ZenTaoBugColumn.closed).tickets.map((t) => t.id), [
         'closed',
       ]);
+    });
+
+    test('leaves the Closed column and its bugs off without includeClosed', () {
+      final board = const BuildZenTaoBugBoard(includeClosed: false)(
+        _q([
+          _ztBug(
+            id: 'closed',
+            providerStatus: 'closed',
+            resolution: 'fixed',
+            status: UnifiedStatus.done,
+          ),
+        ], const FilterState()),
+      );
+
+      expect(
+        board.columns.map((c) => c.column),
+        isNot(contains(ZenTaoBugColumn.closed)),
+      );
+      expect(board.total, 0);
+    });
+
+    test('each column draws on the server view that holds its bugs', () {
+      expect(
+        {for (final c in ZenTaoBugColumn.values) c: ZenTaoBugStream.of(c).code},
+        {
+          ZenTaoBugColumn.newUnconfirmed: 'unconfirmed',
+          ZenTaoBugColumn.confirmedToFix: 'unresolved',
+          ZenTaoBugColumn.resolvedVerify: 'toclosed',
+          ZenTaoBugColumn.postponed: 'toclosed',
+          ZenTaoBugColumn.nonFix: 'toclosed',
+          ZenTaoBugColumn.closed: 'all',
+        },
+      );
     });
   });
 
