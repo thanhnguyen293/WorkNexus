@@ -176,9 +176,15 @@ class ZenTaoClient {
     return _token!;
   }
 
-  /// Raw `GET /user` response for inspecting the signed-in user's profile.
-  Future<Map<String, dynamic>> userInfo() async {
-    final res = await _dio.get<dynamic>('$_v1/user');
+  /// The signed-in user's profile (`GET /user`), plus the "my work" blocks
+  /// named in [fields] (`?fields=task,bug,…`), each list capped at [limit]
+  /// items. Kept as a raw map: the shape varies by block and server version,
+  /// so callers parse it leniently.
+  Future<Map<String, dynamic>> userInfo({String? fields, int? limit}) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/user',
+      queryParameters: {'fields': ?fields, 'limit': ?limit},
+    );
     if ((res.statusCode ?? 0) >= 400) {
       throw DioException.badResponse(
         statusCode: res.statusCode!,
@@ -187,7 +193,11 @@ class ZenTaoClient {
       );
     }
     final json = _responseMap(res.data);
-    appTalker.info('ZenTao GET /user JSON: ${jsonEncode(json)}');
+    // The bare profile is logged for inspecting it; the dashboard's blocks
+    // would flood the log on every refresh.
+    if (fields == null) {
+      appTalker.info('ZenTao GET /user JSON: ${jsonEncode(json)}');
+    }
     return json;
   }
 
@@ -332,21 +342,6 @@ class ZenTaoClient {
         ? (zentaoInt(pager['recTotal']) ?? bugs.length)
         : bugs.length;
     return ZenTaoProductBugsResponse(total: total, bugs: bugs);
-  }
-
-  /// The signed-in user's profile plus the "my work" blocks named in [fields]
-  /// (`GET /user?fields=task,bug,…`), each list capped at [limit] items. Kept as
-  /// a raw map: the shape varies by block and server version, so the dashboard
-  /// mapper parses it leniently.
-  Future<Map<String, dynamic>> userInfo({
-    required String fields,
-    required int limit,
-  }) async {
-    final res = await _dio.get<dynamic>(
-      '$_v1/user',
-      queryParameters: {'fields': fields, 'limit': limit},
-    );
-    return _responseMap(res.data);
   }
 
   /// The user's web notifications (the bell menu), via the classic

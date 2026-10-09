@@ -598,7 +598,7 @@ class AppDatabase extends _$AppDatabase {
       // report the latest version while still missing another branch's tables
       // or columns. Reconcile them once before any row is read.
       if (from < 38) {
-        for (final (name, table) in [
+        for (final (name, table) in <(String, TableInfo<Table, Object?>)>[
           ('zen_tao_profiles', zenTaoProfiles),
           ('dashboard_snapshots', dashboardSnapshots),
           ('zen_tao_notifications', zenTaoNotifications),
