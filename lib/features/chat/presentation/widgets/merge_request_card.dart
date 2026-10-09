@@ -7,6 +7,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/platform/app_resume.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/merge_request_state_pill.dart';
@@ -21,7 +22,8 @@ import 'chat_link_card_frame.dart';
 /// 2h ago`, the title, then `author · +lines −lines · files`. The bar takes
 /// the state's colour. It is fetched through the connected account for the
 /// link's host; a tap opens it beside the chat (or in the browser when it
-/// could not be loaded).
+/// could not be loaded). Coming back to the app refetches one still open,
+/// so a merge done in the browser shows at once.
 class MergeRequestCard extends ConsumerWidget {
   const MergeRequestCard({super.key, required this.url});
 
@@ -33,6 +35,14 @@ class MergeRequestCard extends ConsumerWidget {
     if (link == null) return const SizedBox.shrink();
     final fetch = ref.watch(chatMergeRequestFetchProvider(url));
     final ticket = ref.watch(chatMergeRequestProvider(url));
+    ref.listen(appResumeProvider, (_, _) {
+      // Merged and closed are final; anything else (or a failed load) may
+      // have changed while the user was away.
+      final status = ref.read(chatMergeRequestProvider(url))?.providerStatus;
+      if (status != 'merged' && status != 'closed') {
+        ref.invalidate(chatMergeRequestFetchProvider(url));
+      }
+    });
     final state = ticket == null
         ? null
         : mergeRequestState(context, ticket.providerStatus, link.provider);

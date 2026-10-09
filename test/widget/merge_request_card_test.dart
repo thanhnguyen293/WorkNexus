@@ -146,4 +146,59 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     container.dispose();
   });
+
+  Future<void> leaveAndComeBack(WidgetTester tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+  }
+
+  void answerFetch() => when(
+    () => service.fetchMergeRequest(
+      provider: any(named: 'provider'),
+      host: any(named: 'host'),
+      project: any(named: 'project'),
+      number: any(named: 'number'),
+    ),
+  ).thenAnswer((_) async => const Ok('gl:mr:99'));
+
+  testWidgets('coming back to the app refetches an open MR', (tester) async {
+    answerFetch();
+    final open = _mr.copyWith(
+      providerStatus: 'opened',
+      status: UnifiedStatus.review,
+    );
+    final container = await pump(tester, tickets: [open]);
+
+    await leaveAndComeBack(tester);
+
+    verify(
+      () => service.fetchMergeRequest(
+        provider: any(named: 'provider'),
+        host: any(named: 'host'),
+        project: any(named: 'project'),
+        number: any(named: 'number'),
+      ),
+    ).called(2);
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
+
+  testWidgets('a merged MR is not fetched again', (tester) async {
+    answerFetch();
+    final container = await pump(tester, tickets: [_mr]);
+
+    await leaveAndComeBack(tester);
+
+    verify(
+      () => service.fetchMergeRequest(
+        provider: any(named: 'provider'),
+        host: any(named: 'host'),
+        project: any(named: 'project'),
+        number: any(named: 'number'),
+      ),
+    ).called(1);
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
 }

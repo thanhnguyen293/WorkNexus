@@ -148,16 +148,26 @@ class ParseMessageContent {
     if (n['contentType'] == 'object' && n['content'] is String) {
       n.addAll(_object(n['content']! as String) ?? const {});
     }
+    // ZenTao action cards ("X assigned 1 Bug") put the item as JSON in the
+    // text itself, without saying it is an object: show the item, not the
+    // raw JSON.
+    final card = n['contentType'] != 'object' && n['content'] is String
+        ? _zentaoCard(_object(n['content']! as String))
+        : null;
     final actions = n['actions'];
     final sender = n['sender'];
     return MessageContent.notification(
       title: _str(n['title']),
-      subtitle: _str(n['subtitle']),
-      text: n['content'] is String && n['contentType'] != 'object'
+      subtitle: _str(n['subtitle']) ?? card?.project,
+      text: card != null
+          ? card.text
+          : n['content'] is String && n['contentType'] != 'object'
           ? _decodeEmoji(n['content']! as String)
           : '',
-      markdown: n['contentType'] != 'plain',
-      url: _str(n['url']),
+      markdown: card == null && n['contentType'] != 'plain',
+      // The card's own link first: the outer one may be the official
+      // client's `xxc:openInApp/…` wrapper.
+      url: card?.url ?? _unwrapAppUrl(_str(n['url'])),
       actions: [
         for (final a in actions is List ? actions : [?actions])
           if (a is Map && _str(a['url']) != null)
@@ -173,6 +183,45 @@ class ParseMessageContent {
         _ => null,
       },
     );
+  }
+
+  /// The item of a ZenTao action card (`objectType`, `objectName`, `id`,
+  /// `cardURL`, `headSubTitle` = project); null when [json] is not one.
+  static ({String text, String? url, String? project})? _zentaoCard(
+    Map<String, Object?>? json,
+  ) {
+    if (json == null) return null;
+    final name = _str(json['objectName']) ?? _str(json['name']);
+    final url = _str(json['cardURL']);
+    if (name == null && url == null) return null;
+    final id = _str('${json['id'] ?? json['object'] ?? ''}');
+    final count = _int(json['count']) ?? 1;
+    return (
+      text: [
+        if (id != null) '#$id',
+        ?name,
+        // Only the first of several items is named.
+        if (count > 1) '(+${count - 1})',
+      ].join(' '),
+      url: url,
+      project: _str(json['headSubTitle']) ?? _str(json['headTitle']),
+    );
+  }
+
+  /// `xxc:openInApp/<app>/<encoded url>` (the official client opening a
+  /// page in its ZenTao tab) → the page's own url; others unchanged.
+  static String? _unwrapAppUrl(String? url) {
+    const prefix = 'xxc:openInApp/';
+    if (url == null || !url.startsWith(prefix)) return url;
+    final rest = url.substring(prefix.length);
+    final slash = rest.indexOf('/');
+    if (slash < 0) return url;
+    try {
+      final inner = Uri.decodeComponent(rest.substring(slash + 1));
+      return inner.startsWith('http') ? inner : url;
+    } on ArgumentError {
+      return url;
+    }
   }
 
   static String? _str(Object? v) =>
