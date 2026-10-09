@@ -9,6 +9,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/hover_surface.dart';
+import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_style.dart';
 import 'chat_style_preview.dart';
@@ -37,80 +38,59 @@ class ChatAppearanceSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final s = context.spacing;
-    final c = context.colors;
     final (current, primary) = ref.watch(
       appSettingsProvider.select(
         (s) => (s.chatAppearance, s.chatPrimaryBubbles),
       ),
     );
     final settings = ref.read(appSettingsProvider.notifier);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return QuickSettingsSection(
+      title: l.quickSettingsChatLook,
       children: [
-        Text(
-          l.chatAppearance,
-          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-        ),
-        SizedBox(height: s.lg),
-        LayoutBuilder(
-          builder: (context, box) {
-            final cardWidth =
-                (box.maxWidth - s.md * (_kColumns - 1)) / _kColumns;
-            return Wrap(
-              spacing: s.md,
-              runSpacing: s.md,
-              children: [
-                for (final a in ChatAppearance.values)
-                  SizedBox(
-                    width: cardWidth,
-                    child: _StyleCard(
-                      appearance: a,
-                      selected: a == current,
-                      style: ChatStyle.of(a, context, primaryBubbles: primary),
-                      onTap: () => settings.setChatAppearance(a),
+        QuickSettingsField(
+          label: l.chatAppearance,
+          stacked: true,
+          control: LayoutBuilder(
+            builder: (context, box) {
+              final cardWidth =
+                  (box.maxWidth - s.md * (_kColumns - 1)) / _kColumns;
+              return Wrap(
+                spacing: s.md,
+                runSpacing: s.md,
+                children: [
+                  for (final a in ChatAppearance.values)
+                    SizedBox(
+                      width: cardWidth,
+                      child: _StyleCard(
+                        appearance: a,
+                        selected: a == current,
+                        style: ChatStyle.of(
+                          a,
+                          context,
+                          primaryBubbles: primary,
+                        ),
+                        onTap: () => settings.setChatAppearance(a),
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
-        const _SectionDivider(),
         const ChatTextSizeSetting(),
-        const _SectionDivider(),
         const ChatWallpaperPicker(),
-        const _SectionDivider(),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
+        QuickSettingsSwitchField(
+          label: l.chatPrimaryBubbles,
+          hint: l.chatPrimaryBubblesHint,
           value: primary,
           // The default style already follows the app's colours.
           onChanged: current == ChatAppearance.worknexus
               ? null
               : settings.setChatPrimaryBubbles,
-          title: Text(
-            l.chatPrimaryBubbles,
-            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-          ),
-          subtitle: Text(
-            l.chatPrimaryBubblesHint,
-            style: context.typography.caption.copyWith(color: c.textSecondary),
-          ),
         ),
       ],
     );
   }
-}
-
-/// A hairline with room around it, between the panel's sections (styles,
-/// wallpaper, bubble colour).
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
-
-  @override
-  Widget build(BuildContext context) => Divider(
-    height: context.spacing.xl4 * 1.5,
-    thickness: 1,
-    color: context.colors.border,
-  );
 }
 
 class _StyleCard extends StatelessWidget {

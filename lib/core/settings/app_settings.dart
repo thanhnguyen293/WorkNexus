@@ -50,6 +50,7 @@ const kChatWallpaperPattern = 'pattern';
 class AppSettings {
   const AppSettings({
     this.variant = AppThemeVariant.light,
+    this.themeFollowsSystem = false,
     this.surface = SurfaceStyle.outline,
     this.density = AppDensity.comfortable,
     this.detailLayout = DetailLayout.twoPane,
@@ -70,14 +71,19 @@ class AppSettings {
     this.chatWallpaperDim = 0.2,
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
-    this.chatNotifyWhileViewing = false,
+    this.chatNotifyWhileViewing = true,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
     this.chatTextScale = 1.0,
   });
 
+  /// The theme picked by hand; also the light/dark pair's fallback.
   final AppThemeVariant variant;
+
+  /// Light or dark with the OS instead of [variant] (off: the app opens light).
+  final bool themeFollowsSystem;
+
   final SurfaceStyle surface;
   final AppDensity density;
   final DetailLayout detailLayout;
@@ -160,6 +166,7 @@ class AppSettings {
 
   AppSettings copyWith({
     AppThemeVariant? variant,
+    bool? themeFollowsSystem,
     SurfaceStyle? surface,
     AppDensity? density,
     DetailLayout? detailLayout,
@@ -189,6 +196,7 @@ class AppSettings {
   }) {
     return AppSettings(
       variant: variant ?? this.variant,
+      themeFollowsSystem: themeFollowsSystem ?? this.themeFollowsSystem,
       surface: surface ?? this.surface,
       density: density ?? this.density,
       detailLayout: detailLayout ?? this.detailLayout,
@@ -267,7 +275,11 @@ class AppSettingsController extends Notifier<AppSettings> {
     ref.read(settingsPersistProvider)(next);
   }
 
-  void setVariant(AppThemeVariant v) => _set(state.copyWith(variant: v));
+  /// Picking a theme by hand stops following the OS.
+  void setVariant(AppThemeVariant v) =>
+      _set(state.copyWith(variant: v, themeFollowsSystem: false));
+  void setThemeFollowsSystem() =>
+      _set(state.copyWith(themeFollowsSystem: true));
   void setSurface(SurfaceStyle s) => _set(state.copyWith(surface: s));
   void setDensity(AppDensity d) => _set(state.copyWith(density: d));
   void setDetailLayout(DetailLayout l) => _set(state.copyWith(detailLayout: l));

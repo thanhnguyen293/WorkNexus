@@ -90,6 +90,10 @@ class Comments extends Table {
 class Settings extends Table {
   IntColumn get id => integer().withDefault(const Constant(0))();
   TextColumn get variant => text().withDefault(const Constant('light'))();
+
+  /// Whether the theme follows the OS light/dark mode instead of [variant].
+  BoolColumn get themeFollowsSystem =>
+      boolean().withDefault(const Constant(false))();
   TextColumn get surface => text().withDefault(const Constant('outline'))();
   TextColumn get density => text().withDefault(const Constant('comfortable'))();
   TextColumn get detailLayout =>
@@ -136,7 +140,7 @@ class Settings extends Table {
 
   /// Whether to notify even for the chat open in the focused window.
   BoolColumn get chatNotifyWhileViewing =>
-      boolean().withDefault(const Constant(false))();
+      boolean().withDefault(const Constant(true))();
 
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
@@ -412,7 +416,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 38;
+  int get schemaVersion => 39;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -597,6 +601,11 @@ class AppDatabase extends _$AppDatabase {
       // profiles on one, the dashboard on another). After a rebase, a DB can
       // report the latest version while still missing another branch's tables
       // or columns. Reconcile them once before any row is read.
+      if (from < 39) {
+        if (!await _hasColumn('settings', 'theme_follows_system')) {
+          await m.addColumn(settings, settings.themeFollowsSystem);
+        }
+      }
       if (from < 38) {
         for (final (name, table) in <(String, TableInfo<Table, Object?>)>[
           ('zen_tao_profiles', zenTaoProfiles),
@@ -620,7 +629,7 @@ class AppDatabase extends _$AppDatabase {
         }
         // An older branch may have created this column as nullable.
         await customStatement(
-          'UPDATE settings SET chat_notify_while_viewing = 0 '
+          'UPDATE settings SET chat_notify_while_viewing = 1 '
           'WHERE chat_notify_while_viewing IS NULL',
         );
       }

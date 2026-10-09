@@ -10,10 +10,12 @@ import 'package:work_nexus/features/translation/presentation/translation_api_pro
 import 'package:work_nexus/app/shell/title_bar.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
+import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/theme/fonts.dart';
+import 'package:work_nexus/core/widgets/quick_settings_font_control.dart';
 import 'package:work_nexus/core/widgets/quick_settings_side_panel.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
@@ -52,6 +54,12 @@ void main() {
     await tester.pumpAndSettle();
     return container;
   }
+
+  // "System" is also a theme option; this is the font menu's entry.
+  final systemFontInMenu = find.descendant(
+    of: find.byType(PopupMenuItem<String>),
+    matching: find.text('System'),
+  );
 
   Future<void> openQuickSettings(WidgetTester tester) async {
     await tester.tap(
@@ -130,6 +138,7 @@ void main() {
     expect(panel.right, 1200);
     expect(panel.width, lessThanOrEqualTo(400));
     expect(panel.bottom, 900);
+    // Label left, its control right on the same row.
     expect(
       (tester.getCenter(find.text('Language')).dy -
               tester.getCenter(find.text('English')).dy)
@@ -171,7 +180,7 @@ void main() {
       return rightRect.left - leftRect.right;
     }
 
-    expect(gapBetween('English', 'Vietnamese'), greaterThanOrEqualTo(8));
+    expect(gapBetween('Comfortable', 'Compact'), greaterThanOrEqualTo(8));
     expect(gapBetween('Light', 'Dark'), greaterThanOrEqualTo(8));
   });
 
@@ -182,13 +191,19 @@ void main() {
     expect(kFontChoices.first, kSystemFont);
     await tester.tap(find.text('Be Vietnam Pro'));
     await tester.pumpAndSettle();
-    expect(find.text('System'), findsOneWidget);
+    expect(systemFontInMenu, findsOneWidget);
 
-    await tester.tap(find.text('System'));
+    await tester.tap(systemFontInMenu);
     await tester.pumpAndSettle();
 
     expect(container.read(appSettingsProvider).fontFamily, kSystemFont);
-    expect(find.text('System'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(QuickSettingsFontControl),
+        matching: find.text('System'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text(kSystemFont), findsNothing);
     expect(
       find.byKey(const ValueKey<String>('quick-settings-panel')),
@@ -222,7 +237,7 @@ void main() {
     await tester.tap(find.text('Be Vietnam Pro'));
     await tester.pumpAndSettle();
 
-    final systemFinder = find.text('System');
+    final systemFinder = systemFontInMenu;
     final systemText = tester.widget<Text>(systemFinder);
     final systemContext = tester.element(systemFinder);
     final theme = Theme.of(systemContext);
@@ -246,6 +261,10 @@ void main() {
     final container = await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
+    // Language is a dropdown: the menu opens from the current choice.
+    expect(find.text('Vietnamese'), findsNothing);
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Vietnamese'));
     await tester.pumpAndSettle();
 
@@ -271,6 +290,41 @@ void main() {
       find.byKey(const ValueKey<String>('quick-settings-panel')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('theme defaults to light and can follow the system', (
+    tester,
+  ) async {
+    final container = await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+    AppSettings settings() => container.read(appSettingsProvider);
+
+    expect(settings().variant, AppThemeVariant.light);
+    expect(settings().themeFollowsSystem, isFalse);
+
+    await tester.tap(find.text('System'));
+    await tester.pumpAndSettle();
+    expect(settings().themeFollowsSystem, isTrue);
+
+    // Picking a theme by hand stops following the OS.
+    await tester.tap(find.text('Midnight'));
+    await tester.pumpAndSettle();
+    expect(settings().themeFollowsSystem, isFalse);
+    expect(settings().variant, AppThemeVariant.midnight);
+  });
+
+  testWidgets('a custom primary color comes from the picker', (tester) async {
+    final container = await pumpTitleBar(tester);
+    await openQuickSettings(tester);
+
+    await tester.tap(find.byTooltip('Custom color'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, '#123abc');
+    await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appSettingsProvider).accentColorValue, 0xFF123ABC);
   });
 
   testWidgets('a click outside closes the quick settings panel', (
@@ -355,6 +409,52 @@ void main() {
 
     expect(tester.getRect(panel).bottom, lessThanOrEqualTo(200));
     expect(tester.takeException(), isNull);
+  });
+
+  Future<void> pumpPanelWithChat(WidgetTester tester, MainView view) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(mainViewProvider.notifier).state = view;
+    container.read(quickSettingsOpenProvider.notifier).state = true;
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _SettingsHarness(
+          child: QuickSettingsSidePanel(chatSections: [Text('chat-section')]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('chat settings live on their own tab', (tester) async {
+    await pumpPanelWithChat(tester, MainView.board);
+
+    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('chat-section'), findsNothing);
+
+    await tester.tap(find.text('Chat'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('chat-section'), findsOneWidget);
+    expect(find.text('Theme'), findsNothing);
+
+    await tester.tap(find.text('General'));
+    await tester.pumpAndSettle();
+    expect(find.text('Theme'), findsOneWidget);
+  });
+
+  testWidgets('opened from the chat view, the panel starts on the Chat tab', (
+    tester,
+  ) async {
+    await pumpPanelWithChat(tester, MainView.chat);
+
+    expect(find.text('chat-section'), findsOneWidget);
+    expect(find.text('Theme'), findsNothing);
   });
 
   testWidgets('Integrations page no longer contains appearance settings', (

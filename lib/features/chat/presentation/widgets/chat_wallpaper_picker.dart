@@ -13,6 +13,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/chat_doodle_palette.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../core/widgets/hover_surface.dart';
+import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/wallpaper_providers.dart';
 import 'chat_attachments.dart';
@@ -78,87 +79,86 @@ class ChatWallpaperPicker extends ConsumerWidget {
     };
     final usingImage =
         chatWallpaperIsPicture(current) && current != kChatWallpaperPattern;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.chatWallpaper,
-          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-        ),
-        SizedBox(height: s.md),
-        Wrap(
-          spacing: s.md,
-          runSpacing: s.md,
-          children: [
-            _Tile(
-              label: l.chatWallpaperDefault,
-              selected: !chatWallpaperIsPicture(current),
-              onTap: () => settings.setChatWallpaper(kChatWallpaperPlain),
-              child: ColoredBox(color: c.background),
-            ),
-            _Tile(
-              label: l.chatWallpaperPattern,
-              selected: current == kChatWallpaperPattern,
-              onTap: () => settings.setChatWallpaper(kChatWallpaperPattern),
-              child: ChatWallpaper(
-                doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
-                scale: 0.3,
-                child: const SizedBox.expand(),
+    return QuickSettingsField(
+      label: l.chatWallpaper,
+      stacked: true,
+      control: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: s.md,
+            runSpacing: s.md,
+            children: [
+              _Tile(
+                label: l.chatWallpaperDefault,
+                selected: !chatWallpaperIsPicture(current),
+                onTap: () => settings.setChatWallpaper(kChatWallpaperPlain),
+                child: ColoredBox(color: c.background),
               ),
-            ),
-            for (final path in images)
-              GestureDetector(
-                onSecondaryTapDown: (d) =>
-                    _remove(context, ref, path, d.globalPosition),
-                child: _Tile(
-                  selected: current == path,
-                  onTap: () => settings.setChatWallpaper(path),
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    cacheWidth: (s.xl6 * 4).round(),
-                    errorBuilder: (_, _, _) => Icon(
-                      PhosphorIconsLight.imageBroken,
-                      color: c.textTertiary,
+              _Tile(
+                label: l.chatWallpaperPattern,
+                selected: current == kChatWallpaperPattern,
+                onTap: () => settings.setChatWallpaper(kChatWallpaperPattern),
+                child: ChatWallpaper(
+                  doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
+                  scale: 0.3,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              for (final path in images)
+                GestureDetector(
+                  onSecondaryTapDown: (d) =>
+                      _remove(context, ref, path, d.globalPosition),
+                  child: _Tile(
+                    selected: current == path,
+                    onTap: () => settings.setChatWallpaper(path),
+                    child: Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      cacheWidth: (s.xl6 * 4).round(),
+                      errorBuilder: (_, _, _) => Icon(
+                        PhosphorIconsLight.imageBroken,
+                        color: c.textTertiary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            _Tile(
-              label: l.chatWallpaperAdd,
-              selected: false,
-              onTap: () => _add(context, ref),
-              child: ColoredBox(
-                color: c.surfaceSubtle,
-                child: Icon(
-                  PhosphorIconsLight.imageSquare,
-                  color: c.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (usingImage) ...[
-          SizedBox(height: s.md),
-          Row(
-            children: [
-              Text(
-                l.chatWallpaperDim,
-                style: context.typography.bodySm.copyWith(
-                  color: c.textSecondary,
-                ),
-              ),
-              Expanded(
-                child: Slider(
-                  value: dim.clamp(0, 0.8),
-                  max: 0.8,
-                  onChanged: settings.setChatWallpaperDim,
+              _Tile(
+                label: l.chatWallpaperAdd,
+                selected: false,
+                onTap: () => _add(context, ref),
+                child: ColoredBox(
+                  color: c.surfaceSubtle,
+                  child: Icon(
+                    PhosphorIconsLight.imageSquare,
+                    color: c.textSecondary,
+                  ),
                 ),
               ),
             ],
           ),
+          if (usingImage) ...[
+            SizedBox(height: s.md),
+            Row(
+              children: [
+                Text(
+                  l.chatWallpaperDim,
+                  style: context.typography.bodySm.copyWith(
+                    color: c.textSecondary,
+                  ),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: dim.clamp(0, 0.8),
+                    max: 0.8,
+                    onChanged: settings.setChatWallpaperDim,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -183,24 +183,35 @@ class _Tile extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     final size = s.xl6 * 1.9;
-    final radius = BorderRadius.circular(context.radii.md);
+    final outer = context.radii.md;
+    final borderWidth = selected ? 2.0 : 1.0;
+    // Picked: a thin gap rings the picture inside the accent frame. Resting:
+    // the picture meets its hairline frame directly.
+    final gap = selected ? 2.0 : 0.0;
+    // The picture sits [inset] inside the frame, so its corners curve that
+    // much tighter — the same radius would leave a wedge in each corner.
+    final inset = borderWidth + gap;
+    final inner = (outer - inset).clamp(0.0, outer);
     final tile = HoverSurface(
       onTap: onTap,
       width: size,
       height: size,
-      padding: EdgeInsets.all(selected ? 2 : 1),
-      borderRadius: radius,
+      padding: EdgeInsets.all(gap),
+      borderRadius: BorderRadius.circular(outer),
       // The picture covers the fill, so the frame answers hover instead.
       tintOnHover: false,
       border: Border.all(
         color: selected ? c.accent : c.border,
-        width: selected ? 2 : 1,
+        width: borderWidth,
       ),
       hoverBorder: Border.all(
         color: selected ? c.accent : c.borderStrong,
-        width: selected ? 2 : 1,
+        width: borderWidth,
       ),
-      child: ClipRRect(borderRadius: radius, child: child),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(inner),
+        child: child,
+      ),
     );
     final text = label;
     if (text == null) return tile;

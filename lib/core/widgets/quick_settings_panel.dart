@@ -3,18 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
-import '../theme/app_borders.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_palette.dart';
-import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_typography.dart';
+import 'app_dropdown.dart';
 import 'quick_settings_color_control.dart';
 import 'quick_settings_font_control.dart';
+import 'quick_settings_parts.dart';
 import 'quick_settings_radius_control.dart';
+import 'quick_settings_segmented.dart';
 
 /// Reactive controls for the app-wide language and appearance preferences,
-/// laid out by [QuickSettingsSidePanel].
+/// grouped into sections and laid out by [QuickSettingsSidePanel].
 class QuickSettingsPanel extends ConsumerWidget {
   const QuickSettingsPanel({super.key});
 
@@ -23,190 +22,120 @@ class QuickSettingsPanel extends ConsumerWidget {
     final l = AppL10n.of(context);
     final settings = ref.watch(appSettingsProvider);
     final controller = ref.read(appSettingsProvider.notifier);
+    final languages = {'en': l.english, 'vi': l.vietnamese};
+    final sectionGap = SizedBox(height: context.spacing.xl5);
     return Column(
       key: const ValueKey<String>('quick-settings-panel'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingRow(
-          label: l.language,
-          control: _CompactSegmentedControl<String>(
-            value: settings.locale.languageCode,
-            options: {'en': l.english, 'vi': l.vietnamese},
-            onChanged: controller.setLanguageCode,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.theme,
-          control: _CompactSegmentedControl<AppThemeVariant>(
-            value: settings.variant,
-            options: {
-              AppThemeVariant.light: l.themeLight,
-              AppThemeVariant.dark: l.themeDark,
-              AppThemeVariant.midnight: l.themeMidnight,
-            },
-            onChanged: controller.setVariant,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.surface,
-          control: _CompactSegmentedControl<SurfaceStyle>(
-            value: settings.surface,
-            options: {
-              SurfaceStyle.flat: l.surfaceFlat,
-              SurfaceStyle.outline: l.surfaceOutline,
-            },
-            onChanged: controller.setSurface,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.density,
-          control: _CompactSegmentedControl<AppDensity>(
-            value: settings.density,
-            options: {
-              AppDensity.comfortable: l.densityComfortable,
-              AppDensity.compact: l.densityCompact,
-            },
-            onChanged: controller.setDensity,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.detailLayout,
-          control: _CompactSegmentedControl<DetailLayout>(
-            value: settings.detailLayout,
-            options: {
-              DetailLayout.twoPane: l.layoutTwoPane,
-              DetailLayout.document: l.layoutDocument,
-            },
-            onChanged: controller.setDetailLayout,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.dateFormat,
-          control: _CompactSegmentedControl<DateDisplayFormat>(
-            value: settings.dateFormat,
-            options: {
-              DateDisplayFormat.iso: l.dateFormatIso,
-              DateDisplayFormat.dmy: l.dateFormatDmy,
-              DateDisplayFormat.long: l.dateFormatLong,
-            },
-            onChanged: controller.setDateFormat,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.companyTint,
-          control: _CompactSegmentedControl<bool>(
-            value: settings.companyTint,
-            options: {false: l.settingOff, true: l.settingOn},
-            onChanged: controller.setCompanyTint,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        _SettingRow(
-          label: l.font,
-          control: QuickSettingsFontControl(
-            tooltip: l.chooseUiFont,
-            systemLabel: l.systemFont,
-            value: settings.fontFamily,
-            onChanged: controller.setFontFamily,
-          ),
-        ),
-        SizedBox(height: context.spacing.md),
-        const QuickSettingsColorControl(),
-        SizedBox(height: context.spacing.xs),
-        const QuickSettingsRadiusControl(),
-      ],
-    );
-  }
-}
-
-class _SettingRow extends StatelessWidget {
-  const _SettingRow({required this.label, required this.control});
-
-  final String label;
-  final Widget control;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: context.spacing.xl6 * 2 - context.spacing.xs,
-          child: Text(
-            label,
-            style: context.typography.caption.copyWith(
-              color: context.colors.textTertiary,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: control,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CompactSegmentedControl<T> extends StatelessWidget {
-  const _CompactSegmentedControl({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: EdgeInsets.all(context.spacing.xxs),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        border: context.cardBorder,
-        borderRadius: BorderRadius.circular(context.radii.md),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final entry in options.entries)
-            TextButton(
-              onPressed: () => onChanged(entry.key),
-              style: TextButton.styleFrom(
-                backgroundColor: entry.key == value ? c.selectionFill : null,
-                foregroundColor: entry.key == value
-                    ? c.accent
-                    : c.textSecondary,
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.md,
-                  vertical: context.spacing.md,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(context.radii.sm),
-                ),
-                textStyle: entry.key == value
-                    ? context.typography.captionStrong
-                    : context.typography.caption,
+        QuickSettingsSection(
+          title: l.appearance,
+          children: [
+            QuickSettingsField(
+              label: l.theme,
+              // null: follow the OS light/dark mode.
+              control: QuickSettingsSegmented<AppThemeVariant?>(
+                value: settings.themeFollowsSystem ? null : settings.variant,
+                options: {
+                  AppThemeVariant.light: l.themeLight,
+                  AppThemeVariant.dark: l.themeDark,
+                  AppThemeVariant.midnight: l.themeMidnight,
+                  null: l.themeSystem,
+                },
+                onChanged: (v) => v == null
+                    ? controller.setThemeFollowsSystem()
+                    : controller.setVariant(v),
               ),
-              child: Text(entry.value),
             ),
-        ],
-      ),
+            QuickSettingsField(
+              label: l.primaryColor,
+              stacked: true,
+              control: const QuickSettingsColorControl(),
+            ),
+            QuickSettingsField(
+              label: l.surface,
+              control: QuickSettingsSegmented<SurfaceStyle>(
+                value: settings.surface,
+                options: {
+                  SurfaceStyle.flat: l.surfaceFlat,
+                  SurfaceStyle.outline: l.surfaceOutline,
+                },
+                onChanged: controller.setSurface,
+              ),
+            ),
+            QuickSettingsField(
+              label: l.font,
+              control: QuickSettingsFontControl(
+                tooltip: l.chooseUiFont,
+                systemLabel: l.systemFont,
+                value: settings.fontFamily,
+                onChanged: controller.setFontFamily,
+              ),
+            ),
+            const QuickSettingsRadiusControl(),
+            QuickSettingsSwitchField(
+              label: l.companyTint,
+              value: settings.companyTint,
+              onChanged: controller.setCompanyTint,
+            ),
+          ],
+        ),
+        sectionGap,
+        QuickSettingsSection(
+          title: l.quickSettingsLayout,
+          children: [
+            QuickSettingsField(
+              label: l.density,
+              control: QuickSettingsSegmented<AppDensity>(
+                value: settings.density,
+                options: {
+                  AppDensity.comfortable: l.densityComfortable,
+                  AppDensity.compact: l.densityCompact,
+                },
+                onChanged: controller.setDensity,
+              ),
+            ),
+            QuickSettingsField(
+              label: l.detailLayout,
+              control: QuickSettingsSegmented<DetailLayout>(
+                value: settings.detailLayout,
+                options: {
+                  DetailLayout.twoPane: l.layoutTwoPane,
+                  DetailLayout.document: l.layoutDocument,
+                },
+                onChanged: controller.setDetailLayout,
+              ),
+            ),
+          ],
+        ),
+        sectionGap,
+        QuickSettingsSection(
+          title: l.quickSettingsRegion,
+          children: [
+            QuickSettingsField(
+              label: l.language,
+              control: AppDropdown<String>(
+                value: settings.locale.languageCode,
+                values: languages.keys.toList(),
+                labelOf: (code) => languages[code] ?? code,
+                onChanged: controller.setLanguageCode,
+              ),
+            ),
+            QuickSettingsField(
+              label: l.dateFormat,
+              control: QuickSettingsSegmented<DateDisplayFormat>(
+                value: settings.dateFormat,
+                options: {
+                  DateDisplayFormat.iso: l.dateFormatIso,
+                  DateDisplayFormat.dmy: l.dateFormatDmy,
+                  DateDisplayFormat.long: l.dateFormatLong,
+                },
+                onChanged: controller.setDateFormat,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
