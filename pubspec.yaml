@@ -22,7 +22,6 @@ dependencies:
     sdk: flutter
 
   # UI / icons / fonts
-  cupertino_icons: 1.0.9
   # Phosphor line icons (MIT). Vendored 2.1.0, patched for Flutter 3.44+ where
   # IconData is final (upstream has no fixed release) — see
   # packages/phosphor_flutter/PATCH.md.
@@ -33,11 +32,13 @@ dependencies:
   # hook, so it does not affect build_runner.
   flutter_svg: 2.3.0
   # Be Vietnam Pro (default UI font). Fetched from Google Fonts at first run and
-  # cached on disk; falls back to the bundled sans until then.
+  # cached on disk; falls back to the bundled sans until then. Held at 8.x: 9.x
+  # is built on the `material_ui` package, whose TextTheme is a different type
+  # from flutter/material's — it needs the app moved to material_ui first.
   google_fonts: 8.2.0
   gpt_markdown: 1.3.4
   html2md: 1.3.2
-  cached_network_image: 3.4.1
+  cached_network_image: 4.0.4
   image_picker: 1.2.4
   two_dimensional_scrollables: 0.5.5
   # In-app attachment preview (repro videos). The macOS backend
