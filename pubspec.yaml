@@ -135,16 +135,6 @@ dev_dependencies:
   # gitignored and rebuilt with the other codegen. Re-verify codegen if bumped.
   flutter_gen_runner: 5.15.0
 
-# ─────────────────────────────────────────────────────────────────────────────
-# path_provider_foundation >= 2.6 pulls `objective_c`, whose native-assets
-# `hook/build.dart` breaks `dart run build_runner` (AOT) on this Dart SDK
-# ("'dart compile' does not support build hooks"). Kept as a RANGE on purpose:
-# it must stay < 2.6 while letting the transitive resolver pick a patch.
-# Remove once build_runner tolerates build hooks on the pinned SDK.
-# ─────────────────────────────────────────────────────────────────────────────
-dependency_overrides:
-  path_provider_foundation: '>=2.4.0 <2.6.0'
-
 # NOTE: riverpod_lint + custom_lint are intentionally NOT added — they cannot
 # resolve on this toolchain (riverpod_lint needs analyzer ^7 or ^9, this SDK
 # pins analyzer 13.x; older custom_lint needs freezed_annotation 2.x). Rule
