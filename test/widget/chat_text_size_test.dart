@@ -40,7 +40,7 @@ void main() {
                 children: [
                   ChatTextSizeSetting(),
                   ChatTextScale(child: Text('message')),
-                  Text('chat list'),
+                  Text('app chrome'),
                 ],
               ),
             ),
@@ -57,7 +57,7 @@ void main() {
 
     expect(container.read(appSettingsProvider).chatTextScale, 1.3);
     expect(scaleOf('message'), closeTo(13, 0.001));
-    expect(scaleOf('chat list'), 10);
+    expect(scaleOf('app chrome'), 10);
     expect(tester.takeException(), isNull);
   });
 }

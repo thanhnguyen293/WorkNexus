@@ -5,8 +5,9 @@ import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
-import '../theme/app_typography.dart';
+import '../theme/app_spacing.dart';
 import 'app_button.dart';
+import 'quick_settings_parts.dart';
 
 /// Height of the slider row — trimmed below the default interactive dimension so
 /// the quick-settings popover stays within its compact height budget.
@@ -21,51 +22,54 @@ class QuickSettingsRadiusControl extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
     final radius = ref.watch(
       appSettingsProvider.select((s) => s.componentRadius),
     );
     final controller = ref.read(appSettingsProvider.notifier);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text(
-              l.cornerRadius,
-              style: context.typography.caption.copyWith(color: c.textTertiary),
-            ),
-            const Spacer(),
-            AppButton.filled(
-              size: AppButtonSize.xxSmall,
-              onPressed: () {},
-              child: Text('${radius.round()}'),
-            ),
-          ],
-        ),
-        SizedBox(
-          height: _sliderRowHeight,
-          child: SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 3,
-              activeTrackColor: c.accent,
-              inactiveTrackColor: c.surfaceSubtle,
-              thumbColor: c.accent,
-              overlayColor: c.mixT(c.accent, 0.12),
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-            ),
-            // Snaps to the 5 [kComponentRadiusPresets] stops.
-            child: Slider(
-              max: kComponentRadiusMax,
-              divisions: kComponentRadiusPresets.length - 1,
-              value: snapComponentRadius(radius),
-              onChanged: controller.setComponentRadius,
+    return QuickSettingsField(
+      label: l.cornerRadius,
+      control: Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: _sliderRowHeight,
+              child: SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 4,
+                  activeTrackColor: c.accent,
+                  inactiveTrackColor: c.border,
+                  thumbColor: c.accent,
+                  overlayColor: c.mixT(c.accent, 0.12),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 7,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 12,
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: s.md),
+                ),
+                // Snaps to the 5 [kComponentRadiusPresets] stops.
+                child: Slider(
+                  max: kComponentRadiusMax,
+                  divisions: kComponentRadiusPresets.length - 1,
+                  value: snapComponentRadius(radius),
+                  onChanged: controller.setComponentRadius,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+          SizedBox(width: s.sm),
+          // Live preview: its corners re-round as you drag.
+          AppButton.filled(
+            size: AppButtonSize.xxSmall,
+            onPressed: () {},
+            child: Text('${radius.round()}'),
+          ),
+        ],
+      ),
     );
   }
 }

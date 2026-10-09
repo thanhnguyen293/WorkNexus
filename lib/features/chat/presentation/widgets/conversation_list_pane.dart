@@ -19,6 +19,7 @@ import 'chat_list_tabs.dart';
 import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
 import 'chat_side_panel_frame.dart';
+import 'chat_text_scale.dart';
 import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 import 'new_chat_dialog.dart';
@@ -133,40 +134,49 @@ class ConversationListPane extends ConsumerWidget {
                 ),
               ),
               // Rows run edge to edge: the selection fills the whole row.
-              _ => ListView.builder(
-                itemCount: visible.length,
-                itemBuilder: (context, i) {
-                  final e = visible[i];
-                  return GestureDetector(
-                    key: ValueKey(e.chat.gid),
-                    onSecondaryTapUp: (d) => showConversationMenu(
-                      context,
-                      ref,
-                      chat: e.chat,
-                      at: d.globalPosition,
-                    ),
-                    child: ConversationTile(
-                      chat: e.chat,
-                      title: e.title,
-                      avatar: chatAvatarStyle(e.chat, users),
-                      presence: e.chat.type == ChatType.one2one
-                          ? chatPresenceOf(users, e.chat.peerUserId)
-                          : null,
-                      verified: e.chat.type == ChatType.one2one
-                          ? chatVerifiedBadge(context, users, e.chat.peerUserId)
-                          : null,
-                      lastSender: _lastSender(context, e.chat, users),
-                      selected: e.chat.gid == selected,
-                      compact: compact,
-                      onTap: () =>
-                          ref
-                              .read(selectedChatGidProvider(accountId).notifier)
-                              .state = e
-                              .chat
-                              .gid,
-                    ),
-                  );
-                },
+              // The rows follow the chat text size, like the messages.
+              _ => ChatTextScale(
+                child: ListView.builder(
+                  itemCount: visible.length,
+                  itemBuilder: (context, i) {
+                    final e = visible[i];
+                    return GestureDetector(
+                      key: ValueKey(e.chat.gid),
+                      onSecondaryTapUp: (d) => showConversationMenu(
+                        context,
+                        ref,
+                        chat: e.chat,
+                        at: d.globalPosition,
+                      ),
+                      child: ConversationTile(
+                        chat: e.chat,
+                        title: e.title,
+                        avatar: chatAvatarStyle(e.chat, users),
+                        presence: e.chat.type == ChatType.one2one
+                            ? chatPresenceOf(users, e.chat.peerUserId)
+                            : null,
+                        verified: e.chat.type == ChatType.one2one
+                            ? chatVerifiedBadge(
+                                context,
+                                users,
+                                e.chat.peerUserId,
+                              )
+                            : null,
+                        lastSender: _lastSender(context, e.chat, users),
+                        selected: e.chat.gid == selected,
+                        compact: compact,
+                        onTap: () =>
+                            ref
+                                .read(
+                                  selectedChatGidProvider(accountId).notifier,
+                                )
+                                .state = e
+                                .chat
+                                .gid,
+                      ),
+                    );
+                  },
+                ),
               ),
             },
           ),

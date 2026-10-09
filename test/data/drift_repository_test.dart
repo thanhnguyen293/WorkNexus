@@ -208,6 +208,7 @@ void main() {
 
     const chosen = AppSettings(
       variant: AppThemeVariant.midnight,
+      themeFollowsSystem: true,
       surface: SurfaceStyle.flat,
       density: AppDensity.compact,
       companyTint: true,
@@ -220,6 +221,7 @@ void main() {
 
     final reloaded = appSettingsFromRow((await db.getSettings())!);
     expect(reloaded.variant, AppThemeVariant.midnight);
+    expect(reloaded.themeFollowsSystem, isTrue);
     expect(reloaded.surface, SurfaceStyle.flat);
     expect(reloaded.density, AppDensity.compact);
     expect(reloaded.companyTint, isTrue);

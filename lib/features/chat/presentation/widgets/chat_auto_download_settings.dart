@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/quick_settings_parts.dart';
+import '../../../../core/widgets/quick_settings_segmented.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_storage_dialog.dart';
 
@@ -20,80 +19,37 @@ class ChatAutoDownloadSettings extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final c = context.colors;
-    final s = context.spacing;
     final (on, mb) = ref.watch(
       appSettingsProvider.select(
         (st) => (st.chatAutoDownloadVideos, st.chatAutoDownloadVideoMb),
       ),
     );
     final settings = ref.read(appSettingsProvider.notifier);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return QuickSettingsSection(
+      title: l.quickSettingsDownloads,
       children: [
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
+        QuickSettingsSwitchField(
+          label: l.chatAutoDownloadVideos,
+          hint: l.chatAutoDownloadVideosHint,
           value: on,
           onChanged: settings.setChatAutoDownloadVideos,
-          title: Text(
-            l.chatAutoDownloadVideos,
-            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-          ),
-          subtitle: Text(
-            l.chatAutoDownloadVideosHint,
-            style: context.typography.caption.copyWith(color: c.textSecondary),
-          ),
         ),
-        if (on) ...[
-          SizedBox(height: s.sm),
-          Row(
-            children: [
-              Text(
-                l.chatAutoDownloadUpTo,
-                style: context.typography.caption.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
-              SizedBox(width: s.lg),
-              Expanded(
-                child: SegmentedButton<int>(
-                  showSelectedIcon: false,
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  segments: [
-                    for (final size in kChatAutoDownloadSizesMb)
-                      ButtonSegment(value: size, label: Text('$size MB')),
-                  ],
-                  selected: {
-                    kChatAutoDownloadSizesMb.contains(mb)
-                        ? mb
-                        : kChatAutoDownloadSizesMb[1],
-                  },
-                  onSelectionChanged: (picked) =>
-                      settings.setChatAutoDownloadVideoMb(picked.first),
-                ),
-              ),
-            ],
+        if (on)
+          QuickSettingsField(
+            label: l.chatAutoDownloadUpTo,
+            control: QuickSettingsSegmented<int>(
+              value: kChatAutoDownloadSizesMb.contains(mb)
+                  ? mb
+                  : kChatAutoDownloadSizesMb[1],
+              options: {
+                for (final size in kChatAutoDownloadSizesMb) size: '$size MB',
+              },
+              onChanged: settings.setChatAutoDownloadVideoMb,
+            ),
           ),
-        ],
-        SizedBox(height: s.sm),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            PhosphorIconsLight.database,
-            size: s.xl4,
-            color: c.textSecondary,
-          ),
-          title: Text(
-            l.chatStorage,
-            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-          ),
-          trailing: Icon(
-            PhosphorIconsLight.caretRight,
-            size: s.xl3,
-            color: c.textTertiary,
-          ),
+        QuickSettingsLinkField(
+          icon: PhosphorIconsLight.database,
+          label: l.chatStorage,
           onTap: () => ChatStorageDialog.show(context),
         ),
       ],

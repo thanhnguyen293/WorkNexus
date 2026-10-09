@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/settings/app_settings.dart';
 
 /// Scales the text of [child] by the chat text size from settings, on top of
-/// the system's own scale: the messages, the composer and the panels that
-/// show messages. The chat list and headers keep the app's size.
+/// the system's own scale: the conversation list, the messages, the composer
+/// and the panels that show messages. Headers (search, tabs, titles) keep the
+/// app's size so they stay aligned across panes.
 class ChatTextScale extends ConsumerWidget {
   const ChatTextScale({super.key, required this.child});
 

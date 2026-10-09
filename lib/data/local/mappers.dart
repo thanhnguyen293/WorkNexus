@@ -234,6 +234,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatAutoDownloadVideos: r.chatAutoDownloadVideos,
   chatAutoDownloadVideoMb: r.chatAutoDownloadVideoMb,
   chatTextScale: r.chatTextScale,
+  themeFollowsSystem: r.themeFollowsSystem,
 );
 
 SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
@@ -264,6 +265,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatAutoDownloadVideos: Value(s.chatAutoDownloadVideos),
   chatAutoDownloadVideoMb: Value(s.chatAutoDownloadVideoMb),
   chatTextScale: Value(s.chatTextScale),
+  themeFollowsSystem: Value(s.themeFollowsSystem),
 );
 
 /// Decodes the persisted pinned-executions column; tolerates malformed rows.

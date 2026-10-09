@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// A Quick Settings section: whether new chat messages notify, and whether
@@ -20,60 +19,23 @@ class ChatNotificationSettings extends ConsumerWidget {
       ),
     );
     final settings = ref.read(appSettingsProvider.notifier);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return QuickSettingsSection(
+      title: l.notifications,
       children: [
-        _Switch(
+        QuickSettingsSwitchField(
+          label: l.chatNotificationsSetting,
+          hint: l.chatNotificationsSettingHint,
           value: on,
           onChanged: settings.setChatNotifications,
-          title: l.chatNotificationsSetting,
-          hint: l.chatNotificationsSettingHint,
         ),
-        _Switch(
+        QuickSettingsSwitchField(
+          label: l.chatNotifyWhileViewing,
+          hint: l.chatNotifyWhileViewingHint,
           value: whileViewing,
           // Means nothing while notifications are off.
           onChanged: on ? settings.setChatNotifyWhileViewing : null,
-          title: l.chatNotifyWhileViewing,
-          hint: l.chatNotifyWhileViewingHint,
         ),
       ],
-    );
-  }
-}
-
-class _Switch extends StatelessWidget {
-  const _Switch({
-    required this.value,
-    required this.onChanged,
-    required this.title,
-    required this.hint,
-  });
-
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-  final String title;
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final enabled = onChanged != null;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      value: value,
-      onChanged: onChanged,
-      title: Text(
-        title,
-        style: context.typography.bodyStrong.copyWith(
-          color: enabled ? c.textPrimary : c.textTertiary,
-        ),
-      ),
-      subtitle: Text(
-        hint,
-        style: context.typography.caption.copyWith(
-          color: enabled ? c.textSecondary : c.textTertiary,
-        ),
-      ),
     );
   }
 }

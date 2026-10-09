@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/desktop_app_lifecycle.dart';
 import '../core/settings/app_settings.dart';
+import '../core/theme/app_palette.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/celebration_overlay.dart';
 import '../l10n/app_localizations.dart';
@@ -34,6 +35,14 @@ class WorkNexusApp extends ConsumerWidget {
       }
     });
     final settings = ref.watch(appSettingsProvider);
+    ThemeData themeFor(AppThemeVariant variant) => buildAppTheme(
+      variant: variant,
+      surface: settings.surface,
+      density: settings.density,
+      fontFamily: settings.fontFamily,
+      componentRadius: settings.componentRadius,
+      accentColorValue: settings.accentColorValue,
+    );
     return MaterialApp(
       onGenerateTitle: (context) => AppL10n.of(context).appTitle,
       debugShowCheckedModeBanner: false,
@@ -47,14 +56,15 @@ class WorkNexusApp extends ConsumerWidget {
         FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: AppL10n.supportedLocales,
-      theme: buildAppTheme(
-        variant: settings.variant,
-        surface: settings.surface,
-        density: settings.density,
-        fontFamily: settings.fontFamily,
-        componentRadius: settings.componentRadius,
-        accentColorValue: settings.accentColorValue,
+      // Following the OS, Flutter swaps light/dark live as the system does;
+      // otherwise the picked variant is the only theme.
+      theme: themeFor(
+        settings.themeFollowsSystem ? AppThemeVariant.light : settings.variant,
       ),
+      darkTheme: themeFor(AppThemeVariant.dark),
+      themeMode: settings.themeFollowsSystem
+          ? ThemeMode.system
+          : ThemeMode.light,
       // Above the navigator, so a show also plays over an open dialog.
       builder: (context, child) =>
           CelebrationOverlay(child: child ?? const SizedBox.shrink()),

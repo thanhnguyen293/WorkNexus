@@ -5,9 +5,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
-import 'board_view_tabs.dart';
 
 /// "+ Bug" on a product's bug board, "+ Task" on an execution's task board:
 /// opens the editor on a new one there. Nothing on other boards.
@@ -37,12 +37,16 @@ class NewTicketButton extends ConsumerWidget {
       _ => (null, null),
     };
     if (label == null || route == null) return const SizedBox.shrink();
-    return SizedBox(
-      height: kBoardToolbarControlHeight,
-      child: FilledButton.icon(
-        onPressed: () => openTicketEditor(ref, route),
-        icon: Icon(PhosphorIconsLight.plus, size: context.spacing.xl3),
-        label: Text(label),
+    return AppButton.filled(
+      size: AppButtonSize.small,
+      onPressed: () => openTicketEditor(ref, route),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(PhosphorIconsBold.plus, size: context.spacing.xl2),
+          SizedBox(width: context.spacing.sm),
+          Text(label),
+        ],
       ),
     );
   }
