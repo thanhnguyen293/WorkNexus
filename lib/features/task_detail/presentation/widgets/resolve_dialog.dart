@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/celebration_overlay.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
@@ -57,6 +58,10 @@ class _ResolveDialogState extends ConsumerState<ResolveDialog> {
       comment: _note.text,
     );
     if (!mounted) return;
+    // Fireworks for a fix only, not for duplicate / by design / won't fix.
+    if (res.isOk && _resolution == 'fixed') {
+      ref.read(celebrationProvider.notifier).celebrate();
+    }
     navigator.pop();
     messenger.showSnackBar(
       SnackBar(

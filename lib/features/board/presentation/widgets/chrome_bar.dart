@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import '../board_refresh.dart';
@@ -99,26 +100,21 @@ class _RefreshButton extends ConsumerWidget {
     final busy = ref.watch(boardRefreshingProvider);
     return Tooltip(
       message: l.refresh,
-      child: InkWell(
+      child: HoverSurface(
         onTap: busy ? null : () => _refresh(context, ref),
+        width: kBoardToolbarControlHeight,
+        height: kBoardToolbarControlHeight,
+        alignment: Alignment.center,
+        color: c.surface,
         borderRadius: BorderRadius.circular(context.radii.md),
-        child: Container(
-          width: kBoardToolbarControlHeight,
-          height: kBoardToolbarControlHeight,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: c.surface,
-            borderRadius: BorderRadius.circular(context.radii.md),
-            border: context.cardBorder,
-          ),
-          child: busy
-              ? const SidebarSyncIndicator()
-              : Icon(
-                  PhosphorIconsLight.arrowClockwise,
-                  size: 16,
-                  color: c.textSecondary,
-                ),
-        ),
+        border: context.cardBorder,
+        child: busy
+            ? const SidebarSyncIndicator()
+            : Icon(
+                PhosphorIconsLight.arrowClockwise,
+                size: 16,
+                color: c.textSecondary,
+              ),
       ),
     );
   }
@@ -230,54 +226,49 @@ class _FiltersButton extends StatelessWidget {
     final active = count > 0;
     final color = active ? c.accent : c.textSecondary;
     final radius = BorderRadius.circular(context.radii.md);
-    return InkWell(
+    return HoverSurface(
       onTap: onTap,
+      height: kBoardToolbarControlHeight,
+      padding: EdgeInsets.symmetric(horizontal: compact ? s.md : s.lg),
+      color: active ? c.selectionFill : c.surface,
       borderRadius: radius,
-      child: Container(
-        height: kBoardToolbarControlHeight,
-        padding: EdgeInsets.symmetric(horizontal: compact ? s.md : s.lg),
-        decoration: BoxDecoration(
-          color: active ? c.selectionFill : c.surface,
-          borderRadius: radius,
-          border: context.cardBorder,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              active ? PhosphorIconsFill.funnel : PhosphorIconsLight.funnel,
-              size: s.xl3,
-              color: color,
+      border: context.cardBorder,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            active ? PhosphorIconsFill.funnel : PhosphorIconsLight.funnel,
+            size: s.xl3,
+            color: color,
+          ),
+          if (!compact) ...[
+            SizedBox(width: s.sm),
+            Text(
+              l.filters,
+              style: context.typography.bodySm.copyWith(
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
             ),
-            if (!compact) ...[
-              SizedBox(width: s.sm),
-              Text(
-                l.filters,
-                style: context.typography.bodySm.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: color,
-                ),
-              ),
-            ],
-            if (active) ...[
-              SizedBox(width: s.sm),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: s.sm),
-                decoration: BoxDecoration(
-                  color: c.accent,
-                  borderRadius: BorderRadius.circular(context.radii.pill),
-                ),
-                child: Text(
-                  '$count',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.onAccent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
           ],
-        ),
+          if (active) ...[
+            SizedBox(width: s.sm),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: s.sm),
+              decoration: BoxDecoration(
+                color: c.accent,
+                borderRadius: BorderRadius.circular(context.radii.pill),
+              ),
+              child: Text(
+                '$count',
+                style: context.typography.monoXs.copyWith(
+                  color: c.onAccent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

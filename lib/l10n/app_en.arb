@@ -9,10 +9,14 @@
       }
     }
   },
+  "updateRestartToUpdate": "Restart to update to {version}",
+  "@updateRestartToUpdate": {
+    "placeholders": { "version": { "type": "String" } }
+  },
   "trayOpenApp": "Open WorkNexus",
   "trayQuitApp": "Quit WorkNexus",
   "appUpdatesTitle": "App updates",
-  "appUpdatesSubtitle": "Stable updates are checked automatically when the app starts. You can also check now.",
+  "appUpdatesSubtitle": "Stable updates are checked every hour and downloaded in the background. Once one is ready, the button above Integrations restarts into it. You can also check now.",
   "checkForUpdates": "Check for updates",
   "latestVersionInstalled": "You're using the latest stable version.",
   "updateCheckFailed": "Couldn't check for updates. Check your connection and try again.",
@@ -809,7 +813,7 @@
   "chatReadOnlyAdmins": "Only admins can send messages in this chat",
   "chatReadOnly": "You can't send messages in this chat",
   "updateAction": "Update",
-  "updateRestartHint": "The update downloads, is verified, then WorkNexus restarts into the new version.",
+  "updateReadyHint": "Downloaded and verified. WorkNexus restarts into the new version whenever you are ready.",
   "updateDownloading": "Downloading the update…",
   "updateRestarting": "Installing — WorkNexus will restart…",
   "updateLater": "Later",
@@ -939,5 +943,25 @@
   "datePickTomorrow": "Tomorrow",
   "datePickNextWeek": "In a week",
   "imageResizeHint": "Drag to resize · double-click to fit",
-  "fieldTaskType": "Task type"
+  "fieldTaskType": "Task type",
+  "editorTextColor": "Text colour",
+  "@editorTextColor": {
+    "description": "Tooltip of the rich-text toolbar button that colours the selected text."
+  },
+  "editorHighlightColor": "Highlight colour",
+  "@editorHighlightColor": {
+    "description": "Tooltip of the rich-text toolbar button that colours the background behind the selected text."
+  },
+  "editorInsertLink": "Insert link",
+  "editorEditLink": "Edit link",
+  "editorLinkText": "Text to show",
+  "editorLinkUrl": "Link",
+  "editorLinkRemove": "Remove link",
+  "editorLinkInvalid": "Enter a full link, e.g. https://example.com",
+  "chatWithPerson": "Chat with {name}",
+  "@chatWithPerson": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "dropFilesToSend": "Drop files to send",
+  "dropFilesToInsert": "Drop images to insert, other files to attach"
 }

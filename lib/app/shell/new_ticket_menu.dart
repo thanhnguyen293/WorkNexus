@@ -137,10 +137,6 @@ class NewTicketShortcut extends ConsumerWidget {
   }
 }
 
-/// Opens the editor on [route] over whatever is showing (it is hidden behind
-/// the integrations page, and replaces an open detail).
-void _openEditor(WidgetRef ref, TicketEditorRoute route) {
-  ref.read(settingsOpenProvider.notifier).state = false;
-  ref.read(openTicketIdProvider.notifier).close();
-  ref.read(ticketEditorProvider.notifier).open(route);
-}
+/// Opens the editor on [route] over whatever is showing.
+void _openEditor(WidgetRef ref, TicketEditorRoute route) =>
+    openTicketEditor(ref, route);

@@ -7,6 +7,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/saved_filter.dart';
@@ -90,16 +91,15 @@ class _PresetChip extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final controller = ref.read(savedFilterControllerProvider.notifier);
-    return Container(
+    // The pill itself has no tap handler — the label and the ✕ inside are the
+    // targets — so hover feedback is switched on explicitly.
+    return HoverSurface(
+      enabled: true,
       height: 26,
       padding: EdgeInsets.only(left: context.spacing.lg),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.pill),
-        border: context.borders.showOutline
-            ? Border.all(color: c.border)
-            : null,
-      ),
+      color: c.surfaceSubtle,
+      borderRadius: BorderRadius.circular(context.radii.pill),
+      border: context.borders.showOutline ? Border.all(color: c.border) : null,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -154,23 +154,19 @@ class _SaveButton extends StatelessWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final enabled = onTap != null;
-    return GestureDetector(
+    return HoverSurface(
       onTap: onTap,
-      child: Container(
-        height: 26,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          borderRadius: BorderRadius.circular(context.radii.pill),
-          border: Border.all(color: c.border),
-        ),
-        child: Text(
-          '＋ ${l.saveCurrentFilter}',
-          style: context.typography.meta.copyWith(
-            fontWeight: FontWeight.w500,
-            color: enabled ? c.textSecondary : c.textTertiary,
-          ),
+      height: 26,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
+      alignment: Alignment.center,
+      color: c.surfaceSubtle,
+      borderRadius: BorderRadius.circular(context.radii.pill),
+      border: Border.all(color: c.border),
+      child: Text(
+        '＋ ${l.saveCurrentFilter}',
+        style: context.typography.meta.copyWith(
+          fontWeight: FontWeight.w500,
+          color: enabled ? c.textSecondary : c.textTertiary,
         ),
       ),
     );

@@ -7,12 +7,11 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
-import 'attachment_preview_dialog.dart';
 import 'chat_attachments.dart';
+import 'chat_composer_input.dart';
 import 'chat_composer_toolbar.dart';
+import 'chat_file_send.dart';
 import 'chat_mention_overlay.dart';
 import 'chat_snack.dart';
 import 'mention_autocomplete.dart';
@@ -120,28 +119,14 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   /// Shows the preview; sends what the user kept.
   Future<void> _confirmAndSend(List<ChatAttachment> files) async {
     if (!mounted) return;
-    final chosen = await AttachmentPreviewDialog.show(context, files);
-    if (chosen != null && chosen.isNotEmpty) await _sendFiles(chosen);
+    await previewAndSendChatFiles(
+      context,
+      ref,
+      draftKey: _draftKey,
+      files: files,
+      threadRootId: widget.threadRootId,
+    );
     if (mounted) _focus.requestFocus();
-  }
-
-  Future<void> _sendFiles(List<ChatAttachment> files) async {
-    final t = widget.thread;
-    final controller = ref.read(chatControllerProvider);
-    final replyToId = _replyToId;
-    _cancelReply();
-    for (final f in files) {
-      final result = await controller.sendFile(
-        t.accountId,
-        t.chatGid,
-        name: f.name,
-        bytes: f.bytes,
-        replyToId: replyToId,
-      );
-      if (result case Err(:final failure)) {
-        if (mounted) showChatFailure(context, failure);
-      }
-    }
   }
 
   /// Types "@" at the cursor (after a space if needed): starts a mention.
@@ -179,17 +164,32 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     return true;
   }
 
-  /// Sends the input, or [quick] (e.g. a like) without touching it.
-  Future<void> _send([String? quick]) async {
-    final text = quick ?? _text.text;
-    if (text.trim().isEmpty) return;
-    final mentions = quick == null
-        ? Map.of(_mentions.mentions)
-        : <String, int>{};
-    if (quick == null) {
-      _text.clear();
-      _mentions.reset();
+  /// Sends a like the way the official client does: one large 👍, not a
+  /// text bubble. A large emoji can't answer a message, so while replying
+  /// (or in a thread) the like goes as text with the reply instead.
+  Future<void> _sendLike() async {
+    if (_replyToId != null) return _deliver('👍', const {});
+    final t = widget.thread;
+    final result = await ref
+        .read(chatControllerProvider)
+        .sendLargeEmoji(t.accountId, t.chatGid, '👍');
+    if (result case Err(:final failure)) {
+      if (mounted) showChatFailure(context, failure);
     }
+  }
+
+  /// Sends the input.
+  Future<void> _send() async {
+    final text = _text.text;
+    if (text.trim().isEmpty) return;
+    final mentions = Map.of(_mentions.mentions);
+    _text.clear();
+    _mentions.reset();
+    await _deliver(text, mentions);
+  }
+
+  /// Sends [text] as a message, answering the reply draft (or thread root).
+  Future<void> _deliver(String text, Map<String, int> mentions) async {
     final replyToId = _replyToId;
     _cancelReply();
     final t = widget.thread;
@@ -211,7 +211,6 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final l = AppL10n.of(context);
     final s = context.spacing;
     ref.listen(chatReplyDraftProvider(_draftKey), (_, next) {
       if (next != null) _focus.requestFocus();
@@ -262,32 +261,18 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: ChatComposerInput(
                       controller: _text,
-                      focusNode: _focus,
+                      focus: _focus,
                       autofocus: widget.threadRootId == null,
-                      minLines: 1,
-                      maxLines: 10,
-                      keyboardType: TextInputType.multiline,
-                      style: context.typography.body.copyWith(
-                        color: c.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        border: InputBorder.none,
-                        hintText: widget.hint ?? l.chatComposerHint,
-                        hintStyle: context.typography.body.copyWith(
-                          color: c.textTertiary,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(vertical: s.lg),
-                      ),
+                      hint: widget.hint,
                     ),
                   ),
                   SizedBox(width: s.md),
                   ChatComposerSendButton(
                     text: _text,
                     onSend: _send,
-                    onLike: () => _send('👍'),
+                    onLike: _sendLike,
                   ),
                 ],
               ),

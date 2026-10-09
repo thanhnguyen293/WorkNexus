@@ -126,6 +126,7 @@ class _RoundButton extends StatelessWidget {
       color: c.surface,
       shape: CircleBorder(side: BorderSide(color: c.border)),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: SizedBox.square(

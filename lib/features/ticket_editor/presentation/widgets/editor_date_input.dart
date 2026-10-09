@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// A date (`Y-m-d`, empty for none) picked from a calendar that drops down
@@ -68,44 +69,39 @@ class _EditorDateInputState extends State<EditorDateInput> {
             ),
           ),
         ],
-        builder: (context, menu, _) => InkWell(
+        builder: (context, menu, _) => HoverSurface(
           onTap: () => menu.isOpen ? menu.close() : menu.open(),
+          height: s.xl6,
+          padding: EdgeInsets.only(left: s.lg),
+          color: c.surfaceSubtle,
           borderRadius: radius,
-          child: Container(
-            height: s.xl6,
-            padding: EdgeInsets.only(left: s.lg),
-            decoration: BoxDecoration(
-              color: c.surfaceSubtle,
-              borderRadius: radius,
-              border: Border.all(color: menu.isOpen ? c.accent : c.border),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  PhosphorIconsLight.calendarBlank,
-                  size: s.xl3,
-                  color: picked == null ? c.textTertiary : c.accent,
-                ),
-                SizedBox(width: s.md),
-                Expanded(
-                  child: Text(
-                    picked == null
-                        ? AppL10n.of(context).selectNone
-                        : DateFormat.yMMMEd(locale).format(picked),
-                    style: context.typography.bodySm.copyWith(
-                      color: picked == null ? c.textTertiary : c.textPrimary,
-                    ),
+          border: Border.all(color: menu.isOpen ? c.accent : c.border),
+          child: Row(
+            children: [
+              Icon(
+                PhosphorIconsLight.calendarBlank,
+                size: s.xl3,
+                color: picked == null ? c.textTertiary : c.accent,
+              ),
+              SizedBox(width: s.md),
+              Expanded(
+                child: Text(
+                  picked == null
+                      ? AppL10n.of(context).selectNone
+                      : DateFormat.yMMMEd(locale).format(picked),
+                  style: context.typography.bodySm.copyWith(
+                    color: picked == null ? c.textTertiary : c.textPrimary,
                   ),
                 ),
-                if (picked != null)
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    color: c.textTertiary,
-                    icon: Icon(PhosphorIconsLight.x, size: s.xl2),
-                    onPressed: () => _pick(null),
-                  ),
-              ],
-            ),
+              ),
+              if (picked != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  color: c.textTertiary,
+                  icon: Icon(PhosphorIconsLight.x, size: s.xl2),
+                  onPressed: () => _pick(null),
+                ),
+            ],
           ),
         ),
       ),
@@ -167,8 +163,21 @@ class _Calendar extends StatelessWidget {
                   color: c.textTertiary,
                 ),
                 yearStyle: context.typography.bodySm,
+                subHeaderForegroundColor: c.textPrimary,
                 todayBorder: BorderSide(color: c.accent),
-                todayForegroundColor: WidgetStatePropertyAll(c.accent),
+                // Selected wins over "today": accent ink on the accent fill
+                // would leave a picked today blank.
+                todayForegroundColor: _selectedOr(c.onAccent, c.accent),
+                todayBackgroundColor: _selectedOr(c.accent, null),
+                dayForegroundColor: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.selected)
+                      ? c.onAccent
+                      : states.contains(WidgetState.disabled)
+                      ? c.textTertiary
+                      : c.textPrimary,
+                ),
+                dayBackgroundColor: _selectedOr(c.accent, null),
+                dayOverlayColor: WidgetStatePropertyAll(c.hoverFill),
                 dayShape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(context.radii.md),
@@ -212,6 +221,7 @@ class _QuickPick extends StatelessWidget {
         side: BorderSide(color: selected ? c.mixT(c.accent, 0.5) : c.border),
       ),
       child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         borderRadius: radius,
         child: Padding(
@@ -227,3 +237,9 @@ class _QuickPick extends StatelessWidget {
     );
   }
 }
+
+/// [selected] for the picked day, [otherwise] for the rest.
+WidgetStateProperty<Color?> _selectedOr(Color selected, Color? otherwise) =>
+    WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? selected : otherwise,
+    );

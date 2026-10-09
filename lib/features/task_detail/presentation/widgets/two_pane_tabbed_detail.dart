@@ -4,6 +4,7 @@ import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Below this panel width the overview content + metadata sidebar stack
@@ -220,26 +221,22 @@ class _PaneTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
+    return HoverSurface(
       onTap: onTap,
-      child: Container(
-        height: context.spacing.xl6,
-        alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: selected ? c.accent : Colors.transparent,
-              width: context.borders.thick,
-            ),
-          ),
+      height: context.spacing.xl6,
+      alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
+      border: Border(
+        bottom: BorderSide(
+          color: selected ? c.accent : Colors.transparent,
+          width: context.borders.thick,
         ),
-        child: Text(
-          label,
-          style: context.typography.secondary.copyWith(
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? c.textPrimary : c.textSecondary,
-          ),
+      ),
+      child: Text(
+        label,
+        style: context.typography.secondary.copyWith(
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          color: selected ? c.textPrimary : c.textSecondary,
         ),
       ),
     );

@@ -14,6 +14,7 @@ import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/priority_labels.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/label_chips.dart';
 import '../../../translation/presentation/translation_providers.dart';
 import '../board_providers.dart';
@@ -55,90 +56,82 @@ class TicketCard extends ConsumerWidget {
 
     return Opacity(
       opacity: pending ? 0.48 : 1,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: pending
-              ? null
-              : () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(context.radii.card),
-              border: border,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(context.radii.card),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: stripeWidth, color: wsColor),
-                    Expanded(
-                      child: Padding(
-                        padding: context.spacing.cardPadding,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+      child: HoverSurface(
+        onTap: pending
+            ? null
+            : () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
+        color: bg,
+        borderRadius: BorderRadius.circular(context.radii.card),
+        border: border,
+        // Outline surfaces also firm up the line on hover.
+        hoverBorder: border == null ? null : Border.all(color: c.borderStrong),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(context.radii.card),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: stripeWidth, color: wsColor),
+                Expanded(
+                  child: Padding(
+                    padding: context.spacing.cardPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  ticketRef(
-                                    ticket.providerType,
-                                    ticket.externalKey,
-                                    ticket.externalType,
-                                  ),
-                                  style: context.typography.mono.copyWith(
-                                    color: c.textTertiary,
-                                  ),
-                                ),
-                                SizedBox(width: context.spacing.sm),
-                                const Spacer(),
-
-                                if (ticket.severity != null)
-                                  SeverityTag(ticket.severity!),
-                                if (hasExplicitPriority(ticket)) ...[
-                                  if (ticket.severity != null)
-                                    SizedBox(width: context.spacing.sm),
-                                  PriorityTag(
-                                    ticket.providerType,
-                                    ticket.priority,
-                                  ),
-                                ],
-                              ],
-                            ),
-                            SizedBox(height: context.spacing.md),
                             Text(
-                              ticket.title,
-                              style: context.typography.cardTitle.copyWith(
-                                color: c.textPrimary,
+                              ticketRef(
+                                ticket.providerType,
+                                ticket.externalKey,
+                                ticket.externalType,
+                              ),
+                              style: context.typography.mono.copyWith(
+                                color: c.textTertiary,
                               ),
                             ),
-                            if (cardLabels.isNotEmpty) ...[
-                              SizedBox(height: context.spacing.md),
-                              LabelChips(
-                                labels: cardLabels,
-                                colors: labelColors.background,
-                                textColors: labelColors.text,
-                              ),
-                            ],
-                            SizedBox(height: context.spacing.md),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: AssigneeChip(ticket.assignee, wsColor),
-                                ),
+                            SizedBox(width: context.spacing.sm),
+                            const Spacer(),
+
+                            if (ticket.severity != null)
+                              SeverityTag(ticket.severity!),
+                            if (hasExplicitPriority(ticket)) ...[
+                              if (ticket.severity != null)
                                 SizedBox(width: context.spacing.sm),
-                                TranslationDot(trStatus),
-                              ],
-                            ),
+                              PriorityTag(ticket.providerType, ticket.priority),
+                            ],
                           ],
                         ),
-                      ),
+                        SizedBox(height: context.spacing.md),
+                        Text(
+                          ticket.title,
+                          style: context.typography.cardTitle.copyWith(
+                            color: c.textPrimary,
+                          ),
+                        ),
+                        if (cardLabels.isNotEmpty) ...[
+                          SizedBox(height: context.spacing.md),
+                          LabelChips(
+                            labels: cardLabels,
+                            colors: labelColors.background,
+                            textColors: labelColors.text,
+                          ),
+                        ],
+                        SizedBox(height: context.spacing.md),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AssigneeChip(ticket.assignee, wsColor),
+                            ),
+                            SizedBox(width: context.spacing.sm),
+                            TranslationDot(trStatus),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

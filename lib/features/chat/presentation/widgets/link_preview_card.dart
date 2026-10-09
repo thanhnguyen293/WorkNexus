@@ -6,6 +6,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/contrast.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../domain/entities/link_preview.dart';
 import '../providers/chat_providers.dart';
 import 'chat_bubble_theme.dart';
@@ -36,39 +37,35 @@ class LinkPreviewCard extends ConsumerWidget {
     final image = preview?.imageUrl;
     return Padding(
       padding: EdgeInsets.only(top: s.md),
-      child: InkWell(
+      child: HoverSurface(
         onTap: () => openChatLink(ref, url),
+        height: _kCardHeight,
+        constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
+        color: ink.quoteFill,
+        hoverColor: ink.hoverFill,
         borderRadius: radius,
-        child: Container(
-          height: _kCardHeight,
-          constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
-          decoration: BoxDecoration(
-            color: ink.quoteFill,
-            borderRadius: radius,
-            border: Border(left: BorderSide(color: ink.quoteBar, width: 3)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: s.lg),
-                  child: state.isLoading
-                      ? const _SkeletonLines()
-                      : _Lines(url: url, preview: preview),
+        border: Border(left: BorderSide(color: ink.quoteBar, width: 3)),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: s.lg),
+                child: state.isLoading
+                    ? const _SkeletonLines()
+                    : _Lines(url: url, preview: preview),
+              ),
+            ),
+            if (image != null)
+              SizedBox.square(
+                dimension: _kCardHeight,
+                child: CachedNetworkImage(
+                  imageUrl: image,
+                  fit: BoxFit.cover,
+                  errorWidget: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),
-              if (image != null)
-                SizedBox.square(
-                  dimension: _kCardHeight,
-                  child: CachedNetworkImage(
-                    imageUrl: image,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, _, _) => const SizedBox.shrink(),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );

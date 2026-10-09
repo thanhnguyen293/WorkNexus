@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'editor_chip.dart';
 import 'option_multi_select_dialog.dart';
@@ -48,49 +49,44 @@ class OptionMultiSelect extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     final radius = BorderRadius.circular(context.radii.md);
-    return InkWell(
+    return HoverSurface(
       onTap: () => _pick(context),
+      constraints: BoxConstraints(minHeight: s.xl6),
+      padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.sm),
+      color: c.surfaceSubtle,
       borderRadius: radius,
-      child: Container(
-        constraints: BoxConstraints(minHeight: s.xl6),
-        padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.sm),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          borderRadius: radius,
-          border: Border.all(color: c.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: values.isEmpty
-                  ? Text(
-                      AppL10n.of(context).selectNone,
-                      style: context.typography.bodySm.copyWith(
-                        color: c.textTertiary,
-                      ),
-                    )
-                  : Wrap(
-                      spacing: s.sm,
-                      runSpacing: s.sm,
-                      children: [
-                        for (final value in values)
-                          EditorChip(
-                            label: _label(value),
-                            onRemove: () => onChanged([
-                              for (final v in values)
-                                if (v != value) v,
-                            ]),
-                          ),
-                      ],
+      border: Border.all(color: c.border),
+      child: Row(
+        children: [
+          Expanded(
+            child: values.isEmpty
+                ? Text(
+                    AppL10n.of(context).selectNone,
+                    style: context.typography.bodySm.copyWith(
+                      color: c.textTertiary,
                     ),
-            ),
-            Icon(
-              PhosphorIconsLight.caretDown,
-              size: s.xl3,
-              color: c.textTertiary,
-            ),
-          ],
-        ),
+                  )
+                : Wrap(
+                    spacing: s.sm,
+                    runSpacing: s.sm,
+                    children: [
+                      for (final value in values)
+                        EditorChip(
+                          label: _label(value),
+                          onRemove: () => onChanged([
+                            for (final v in values)
+                              if (v != value) v,
+                          ]),
+                        ),
+                    ],
+                  ),
+          ),
+          Icon(
+            PhosphorIconsLight.caretDown,
+            size: s.xl3,
+            color: c.textTertiary,
+          ),
+        ],
       ),
     );
   }

@@ -42,6 +42,7 @@ class AppRailButton extends StatelessWidget {
               color: selected ? c.selectionFill : Colors.transparent,
               borderRadius: BorderRadius.circular(context.radii.lg),
               child: InkWell(
+                mouseCursor: WidgetStateMouseCursor.clickable,
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(context.radii.lg),
                 child: SizedBox.square(

@@ -20,6 +20,7 @@ class ChatAccountPicker extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.md),
       child: DropdownButton<String>(
+        mouseCursor: WidgetStateMouseCursor.clickable,
         value: selected,
         isExpanded: true,
         isDense: true,

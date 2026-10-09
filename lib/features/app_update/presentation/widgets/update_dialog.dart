@@ -13,12 +13,13 @@ import '../../domain/entities/available_update.dart';
 import '../providers/update_controller.dart';
 import '../providers/update_state.dart';
 
-/// Offers to download and install [update], then restarts into it. Without an
-/// in-app build for this platform, or when the install fails, it points at the
-/// release page instead.
 /// Widest the dialog grows, in logical pixels: a phone-sized card.
 const _dialogMaxWidth = 420.0;
 
+/// Shows [update] after a manual check: the download the controller already
+/// started, then a restart into it. Without an in-app build for this platform,
+/// or when the install fails, it points at the release page instead. Closing
+/// it does not stop the download; the rail offers the restart once it is done.
 class UpdateDialog extends ConsumerWidget {
   const UpdateDialog({required this.update, super.key});
 
@@ -29,9 +30,11 @@ class UpdateDialog extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final state = ref.watch(updateControllerProvider);
-    final busy = state is UpdateDownloading || state is UpdateInstalling;
+    final ready = state is UpdateReady;
     final failed = state is UpdateFailed;
-    final manual = failed || !update.canInstallInApp;
+    final manual = failed || state is UpdateManual;
+    // Downloading or installing; also the moment before the download starts.
+    final busy = !ready && !manual;
 
     return Dialog(
       backgroundColor: c.surface,
@@ -66,7 +69,7 @@ class UpdateDialog extends ConsumerWidget {
                       ? l.updateInstallFailed
                       : manual
                       ? l.updateManualInstall
-                      : l.updateRestartHint,
+                      : l.updateReadyHint,
                   textAlign: TextAlign.center,
                   style: context.typography.paragraph.copyWith(
                     color: failed ? c.error : c.textSecondary,
@@ -77,9 +80,7 @@ class UpdateDialog extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: AppButton.outlinedNeutral(
-                      onPressed: busy
-                          ? null
-                          : () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(),
                       child: Text(l.updateLater),
                     ),
                   ),
@@ -94,7 +95,7 @@ class UpdateDialog extends ConsumerWidget {
                             isLoading: busy,
                             onPressed: () => ref
                                 .read(updateControllerProvider.notifier)
-                                .installAndRestart(update),
+                                .installAndRestart(),
                             child: Text(l.updateRestartNow),
                           ),
                   ),
@@ -199,9 +200,8 @@ class _Progress extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    final progress = state is UpdateDownloading
-        ? (state as UpdateDownloading).progress
-        : null;
+    final state = this.state;
+    final progress = state is UpdateDownloading ? state.progress : null;
     final installing = state is UpdateInstalling;
     return Column(
       children: [

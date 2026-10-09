@@ -8,6 +8,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/zentao_labels.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'attachment_viewer_dialog.dart';
 import 'section_label.dart';
@@ -57,79 +58,74 @@ class _AttachmentRow extends StatelessWidget {
       if ((attachment.addedBy ?? '').isNotEmpty) attachment.addedBy!,
     ].join(' · ');
 
-    return InkWell(
+    return HoverSurface(
       onTap: () => showAttachmentViewer(context, ticket, attachment),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.md,
+        vertical: context.spacing.sm,
+      ),
+      color: c.surfaceSubtle,
       borderRadius: BorderRadius.circular(context.radii.md),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.md,
-          vertical: context.spacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          borderRadius: BorderRadius.circular(context.radii.md),
-          border: Border.all(color: c.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: c.mixT(c.info, 0.16),
-                borderRadius: BorderRadius.circular(context.radii.md),
-              ),
-              child: Icon(
-                _iconFor(attachment.extension),
-                size: 16,
-                color: c.info,
-              ),
+      border: Border.all(color: c.border),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: c.mixT(c.info, 0.16),
+              borderRadius: BorderRadius.circular(context.radii.md),
             ),
-            SizedBox(width: context.spacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: Icon(
+              _iconFor(attachment.extension),
+              size: 16,
+              color: c.info,
+            ),
+          ),
+          SizedBox(width: context.spacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attachment.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.secondary.copyWith(
+                    color: c.textPrimary,
+                  ),
+                ),
+                if (subtitle.isNotEmpty) ...[
+                  SizedBox(height: context.spacing.xxs),
                   Text(
-                    attachment.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.secondary.copyWith(
-                      color: c.textPrimary,
+                    subtitle,
+                    style: context.typography.caption.copyWith(
+                      color: c.textTertiary,
                     ),
                   ),
-                  if (subtitle.isNotEmpty) ...[
-                    SizedBox(height: context.spacing.xxs),
-                    Text(
-                      subtitle,
-                      style: context.typography.caption.copyWith(
-                        color: c.textTertiary,
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-            SizedBox(width: context.spacing.md),
-            Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(context.radii.md),
-                border: Border.all(color: c.border),
-              ),
-              child: Icon(
-                _isViewable(attachment.extension)
-                    ? PhosphorIconsLight.eye
-                    : PhosphorIconsLight.downloadSimple,
-                size: 15,
-                color: c.textTertiary,
-              ),
+          ),
+          SizedBox(width: context.spacing.md),
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(context.radii.md),
+              border: Border.all(color: c.border),
             ),
-          ],
-        ),
+            child: Icon(
+              _isViewable(attachment.extension)
+                  ? PhosphorIconsLight.eye
+                  : PhosphorIconsLight.downloadSimple,
+              size: 15,
+              color: c.textTertiary,
+            ),
+          ),
+        ],
       ),
     );
   }

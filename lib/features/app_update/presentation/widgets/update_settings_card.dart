@@ -12,16 +12,26 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/build_issue_report_url.dart';
+import '../providers/update_controller.dart';
 import '../providers/update_provider.dart';
+import 'update_dialog.dart';
 
-class UpdateSettingsCard extends ConsumerWidget {
+class UpdateSettingsCard extends ConsumerStatefulWidget {
   const UpdateSettingsCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UpdateSettingsCard> createState() => _UpdateSettingsCardState();
+}
+
+class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
+  /// The manual check's spinner; the controller's state tracks the install,
+  /// not the lookup.
+  var _checking = false;
+
+  @override
+  Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    final check = ref.watch(updateCheckProvider);
     final version = ref.watch(appVersionProvider).asData?.value;
 
     return Column(
@@ -59,8 +69,8 @@ class UpdateSettingsCard extends ConsumerWidget {
                     ),
                   ),
                   AppButton.outlinedNeutral(
-                    isLoading: check.isLoading,
-                    onPressed: () => _checkForUpdates(context, ref),
+                    isLoading: _checking,
+                    onPressed: _checkForUpdates,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -108,29 +118,29 @@ class UpdateSettingsCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _checkForUpdates(BuildContext context, WidgetRef ref) async {
-    ref.invalidate(updateCheckProvider);
-    final result = await ref.read(updateCheckProvider.future);
-    if (!context.mounted) return;
+  Future<void> _checkForUpdates() async {
+    setState(() => _checking = true);
+    final result = await ref.read(updateControllerProvider.notifier).check();
+    if (!mounted) return;
+    setState(() => _checking = false);
 
-    result.fold<void>(
-      (update) {
-        // A newer release is offered by UpdateNotificationListener's dialog.
-        if (update == null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(AppL10n.of(context).latestVersionInstalled),
-              ),
-            );
-        }
-      },
-      (_) => ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(AppL10n.of(context).updateCheckFailed)),
-        ),
-    );
+    final l = AppL10n.of(context);
+    result.fold<void>((update) {
+      if (update == null) {
+        _toast(l.latestVersionInstalled);
+        return;
+      }
+      // One dialog per check: the controller is already downloading.
+      showDialog<void>(
+        context: context,
+        builder: (_) => UpdateDialog(update: update),
+      );
+    }, (_) => _toast(l.updateCheckFailed));
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

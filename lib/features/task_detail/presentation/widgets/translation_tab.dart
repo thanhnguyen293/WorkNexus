@@ -149,12 +149,14 @@ class TranslationTab extends ConsumerWidget {
                   SizedBox(height: context.spacing.xl),
                   SectionLabel(l.description),
                   SizedBox(height: context.spacing.md),
-                  MarkdownText(
-                    record.translatedBody,
-                    imageLoader: (url) =>
-                        getIt<SyncService>().fetchTicketImage(ticket, url),
-                    imageFallbackUrl: imageFallback.resolveUrl,
-                    onOpenImage: imageFallback.open,
+                  SelectionArea(
+                    child: MarkdownText(
+                      record.translatedBody,
+                      imageLoader: (url) =>
+                          getIt<SyncService>().fetchTicketImage(ticket, url),
+                      imageFallbackUrl: imageFallback.resolveUrl,
+                      onOpenImage: imageFallback.open,
+                    ),
                   ),
                 ],
               ),
