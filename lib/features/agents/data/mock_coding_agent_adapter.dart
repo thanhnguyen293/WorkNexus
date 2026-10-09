@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import '../../../core/domain/adapters/coding_agent_adapter.dart';
 import '../../../core/domain/entities/agent_event.dart';
 import '../../../core/domain/entities/agent_session.dart';
 import '../../../core/domain/value_objects/agent_kind.dart';
 import '../../../core/util/content_hash.dart';
-import '../domain/adapters/coding_agent_adapter.dart';
 
 /// Simulates a coding-agent run with realistic, timed progress events. Used for
 /// offline demos and tests, and as the default dry-run path so dispatching never

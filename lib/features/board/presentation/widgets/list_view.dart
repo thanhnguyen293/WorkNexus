@@ -10,11 +10,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/translation/translation_providers.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../translation/presentation/translation_providers.dart';
 import '../board_providers.dart';
 
 // Column widths (design grid: 220 / 1fr / 150 / 128 / 132 / 56 / 60).

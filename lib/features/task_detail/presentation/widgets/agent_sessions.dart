@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/agents/agent_providers.dart';
 import '../../../../core/domain/entities/agent_event.dart';
 import '../../../../core/domain/value_objects/agent_kind.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../agents/presentation/agent_providers.dart';
 
 /// The list of coding-agent sessions dispatched for a ticket (dev tab).
 class AgentSessions extends ConsumerWidget {

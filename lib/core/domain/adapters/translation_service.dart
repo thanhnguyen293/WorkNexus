@@ -1,5 +1,5 @@
-import '../../../../core/domain/entities/translation_record.dart';
-import '../../../../core/error/result.dart';
+import '../../error/result.dart';
+import '../entities/translation_record.dart';
 
 /// The translatable content of a ticket.
 class TicketSource {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/agents/agent_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/agent_kind.dart';
@@ -13,7 +14,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../agents/presentation/agent_providers.dart';
 import '../detail_providers.dart';
 import 'agent_sessions.dart';
 import 'detail_scroll_body.dart';

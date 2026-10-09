@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../features/agents/data/cli_agent_adapters.dart';
 import '../../features/agents/data/mock_coding_agent_adapter.dart';
-import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
+import '../domain/adapters/coding_agent_adapter.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';

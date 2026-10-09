@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/providers.dart';
-import '../../../core/di/service_locator.dart';
-import '../../../core/domain/entities/translation_record.dart';
-import '../../../core/domain/repositories/translation_repository.dart';
-import '../../../core/domain/value_objects/translation_state.dart';
-import '../../../core/settings/app_settings.dart';
+import '../di/providers.dart';
+import '../di/service_locator.dart';
 import '../domain/adapters/translation_service.dart';
+import '../domain/entities/translation_record.dart';
+import '../domain/repositories/translation_repository.dart';
 import '../domain/usecases/resolve_translation_state.dart';
+import '../domain/value_objects/translation_state.dart';
+import '../settings/app_settings.dart';
 
 /// The cached translation record for a ticket (reactive). The DB holds one
 /// record per ticket; [translationStatusProvider] decides whether it matches the

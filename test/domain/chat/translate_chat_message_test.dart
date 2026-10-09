@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/domain/adapters/translation_service.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
@@ -7,7 +8,6 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message_translatio
 import 'package:work_nexus/features/chat/domain/repositories/message_translation_repository.dart';
 import 'package:work_nexus/features/chat/domain/usecases/translate_chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
-import 'package:work_nexus/features/translation/domain/adapters/translation_service.dart';
 
 class _MockRepo extends Mock implements MessageTranslationRepository {}
 

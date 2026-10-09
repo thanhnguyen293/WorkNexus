@@ -1,6 +1,6 @@
-import '../../../../core/domain/entities/agent_event.dart';
-import '../../../../core/domain/entities/agent_session.dart';
-import '../../../../core/domain/value_objects/agent_kind.dart';
+import '../entities/agent_event.dart';
+import '../entities/agent_session.dart';
+import '../value_objects/agent_kind.dart';
 
 /// A request to run a coding agent against a ticket in a working directory.
 class DispatchTask {

@@ -11,11 +11,11 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/translation/translation_providers.dart';
 import '../../../../core/util/labels.dart';
 import '../../../../core/util/priority_labels.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/label_chips.dart';
-import '../../../translation/presentation/translation_providers.dart';
 import '../board_providers.dart';
 import 'ticket_card_meta.dart';
 

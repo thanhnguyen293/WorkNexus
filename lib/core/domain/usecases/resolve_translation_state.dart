@@ -1,5 +1,5 @@
-import '../../../../core/domain/entities/translation_record.dart';
-import '../../../../core/domain/value_objects/translation_state.dart';
+import '../entities/translation_record.dart';
+import '../value_objects/translation_state.dart';
 
 /// Pure state-machine resolver for a ticket's translation, per the plan:
 ///   loading           → a request is in flight
