@@ -11,6 +11,7 @@ import '../../features/chat/presentation/widgets/chat_rail_button.dart';
 import '../../features/dashboard/presentation/widgets/dashboard_rail_button.dart';
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import '../../l10n/app_localizations.dart';
+import 'new_ticket_menu.dart';
 
 /// The app's narrow left rail: the main destinations (dashboard,
 /// notifications, chat, board) on top and integrations at the bottom. The board's workspace tree is a separate
@@ -38,6 +39,7 @@ class AppNavRail extends ConsumerWidget {
       padding: EdgeInsets.symmetric(vertical: s.lg),
       child: Column(
         children: [
+          const NewTicketRailButton(),
           const DashboardRailButton(),
           const NotificationsRailButton(),
           const ChatRailButton(),

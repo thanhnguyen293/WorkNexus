@@ -9,6 +9,9 @@ import 'zentao_client.dart';
 import 'zentao_form_parsing.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
+import 'zentao_subtask_form.dart';
+
+part 'zentao_task_forms.dart';
 
 /// Marks, in a form's `kept` fields, that it came from ZenTao 18.x — whose
 /// forms differ (field names, which keys it accepts) from 20+.
@@ -65,8 +68,22 @@ class ZenTaoTicketForms {
 
   // ---- bugs ----
 
-  Future<BugForm> newBug(String productId) async {
-    final page = await _page('bug-create-$productId-0-');
+  /// A new bug's form in product [productId] (`'0'`: ZenTao picks its current
+  /// one), filled in by ZenTao from bug [copyOf] (a copy), or filed against
+  /// execution [executionId] and task [taskId] — the `extras` its web form
+  /// takes in both 18.x and 20+.
+  Future<BugForm> newBug(
+    String productId, {
+    String? copyOf,
+    String? executionId,
+    String? taskId,
+  }) async {
+    final extras = [
+      if (copyOf != null) 'bugID=$copyOf',
+      if (executionId != null) 'executionID=$executionId',
+      if (taskId != null) 'taskID=$taskId',
+    ].join(',');
+    final page = await _page('bug-create-$productId-0-$extras');
     final legacy = page.containsKey('bugTitle');
     // 20+ keeps the defaults on an init `bug`; 18.x sends them flat.
     final bug = page['bug'] is Map ? page['bug'] as Map : page;
@@ -74,16 +91,38 @@ class ZenTaoTicketForms {
       options: _bugOptions(page),
       kept: {if (legacy) _legacyKey: '1'},
       draft: BugDraft(
-        product: productId,
+        product: productId != '0'
+            ? productId
+            : zentaoId(page['productID'] ?? bug['productID']),
         module: zentaoId(bug['moduleID'] ?? page['moduleID']),
-        project: zentaoId(page['projectID']),
-        execution: zentaoId(page['executionID']),
+        project: zentaoId(bug['projectID'] ?? page['projectID']),
+        execution: zentaoId(
+          bug['executionID'] ?? page['executionID'] ?? _idOf(page['execution']),
+        ),
+        story: zentaoId(bug['storyID'] ?? page['storyID']),
+        task: zentaoId(bug['taskID'] ?? page['taskID']),
+        // A copy keeps its builds; a new bug starts on trunk.
+        openedBuilds: switch ([
+          for (final build in zentaoCsv(bug['buildID'] ?? page['buildID']))
+            if (build != '0') build,
+        ]) {
+          final builds when builds.isNotEmpty => builds,
+          _ => const ['trunk'],
+        },
+        // 18.x's own `title` is the page's; a copied one is `bugTitle`.
+        title: zentaoText(legacy ? page['bugTitle'] : bug['title']),
         type: _or(bug['type'], 'codeerror'),
         severity: zentaoIntOr(bug['severity'], 3),
         pri: zentaoIntOr(bug['pri'], 3),
         // 18.x sends the steps template HTML-escaped.
         steps: zentaoText(bug['steps']),
         assignedTo: zentaoText(bug['assignedTo']),
+        deadline: zentaoDate(bug['deadline']),
+        os: zentaoCsv(bug['os']),
+        browser: zentaoCsv(bug['browser']),
+        mailto: zentaoCsv(bug['mailto']),
+        keywords: zentaoText(bug['keywords']),
+        color: zentaoText(bug['color']),
       ),
     );
   }
@@ -219,124 +258,6 @@ class ZenTaoTicketForms {
     return id ?? saved ?? (throw const ParseFailure('ZenTao gave no bug id'));
   }
 
-  // ---- tasks ----
-
-  Future<TaskForm> newTask(String executionId) async {
-    final page = await _page('task-create-$executionId-0-0');
-    final legacy = page.containsKey('moduleOptionMenu');
-    final task = page['task'] is Map ? page['task'] as Map : const {};
-    return TaskForm(
-      options: _taskOptions(page),
-      kept: {if (legacy) _legacyKey: '1'},
-      draft: TaskDraft(
-        execution: executionId,
-        module: zentaoId(task['module']),
-        story: zentaoId(task['story']),
-        type: _or(task['type'], 'devel'),
-        pri: zentaoIntOr(task['pri'], 3),
-        assignedTo: zentaoText(task['assignedTo']),
-      ),
-    );
-  }
-
-  Future<TaskForm> editTask(String taskId) async {
-    final page = await _page('task-edit-$taskId');
-    final legacy = !page.containsKey('parentTask');
-    final raw = page['task'];
-    if (raw is! Map) throw NotFoundFailure('ZenTao task $taskId not found');
-    final task = Map<String, dynamic>.from(raw);
-    return TaskForm(
-      options: _taskOptions(page),
-      kept: {
-        for (final field in _keptTaskFields) field: '${task[field] ?? ''}',
-        if (legacy) _legacyKey: '1',
-      },
-      draft: TaskDraft(
-        id: taskId,
-        execution: zentaoId(task['execution']),
-        module: zentaoId(task['module']),
-        story: zentaoId(task['story']),
-        parent: zentaoId(task['parent']),
-        name: zentaoText(task['name']),
-        type: _or(task['type'], 'devel'),
-        pri: zentaoIntOr(task['pri'], 3),
-        estimate: zentaoNumber(task['estimate']),
-        left: zentaoNumber(task['left']),
-        consumed: zentaoNumber(task['consumed']),
-        status: _or(task['status'], 'wait'),
-        assignedTo: zentaoText(task['assignedTo']),
-        estStarted: zentaoDate(task['estStarted']),
-        deadline: zentaoDate(task['deadline']),
-        desc: task['desc']?.toString() ?? '',
-        color: zentaoText(task['color']),
-        mailto: zentaoCsv(task['mailto']),
-        keywords: zentaoText(task['keywords']),
-        files: zentaoAttachments(ZenTaoEntity.fromJson(task), _client.baseUrl),
-      ),
-    );
-  }
-
-  Future<TaskFormOptions> taskOptions(String executionId) async =>
-      _taskOptions(await _page('task-create-$executionId-0-0'));
-
-  TaskFormOptions _taskOptions(Map<String, dynamic> page) {
-    final members = zentaoOptions(page['members']);
-    return TaskFormOptions(
-      executions: zentaoOptions(page['executions']),
-      modules: zentaoOptions(
-        page['modulePairs'] ?? page['moduleOptionMenu'] ?? page['modules'],
-      ),
-      stories: zentaoOptions(page['stories']),
-      parents: zentaoOptions(page['parents'] ?? page['tasks']),
-      users: members.isEmpty ? zentaoOptions(page['users']) : members,
-    );
-  }
-
-  /// Saves [draft]; returns the task's ZenTao id.
-  Future<String> saveTask(TaskForm form, TaskDraft draft, String uid) async {
-    final legacy = form.kept[_legacyKey] == '1';
-    final id = draft.id;
-    String hours(double h) => h == h.roundToDouble() ? '${h.toInt()}' : '$h';
-    final fields = <String, Object>{
-      'uid': uid,
-      'execution': draft.execution,
-      'module': draft.module,
-      'story': draft.story,
-      'name': draft.name,
-      'type': draft.type,
-      'pri': '${draft.pri}',
-      'estimate': hours(draft.estimate),
-      if (draft.estStarted.isNotEmpty) 'estStarted': draft.estStarted,
-      if (draft.deadline.isNotEmpty) 'deadline': draft.deadline,
-      'desc': draft.desc,
-      'color': draft.color,
-      'mailto[]': draft.mailto,
-      // 18.x's task table has no keywords column (an unknown key fails there).
-      if (!legacy) 'keywords': draft.keywords,
-      if (id == null)
-        // 18.x creates nothing without an assignedTo list.
-        legacy ? 'assignedTo[]' : 'assignedTo': legacy
-            ? [draft.assignedTo]
-            : draft.assignedTo
-      else ...{
-        'assignedTo': draft.assignedTo,
-        'parent': draft.parent,
-        'status': draft.status,
-        'left': hours(draft.left),
-        'consumed': hours(draft.consumed),
-        for (final field in _keptTaskFields)
-          if (form.kept[field] case final value? when value.isNotEmpty)
-            field: value,
-        'deleteFiles[]': _removed(form.draft.files, draft.files),
-      },
-    };
-    final path = id == null
-        ? 'task-create-${draft.execution}-0-0'
-        : 'task-edit-$id';
-    final saved = await _post(path, fields, draft.newFiles);
-    return id ?? saved ?? (throw const ParseFailure('ZenTao gave no task id'));
-  }
-
   // ---- shared ----
 
   /// Uploads an image for a description; returns the URL to embed it at.
@@ -386,6 +307,10 @@ List<String> _removed(
   for (final f in loaded)
     if (!kept.contains(f)) f.id,
 ];
+
+/// The id of a ZenTao object given whole (`{id, name…}`), as 18.x gives the
+/// current execution.
+Object? _idOf(Object? raw) => raw is Map ? raw['id'] : null;
 
 String _or(Object? raw, String fallback) {
   final text = raw?.toString().trim() ?? '';

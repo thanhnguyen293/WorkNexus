@@ -201,6 +201,105 @@ void main() {
     expect(sent.containsKey('keywords'), isFalse);
   });
 
+  test('a copied bug on 18.x starts from the copy ZenTao fills in', () async {
+    final (forms, fake) = _forms(
+      (_) => _page({
+        'bugTitle': 'Login fails',
+        'title': 'VN_Socialfi::Create bug',
+        'productID': '4',
+        'buildID': 'trunk,12',
+        'os': 'ios',
+        'keywords': 'auth',
+        'taskID': '0',
+      }),
+    );
+
+    final form = await forms.newBug('4', copyOf: '7');
+
+    expect(fake.requests.last.path, contains('bug-create-4-0-bugID=7'));
+    expect(form.draft.id, isNull);
+    // 18.x's `title` is the page's own; the copy's is `bugTitle`.
+    expect(form.draft.title, 'Login fails');
+    expect(form.draft.openedBuilds, ['trunk', '12']);
+    expect(form.draft.os, ['ios']);
+    expect(form.draft.keywords, 'auth');
+  });
+
+  test('a bug from a task is filed against its execution and task', () async {
+    final (forms, fake) = _forms(
+      (_) => _page({
+        'bug': {'productID': 5, 'executionID': 31, 'taskID': 12, 'title': ''},
+      }),
+    );
+
+    final form = await forms.newBug('0', executionId: '31', taskId: '12');
+
+    expect(
+      fake.requests.last.path,
+      contains('bug-create-0-0-executionID=31,taskID=12'),
+    );
+    // ZenTao picked its current product for '0'.
+    expect(form.draft.product, '5');
+    expect(form.draft.execution, '31');
+    expect(form.draft.task, '12');
+    expect(form.draft.openedBuilds, ['trunk']);
+  });
+
+  test('a new subtask goes through the batch form, one row', () async {
+    final (forms, fake) = _forms((o) {
+      if (o.method == 'GET') {
+        return _page({
+          'moduleOptionMenu': {'0': '/'},
+          'execution': {'id': 31, 'name': 'Sprint 3'},
+        });
+      }
+      return {
+        'result': 'success',
+        'idList': [130],
+      };
+    });
+
+    final form = await forms.newTask('0', parentId: '120');
+    expect(form.draft.execution, '31');
+    expect(form.draft.parent, '120');
+    // 18.x lists no parents on its create form; the parent is offered anyway.
+    expect(form.options.parents.first.value, '120');
+
+    final id = await forms.saveTask(
+      form,
+      form.draft.copyWith(name: 'API', estimate: 2, desc: '<p>a</p>\n<p>b</p>'),
+      'u4',
+    );
+
+    expect(id, '130');
+    final sent = _sent(fake, 'task-batchCreate-31-0-0-120');
+    expect(sent['parent[1]'], '120');
+    expect(sent['name[1]'], 'API');
+    expect(sent['estimate[1]'], '2');
+    expect(sent['story[1]'], '0');
+    expect(sent['desc[1]'], '<p>a</p><p>b</p>');
+    expect(sent.containsKey('estStarted[1]'), isFalse);
+  });
+
+  test('a subtask ZenTao gives no id for opens its parent', () async {
+    final (forms, _) = _forms((o) {
+      if (o.method == 'GET')
+        return _page({
+          'moduleOptionMenu': {'0': '/'},
+        });
+      return {'result': 'success'};
+    });
+    final form = await forms.newTask('31', parentId: '120');
+
+    final id = await forms.saveTask(
+      form,
+      form.draft.copyWith(name: 'API'),
+      'u5',
+    );
+
+    expect(id, '120');
+  });
+
   test('an uploaded image is embedded at its absolute URL', () async {
     final (forms, fake) = _forms(
       (_) => {'error': 0, 'url': '/zentao/file-read-31.png'},

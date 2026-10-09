@@ -161,6 +161,43 @@
   "assign": "Assign",
   "resolve": "Resolve",
   "activate": "Activate",
+  "zentaoCopyBug": "Copy",
+  "zentaoAddSubtask": "Add subtask",
+  "zentaoReportBug": "Report bug",
+  "zentaoNewTicket": "New bug or task ({shortcut})",
+  "@zentaoNewTicket": {
+    "placeholders": { "shortcut": { "type": "String" } }
+  },
+  "zentaoNewInAccount": "{item} · {account}",
+  "@zentaoNewInAccount": {
+    "placeholders": { "item": { "type": "String" }, "account": { "type": "String" } }
+  },
+  "zentaoConfirm": "Confirm",
+  "zentaoStart": "Start",
+  "zentaoRestart": "Continue",
+  "zentaoPause": "Pause",
+  "zentaoFinish": "Finish",
+  "zentaoCancelTask": "Cancel task",
+  "zentaoActionTitle": "{action} #{key}",
+  "@zentaoActionTitle": {
+    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+  },
+  "zentaoActionDone": "{action} #{key}: done",
+  "@zentaoActionDone": {
+    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+  },
+  "zentaoAssignToOptional": "Assign to (optional)",
+  "zentaoNote": "Note",
+  "zentaoBuild": "Build",
+  "zentaoHoursSpent": "Hours worked this time",
+  "zentaoHoursLeft": "Hours left",
+  "zentaoHoursLogged": "{hours} h logged so far",
+  "@zentaoHoursLogged": {
+    "placeholders": { "hours": { "type": "String" } }
+  },
+  "zentaoHoursInvalid": "Enter hours as a number, 0 or more",
+  "zentaoHoursLeftRequired": "Enter the hours left (more than 0)",
+  "zentaoHoursSpentRequired": "Enter the hours worked — none are logged yet",
   "gitlabMerge": "Merge",
   "gitlabReopen": "Reopen",
   "gitlabMrClosed": "Closed merge request !{key}",

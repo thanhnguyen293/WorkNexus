@@ -20,24 +20,46 @@ sealed class TicketEditorRoute {
   int get hashCode => Object.hash(runtimeType, accountId, Object.hashAll(_key));
 }
 
-/// A new bug in product [productId].
+/// A new bug in product [productId] (`'0'`: the one ZenTao has current). It
+/// starts as a copy of bug [copyOf], or filed against execution
+/// [executionId] and task [taskId], when given.
 class NewBugRoute extends TicketEditorRoute {
-  const NewBugRoute({required super.accountId, required this.productId});
+  const NewBugRoute({
+    required super.accountId,
+    this.productId = '0',
+    this.copyOf,
+    this.executionId,
+    this.taskId,
+  });
 
   final String productId;
+  final String? copyOf;
+  final String? executionId;
+  final String? taskId;
 
   @override
-  List<Object> get _key => [productId];
+  List<Object> get _key => [
+    productId,
+    copyOf ?? '',
+    executionId ?? '',
+    taskId ?? '',
+  ];
 }
 
-/// A new task in execution [executionId].
+/// A new task in execution [executionId] (`'0'`: the one ZenTao has
+/// current); a subtask of task [parentId] when given.
 class NewTaskRoute extends TicketEditorRoute {
-  const NewTaskRoute({required super.accountId, required this.executionId});
+  const NewTaskRoute({
+    required super.accountId,
+    this.executionId = '0',
+    this.parentId,
+  });
 
   final String executionId;
+  final String? parentId;
 
   @override
-  List<Object> get _key => [executionId];
+  List<Object> get _key => [executionId, parentId ?? ''];
 }
 
 /// Bug [bugId] (its ZenTao id), as edited.

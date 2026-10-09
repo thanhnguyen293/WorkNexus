@@ -1,19 +1,21 @@
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/network/api_paging.dart';
 import '../../../../core/util/synthetic_labels.dart';
+import 'zentao_action_result.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
+import 'zentao_workflow.dart';
 
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
 class ZenTaoAdapter implements ProviderAdapter {
@@ -482,14 +484,21 @@ class ZenTaoAdapter implements ProviderAdapter {
       // Classic web action `{type}-assignTo-{id}` (no REST v1 endpoint on this
       // build); mirrors the web client's assign request.
       final type = _typeOf(ticket);
+      // A task's assign form also carries its hours left, which ZenTao 20+
+      // resets to 0 when the field is missing.
+      final left = switch (ticket.providerEntity) {
+        ZenTaoTaskEntity(:final left?) => zentaoHours(left),
+        _ => null,
+      };
       final resp = await _client.classicActionPost(
         '${type.pathSegment}-assignTo-${ticket.externalKey}',
         {
           'assignedTo': assignee,
+          'left': ?left,
           if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
         },
       );
-      _ensureClassicActionOk(resp, 'assign');
+      ensureZenTaoActionOk(resp, 'assign');
       return true;
     });
   }
@@ -519,7 +528,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
         },
       );
-      _ensureClassicActionOk(resp, 'resolve');
+      ensureZenTaoActionOk(resp, 'resolve');
       return true;
     });
   }
@@ -550,7 +559,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
         },
       );
-      _ensureClassicActionOk(resp, 'activate');
+      ensureZenTaoActionOk(resp, 'activate');
       return true;
     });
   }
@@ -577,7 +586,7 @@ class ZenTaoAdapter implements ProviderAdapter {
           if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
         },
       );
-      _ensureClassicActionOk(resp, 'confirm');
+      ensureZenTaoActionOk(resp, 'confirm');
       return true;
     });
   }
@@ -609,45 +618,6 @@ class ZenTaoAdapter implements ProviderAdapter {
     ZenTaoType.task => 'tasks',
     ZenTaoType.story => 'stories',
   };
-
-  /// Success check for a classic (`index.php`) action [Response]. Unlike the
-  /// REST channel, a POST that ZenTao did NOT process comes back as the action
-  /// page's HTML (a String) or a login redirect rather than a
-  /// `{result: 'success'}` JSON object — so anything that isn't a non-`fail`
-  /// JSON object is treated as a failure. (The old lenient check let a
-  /// silently-ignored action read as success, so the change was lost on the
-  /// next sync — which looked like "confirm does nothing".)
-  void _ensureClassicActionOk(Response<dynamic> resp, String action) {
-    final code = resp.statusCode ?? 0;
-    Object? data = resp.data;
-    if (data is String) {
-      final trimmed = data.trim();
-      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-        try {
-          data = jsonDecode(trimmed);
-        } catch (_) {
-          // Not JSON → leave as String, treated as a failure below.
-        }
-      }
-    }
-    final ok =
-        code < 400 &&
-        data is Map &&
-        data['result']?.toString() != 'fail' &&
-        data['status']?.toString() != 'fail';
-    if (ok) return;
-    final detail = data is Map
-        ? (data['message'] ?? data['error'])?.toString()
-        : 'ZenTao did not process the action '
-              '(auth/permission, CSRF, or the action does not exist)';
-    throw DioException(
-      requestOptions: resp.requestOptions,
-      response: resp,
-      message:
-          'ZenTao $action failed (HTTP $code)'
-          '${detail == null || detail.isEmpty ? '' : ': $detail'}',
-    );
-  }
 
   Future<Result<T>> _guard<T>(Future<T> Function() run) async {
     try {
