@@ -57,6 +57,30 @@ class DesktopWindowService {
     await windowManager.focus();
   }
 
+  Future<void> hide() async {
+    if (!isDesktop) return;
+    await windowManager.hide();
+  }
+
+  Future<void> preventClose(bool prevent) async {
+    if (!isDesktop) return;
+    await windowManager.setPreventClose(prevent);
+  }
+
+  void addListener(WindowListener listener) {
+    if (isDesktop) windowManager.addListener(listener);
+  }
+
+  void removeListener(WindowListener listener) {
+    if (isDesktop) windowManager.removeListener(listener);
+  }
+
+  Future<void> quit() async {
+    if (!isDesktop) return;
+    await windowManager.setPreventClose(false);
+    await windowManager.destroy();
+  }
+
   static WindowOptions windowOptionsFor({required bool isWindows}) {
     return WindowOptions(
       size: const Size(1440, 900),
