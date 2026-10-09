@@ -13,6 +13,7 @@ import '../../features/chat/presentation/widgets/chat_auto_download_settings.dar
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
 import '../../features/connections/presentation/settings_page.dart';
+import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
 import 'app_nav_rail.dart';
 import 'resizable_sidebar.dart';
@@ -40,6 +41,7 @@ class AppShell extends ConsumerWidget {
             Expanded(
               child: Stack(
                 children: [
+                  const ZenTaoProfileStartup(),
                   Row(
                     children: [
                       const AppNavRail(),

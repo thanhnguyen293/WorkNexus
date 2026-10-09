@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/debug/app_talker.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/workspace.dart';
@@ -10,6 +11,7 @@ import '../../../core/util/content_hash.dart';
 import '../../sync/data/sync_service.dart';
 import '../data/provider_adapter_factory.dart';
 import '../domain/repositories/connection_repository.dart';
+import '../domain/usecases/refresh_zentao_profile.dart';
 
 /// State of the add-connection form.
 class AddConnectionState {
@@ -89,6 +91,9 @@ class AddConnectionController extends Notifier<AddConnectionState> {
 
     await getIt<CredentialStore>().write(credRef, password);
     await getIt<ConnectionRepository>().addAccount(account);
+    if (await getIt<RefreshZenTaoProfile>()(account) case Err(:final failure)) {
+      appTalker.warning('ZenTao profile refresh failed: ${failure.message}');
+    }
     final sync = await getIt<SyncService>().syncAccount(account);
     switch (sync) {
       case Err(:final failure):
