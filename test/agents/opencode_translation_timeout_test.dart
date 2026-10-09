@@ -6,12 +6,12 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/adapters/translation_service.dart';
 import 'package:work_nexus/core/domain/entities/translation_record.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/agent_runner.dart';
 import 'package:work_nexus/features/translation/data/opencode_translation_service.dart';
-import 'package:work_nexus/features/translation/domain/adapters/translation_service.dart';
 
 /// Regression for the "Translate spins forever" report: `opencode run` has no
 /// deadline of its own, and a queued or unauthenticated model can leave it

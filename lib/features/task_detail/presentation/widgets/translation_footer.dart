@@ -7,11 +7,11 @@ import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/translation/translation_providers.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
 import '../../../../core/widgets/translation_language_control.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../translation/presentation/translation_providers.dart';
 
 /// Sticky footer under the translation tab — the Translate / Retry action.
 class TranslationFooter extends ConsumerWidget {

@@ -1,6 +1,6 @@
+import '../../../../core/domain/adapters/translation_service.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
-import '../../../translation/domain/adapters/translation_service.dart';
 import '../entities/chat_message.dart';
 import '../entities/chat_message_translation.dart';
 import '../repositories/message_translation_repository.dart';

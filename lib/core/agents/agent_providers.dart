@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/providers.dart';
-import '../../../core/di/service_locator.dart';
-import '../../../core/domain/entities/agent_session.dart';
-import '../../../core/domain/repositories/agent_session_repository.dart';
-import '../../../core/domain/value_objects/agent_kind.dart';
+import '../di/providers.dart';
+import '../di/service_locator.dart';
 import '../domain/adapters/coding_agent_adapter.dart';
+import '../domain/entities/agent_session.dart';
+import '../domain/repositories/agent_session_repository.dart';
+import '../domain/value_objects/agent_kind.dart';
 
 /// Agent sessions for a ticket (reactive; drives the Development tab).
 final agentSessionsProvider = StreamProvider.family<List<AgentSession>, String>(
