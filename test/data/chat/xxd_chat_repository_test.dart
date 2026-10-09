@@ -122,6 +122,12 @@ void main() {
         'chatstar' => {'gid': params[1], 'star': params[0]},
         'chatgetmessageinfo' => {'lastMessage': 120, 'messageCount': 120},
         'chatsetlastreadmessagebyindex' => {'gid': params[0], 'id': params[1]},
+        // `[cgid, startId, reverse, limit, returnID]`: 50 back from startId,
+        // or forward when not reverse.
+        'messagesync' when params[2] == false => [
+          for (var id = params[1]! as int; id < (params[1]! as int) + 50; id++)
+            ?history[id],
+        ],
         'messagesync' => [
           for (
             var id = params[1]! as int;
@@ -130,6 +136,7 @@ void main() {
           )
             ?history[id],
         ],
+        'messagegetlist' => [for (final id in params[1]! as List) ?history[id]],
         _ => null,
       };
       return data == null
@@ -551,6 +558,75 @@ void main() {
 
     final all = await repo.watchMessages(_acc, 'g1', limit: 500).first;
     expect(all.map((m) => m.serverId), [for (var i = 1; i <= 120; i++) i]);
+  });
+
+  test('a reply parent fetched by id stays out of the timeline', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    expect((await repo.refreshMessages(_acc, 'g1')).isOk, isTrue);
+
+    expect((await repo.fetchMessages(_acc, 'g1', [3])).isOk, isTrue);
+    expect((await repo.watchMessage(_acc, 'g1', 3).first)?.serverId, 3);
+
+    final shown = await repo.watchMessages(_acc, 'g1', limit: 51).first;
+    expect(shown.map((m) => m.serverId), [for (var i = 71; i <= 120; i++) i]);
+    expect(
+      (await repo.countOlderMessages(
+        _acc,
+        'g1',
+        before: shown.first.sentAt,
+      )).valueOrNull,
+      0,
+    );
+  });
+
+  test('a jump window around an old message, then newer pages until it '
+      'joins the timeline', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    expect((await repo.refreshMessages(_acc, 'g1')).isOk, isTrue);
+
+    final span = (await repo.loadMessagesAround(_acc, 'g1', 3)).valueOrNull;
+    expect(span, (from: 1, to: 52));
+    final window = await repo
+        .watchMessagesInRange(_acc, 'g1', fromIndex: 1, toIndex: 52)
+        .first;
+    expect(window.map((m) => m.serverId), [for (var i = 1; i <= 52; i++) i]);
+    // Not part of the timeline yet.
+    final latest = await repo.watchMessages(_acc, 'g1', limit: 500).first;
+    expect(latest.first.serverId, 71);
+
+    // 53–70 come with the next page; the window then reaches the timeline.
+    expect(
+      (await repo.loadNewerMessages(_acc, 'g1', afterServerId: 52)).valueOrNull,
+      greaterThan(0),
+    );
+    expect(
+      (await repo.joinWindowToTimeline(
+        _acc,
+        'g1',
+        fromIndex: 1,
+        toIndex: 101,
+      )).valueOrNull,
+      120,
+    );
+    final joined = await repo.watchMessages(_acc, 'g1', limit: 500).first;
+    expect(joined.map((m) => m.serverId), [for (var i = 1; i <= 120; i++) i]);
+  });
+
+  test('a refresh that skips ahead cuts off the stale history below', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    // Pages 1–50 were stored in an earlier session.
+    expect(
+      (await repo.loadOlderMessages(_acc, 'g1', beforeServerId: 51)).isOk,
+      isTrue,
+    );
+
+    expect((await repo.refreshMessages(_acc, 'g1')).isOk, isTrue);
+
+    final shown = await repo.watchMessages(_acc, 'g1', limit: 500).first;
+    expect(shown.map((m) => m.serverId), [for (var i = 71; i <= 120; i++) i]);
   });
 
   test('an untrusted certificate waits for the user, then pins it', () async {

@@ -338,16 +338,77 @@ class XxdChatRepository implements ChatRepository {
       _history.refresh(_sessions[accountId], accountId, chatGid);
 
   @override
+  Stream<List<ChatMessage>> watchMessagesInRange(
+    String accountId,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
+  }) => withSelfUserId(
+    _local.watchSelfUserId(accountId),
+    _local.timeline.watchMessagesInRange(
+      accountId,
+      chatGid,
+      from: fromIndex,
+      to: toIndex,
+    ),
+    (rows, self) => [
+      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
+    ],
+  );
+
+  @override
   Future<Result<int>> loadOlderMessages(
     String accountId,
     String chatGid, {
     int? beforeServerId,
+    bool inWindow = false,
   }) => _history.loadOlder(
     _sessions[accountId],
     accountId,
     chatGid,
     before: beforeServerId,
+    inWindow: inWindow,
   );
+
+  @override
+  Future<Result<({int from, int to})?>> loadMessagesAround(
+    String accountId,
+    String chatGid,
+    int serverId,
+  ) => _history.loadAround(_sessions[accountId], accountId, chatGid, serverId);
+
+  @override
+  Future<Result<int>> loadNewerMessages(
+    String accountId,
+    String chatGid, {
+    required int afterServerId,
+  }) => _history.loadNewer(
+    _sessions[accountId],
+    accountId,
+    chatGid,
+    after: afterServerId,
+  );
+
+  @override
+  Future<Result<int?>> joinWindowToTimeline(
+    String accountId,
+    String chatGid, {
+    required int fromIndex,
+    required int toIndex,
+  }) async {
+    try {
+      return Ok(
+        await _local.timeline.joinWindow(
+          accountId,
+          chatGid,
+          from: fromIndex,
+          to: toIndex,
+        ),
+      );
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not join the messages', cause: e));
+    }
+  }
 
   @override
   Future<Result<int>> countOlderMessages(
