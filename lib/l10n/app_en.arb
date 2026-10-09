@@ -671,32 +671,10 @@
   "chatWallpaperDim": "Darken",
   "chatMarkdownOn": "Markdown on — messages are sent formatted",
   "chatMarkdownOff": "Markdown off — messages are sent as plain text",
-  "updateReadyButton": "Update to {version}",
-  "@updateReadyButton": {
-    "placeholders": { "version": { "type": "String" } }
-  },
-  "updateNotificationTitle": "WorkNexus {version} is ready",
-  "@updateNotificationTitle": {
-    "placeholders": { "version": { "type": "String" } }
-  },
-  "updateNotificationBody": "Restart the app to install the update.",
-  "updateDialogTitle": "Version {version} is ready",
-  "@updateDialogTitle": {
-    "placeholders": { "version": { "type": "String" } }
-  },
-  "updateNoNotes": "No release notes.",
-  "updateLater": "Later",
-  "updateRestartNow": "Restart & update",
-  "updateInstallFailed": "The update could not be installed automatically — WorkNexus is probably in a folder you cannot write to. Download it from the release page instead.",
-  "updateOpenReleasePage": "Open release page",
   "chatNotificationsSetting": "New message notifications",
   "chatNotificationsSettingHint": "Show a system notification when a chat message arrives.",
   "chatNotifyWhileViewing": "Notify while viewing the chat",
   "chatNotifyWhileViewingHint": "Also notify for the chat open on screen while WorkNexus is in front.",
-  "updateRailTooltip": "Version {version} is ready — restart to update",
-  "@updateRailTooltip": {
-    "placeholders": { "version": { "type": "String" } }
-  },
   "chatStorageThisChat": "Storage",
   "chatStoragePhotos": "Photos",
   "chatStorageVideos": "Videos",

@@ -15,14 +15,6 @@ import '../../features/agents/data/datasources/opencode_auth_file.dart';
 import '../../features/agents/data/datasources/opencode_cli_runner.dart';
 import '../../features/agents/data/in_memory_agent_session_repository.dart';
 import '../../features/agents/data/repositories/opencode_auth_file_repository.dart';
-import '../../features/app_update/data/datasources/github_release_datasource.dart';
-import '../../features/app_update/data/datasources/macos_update_installer.dart';
-import '../../features/app_update/data/datasources/windows_update_installer.dart';
-import '../../features/app_update/data/repositories/github_update_repository.dart';
-import '../../features/app_update/domain/repositories/update_repository.dart';
-import '../../features/app_update/domain/usecases/check_for_update.dart';
-import '../../features/app_update/domain/usecases/download_update.dart';
-import '../../features/app_update/domain/usecases/install_update.dart';
 import '../../features/board/data/repositories/local_saved_filter_repository.dart';
 import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
@@ -196,29 +188,6 @@ abstract class ServiceModule {
               '${Directory.systemTemp.path}/work_nexus_test_opencode_auth.json',
         ),
       );
-
-  @lazySingleton
-  UpdateRepository get updateRepository => GithubUpdateRepository(
-    releases: GithubReleaseDatasource(),
-    installer: Platform.isWindows
-        ? const WindowsUpdateInstaller()
-        : const MacosUpdateInstaller(),
-    // Temp, so the OS clears zips left behind by earlier updates.
-    stagingRoot: () async =>
-        Directory('${(await getTemporaryDirectory()).path}/worknexus_update'),
-  );
-
-  @lazySingleton
-  CheckForUpdate checkForUpdate(UpdateRepository repository) =>
-      CheckForUpdate(repository);
-
-  @lazySingleton
-  DownloadUpdate downloadUpdate(UpdateRepository repository) =>
-      DownloadUpdate(repository);
-
-  @lazySingleton
-  InstallUpdate installUpdate(UpdateRepository repository) =>
-      InstallUpdate(repository);
 
   @lazySingleton
   SyncService syncService(AppDatabase db, CredentialStore credentials) =>
