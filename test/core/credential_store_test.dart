@@ -1,48 +1,109 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
 
-class _MockStorage extends Mock implements FlutterSecureStorage {}
+/// An in-memory keychain that counts reads per item (each would be a macOS
+/// "allow access" prompt for an ad-hoc signed build).
+class _FakeKeychain implements FlutterSecureStorage {
+  final items = <String, String>{};
+  final reads = <String, int>{};
+
+  @override
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    reads[key] = (reads[key] ?? 0) + 1;
+    return items[key];
+  }
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    if (value == null) {
+      items.remove(key);
+    } else {
+      items[key] = value;
+    }
+  }
+
+  @override
+  Future<void> delete({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async => items.remove(key);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
-  late _MockStorage storage;
-  late CredentialStore store;
+  late _FakeKeychain keychain;
 
-  setUp(() {
-    storage = _MockStorage();
-    store = CredentialStore(storage);
+  setUp(() => keychain = _FakeKeychain());
+
+  test('every secret lives in one item, read once per launch', () async {
+    final first = CredentialStore(keychain);
+    await first.write('secret:a', 'pw-a');
+    await first.write('secret:b', 'pw-b');
+    expect(keychain.items.keys, [CredentialStore.vaultKey]);
+
+    // Next launch: three reads of two secrets, one keychain read.
+    keychain.reads.clear();
+    final next = CredentialStore(keychain);
+    final secrets = await Future.wait([
+      next.read('secret:a'),
+      next.read('secret:b'),
+      next.read('secret:a'),
+    ]);
+    expect(secrets, ['pw-a', 'pw-b', 'pw-a']);
+    expect(keychain.reads, {CredentialStore.vaultKey: 1});
   });
 
-  test(
-    'reads a secret from the keychain once, even when asked at once',
-    () async {
-      when(() => storage.read(key: 'a')).thenAnswer((_) async => 's');
-      final results = await Future.wait([store.read('a'), store.read('a')]);
-      expect(await store.read('a'), 's');
-      expect(results, ['s', 's']);
-      verify(() => storage.read(key: 'a')).called(1);
-    },
-  );
+  test('an older per-account item moves into the vault once', () async {
+    keychain.items['secret:old'] = 'pw-old';
+    final store = CredentialStore(keychain);
 
-  test('a written secret is served without reading it back', () async {
-    when(() => storage.write(key: 'a', value: 'new')).thenAnswer((_) async {});
-    await store.write('a', 'new');
-    expect(await store.read('a'), 'new');
-    verifyNever(() => storage.read(key: 'a'));
-  });
-
-  test('a failed read is retried, a deleted secret is read again', () async {
-    var calls = 0;
-    when(() => storage.read(key: 'a')).thenAnswer((_) async {
-      if (calls++ == 0) throw Exception('denied');
-      return 's';
+    final both = await Future.wait([
+      store.read('secret:old'),
+      store.read('secret:old'),
+    ]);
+    expect(both, ['pw-old', 'pw-old']);
+    expect(keychain.reads['secret:old'], 1);
+    expect(keychain.items.containsKey('secret:old'), isFalse);
+    expect(jsonDecode(keychain.items[CredentialStore.vaultKey]!), {
+      'secret:old': 'pw-old',
     });
-    when(() => storage.delete(key: 'a')).thenAnswer((_) async {});
-    await expectLater(store.read('a'), throwsException);
-    expect(await store.read('a'), 's');
-    await store.delete('a');
-    await store.read('a');
-    verify(() => storage.read(key: 'a')).called(3);
+  });
+
+  test('a deleted secret is gone, others stay', () async {
+    final store = CredentialStore(keychain);
+    await store.write('secret:a', 'pw-a');
+    await store.write('secret:b', 'pw-b');
+    await store.delete('secret:a');
+
+    final next = CredentialStore(keychain);
+    expect(await next.read('secret:a'), isNull);
+    expect(await next.read('secret:b'), 'pw-b');
   });
 }
