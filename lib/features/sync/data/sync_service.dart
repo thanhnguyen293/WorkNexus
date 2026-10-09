@@ -19,6 +19,7 @@ import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/util/in_flight.dart';
 import '../../../core/util/synthetic_labels.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/github/github_adapter.dart';
@@ -1029,6 +1030,10 @@ class SyncService
   /// LRU-bounded at 500 MB so it can't grow without limit over the app lifetime.
   final ByteLruCache _imageCache = ByteLruCache();
 
+  /// Image loads in flight, so the same image shown in several places at once
+  /// (description, comment, activity, a second open) is fetched only once.
+  final _imagesInFlight = InFlight<String, Uint8List?>();
+
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
   /// via the ticket account's authenticated client (ZenTao session, GitLab or
   /// GitHub PAT). Returns null if the account has no stored credentials or the
@@ -1039,9 +1044,11 @@ class SyncService
     final key = '${ticket.accountId}|$url';
     final cached = _imageCache.get(key);
     if (cached != null) return cached;
-    final bytes = await _loadTicketImage(ticket, url);
-    if (bytes != null) _imageCache.put(key, bytes);
-    return bytes;
+    return _imagesInFlight.run(key, () async {
+      final bytes = await _loadTicketImage(ticket, url);
+      if (bytes != null) _imageCache.put(key, bytes);
+      return bytes;
+    });
   }
 
   Future<Uint8List?> _loadTicketImage(Ticket ticket, String url) async {
