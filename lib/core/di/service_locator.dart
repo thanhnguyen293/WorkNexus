@@ -46,8 +46,17 @@ import '../../features/connections/domain/repositories/connection_repository.dar
 import '../../features/connections/domain/repositories/zentao_profile_repository.dart';
 import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
 import '../../features/connections/domain/usecases/update_zentao_profile.dart';
+import '../../features/dashboard/data/datasources/dashboard_local_datasource.dart';
+import '../../features/dashboard/data/repositories/zentao_dashboard_repository.dart';
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
+import '../../features/dashboard/domain/usecases/refresh_dashboard.dart';
+import '../../features/notifications/data/datasources/notification_local_datasource.dart';
+import '../../features/notifications/data/repositories/zentao_notification_repository.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/refresh_notifications.dart';
 import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
+import '../../features/sync/data/zentao_ticket_editor_service.dart';
 import '../../features/translation/data/api_translation_service.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/credential_translation_api_config_repository.dart';
@@ -63,6 +72,7 @@ import '../domain/adapters/github_pr_service.dart';
 import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/adapters/merge_request_link_service.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
@@ -289,6 +299,39 @@ abstract class ServiceModule {
   @lazySingleton
   ZenTaoTicketService zenTaoTicketService(SyncService syncService) =>
       syncService;
+
+  @lazySingleton
+  ZenTaoTicketEditor zenTaoTicketEditor(SyncService syncService) =>
+      ZenTaoTicketEditorService(syncService);
+
+  @lazySingleton
+  DashboardRepository dashboardRepository(
+    AppDatabase db,
+    SyncService syncService,
+  ) => ZenTaoDashboardRepository(
+    local: DashboardLocalDatasource(db),
+    fetch: syncService.fetchZenTaoUserInfo,
+    syncAssigned: syncService.syncAccountById,
+  );
+
+  @lazySingleton
+  NotificationRepository notificationRepository(
+    AppDatabase db,
+    SyncService syncService,
+  ) => ZenTaoNotificationRepository(
+    local: NotificationLocalDatasource(db),
+    fetch: syncService.fetchZenTaoMessages,
+    run: syncService.zenTaoMessageAction,
+  );
+
+  @lazySingleton
+  RefreshNotifications refreshNotifications(
+    NotificationRepository repository,
+  ) => RefreshNotifications(repository);
+
+  @lazySingleton
+  RefreshDashboard refreshDashboard(DashboardRepository repository) =>
+      RefreshDashboard(repository);
 
   @lazySingleton
   MergeRequestLinkService mergeRequestLinkService(

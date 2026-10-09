@@ -14,6 +14,7 @@ import '../board_providers.dart';
 import '../board_refresh.dart';
 import 'active_tokens.dart';
 import 'board_view_tabs.dart';
+import 'new_ticket_button.dart';
 import 'sidebar_primitives.dart';
 
 /// Whether the advanced-filter popover is open.
@@ -73,6 +74,7 @@ class ChromeBar extends ConsumerWidget {
                       .update((v) => !v),
                 ),
               if (!narrow) const Expanded(child: ActiveTokens()),
+              const NewTicketButton(),
               const _RefreshButton(),
             ],
           );

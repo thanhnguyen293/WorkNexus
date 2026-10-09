@@ -334,6 +334,79 @@ class ZenTaoClient {
     return ZenTaoProductBugsResponse(total: total, bugs: bugs);
   }
 
+  /// The signed-in user's profile plus the "my work" blocks named in [fields]
+  /// (`GET /user?fields=task,bug,…`), each list capped at [limit] items. Kept as
+  /// a raw map: the shape varies by block and server version, so the dashboard
+  /// mapper parses it leniently.
+  Future<Map<String, dynamic>> userInfo({
+    required String fields,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/user',
+      queryParameters: {'fields': fields, 'limit': limit},
+    );
+    return _responseMap(res.data);
+  }
+
+  /// The user's web notifications (the bell menu), via the classic
+  /// `message-ajaxGetDropmenu-all` page — REST v1 has no message endpoint. The
+  /// reply's `data` is the page's view, carrying `allMessages` (by day).
+  Future<Map<String, dynamic>> messages() async {
+    final payload = _classicView(await _messageGet('ajaxGetDropmenu-all'));
+    if (payload == null || !payload.containsKey('allMessages')) {
+      throw DioException(
+        requestOptions: RequestOptions(path: baseUrl),
+        message: 'ZenTao messages reply had no message list',
+      );
+    }
+    return payload;
+  }
+
+  /// Runs a classic message action, e.g. `ajaxMarkRead-all` or
+  /// `ajaxDelete-12`. They answer with an empty body.
+  Future<void> messageAction(String action) async {
+    final res = await _messageGet(action);
+    if (res.statusCode != 200) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'ZenTao message action failed',
+      );
+    }
+  }
+
+  Future<Response<dynamic>> _messageGet(String action) async {
+    final token = await _ensureToken();
+    return _dio.get<dynamic>(
+      '$baseUrl/message-$action.json',
+      queryParameters: {'zentaosid': token},
+      options: Options(headers: {'Cookie': 'zentaosid=$token'}),
+    );
+  }
+
+  /// The view map of a classic `{status, data}` reply, whose `data` is itself
+  /// JSON-encoded; null when the reply is not that (e.g. a login page).
+  Map<String, dynamic>? _classicView(Response<dynamic> res) {
+    Object? body = res.data;
+    for (var i = 0; i < 2 && body is String; i++) {
+      try {
+        body = jsonDecode(body);
+      } on FormatException {
+        return null;
+      }
+    }
+    Object? data = body is Map ? (body['data'] ?? body) : null;
+    if (data is String) {
+      try {
+        data = jsonDecode(data);
+      } on FormatException {
+        return null;
+      }
+    }
+    return data is Map ? Map<String, dynamic>.from(data) : null;
+  }
+
   /// Projects for this account (`GET /projects`), used to group executions.
   Future<ZenTaoProjectsResponse> projects({
     required int page,
@@ -400,27 +473,48 @@ class ZenTaoClient {
   Future<Response<dynamic>> classicActionPost(
     String actionPath,
     Map<String, String> form,
-  ) async {
+  ) => classicPost(actionPath, {'uid': formUid(), ...form});
+
+  /// POSTs [data] — a field map (form-urlencoded; list values are sent as
+  /// repeated `key=` pairs, so name array fields `key[]`) or a [FormData]
+  /// (multipart, for files) — to classic action [actionPath] (see
+  /// [classicActionPost] for the session and CSRF headers).
+  Future<Response<dynamic>> classicPost(String actionPath, Object data) async {
     final token = await _ensureToken();
     return _dio.post<dynamic>(
       '$baseUrl/$actionPath.json',
       queryParameters: {'zentaosid': token},
-      data: {'uid': _formUid(), ...form},
+      data: data,
       options: Options(
-        contentType: Headers.formUrlEncodedContentType,
-        headers: {
-          'Cookie': 'zentaosid=$token',
-          'Token': token,
-          'Origin': Uri.parse(baseUrl).origin,
-          'Referer': '$baseUrl/index.html',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
+        contentType: data is FormData
+            ? Headers.multipartFormDataContentType
+            : Headers.formUrlEncodedContentType,
+        listFormat: ListFormat.multi,
+        headers: _classicHeaders(token),
       ),
     );
   }
 
+  /// GETs classic page [path] as JSON (`{base}/{path}.json`).
+  Future<Response<dynamic>> classicGet(String path) async {
+    final token = await _ensureToken();
+    return _dio.get<dynamic>(
+      '$baseUrl/$path.json',
+      queryParameters: {'zentaosid': token},
+      options: Options(headers: _classicHeaders(token)),
+    );
+  }
+
+  Map<String, String> _classicHeaders(String token) => {
+    'Cookie': 'zentaosid=$token',
+    'Token': token,
+    'Origin': Uri.parse(baseUrl).origin,
+    'Referer': '$baseUrl/index.html',
+    'X-Requested-With': 'XMLHttpRequest',
+  };
+
   /// A ZenTao-style form uid (a `uniqid()`-like hex string) for classic actions.
-  String _formUid() => DateTime.now().microsecondsSinceEpoch.toRadixString(16);
+  String formUid() => DateTime.now().microsecondsSinceEpoch.toRadixString(16);
 
   /// Fetches raw bytes for an (authenticated, self-signed-TLS) asset such as an
   /// inline image referenced by a ticket's rich text — e.g. ZenTao's

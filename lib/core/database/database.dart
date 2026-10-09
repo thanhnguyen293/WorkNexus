@@ -350,6 +350,36 @@ class ZenTaoProfiles extends Table {
   Set<Column> get primaryKey => {accountId};
 }
 
+/// The last ZenTao dashboard reply (`GET /user?fields=…`) per account, stored
+/// raw so the dashboard opens instantly and offline; parsed on read.
+@DataClassName('DashboardSnapshotRow')
+class DashboardSnapshots extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get json => text()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId};
+}
+
+/// ZenTao web notifications (the bell menu), per account. The server's list
+/// replaces an account's rows on every refresh.
+@DataClassName('ZenTaoNotificationRow')
+class ZenTaoNotifications extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get id => text()();
+  TextColumn get summary => text()();
+  TextColumn get objectType => text().nullable()();
+  TextColumn get objectId => text().nullable()();
+  TextColumn get objectTitle => text().nullable()();
+  TextColumn get url => text().nullable()();
+  BoolColumn get read => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, id};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -367,6 +397,8 @@ class ZenTaoProfiles extends Table {
     ChatUsers,
     ZenTaoProfiles,
     ChatMessageTranslations,
+    DashboardSnapshots,
+    ZenTaoNotifications,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -380,7 +412,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 36;
+  int get schemaVersion => 38;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -561,12 +593,17 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(chatConversations, chatConversations.adminsJson);
         }
       }
-      // Versions 32–35 were used on parallel branches. After a rebase, a DB
-      // can report the latest version while still missing another branch's
-      // tables or columns. Reconcile them once before any row is read.
-      if (from < 36) {
-        if (!await _hasTable('zen_tao_profiles')) {
-          await m.createTable(zenTaoProfiles);
+      // Versions 32–37 were used on parallel branches (36 twice: ZenTao
+      // profiles on one, the dashboard on another). After a rebase, a DB can
+      // report the latest version while still missing another branch's tables
+      // or columns. Reconcile them once before any row is read.
+      if (from < 38) {
+        for (final (name, table) in [
+          ('zen_tao_profiles', zenTaoProfiles),
+          ('dashboard_snapshots', dashboardSnapshots),
+          ('zen_tao_notifications', zenTaoNotifications),
+        ]) {
+          if (!await _hasTable(name)) await m.createTable(table);
         }
         for (final (name, column) in [
           ('chat_auto_download_videos', settings.chatAutoDownloadVideos),

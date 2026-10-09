@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
+import '../../core/navigation/ticket_editor_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/quick_settings_side_panel.dart';
@@ -19,7 +20,10 @@ import '../../features/chat/presentation/widgets/chat_notification_settings.dart
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/notifications/presentation/widgets/notifications_panel.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
+import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart';
 import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import 'app_nav_rail.dart';
 import 'resizable_sidebar.dart';
@@ -36,7 +40,9 @@ class AppShell extends ConsumerWidget {
     final c = context.colors;
     final assigned = ref.watch(ticketsProvider).asData?.value.length;
     final integrationsVisible = ref.watch(integrationsVisibleProvider);
-    final chatOpen = ref.watch(chatOpenProvider);
+    final view = ref.watch(mainViewProvider);
+    // A bug / task editor takes the whole area beside the rail.
+    final editor = integrationsVisible ? null : ref.watch(ticketEditorProvider);
 
     return UpdateNotificationListener(
       child: ChatNotificationListener(
@@ -53,7 +59,9 @@ class AppShell extends ConsumerWidget {
                       children: [
                         const AppNavRail(),
                         // The workspace tree belongs to the board only.
-                        if (!integrationsVisible && !chatOpen)
+                        if (!integrationsVisible &&
+                            editor == null &&
+                            view == MainView.board)
                           const ResizableSidebar(),
                         Expanded(
                           child: integrationsVisible
@@ -68,26 +76,31 @@ class AppShell extends ConsumerWidget {
                                     ],
                                   ),
                                 )
-                              : chatOpen
-                              ? ChatPage(
-                                  onViewProfile: (dialogContext, accountId) {
-                                    for (final account in ref.read(
-                                      chatAccountsProvider,
-                                    )) {
-                                      if (account.id == accountId) {
-                                        ZenTaoProfileDialog.show(
-                                          dialogContext,
-                                          account,
-                                        );
-                                        break;
+                              : editor != null
+                              ? TicketEditorPage(route: editor)
+                              : switch (view) {
+                                  MainView.dashboard => const DashboardPage(),
+                                  MainView.chat => ChatPage(
+                                    onViewProfile: (dialogContext, accountId) {
+                                      for (final account in ref.read(
+                                        chatAccountsProvider,
+                                      )) {
+                                        if (account.id == accountId) {
+                                          ZenTaoProfileDialog.show(
+                                            dialogContext,
+                                            account,
+                                          );
+                                          break;
+                                        }
                                       }
-                                    }
-                                  },
-                                )
-                              : const BoardPage(),
+                                    },
+                                  ),
+                                  MainView.board => const BoardPage(),
+                                },
                         ),
                       ],
                     ),
+                    NotificationsPanel(leftInset: AppNavRail.widthOf(context)),
                     const DetailOverlay(),
                     const QuickSettingsSidePanel(
                       sections: [

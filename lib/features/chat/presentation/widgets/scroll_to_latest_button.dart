@@ -3,8 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/unread_badge.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'unread_badge.dart';
 
 const Duration _kDuration = Duration(milliseconds: 200);
 
