@@ -20,7 +20,6 @@ import 'chat_info_files_section.dart';
 import 'chat_info_storage_card.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
-import 'chat_member_list.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
 
@@ -73,7 +72,13 @@ class ChatInfoPanel extends ConsumerWidget {
         ChatDetailRow(
           icon: PhosphorIconsLight.identificationBadge,
           label: l.chatRole,
-          value: chatRoleLabel(context, role),
+          value: chatRoleLabel(
+            context,
+            role,
+            serverNames:
+                ref.watch(chatRoleNamesProvider(thread.accountId)).value ??
+                const {},
+          ),
           spaced: false,
         ),
       if (peer?.email case final email?)
@@ -184,66 +189,89 @@ class ChatInfoPanel extends ConsumerWidget {
                 ],
               ),
             ),
-          ChatPanelCard(
-            padding: EdgeInsets.zero,
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
-              visualDensity: VisualDensity.compact,
-              horizontalTitleGap: s.lg,
-              minLeadingWidth: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(context.radii.lg),
-              ),
-              leading: Icon(PhosphorIconsLight.pushPin, color: c.accent),
-              title: Text(
-                l.chatPinnedMessages,
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${chat.pinnedMessageIds.length}',
-                    style: context.typography.bodyStrong.copyWith(
-                      color: c.textSecondary,
-                    ),
-                  ),
-                  Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
-                ],
-              ),
+          _PanelLink(
+            icon: PhosphorIconsLight.pushPin,
+            label: l.chatPinnedMessages,
+            count: chat.pinnedMessageIds.length,
+            onTap: () => toggleChatSidePanel(
+              ref,
+              thread,
+              ChatSidePanel.pinned,
+              infoRoom: ChatLayoutScope.of(context).infoRoom,
+            ),
+          ),
+          if (!oneToOne)
+            _PanelLink(
+              icon: PhosphorIconsLight.usersThree,
+              label: l.chatMembersTitle,
+              count: switch (members) {
+                Ok(:final value) => value.length,
+                _ => null,
+              },
               onTap: () => toggleChatSidePanel(
                 ref,
                 thread,
-                ChatSidePanel.pinned,
+                ChatSidePanel.members,
                 infoRoom: ChatLayoutScope.of(context).infoRoom,
               ),
             ),
-          ),
           ChatInfoFilesSection(thread: thread),
           ChatInfoStorageCard(thread: thread),
-          if (!oneToOne)
-            ChatPanelCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l.chatMembersTitle,
-                    style: context.typography.bodyStrong.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: s.md),
-                  ChatMemberList(
-                    chat: thread,
-                    users: users,
-                    ownerAccount: chat.ownerAccount,
-                  ),
-                ],
-              ),
-            ),
         ],
+      ),
+    );
+  }
+}
+
+/// A card that opens a sub-panel of the info: icon, label, count, chevron.
+class _PanelLink extends StatelessWidget {
+  const _PanelLink({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+
+  /// Null while unknown.
+  final int? count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final s = context.spacing;
+    return ChatPanelCard(
+      padding: EdgeInsets.zero,
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
+        visualDensity: VisualDensity.compact,
+        horizontalTitleGap: s.lg,
+        minLeadingWidth: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.radii.lg),
+        ),
+        leading: Icon(icon, color: c.accent),
+        title: Text(
+          label,
+          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (count case final n?)
+              Text(
+                '$n',
+                style: context.typography.bodyStrong.copyWith(
+                  color: c.textSecondary,
+                ),
+              ),
+            Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
+          ],
+        ),
+        onTap: onTap,
       ),
     );
   }

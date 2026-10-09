@@ -11,7 +11,9 @@ void main() {
   test('known emoji become shortnames, others numeric entities', () {
     expect(encode('👍'), ':thumbsup:');
     expect(encode('ok 😂!'), 'ok :joy:!');
-    expect(encode('🦀'), '&#x1F980;');
+    expect(encode('🦀'), ':crab:');
+    // A 4-byte character that is no emoji (mathematical 𝔸).
+    expect(encode('𝔸'), '&#x1D538;');
     expect(encode('Tiếng Việt ❤'), 'Tiếng Việt ❤');
   });
 
@@ -21,8 +23,15 @@ void main() {
     expect(decode('at 10:30: done :unknown:'), 'at 10:30: done :unknown:');
   });
 
+  test('flags and skin tones go whole, both ways', () {
+    expect(decode(':flag_vn: :metal_tone5:'), '🇻🇳 🤘🏿');
+    expect(encode('🇻🇳 🤘🏿'), ':flag_vn: :metal_tone5:');
+    // Typed with a variation selector, still the same emoji.
+    expect(encode('☺️ 👍️'), '☺️ :thumbsup:');
+  });
+
   test('round trip keeps the text', () {
-    const text = 'Xong rồi 👍🎉 🦀';
+    const text = 'Xong rồi 👍🎉 🦀 🇻🇳 🤘🏿';
     expect(decode(encode(text)), text);
   });
 
@@ -41,5 +50,10 @@ void main() {
       const MessageContent.emoji('👍'),
     );
     expect(parse('emotion', ':smile:'), const MessageContent.emoji('😄'));
+    // Not an emoji we know: plain text rather than a giant ":name:".
+    expect(
+      parse('emotion', ':no_such_emoji:'),
+      const MessageContent.text(':no_such_emoji:'),
+    );
   });
 }

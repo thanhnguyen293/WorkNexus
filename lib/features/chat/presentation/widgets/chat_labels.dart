@@ -249,8 +249,26 @@ ChatPresence? chatPresenceOf(Map<int, ChatUser> users, int? id) {
   return status == null ? null : ChatPresence.fromStatus(status);
 }
 
-/// A ZenTao role's official name; an admin-defined code stays as it is.
-String chatRoleLabel(BuildContext context, String role) {
+/// Names for role codes admins often add beyond ZenTao's defaults, which
+/// the server sends no name for.
+String? _extraRoleName(AppL10n l, String code) => switch (code.toLowerCase()) {
+  'ui' || 'designer' => l.chatRoleUi,
+  'ux' => l.chatRoleUx,
+  'op' || 'ops' => l.chatRoleOp,
+  'opm' => l.chatRoleOpm,
+  'ba' => l.chatRoleBa,
+  'devops' => l.chatRoleDevops,
+  _ => null,
+};
+
+/// A ZenTao role's official name. A role an admin added takes a name of ours
+/// for common codes (`ui` → Designer), else the server's ([serverNames],
+/// code → name), else stays as its code.
+String chatRoleLabel(
+  BuildContext context,
+  String role, {
+  Map<String, String> serverNames = const {},
+}) {
   final l = AppL10n.of(context);
   return switch (ChatRole.fromCode(role)) {
     ChatRole.dev => l.chatRoleDev,
@@ -262,7 +280,7 @@ String chatRoleLabel(BuildContext context, String role) {
     ChatRole.qd => l.chatRoleQd,
     ChatRole.top => l.chatRoleTop,
     ChatRole.others => l.chatRoleOthers,
-    null => role,
+    null => _extraRoleName(l, role.trim()) ?? serverNames[role.trim()] ?? role,
   };
 }
 
@@ -274,8 +292,8 @@ ChatVerifiedBadge? chatVerifiedBadge(
   Map<int, ChatUser> users,
   int? id,
 ) {
-  final role = ChatRole.fromCode(users[id]?.role);
-  final rank = role?.rank;
+  final role = users[id]?.role?.trim();
+  final rank = chatRoleRankOf(role);
   if (role == null || rank == null) return null;
   return (color: chatRankColor(context, rank), role: role);
 }

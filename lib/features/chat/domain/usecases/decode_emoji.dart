@@ -1,8 +1,10 @@
 import '../value_objects/emoji_shortnames.dart';
+import '../value_objects/emojione_shortnames.dart';
 
 /// Shows what [EncodeEmoji] and the official client send as emoji again:
-/// known `:shortname:`s and HTML numeric entities (`&#x1F44D;`, `&#128077;`).
-/// Unknown shortnames are left as typed.
+/// Emojione `:shortname:`s (the client's full set: flags, skin tones…) and
+/// HTML numeric entities (`&#x1F44D;`, `&#128077;`). Unknown shortnames are
+/// left as typed.
 class DecodeEmoji {
   const DecodeEmoji();
 
@@ -13,14 +15,14 @@ class DecodeEmoji {
   String call(String text) {
     if (!text.contains(':') && !text.contains('&#')) return text;
     return text.replaceAllMapped(_token, (m) {
-      final int? rune;
       if (m[1] case final name?) {
-        rune = kEmojiShortnames[kEmojiAliases[name] ?? name];
-      } else if (m[2] case final hex?) {
-        rune = int.tryParse(hex, radix: 16);
-      } else {
-        rune = int.tryParse(m[3] ?? '');
+        return kEmojioneShortnames[name] ??
+            kEmojioneShortnames[kEmojiAliases[name]] ??
+            m[0]!;
       }
+      final rune = m[2] != null
+          ? int.tryParse(m[2]!, radix: 16)
+          : int.tryParse(m[3] ?? '');
       return rune != null && rune > 0 && rune <= 0x10FFFF
           ? String.fromCharCode(rune)
           : m[0]!;

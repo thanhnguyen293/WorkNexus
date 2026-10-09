@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import 'chat_field_decoration.dart';
 import 'chat_snack.dart';
 import 'new_chat_people.dart';
 
@@ -103,12 +104,14 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.radii.lg),
       ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440, maxHeight: 640),
+      // A fixed size: switching tabs or searching changes how many people
+      // are listed, which must not make the dialog grow and shrink.
+      child: SizedBox(
+        width: 440,
+        height: (MediaQuery.sizeOf(context).height * 0.85).clamp(320, 640),
         child: Padding(
           padding: EdgeInsets.fromLTRB(s.xl5, s.xl3, s.xl5, s.xl5),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -149,7 +152,7 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                 ),
                 SizedBox(height: s.xl),
               ],
-              Flexible(
+              Expanded(
                 child: NewChatPeople(
                   accountId: widget.accountId,
                   search: _search,

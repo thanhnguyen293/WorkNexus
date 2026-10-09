@@ -400,6 +400,39 @@ void main() {
     );
   });
 
+  test('role names come from sysgetdepts, asked once', () async {
+    server.onRequest = (req) => req['method'] == 'sysgetdepts'
+        ? {
+            'method': 'sysgetdepts',
+            'rid': req['rid'],
+            'result': 'success',
+            // As xxd 9 replies: departments and roles inside `data`, the
+            // reply's own `roles` empty.
+            'data': {
+              'depts': {
+                '1': {'name': 'Mobile'},
+              },
+              'roles': {'dev': '研发', 'op': 'Operations', 'x': ''},
+            },
+            'roles': '',
+          }
+        : null;
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+    final names = await repo.roleNames(_acc);
+    expect(names, isA<Ok<Map<String, String>>>());
+    expect((names as Ok<Map<String, String>>).value, {
+      'dev': '研发',
+      'op': 'Operations',
+    });
+    await repo.roleNames(_acc);
+    expect(
+      server.requests.where((r) => r['method'] == 'sysgetdepts'),
+      hasLength(1),
+    );
+  });
+
   test('a message in an unknown chat fetches that chat', () async {
     await repo.connect(_acc);
     await eventually(repo.watchConversations(_acc), (l) => l.length == 2);

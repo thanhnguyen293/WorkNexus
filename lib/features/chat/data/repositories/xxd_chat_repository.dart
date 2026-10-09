@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/database.dart';
+import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/credential_store.dart';
@@ -459,6 +461,59 @@ class XxdChatRepository implements ChatRepository {
     String accountId,
     MessageContent content,
   ) => _attachments.localFile(accountId, _sessions[accountId], content);
+
+  /// Role names by account, asked once per session.
+  final _roleNames = <String, Map<String, String>>{};
+
+  @override
+  Future<Result<Map<String, String>>> roleNames(String accountId) async {
+    if (_roleNames[accountId] case final names?) return Ok(names);
+    final session = _sessions[accountId];
+    if (session == null) return const Err(NetworkFailure('Chat is offline'));
+    // The official client's `sysgetdepts`: departments and the role list.
+    appTalker.info('Chat roles: asking sysgetdepts');
+    final reply = await session.connection.request(
+      const XxdRequest('sysgetdepts'),
+    );
+    final Object? roles;
+    switch (reply) {
+      // The official client reads `data.roles` (beside `data.depts`); the
+      // reply's own `roles` field is left empty by xxd 9.
+      case Ok(:final value):
+        final data = _decodeRoles(value.data);
+        final nested = data is Map ? _decodeRoles(data['roles']) : null;
+        roles = nested is Map && nested.isNotEmpty
+            ? nested
+            : _decodeRoles(value.raw['roles']);
+        appTalker.info(
+          'Chat roles: sysgetdepts data keys '
+          '${data is Map ? data.keys.toList() : data.runtimeType}; '
+          'roles: $roles',
+        );
+      case Err(:final failure):
+        appTalker.warning(
+          'Chat roles: sysgetdepts failed — ${failure.message}',
+        );
+        return Err(failure);
+    }
+    final names = <String, String>{
+      if (roles is Map)
+        for (final MapEntry(:key, :value) in roles.entries)
+          if (value is String && value.trim().isNotEmpty)
+            '$key'.trim(): value.trim(),
+    };
+    return Ok(_roleNames[accountId] = names);
+  }
+
+  /// A map as sent, or the same map as a JSON string (as xxd may send it).
+  static Object? _decodeRoles(Object? roles) {
+    if (roles is! String) return roles;
+    try {
+      return jsonDecode(roles);
+    } on FormatException {
+      return null;
+    }
+  }
 
   @override
   void cancelDownload(String accountId, MessageContent content) =>

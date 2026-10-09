@@ -26,4 +26,13 @@ void main() {
       },
     );
   });
+
+  test('added roles rank too: opm is a manager, specialists get none', () {
+    expect(chatRoleRankOf('opm'), ChatRoleRank.manager);
+    expect(chatRoleRankOf(' TD '), ChatRoleRank.manager);
+    expect(chatRoleRankOf('ui'), isNull);
+    expect(chatRoleRankOf('op'), isNull);
+    expect(chatRoleRankOf('unknown'), isNull);
+    expect(chatRoleCodesOf(ChatRoleRank.manager), ['td', 'pd', 'qd', 'opm']);
+  });
 }
