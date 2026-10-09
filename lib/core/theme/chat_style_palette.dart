@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'contrast.dart';
+part 'chat_style_palette_presets.dart';
 
 /// Colour tokens of one chat style ([ChatAppearance]) in one brightness.
 ///
@@ -200,237 +201,22 @@ class ChatStylePalette {
   /// inset keeps light text readable (a light tint would wash it out).
   static const darkInset = Color(0x2E000000);
 
-  static const telegramDay = ChatStylePalette(
-    background: Color(0xFFA9C08E),
-    incomingBubble: Color(0xFFFFFFFF),
-    incomingText: Color(0xFF000000),
-    incomingMeta: Color(0xFF677887),
-    incomingLink: Color(0xFF147CB9),
-    incomingQuoteBar: Color(0xFF1B71A3),
-    outgoingBubble: Color(0xFFEFFDDE),
-    outgoingText: Color(0xFF000000),
-    outgoingMeta: Color(0xFF437F3E),
-    outgoingLink: Color(0xFF378124),
-    outgoingQuoteBar: Color(0xFF377430),
-    outgoingTicks: Color(0xFF4AA140),
-    // Near-opaque: the pill sits on whichever background the user picked.
-    separatorFill: Color(0xF2405A33),
-    separatorText: Color(0xFFFFFFFF),
-    nameColors: [
-      Color(0xFFC03D33),
-      Color(0xFF3D8623),
-      Color(0xFF9A6D04),
-      Color(0xFF147CB9),
-      Color(0xFF8544D6),
-      Color(0xFFCD4073),
-      Color(0xFF238194),
-      Color(0xFFB85C18),
-    ],
-  );
-
-  static const telegramNight = ChatStylePalette(
-    background: Color(0xFF0B121B),
-    incomingBubble: Color(0xFF1E2C3A),
-    incomingText: Color(0xFFF5F5F5),
-    incomingMeta: Color(0xFF8493A1),
-    incomingLink: Color(0xFF70BAF5),
-    incomingQuoteBar: Color(0xFF429BDB),
-    outgoingBubble: Color(0xFF2B5278),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFA8C5E1),
-    outgoingLink: Color(0xFF83CAFF),
-    outgoingQuoteBar: Color(0xFF65B9F4),
-    outgoingTicks: Color(0xFF6BBFFF),
-    separatorFill: Color(0xD5213040),
-    separatorText: Color(0xFFFFFFFF),
-    nameColors: [
-      Color(0xFFFB6169),
-      Color(0xFF85DE85),
-      Color(0xFFF3BC5C),
-      Color(0xFF65BDF3),
-      Color(0xFFB48BF2),
-      Color(0xFFFF5694),
-      Color(0xFF62D4E3),
-      Color(0xFFFAA357),
-    ],
-  );
-
-  static const zaloLight = ChatStylePalette(
-    background: Color(0xFFEEF0F3),
-    incomingBubble: Color(0xFFFFFFFF),
-    incomingText: Color(0xFF081C36),
-    incomingMeta: Color(0xFF637894),
-    incomingLink: Color(0xFF0068FF),
-    incomingQuoteBar: Color(0xFF0065F7),
-    incomingBorder: Color(0xFFD6DBE1),
-    outgoingBubble: Color(0xFFD3E5FF),
-    outgoingText: Color(0xFF081C36),
-    outgoingMeta: Color(0xFF54677E),
-    outgoingLink: Color(0xFF005CE2),
-    outgoingQuoteBar: Color(0xFF0065F7),
-    outgoingBorder: Color(0xFFA9C8F2),
-    quoteFill: Color(0xFFF0F4FA),
-    separatorFill: Color(0x99FFFFFF),
-    separatorText: Color(0xFF5A6D86),
-  );
-
-  static const zaloDark = ChatStylePalette(
-    background: Color(0xFF16191D),
-    incomingBubble: Color(0xFF2A2E33),
-    incomingText: Color(0xFFE3E5E8),
-    incomingMeta: Color(0xFF8B97A6),
-    incomingLink: Color(0xFF4D9BFF),
-    incomingQuoteBar: Color(0xFF4D9BFF),
-    incomingBorder: Color(0xFF353A40),
-    outgoingBubble: Color(0xFF1B4A82),
-    outgoingText: Color(0xFFF2F5F8),
-    outgoingMeta: Color(0xFFA9C1E0),
-    outgoingLink: Color(0xFF9CC8FF),
-    outgoingQuoteBar: Color(0xFF9CC8FF),
-    outgoingBorder: Color(0xFF245A99),
-    separatorFill: Color(0xFF2A2E33),
-    separatorText: Color(0xFFB8C2CE),
-  );
-
-  static const messengerLight = ChatStylePalette(
-    background: Color(0xFFFFFFFF),
-    incomingBubble: Color(0xFFEBECEF),
-    incomingText: Color(0xFF050505),
-    incomingMeta: Color(0xFF65676B),
-    incomingLink: Color(0xFF005EF7),
-    incomingQuoteBar: Color(0xFF5E6064),
-    outgoingBubble: Color(0xFF0866FF),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFF5F8FF),
-    outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFFFFFFFF),
-    // A deep navy card on the blue own bubble: state colours (green, red,
-    // purple) then read without being washed out to white.
-    outgoingQuoteFill: Color(0x66001A4D),
-    separatorText: Color(0xFF65676B),
-  );
-
-  static const messengerDark = ChatStylePalette(
-    background: Color(0xFF000000),
-    incomingBubble: Color(0xFF303030),
-    incomingText: Color(0xFFE4E6EB),
-    incomingMeta: Color(0xFFB0B3B8),
-    incomingLink: Color(0xFF4599FF),
-    incomingQuoteBar: Color(0xFFB0B3B8),
-    outgoingBubble: Color(0xFF0866FF),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFF5F8FF),
-    outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFFFFFFFF),
-    // A deep navy card on the blue own bubble: state colours (green, red,
-    // purple) then read without being washed out to white.
-    outgoingQuoteFill: Color(0x66001A4D),
-    separatorText: Color(0xFFB0B3B8),
-  );
-
-  static const wechatLight = ChatStylePalette(
-    background: Color(0xFFE8E8E8),
-    incomingBubble: Color(0xFFFFFFFF),
-    incomingText: Color(0xFF191919),
-    incomingMeta: Color(0xFF767676),
-    incomingLink: Color(0xFF576B95),
-    incomingQuoteBar: Color(0xFF576B95),
-    outgoingBubble: Color(0xFFADD897),
-    outgoingText: Color(0xFF0F170A),
-    outgoingMeta: Color(0xFF3D5E2C),
-    outgoingLink: Color(0xFF2F4F1F),
-    outgoingQuoteBar: Color(0xFF2F4F1F),
-    quoteFill: Color(0x0F000000),
-    // A pale wash on the green own bubble: a dark tint turns it muddy.
-    outgoingQuoteFill: Color(0x99FFFFFF),
-    separatorText: Color(0xFF686868),
-    outsideQuoteFill: Color(0xFFDADADA),
-    outsideQuoteText: Color(0xFF4C4C4C),
-  );
-
-  static const wechatDark = ChatStylePalette(
-    background: Color(0xFF111111),
-    incomingBubble: Color(0xFF2C2C2C),
-    incomingText: Color(0xFFD5D5D5),
-    incomingMeta: Color(0xFF939393),
-    incomingLink: Color(0xFF8294AC),
-    incomingQuoteBar: Color(0xFF7E91AA),
-    outgoingBubble: Color(0xFF37A169),
-    outgoingText: Color(0xFF000000),
-    outgoingMeta: Color(0xFF102E1E),
-    outgoingLink: Color(0xFF0A2E1D),
-    outgoingQuoteBar: Color(0xFF071F13),
-    quoteFill: Color(0x14000000),
-    outgoingQuoteFill: Color(0x4DFFFFFF),
-    separatorText: Color(0xFF8C8C8C),
-    outsideQuoteFill: Color(0xFF262626),
-    outsideQuoteText: Color(0xFFB2B2B2),
-  );
+  static const telegramDay = _telegramDay;
+  static const telegramNight = _telegramNight;
+  static const zaloLight = _zaloLight;
+  static const zaloDark = _zaloDark;
+  static const messengerLight = _messengerLight;
+  static const messengerDark = _messengerDark;
+  static const wechatLight = _wechatLight;
+  static const wechatDark = _wechatDark;
 
   /// The TBChat client's bubbles (tbchat_socialfi `PrimaryColorsApi.bubbleColor`
   /// / `otherSideBubbleColor`, a 6% black hairline): pale green own, white
   /// other; text black, secondary text black at 65% (made opaque); quote
   /// bars the app's green. Links use a darker green, which reads on both.
-  static const tbchatLight = ChatStylePalette(
-    background: Color(0xFFEAE6DF),
-    incomingBubble: Color(0xFFFFFFFF),
-    incomingText: Color(0xFF000000),
-    incomingMeta: Color(0xFF595959),
-    incomingLink: Color(0xFF0A7A3D),
-    incomingQuoteBar: Color(0xFF0DCC61),
-    outgoingBubble: Color(0xFFD4FDD1),
-    outgoingText: Color(0xFF000000),
-    outgoingMeta: Color(0xFF4A5949),
-    outgoingLink: Color(0xFF0A7A3D),
-    outgoingQuoteBar: Color(0xFF0DCC61),
-    quoteFill: Color(0x0F000000),
-    outgoingQuoteFill: Color(0x99FFFFFF),
-    // Near-opaque: the pill sits on whichever background the user picked.
-    separatorFill: Color(0xF2FFFFFF),
-    incomingBorder: Color(0x0F000000),
-    outgoingBorder: Color(0x0F000000),
-    separatorText: Color(0xFF54656F),
-    nameColors: [
-      Color(0xFFC03D33),
-      Color(0xFF1F8A4C),
-      Color(0xFF9A6D04),
-      Color(0xFF147CB9),
-      Color(0xFF8544D6),
-      Color(0xFFCD4073),
-      Color(0xFF238194),
-      Color(0xFFB85C18),
-    ],
-  );
+  static const tbchatLight = _tbchatLight;
 
   /// TBChat's dark bubbles: deep green own, slate other, a 12% white
   /// hairline; text white, secondary white at 65% (made opaque).
-  static const tbchatDark = ChatStylePalette(
-    background: Color(0xFF0B141A),
-    incomingBubble: Color(0xFF182025),
-    incomingText: Color(0xFFFFFFFF),
-    incomingMeta: Color(0xFFAEB1B3),
-    incomingLink: Color(0xFF5FE39A),
-    incomingQuoteBar: Color(0xFF0DCC61),
-    outgoingBubble: Color(0xFF004E35),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFA6C1B8),
-    outgoingLink: Color(0xFF7DEBB0),
-    outgoingQuoteBar: Color(0xFF0DCC61),
-    quoteFill: Color(0x14FFFFFF),
-    outgoingQuoteFill: Color(0x33000000),
-    separatorFill: Color(0xF2182229),
-    incomingBorder: Color(0x1FFFFFFF),
-    outgoingBorder: Color(0x1FFFFFFF),
-    separatorText: Color(0xFFB4C0C6),
-    nameColors: [
-      Color(0xFFFF8A80),
-      Color(0xFF7FDC9A),
-      Color(0xFFF3BC5C),
-      Color(0xFF65BDF3),
-      Color(0xFFB9A0F5),
-      Color(0xFFFF7FAE),
-      Color(0xFF62D4E3),
-      Color(0xFFFAA357),
-    ],
-  );
+  static const tbchatDark = _tbchatDark;
 }
