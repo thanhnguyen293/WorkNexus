@@ -18,8 +18,7 @@ import 'zentao_normalize.dart';
 
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
 class ZenTaoAdapter implements ProviderAdapter {
-  ZenTaoAdapter({required this.accountId, required ZenTaoClient client})
-    : _client = client;
+  ZenTaoAdapter({required this.accountId, required this._client});
 
   final String accountId;
   final ZenTaoClient _client;
@@ -261,7 +260,6 @@ class ZenTaoAdapter implements ProviderAdapter {
             : await _client.classicProductBugs(
                 productId,
                 browseType: browseType,
-                recPerPage: limit,
                 pageID: page,
               );
         if (res.total > 0) total = res.total;

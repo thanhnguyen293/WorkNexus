@@ -18,8 +18,7 @@ typedef XxdRequestAndStore = Future<Result<void>> Function(
 /// Group pictures and the user's own picture — both go through ZenTao web
 /// (`im-authorize`) with a fresh `authToken`.
 class ChatAvatarService {
-  ChatAvatarService(this._http, {XxdBackend backend = const XxdBackend()})
-    : _backend = backend;
+  ChatAvatarService(this._http, {this._backend = const XxdBackend()});
 
   final XxdHttpDatasource _http;
   final XxdBackend _backend;

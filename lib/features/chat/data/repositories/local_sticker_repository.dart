@@ -16,11 +16,7 @@ const _imageExtensions = {'png', 'gif', 'webp', 'jpg', 'jpeg'};
 /// Bundled sets come from the asset manifest; the user's own stickers are
 /// files in [directory], named `<epoch ms>_<name>` so the newest sort first.
 class LocalStickerRepository implements StickerRepository {
-  LocalStickerRepository({
-    required AssetBundle bundle,
-    required Future<Directory> Function() directory,
-  }) : _bundle = bundle,
-       _directory = directory;
+  LocalStickerRepository({required this._bundle, required this._directory});
 
   final AssetBundle _bundle;
   final Future<Directory> Function() _directory;

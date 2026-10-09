@@ -21,8 +21,7 @@ import 'gitlab_normalize.dart';
 /// close/reopen) lives on this concrete class as extra public methods, called
 /// through GitLab-specific `SyncService` paths — not through the interface.
 class GitLabAdapter implements GitLabMrAdapter {
-  GitLabAdapter({required this.accountId, required GitLabClient client})
-    : _client = client;
+  GitLabAdapter({required this.accountId, required this._client});
 
   final String accountId;
   final GitLabClient _client;

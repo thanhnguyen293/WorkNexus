@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../di/providers.dart';
 import '../navigation/navigation_providers.dart';
 import '../theme/app_colors.dart';
@@ -8,7 +9,6 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/fonts.dart';
-import '../../l10n/app_localizations.dart';
 import 'app_button.dart';
 
 /// True when OpenCode has an authenticated provider. Otherwise explains how to
@@ -27,7 +27,7 @@ Future<bool> ensureOpenCodeLinked(BuildContext context, WidgetRef ref) async {
 /// Explains how to link OpenCode when no provider is authenticated: paste a key
 /// in Settings, or run the CLI login for an OAuth provider.
 class OpenCodeNotLinkedDialog extends ConsumerWidget {
-  const OpenCodeNotLinkedDialog();
+  const OpenCodeNotLinkedDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -21,8 +21,7 @@ import 'github_normalize.dart';
 /// fields, so comment/assign/close/reopen all route through the issues endpoints;
 /// only merge and the rich PR board use the `/pulls` endpoints.
 class GitHubAdapter implements ProviderAdapter {
-  GitHubAdapter({required this.accountId, required GitHubClient client})
-    : _client = client;
+  GitHubAdapter({required this.accountId, required this._client});
 
   final String accountId;
   final GitHubClient _client;

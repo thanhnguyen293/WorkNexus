@@ -6,6 +6,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/translation_record.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/agents/data/cli_agent_adapters.dart';
@@ -33,10 +34,13 @@ class _ScriptedRunner extends AgentRunner {
   }) => Process.start('/bin/sh', ['-c', script]);
 }
 
+/// The value of an [Ok] result, typed from the [Result] (fails the test on Err).
+T _ok<T>(Result<T> result) => (result as Ok<T>).value;
+
 void main() {
   const source = TicketSource(title: 'Fix login', body: 'It does not respond.');
 
-  Future<Result<dynamic>> translateWith(
+  Future<Result<TranslationRecord>> translateWith(
     String script, {
     Duration timeout = const Duration(seconds: 30),
   }) =>
@@ -103,7 +107,7 @@ void main() {
     );
 
     expect(res, isA<Ok<dynamic>>());
-    final record = (res as Ok).value;
+    final record = _ok(res);
     expect(record.translatedTitle, 'Sửa đăng nhập');
     expect(record.translatedBody, 'Không phản hồi.');
     expect(record.targetLang, 'vi');
