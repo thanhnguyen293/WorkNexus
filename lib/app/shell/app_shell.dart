@@ -103,7 +103,7 @@ class AppShell extends ConsumerWidget {
                     NotificationsPanel(leftInset: AppNavRail.widthOf(context)),
                     const DetailOverlay(),
                     const QuickSettingsSidePanel(
-                      sections: [
+                      chatSections: [
                         ChatAppearanceSettings(),
                         ChatAutoDownloadSettings(),
                         ChatNotificationSettings(),

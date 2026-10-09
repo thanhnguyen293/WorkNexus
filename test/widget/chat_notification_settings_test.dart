@@ -39,11 +39,12 @@ void main() {
     );
     AppSettings settings() => container.read(appSettingsProvider);
     final whileViewing = find.text('Notify while viewing the chat');
-    expect(settings().chatNotifyWhileViewing, isFalse);
+    // On by default.
+    expect(settings().chatNotifyWhileViewing, isTrue);
 
     await tester.tap(whileViewing);
     await tester.pump();
-    expect(settings().chatNotifyWhileViewing, isTrue);
+    expect(settings().chatNotifyWhileViewing, isFalse);
 
     await tester.tap(find.text('New message notifications'));
     await tester.pump();
@@ -51,6 +52,6 @@ void main() {
 
     await tester.tap(whileViewing);
     await tester.pump();
-    expect(settings().chatNotifyWhileViewing, isTrue, reason: 'disabled');
+    expect(settings().chatNotifyWhileViewing, isFalse, reason: 'disabled');
   });
 }

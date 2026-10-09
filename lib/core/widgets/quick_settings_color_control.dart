@@ -1,41 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_typography.dart';
+import 'custom_color_dialog.dart';
 import 'hover_surface.dart';
 
-/// A row of color swatches for choosing the app primary color. The first swatch
-/// ("default") clears the override and follows the theme variant's accent.
+/// Swatches per row: default + 20 presets + custom fill two even rows.
+const int _kColumns = 11;
+
+/// The app primary colour: the theme's own accent ("default"), the presets,
+/// and a last swatch that opens a free picker — showing the custom colour
+/// once one is chosen.
 class QuickSettingsColorControl extends ConsumerWidget {
   const QuickSettingsColorControl({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
-    final settings = ref.watch(appSettingsProvider);
+    final s = context.spacing;
+    final selected = ref.watch(
+      appSettingsProvider.select((st) => st.accentColorValue),
+    );
     final controller = ref.read(appSettingsProvider.notifier);
-    final selected = settings.accentColorValue;
-    final defaultColor = AppPalette.of(settings.variant).accent;
+    // The variant actually on screen (following the OS, it's light or dark).
+    final defaultColor = AppPalette.of(
+      Theme.of(context).brightness == Brightness.dark
+          ? AppThemeVariant.dark
+          : AppThemeVariant.light,
+    ).accent;
+    final custom = selected != null && !kAccentPresets.contains(selected)
+        ? selected
+        : null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l.primaryColor,
-          style: context.typography.caption.copyWith(color: c.textTertiary),
-        ),
-        SizedBox(height: context.spacing.sm),
-        Wrap(
-          spacing: context.spacing.xs,
-          runSpacing: context.spacing.xs,
+    Future<void> pickCustom() async {
+      final picked = await showCustomColorDialog(
+        context,
+        initial: Color(selected ?? defaultColor.toARGB32()),
+      );
+      if (picked != null) controller.setAccentColor(picked);
+    }
+
+    return LayoutBuilder(
+      builder: (context, box) {
+        final gap = s.xs;
+        final size = (box.maxWidth - gap * (_kColumns - 1)) / _kColumns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
           children: [
             _Swatch(
+              size: size,
               color: defaultColor,
               selected: selected == null,
               tooltip: l.colorDefault,
@@ -43,26 +62,37 @@ class QuickSettingsColorControl extends ConsumerWidget {
             ),
             for (final value in kAccentPresets)
               _Swatch(
+                size: size,
                 color: Color(value),
                 selected: selected == value,
                 onTap: () => controller.setAccentColor(value),
               ),
+            _Swatch(
+              size: size,
+              color: custom == null ? null : Color(custom),
+              selected: custom != null,
+              tooltip: l.colorCustom,
+              onTap: pickCustom,
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
+/// One round swatch; with no [color] it's the "pick your own" button.
 class _Swatch extends StatelessWidget {
   const _Swatch({
+    required this.size,
     required this.color,
     required this.selected,
     required this.onTap,
     this.tooltip,
   });
 
-  final Color color;
+  final double size;
+  final Color? color;
   final bool selected;
   final VoidCallback onTap;
   final String? tooltip;
@@ -70,30 +100,44 @@ class _Swatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final color = this.color;
+    // A 2px ring, then a 1.5px gap, around the dot.
+    const ring = 2.0;
+    const ringGap = 1.5;
     final swatch = HoverSurface(
       onTap: onTap,
       shape: BoxShape.circle,
-      padding: const EdgeInsets.all(2),
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(ringGap),
       // The ring answers hover, not a tint: a tint would shift the colour.
       tintOnHover: false,
       border: Border.all(
         color: selected ? c.textPrimary : Colors.transparent,
-        width: 2,
+        width: ring,
       ),
       hoverBorder: Border.all(
         color: selected ? c.textPrimary : c.borderStrong,
-        width: 2,
+        width: ring,
       ),
-      child: Container(
-        width: 16,
-        height: 16,
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: color,
+          color: color ?? c.surfaceSubtle,
           shape: BoxShape.circle,
-          border: Border.all(color: c.mixT(c.scrim, 0.12)),
+          border: Border.all(
+            color: color == null ? c.borderStrong : c.mixT(c.scrim, 0.12),
+          ),
         ),
+        child: color == null
+            ? Icon(
+                PhosphorIconsLight.plus,
+                size: size * 0.45,
+                color: c.textSecondary,
+              )
+            : const SizedBox.expand(),
       ),
     );
-    return tooltip == null ? swatch : Tooltip(message: tooltip!, child: swatch);
+    final tooltip = this.tooltip;
+    return tooltip == null ? swatch : Tooltip(message: tooltip, child: swatch);
   }
 }

@@ -1,17 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../settings/app_settings.dart';
-import '../theme/app_borders.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_radii.dart';
-import '../theme/app_spacing.dart';
-import '../theme/app_typography.dart';
 import '../theme/fonts.dart';
 import '../theme/google_font_families.dart';
+import 'app_dropdown.dart';
 
-/// Compact font picker used by the Quick Settings popover.
+/// Font picker for Quick Settings; each font previews in its own face.
 class QuickSettingsFontControl extends StatelessWidget {
   const QuickSettingsFontControl({
     required this.tooltip,
@@ -49,66 +44,13 @@ class QuickSettingsFontControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return PopupMenuButton<String>(
-      initialValue: value,
-      onSelected: onChanged,
+    return AppDropdown<String>(
+      value: value,
+      values: kFontChoices,
+      labelOf: _displayLabel,
+      fontFamilyOf: _previewFamily,
       tooltip: tooltip,
-      color: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.md),
-        side: context.hairlineSide,
-      ),
-      itemBuilder: (context) => [
-        for (final font in kFontChoices)
-          PopupMenuItem<String>(
-            value: font,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _displayLabel(font),
-                    style: context.typography.subtitle.copyWith(
-                      fontFamily: _previewFamily(context, font),
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-                if (font == value)
-                  Icon(PhosphorIconsLight.check, color: c.accent),
-              ],
-            ),
-          ),
-      ],
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.sm,
-          vertical: context.spacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          border: context.cardBorder,
-          borderRadius: BorderRadius.circular(context.radii.md),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _displayLabel(value),
-              style: context.typography.captionStrong.copyWith(
-                fontFamily: _previewFamily(context, value),
-                color: c.textPrimary,
-              ),
-            ),
-            SizedBox(width: context.spacing.xs),
-            Icon(
-              PhosphorIconsLight.caretDown,
-              size: context.spacing.xl3,
-              color: c.textSecondary,
-            ),
-          ],
-        ),
-      ),
+      onChanged: onChanged,
     );
   }
 }

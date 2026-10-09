@@ -8,15 +8,18 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dropdown.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
-import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'chat_storage_rows.dart';
 
 /// Limits users can pick for the attachment cache, in MB.
 const _kLimitsMb = [512, 1024, 2048, 5120, 10240];
+
+/// A limit as a round figure: "512 MB", "2 GB" — never "512.0 MB".
+String _limitLabel(int mb) => mb >= 1024 ? '${mb ~/ 1024} GB' : '$mb MB';
 
 /// Disk space of downloaded chat files: how much is used against the
 /// limit, the limit itself, per-chat usage with delete, and "clear all".
@@ -104,28 +107,25 @@ class ChatStorageDialog extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  DropdownButton<int>(
-                    mouseCursor: WidgetStateMouseCursor.clickable,
-                    value: _kLimitsMb.contains(limitMb) ? limitMb : null,
-                    underline: const SizedBox.shrink(),
-                    items: [
-                      for (final mb in _kLimitsMb)
-                        DropdownMenuItem(
-                          value: mb,
-                          child: Text(formatFileSize(mb * 1024 * 1024)),
-                        ),
-                    ],
-                    onChanged: (mb) {
-                      if (mb == null) return;
-                      ref
-                          .read(appSettingsProvider.notifier)
-                          .setChatCacheLimitMb(mb);
-                      // Lowering the limit trims; show the new usage after.
-                      Future<void>.delayed(
-                        const Duration(milliseconds: 500),
-                        () => ref.invalidate(chatCacheUsageProvider),
-                      );
-                    },
+                  SizedBox(
+                    width: s.xl6 * 3,
+                    child: AppDropdown<int>(
+                      value: _kLimitsMb.contains(limitMb)
+                          ? limitMb
+                          : _kLimitsMb.first,
+                      values: _kLimitsMb,
+                      labelOf: _limitLabel,
+                      onChanged: (mb) {
+                        ref
+                            .read(appSettingsProvider.notifier)
+                            .setChatCacheLimitMb(mb);
+                        // Lowering the limit trims; show the new usage after.
+                        Future<void>.delayed(
+                          const Duration(milliseconds: 500),
+                          () => ref.invalidate(chatCacheUsageProvider),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
