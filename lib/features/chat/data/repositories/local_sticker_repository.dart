@@ -99,7 +99,10 @@ class LocalStickerRepository implements StickerRepository {
       await dir.create(recursive: true);
       final safe = name.replaceAll(RegExp(r'[^\w.\-]'), '_');
       final file = File(
-        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_'
+        // The platform separator, so this path equals the one a later directory
+        // listing returns for the same file (it is the item's id).
+        '${dir.path}${Platform.pathSeparator}'
+        '${DateTime.now().millisecondsSinceEpoch}_'
         '${_isImage(safe) ? safe : '$safe.png'}',
       );
       await file.writeAsBytes(bytes, flush: true);
