@@ -9,8 +9,8 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_adapter.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_client.dart';
+import 'package:work_nexus/core/network/zentao/zentao_adapter.dart';
+import 'package:work_nexus/core/network/zentao/zentao_client.dart';
 
 /// A minimal ZenTao bug ticket for detail/comment fetches.
 Ticket _bugTicket() => const Ticket(

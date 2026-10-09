@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
-import '../../../../core/debug/app_talker.dart';
-import '../../../../core/network/api_paging.dart';
+import '../../debug/app_talker.dart';
+import '../api_paging.dart';
 import 'gitlab_models.dart';
 
 part 'gitlab_client_reads.dart';

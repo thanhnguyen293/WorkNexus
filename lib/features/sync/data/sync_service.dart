@@ -21,27 +21,27 @@ import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
+import '../../../core/network/github/github_adapter.dart';
+import '../../../core/network/github/github_client.dart';
+import '../../../core/network/github/github_normalize.dart';
+import '../../../core/network/gitlab/gitlab_adapter.dart';
+import '../../../core/network/gitlab/gitlab_client.dart';
+import '../../../core/network/gitlab/gitlab_normalize.dart';
+import '../../../core/network/provider_adapter_factory.dart';
+import '../../../core/network/zentao/zentao_client.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../core/util/in_flight.dart';
 import '../../../core/util/synthetic_labels.dart';
 import '../../../data/local/mappers.dart';
-import '../../connections/data/github/github_adapter.dart';
-import '../../connections/data/github/github_client.dart';
-import '../../connections/data/github/github_normalize.dart';
-import '../../connections/data/gitlab/gitlab_adapter.dart';
-import '../../connections/data/gitlab/gitlab_client.dart';
-import '../../connections/data/gitlab/gitlab_normalize.dart';
-import '../../connections/data/provider_adapter_factory.dart';
-import '../../connections/data/zentao/zentao_client.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
 import 'timed_slice_cache.dart';
 
-part 'sync_service_sources.dart';
-part 'sync_service_detail.dart';
 part 'sync_service_actions.dart';
-part 'sync_service_mr_actions.dart';
+part 'sync_service_detail.dart';
 part 'sync_service_media.dart';
+part 'sync_service_mr_actions.dart';
+part 'sync_service_sources.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
 /// labels ([kSyntheticLabelPrefixes]) carried on the already-stored

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_client.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_client.dart';
 
 /// A fake dio adapter that records requests and returns a canned response.
 class _FakeAdapter implements HttpClientAdapter {

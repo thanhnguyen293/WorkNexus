@@ -2,23 +2,23 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../../../../core/domain/adapters/provider_adapter.dart';
-import '../../../../core/domain/entities/activity_event.dart';
-import '../../../../core/domain/entities/comment.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/error/failure.dart';
-import '../../../../core/error/result.dart';
-import '../../../../core/network/api_paging.dart';
-import '../../../../core/util/in_flight.dart';
-import '../../../../core/util/synthetic_labels.dart';
+import '../../domain/adapters/provider_adapter.dart';
+import '../../domain/entities/activity_event.dart';
+import '../../domain/entities/comment.dart';
+import '../../domain/entities/ticket.dart';
+import '../../domain/value_objects/provider_type.dart';
+import '../../error/failure.dart';
+import '../../error/result.dart';
+import '../../util/in_flight.dart';
+import '../../util/synthetic_labels.dart';
+import '../api_paging.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
 
-part 'zentao_adapter_tickets.dart';
-part 'zentao_adapter_catalog.dart';
 part 'zentao_adapter_actions.dart';
+part 'zentao_adapter_catalog.dart';
+part 'zentao_adapter_tickets.dart';
 
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
 class ZenTaoAdapter extends _ZenTaoAdapterBase

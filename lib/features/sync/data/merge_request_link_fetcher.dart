@@ -10,11 +10,11 @@ import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
+import '../../../core/network/github/github_adapter.dart';
+import '../../../core/network/gitlab/gitlab_adapter.dart';
+import '../../../core/network/provider_adapter_factory.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../data/local/mappers.dart';
-import '../../connections/data/github/github_adapter.dart';
-import '../../connections/data/gitlab/gitlab_adapter.dart';
-import '../../connections/data/provider_adapter_factory.dart';
 
 /// [MergeRequestLinkService] over the connected GitLab/GitHub accounts: the
 /// account whose host matches the link fetches the MR/PR, which is stored

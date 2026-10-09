@@ -6,10 +6,10 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/github/github_adapter.dart';
-import 'package:work_nexus/features/connections/data/github/github_client.dart';
-import 'package:work_nexus/features/connections/data/github/github_models.dart';
-import 'package:work_nexus/features/connections/data/github/github_normalize.dart';
+import 'package:work_nexus/core/network/github/github_adapter.dart';
+import 'package:work_nexus/core/network/github/github_client.dart';
+import 'package:work_nexus/core/network/github/github_models.dart';
+import 'package:work_nexus/core/network/github/github_normalize.dart';
 
 class _MockGitHubClient extends Mock implements GitHubClient {}
 

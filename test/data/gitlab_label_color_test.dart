@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_models.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_normalize.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_models.dart';
+import 'package:work_nexus/core/network/gitlab/gitlab_normalize.dart';
 
 void main() {
   // A merge request as returned by GitLab with `with_labels_details=true`:

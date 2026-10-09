@@ -1,6 +1,6 @@
-import '../../../core/domain/adapters/provider_adapter.dart';
-import '../../../core/domain/entities/account.dart';
-import '../../../core/domain/value_objects/provider_type.dart';
+import '../domain/adapters/provider_adapter.dart';
+import '../domain/entities/account.dart';
+import '../domain/value_objects/provider_type.dart';
 import 'github/github_adapter.dart';
 import 'github/github_client.dart';
 import 'gitlab/gitlab_adapter.dart';
