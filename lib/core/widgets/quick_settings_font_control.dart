@@ -31,7 +31,7 @@ class QuickSettingsFontControl extends StatelessWidget {
   String? _previewFamily(BuildContext context, String font) {
     // google-fonts-backed families (Be Vietnam Pro, Geist Mono) resolve to a
     // generated family name; bundled/system families are used by name.
-    final googleFont = kGoogleFontFamilies[font];
+    final googleFont = googleFontFamily(font);
     if (googleFont != null) return googleFont.style().fontFamily;
     if (font != kSystemFont) return font;
 
