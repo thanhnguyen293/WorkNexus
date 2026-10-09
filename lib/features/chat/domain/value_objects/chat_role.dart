@@ -40,3 +40,32 @@ enum ChatRoleRank {
   /// Senior management.
   executive,
 }
+
+/// Role codes admins often add beyond ZenTao's defaults, with their rank
+/// (null: no "verified" check — a specialist, like dev and qa).
+const Map<String, ChatRoleRank?> kExtraRoleRanks = {
+  'opm': ChatRoleRank.manager,
+  'ui': null,
+  'designer': null,
+  'ux': null,
+  'op': null,
+  'ops': null,
+  'ba': null,
+  'devops': null,
+};
+
+/// The rank of any role code — a default role or a common added one; null
+/// for no check (specialists, "others", unknown codes).
+ChatRoleRank? chatRoleRankOf(String? code) {
+  final key = code?.trim().toLowerCase() ?? '';
+  return ChatRole.fromCode(key)?.rank ?? kExtraRoleRanks[key];
+}
+
+/// The role codes holding [rank], in the defaults' order then the added
+/// ones — what the check legend lists for that colour.
+List<String> chatRoleCodesOf(ChatRoleRank rank) => [
+  for (final role in ChatRole.values)
+    if (role.rank == rank) role.name,
+  for (final MapEntry(:key, :value) in kExtraRoleRanks.entries)
+    if (value == rank) key,
+];

@@ -20,6 +20,7 @@ import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
@@ -39,9 +40,11 @@ class _FakeChatRepository implements ChatRepository {
     int sender,
     String text, {
     SendState state = SendState.sent,
+    int? serverId,
   }) => ChatMessage(
     accountId: 'acc',
     gid: gid,
+    serverId: serverId,
     chatGid: 'g1',
     senderId: sender,
     sentAt: _at,
@@ -119,6 +122,10 @@ class _FakeChatRepository implements ChatRepository {
   void cancelDownload(String a, MessageContent c) {}
 
   @override
+  Future<Result<Map<String, String>>> roleNames(String a) async =>
+      const Ok({'op': 'Operations'});
+
+  @override
   void setVideoAutoDownloadLimit(int bytes) {}
 
   @override
@@ -151,7 +158,7 @@ class _FakeChatRepository implements ChatRepository {
           name: 'VN Mobile Team',
           unreadCount: 3,
           lastActiveAt: _at,
-          lastMessage: _msg('m2', 31, 'hi [@Thanh](@#40)'),
+          lastMessage: _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502),
         ),
         ChatConversation(
           accountId: 'acc',
@@ -175,7 +182,7 @@ class _FakeChatRepository implements ChatRepository {
     int limit = 50,
   }) => Stream.value([
     _msg('m1', 40, 'xin chào'),
-    _msg('m2', 31, 'hi [@Thanh](@#40)'),
+    _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502),
     _msg('m3', 40, 'lost', state: SendState.failed),
   ]);
 
@@ -493,6 +500,42 @@ void main() {
     await tester.tapAt(const Offset(500, 400));
     await tester.pumpAndSettle();
     expect(find.byType(ChatFilesPanel), findsNothing);
+  });
+
+  testWidgets('members open as their own panel from the chat info', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    expect(find.byType(ChatMembersPanel), findsNothing);
+    await tester.tap(find.text('Members'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ChatMembersPanel), findsOneWidget);
+    expect(find.byType(ChatInfoPanel), findsNothing);
+  });
+
+  testWidgets('a jump asked before the chat opens (a notification tap) '
+      'is taken once the chat shows', (tester) async {
+    await pumpChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const thread = (accountId: 'acc', chatGid: 'g1');
+    container.read(chatJumpRequestProvider(thread).notifier).state = 502;
+    final highlighted = <int?>[];
+    container.listen(
+      chatHighlightedMessageProvider(thread),
+      (_, id) => highlighted.add(id),
+    );
+
+    await openTeamChat(tester);
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(container.read(chatJumpRequestProvider(thread)), isNull);
+    expect(highlighted, contains(502));
+    await tester.pumpAndSettle(const Duration(seconds: 3));
   });
 
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {

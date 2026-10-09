@@ -108,6 +108,10 @@ abstract class ChatRepository {
     MessageContent content,
   );
 
+  /// The server's role names by role code (`dev` → its name, and roles an
+  /// admin added), as the official client shows them.
+  Future<Result<Map<String, String>>> roleNames(String accountId);
+
   /// Stops downloading an attachment; [attachmentFile] then fails with a
   /// `CancelledFailure`.
   void cancelDownload(String accountId, MessageContent content);

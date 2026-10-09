@@ -11,6 +11,7 @@ import 'chat_files_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
+import 'chat_members_panel.dart';
 import 'chat_panels.dart';
 import 'chat_read_only_bar.dart';
 import 'chat_side_panel_host.dart';
@@ -124,6 +125,11 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               users: users,
             ),
             ChatSidePanel.files => ChatFilesPanel(thread: t),
+            ChatSidePanel.members => ChatMembersPanel(
+              thread: t,
+              chat: chat,
+              users: users,
+            ),
             null => null,
           };
     return ChatSidePanelHost(

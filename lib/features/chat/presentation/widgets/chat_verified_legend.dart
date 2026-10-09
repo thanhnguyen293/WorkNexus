@@ -15,7 +15,8 @@ import 'chat_labels.dart';
 class ChatVerifiedLegend extends StatelessWidget {
   const ChatVerifiedLegend({super.key, required this.role});
 
-  final ChatRole role;
+  /// The viewed user's role code.
+  final String role;
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +40,13 @@ class ChatVerifiedLegend extends StatelessWidget {
           for (final rank in ChatRoleRank.values.reversed)
             _Row(
               color: chatRankColor(context, rank),
-              roles: [
-                for (final r in ChatRole.values)
-                  if (r.rank == rank) r,
-              ],
+              roles: chatRoleCodesOf(rank),
               current: role,
             ),
           _Row(
             color: null,
             label: l.chatRoleNoBadge,
-            roles: const [ChatRole.dev, ChatRole.qa],
+            roles: [ChatRole.dev.name, ChatRole.qa.name],
             current: role,
           ),
         ],
@@ -67,8 +65,8 @@ class _Row extends StatelessWidget {
   });
 
   final Color? color;
-  final List<ChatRole> roles;
-  final ChatRole current;
+  final List<String> roles;
+  final String current;
   final String? label;
 
   @override
@@ -86,38 +84,43 @@ class _Row extends StatelessWidget {
           else
             Icon(PhosphorIconsLight.minus, size: s.xl3, color: c.textTertiary),
           SizedBox(width: s.md),
-          Text.rich(
-            TextSpan(
-              style: text,
-              children: [
-                if (label case final label?) TextSpan(text: '$label: '),
-                for (final (i, r) in roles.indexed) ...[
-                  if (i > 0) const TextSpan(text: ', '),
-                  if (r == current)
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: s.sm,
-                          vertical: s.xxs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: c.selectionFill,
-                          borderRadius: BorderRadius.circular(context.radii.sm),
-                        ),
-                        child: Text(
-                          chatRoleLabel(context, r.name),
-                          style: text.copyWith(
-                            color: c.accent,
-                            fontWeight: FontWeight.w700,
+          // Wraps when the window is narrow rather than overflowing.
+          Flexible(
+            child: Text.rich(
+              TextSpan(
+                style: text,
+                children: [
+                  if (label case final label?) TextSpan(text: '$label: '),
+                  for (final (i, r) in roles.indexed) ...[
+                    if (i > 0) const TextSpan(text: ', '),
+                    if (r == current.toLowerCase())
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: s.sm,
+                            vertical: s.xxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: c.selectionFill,
+                            borderRadius: BorderRadius.circular(
+                              context.radii.sm,
+                            ),
+                          ),
+                          child: Text(
+                            chatRoleLabel(context, r),
+                            style: text.copyWith(
+                              color: c.accent,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  else
-                    TextSpan(text: chatRoleLabel(context, r.name)),
+                      )
+                    else
+                      TextSpan(text: chatRoleLabel(context, r)),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],

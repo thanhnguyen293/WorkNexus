@@ -11,42 +11,13 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
+import 'chat_field_decoration.dart';
 import 'chat_labels.dart';
-
-/// The chat list's input look (filled, hairline border), for the new-chat
-/// dialog's search and group-name fields.
-InputDecoration chatFieldDecoration(
-  BuildContext context, {
-  required String hint,
-  IconData? icon,
-}) {
-  final c = context.colors;
-  final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(context.radii.md),
-    borderSide: BorderSide(color: c.border),
-  );
-  return InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: c.background,
-    hintText: hint,
-    hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-    prefixIcon: icon == null
-        ? null
-        : Icon(icon, size: context.spacing.xl3, color: c.textTertiary),
-    contentPadding: EdgeInsets.symmetric(
-      vertical: context.spacing.lg,
-      horizontal: context.spacing.lg,
-    ),
-    border: border,
-    enabledBorder: border,
-    focusedBorder: border.copyWith(borderSide: BorderSide(color: c.accent)),
-  );
-}
+import 'chat_role_tabs.dart';
 
 /// The people picker of the new-chat dialog: picked people as pills, a
 /// search box, and the users as chat-list-like rows with a round tick.
-class NewChatPeople extends ConsumerWidget {
+class NewChatPeople extends ConsumerStatefulWidget {
   const NewChatPeople({
     super.key,
     required this.accountId,
@@ -61,20 +32,37 @@ class NewChatPeople extends ConsumerWidget {
   final void Function(int userId) onToggle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NewChatPeople> createState() => _NewChatPeopleState();
+}
+
+class _NewChatPeopleState extends ConsumerState<NewChatPeople> {
+  /// The role tab shown; null for everyone.
+  String? _role;
+
+  @override
+  Widget build(BuildContext context) {
+    final accountId = widget.accountId;
+    final search = widget.search;
+    final selected = widget.selected;
+    final onToggle = widget.onToggle;
     final s = context.spacing;
     final l = AppL10n.of(context);
     final users = ref.watch(chatUsersProvider(accountId)).value ?? {};
+    final roleNames =
+        ref.watch(chatRoleNamesProvider(accountId)).value ?? const {};
     final self = ref.watch(chatSelfUserIdProvider(accountId)).value;
     return ValueListenableBuilder(
       valueListenable: search,
       builder: (context, value, _) {
         final q = value.text.trim().toLowerCase();
+        final everyone = [
+          for (final u in users.values)
+            if (u.userId != self && !u.deleted) u,
+        ];
         final people =
             [
-              for (final u in users.values)
-                if (u.userId != self &&
-                    !u.deleted &&
+              for (final u in everyone)
+                if (chatRoleMatches(_role, u.role) &&
                     (q.isEmpty ||
                         u.realname.toLowerCase().contains(q) ||
                         u.account.toLowerCase().contains(q)))
@@ -84,7 +72,6 @@ class NewChatPeople extends ConsumerWidget {
                   _name(a).toLowerCase().compareTo(_name(b).toLowerCase()),
             );
         return Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
@@ -116,7 +103,14 @@ class NewChatPeople extends ConsumerWidget {
                 ),
               ),
             SizedBox(height: s.md),
-            Flexible(
+            ChatRoleTabs(
+              serverNames: roleNames,
+              roles: [for (final u in everyone) u.role],
+              selected: _role,
+              onSelect: (role) => setState(() => _role = role),
+            ),
+            SizedBox(height: s.sm),
+            Expanded(
               child: people.isEmpty
                   ? Padding(
                       padding: EdgeInsets.all(s.xl),
@@ -125,7 +119,6 @@ class NewChatPeople extends ConsumerWidget {
                           : AppInlineNote(text: l.chatNoPeople),
                     )
                   : ListView.builder(
-                      shrinkWrap: true,
                       itemCount: people.length,
                       itemBuilder: (context, i) {
                         final u = people[i];
@@ -133,6 +126,7 @@ class NewChatPeople extends ConsumerWidget {
                           user: u,
                           name: _name(u),
                           picked: selected.contains(u.userId),
+                          roleNames: roleNames,
                           onTap: () => onToggle(u.userId),
                         );
                       },
@@ -156,11 +150,13 @@ class _PersonRow extends StatelessWidget {
     required this.name,
     required this.picked,
     required this.onTap,
+    required this.roleNames,
   });
 
   final ChatUser user;
   final String name;
   final bool picked;
+  final Map<String, String> roleNames;
   final VoidCallback onTap;
 
   @override
@@ -200,7 +196,11 @@ class _PersonRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      ['@${user.account}', ?user.role].join(' · '),
+                      [
+                        '@${user.account}',
+                        if (user.role case final role? when role.isNotEmpty)
+                          chatRoleLabel(context, role, serverNames: roleNames),
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.typography.caption.copyWith(

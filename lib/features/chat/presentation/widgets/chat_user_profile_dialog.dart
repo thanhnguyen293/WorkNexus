@@ -144,7 +144,15 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 Center(
                   child: TintedPill(
                     color: c.accent,
-                    label: chatRoleLabel(context, role),
+                    label: chatRoleLabel(
+                      context,
+                      role,
+                      serverNames:
+                          ref
+                              .watch(chatRoleNamesProvider(widget.accountId))
+                              .value ??
+                          const {},
+                    ),
                   ),
                 ),
               ],

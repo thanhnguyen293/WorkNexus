@@ -61,7 +61,7 @@ class ParseMessageContent {
             json?['type'] == 'emoji' &&
             inline is String &&
             inline.isNotEmpty) {
-          return MessageContent.emoji(_decodeEmoji(inline));
+          return _emoji(inline);
         }
         if (contentType == 'image' &&
             json?['type'] == 'base64' &&
@@ -119,7 +119,7 @@ class ParseMessageContent {
         // some builds, just the shortname).
         final inline = _object(content)?['content'] ?? content.trim();
         if (inline is String && inline.isNotEmpty) {
-          return MessageContent.emoji(_decodeEmoji(inline));
+          return _emoji(inline);
         }
       case 'notification':
         if (_object(content) case final json?) return _notification(json);
@@ -138,6 +138,17 @@ class ParseMessageContent {
   }
 
   static const _decodeEmoji = DecodeEmoji();
+
+  static final _shortname = RegExp(r':[a-z0-9_+\-]+:');
+
+  /// A large emoji — unless its shortname is one we cannot show, which then
+  /// reads as ordinary text instead of a giant `:name:`.
+  static MessageContent _emoji(String inline) {
+    final emoji = _decodeEmoji(inline);
+    return _shortname.hasMatch(emoji)
+        ? MessageContent.text(emoji)
+        : MessageContent.emoji(emoji);
+  }
 
   static String _text(String content) => _decodeEmoji(repairMentions(content));
 

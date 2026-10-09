@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../../../core/debug/app_talker.dart';
 import '../../domain/entities/chat_message.dart';
 
 /// Brings a row of a lazily built, reversed message list into view. Rows far
@@ -37,6 +41,7 @@ class MessageJump {
       await WidgetsBinding.instance.endOfFrame;
       final row = anchor.currentContext;
       if (row != null && row.mounted) {
+        appTalker.info('Chat jump: $gid on screen, centring it');
         await Scrollable.ensureVisible(
           row,
           alignment: 0.5,
@@ -57,7 +62,22 @@ class MessageJump {
         estimate.clamp(position.minScrollExtent, position.maxScrollExtent),
       );
     }
+    appTalker.warning('Chat jump: $gid never came into view');
     return false;
+  }
+
+  /// Takes the pending jump [request] — cleared, so it runs once — and
+  /// hands its message id to [jump].
+  static void take(
+    StateProvider<int?> request,
+    WidgetRef ref,
+    void Function(int serverId) jump,
+  ) {
+    final pending = ref.read(request.notifier);
+    final id = pending.state;
+    if (id == null) return;
+    pending.state = null;
+    jump(id);
   }
 
   /// Highlights message [serverId] through [highlight] for a moment.
@@ -66,9 +86,26 @@ class MessageJump {
     int serverId,
   ) async {
     highlight.state = serverId;
+    // Counted from when it is on screen: after a notification tap the app
+    // may still be coming to the front, drawing no frames yet.
+    await _untilShown();
+    await WidgetsBinding.instance.endOfFrame;
     await Future<void>.delayed(_highlightFor);
     if (highlight.mounted && highlight.state == serverId) {
       highlight.state = null;
     }
   }
+
+  /// Waits (a few seconds at most) for the app to be in front and drawing.
+  static Future<void> _untilShown() async {
+    final state = WidgetsBinding.instance.lifecycleState;
+    // Unknown (not reported yet, e.g. in tests) counts as shown.
+    if (state == null || state == AppLifecycleState.resumed) return;
+    final shown = Completer<void>();
+    final listener = AppLifecycleListener(onResume: shown.complete);
+    await shown.future.timeout(_waitForFront, onTimeout: () {});
+    listener.dispose();
+  }
+
+  static const _waitForFront = Duration(seconds: 5);
 }

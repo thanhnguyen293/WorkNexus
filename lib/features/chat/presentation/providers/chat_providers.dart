@@ -228,7 +228,7 @@ final chatHighlightedMessageProvider =
     StateProvider.family<int?, ChatThreadKey>((ref, key) => null);
 
 /// Panels that can open beside a chat instead of a reply thread.
-enum ChatSidePanel { info, pinned, files }
+enum ChatSidePanel { info, pinned, files, members }
 
 /// A chat's image and file messages stored locally, newest first.
 final chatAttachmentsProvider = StreamProvider.autoDispose
@@ -237,6 +237,24 @@ final chatAttachmentsProvider = StreamProvider.autoDispose
           .watch(chatRepositoryProvider)
           .watchAttachments(key.accountId, key.chatGid),
     );
+
+/// The server's role names by code for an account (empty while unknown or
+/// offline); used for roles an admin added, which have no name of ours.
+final chatRoleNamesProvider = FutureProvider.autoDispose
+    .family<Map<String, String>, String>((ref, accountId) async {
+      // Asked once online: a failed (offline) ask is not kept, it is asked
+      // again when the chat connects. The repository keeps a success.
+      final online = ref.watch(
+        chatStatusProvider(accountId).select((s) => s.value is ChatOnline),
+      );
+      if (!online) return const {};
+      return switch (await ref
+          .watch(chatRepositoryProvider)
+          .roleNames(accountId)) {
+        Ok(:final value) => value,
+        Err() => const {},
+      };
+    });
 
 final chatSidePanelProvider =
     StateProvider.family<ChatSidePanel?, ChatThreadKey>((ref, key) => null);

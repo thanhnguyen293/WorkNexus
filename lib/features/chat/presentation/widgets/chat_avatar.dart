@@ -8,7 +8,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/contrast.dart';
 import '../../domain/value_objects/chat_presence.dart';
-import '../../domain/value_objects/chat_role.dart';
 import 'chat_labels.dart';
 import 'chat_verified_legend.dart';
 
@@ -16,7 +15,7 @@ import 'chat_verified_legend.dart';
 enum ChatAvatarSize { small, medium, large }
 
 /// The "verified" check of a leading role: its colour and the role.
-typedef ChatVerifiedBadge = ({Color color, ChatRole role});
+typedef ChatVerifiedBadge = ({Color color, String role});
 
 /// Avatar outline: round, or a rounded square (WeChat).
 enum ChatAvatarShape { circle, roundedSquare }
