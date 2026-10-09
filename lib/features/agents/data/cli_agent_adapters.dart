@@ -96,10 +96,7 @@ class AgentRunner {
 
 /// Shared subprocess+JSONL machinery for the CLI-backed agents.
 abstract class CliAgentAdapter implements CodingAgentAdapter {
-  CliAgentAdapter({
-    AgentRunner runner = const AgentRunner(),
-    this.binaryOverride,
-  }) : _runner = runner;
+  CliAgentAdapter({this._runner = const AgentRunner(), this.binaryOverride});
 
   final AgentRunner _runner;
   final String? binaryOverride;

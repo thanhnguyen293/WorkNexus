@@ -38,12 +38,11 @@ class GitHubClient {
 
   GitHubClient._({
     required String apiBase,
-    required String apiHost,
+    required this._apiHost,
     required this.webBase,
     required this.token,
     Dio? dio,
-  }) : _apiHost = apiHost,
-       _webHost = Uri.parse(webBase).host,
+  }) : _webHost = Uri.parse(webBase).host,
        _dio = dio ?? Dio() {
     _dio.options
       ..baseUrl = apiBase

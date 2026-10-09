@@ -17,6 +17,7 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "lib/l10n/app_localizations*.dart"
+    - "lib/gen/**"
     - "build/**"
     - windows/**
     - macos/**

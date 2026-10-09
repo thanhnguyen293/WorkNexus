@@ -19,16 +19,12 @@ import 'chat_session.dart';
 /// through [ingest] like any other packet.
 class ChatSender {
   ChatSender({
-    required ChatLocalDatasource local,
-    required ChatAttachmentLoader attachments,
-    required ChatSession? Function(String accountId) session,
-    required Future<void> Function(String, ChatSession, XxdResponse) ingest,
-    required DateTime Function() now,
-  }) : _local = local,
-       _attachments = attachments,
-       _session = session,
-       _ingest = ingest,
-       _now = now;
+    required this._local,
+    required this._attachments,
+    required this._session,
+    required this._ingest,
+    required this._now,
+  });
 
   final ChatLocalDatasource _local;
   final ChatAttachmentLoader _attachments;

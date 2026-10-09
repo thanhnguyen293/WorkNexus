@@ -49,7 +49,7 @@ void main() {
         sort_order INTEGER NOT NULL DEFAULT 0
       );
     ''');
-    raw.execute("INSERT INTO settings (id) VALUES (0);");
+    raw.execute('INSERT INTO settings (id) VALUES (0);');
     raw.execute('PRAGMA user_version = 13;');
     raw.close();
 

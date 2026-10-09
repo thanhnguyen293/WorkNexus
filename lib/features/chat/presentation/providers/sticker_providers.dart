@@ -37,14 +37,11 @@ final stickerControllerProvider = Provider<StickerController>((ref) {
 class StickerController {
   StickerController(
     this._stickers, {
-    required SendSticker sendSticker,
-    required SendLargeEmoji sendLargeEmoji,
-    required SaveImageAsSticker saveImage,
-    required void Function() onChanged,
-  }) : _sendSticker = sendSticker,
-       _sendLargeEmoji = sendLargeEmoji,
-       _saveImage = saveImage,
-       _onChanged = onChanged;
+    required this._sendSticker,
+    required this._sendLargeEmoji,
+    required this._saveImage,
+    required this._onChanged,
+  });
 
   final StickerRepository _stickers;
   final SendSticker _sendSticker;

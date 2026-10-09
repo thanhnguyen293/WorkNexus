@@ -126,6 +126,9 @@ dev_dependencies:
 
   # Testing
   mocktail: 1.0.5
+  # Raw SQLite handle for migration tests (builds an old-schema file directly).
+  # Same version drift resolves at runtime.
+  sqlite3: 3.7.0
 
   # Type-safe asset references (assets/brands/*.svg → Assets.brands.*). The
   # build_runner integration of flutter_gen; its generated output (lib/gen/) is

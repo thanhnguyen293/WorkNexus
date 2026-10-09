@@ -30,12 +30,10 @@ final wallpaperControllerProvider = Provider<WallpaperController>(
 class WallpaperController {
   WallpaperController(
     this._repository, {
-    required AppSettingsController settings,
-    required String Function() current,
-    required void Function() onChanged,
-  }) : _settings = settings,
-       _current = current,
-       _onChanged = onChanged;
+    required this._settings,
+    required this._current,
+    required this._onChanged,
+  });
 
   final WallpaperRepository _repository;
   final AppSettingsController _settings;

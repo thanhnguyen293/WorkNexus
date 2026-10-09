@@ -34,12 +34,12 @@ final RegExp _ansiEscape = RegExp(r'\x1B\[[0-9;]*[a-zA-Z]');
 /// bypass your OpenCode usage tracking.
 class OpenCodeTranslationService implements TranslationService {
   OpenCodeTranslationService({
-    AgentRunner runner = const AgentRunner(),
+    this._runner = const AgentRunner(),
     this.model,
     this.workingDir,
     this.binaryOverride,
     this.timeout = kOpenCodeTranslationTimeout,
-  }) : _runner = runner;
+  });
 
   final AgentRunner _runner;
 

@@ -58,7 +58,6 @@ class _CommentsTabState extends ConsumerState<CommentsTab> {
           body: text,
           createdAt: DateTime.now(),
           origin: CommentOrigin.internalNote,
-          synced: true,
         ),
       );
       _ctrl.clear();

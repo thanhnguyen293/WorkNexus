@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
+import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -41,7 +41,7 @@ class _FakeAdapter implements HttpClientAdapter {
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<Uint8List>? requestStream,
-    Future? cancelFuture,
+    Future<void>? cancelFuture,
   ) async {
     requests.add(options);
     return handler(options);
@@ -65,6 +65,9 @@ ZenTaoClient _client(_FakeAdapter fake) {
     dio: dio,
   );
 }
+
+/// The value of an [Ok] result, typed from the [Result] (fails the test on Err).
+T _ok<T>(Result<T> result) => (result as Ok<T>).value;
 
 void main() {
   test('authenticate posts to /tokens and returns the account', () async {
@@ -121,8 +124,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
-      final tickets = (res as Ok).value.tickets;
+      expect(res, isA<Ok<Object?>>());
+      final tickets = _ok(res).tickets;
       expect(tickets.length, 1);
       final t = tickets.single;
       expect(t.providerType, ProviderType.zentao);
@@ -164,8 +167,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
-      final tickets = (res as Ok).value.tickets;
+      expect(res, isA<Ok<Object?>>());
+      final tickets = _ok(res).tickets;
       expect(tickets.map((t) => t.externalKey).toSet(), {'1871', '3259'});
     },
   );
@@ -192,8 +195,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.getTicket(_bugTicket());
 
-      expect(res, isA<Ok>());
-      final t = (res as Ok).value as Ticket;
+      expect(res, isA<Ok<Object?>>());
+      final t = _ok(res);
       expect(t.title, 'Login loops');
       expect(t.status, UnifiedStatus.review); // resolved → review
       // HTML became Markdown: bold + ordered list.
@@ -342,8 +345,8 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listUsers();
 
-    expect(res, isA<Ok>());
-    final users = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final users = _ok(res);
     expect(users.map((u) => u.displayName).toList(), ['Amy', 'Zoe']); // sorted
     expect(users.first.account, 'amy');
   });
@@ -365,8 +368,8 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listProducts();
 
-    expect(res, isA<Ok>());
-    final products = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final products = _ok(res);
     expect(products.map((p) => p.id).toList(), ['8', '9']);
     expect(products.map((p) => p.name).toList(), ['VN_Socialfi', 'VN_IM_Chat']);
   });
@@ -517,8 +520,8 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listComments(_bugTicket());
 
-    expect(res, isA<Ok>());
-    final comments = (res as Ok).value;
+    expect(res, isA<Ok<Object?>>());
+    final comments = _ok(res);
     // Only the `commented` action becomes a comment (the empty 'opened' drops).
     expect(comments.length, 1);
     expect(comments.single.authorName, 'Thanh');

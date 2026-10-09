@@ -81,7 +81,7 @@ void main() {
     final res = await adapter.mergePull(_ticket(externalType: 'PullRequest'));
 
     expect(res, isA<Ok<bool>>());
-    verify(() => client.mergePull(ref, '42', mergeMethod: 'merge')).called(1);
+    verify(() => client.mergePull(ref, '42')).called(1);
   });
 
   test('listRepoAssignees maps, dedupes, and sorts by login', () async {

@@ -35,7 +35,7 @@ void main() {
     getIt.registerSingleton<SyncService>(sync);
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   test('refreshing the bug board drops the cached tab and refetches', () async {
     when(

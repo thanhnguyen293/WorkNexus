@@ -31,7 +31,7 @@ void main() {
   });
 
   test('scales a large picture down to maxSide', () async {
-    final result = await squareAvatarPng(await _png(600, 900), maxSide: 256);
+    final result = await squareAvatarPng(await _png(600, 900));
     final value = (result as Ok<({Uint8List png, int side})>).value;
     expect(value.side, 256);
     expect(await _size(value.png), (256, 256));

@@ -14,13 +14,11 @@ import 'package:path_provider/path_provider.dart';
 /// download again.
 class ChatFileCache {
   ChatFileCache({
-    required Future<Directory> Function() root,
-    int maxBytes = defaultMaxBytes,
+    required this._root,
+    this._maxBytes = defaultMaxBytes,
     this.trimEvery = const Duration(minutes: 10),
-    DateTime Function() now = DateTime.now,
-  }) : _root = root,
-       _now = now,
-       _maxBytes = maxBytes;
+    this._now = DateTime.now,
+  });
 
   static const defaultMaxBytes = 2 * 1024 * 1024 * 1024;
 

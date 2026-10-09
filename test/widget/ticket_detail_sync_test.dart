@@ -41,7 +41,7 @@ void main() {
         .thenAnswer((_) async => const Ok(null));
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   Future<ProviderContainer> container() async {
     final c = ProviderContainer(

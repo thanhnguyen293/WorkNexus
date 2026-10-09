@@ -34,7 +34,7 @@ void main() {
   final all = [
     _t(id: 'a', labels: const [projectLabel]),
     _t(id: 'b', labels: const [projectLabel]),
-    _t(id: 'c', labels: const []), // right account/type, no membership label
+    _t(id: 'c'), // right account/type, no membership label
     _t(id: 'd', accountId: 'other', labels: const [projectLabel]),
     _t(id: 'e', externalType: 'Issue', labels: const [projectLabel]),
     _t(

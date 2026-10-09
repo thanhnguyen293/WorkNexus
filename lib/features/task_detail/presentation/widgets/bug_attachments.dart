@@ -149,8 +149,9 @@ class _AttachmentRow extends StatelessWidget {
     if (video.contains(e)) return PhosphorIconsLight.videoCamera;
     if (image.contains(e)) return PhosphorIconsLight.image;
     if (e == 'pdf') return PhosphorIconsLight.filePdf;
-    if (e == 'zip' || e == 'rar' || e == '7z')
+    if (e == 'zip' || e == 'rar' || e == '7z') {
       return PhosphorIconsLight.fileZip;
+    }
     return PhosphorIconsLight.file;
   }
 }
