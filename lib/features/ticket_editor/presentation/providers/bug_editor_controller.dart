@@ -20,10 +20,19 @@ class BugEditorController extends AsyncNotifier<BugEditorState> {
   Future<BugEditorState> build() async {
     final editor = ref.read(zenTaoTicketEditorProvider);
     final res = switch (route) {
-      NewBugRoute(:final productId) => await editor.newBugForm(
-        route.accountId,
-        productId,
-      ),
+      NewBugRoute(
+        :final productId,
+        :final copyOf,
+        :final executionId,
+        :final taskId,
+      ) =>
+        await editor.newBugForm(
+          route.accountId,
+          productId,
+          copyOf: copyOf,
+          executionId: executionId,
+          taskId: taskId,
+        ),
       EditBugRoute(:final bugId) => await editor.editBugForm(
         route.accountId,
         bugId,

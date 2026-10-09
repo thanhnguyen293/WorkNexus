@@ -57,6 +57,7 @@ import '../../features/notifications/domain/usecases/refresh_notifications.dart'
 import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
 import '../../features/sync/data/zentao_ticket_editor_service.dart';
+import '../../features/sync/data/zentao_workflow_actions.dart';
 import '../../features/translation/data/api_translation_service.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/credential_translation_api_config_repository.dart';
@@ -74,6 +75,7 @@ import '../domain/adapters/merge_request_link_service.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
+import '../domain/adapters/zentao_workflow_service.dart';
 import '../domain/repositories/activity_repository.dart';
 import '../domain/repositories/agent_session_repository.dart';
 import '../domain/repositories/comment_repository.dart';
@@ -303,6 +305,10 @@ abstract class ServiceModule {
   @lazySingleton
   ZenTaoTicketEditor zenTaoTicketEditor(SyncService syncService) =>
       ZenTaoTicketEditorService(syncService);
+
+  @lazySingleton
+  ZenTaoWorkflowService zenTaoWorkflowService(SyncService syncService) =>
+      ZenTaoWorkflowActions(syncService);
 
   @lazySingleton
   DashboardRepository dashboardRepository(

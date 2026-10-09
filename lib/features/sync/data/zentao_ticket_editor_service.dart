@@ -49,8 +49,21 @@ class ZenTaoTicketEditorService implements ZenTaoTicketEditor {
   }
 
   @override
-  Future<Result<BugForm>> newBugForm(String accountId, String productId) =>
-      _run(accountId, (f) => f.newBug(productId));
+  Future<Result<BugForm>> newBugForm(
+    String accountId,
+    String productId, {
+    String? copyOf,
+    String? executionId,
+    String? taskId,
+  }) => _run(
+    accountId,
+    (f) => f.newBug(
+      productId,
+      copyOf: copyOf,
+      executionId: executionId,
+      taskId: taskId,
+    ),
+  );
 
   @override
   Future<Result<BugForm>> editBugForm(String accountId, String bugId) =>
@@ -83,8 +96,11 @@ class ZenTaoTicketEditorService implements ZenTaoTicketEditor {
   }
 
   @override
-  Future<Result<TaskForm>> newTaskForm(String accountId, String executionId) =>
-      _run(accountId, (f) => f.newTask(executionId));
+  Future<Result<TaskForm>> newTaskForm(
+    String accountId,
+    String executionId, {
+    String? parentId,
+  }) => _run(accountId, (f) => f.newTask(executionId, parentId: parentId));
 
   @override
   Future<Result<TaskForm>> editTaskForm(String accountId, String taskId) =>

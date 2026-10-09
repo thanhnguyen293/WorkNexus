@@ -153,6 +153,43 @@
   "assign": "Giao",
   "resolve": "Xử lý",
   "activate": "Kích hoạt lại",
+  "zentaoCopyBug": "Sao chép",
+  "zentaoAddSubtask": "Thêm subtask",
+  "zentaoReportBug": "Báo bug",
+  "zentaoNewTicket": "Tạo bug hoặc task ({shortcut})",
+  "@zentaoNewTicket": {
+    "placeholders": { "shortcut": { "type": "String" } }
+  },
+  "zentaoNewInAccount": "{item} · {account}",
+  "@zentaoNewInAccount": {
+    "placeholders": { "item": { "type": "String" }, "account": { "type": "String" } }
+  },
+  "zentaoConfirm": "Xác nhận",
+  "zentaoStart": "Bắt đầu",
+  "zentaoRestart": "Tiếp tục",
+  "zentaoPause": "Tạm dừng",
+  "zentaoFinish": "Hoàn thành",
+  "zentaoCancelTask": "Hủy task",
+  "zentaoActionTitle": "{action} #{key}",
+  "@zentaoActionTitle": {
+    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+  },
+  "zentaoActionDone": "{action} #{key}: xong",
+  "@zentaoActionDone": {
+    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+  },
+  "zentaoAssignToOptional": "Giao cho (tùy chọn)",
+  "zentaoNote": "Ghi chú",
+  "zentaoBuild": "Build",
+  "zentaoHoursSpent": "Số giờ làm lần này",
+  "zentaoHoursLeft": "Số giờ còn lại",
+  "zentaoHoursLogged": "Đã ghi {hours} giờ",
+  "@zentaoHoursLogged": {
+    "placeholders": { "hours": { "type": "String" } }
+  },
+  "zentaoHoursInvalid": "Nhập số giờ là một số từ 0 trở lên",
+  "zentaoHoursLeftRequired": "Nhập số giờ còn lại (lớn hơn 0)",
+  "zentaoHoursSpentRequired": "Nhập số giờ đã làm — task chưa ghi giờ nào",
   "gitlabMerge": "Merge",
   "gitlabReopen": "Mở lại",
   "gitlabMrClosed": "Đã đóng merge request !{key}",

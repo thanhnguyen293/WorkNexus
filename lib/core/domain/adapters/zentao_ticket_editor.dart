@@ -5,8 +5,16 @@ import '../entities/zentao_ticket_form.dart';
 
 /// Creates and edits ZenTao bugs and tasks through ZenTao's own web forms.
 abstract interface class ZenTaoTicketEditor {
-  /// A new bug's form in product [productId].
-  Future<Result<BugForm>> newBugForm(String accountId, String productId);
+  /// A new bug's form in product [productId] (`'0'`: the one ZenTao has
+  /// current): a copy of bug [copyOf], or filed against execution
+  /// [executionId] and task [taskId], when given.
+  Future<Result<BugForm>> newBugForm(
+    String accountId,
+    String productId, {
+    String? copyOf,
+    String? executionId,
+    String? taskId,
+  });
 
   /// Bug [bugId]'s form, filled in with the bug.
   Future<Result<BugForm>> editBugForm(String accountId, String bugId);
@@ -30,8 +38,13 @@ abstract interface class ZenTaoTicketEditor {
     required String uid,
   });
 
-  /// A new task's form in execution [executionId].
-  Future<Result<TaskForm>> newTaskForm(String accountId, String executionId);
+  /// A new task's form in execution [executionId] (`'0'`: the one ZenTao has
+  /// current); a subtask of task [parentId] when given.
+  Future<Result<TaskForm>> newTaskForm(
+    String accountId,
+    String executionId, {
+    String? parentId,
+  });
 
   /// Task [taskId]'s form, filled in with the task.
   Future<Result<TaskForm>> editTaskForm(String accountId, String taskId);
@@ -43,7 +56,8 @@ abstract interface class ZenTaoTicketEditor {
   );
 
   /// Saves [draft] (a new task when its id is null); returns the task's
-  /// WorkNexus ticket id.
+  /// WorkNexus ticket id — a new subtask's parent's when ZenTao does not say
+  /// which id the subtask got.
   Future<Result<String>> saveTask(
     String accountId,
     TaskForm form,

@@ -310,16 +310,54 @@ void main() {
     );
   });
 
-  test('a task with no parent, or that is a parent, has none', () {
-    for (final parent in [0, -1]) {
+  test('a task with no parent has none, and only a parent is one', () {
+    for (final (json, isParent) in [
+      ({'parent': 0}, false),
+      ({'parent': -1}, true), // 18.x
+      ({'parent': 0, 'isParent': '1'}, true), // 20+
+    ]) {
       final t = normalizeZenTao(
-        ZenTaoEntity.fromJson({'id': 1, 'name': 'x', 'parent': parent}),
+        ZenTaoEntity.fromJson({'id': 1, 'name': 'x', ...json}),
         type: ZenTaoType.task,
         accountId: 'ztB',
         baseUrl: 'https://z',
       );
-      expect(t.providerEntity, isNull, reason: '$parent');
+      final entity = t.providerEntity! as ZenTaoTaskEntity;
+      expect(entity.parentId, isNull, reason: '$json');
+      expect(entity.isParent, isParent, reason: '$json');
     }
+  });
+
+  test('a task keeps its hours and when it really started', () {
+    ZenTaoTaskEntity task(Map<String, Object?> json) =>
+        normalizeZenTao(
+              ZenTaoEntity.fromJson({'id': 7, 'name': 'x', ...json}),
+              type: ZenTaoType.task,
+              accountId: 'ztB',
+              baseUrl: 'https://z',
+            ).providerEntity!
+            as ZenTaoTaskEntity;
+
+    final started = task({
+      'estimate': '4',
+      'consumed': 1.5,
+      'left': '2.5',
+      'realStarted': '2026-10-01 09:30:00',
+    });
+    expect(started.estimate, 4);
+    expect(started.consumed, 1.5);
+    expect(started.left, 2.5);
+    expect(started.realStarted, DateTime(2026, 10, 1, 9, 30));
+    expect(task({'execution': '31'}).execution, '31');
+    expect(
+      task({
+        'execution': {'id': 31, 'name': 'S3'},
+      }).execution,
+      '31',
+    );
+    expect(task({'execution': 0}).execution, isNull);
+
+    expect(task({'realStarted': '0000-00-00 00:00:00'}).realStarted, isNull);
   });
 
   test('a parent task lists its subtasks', () {

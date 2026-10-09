@@ -947,6 +947,30 @@ class SyncService
     return const Ok(null);
   }
 
+  /// Shows [optimistic] at once, runs [action] against the provider, then
+  /// refreshes [ticket] from it — or puts [ticket] back when [action] fails.
+  /// The refresh brings the provider's own outcome (assignee, hours…).
+  Future<Result<void>> runOptimisticAction(
+    Ticket ticket,
+    Ticket optimistic,
+    Future<Result<void>> Function() action,
+  ) async {
+    await _optimisticallyUpdateTicket(optimistic);
+    final Result<void> res;
+    try {
+      res = await action();
+    } catch (_) {
+      await _rollbackTicket(ticket);
+      rethrow;
+    }
+    if (res case Err(:final failure)) {
+      await _rollbackTicket(ticket);
+      return Err(failure);
+    }
+    await syncTicketDetail(ticket);
+    return const Ok(null);
+  }
+
   Future<void> _optimisticallyUpdateTicket(Ticket ticket) async {
     await _db
         .into(_db.tickets)

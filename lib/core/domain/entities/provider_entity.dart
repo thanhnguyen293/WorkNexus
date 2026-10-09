@@ -57,6 +57,16 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     String? parentId,
     String? parentName,
     @Default(<TicketSubtask>[]) List<TicketSubtask> subtasks,
+    // The execution (sprint) the task is in, where its subtasks and bugs go.
+    String? execution,
+    // A parent task's status follows its subtasks, so ZenTao offers it fewer
+    // actions (no start, finish or reopen).
+    @Default(false) bool isParent,
+    // Effort in hours: estimated, logged so far, and left.
+    double? estimate,
+    double? consumed,
+    double? left,
+    DateTime? realStarted,
   }) = ZenTaoTaskEntity;
 
   /// Structured metadata for a GitLab issue or merge request. MR-only fields

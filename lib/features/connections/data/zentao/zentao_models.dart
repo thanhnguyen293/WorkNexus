@@ -20,6 +20,13 @@ int? zentaoInt(Object? v) {
   return int.tryParse(v.toString());
 }
 
+/// ZenTao hours arrive as a number or a numeric string (`"2.5"`).
+double? zentaoDouble(Object? v) {
+  if (v == null) return null;
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString());
+}
+
 /// ZenTao returns `actions` as a JSON array or an id-keyed object; normalize
 /// both to a chronologically-sorted list of [ZenTaoAction].
 List<ZenTaoAction> zentaoActions(Object? raw) {
@@ -345,8 +352,13 @@ class ZenTaoEntity {
     this.executionName,
     this.storyTitle,
     this.parent,
+    this.isParent,
     this.parentName,
     this.children = const [],
+    this.estimate,
+    this.consumed,
+    this.left,
+    this.realStarted,
     this.taskName,
     this.planName,
     this.product,
@@ -403,12 +415,27 @@ class ZenTaoEntity {
   @JsonKey(fromJson: zentaoInt)
   final int? parent;
 
+  /// 1 on a parent task (ZenTao 20+; 18.x marks one with `parent` -1).
+  @JsonKey(fromJson: zentaoInt)
+  final int? isParent;
+
   /// The parent task's name, given with a subtask's detail.
   final Object? parentName;
 
   /// A parent task's subtasks, given with its detail.
   @JsonKey(fromJson: zentaoChildren)
   final List<ZenTaoEntity> children;
+
+  /// A task's hours: estimated, logged so far, and left.
+  @JsonKey(fromJson: zentaoDouble)
+  final double? estimate;
+  @JsonKey(fromJson: zentaoDouble)
+  final double? consumed;
+  @JsonKey(fromJson: zentaoDouble)
+  final double? left;
+
+  /// When work on a task really started (`0000-00-00 …` until it is).
+  final Object? realStarted;
   final Object? taskName;
   final Object? planName;
   final Object? product;

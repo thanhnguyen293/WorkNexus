@@ -225,20 +225,25 @@ Ticket normalizeZenTao(
     updatedAt: parseZenTaoDate(e.lastEditedDate),
     providerEntity: switch (type) {
       ZenTaoType.bug => _zentaoBugEntity(e, resolution, normalizedBase),
-      ZenTaoType.task when (e.parent ?? 0) > 0 || e.children.isNotEmpty =>
-        _zentaoTaskEntity(e),
-      ZenTaoType.task || ZenTaoType.story => null,
+      ZenTaoType.task => _zentaoTaskEntity(e),
+      ZenTaoType.story => null,
     },
     sourceHash: contentHash(title, body),
   );
 }
 
-/// A task's place in its family: its parent (a subtask) or its subtasks (a
-/// parent task).
+/// A task's place in its family — its parent (a subtask) or its subtasks (a
+/// parent task) — and its hours, which its status actions work from.
 TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
     TicketProviderEntity.zentaoTask(
       parentId: (e.parent ?? 0) > 0 ? '${e.parent}' : null,
       parentName: _text(e.parentName),
+      execution: _executionId(e.execution),
+      isParent: e.isParent == 1 || e.parent == -1 || e.children.isNotEmpty,
+      estimate: e.estimate,
+      consumed: e.consumed,
+      left: e.left,
+      realStarted: parseZenTaoDate(e.realStarted),
       subtasks: [
         for (final child in e.children)
           if (child.idString.isNotEmpty)
@@ -331,6 +336,13 @@ List<TicketAttachment> zentaoAttachments(ZenTaoEntity e, String baseUrl) {
     );
   }
   return out;
+}
+
+/// A task's execution id: given bare, or as `{id, name}` by some endpoints.
+String? _executionId(Object? value) {
+  if (value is Map) return _executionId(value['id']);
+  final id = _text(value);
+  return id == '0' ? null : id;
 }
 
 String? _text(Object? value) {

@@ -20,10 +20,12 @@ class TaskEditorController extends AsyncNotifier<TaskEditorState> {
   Future<TaskEditorState> build() async {
     final editor = ref.read(zenTaoTicketEditorProvider);
     final res = switch (route) {
-      NewTaskRoute(:final executionId) => await editor.newTaskForm(
-        route.accountId,
-        executionId,
-      ),
+      NewTaskRoute(:final executionId, :final parentId) =>
+        await editor.newTaskForm(
+          route.accountId,
+          executionId,
+          parentId: parentId,
+        ),
       EditTaskRoute(:final taskId) => await editor.editTaskForm(
         route.accountId,
         taskId,

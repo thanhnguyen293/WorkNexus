@@ -7,6 +7,7 @@ import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
+import '../domain/adapters/zentao_workflow_service.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/ticket.dart';
@@ -119,4 +120,9 @@ final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
 /// Creates and edits ZenTao bugs and tasks through ZenTao's own forms.
 final zenTaoTicketEditorProvider = Provider<ZenTaoTicketEditor>(
   (ref) => getIt<ZenTaoTicketEditor>(),
+);
+
+/// ZenTao's status actions on bugs and tasks (confirm, close, start, finish…).
+final zenTaoWorkflowServiceProvider = Provider<ZenTaoWorkflowService>(
+  (ref) => getIt<ZenTaoWorkflowService>(),
 );
