@@ -8,11 +8,13 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/quick_settings_side_panel.dart';
 import '../../features/board/presentation/board_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
 import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
 import '../../features/connections/presentation/settings_page.dart';
+import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
 import 'app_nav_rail.dart';
@@ -52,7 +54,21 @@ class AppShell extends ConsumerWidget {
                         child: integrationsVisible
                             ? const SettingsPage()
                             : chatOpen
-                            ? const ChatPage()
+                            ? ChatPage(
+                                onViewProfile: (dialogContext, accountId) {
+                                  for (final account in ref.read(
+                                    chatAccountsProvider,
+                                  )) {
+                                    if (account.id == accountId) {
+                                      ZenTaoProfileDialog.show(
+                                        dialogContext,
+                                        account,
+                                      );
+                                      break;
+                                    }
+                                  }
+                                },
+                              )
                             : const BoardPage(),
                       ),
                     ],

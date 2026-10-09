@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -19,25 +20,30 @@ import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_snack.dart';
 
-/// A chat user's profile — avatar, name, role and contact details — with a
-/// button to message them directly.
 class ChatUserProfileDialog extends ConsumerStatefulWidget {
   const ChatUserProfileDialog({
     super.key,
     required this.accountId,
     required this.userId,
+    this.onViewProfile,
   });
 
   final String accountId;
   final int userId;
+  final OpenAccountProfile? onViewProfile;
 
   static Future<void> show(
     BuildContext context, {
     required String accountId,
     required int userId,
+    OpenAccountProfile? onViewProfile,
   }) => showDialog<void>(
     context: context,
-    builder: (_) => ChatUserProfileDialog(accountId: accountId, userId: userId),
+    builder: (_) => ChatUserProfileDialog(
+      accountId: accountId,
+      userId: userId,
+      onViewProfile: onViewProfile,
+    ),
   );
 
   @override
@@ -78,6 +84,12 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
       case Err(:final failure):
         showChatFailure(context, failure);
     }
+  }
+
+  void _viewProfile() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    widget.onViewProfile?.call(navigator.context, widget.accountId);
   }
 
   @override
@@ -176,6 +188,13 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 ),
               if (widget.userId == self) ...[
                 SizedBox(height: s.xl5),
+                if (widget.onViewProfile != null) ...[
+                  AppButton.outlinedNeutral(
+                    onPressed: _viewProfile,
+                    child: Text(l.chatViewFullProfile),
+                  ),
+                  SizedBox(height: s.sm),
+                ],
                 Tooltip(
                   message: l.chatChangeMyAvatarHint,
                   child: AppButton.outlinedNeutral(
@@ -228,7 +247,6 @@ class ChatProfileTap extends StatelessWidget {
   );
 }
 
-/// Own avatar in the profile: clickable, with a camera badge, to change it.
 class _EditableAvatar extends StatelessWidget {
   const _EditableAvatar({
     required this.editable,

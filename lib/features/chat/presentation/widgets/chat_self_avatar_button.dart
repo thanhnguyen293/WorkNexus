@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
@@ -11,9 +12,14 @@ import 'chat_user_profile_dialog.dart';
 /// The signed-in user's own avatar at the top of the chat list: opens their
 /// profile, where the ZenTao picture is changed.
 class ChatSelfAvatarButton extends ConsumerWidget {
-  const ChatSelfAvatarButton({super.key, required this.accountId});
+  const ChatSelfAvatarButton({
+    super.key,
+    required this.accountId,
+    this.onViewProfile,
+  });
 
   final String accountId;
+  final OpenAccountProfile? onViewProfile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,6 +35,7 @@ class ChatSelfAvatarButton extends ConsumerWidget {
           context,
           accountId: accountId,
           userId: self,
+          onViewProfile: onViewProfile,
         ),
         child: ChatAvatar(
           name: chatUserName(context, users, self),
