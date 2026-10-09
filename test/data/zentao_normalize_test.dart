@@ -158,6 +158,30 @@ void main() {
     expect(md, isNot(contains('zentao/https://'))); // not mangled
   });
 
+  test('list-endpoint {id.ext} image placeholders expand to file-read', () {
+    final task = normalizeZenTao(
+      ZenTaoEntity.fromJson(const {
+        'id': 5,
+        'name': 'Shot',
+        'desc':
+            '<p>see</p><img src="{19689.png}" alt="file-read-19689.png" />'
+            "<img src='https://z.example.com/zentao/file-read-7.jpg' />",
+      }),
+      type: ZenTaoType.task,
+      accountId: 'zt',
+      baseUrl: 'https://z.example.com/zentao/',
+    );
+    expect(
+      task.body,
+      contains('(https://z.example.com/zentao/file-read-19689.png)'),
+    );
+    expect(
+      task.body,
+      contains('(https://z.example.com/zentao/file-read-7.jpg)'),
+    );
+    expect(task.body, isNot(contains('{19689.png}')));
+  });
+
   group('activity descriptions', () {
     test('created / assigned / resolved / closed / edited', () {
       expect(

@@ -65,6 +65,18 @@ Priority mapZenTaoPriority(int? pri) {
   return Priority.fromLevel((pri - 1).clamp(0, 3));
 }
 
+/// ZenTao's list endpoints return inline images as raw storage placeholders
+/// (`src="{19689.png}"`); only the detail endpoint expands them to
+/// `{base}/file-read-19689.png`. Left as-is, the placeholder is an unfetchable
+/// URL: every image costs a round of failing retries (plus a forced re-login)
+/// on first open, until the detail sync swaps in the real URL. Expanding it
+/// here makes list-synced bodies match the detail endpoint's.
+String expandZenTaoImagePlaceholders(String html, String baseUrl) =>
+    html.replaceAllMapped(
+      RegExp(r'''(src=["']?)\{(\d+)\.([A-Za-z0-9]+)\}'''),
+      (m) => '${m[1]}$baseUrl/file-read-${m[2]}.${m[3]}',
+    );
+
 /// Converts ZenTao's rich-text HTML (bug steps / task desc / story spec /
 /// comments) into Markdown for the unified renderer. Falls back to a plain-text
 /// strip if conversion throws. Plain/empty input passes through unchanged.
@@ -205,7 +217,9 @@ Ticket normalizeZenTao(
   final normalizedBase = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
       : baseUrl;
-  final body = htmlToMarkdown(rawBody);
+  final body = htmlToMarkdown(
+    expandZenTaoImagePlaceholders(rawBody, normalizedBase),
+  );
   final rawStatus = e.status?.toString() ?? '';
   final status = mapZenTaoStatus(type, rawStatus, confirmed: e.confirmed);
 

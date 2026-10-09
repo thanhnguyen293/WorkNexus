@@ -517,10 +517,25 @@ class ZenTaoAdapter implements ProviderAdapter {
 
   // ---- helpers ----
 
+  /// Detail fetches in flight, keyed by type + id. Opening a ticket asks for
+  /// its detail, comments and activity at once — all read from this one
+  /// payload — so concurrent callers share a single request. Entries are
+  /// dropped on completion, so a later call always refetches.
+  final _detailsInFlight = <String, Future<ZenTaoEntity>>{};
+
+  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) {
+    final key = '${_typeOf(ticket).pathSegment}-${ticket.externalKey}';
+    // Block body: whenComplete awaits a returned Future, and `remove` would
+    // hand back this very future — it would wait on itself forever.
+    return _detailsInFlight[key] ??= _loadDetail(ticket).whenComplete(() {
+      _detailsInFlight.remove(key);
+    });
+  }
+
   /// Fetches a ticket's full detail (with its embedded `actions`), preferring
   /// REST v1 and falling back to the classic `{type}-view-{id}.json` endpoint
   /// when v1 returns an empty body.
-  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) async {
+  Future<ZenTaoEntity> _loadDetail(Ticket ticket) async {
     final type = _typeOf(ticket);
     final entity = await _client.api.entity(_plural(type), ticket.externalKey);
     if (entity.idString.isNotEmpty) return entity;
