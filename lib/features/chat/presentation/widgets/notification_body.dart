@@ -15,8 +15,8 @@ import 'zentao_ticket_card.dart';
 /// A ZenTao / xuanbot notification: who it is from and the project on one
 /// line, the title, then the item — as a live ticket card (status,
 /// priority, assignee) when it is a ZenTao bug / task / story, else its
-/// Markdown text — and "View details" (a ZenTao item opens beside the chat)
-/// with its other actions.
+/// Markdown text, then "View details" (only without a card, which opens the
+/// item itself) and its other actions.
 class NotificationBody extends ConsumerWidget {
   const NotificationBody({
     super.key,
@@ -41,7 +41,8 @@ class NotificationBody extends ConsumerWidget {
         : null;
     final meta = [?n.sender, ?subtitle].join(' · ');
     final links = [
-      if (n.url case final url?) (label: l.chatViewDetail, url: url),
+      // The ticket card opens the item itself.
+      if (url != null && ticketUrl == null) (label: l.chatViewDetail, url: url),
       for (final a in n.actions)
         if (a.url != n.url) (label: a.label, url: a.url),
     ];
@@ -101,7 +102,7 @@ class NotificationBody extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                     ),
                     icon: Icon(
-                      i == 0 && n.url != null
+                      i == 0 && url != null && ticketUrl == null
                           ? PhosphorIconsLight.arrowCircleRight
                           : PhosphorIconsLight.arrowSquareOut,
                       size: s.xl3,

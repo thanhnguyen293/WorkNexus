@@ -151,6 +151,11 @@ void main() {
     // The card's live title, not the notification's text repeated.
     expect(find.text('Login button does nothing'), findsOneWidget);
     expect(find.textContaining('Thanh', findRichText: true), findsOneWidget);
+    expect(
+      find.text('View details'),
+      findsNothing,
+      reason: 'the card opens it',
+    );
     await end(tester, container);
   });
 
