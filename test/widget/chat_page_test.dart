@@ -18,8 +18,11 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_st
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 /// In-memory [ChatRepository] that records the commands it receives.
@@ -277,7 +280,10 @@ class _FakeChatRepository implements ChatRepository {
     String a,
     String c, {
     required bool muted,
-  }) async => const Ok(null);
+  }) async {
+    calls.add('mute $c $muted');
+    return const Ok(null);
+  }
 
   @override
   Future<Result<void>> sendEmoji(String a, String c, String code) async =>
@@ -355,7 +361,11 @@ void main() {
 
     expect(find.text('VN Mobile Team'), findsOneWidget);
     expect(find.text('Dyno'), findsOneWidget, reason: '1:1 titled by peer');
-    expect(find.text('hi @Thanh'), findsOneWidget, reason: 'mention flattened');
+    expect(
+      find.text('Dyno: hi @Thanh', findRichText: true),
+      findsOneWidget,
+      reason: 'mention flattened, group preview names its sender',
+    );
     expect(find.text('3'), findsOneWidget);
     expect(find.text('Select a conversation'), findsOneWidget);
   });
@@ -368,6 +378,20 @@ void main() {
 
     expect(find.text('Dyno'), findsOneWidget);
     expect(find.text('VN Mobile Team'), findsNothing);
+  });
+
+  testWidgets('the search box keeps its height with or without text', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    final box = find.byType(TextField).first;
+    final empty = tester.getSize(box).height;
+
+    await tester.enterText(box, 'dyn');
+    await tester.pumpAndSettle();
+
+    expect(empty, greaterThanOrEqualTo(36));
+    expect(tester.getSize(box).height, empty);
   });
 
   testWidgets('a rebuilt chat list shows the search it filters by', (
@@ -393,6 +417,38 @@ void main() {
     expect(find.text('Dyno'), findsWidgets, reason: 'sender shown in groups');
   });
 
+  testWidgets('switching chats keeps the background, not the message list', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    final background = tester.renderObject(find.byType(ChatBackground));
+    final list = tester.state(find.byType(MessageList));
+
+    // The chat list comes first in the tree, before the open thread.
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.renderObject(find.byType(ChatBackground)),
+      same(background),
+      reason: 'not built and painted again on every switch',
+    );
+    expect(tester.state(find.byType(MessageList)), isNot(same(list)));
+  });
+
+  testWidgets('the header bell mutes this chat, not every notification', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    await tester.tap(find.byTooltip('Mute chat'));
+    await tester.pumpAndSettle();
+
+    expect(repo.calls, contains('mute g1 true'));
+  });
+
   testWidgets('the header shows the chat info beside or as a dialog', (
     tester,
   ) async {
@@ -416,6 +472,27 @@ void main() {
     await tester.tap(find.byIcon(PhosphorIconsLight.x));
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsNothing);
+  });
+
+  testWidgets('without room, a panel slides over the messages', (tester) async {
+    await pumpChat(tester, size: const Size(1000, 700));
+    await openTeamChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    container
+        .read(chatSidePanelProvider((accountId: 'acc', chatGid: 'g1')).notifier)
+        .state = ChatSidePanel
+        .files;
+    await tester.pumpAndSettle();
+
+    // The messages keep their width; the panel is drawn over them.
+    expect(find.byType(ChatFilesPanel), findsOneWidget);
+    expect(tester.getSize(find.byType(MessageList)).width, greaterThan(500));
+
+    await tester.tapAt(const Offset(500, 400));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatFilesPanel), findsNothing);
   });
 
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {

@@ -198,6 +198,17 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
       },
     };
     final loading = full == null;
+    final progress = loading
+        ? ref
+              .watch(
+                chatDownloadProgressProvider((
+                  accountId: widget.accountId,
+                  content: _image,
+                )),
+              )
+              .value
+        : null;
+    final (width, height) = (_image.width, _image.height);
     final failed = full is Err;
     final chatGid = widget.chatGid;
     final thread = chatGid == null
@@ -252,11 +263,20 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
                     return ChatImageStage(
                       transform: _transform,
                       bytes: bytes,
+                      originalSize:
+                          width != null &&
+                              height != null &&
+                              width > 0 &&
+                              height > 0
+                          ? Size(width.toDouble(), height.toDouble())
+                          : null,
                       turns: _turns,
                       minScale: _kMinScale,
                       maxScale: _kMaxScale,
                       roomForArrows: _images.length > 1,
                       loading: loading,
+                      progress: progress,
+                      totalBytes: _image.size,
                       failed: failed,
                       onDoubleTap: () =>
                           _transform.value.getMaxScaleOnAxis() > 1.01

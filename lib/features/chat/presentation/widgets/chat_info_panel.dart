@@ -17,6 +17,7 @@ import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
 import 'chat_group_avatar_dialog.dart';
 import 'chat_info_files_section.dart';
+import 'chat_info_storage_card.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_member_list.dart';
@@ -221,6 +222,7 @@ class ChatInfoPanel extends ConsumerWidget {
             ),
           ),
           ChatInfoFilesSection(thread: thread),
+          ChatInfoStorageCard(thread: thread),
           if (!oneToOne)
             ChatPanelCard(
               child: Column(

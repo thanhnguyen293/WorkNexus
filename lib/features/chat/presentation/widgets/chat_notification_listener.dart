@@ -65,11 +65,13 @@ class _ChatNotificationListenerState
     final shownGid = ref.read(chatOpenProvider) && shownAccount != null
         ? ref.read(selectedChatGidProvider(shownAccount))
         : null;
+    final settings = ref.read(appSettingsProvider);
     final notify = ref
         .read(chatControllerProvider)
         .shouldNotify(
           message,
-          enabled: ref.read(appSettingsProvider).chatNotifications,
+          enabled: settings.chatNotifications,
+          whileViewing: settings.chatNotifyWhileViewing,
           appFocused: focused,
           visibleChat: shownAccount != null && shownGid != null
               ? (accountId: shownAccount, chatGid: shownGid)

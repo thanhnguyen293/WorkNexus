@@ -13,18 +13,18 @@ const double kChatPanelRoom = 380;
 
 /// How the chat view fits its width: whether the info panel stays open
 /// beside a chat (it only gives way when there is no room), and whether the
-/// chat list collapses to avatars (only once the panel is gone and there is
-/// still no room).
+/// chat list collapses to avatars (once the info panel is gone and there is
+/// still no room). A panel the user opens without room slides over the
+/// messages instead (see `ChatSidePanelHost`), so it takes no width here.
 @immutable
 class ChatLayout {
   const ChatLayout({required this.infoRoom, required this.compactList});
 
-  /// Lays out [width]; [panelOpen] when the user opened a panel (thread,
-  /// files…) that stays even without room for the info panel.
-  factory ChatLayout.of(double width, {required bool panelOpen}) {
+  /// Lays out [width].
+  factory ChatLayout.of(double width) {
     final infoRoom =
         width - kChatListWidth - kChatPanelRoom >= kChatMessagesMinWidth;
-    final panel = infoRoom || panelOpen ? kChatPanelRoom : 0;
+    final panel = infoRoom ? kChatPanelRoom : 0;
     return ChatLayout(
       infoRoom: infoRoom,
       compactList: width - kChatListWidth - panel < kChatMessagesMinWidth,

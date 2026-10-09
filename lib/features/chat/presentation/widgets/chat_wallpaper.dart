@@ -42,16 +42,15 @@ class ChatBackground extends ConsumerWidget {
       fit: StackFit.expand,
       children: [
         RepaintBoundary(
-          child: LayoutBuilder(
-            builder: (context, box) => Image.file(
-              File(wallpaper),
-              fit: BoxFit.cover,
-              // Decoded at about the area's size, not the photo's.
-              cacheWidth:
-                  (box.maxWidth * MediaQuery.devicePixelRatioOf(context))
-                      .round(),
-              errorBuilder: (_, _, _) => plain,
-            ),
+          child: Image.file(
+            File(wallpaper),
+            fit: BoxFit.cover,
+            // Decoded once at the screen's width, not the photo's: sized to
+            // the area instead, every step of a window resize decoded it
+            // again and the background blinked while each decode ran.
+            cacheWidth: View.of(context).display.size.width.round(),
+            gaplessPlayback: true,
+            errorBuilder: (_, _, _) => plain,
           ),
         ),
         if (dim > 0)

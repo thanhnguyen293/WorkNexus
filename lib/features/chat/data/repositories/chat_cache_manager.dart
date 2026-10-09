@@ -2,6 +2,7 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_cache_usage.dart';
 import '../../domain/usecases/parse_message_content.dart';
+import '../../domain/value_objects/chat_media_kind.dart';
 import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_local_datasource.dart';
 import 'chat_attachment_loader.dart';
@@ -25,17 +26,22 @@ class ChatCacheManager {
       for (final accountId in await _local.chatAccountIds()) {
         final sizes = await _files.sizes(accountId);
         if (sizes.isEmpty) continue;
-        final perChat = <String, int>{};
-        (await _owners(accountId)).forEach((name, cgid) {
+        final perChat = <String, Map<ChatMediaKind, int>>{};
+        (await _owners(accountId)).forEach((name, owner) {
           final size = sizes[name];
-          if (size != null) perChat[cgid] = (perChat[cgid] ?? 0) + size;
+          if (size == null) return;
+          final kinds = perChat.putIfAbsent(owner.cgid, () => {});
+          kinds[owner.kind] = (kinds[owner.kind] ?? 0) + size;
         });
         perChat.forEach(
-          (cgid, bytes) => chats.add(
+          (cgid, kinds) => chats.add(
             ChatCacheChatUsage(
               accountId: accountId,
               chatGid: cgid,
-              bytes: bytes,
+              bytes: kinds.values.fold(0, (sum, b) => sum + b),
+              imageBytes: kinds[ChatMediaKind.image] ?? 0,
+              videoBytes: kinds[ChatMediaKind.video] ?? 0,
+              fileBytes: kinds[ChatMediaKind.file] ?? 0,
             ),
           ),
         );
@@ -63,7 +69,7 @@ class ChatCacheManager {
       final owners = await _owners(accountId);
       await _files.delete(accountId, [
         for (final MapEntry(:key, :value) in owners.entries)
-          if (value == chatGid) key,
+          if (value.cgid == chatGid) key,
       ]);
       _attachments.clearMemory(accountId: accountId);
       return const Ok(null);
@@ -72,12 +78,15 @@ class ChatCacheManager {
     }
   }
 
-  /// On-disk file name → chat gid, for every attachment message stored.
-  Future<Map<String, String>> _owners(String accountId) async => {
+  /// On-disk file name → its chat and kind, for every attachment message
+  /// stored.
+  Future<Map<String, ({String cgid, ChatMediaKind kind})>> _owners(
+    String accountId,
+  ) async => {
     for (final m in await _local.attachmentMessages(accountId))
-      for (final name in ChatAttachmentLoader.diskNamesOf(
-        _parse(m.contentType, m.content),
-      ))
-        name: m.cgid,
+      if (_parse(m.contentType, m.content) case final content)
+        if (chatMediaKindOf(content) case final kind?)
+          for (final name in ChatAttachmentLoader.diskNamesOf(content))
+            name: (cgid: m.cgid, kind: kind),
   };
 }
