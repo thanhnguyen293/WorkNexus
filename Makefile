@@ -28,7 +28,7 @@ watch: ## Watch and regenerate generated Dart sources.
 	$(FLUTTER) pub run build_runner watch
 
 format: ## Format Dart source and tests.
-	$(DART) format lib test
+	$(DART) format lib test integration_test test_driver
 
 analyze: ## Run static analysis.
 	$(DART) analyze

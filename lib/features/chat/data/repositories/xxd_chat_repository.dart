@@ -120,9 +120,8 @@ class XxdChatRepository implements ChatRepository {
       case Ok(:final value):
         creds = value;
       case Err(:final failure):
-        _status(
-          accountId,
-        ).set(ChatConnectionStatus.signedOut(message: failure.message));
+        _status(accountId)
+            .set(ChatConnectionStatus.signedOut(message: failure.message));
         return Err(failure);
     }
     await _local.failStalePending(accountId, _now().subtract(pendingTimeout));
@@ -546,9 +545,8 @@ class XxdChatRepository implements ChatRepository {
     String accountId,
     MessageContent video,
   ) async {
-    if (video case FileContent(
-      :final size,
-    ) when size > _videoAutoDownloadBytes) {
+    if (video case FileContent(:final size)
+        when size > _videoAutoDownloadBytes) {
       // Downloaded on request since: a frame can be made from the file.
       if (!await _attachments.isCached(accountId, video)) {
         return const Err(NotFoundFailure('Video too large to preview'));

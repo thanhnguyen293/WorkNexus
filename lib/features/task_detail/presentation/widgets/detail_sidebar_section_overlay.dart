@@ -59,9 +59,8 @@ class _MetadataOverlay extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .closeButtonTooltip,
                     onPressed: onClose,
                     icon: const Icon(PhosphorIconsLight.x),
                     iconSize: spacing.xl4,

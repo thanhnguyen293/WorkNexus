@@ -113,9 +113,9 @@ class XxdHttpDatasource {
       }),
     );
     try {
-      final response = await (await client.getUrl(
-        uri,
-      )).close().timeout(const Duration(seconds: 60));
+      final response = await (await client.getUrl(uri))
+          .close()
+          .timeout(const Duration(seconds: 60));
       final builder = BytesBuilder(copy: false);
       final total = response.contentLength > 0 ? response.contentLength : null;
       await response.forEach((chunk) {

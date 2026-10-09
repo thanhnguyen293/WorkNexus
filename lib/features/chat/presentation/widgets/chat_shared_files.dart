@@ -141,9 +141,8 @@ class ChatFileRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
-    final date = DateFormat.yMd(
-      Localizations.localeOf(context).toString(),
-    ).format(message.sentAt);
+    final date = DateFormat.yMd(Localizations.localeOf(context).toString())
+        .format(message.sentAt);
     final key = (accountId: message.accountId, content: file);
     final downloading = ref.watch(
       chatDownloadingProvider.select((d) => d.contains(key)),

@@ -26,14 +26,12 @@ void main() {
         ),
         home: Scaffold(
           body: ChatImageViewerBar(
-            image:
-                const MessageContent.image(
-                      fileId: 1,
-                      name: 'cat.jpg',
-                      size: 1000,
-                      time: 0,
-                    )
-                    as ImageContent,
+            image: const MessageContent.image(
+              fileId: 1,
+              name: 'cat.jpg',
+              size: 1000,
+              time: 0,
+            ) as ImageContent,
             position: '1 / 1',
             transform: transform,
             onZoomIn: () {},

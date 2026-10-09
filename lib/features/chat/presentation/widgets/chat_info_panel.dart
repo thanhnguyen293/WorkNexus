@@ -113,9 +113,8 @@ class ChatInfoPanel extends ConsumerWidget {
         ChatDetailRow(
           icon: PhosphorIconsLight.calendarBlank,
           label: l.chatCreatedOn,
-          value: DateFormat.yMMMd(
-            Localizations.localeOf(context).toString(),
-          ).format(created),
+          value: DateFormat.yMMMd(Localizations.localeOf(context).toString())
+              .format(created),
           spaced: false,
         ),
     ];

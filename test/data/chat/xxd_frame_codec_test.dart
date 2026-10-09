@@ -136,9 +136,8 @@ void main() {
         expect(raws, isNotEmpty);
         for (final raw in raws) {
           final expected = jsonDecode(
-            File(
-              raw.path.replaceFirst('.raw.json', '.decoded.json'),
-            ).readAsStringSync(),
+            File(raw.path.replaceFirst('.raw.json', '.decoded.json'))
+                .readAsStringSync(),
           );
           final packets = codec.decodeText(raw.readAsStringSync());
           expect(
