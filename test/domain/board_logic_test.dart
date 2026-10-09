@@ -140,21 +140,18 @@ void main() {
         _t(id: 'c', key: 'SILVER-142', title: 'Payments'),
       ];
       expect(
-        filter(
-          _q(tickets, const FilterState(search: 'WEBSOCKET')),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(search: 'WEBSOCKET')))
+            .map((t) => t.id),
         ['a'],
       );
       expect(
-        filter(
-          _q(tickets, const FilterState(search: 'enhancement')),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(search: 'enhancement')))
+            .map((t) => t.id),
         ['b'],
       );
       expect(
-        filter(
-          _q(tickets, const FilterState(search: 'silver-142')),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(search: 'silver-142')))
+            .map((t) => t.id),
         ['c'],
       );
     });
@@ -177,56 +174,51 @@ void main() {
         _ztBug(id: 'none', providerStatus: 'active'),
       ];
       expect(
-        filter(
-          _q(tickets, const FilterState(assignees: {'Thanh'})),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(assignees: {'Thanh'})))
+            .map((t) => t.id),
         ['mine'],
       );
       expect(
-        filter(
-          _q(tickets, const FilterState(assignees: {''})),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(assignees: {''})))
+            .map((t) => t.id),
         ['none'],
       );
     });
 
-    test(
-      'my-tickets filter keeps bugs I resolved or opened but no longer own',
-      () {
-        // ZenTao reassigns a bug to the reporter on resolve, so a bug I resolved
-        // is assigned to someone else — the "my tickets" (assignee=me) filter must
-        // still include it via resolvedByHandle/openedByHandle.
-        final resolvedByMe =
-            _ztBug(
-              id: 'resolved-by-me',
-              providerStatus: 'resolved',
-              resolution: 'fixed',
-            ).copyWith(
-              assignee: 'reporter',
-              providerEntity: const ZenTaoBugEntity(resolvedByHandle: 'thanh'),
-            );
-        final openedByMe = _ztBug(id: 'opened-by-me', providerStatus: 'active')
-            .copyWith(
-              assignee: 'someoneelse',
-              providerEntity: const ZenTaoBugEntity(openedByHandle: 'thanh'),
-            );
-        final theirs = _ztBug(id: 'theirs', providerStatus: 'active').copyWith(
-          assignee: 'someoneelse',
-          providerEntity: const ZenTaoBugEntity(
-            resolvedByHandle: 'someoneelse',
-            openedByHandle: 'someoneelse',
-          ),
-        );
-        final out = filter(
-          _q([
-            resolvedByMe,
-            openedByMe,
-            theirs,
-          ], const FilterState(assignees: {'thanh'})),
-        );
-        expect(out.map((t) => t.id), ['resolved-by-me', 'opened-by-me']);
-      },
-    );
+    test('my-tickets filter keeps bugs I resolved or opened but no longer own', () {
+      // ZenTao reassigns a bug to the reporter on resolve, so a bug I resolved
+      // is assigned to someone else — the "my tickets" (assignee=me) filter must
+      // still include it via resolvedByHandle/openedByHandle.
+      final resolvedByMe =
+          _ztBug(
+            id: 'resolved-by-me',
+            providerStatus: 'resolved',
+            resolution: 'fixed',
+          ).copyWith(
+            assignee: 'reporter',
+            providerEntity: const ZenTaoBugEntity(resolvedByHandle: 'thanh'),
+          );
+      final openedByMe = _ztBug(id: 'opened-by-me', providerStatus: 'active')
+          .copyWith(
+            assignee: 'someoneelse',
+            providerEntity: const ZenTaoBugEntity(openedByHandle: 'thanh'),
+          );
+      final theirs = _ztBug(id: 'theirs', providerStatus: 'active').copyWith(
+        assignee: 'someoneelse',
+        providerEntity: const ZenTaoBugEntity(
+          resolvedByHandle: 'someoneelse',
+          openedByHandle: 'someoneelse',
+        ),
+      );
+      final out = filter(
+        _q([
+          resolvedByMe,
+          openedByMe,
+          theirs,
+        ], const FilterState(assignees: {'thanh'})),
+      );
+      expect(out.map((t) => t.id), ['resolved-by-me', 'opened-by-me']);
+    });
 
     test('reviewer filter matches GitLab merge request reviewers', () {
       final tickets = [
@@ -277,15 +269,13 @@ void main() {
         ).copyWith(providerEntity: const ZenTaoBugEntity(resolution: 'fixed')),
       ];
       expect(
-        filter(
-          _q(tickets, const FilterState(bugTypes: {'codeerror'})),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(bugTypes: {'codeerror'})))
+            .map((t) => t.id),
         ['code'],
       );
       expect(
-        filter(
-          _q(tickets, const FilterState(resolutions: {'fixed'})),
-        ).map((t) => t.id),
+        filter(_q(tickets, const FilterState(resolutions: {'fixed'})))
+            .map((t) => t.id),
         ['fixed'],
       );
     });

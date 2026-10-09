@@ -150,9 +150,8 @@ class _Highlight extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final on = ref.watch(
-      chatHighlightedMessageProvider(
-        thread,
-      ).select((id) => id != null && id == serverId),
+      chatHighlightedMessageProvider(thread)
+          .select((id) => id != null && id == serverId),
     );
     // The same margin above and below the message: the tint starts inside
     // the gap above it and runs as far into the next row's gap below it —

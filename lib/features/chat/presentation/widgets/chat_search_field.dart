@@ -65,9 +65,8 @@ class _ChatSearchFieldState extends ConsumerState<ChatSearchField> {
             suffixIcon: value.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).clearButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .clearButtonTooltip,
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       _text.clear();

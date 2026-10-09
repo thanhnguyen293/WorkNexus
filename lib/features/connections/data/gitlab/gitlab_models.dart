@@ -58,9 +58,9 @@ class GitLabLabel {
 }
 
 List<GitLabLabel> _labelsFromJson(Object? raw) => raw is List
-    ? [
-        for (final e in raw) GitLabLabel.fromDynamic(e),
-      ].where((l) => l.name.isNotEmpty).toList()
+    ? [for (final e in raw) GitLabLabel.fromDynamic(e)]
+          .where((l) => l.name.isNotEmpty)
+          .toList()
     : const <GitLabLabel>[];
 
 /// A GitLab project from `GET /projects` — the container the sidebar browses and

@@ -101,9 +101,8 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               thread: t,
               hint: chat == null
                   ? null
-                  : AppL10n.of(
-                      context,
-                    ).chatMessageTo(chatTitle(context, chat, users)),
+                  : AppL10n.of(context)
+                        .chatMessageTo(chatTitle(context, chat, users)),
             ),
           )
         else

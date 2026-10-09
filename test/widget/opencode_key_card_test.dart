@@ -38,9 +38,9 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  void stubCredentials(List<OpenCodeCredential> credentials) => when(
-    () => repository.listCredentials(),
-  ).thenAnswer((_) async => Ok(credentials));
+  void stubCredentials(List<OpenCodeCredential> credentials) =>
+      when(() => repository.listCredentials())
+          .thenAnswer((_) async => Ok(credentials));
 
   Future<void> pumpCard(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 900);

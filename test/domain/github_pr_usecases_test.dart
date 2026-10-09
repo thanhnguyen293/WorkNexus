@@ -35,9 +35,8 @@ void main() {
   setUp(() => service = _MockGitHubPrService());
 
   test('PostGitHubComment delegates one comment command', () async {
-    when(
-      () => service.postComment(_ticket, 'Looks good'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.postComment(_ticket, 'Looks good'))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await PostGitHubComment(service)(_ticket, 'Looks good');
 
@@ -46,9 +45,8 @@ void main() {
   });
 
   test('CloseGitHubItem delegates one close command', () async {
-    when(
-      () => service.closeGitHubItem(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.closeGitHubItem(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await CloseGitHubItem(service)(_ticket);
 
@@ -57,9 +55,8 @@ void main() {
   });
 
   test('ReopenGitHubItem delegates one reopen command', () async {
-    when(
-      () => service.reopenGitHubItem(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.reopenGitHubItem(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await ReopenGitHubItem(service)(_ticket);
 
@@ -68,9 +65,8 @@ void main() {
   });
 
   test('MergeGitHubPr delegates one merge command', () async {
-    when(
-      () => service.mergeGitHubPr(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.mergeGitHubPr(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await MergeGitHubPr(service)(_ticket);
 
@@ -79,9 +75,8 @@ void main() {
   });
 
   test('UpdateGitHubPrBranch delegates one update-branch command', () async {
-    when(
-      () => service.updateGitHubPrBranch(_ticket),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => service.updateGitHubPrBranch(_ticket))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await UpdateGitHubPrBranch(service)(_ticket);
 

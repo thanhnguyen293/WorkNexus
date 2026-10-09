@@ -30,9 +30,8 @@ void main() {
   });
 
   test('creates with a trimmed name and unique members', () async {
-    when(
-      () => repo.createGroupChat('a', name: 'Team', memberIds: [1, 2]),
-    ).thenAnswer((_) async => const Ok('gid'));
+    when(() => repo.createGroupChat('a', name: 'Team', memberIds: [1, 2]))
+        .thenAnswer((_) async => const Ok('gid'));
     final result = await CreateGroupChat(repo)(
       accountId: 'a',
       name: ' Team ',

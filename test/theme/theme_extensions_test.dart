@@ -58,9 +58,10 @@ void main() {
       );
 
       expect(kSystemFont, '__system__');
-      final systemFamily = themeFor(
-        kSystemFont,
-      ).textTheme.bodyMedium?.fontFamily;
+      final systemFamily = themeFor(kSystemFont)
+          .textTheme
+          .bodyMedium
+          ?.fontFamily;
       expect(systemFamily, isNot(kSansFont));
       expect(systemFamily, isNot(kSystemFont));
       expect(themeFor(kSansFont).textTheme.bodyMedium?.fontFamily, kSansFont);

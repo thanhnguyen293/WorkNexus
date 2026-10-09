@@ -42,9 +42,8 @@ void main() {
   const ref = 'octo/web';
 
   test('closeItem sets state=closed on the issues endpoint', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     final res = await adapter.closeItem(_ticket(externalType: 'Issue'));
 
@@ -53,9 +52,8 @@ void main() {
   });
 
   test('reopenItem sets state=open', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     await adapter.reopenItem(_ticket(externalType: 'Issue'));
 
@@ -63,9 +61,8 @@ void main() {
   });
 
   test('closeItem closes a PR via the same issues endpoint', () async {
-    when(
-      () => client.updateIssue(any(), any(), state: any(named: 'state')),
-    ).thenAnswer((_) async {});
+    when(() => client.updateIssue(any(), any(), state: any(named: 'state')))
+        .thenAnswer((_) async {});
 
     await adapter.closeItem(_ticket(externalType: 'PullRequest'));
 

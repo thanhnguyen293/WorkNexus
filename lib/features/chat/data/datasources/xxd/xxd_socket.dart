@@ -17,8 +17,10 @@ abstract interface class XxdSocket {
 }
 
 /// Opens a socket to [url] using [client] for the TLS handshake.
-typedef XxdSocketConnector =
-    Future<XxdSocket> Function(Uri url, HttpClient client);
+typedef XxdSocketConnector = Future<XxdSocket> Function(
+  Uri url,
+  HttpClient client,
+);
 
 /// Production connector backed by `dart:io` [WebSocket].
 Future<XxdSocket> connectIoXxdSocket(Uri url, HttpClient client) async =>

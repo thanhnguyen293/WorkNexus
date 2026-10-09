@@ -10,8 +10,10 @@ import '../datasources/xxd/xxd_server_info.dart';
 import 'chat_session.dart';
 
 /// Sends a request and stores its reply like a pushed packet.
-typedef XxdRequestAndStore =
-    Future<Result<void>> Function(ChatSession session, XxdRequest request);
+typedef XxdRequestAndStore = Future<Result<void>> Function(
+  ChatSession session,
+  XxdRequest request,
+);
 
 /// Group pictures and the user's own picture — both go through ZenTao web
 /// (`im-authorize`) with a fresh `authToken`.

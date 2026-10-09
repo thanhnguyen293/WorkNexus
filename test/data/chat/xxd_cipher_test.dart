@@ -8,9 +8,9 @@ import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_signing.dart';
 void main() {
   // Vectors produced with Node's crypto.createCipheriv (tool/xxd_fixtures.mjs),
   // the same call the xuanxuan client uses.
-  final fixture =
-      jsonDecode(File('test/fixtures/xxd/cipher_cases.json').readAsStringSync())
-          as Map<String, Object?>;
+  final fixture = jsonDecode(
+    File('test/fixtures/xxd/cipher_cases.json').readAsStringSync(),
+  ) as Map<String, Object?>;
   final cipher = XxdCipher(fixture['token']! as String);
 
   group('XxdCipher', () {

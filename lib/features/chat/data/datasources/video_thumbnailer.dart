@@ -39,9 +39,8 @@ class VideoThumbnailer {
   }
 
   Future<bool> _quickLook(String videoPath, File target) async {
-    final outDir = await Directory(
-      '${target.parent.path}/.thumbs',
-    ).create(recursive: true);
+    final outDir = await Directory('${target.parent.path}/.thumbs')
+        .create(recursive: true);
     try {
       final run = await Process.run('qlmanage', [
         '-t',

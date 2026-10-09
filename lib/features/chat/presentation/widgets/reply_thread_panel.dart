@@ -55,10 +55,8 @@ class ReplyThreadPanel extends ConsumerWidget {
     void reply(ChatMessage message) =>
         ref
                 .read(
-                  chatReplyDraftProvider((
-                    chat: chat,
-                    inThread: false,
-                  )).notifier,
+                  chatReplyDraftProvider((chat: chat, inThread: false))
+                      .notifier,
                 )
                 .state =
             message;

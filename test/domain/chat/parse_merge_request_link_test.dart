@@ -13,9 +13,8 @@ void main() {
       number: '3458',
     ));
     expect(
-      parse(
-        'https://gitlab.com/a/b/c/-/merge_requests/7/diffs?view=inline',
-      )?.project,
+      parse('https://gitlab.com/a/b/c/-/merge_requests/7/diffs?view=inline')
+          ?.project,
       'a/b/c',
     );
   });

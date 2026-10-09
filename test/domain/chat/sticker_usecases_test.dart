@@ -58,9 +58,8 @@ void main() {
   });
 
   test('an unreadable sticker is not sent', () async {
-    when(
-      () => stickers.bytes(sticker),
-    ).thenAnswer((_) async => const Err(StorageFailure('gone')));
+    when(() => stickers.bytes(sticker))
+        .thenAnswer((_) async => const Err(StorageFailure('gone')));
 
     final result = await SendSticker(chats, stickers)(
       accountId: 'acc',
@@ -80,9 +79,8 @@ void main() {
   });
 
   test('a large emoji goes out as its shortname', () async {
-    when(
-      () => chats.sendEmoji(any(), any(), any()),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => chats.sendEmoji(any(), any(), any()))
+        .thenAnswer((_) async => const Ok(null));
 
     await SendLargeEmoji(chats)(accountId: 'acc', chatGid: 'g1', emoji: '👍');
 
@@ -105,12 +103,10 @@ void main() {
       size: 3,
       time: 1,
     );
-    when(
-      () => chats.loadAttachment('acc', image),
-    ).thenAnswer((_) async => Ok(png));
-    when(
-      () => stickers.add(any(), name: any(named: 'name')),
-    ).thenAnswer((_) async => const Ok(sticker));
+    when(() => chats.loadAttachment('acc', image))
+        .thenAnswer((_) async => Ok(png));
+    when(() => stickers.add(any(), name: any(named: 'name')))
+        .thenAnswer((_) async => const Ok(sticker));
 
     final result = await SaveImageAsSticker(chats, stickers)('acc', image);
 

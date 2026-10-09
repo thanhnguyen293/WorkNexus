@@ -58,9 +58,8 @@ class _ChatMemberListState extends ConsumerState<ChatMemberList> {
         children: [
           // On the header's colour and as tall as the pinned-message bar
           // beside it, its bottom border included; none for a single role.
-          if (const OrderChatRoles()([
-                for (final id in value) users[id]?.role,
-              ]).length >
+          if (const OrderChatRoles()([for (final id in value) users[id]?.role])
+                  .length >
               1)
             Container(
               height: kChatSubHeaderHeight,

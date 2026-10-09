@@ -32,26 +32,24 @@ void main() {
   testWidgets('GitLab MR overview renders the MR-specific layout', (
     tester,
   ) async {
-    final entity =
-        TicketProviderEntity.fromJson({
-              'runtimeType': 'gitlabItem',
-              'projectPath': 'Administrator / tbchat_socialfi',
-              'author': 'Thanh',
-              'authorAvatarUrl': 'https://cdn.example.com/thanh.png',
-              'sourceBranch': 'develop_socialfi',
-              'targetBranch': 'new_tbchat_develop',
-              'mergeStatus': 'need_rebase',
-              'assignees': ['Thanh'],
-              'reviewers': ['Reviewer One'],
-              'userAvatarUrls': {
-                'Thanh': 'https://cdn.example.com/thanh.png',
-                'Reviewer One': 'https://cdn.example.com/reviewer.png',
-              },
-              'milestoneTitle': 'Release 1.0',
-              'humanTimeEstimate': '2h',
-              'humanTotalTimeSpent': '1h',
-            })
-            as GitLabItemEntity;
+    final entity = TicketProviderEntity.fromJson({
+      'runtimeType': 'gitlabItem',
+      'projectPath': 'Administrator / tbchat_socialfi',
+      'author': 'Thanh',
+      'authorAvatarUrl': 'https://cdn.example.com/thanh.png',
+      'sourceBranch': 'develop_socialfi',
+      'targetBranch': 'new_tbchat_develop',
+      'mergeStatus': 'need_rebase',
+      'assignees': ['Thanh'],
+      'reviewers': ['Reviewer One'],
+      'userAvatarUrls': {
+        'Thanh': 'https://cdn.example.com/thanh.png',
+        'Reviewer One': 'https://cdn.example.com/reviewer.png',
+      },
+      'milestoneTitle': 'Release 1.0',
+      'humanTimeEstimate': '2h',
+      'humanTotalTimeSpent': '1h',
+    }) as GitLabItemEntity;
     final ticket = Ticket(
       id: 'gitlab:mr:42',
       accountId: 'gitlab',

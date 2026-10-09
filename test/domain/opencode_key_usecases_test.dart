@@ -23,9 +23,8 @@ void main() {
   setUp(() => repository = _MockOpenCodeAuthRepository());
 
   test('LoadOpenCodeCredentials returns the stored credentials', () async {
-    when(
-      () => repository.listCredentials(),
-    ).thenAnswer((_) async => const Ok([_credential]));
+    when(() => repository.listCredentials())
+        .thenAnswer((_) async => const Ok([_credential]));
 
     final result = await LoadOpenCodeCredentials(repository)();
 
@@ -34,9 +33,8 @@ void main() {
   });
 
   test('LoadOpenCodeCredentials passes a read failure through', () async {
-    when(
-      () => repository.listCredentials(),
-    ).thenAnswer((_) async => const Err(ParseFailure('bad json')));
+    when(() => repository.listCredentials())
+        .thenAnswer((_) async => const Err(ParseFailure('bad json')));
 
     final result = await LoadOpenCodeCredentials(repository)();
 
@@ -44,9 +42,8 @@ void main() {
   });
 
   test('SaveOpenCodeKey forwards the provider and key', () async {
-    when(
-      () => repository.saveApiKey(providerId: 'opencode-go', key: 'new-key'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repository.saveApiKey(providerId: 'opencode-go', key: 'new-key'))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await SaveOpenCodeKey(repository)(
       providerId: 'opencode-go',
@@ -60,9 +57,8 @@ void main() {
   });
 
   test('SaveOpenCodeKey surfaces a write failure', () async {
-    when(
-      () => repository.saveApiKey(providerId: 'opencode-go', key: 'k'),
-    ).thenAnswer((_) async => const Err(StorageFailure('read-only file')));
+    when(() => repository.saveApiKey(providerId: 'opencode-go', key: 'k'))
+        .thenAnswer((_) async => const Err(StorageFailure('read-only file')));
 
     final result = await SaveOpenCodeKey(repository)(
       providerId: 'opencode-go',
@@ -73,9 +69,8 @@ void main() {
   });
 
   test('RemoveOpenCodeCredential unlinks the named provider', () async {
-    when(
-      () => repository.removeCredential('opencode-go'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repository.removeCredential('opencode-go'))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await RemoveOpenCodeCredential(repository)('opencode-go');
 

@@ -57,9 +57,8 @@ void main() {
           workspacesProvider.overrideWith((ref) => Stream.value(const [])),
           accountsProvider.overrideWith((ref) => Stream.value(const [])),
           projectsProvider.overrideWith((ref) => Stream.value(const [])),
-          translationRecordProvider(
-            _ticket.id,
-          ).overrideWith((ref) => Stream.value(null)),
+          translationRecordProvider(_ticket.id)
+              .overrideWith((ref) => Stream.value(null)),
           translationControllerProvider.overrideWith(
             () => _FailedTranslationController(message),
           ),

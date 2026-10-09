@@ -7,13 +7,12 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'metadata_editor_parts.dart';
 
-typedef SaveTimeTracking =
-    Future<Result<void>> Function({
-      String? estimate,
-      String? spent,
-      bool resetEstimate,
-      bool resetSpent,
-    });
+typedef SaveTimeTracking = Future<Result<void>> Function({
+  String? estimate,
+  String? spent,
+  bool resetEstimate,
+  bool resetSpent,
+});
 
 class TimeTrackingEditor extends StatefulWidget {
   const TimeTrackingEditor({

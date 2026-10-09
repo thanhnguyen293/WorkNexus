@@ -17,9 +17,8 @@ void main() {
   });
 
   test('trims and sends', () async {
-    when(
-      () => repo.sendText('a', 'g', 'hello'),
-    ).thenAnswer((_) async => const Ok(null));
+    when(() => repo.sendText('a', 'g', 'hello'))
+        .thenAnswer((_) async => const Ok(null));
 
     final result = await send(accountId: 'a', chatGid: 'g', text: '  hello \n');
 
