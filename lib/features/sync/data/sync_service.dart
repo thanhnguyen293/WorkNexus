@@ -481,7 +481,13 @@ class SyncService
     final adapter = _buildAdapter(account, secret);
     if (adapter == null) return const Ok(null);
 
-    final detail = await adapter.getTicket(ticket);
+    // Fetched together: some providers (ZenTao) serve all three from one detail
+    // payload and share the request instead of making three round trips.
+    final (detail, comments, activity) = await (
+      adapter.getTicket(ticket),
+      adapter.listComments(ticket),
+      adapter.listActivity(ticket),
+    ).wait;
     if (detail case Err(:final failure)) return Err(failure);
     final value = (detail as Ok<Ticket>).value;
     // Keep the local identity/scope stable; refresh only the content fields.
@@ -503,8 +509,6 @@ class SyncService
         .into(_db.tickets)
         .insertOnConflictUpdate(ticketToCompanion(merged));
 
-    final comments = await adapter.listComments(ticket);
-    final activity = await adapter.listActivity(ticket);
     await _db.transaction(() async {
       if (comments case Ok(:final value)) {
         // Replace provider comments (keep the user's internal notes) so stale

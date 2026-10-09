@@ -525,6 +525,54 @@ void main() {
     expect(comments.single.body, contains('`auth.dart`'));
   });
 
+  test(
+    'detail, comments and activity fetched together share one request',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
+          return _json({
+            'id': 4302,
+            'title': 'Login loops',
+            'status': 'active',
+            'actions': [
+              {
+                'id': 1,
+                'action': 'commented',
+                'actor': 'thanh',
+                'comment': 'Looking into it',
+                'date': '2026-07-16 09:00:00',
+              },
+            ],
+          });
+        }
+        return _json(const {});
+      });
+      int detailRequests() => fake.requests
+          .where((r) => r.uri.path.endsWith('/api.php/v1/bugs/4302'))
+          .length;
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+      final (detail, comments, activity) = await (
+        adapter.getTicket(_bugTicket()),
+        adapter.listComments(_bugTicket()),
+        adapter.listActivity(_bugTicket()),
+      ).wait;
+
+      expect(detail, isA<Ok<Ticket>>());
+      expect(switch (comments) {
+        Ok(:final value) => value.length,
+        Err() => -1,
+      }, 1);
+      expect(activity, isA<Ok<Object>>());
+      expect(detailRequests(), 1);
+
+      // Only in-flight requests are shared: a later call fetches again.
+      await adapter.getTicket(_bugTicket());
+      expect(detailRequests(), 2);
+    },
+  );
+
   group('detectBaseUrl', () {
     ResponseBody html404() => ResponseBody.fromString(
       '<h1>Not Found</h1>',
