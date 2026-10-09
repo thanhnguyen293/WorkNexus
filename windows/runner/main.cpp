@@ -5,8 +5,41 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+namespace {
+
+// Per-user lock so a second launch hands focus to the running window instead
+// of opening another one (two instances would fight over the same database).
+constexpr const wchar_t kSingleInstanceMutex[] =
+    L"Local\\WorkNexus.WorkNexus.Desktop.SingleInstance";
+// Must match win32_window.cpp's class name and DesktopWindowService's title.
+constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
+constexpr const wchar_t kWindowTitle[] = L"WorkNexus";
+
+void FocusRunningInstance() {
+  HWND existing = ::FindWindow(kWindowClassName, kWindowTitle);
+  if (existing == nullptr) return;
+  if (::IsIconic(existing)) {
+    ::ShowWindow(existing, SW_RESTORE);
+  } else {
+    ::ShowWindow(existing, SW_SHOW);
+  }
+  ::SetForegroundWindow(existing);
+}
+
+}  // namespace
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  // Held for the process lifetime; Windows releases it on exit.
+  HANDLE instance_mutex =
+      ::CreateMutex(nullptr, TRUE, kSingleInstanceMutex);
+  if (instance_mutex != nullptr &&
+      ::GetLastError() == ERROR_ALREADY_EXISTS) {
+    FocusRunningInstance();
+    ::CloseHandle(instance_mutex);
+    return EXIT_SUCCESS;
+  }
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {

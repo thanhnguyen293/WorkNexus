@@ -40,6 +40,9 @@ ChatConversationsCompanion conversationFromXxd(
     adminsJson: chat.containsKey('admins')
         ? Value(pinnedJsonOf(chat['admins']))
         : const Value.absent(),
+    committers: chat.containsKey('committers')
+        ? Value('${chat['committers'] ?? ''}')
+        : const Value.absent(),
     ownedBy: Value(_text(chat['ownedBy'])),
     starred: chat.containsKey('star')
         ? Value(
@@ -198,7 +201,13 @@ ChatConversation conversationFromRow(
   ParseMessageContent parse = const ParseMessageContent(),
 }) {
   final type = _chatType(row.type);
-  final unread = row.lastMessageIndex - row.lastReadIndex;
+  // Sending reads the chat: the server's read mark only moves when the chat
+  // is marked read, so without this your own last message counted as unread.
+  final mineLast =
+      lastMessage != null &&
+      selfUserId != null &&
+      lastMessage.senderId == selfUserId;
+  final unread = mineLast ? 0 : row.lastMessageIndex - row.lastReadIndex;
   return ChatConversation(
     accountId: row.accountId,
     gid: row.gid,
@@ -216,6 +225,7 @@ ChatConversation conversationFromRow(
     muted: row.muted,
     pinnedMessageIds: _pinnedIds(row.pinnedJson),
     adminIds: _pinnedIds(row.adminsJson),
+    committers: row.committers,
     ownerAccount: row.ownedBy,
     avatarJson: row.avatarJson,
     createdAt: row.createdAt,

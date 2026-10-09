@@ -7,6 +7,7 @@ import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_rail_button.dart';
+import '../../features/app_update/presentation/widgets/update_rail_button.dart';
 import '../../features/chat/presentation/widgets/chat_rail_button.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -41,6 +42,7 @@ class AppNavRail extends ConsumerWidget {
             onTap: () => showBoardView(ref),
           ),
           const Spacer(),
+          const UpdateRailButton(),
           AppRailButton(
             icon: PhosphorIconsLight.gear,
             selectedIcon: PhosphorIconsLight.gear,

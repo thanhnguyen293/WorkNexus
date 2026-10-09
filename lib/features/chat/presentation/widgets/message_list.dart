@@ -13,7 +13,6 @@ import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
 import 'chat_style.dart';
-import 'chat_wallpaper.dart';
 import 'list_extent_estimate.dart';
 import 'message_jump.dart';
 import 'message_list_header.dart';
@@ -278,21 +277,19 @@ class _MessageListState extends ConsumerState<MessageList> {
       onMouseUp: _onMouseUp,
     );
     final s = context.spacing;
-    return ChatBackground(
-      child: Stack(
-        children: [
-          list,
-          Positioned(
-            right: s.xl5,
-            bottom: s.xl3,
-            child: ScrollToLatestButton(
-              visible: _away,
-              unseen: _unseen,
-              onPressed: _scrollToLatest,
-            ),
+    return Stack(
+      children: [
+        list,
+        Positioned(
+          right: s.xl5,
+          bottom: s.xl3,
+          child: ScrollToLatestButton(
+            visible: _away,
+            unseen: _unseen,
+            onPressed: _scrollToLatest,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

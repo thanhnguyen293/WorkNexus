@@ -14,7 +14,7 @@ import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_info_dialog.dart';
 import 'chat_labels.dart';
-import 'chat_notification_toggle.dart';
+import 'chat_mute_toggle.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
@@ -42,7 +42,8 @@ class ChatThreadHeader extends ConsumerWidget {
     final peer = oneToOne ? users[chat?.peerUserId] : null;
     final members = oneToOne
         ? null
-        : ref.watch(chatMemberCountProvider(thread)).asData?.value;
+        // `value`, not `asData`: keeps the last count while it refreshes.
+        : ref.watch(chatMemberCountProvider(thread)).value;
     final avatar = chat == null ? null : chatAvatarStyle(chat, users);
     final presence = oneToOne ? chatPresenceOf(users, chat?.peerUserId) : null;
     final subtitle = switch (members) {
@@ -130,7 +131,7 @@ class ChatThreadHeader extends ConsumerWidget {
               ),
             ),
           ),
-          const ChatNotificationToggle(),
+          if (chat case final chat?) ChatMuteToggle(chat: chat),
         ],
       ),
     );

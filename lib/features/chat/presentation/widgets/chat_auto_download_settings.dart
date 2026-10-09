@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'chat_storage_dialog.dart';
 
 /// Sizes offered for the video auto-download limit, in MB.
 const List<int> kChatAutoDownloadSizesMb = [10, 20, 50, 100];
 
-/// A Quick Settings section: whether chat videos download on their own, and
-/// up to what size.
+/// A Quick Settings section: whether chat videos download on their own, up to
+/// what size, and the way into the downloaded-files storage.
 class ChatAutoDownloadSettings extends ConsumerWidget {
   const ChatAutoDownloadSettings({super.key});
 
@@ -75,6 +77,25 @@ class ChatAutoDownloadSettings extends ConsumerWidget {
             ],
           ),
         ],
+        SizedBox(height: s.sm),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            PhosphorIconsLight.database,
+            size: s.xl4,
+            color: c.textSecondary,
+          ),
+          title: Text(
+            l.chatStorage,
+            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+          ),
+          trailing: Icon(
+            PhosphorIconsLight.caretRight,
+            size: s.xl3,
+            color: c.textTertiary,
+          ),
+          onTap: () => ChatStorageDialog.show(context),
+        ),
       ],
     );
   }

@@ -67,6 +67,7 @@ class AppSettings {
     this.chatWallpaperDim = 0.2,
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
+    this.chatNotifyWhileViewing = false,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
@@ -137,6 +138,9 @@ class AppSettings {
   /// Show a desktop notification for new chat messages.
   final bool chatNotifications;
 
+  /// Notify even for the chat already open in the focused window.
+  final bool chatNotifyWhileViewing;
+
   /// Most disk space downloaded chat attachments may use, in MB.
   final int chatCacheLimitMb;
 
@@ -167,6 +171,7 @@ class AppSettings {
     double? chatWallpaperDim,
     bool? chatSendMarkdown,
     bool? chatNotifications,
+    bool? chatNotifyWhileViewing,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
@@ -194,6 +199,8 @@ class AppSettings {
       chatWallpaperDim: chatWallpaperDim ?? this.chatWallpaperDim,
       chatSendMarkdown: chatSendMarkdown ?? this.chatSendMarkdown,
       chatNotifications: chatNotifications ?? this.chatNotifications,
+      chatNotifyWhileViewing:
+          chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
           chatAutoDownloadVideos ?? this.chatAutoDownloadVideos,
@@ -278,6 +285,8 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatSendMarkdown: on));
   void setChatNotifications(bool on) =>
       _set(state.copyWith(chatNotifications: on));
+  void setChatNotifyWhileViewing(bool on) =>
+      _set(state.copyWith(chatNotifyWhileViewing: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));
   void setChatAutoDownloadVideos(bool on) =>

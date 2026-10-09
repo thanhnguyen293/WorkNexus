@@ -247,6 +247,25 @@ final chatSelfUserIdProvider = StreamProvider.autoDispose.family<int?, String>(
       ref.watch(chatRepositoryProvider).watchSelfUserId(accountId),
 );
 
+/// Whether the signed-in user may post in a chat (true until the chat and
+/// the user are known, so the composer does not blink away and back).
+final chatCanSendProvider = Provider.autoDispose.family<bool, ChatThreadKey>((
+  ref,
+  key,
+) {
+  final chat = ref
+      .watch(chatConversationsProvider(key.accountId))
+      .value
+      ?.where((c) => c.gid == key.chatGid)
+      .firstOrNull;
+  if (chat == null) return true;
+  final self = ref.watch(chatSelfUserIdProvider(key.accountId)).value;
+  final users = ref.watch(chatUsersProvider(key.accountId)).value;
+  return ref
+      .watch(chatControllerProvider)
+      .canSend(chat, selfUserId: self, selfAccount: users?[self]?.account);
+});
+
 /// Whether the signed-in user may pin messages in a chat.
 final chatCanPinProvider = Provider.autoDispose.family<bool, ChatThreadKey>((
   ref,
@@ -363,12 +382,18 @@ final chatVideoDurationProvider = FutureProvider.autoDispose
     });
 
 /// Member count of a chat (header subtitle); refetched when the chat opens.
+///
+/// Kept once known: switching chats otherwise refetched it each time and
+/// the header's "N members" blinked out while it loaded. Opening a chat
+/// refreshes it in place (the old count shows meanwhile).
 final chatMemberCountProvider = FutureProvider.autoDispose
-    .family<Result<int>, ChatThreadKey>(
-      (ref, key) => ref
+    .family<Result<int>, ChatThreadKey>((ref, key) async {
+      final result = await ref
           .watch(chatRepositoryProvider)
-          .memberCount(key.accountId, key.chatGid),
-    );
+          .memberCount(key.accountId, key.chatGid);
+      if (result is Ok) ref.keepAlive();
+      return result;
+    });
 
 /// Preview card data for a web link in a message (null = nothing to show).
 final chatLinkPreviewProvider = FutureProvider.autoDispose

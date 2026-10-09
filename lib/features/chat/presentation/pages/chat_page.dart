@@ -12,11 +12,21 @@ import '../widgets/conversation_list_pane.dart';
 import '../widgets/thread_pane.dart';
 
 /// The ZenTao chat view: connection banner, chat list and the open thread.
-class ChatPage extends ConsumerWidget {
+class ChatPage extends ConsumerStatefulWidget {
   const ChatPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends ConsumerState<ChatPage> {
+  /// Moves the messages' background from one chat's pane to the next, so
+  /// switching chats keeps it on screen instead of building and painting it
+  /// again (each pane is keyed per chat).
+  final _background = GlobalKey(debugLabel: 'chat-background');
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppL10n.of(context);
     final accountId = ref.watch(selectedChatAccountIdProvider);
     if (accountId == null) {
@@ -26,11 +36,6 @@ class ChatPage extends ConsumerWidget {
     final thread = chatGid == null
         ? null
         : (accountId: accountId, chatGid: chatGid);
-    // A panel the user opened stays even when the info panel has no room.
-    final panelOpen =
-        thread != null &&
-        (ref.watch(openReplyThreadProvider(thread)) != null ||
-            ref.watch(chatSidePanelProvider(thread)) != null);
     return ColoredBox(
       color: context.colors.background,
       child: Column(
@@ -40,10 +45,7 @@ class ChatPage extends ConsumerWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final layout = ChatLayout.of(
-                  constraints.maxWidth,
-                  panelOpen: panelOpen,
-                );
+                final layout = ChatLayout.of(constraints.maxWidth);
                 return ChatLayoutScope(
                   layout: layout,
                   child: Row(
@@ -67,6 +69,7 @@ class ChatPage extends ConsumerWidget {
                             : ThreadPane(
                                 key: ValueKey('$accountId/$chatGid'),
                                 thread: thread!,
+                                backgroundKey: _background,
                               ),
                       ),
                     ],

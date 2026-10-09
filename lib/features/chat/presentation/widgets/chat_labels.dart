@@ -13,6 +13,11 @@ import '../../domain/value_objects/chat_role.dart';
 import '../../domain/value_objects/message_content.dart';
 import 'chat_avatar.dart';
 
+// Moved to the domain (storage counts videos too); kept reachable here for
+// the widgets that already import labels.
+export '../../domain/value_objects/chat_media_kind.dart'
+    show isVideoFile, isVideoName;
+
 /// `[@Display Name](@#userId)` — how xxd encodes a mention inside text.
 final chatMentionPattern = RegExp(r'\[@([^\]]+)\]\(@#(\d+)\)');
 
@@ -77,6 +82,8 @@ String chatUserName(BuildContext context, Map<int, ChatUser> users, int id) {
 /// One-line preview of a message for the chat list.
 String chatPreview(BuildContext context, ChatMessage message) {
   final l = AppL10n.of(context);
+  // A retracted message keeps no content; say so rather than show nothing.
+  if (message.deleted) return l.chatRetracted;
   return switch (message.content) {
     TextContent(:final text, :final markdown) =>
       (markdown ? _stripMarkdown(text) : text)
@@ -105,14 +112,6 @@ String chatInitials(String name) {
   final joined = letters.join();
   return joined.isEmpty ? '?' : joined;
 }
-
-const _videoExtensions = {'mp4', 'mov', 'm4v', 'webm', 'mkv', 'avi'};
-
-/// Whether a file message holds a video the in-app player can try.
-bool isVideoFile(FileContent file) =>
-    (file.mimeType?.startsWith('video/') ?? false) || isVideoName(file.name);
-
-bool isVideoName(String name) => _videoExtensions.contains(_extension(name));
 
 /// Whether a file to send is an image (gets a thumbnail in the preview).
 bool isImageAttachment(String name) => const {

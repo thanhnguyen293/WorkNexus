@@ -57,8 +57,10 @@ jobs:
 
       # Release build. No Apple cert on CI: the project defaults to ad-hoc
       # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
+      # APP_VERSION turns on the in-app updater; it stays empty for nightly
+      # builds, which never update themselves.
       - name: Build macOS (release, ad-hoc signed)
-        run: flutter build macos --release
+        run: flutter build macos --release --dart-define=APP_VERSION=${{ inputs.release_tag }}
 
       # Zip the .app while preserving the bundle (use ditto, not plain zip).
       - name: Package .app
@@ -104,7 +106,7 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build Windows (release)
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define=APP_VERSION=${{ inputs.release_tag }}
 
       # Zip the whole Release folder (exe + DLLs + data/ must stay together).
       - name: Package build output
@@ -139,6 +141,11 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # The in-app updater refuses a build whose hash is not listed here.
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum *.zip > SHA256SUMS.txt
+
       # Attach to the versioned release that release-please just published.
       # --clobber overwrites assets if the build is re-run for the same tag.
       - name: Attach assets to versioned release
@@ -146,7 +153,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" dist/*.zip \
+          gh release upload "${{ inputs.release_tag }}" dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" --clobber
 
       # Delete the previous nightly release + its tag, then recreate at this
@@ -158,7 +165,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create nightly dist/*.zip \
+          gh release create nightly dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Nightly build (main)" \

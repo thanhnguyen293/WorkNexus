@@ -6,6 +6,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
+import '../../domain/usecases/can_send_to_chat.dart';
 import '../../domain/usecases/connect_chat.dart';
 import '../../domain/usecases/create_group_chat.dart';
 import '../../domain/usecases/encode_mentions.dart';
@@ -67,6 +68,7 @@ class ChatController {
   final OpenDirectChat _direct;
   final _threads = const BuildReplyThread();
   final _shouldNotify = const ShouldNotifyChatMessage();
+  final _canSend = const CanSendToChat();
   final ChatRepository _repository;
 
   Future<Result<void>> connect(String accountId) => _connect(accountId);
@@ -76,6 +78,12 @@ class ChatController {
     required int? selfUserId,
     required String? selfAccount,
   }) => _pin.canPin(chat, selfUserId: selfUserId, selfAccount: selfAccount);
+
+  bool canSend(
+    ChatConversation chat, {
+    required int? selfUserId,
+    required String? selfAccount,
+  }) => _canSend(chat, selfUserId: selfUserId, selfAccount: selfAccount);
 
   /// Mutes or unmutes a chat's notifications (a CRUD pass-through).
   Future<Result<void>> setChatMuted(
@@ -150,12 +158,14 @@ class ChatController {
     required bool appFocused,
     required ({String accountId, String chatGid})? visibleChat,
     ChatConversation? conversation,
+    bool whileViewing = false,
   }) => _shouldNotify(
     message,
     enabled: enabled,
     appFocused: appFocused,
     visibleChat: visibleChat,
     conversation: conversation,
+    whileViewing: whileViewing,
   );
 
   Future<Result<void>> trust(String accountId, String fingerprint) =>

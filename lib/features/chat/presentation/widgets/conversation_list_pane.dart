@@ -4,21 +4,20 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/value_objects/chat_list_tab.dart';
+import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
 import 'chat_list_tabs.dart';
+import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
 import 'chat_side_panel_frame.dart';
-import 'chat_storage_dialog.dart';
 import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 import 'new_chat_dialog.dart';
@@ -97,17 +96,12 @@ class ConversationListPane extends ConsumerWidget {
                 children: [
                   ChatSelfAvatarButton(accountId: accountId),
                   SizedBox(width: context.spacing.md),
-                  Expanded(child: _SearchField(hint: l.chatSearch)),
+                  Expanded(child: ChatSearchField(hint: l.chatSearch)),
                   SizedBox(width: context.spacing.xs),
                   _HeaderButton(
                     tooltip: l.chatNewChat,
                     icon: PhosphorIconsLight.notePencil,
                     onPressed: () => NewChatDialog.show(context, accountId),
-                  ),
-                  _HeaderButton(
-                    tooltip: l.chatStorage,
-                    icon: PhosphorIconsLight.database,
-                    onPressed: () => ChatStorageDialog.show(context),
                   ),
                 ],
               ),
@@ -155,6 +149,7 @@ class ConversationListPane extends ConsumerWidget {
                       verified: e.chat.type == ChatType.one2one
                           ? chatVerifiedBadge(context, users, e.chat.peerUserId)
                           : null,
+                      lastSender: _lastSender(context, e.chat, users),
                       selected: e.chat.gid == selected,
                       compact: compact,
                       onTap: () =>
@@ -175,6 +170,21 @@ class ConversationListPane extends ConsumerWidget {
   }
 }
 
+/// Who sent a group's last message, for its row; null for one-to-one
+/// chats (always the other person or you) and for system notices.
+String? _lastSender(
+  BuildContext context,
+  ChatConversation chat,
+  Map<int, ChatUser> users,
+) {
+  final last = chat.lastMessage;
+  if (chat.type == ChatType.one2one || last == null) return null;
+  if (last.content is NotificationContent) return null;
+  return last.isMine
+      ? AppL10n.of(context).chatYou
+      : chatUserName(context, users, last.senderId);
+}
+
 class _SectionDivider extends StatelessWidget {
   const _SectionDivider();
 
@@ -186,92 +196,7 @@ class _SectionDivider extends StatelessWidget {
   );
 }
 
-/// The chat search box. Its text lives in [chatSearchProvider] (the list
-/// filters by it), so a box rebuilt after switching views starts from that
-/// text rather than empty over a still-filtered list.
-class _SearchField extends ConsumerStatefulWidget {
-  const _SearchField({required this.hint});
-
-  final String hint;
-
-  @override
-  ConsumerState<_SearchField> createState() => _SearchFieldState();
-}
-
-class _SearchFieldState extends ConsumerState<_SearchField> {
-  late final _text = TextEditingController(text: ref.read(chatSearchProvider));
-
-  @override
-  void dispose() {
-    _text.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    final shape = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide.none,
-    );
-    return SizedBox(
-      height: s.xl6 * 0.8,
-      child: ValueListenableBuilder(
-        valueListenable: _text,
-        builder: (context, value, _) => TextField(
-          controller: _text,
-          onChanged: _search,
-          textAlignVertical: TextAlignVertical.center,
-          style: context.typography.secondary.copyWith(color: c.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surfaceSubtle,
-            hintText: widget.hint,
-            hintStyle: context.typography.secondary.copyWith(
-              color: c.textTertiary,
-            ),
-            prefixIcon: Icon(
-              PhosphorIconsLight.magnifyingGlass,
-              size: s.xl2,
-              color: c.textTertiary,
-            ),
-            prefixIconConstraints: BoxConstraints(minWidth: s.xl6 * 0.8),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).clearButtonTooltip,
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      _text.clear();
-                      _search('');
-                    },
-                    icon: Icon(
-                      PhosphorIconsLight.x,
-                      size: s.xl2,
-                      color: c.textTertiary,
-                    ),
-                  ),
-            contentPadding: EdgeInsets.zero,
-            border: shape,
-            enabledBorder: shape,
-            focusedBorder: shape.copyWith(
-              borderSide: BorderSide(color: c.accent),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _search(String text) =>
-      ref.read(chatSearchProvider.notifier).state = text;
-}
-
-/// A compact icon button beside the chat search box.
+/// The new-chat button beside the chat search box.
 class _HeaderButton extends StatelessWidget {
   const _HeaderButton({
     required this.tooltip,

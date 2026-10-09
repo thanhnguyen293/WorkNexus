@@ -21,6 +21,7 @@ class ConversationTile extends StatelessWidget {
     required this.avatar,
     this.presence,
     this.verified,
+    this.lastSender,
     this.compact = false,
   });
 
@@ -41,6 +42,9 @@ class ConversationTile extends StatelessWidget {
 
   /// The other person's "verified" check (one-to-one chats, leading roles).
   final ChatVerifiedBadge? verified;
+
+  /// Who sent the last message, shown before its preview (groups).
+  final String? lastSender;
 
   @override
   Widget build(BuildContext context) {
@@ -128,8 +132,24 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          last == null ? '' : chatPreview(context, last),
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              if (lastSender case final sender?)
+                                TextSpan(
+                                  text: '$sender: ',
+                                  style: TextStyle(
+                                    color: c.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              TextSpan(
+                                text: last == null
+                                    ? ''
+                                    : chatPreview(context, last),
+                              ),
+                            ],
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.typography.bodySm.copyWith(

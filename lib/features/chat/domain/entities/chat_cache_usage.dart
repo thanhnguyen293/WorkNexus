@@ -27,5 +27,10 @@ abstract class ChatCacheChatUsage with _$ChatCacheChatUsage {
     required String accountId,
     required String chatGid,
     required int bytes,
+
+    /// [bytes] split by attachment kind (previews count with their file).
+    @Default(0) int imageBytes,
+    @Default(0) int videoBytes,
+    @Default(0) int fileBytes,
   }) = _ChatCacheChatUsage;
 }

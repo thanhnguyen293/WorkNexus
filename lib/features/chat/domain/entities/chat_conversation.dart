@@ -34,6 +34,9 @@ abstract class ChatConversation with _$ChatConversation {
     /// User ids of the group's admins (they and the owner may pin).
     @Default(<int>[]) List<int> adminIds,
 
+    /// Who may send, as xxd stores it; see `CanSendToChat`.
+    @Default('') String committers,
+
     /// Group owner's account and creation time (groups only).
     String? ownerAccount,
 
