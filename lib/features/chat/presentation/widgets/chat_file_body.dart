@@ -54,12 +54,27 @@ class _FileBodyState extends ConsumerState<FileBody> {
       return ChatVideoTile(
         accountId: widget.accountId,
         file: widget.file,
-        onTap: _open,
+        chatGid: widget.message.chatGid,
+        messageGid: widget.message.gid,
+        onFullScreen: _open,
       );
     }
     final uploading =
         widget.message.sendState == SendState.pending &&
         widget.file.fileId == 0;
+    // An own video not uploaded yet is still drawn as a video (from the
+    // picked bytes) rather than as a file tile.
+    if (!_sent &&
+        widget.file.fileId == 0 &&
+        widget.message.sendState != SendState.sent &&
+        isVideoFile(widget.file)) {
+      return ChatVideoTile(
+        accountId: widget.accountId,
+        file: widget.file,
+        uploadGid: widget.message.gid,
+        uploading: uploading,
+      );
+    }
     final downloading = ref.watch(
       chatDownloadingProvider.select((d) => d.contains(_key)),
     );

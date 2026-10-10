@@ -74,4 +74,18 @@ void main() {
       const MessageContent.unsupported('emoticon'),
     );
   });
+
+  test('an image still uploading keeps its size for the bubble', () {
+    expect(
+      parse('image', '{"name":"shot.png","size":68,"width":320,"height":200}'),
+      const MessageContent.image(
+        fileId: 0,
+        name: 'shot.png',
+        size: 68,
+        time: 0,
+        width: 320,
+        height: 200,
+      ),
+    );
+  });
 }

@@ -140,6 +140,10 @@ abstract class ChatRepository {
   /// Upload progress (0–1) of a pending file message.
   Stream<double> watchUploadProgress(String messageGid);
 
+  /// The local bytes of a file message that has not uploaded yet (pending or
+  /// failed), or null — what an image shows while it is being sent.
+  Uint8List? pendingUploadBytes(String messageGid);
+
   /// Downloads an attachment to a local file and returns its path (for the
   /// video player or opening it with the system's default app).
   Future<Result<String>> attachmentFile(
@@ -168,6 +172,13 @@ abstract class ChatRepository {
   Future<Result<Uint8List>> videoThumbnail(
     String accountId,
     MessageContent video,
+  );
+
+  /// A preview frame of an own video still uploading, made from the picked
+  /// bytes ([fileName] gives the container its extension).
+  Future<Result<Uint8List>> pendingVideoThumbnail(
+    String messageGid,
+    String fileName,
   );
 
   /// How many members a chat has (`chatGetMembers`).
