@@ -10,6 +10,7 @@ import '../providers/chat_providers.dart';
 import 'chat_composer.dart';
 import 'chat_file_send.dart';
 import 'chat_files_panel.dart';
+import 'chat_floating_video.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
@@ -97,16 +98,23 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
           Expanded(
             // Behind the list rather than inside it, so it also shows while
             // the messages load.
-            child: ChatBackground(
-              key: widget.backgroundKey,
-              child: ChatTextScale(
-                child: MessageList(
-                  // The background is reused across chats; the list is not.
-                  key: ValueKey(t),
-                  thread: t,
-                  showSenders: chat?.type != ChatType.one2one,
+            child: Stack(
+              children: [
+                ChatBackground(
+                  key: widget.backgroundKey,
+                  child: ChatTextScale(
+                    child: MessageList(
+                      // The background is reused across chats; the list is
+                      // not.
+                      key: ValueKey(t),
+                      thread: t,
+                      showSenders: chat?.type != ChatType.one2one,
+                    ),
+                  ),
                 ),
-              ),
+                // A video scrolled out of view plays on over the list.
+                Positioned.fill(child: ChatFloatingVideo(thread: t)),
+              ],
             ),
           ),
           if (canSend)

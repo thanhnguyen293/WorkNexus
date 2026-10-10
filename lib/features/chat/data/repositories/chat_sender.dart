@@ -42,6 +42,10 @@ class ChatSender {
   /// Upload progress of pending file messages (0–1), by message gid.
   Stream<({String gid, double sent})> get uploadProgress => _progress.stream;
 
+  /// The bytes of a file message still uploading (or failed), so its bubble
+  /// can show the picked image before the server stores it.
+  Uint8List? pendingBytes(String gid) => _pendingUploads[gid]?.bytes;
+
   /// Files whose upload has not succeeded yet, kept for retry.
   final _pendingUploads =
       <String, ({String name, Uint8List bytes, String? mimeType})>{};
@@ -121,8 +125,14 @@ class ChatSender {
           senderId: await _selfId(accountId),
           sentAt: _now(),
           contentType: isImageMime(mimeType) ? 'image' : 'file',
-          // Placeholder until the upload returns the stored file's id.
-          content: jsonEncode({'name': name, 'size': bytes.length}),
+          // Placeholder until the upload returns the stored file's id; an
+          // image's size already shapes its bubble, so it doesn't resize
+          // when the upload lands.
+          content: jsonEncode({
+            'name': name,
+            'size': bytes.length,
+            if (isImageMime(mimeType)) ...?imageDimensions(bytes),
+          }),
           sendState: Value(SendState.pending.name),
           replyToId: Value(replyToId),
         ),

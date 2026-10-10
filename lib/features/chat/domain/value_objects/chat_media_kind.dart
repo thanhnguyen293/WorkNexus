@@ -1,3 +1,4 @@
+import '../entities/chat_message.dart';
 import 'message_content.dart';
 
 /// What kind of attachment a message carries, for storage breakdowns.
@@ -23,3 +24,15 @@ ChatMediaKind? chatMediaKindOf(MessageContent content) => switch (content) {
   FileContent() => ChatMediaKind.file,
   _ => null,
 };
+
+/// Whether [message] is drawn bare — an image, a large emoji or a video —
+/// rather than inside a bubble. An own video still uploading counts too: it
+/// is drawn as a video already, so it keeps one look from send to sent.
+bool chatShowsAsMedia(ChatMessage message) =>
+    !message.deleted &&
+    switch (message.content) {
+      ImageContent() || EmojiContent() => true,
+      final FileContent f =>
+        isVideoFile(f) && (f.fileId > 0 || message.sendState != SendState.sent),
+      _ => false,
+    };

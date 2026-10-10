@@ -13,6 +13,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
+import 'chat_storage_meter.dart';
 import 'chat_storage_rows.dart';
 
 /// Limits users can pick for the attachment cache, in MB.
@@ -87,7 +88,7 @@ class ChatStorageDialog extends ConsumerWidget {
               SizedBox(height: s.xl3),
               switch (usage) {
                 AsyncData(value: Ok(:final value)) => ChatStorageMeter(
-                  usedBytes: value.totalBytes,
+                  usage: value,
                   limitBytes: limitBytes,
                 ),
                 AsyncData(value: Err()) || AsyncError() => AppInlineNote(

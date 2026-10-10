@@ -9,8 +9,8 @@ void main() {
   });
 
   test('a transfer shows how much of the file has moved', () {
-    expect(formatTransfer(100 * mb, 0.25), '25.0 MB / 100.0 MB');
-    expect(formatTransfer(100 * mb, 0), '0 B / 100.0 MB');
-    expect(formatTransfer(100 * mb, 1.4), '100.0 MB / 100.0 MB');
+    expect(formatTransfer(100 * mb, 0.25), '25% · 25.0 MB / 100.0 MB');
+    expect(formatTransfer(100 * mb, 0), '0% · 0 B / 100.0 MB');
+    expect(formatTransfer(100 * mb, 1.4), '100% · 100.0 MB / 100.0 MB');
   });
 }

@@ -25,7 +25,20 @@ class VideoThumbnailer {
     }
   }
 
-  Future<Uint8List?> thumbnailOf(String videoPath) async {
+  Future<Uint8List?> thumbnailOf(String videoPath) =>
+      // One run per video: a message's content changes twice as its upload
+      // lands (local result, then the server's echo), and two QuickLook runs
+      // into the same output would race — the loser finding its frame already
+      // moved and reporting none.
+      _inFlight[videoPath] ??= _make(videoPath).whenComplete(() {
+        // A block, not an arrow: `remove` returns this very future, and
+        // whenComplete would wait on it — forever.
+        _inFlight.remove(videoPath);
+      });
+
+  static final _inFlight = <String, Future<Uint8List?>>{};
+
+  Future<Uint8List?> _make(String videoPath) async {
     final cached = File('$videoPath.thumb.png');
     if (await cached.exists()) return cached.readAsBytes();
     final made = switch (Platform.operatingSystem) {
@@ -35,7 +48,8 @@ class VideoThumbnailer {
             await _ffmpeg(videoPath, cached),
       _ => await _ffmpeg(videoPath, cached),
     };
-    return made ? cached.readAsBytes() : null;
+    // Another process may have made it meanwhile (an earlier app run).
+    return made || await cached.exists() ? cached.readAsBytes() : null;
   }
 
   Future<bool> _quickLook(String videoPath, File target) async {

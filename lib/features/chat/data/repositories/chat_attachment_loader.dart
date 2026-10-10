@@ -259,7 +259,7 @@ class ChatAttachmentLoader {
             'id': value.id,
             'time': value.time,
             // Lets every client reserve the image's space before it loads.
-            if (isImageMime(mimeType)) ...?_dimensions(bytes),
+            if (isImageMime(mimeType)) ...?imageDimensions(bytes),
           }),
         ));
       case Err(:final failure):
@@ -353,7 +353,8 @@ String? mimeTypeForFileName(String name) {
   }[name.substring(dot + 1).toLowerCase()];
 }
 
-Map<String, int>? _dimensions(Uint8List bytes) {
+/// An image's `width` / `height` from its header, as message content keys.
+Map<String, int>? imageDimensions(Uint8List bytes) {
   final size = imageHeaderSize(bytes);
   return size == null ? null : {'width': size.width, 'height': size.height};
 }

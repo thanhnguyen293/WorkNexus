@@ -7,7 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/build_reply_thread.dart';
-import '../../domain/value_objects/message_content.dart';
+import '../../domain/value_objects/chat_media_kind.dart';
 import '../providers/chat_providers.dart';
 import 'bubble_tail.dart';
 import 'chat_avatar.dart';
@@ -66,13 +66,7 @@ class MessageBubble extends ConsumerWidget {
   bool get _hasQuote =>
       showQuote && message.replyToId != null && !message.deleted;
 
-  bool get _isMedia =>
-      !message.deleted &&
-      switch (message.content) {
-        ImageContent() || EmojiContent() => true,
-        final FileContent f => isVideoFile(f) && f.fileId > 0,
-        _ => false,
-      };
+  bool get _isMedia => chatShowsAsMedia(message);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

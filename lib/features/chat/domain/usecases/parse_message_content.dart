@@ -85,10 +85,19 @@ class ParseMessageContent {
         if (json == null || name is! String) break;
         final size = _int(json['size']);
         if (id == null) {
-          // A file or image still uploading (no server id yet): show it by name.
+          // A file or image still uploading (no server id yet): show it by
+          // name — an image at its real size, so the bubble keeps its shape
+          // when the upload lands.
           if (size == null) break;
           return contentType == 'image'
-              ? MessageContent.image(fileId: 0, name: name, size: size, time: 0)
+              ? MessageContent.image(
+                  fileId: 0,
+                  name: name,
+                  size: size,
+                  time: 0,
+                  width: _int(json['width']),
+                  height: _int(json['height']),
+                )
               : MessageContent.file(fileId: 0, name: name, size: size, time: 0);
         }
         final totalSize = size ?? 0;

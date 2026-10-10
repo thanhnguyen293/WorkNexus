@@ -383,6 +383,20 @@ final chatUploadProgressProvider = StreamProvider.autoDispose
       (ref, gid) => ref.watch(chatRepositoryProvider).watchUploadProgress(gid),
     );
 
+/// The picked bytes of an own image still being sent (null once uploaded).
+final chatPendingUploadBytesProvider = Provider.autoDispose
+    .family<Uint8List?, String>(
+      (ref, gid) => ref.watch(chatRepositoryProvider).pendingUploadBytes(gid),
+    );
+
+/// Preview frame of an own video still uploading, made from its bytes.
+final chatPendingVideoThumbnailProvider = FutureProvider.autoDispose
+    .family<Result<Uint8List>, ({String gid, String name})>(
+      (ref, key) => ref
+          .watch(chatRepositoryProvider)
+          .pendingVideoThumbnail(key.gid, key.name),
+    );
+
 /// Preview frame of a video message.
 final chatVideoThumbnailProvider = FutureProvider.autoDispose
     .family<Result<Uint8List>, ({String accountId, MessageContent video})>((

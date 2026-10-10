@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
@@ -512,6 +513,10 @@ class XxdChatRepository implements ChatRepository {
   );
 
   @override
+  Uint8List? pendingUploadBytes(String messageGid) =>
+      _sender.pendingBytes(messageGid);
+
+  @override
   Stream<double> watchUploadProgress(String messageGid) => _sender
       .uploadProgress
       .where((p) => p.gid == messageGid)
@@ -600,6 +605,39 @@ class XxdChatRepository implements ChatRepository {
     return duration == null
         ? const Err(NotFoundFailure('Unknown video length'))
         : Ok(duration);
+  }
+
+  @override
+  Future<Result<Uint8List>> pendingVideoThumbnail(
+    String messageGid,
+    String fileName,
+  ) async {
+    final bytes = _sender.pendingBytes(messageGid);
+    if (bytes == null) return const Err(NotFoundFailure('Not uploading'));
+    // The thumbnailers read a file: the picked bytes go to a scratch copy,
+    // removed (with the frame cached beside it) once the frame is made.
+    final dot = fileName.lastIndexOf('.');
+    final ext = dot < 0 ? '' : fileName.substring(dot);
+    final video = File(
+      '${Directory.systemTemp.path}/worknexus-upload-$messageGid$ext',
+    );
+    try {
+      await video.writeAsBytes(bytes, flush: true);
+      final frame = await _thumbnailer.thumbnailOf(video.path);
+      return frame == null
+          ? const Err(NotFoundFailure('No preview frame'))
+          : Ok(frame);
+    } on FileSystemException catch (e) {
+      return Err(StorageFailure('Could not preview the video', cause: e));
+    } finally {
+      for (final f in [video, File('${video.path}.thumb.png')]) {
+        try {
+          if (f.existsSync()) await f.delete();
+        } on FileSystemException {
+          // A leftover in the temp dir is harmless.
+        }
+      }
+    }
   }
 
   @override
