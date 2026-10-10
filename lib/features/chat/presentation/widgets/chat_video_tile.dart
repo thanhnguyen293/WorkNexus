@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/error/result.dart';
@@ -251,7 +251,7 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
                 right: s.md,
                 bottom: s.md,
                 child: ChatVideoCornerButton(
-                  icon: PhosphorIconsLight.cornersOut,
+                  icon: LucideIcons.maximize300,
                   tooltip: AppL10n.of(context).chatFullScreen,
                   onPressed: _fullScreen,
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../navigation/navigation_providers.dart';
@@ -67,7 +67,7 @@ class _QuickSettingsButtonState extends ConsumerState<QuickSettingsButton> {
               hoverColor: c.surfaceSubtle,
               borderRadius: BorderRadius.circular(context.radii.sm),
               child: Icon(
-                PhosphorIconsLight.gear,
+                LucideIcons.settings300,
                 size: context.spacing.xl3,
                 color: isOpen ? c.accent : c.textTertiary,
               ),

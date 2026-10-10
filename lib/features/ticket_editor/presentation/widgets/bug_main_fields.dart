@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
@@ -42,7 +42,7 @@ class BugMainFields extends ConsumerWidget {
       children: [
         EditorSection(
           title: l.editorSectionContent,
-          icon: PhosphorIconsLight.textAlignLeft,
+          icon: LucideIcons.textAlignStart300,
           children: [
             EditorField(
               label: l.fieldTitle,
@@ -79,7 +79,7 @@ class BugMainFields extends ConsumerWidget {
         ),
         EditorSection(
           title: l.attachments,
-          icon: PhosphorIconsLight.paperclip,
+          icon: LucideIcons.paperclip300,
           children: [
             AttachmentsInput(
               files: draft.files,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/chat_appearance.dart';
@@ -152,7 +152,7 @@ class _StyleCard extends StatelessWidget {
                 ),
                 if (selected)
                   Icon(
-                    PhosphorIconsFill.checkCircle,
+                    LucideIcons.checkCircle500,
                     size: s.xl3,
                     color: c.accent,
                   ),

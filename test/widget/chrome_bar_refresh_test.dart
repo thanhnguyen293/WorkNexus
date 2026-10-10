@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -54,10 +54,10 @@ void main() {
     await pump(tester);
     await tester.pump();
 
-    expect(find.byIcon(PhosphorIconsLight.arrowClockwise), findsOneWidget);
+    expect(find.byIcon(LucideIcons.rotateCw300), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
-    await tester.tap(find.byIcon(PhosphorIconsLight.arrowClockwise));
+    await tester.tap(find.byIcon(LucideIcons.rotateCw300));
     await tester.pump();
 
     // Nothing is selected, so the refresh is a no-op rather than an error.
@@ -72,7 +72,7 @@ void main() {
     await pump(tester, refreshing: true);
     await tester.pump();
 
-    expect(find.byIcon(PhosphorIconsLight.arrowClockwise), findsNothing);
+    expect(find.byIcon(LucideIcons.rotateCw300), findsNothing);
     expect(find.byType(SidebarSyncIndicator), findsOneWidget);
 
     await disposeTree(tester);

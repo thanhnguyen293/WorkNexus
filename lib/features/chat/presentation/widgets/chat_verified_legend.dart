@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -80,9 +80,9 @@ class _Row extends StatelessWidget {
       child: Row(
         children: [
           if (check != null)
-            Icon(PhosphorIconsFill.sealCheck, size: s.xl3, color: check)
+            Icon(Icons.verified_rounded, size: s.xl3, color: check)
           else
-            Icon(PhosphorIconsLight.minus, size: s.xl3, color: c.textTertiary),
+            Icon(LucideIcons.minus300, size: s.xl3, color: c.textTertiary),
           SizedBox(width: s.md),
           // Wraps when the window is narrow rather than overflowing.
           Flexible(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -79,7 +79,7 @@ class _EditorDateInputState extends State<EditorDateInput> {
           child: Row(
             children: [
               Icon(
-                PhosphorIconsLight.calendarBlank,
+                LucideIcons.calendar300,
                 size: s.xl3,
                 color: picked == null ? c.textTertiary : c.accent,
               ),
@@ -98,7 +98,7 @@ class _EditorDateInputState extends State<EditorDateInput> {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   color: c.textTertiary,
-                  icon: Icon(PhosphorIconsLight.x, size: s.xl2),
+                  icon: Icon(LucideIcons.x300, size: s.xl2),
                   onPressed: () => _pick(null),
                 ),
             ],

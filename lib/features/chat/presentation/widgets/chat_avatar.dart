@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -138,11 +137,7 @@ class ChatAvatar extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  Icon(
-                    PhosphorIconsFill.sealCheck,
-                    size: checkSize,
-                    color: color,
-                  ),
+                  Icon(Icons.verified_rounded, size: checkSize, color: color),
                 ],
               ),
             ),

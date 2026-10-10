@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -72,7 +72,7 @@ class ChatInfoPanel extends ConsumerWidget {
     final details = [
       if (peer?.role case final role?)
         ChatDetailRow(
-          icon: PhosphorIconsLight.identificationBadge,
+          icon: LucideIcons.idCard300,
           label: l.chatRole,
           value: chatRoleLabel(
             context,
@@ -85,35 +85,35 @@ class ChatInfoPanel extends ConsumerWidget {
         ),
       if (peer?.email case final email?)
         ChatDetailRow(
-          icon: PhosphorIconsLight.envelopeSimple,
+          icon: LucideIcons.mail300,
           label: l.chatEmail,
           value: email,
           spaced: false,
         ),
       if (peer?.mobile case final mobile?)
         ChatDetailRow(
-          icon: PhosphorIconsLight.deviceMobile,
+          icon: LucideIcons.smartphone300,
           label: l.chatMobile,
           value: mobile,
           spaced: false,
         ),
       if (peer?.phone case final phone?)
         ChatDetailRow(
-          icon: PhosphorIconsLight.phone,
+          icon: LucideIcons.phone300,
           label: l.chatPhone,
           value: phone,
           spaced: false,
         ),
       if (!oneToOne && chat.ownerAccount != null)
         ChatDetailRow(
-          icon: PhosphorIconsLight.shieldCheck,
+          icon: LucideIcons.shieldCheck300,
           label: l.chatOwner,
           value: owner?.realname ?? chat.ownerAccount ?? '',
           spaced: false,
         ),
       if (!oneToOne && created != null)
         ChatDetailRow(
-          icon: PhosphorIconsLight.calendarBlank,
+          icon: LucideIcons.calendar300,
           label: l.chatCreatedOn,
           value: DateFormat.yMMMd(
             Localizations.localeOf(context).toString(),
@@ -157,7 +157,7 @@ class ChatInfoPanel extends ConsumerWidget {
                   chat: chat,
                   title: title,
                 ),
-                icon: const Icon(PhosphorIconsLight.camera),
+                icon: const Icon(LucideIcons.camera300),
                 label: Text(l.chatChangeGroupAvatar),
               ),
             ),
@@ -192,7 +192,7 @@ class ChatInfoPanel extends ConsumerWidget {
               ),
             ),
           _PanelLink(
-            icon: PhosphorIconsLight.pushPin,
+            icon: LucideIcons.pin300,
             label: l.chatPinnedMessages,
             count: chat.pinnedMessageIds.length,
             onTap: () => toggleChatSidePanel(
@@ -204,7 +204,7 @@ class ChatInfoPanel extends ConsumerWidget {
           ),
           if (!oneToOne)
             _PanelLink(
-              icon: PhosphorIconsLight.usersThree,
+              icon: LucideIcons.users300,
               label: l.chatMembersTitle,
               count: switch (members) {
                 Ok(:final value) => value,
@@ -255,7 +255,8 @@ class _PanelLink extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(context.radii.lg),
         ),
-        leading: Icon(icon, color: c.accent),
+        // The details rows' size, so the card icons line up as one set.
+        leading: Icon(icon, size: context.spacing.xl4, color: c.accent),
         title: Text(
           label,
           style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
@@ -270,7 +271,11 @@ class _PanelLink extends StatelessWidget {
                   color: c.textSecondary,
                 ),
               ),
-            Icon(PhosphorIconsLight.caretRight, color: c.textTertiary),
+            Icon(
+              LucideIcons.chevronRight300,
+              size: context.spacing.xl4,
+              color: c.textTertiary,
+            ),
           ],
         ),
         onTap: onTap,

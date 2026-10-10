@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -119,8 +119,8 @@ class _AttachmentRow extends StatelessWidget {
             ),
             child: Icon(
               _isViewable(attachment.extension)
-                  ? PhosphorIconsLight.eye
-                  : PhosphorIconsLight.downloadSimple,
+                  ? LucideIcons.eye300
+                  : LucideIcons.download300,
               size: 15,
               color: c.textTertiary,
             ),
@@ -142,11 +142,11 @@ class _AttachmentRow extends StatelessWidget {
     const video = {'mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v'};
     const image = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'heic'};
     final e = ext?.toLowerCase() ?? '';
-    if (video.contains(e)) return PhosphorIconsLight.videoCamera;
-    if (image.contains(e)) return PhosphorIconsLight.image;
-    if (e == 'pdf') return PhosphorIconsLight.filePdf;
+    if (video.contains(e)) return LucideIcons.video300;
+    if (image.contains(e)) return LucideIcons.image300;
+    if (e == 'pdf') return LucideIcons.fileText300;
     if (e == 'zip' || e == 'rar' || e == '7z')
-      return PhosphorIconsLight.fileZip;
-    return PhosphorIconsLight.file;
+      return LucideIcons.fileArchive300;
+    return LucideIcons.file300;
   }
 }

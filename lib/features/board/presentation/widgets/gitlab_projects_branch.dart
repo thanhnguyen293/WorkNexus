@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
@@ -89,8 +89,8 @@ class _ProjectsGroup extends ConsumerWidget {
               children: [
                 Icon(
                   expanded
-                      ? PhosphorIconsLight.caretDown
-                      : PhosphorIconsLight.caretRight,
+                      ? LucideIcons.chevronDown300
+                      : LucideIcons.chevronRight300,
                   size: 14,
                   color: c.textTertiary,
                 ),

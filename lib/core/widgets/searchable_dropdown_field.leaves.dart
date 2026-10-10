@@ -36,7 +36,7 @@ class _SearchBox extends StatelessWidget {
             hintText: hint,
             hintStyle: context.typography.body.copyWith(color: c.textTertiary),
             prefixIcon: Icon(
-              PhosphorIconsLight.magnifyingGlass,
+              LucideIcons.search300,
               size: 18,
               color: c.textTertiary,
             ),
@@ -116,7 +116,7 @@ class _OptionTile extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  Icon(PhosphorIconsLight.check, size: 16, color: c.accent),
+                  Icon(LucideIcons.check300, size: 16, color: c.accent),
               ],
             ),
           ),

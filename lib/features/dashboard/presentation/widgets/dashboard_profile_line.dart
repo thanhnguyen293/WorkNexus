@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -34,19 +34,19 @@ class DashboardProfileLine extends ConsumerWidget {
       runSpacing: s.xs,
       children: [
         MyWorkFact(
-          icon: PhosphorIconsLight.identificationBadge,
+          icon: LucideIcons.idCard300,
           text: [p.account, ?p.role].join(' · '),
         ),
         if (p.email case final email? when email.isNotEmpty)
-          MyWorkFact(icon: PhosphorIconsLight.envelopeSimple, text: email),
+          MyWorkFact(icon: LucideIcons.mail300, text: email),
         if (p.lastLogin case final at?)
           MyWorkFact(
-            icon: PhosphorIconsLight.signIn,
+            icon: LucideIcons.logIn300,
             text: l.dashboardLastLogin(formatWhen(context, at, format: format)),
           ),
         if (contributions.isNotEmpty)
           MyWorkFact(
-            icon: PhosphorIconsLight.folders,
+            icon: LucideIcons.folders300,
             text: contributions.join(' · '),
           ),
       ],

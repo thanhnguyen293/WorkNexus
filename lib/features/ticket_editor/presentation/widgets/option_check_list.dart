@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,7 +38,7 @@ class OptionSearchBox extends StatelessWidget {
         hintText: hint,
         hintStyle: context.typography.body.copyWith(color: c.textTertiary),
         prefixIcon: Icon(
-          PhosphorIconsLight.magnifyingGlass,
+          LucideIcons.search300,
           size: s.xl3,
           color: c.textTertiary,
         ),
@@ -121,7 +121,7 @@ class _CheckRow extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            checked ? PhosphorIconsFill.checkSquare : PhosphorIconsLight.square,
+            checked ? LucideIcons.checkSquare500 : LucideIcons.square300,
             size: s.xl4,
             color: checked ? c.accent : c.textTertiary,
           ),

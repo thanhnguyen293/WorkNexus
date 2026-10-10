@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -45,7 +45,7 @@ class ZenTaoActions extends ConsumerWidget {
         children: [
           if (canAssign)
             DetailActionButton(
-              icon: PhosphorIconsLight.userPlus,
+              icon: LucideIcons.userPlus300,
               label: l.assign,
               onTap: () => _open(context, AssignDialog(ticket: ticket)),
             ),

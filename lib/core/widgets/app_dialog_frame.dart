@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -66,7 +66,7 @@ class AppDialogFrame extends StatelessWidget {
                     visualDensity: VisualDensity.compact,
                     tooltip: AppL10n.of(context).cancel,
                     color: c.textTertiary,
-                    icon: Icon(PhosphorIconsLight.x, size: s.xl3),
+                    icon: Icon(LucideIcons.x300, size: s.xl3),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],

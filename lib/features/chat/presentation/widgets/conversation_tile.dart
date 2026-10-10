@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -160,7 +160,7 @@ class ConversationTile extends StatelessWidget {
                       if (chat.muted) ...[
                         SizedBox(width: context.spacing.sm),
                         Icon(
-                          PhosphorIconsLight.bellSlash,
+                          LucideIcons.bellOff300,
                           size: context.spacing.xl2,
                           color: c.textTertiary,
                         ),
@@ -168,7 +168,7 @@ class ConversationTile extends StatelessWidget {
                       if (chat.starred) ...[
                         SizedBox(width: context.spacing.sm),
                         Icon(
-                          PhosphorIconsFill.pushPin,
+                          LucideIcons.pin500,
                           size: context.spacing.xl2,
                           color: c.textTertiary,
                         ),

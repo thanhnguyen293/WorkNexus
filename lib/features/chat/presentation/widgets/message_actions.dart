@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
@@ -57,21 +57,21 @@ List<MessageAction> messageActions(
   return [
     if (serverId != null && !message.deleted)
       (
-        icon: PhosphorIconsLight.quotes,
+        icon: LucideIcons.quote300,
         tooltip: l.chatReply,
         destructive: false,
         onTap: () => onReply(message),
       ),
     if (onOpenThread != null && serverId != null)
       (
-        icon: PhosphorIconsLight.chats,
+        icon: LucideIcons.messagesSquare300,
         tooltip: l.chatOpenThread,
         destructive: false,
         onTap: () => onOpenThread(serverId),
       ),
     if (text != null)
       (
-        icon: PhosphorIconsLight.copy,
+        icon: LucideIcons.copy300,
         tooltip: l.chatCopy,
         destructive: false,
         onTap: () => Clipboard.setData(
@@ -82,9 +82,7 @@ List<MessageAction> messageActions(
       ),
     if (text != null)
       (
-        icon: translated
-            ? PhosphorIconsLight.translate
-            : PhosphorIconsLight.translate,
+        icon: translated ? LucideIcons.languages300 : LucideIcons.languages300,
         tooltip: translated ? l.chatShowOriginal : l.chatTranslate,
         destructive: false,
         onTap: () async {
@@ -105,7 +103,7 @@ List<MessageAction> messageActions(
     if (message.content case final ImageContent image
         when serverId != null && !message.deleted)
       (
-        icon: PhosphorIconsLight.sticker,
+        icon: LucideIcons.sticker300,
         tooltip: l.chatSaveSticker,
         destructive: false,
         onTap: () => saveImageAsSticker(
@@ -117,7 +115,7 @@ List<MessageAction> messageActions(
       ),
     if (canPin)
       (
-        icon: pinned ? PhosphorIconsFill.pushPin : PhosphorIconsLight.pushPin,
+        icon: pinned ? LucideIcons.pin500 : LucideIcons.pin300,
         tooltip: pinned ? l.chatUnpin : l.chatPin,
         destructive: false,
         onTap: () async {
@@ -129,7 +127,7 @@ List<MessageAction> messageActions(
       ),
     if (controller.canRetract(message))
       (
-        icon: PhosphorIconsLight.arrowCounterClockwise,
+        icon: LucideIcons.rotateCcw300,
         tooltip: l.chatRetract,
         destructive: true,
         onTap: () async {

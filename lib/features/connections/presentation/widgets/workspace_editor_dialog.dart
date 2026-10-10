@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -272,11 +272,7 @@ class _IconFilePicker extends StatelessWidget {
                 tooltip: 'Remove custom icon',
                 visualDensity: VisualDensity.compact,
                 onPressed: onClear,
-                icon: Icon(
-                  PhosphorIconsLight.x,
-                  size: 16,
-                  color: c.textTertiary,
-                ),
+                icon: Icon(LucideIcons.x300, size: 16, color: c.textTertiary),
               ),
             ],
           ],

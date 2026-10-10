@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -56,7 +56,7 @@ class ChatStickerGrid extends ConsumerWidget {
       at: at,
       entries: [
         AppMenuEntry(
-          icon: PhosphorIconsLight.trash,
+          icon: LucideIcons.trash300,
           label: l.chatRemoveSticker,
           destructive: true,
         ),
@@ -76,10 +76,7 @@ class ChatStickerGrid extends ConsumerWidget {
     final add = _Tile(
       tooltip: l.chatAddSticker,
       onTap: () => _add(context, ref),
-      child: Icon(
-        PhosphorIconsLight.imageSquare,
-        color: context.colors.textSecondary,
-      ),
+      child: Icon(LucideIcons.image300, color: context.colors.textSecondary),
     );
     if (editable && stickers.isEmpty) {
       return Padding(
@@ -162,7 +159,7 @@ class _StickerImage extends StatelessWidget {
         (context.spacing.xl6 * 2 * MediaQuery.devicePixelRatioOf(context))
             .round();
     final broken = Icon(
-      PhosphorIconsLight.imageBroken,
+      LucideIcons.imageOff300,
       color: context.colors.textTertiary,
     );
     return sticker.custom

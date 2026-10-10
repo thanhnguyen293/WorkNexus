@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -74,7 +74,7 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(PhosphorIconsLight.arrowClockwise, size: 16),
+                        const Icon(LucideIcons.rotateCw300, size: 16),
                         SizedBox(width: context.spacing.sm),
                         Text(l.checkForUpdates),
                       ],
@@ -103,7 +103,7 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(PhosphorIconsLight.bug, size: 16),
+                        const Icon(LucideIcons.bug300, size: 16),
                         SizedBox(width: context.spacing.sm),
                         Text(l.reportIssue),
                       ],

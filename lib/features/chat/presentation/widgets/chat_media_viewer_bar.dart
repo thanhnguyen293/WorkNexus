@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -60,7 +60,7 @@ class ChatMediaViewerBar extends StatelessWidget {
             ...actions,
             SizedBox(width: s.md),
             ChatViewerButton(
-              icon: PhosphorIconsLight.x,
+              icon: LucideIcons.x300,
               tooltip: AppL10n.of(context).chatClosePanel,
               onPressed: onClose,
             ),

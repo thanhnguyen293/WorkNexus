@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -63,7 +63,7 @@ class LocalCacheCard extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   spacing: s.sm,
                   children: [
-                    Icon(PhosphorIconsLight.broom, size: s.xl3),
+                    Icon(LucideIcons.broom300, size: s.xl3),
                     Text(l.clearCache),
                   ],
                 ),

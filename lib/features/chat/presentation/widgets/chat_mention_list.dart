@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -147,7 +147,7 @@ class _Row extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    PhosphorIconsLight.at,
+                    LucideIcons.atSign300,
                     color: c.onAccent,
                     size: s.xl5,
                   ),

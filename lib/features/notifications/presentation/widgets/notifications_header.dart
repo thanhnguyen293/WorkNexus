@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -52,7 +52,7 @@ class NotificationsHeader extends ConsumerWidget {
               IconButton(
                 tooltip: l.notificationsMarkAllRead,
                 color: c.textSecondary,
-                icon: const Icon(PhosphorIconsLight.checks),
+                icon: const Icon(LucideIcons.checkCheck300),
                 onPressed: unread == 0
                     ? null
                     : () {
@@ -68,7 +68,7 @@ class NotificationsHeader extends ConsumerWidget {
               IconButton(
                 tooltip: l.notificationsDeleteRead,
                 color: c.textSecondary,
-                icon: const Icon(PhosphorIconsLight.trash),
+                icon: const Icon(LucideIcons.trash300),
                 onPressed: () async {
                   if (!await _confirmDeleteRead(context) || !context.mounted) {
                     return;
@@ -96,13 +96,13 @@ class NotificationsHeader extends ConsumerWidget {
                         dimension: s.xl3,
                         child: const CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(PhosphorIconsLight.arrowClockwise),
+                    : const Icon(LucideIcons.rotateCw300),
               ),
               IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonLabel,
                 color: c.textSecondary,
                 onPressed: onClose,
-                icon: const Icon(PhosphorIconsLight.x),
+                icon: const Icon(LucideIcons.x300),
               ),
             ],
           ),

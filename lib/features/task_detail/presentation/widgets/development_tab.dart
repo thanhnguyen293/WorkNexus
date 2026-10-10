@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -154,7 +154,7 @@ class _DryRunToggle extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              dry ? PhosphorIconsLight.flask : PhosphorIconsLight.lightning,
+              dry ? LucideIcons.flaskConical300 : LucideIcons.zap300,
               size: 13,
               color: dry ? c.warning : c.success,
             ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/widgets/app_rail_button.dart';
@@ -22,8 +22,7 @@ class NotificationsRailButton extends ConsumerWidget {
     ref.watch(notificationsRefreshProvider);
     final unread = ref.watch(unreadNotificationCountProvider);
     return AppRailButton(
-      icon: PhosphorIconsLight.bell,
-      selectedIcon: PhosphorIconsFill.bell,
+      icon: LucideIcons.bell300,
       label: AppL10n.of(context).notifications,
       selected: ref.watch(notificationsPanelOpenProvider),
       onTap: () => ref

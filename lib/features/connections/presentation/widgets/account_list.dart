@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
@@ -71,7 +71,7 @@ class WorkspaceAccounts extends StatelessWidget {
                 tooltip: 'Edit workspace',
                 visualDensity: VisualDensity.compact,
                 icon: Icon(
-                  PhosphorIconsLight.palette,
+                  LucideIcons.palette300,
                   size: 16,
                   color: c.textSecondary,
                 ),
@@ -81,7 +81,7 @@ class WorkspaceAccounts extends StatelessWidget {
                 tooltip: 'Delete workspace',
                 visualDensity: VisualDensity.compact,
                 icon: Icon(
-                  PhosphorIconsLight.trash,
+                  LucideIcons.trash300,
                   size: 16,
                   color: c.textTertiary,
                 ),
@@ -176,7 +176,7 @@ class _DeleteWorkspaceDialog extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(PhosphorIconsLight.trash, size: 20, color: c.error),
+                  Icon(LucideIcons.trash300, size: 20, color: c.error),
                   SizedBox(width: context.spacing.md),
                   Expanded(
                     child: Text(

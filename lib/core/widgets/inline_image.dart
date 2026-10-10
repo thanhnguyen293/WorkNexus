@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -92,11 +92,7 @@ class InlineImageState extends State<InlineImage> {
           if (resolved == null) {
             return _frame(
               context,
-              Icon(
-                PhosphorIconsLight.imageBroken,
-                color: c.textTertiary,
-                size: 22,
-              ),
+              Icon(LucideIcons.imageOff300, color: c.textTertiary, size: 22),
             );
           }
           return _frame(
@@ -120,7 +116,7 @@ class InlineImageState extends State<InlineImage> {
               fit: BoxFit.contain,
               errorBuilder: (_, _, _) => _frame(
                 context,
-                Icon(PhosphorIconsLight.imageBroken, color: c.textTertiary),
+                Icon(LucideIcons.imageOff300, color: c.textTertiary),
               ),
             ),
           ),
@@ -172,14 +168,14 @@ class _ImageFallbackActionsState extends State<_ImageFallbackActions> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _FallbackChip(
-            icon: _copied ? PhosphorIconsLight.check : PhosphorIconsLight.link,
+            icon: _copied ? LucideIcons.check300 : LucideIcons.link300,
             label: _copied ? l.linkCopied : l.copyLink,
             onTap: _copy,
           ),
           if (widget.onOpen != null) ...[
             Container(width: 1, height: 16, color: context.colors.border),
             _FallbackChip(
-              icon: PhosphorIconsLight.arrowSquareOut,
+              icon: LucideIcons.squareArrowOutUpRight300,
               label: l.openImageInBrowser,
               onTap: () => widget.onOpen!(widget.url),
             ),
