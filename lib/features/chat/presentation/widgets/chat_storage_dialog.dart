@@ -72,7 +72,7 @@ class ChatStorageDialog extends ConsumerWidget {
         borderRadius: BorderRadius.circular(context.radii.lg),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 620),
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 820),
         child: Padding(
           padding: EdgeInsets.all(s.xl5),
           child: Column(

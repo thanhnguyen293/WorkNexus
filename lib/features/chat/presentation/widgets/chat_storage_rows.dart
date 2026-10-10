@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -13,6 +14,9 @@ import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_storage_bar.dart';
+
+/// Diameter of a row's avatar.
+const double _kAvatar = 36;
 
 /// Per-chat usage, largest first: each row's bar is scaled to the largest
 /// chat so they compare at a glance, with its split by kind and a delete
@@ -49,40 +53,57 @@ class ChatStorageChatList extends StatelessWidget {
             color: c.textSecondary,
           ),
         ),
-        SizedBox(height: s.xs),
+        SizedBox(height: s.md),
+        // A bordered card the rows scroll inside, so they never run under
+        // the label above.
         Flexible(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (final chat in usage.chats)
-                _ChatRow(usage: chat, largest: largest, onClear: onClear),
-              if (usage.otherBytes > 0)
-                _UsageRow(
-                  leading: Container(
-                    width: s.xl6 * 0.8,
-                    height: s.xl6 * 0.8,
-                    decoration: BoxDecoration(
-                      color: c.surfaceSubtle,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      PhosphorIconsLight.folder,
-                      size: s.xl3,
-                      color: c.textSecondary,
-                    ),
-                  ),
-                  title: l.chatStorageOther,
-                  bytes: usage.otherBytes,
-                  largest: largest,
-                  kinds: [
-                    (
-                      label: l.chatStorageOther,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(context.radii.lg),
+              border: Border.all(color: c.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(context.radii.lg),
+              child: ListView(
+                shrinkWrap: true,
+                padding: EdgeInsets.symmetric(horizontal: s.lg),
+                children: [
+                  for (final (i, chat) in usage.chats.indexed) ...[
+                    if (i > 0) Divider(height: 1, color: c.border),
+                    _ChatRow(usage: chat, largest: largest, onClear: onClear),
+                  ],
+                  if (usage.otherBytes > 0) ...[
+                    if (usage.chats.isNotEmpty)
+                      Divider(height: 1, color: c.border),
+                    _UsageRow(
+                      leading: Container(
+                        width: _kAvatar,
+                        height: _kAvatar,
+                        decoration: BoxDecoration(
+                          color: c.surfaceSubtle,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          PhosphorIconsLight.folder,
+                          size: s.xl4,
+                          color: c.textSecondary,
+                        ),
+                      ),
+                      title: l.chatStorageOther,
                       bytes: usage.otherBytes,
-                      color: c.textTertiary,
+                      largest: largest,
+                      kinds: [
+                        (
+                          label: l.chatStorageOther,
+                          bytes: usage.otherBytes,
+                          color: c.textTertiary,
+                        ),
+                      ],
                     ),
                   ],
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -116,7 +137,7 @@ class _ChatRow extends ConsumerWidget {
       leading: ChatAvatar(
         name: title,
         imageUrl: chatAvatarUrl(users, chat?.peerUserId),
-        size: ChatAvatarSize.small,
+        diameter: _kAvatar,
       ),
       title: title,
       bytes: usage.bytes,
@@ -159,11 +180,11 @@ class _UsageRow extends StatelessWidget {
     final split = [...kinds.where((k) => k.bytes > 0)]
       ..sort((a, b) => b.bytes.compareTo(a.bytes));
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: s.md),
+      padding: EdgeInsets.symmetric(vertical: s.lg),
       child: Row(
         children: [
           leading,
-          SizedBox(width: s.lg),
+          SizedBox(width: s.xl),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +210,7 @@ class _UsageRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: s.sm),
+                SizedBox(height: s.xs),
                 ChatStorageBar(
                   total: largest,
                   parts: [
@@ -198,7 +219,7 @@ class _UsageRow extends StatelessWidget {
                   height: s.xs,
                 ),
                 if (split.length > 1 || onClear != null) ...[
-                  SizedBox(height: s.xs),
+                  SizedBox(height: s.xxs),
                   Text(
                     [
                       for (final k in split)
