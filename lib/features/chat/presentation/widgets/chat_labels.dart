@@ -144,10 +144,16 @@ String formatFileSize(int bytes) {
 
 /// A file's size, or — while it transfers ([progress] 0–1) — how much of it
 /// has moved: `12.3 MB / 364.2 MB`.
-String formatTransfer(int bytes, double? progress) => progress == null
-    ? formatFileSize(bytes)
-    : '${formatFileSize((bytes * progress.clamp(0, 1)).round())} / '
-          '${formatFileSize(bytes)}';
+String formatTransfer(int bytes, double? progress) {
+  if (progress == null) return formatFileSize(bytes);
+  final p = progress.clamp(0, 1);
+  return '${formatPercent(p)} · '
+      '${formatFileSize((bytes * p).round())} / ${formatFileSize(bytes)}';
+}
+
+/// A transfer's progress (0–1) as a whole percentage (`0.456` → `46%`).
+String formatPercent(num progress) =>
+    '${(progress.clamp(0, 1) * 100).round()}%';
 
 /// A user's avatar URL, when they have one.
 String? chatAvatarUrl(Map<int, ChatUser> users, int? id) =>

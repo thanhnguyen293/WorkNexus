@@ -345,6 +345,13 @@ class _FakeChatRepository implements ChatRepository {
   Stream<double> watchUploadProgress(String g) => const Stream.empty();
 
   @override
+  Uint8List? pendingUploadBytes(String g) => null;
+
+  @override
+  Future<Result<Uint8List>> pendingVideoThumbnail(String g, String n) async =>
+      const Err(NotFoundFailure('none'));
+
+  @override
   Future<Result<String>> attachmentFile(String a, MessageContent c) async =>
       const Err(NotFoundFailure('none'));
 

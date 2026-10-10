@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -11,6 +10,7 @@ import '../../domain/entities/chat_cache_usage.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_side_panel_frame.dart';
+import 'chat_storage_bar.dart';
 import 'chat_storage_dialog.dart';
 
 /// The info panel's storage card: how much of the chat cache limit this
@@ -44,11 +44,12 @@ class ChatInfoStorageCard extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final kinds = [
-      (label: l.chatStoragePhotos, bytes: chat.imageBytes, color: c.accent),
-      (label: l.chatStorageVideos, bytes: chat.videoBytes, color: c.info),
-      (label: l.chatStorageFiles, bytes: chat.fileBytes, color: c.notice),
-    ];
+    final kinds = chatStorageKinds(
+      context,
+      imageBytes: chat.imageBytes,
+      videoBytes: chat.videoBytes,
+      fileBytes: chat.fileBytes,
+    );
     return ChatPanelCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,8 +89,8 @@ class ChatInfoStorageCard extends ConsumerWidget {
             ),
           ),
           SizedBox(height: s.sm),
-          _UsageBar(
-            limit: usage.limitBytes,
+          ChatStorageBar(
+            total: usage.limitBytes,
             parts: [for (final k in kinds) (bytes: k.bytes, color: k.color)],
           ),
           SizedBox(height: s.lg),
@@ -125,51 +126,6 @@ class ChatInfoStorageCard extends ConsumerWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// A bar for the whole limit with one coloured segment per kind.
-class _UsageBar extends StatelessWidget {
-  const _UsageBar({required this.limit, required this.parts});
-
-  final int limit;
-  final List<({int bytes, Color color})> parts;
-
-  /// Bar resolution: segments are whole thousandths of the limit.
-  static const _steps = 1000;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final flexes = [
-      for (final p in parts)
-        p.bytes <= 0 || limit <= 0
-            ? 0
-            // A used kind always shows, however small next to the limit.
-            : (p.bytes * _steps / limit).round().clamp(1, _steps).toInt(),
-    ];
-    final rest = _steps - flexes.fold<int>(0, (sum, f) => sum + f);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(context.radii.pill),
-      child: SizedBox(
-        height: context.spacing.md,
-        child: Row(
-          children: [
-            for (final (i, p) in parts.indexed)
-              if (flexes[i] > 0)
-                Expanded(
-                  flex: flexes[i],
-                  child: ColoredBox(color: p.color),
-                ),
-            if (rest > 0)
-              Expanded(
-                flex: rest,
-                child: ColoredBox(color: c.border),
-              ),
-          ],
-        ),
       ),
     );
   }

@@ -34,10 +34,19 @@ class ChatVideoDialog extends ConsumerStatefulWidget {
     required this.accountId,
     required this.video,
     this.chatGid,
+    this.startAt,
+    this.onClosed,
   });
 
   final String accountId;
   final FileContent video;
+
+  /// Where to start (the frame it took over from was there); the start when
+  /// null.
+  final Duration? startAt;
+
+  /// Told where playback stood when the viewer closes, however it closes.
+  final ValueChanged<Duration?>? onClosed;
 
   /// The chat the video is from: its photos and videos then show in a strip
   /// along the bottom to switch to.
@@ -48,13 +57,20 @@ class ChatVideoDialog extends ConsumerStatefulWidget {
     required String accountId,
     required FileContent video,
     String? chatGid,
+    Duration? startAt,
+    ValueChanged<Duration?>? onClosed,
   }) => showDialog<void>(
     context: context,
     barrierColor: context.colors.scrim.withValues(
       alpha: kChatViewerBarrierAlpha,
     ),
-    builder: (_) =>
-        ChatVideoDialog(accountId: accountId, video: video, chatGid: chatGid),
+    builder: (_) => ChatVideoDialog(
+      accountId: accountId,
+      video: video,
+      chatGid: chatGid,
+      startAt: startAt,
+      onClosed: onClosed,
+    ),
   );
 
   @override
@@ -127,6 +143,11 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
           await player.dispose();
           return;
         }
+        if (widget.startAt case final at?) await player.seekTo(at);
+        if (!mounted) {
+          await player.dispose();
+          return;
+        }
         setState(() {
           _player = player;
           _path = value;
@@ -139,6 +160,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
 
   @override
   void dispose() {
+    widget.onClosed?.call(_player?.value.position);
     _player?.dispose();
     // Leaving the player leaves full screen too.
     _window.exitFullScreen();
