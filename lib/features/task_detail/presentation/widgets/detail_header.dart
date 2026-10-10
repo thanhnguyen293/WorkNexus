@@ -20,6 +20,7 @@ import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 import '../ticket_actions.dart';
+import 'bug_status_strip.dart';
 import 'detail_header_icon_button.dart';
 import 'parent_task_link.dart';
 
@@ -106,7 +107,12 @@ class DetailHeader extends ConsumerWidget {
             ],
           ),
           SizedBox(height: context.spacing.lg),
-          Row(
+          // Identity, priority and — for a ZenTao bug — its status chips on
+          // one wrapping line, so the state reads alongside the ticket id.
+          Wrap(
+            spacing: context.spacing.sm,
+            runSpacing: context.spacing.sm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 ticketRef(
@@ -114,16 +120,17 @@ class DetailHeader extends ConsumerWidget {
                   ticket.externalKey,
                   ticket.externalType,
                 ),
-                style: context.typography.mono.copyWith(color: c.textSecondary),
+                style: context.typography.monoStrong.copyWith(
+                  color: c.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              if (hasExplicitPriority(ticket)) ...[
-                SizedBox(width: context.spacing.sm),
-                PriorityTag(ticket.providerType, ticket.priority),
-              ],
-              if (ticket.severity != null) ...[
-                SizedBox(width: context.spacing.sm),
-                SeverityTag(ticket.severity),
-              ],
+              if (hasExplicitPriority(ticket))
+                PriorityTag(ticket.providerType, ticket.priority, large: true),
+              if (ticket.severity != null)
+                SeverityTag(ticket.severity, large: true),
+              if (ticket.providerEntity case final ZenTaoBugEntity bug)
+                BugStatusStrip(ticket: ticket, bug: bug),
             ],
           ),
           // A subtask names its parent right above its own title.

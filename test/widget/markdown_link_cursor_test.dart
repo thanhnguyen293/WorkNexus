@@ -41,10 +41,12 @@ void main() {
     expect(cursor, SystemMouseCursors.click);
   });
 
-  testWidgets('a link with no tap handler keeps the default cursor', (
+  testWidgets('a link with no tap handler still opens in the browser', (
     tester,
   ) async {
+    // Without a handler the link falls back to opening externally, so it is
+    // still tappable.
     final cursor = await cursorOverLink(tester);
-    expect(cursor, isNot(SystemMouseCursors.click));
+    expect(cursor, SystemMouseCursors.click);
   });
 }

@@ -8,6 +8,12 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 
+/// The workspace a connect dialog starts on: the only one when there is
+/// exactly one. With several the user must pick explicitly; with none the
+/// dialog hides the picker and connecting creates a default workspace.
+String? initialWorkspaceId(List<Workspace> workspaces) =>
+    workspaces.length == 1 ? workspaces.single.id : null;
+
 /// The workspace dropdown shared by the connection dialogs: lists existing
 /// workspaces plus a "New workspace…" entry ([newValue]).
 ///

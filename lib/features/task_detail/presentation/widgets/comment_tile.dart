@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/inline_image.dart';
 import '../../../../core/widgets/rich_body_text.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../util/activity_action_parts.dart';
 import '../util/image_fallback.dart';
+import 'timeline_headline.dart';
+import 'timeline_item.dart';
 
-/// A single comment bubble in the merged comments/activity timeline.
-class CommentTile extends ConsumerWidget {
+/// A comment in the merged comments/activity timeline: "author commented"
+/// over the body in a card.
+class CommentTile extends StatelessWidget {
   const CommentTile(
     this.comment, {
     super.key,
     this.html = false,
+    this.isFirst = false,
+    this.isLast = false,
     this.imageLoader,
     this.imageFallback,
   });
@@ -27,55 +31,35 @@ class CommentTile extends ConsumerWidget {
 
   /// Whether the comment is HTML (see `isHtmlBody`).
   final bool html;
+  final bool isFirst;
+  final bool isLast;
   final ImageBytesLoader? imageLoader;
   final ImageFallback? imageFallback;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    return Container(
-      margin: EdgeInsets.only(bottom: context.spacing.lg),
-      padding: EdgeInsets.all(context.spacing.lg),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(color: c.border),
-      ),
+  Widget build(BuildContext context) {
+    return TimelineItem(
+      marker: TimelineAvatar(comment.authorName),
+      isFirst: isFirst,
+      isLast: isLast,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                comment.authorName,
-                style: context.typography.monoStrong.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                formatWhen(
-                  context,
-                  comment.createdAt,
-                  format: ref.watch(
-                    appSettingsProvider.select((s) => s.dateFormat),
-                  ),
-                ),
-                style: context.typography.monoXs.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
-            ],
+          TimelineHeadline(
+            actor: comment.authorName,
+            action: AppL10n.of(context).commentedAction,
+            at: comment.createdAt,
           ),
           SizedBox(height: context.spacing.sm),
-          RichBodyText(
-            comment.body,
-            html: html,
-            fontSize: 12.5,
-            height: 1.5,
-            imageLoader: imageLoader,
-            imageFallbackUrl: imageFallback?.resolveUrl,
-            onOpenImage: imageFallback?.open,
+          _NoteCard(
+            child: RichBodyText(
+              comment.body,
+              html: html,
+              height: 1.55,
+              imageLoader: imageLoader,
+              imageFallbackUrl: imageFallback?.resolveUrl,
+              onOpenImage: imageFallback?.open,
+            ),
           ),
         ],
       ),
@@ -83,102 +67,85 @@ class CommentTile extends ConsumerWidget {
   }
 }
 
-/// A compact non-comment activity line in the merged timeline.
-class ActivityRow extends ConsumerWidget {
-  const ActivityRow(this.event, {super.key});
+/// A non-comment event in the timeline (created, assigned, resolved, …), with
+/// the note and files a state change carried.
+class ActivityRow extends StatelessWidget {
+  const ActivityRow(
+    this.event, {
+    super.key,
+    this.isFirst = false,
+    this.isLast = false,
+  });
   final ActivityEvent event;
+  final bool isFirst;
+  final bool isLast;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final c = context.colors;
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-      child: Row(
+    final s = context.spacing;
+    final note = event.detail ?? '';
+    return TimelineItem(
+      marker: TimelineEventIcon(activityKindOf(event.action)),
+      isFirst: isFirst,
+      isLast: isLast,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.only(
-              top: context.spacing.xs,
-              left: context.spacing.xxs,
-            ),
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: c.textTertiary,
-              shape: BoxShape.circle,
-            ),
+          TimelineHeadline(
+            actor: event.actor,
+            action: event.action,
+            at: event.at,
+            compact: true,
           ),
-          SizedBox(width: context.spacing.xl),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: context.typography.bodySm.copyWith(
-                      color: c.textSecondary,
-                      height: 1.4,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: event.actor,
-                        style: context.typography.bodySmStrong.copyWith(
-                          color: c.textPrimary,
-                        ),
-                      ),
-                      TextSpan(text: ' ${event.action}'),
-                    ],
-                  ),
+          if (note.isNotEmpty) ...[
+            SizedBox(height: s.sm),
+            _NoteCard(
+              child: Text(
+                note,
+                style: context.typography.body.copyWith(
+                  color: c.textPrimary,
+                  height: 1.55,
                 ),
-                if (event.detail != null && event.detail!.isNotEmpty) ...[
-                  SizedBox(height: context.spacing.sm),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.spacing.lg,
-                      vertical: context.spacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c.surfaceSubtle,
-                      borderRadius: BorderRadius.circular(context.radii.sm),
-                      border: Border.all(color: c.border),
-                    ),
-                    child: Text(
-                      event.detail!,
-                      style: context.typography.bodySm.copyWith(
-                        color: c.textPrimary,
-                        height: 1.45,
-                      ),
-                    ),
-                  ),
-                ],
-                if (event.attachments.isNotEmpty) ...[
-                  SizedBox(height: context.spacing.sm),
-                  Wrap(
-                    spacing: context.spacing.xs,
-                    runSpacing: context.spacing.xs,
-                    children: [
-                      for (final name in event.attachments)
-                        _AttachmentChip(name),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          SizedBox(width: context.spacing.md),
-          Text(
-            formatWhen(
-              context,
-              event.at,
-              format: ref.watch(
-                appSettingsProvider.select((s) => s.dateFormat),
               ),
             ),
-            style: context.typography.monoXs.copyWith(color: c.textTertiary),
-          ),
+          ],
+          if (event.attachments.isNotEmpty) ...[
+            SizedBox(height: s.sm),
+            Wrap(
+              spacing: s.xs,
+              runSpacing: s.xs,
+              children: [
+                for (final name in event.attachments) _AttachmentChip(name),
+              ],
+            ),
+          ],
         ],
       ),
+    );
+  }
+}
+
+/// The bordered card holding a comment body or a state change's note.
+class _NoteCard extends StatelessWidget {
+  const _NoteCard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.lg,
+        vertical: context.spacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: c.surfaceSubtle,
+        borderRadius: BorderRadius.circular(context.radii.md),
+        border: Border.all(color: c.border),
+      ),
+      child: child,
     );
   }
 }

@@ -11,6 +11,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/badges.dart';
 import 'connection_controllers.dart';
 import '../../../core/widgets/connection_text_field.dart';
+import '../../../l10n/app_localizations.dart';
 import 'widgets/workspace_picker.dart';
 
 /// Modal form for connecting a ZenTao account. The user types their own
@@ -57,8 +58,11 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     final workspaces = ref.watch(lookupsProvider).workspaces.values.toList();
-    _workspaceId ??= workspaces.isEmpty ? null : workspaces.first.id;
+    _workspaceId ??= initialWorkspaceId(workspaces);
+    // No workspace yet: skip the picker; connecting creates a default one.
+    final noWorkspace = workspaces.isEmpty;
     final state = ref.watch(addConnectionControllerProvider);
 
     ref.listen(addConnectionControllerProvider, (_, s) {
@@ -117,13 +121,14 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                 obscure: true,
               ),
               SizedBox(height: context.spacing.xl),
-              WorkspacePicker(
-                workspaces: workspaces,
-                value: _workspaceId,
-                newValue: _kNewWorkspace,
-                onChanged: (v) => setState(() => _workspaceId = v),
-              ),
-              if (_workspaceId == _kNewWorkspace) ...[
+              if (!noWorkspace)
+                WorkspacePicker(
+                  workspaces: workspaces,
+                  value: _workspaceId,
+                  newValue: _kNewWorkspace,
+                  onChanged: (v) => setState(() => _workspaceId = v),
+                ),
+              if (!noWorkspace && _workspaceId == _kNewWorkspace) ...[
                 SizedBox(height: context.spacing.lg),
                 ConnectionTextField(
                   label: 'New workspace name',
@@ -162,17 +167,21 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
                   SizedBox(width: context.spacing.md),
                   AppButton.filled(
                     isLoading: state.busy,
-                    onPressed: _canConnect(state)
+                    onPressed: _canConnect(state, noWorkspace: noWorkspace)
                         ? () => ref
                               .read(addConnectionControllerProvider.notifier)
                               .connectZenTao(
                                 baseUrl: _baseUrl.text,
                                 username: _username.text,
                                 password: _password.text,
-                                workspaceId: _workspaceId == _kNewWorkspace
+                                workspaceId:
+                                    noWorkspace ||
+                                        _workspaceId == _kNewWorkspace
                                     ? null
                                     : _workspaceId,
-                                newWorkspaceName: _workspaceId == _kNewWorkspace
+                                newWorkspaceName: noWorkspace
+                                    ? l.defaultWorkspaceName
+                                    : _workspaceId == _kNewWorkspace
                                     ? _newWorkspace.text
                                     : null,
                               )
@@ -188,8 +197,10 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
     );
   }
 
-  bool _canConnect(AddConnectionState state) {
-    if (state.busy || _workspaceId == null) return false;
+  bool _canConnect(AddConnectionState state, {required bool noWorkspace}) {
+    if (state.busy) return false;
+    if (noWorkspace) return true;
+    if (_workspaceId == null) return false;
     if (_workspaceId == _kNewWorkspace) {
       return _newWorkspace.text.trim().isNotEmpty;
     }

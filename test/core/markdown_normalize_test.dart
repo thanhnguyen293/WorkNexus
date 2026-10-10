@@ -113,4 +113,39 @@ void main() {
       }
     });
   });
+
+  group('linkifyBareUrls', () {
+    test('a bare address in a list message becomes a link', () {
+      expect(
+        linkifyBareUrls(
+          'http://mac-mini-2.local:8080/#/builds/actions/ci.reposts\n'
+          '- Login discord -> New build',
+        ),
+        '[http://mac-mini-2.local:8080/#/builds/actions/ci.reposts]'
+        '(http://mac-mini-2.local:8080/#/builds/actions/ci.reposts)\n'
+        '- Login discord -> New build',
+      );
+    });
+
+    test('sentence punctuation after an address stays outside it', () {
+      expect(
+        linkifyBareUrls('see https://a.dev/x.'),
+        'see [https://a.dev/x](https://a.dev/x).',
+      );
+    });
+
+    test('an angle-bracket autolink becomes a link', () {
+      expect(
+        linkifyBareUrls('<https://a.dev>'),
+        '[https://a.dev](https://a.dev)',
+      );
+    });
+
+    test('existing links, mentions, images and code are left alone', () {
+      const text =
+          '[docs](https://a.dev) [@Thanh](@#24) ![i](https://a.dev/i.png) '
+          '`https://a.dev`\n```\nhttps://a.dev\n```';
+      expect(linkifyBareUrls(text), text);
+    });
+  });
 }

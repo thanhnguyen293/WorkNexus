@@ -171,6 +171,43 @@ void main() {
     },
   );
 
+  test(
+    'detail, comments and activity share one detail request per adapter',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
+          return _json({
+            'id': 4302,
+            'title': 'Login loops',
+            'status': 'active',
+            'pri': 2,
+            'actions': [
+              {
+                'id': 1,
+                'action': 'commented',
+                'actor': 'thanh',
+                'comment': 'Looking into it',
+                'date': '2026-07-16 10:00:00',
+              },
+            ],
+          });
+        }
+        return _json(const {});
+      });
+
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      await adapter.getTicket(_bugTicket());
+      await adapter.listComments(_bugTicket());
+      await adapter.listActivity(_bugTicket());
+
+      final detailCalls = fake.requests.where(
+        (r) => r.uri.path.endsWith('/api.php/v1/bugs/4302'),
+      );
+      expect(detailCalls, hasLength(1));
+    },
+  );
+
   test('getTicket fetches v1 detail and keeps its HTML steps', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

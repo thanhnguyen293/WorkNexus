@@ -6,7 +6,6 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/body_format.dart';
@@ -19,12 +18,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../util/image_fallback.dart';
 import 'bug_attachments.dart';
-import 'bug_description.dart';
 import 'bug_detail_sections.dart';
 import 'bug_people_row.dart';
-import 'bug_status_strip.dart';
 import 'comments_section.dart';
-import 'detail_field_rows.dart';
 import 'detail_scroll_body.dart';
 import 'provider_detail_sections.dart';
 import 'section_label.dart';
@@ -43,7 +39,6 @@ class OriginalTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final lookups = ref.watch(lookupsProvider);
     final account = lookups.accounts[ticket.accountId];
@@ -108,8 +103,6 @@ class OriginalTab extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (bug != null) ...[
-          BugStatusStrip(ticket: ticket, bug: bug),
-          SizedBox(height: context.spacing.xl2),
           BugPeopleRow(bug: bug, accountId: ticket.accountId),
           SizedBox(height: context.spacing.xl3),
         ],
@@ -117,22 +110,14 @@ class OriginalTab extends ConsumerWidget {
         SizedBox(height: context.spacing.md),
         // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
         SelectionArea(
-          child: bug != null
-              ? BugDescription(
-                  body: ticket.body,
-                  html: html,
-                  imageLoader: (url) =>
-                      getIt<SyncService>().fetchTicketImage(ticket, url),
-                  imageFallback: imageFallback,
-                )
-              : RichBodyText(
-                  ticket.body,
-                  html: html,
-                  imageLoader: (url) =>
-                      getIt<SyncService>().fetchTicketImage(ticket, url),
-                  imageFallbackUrl: imageFallback.resolveUrl,
-                  onOpenImage: imageFallback.open,
-                ),
+          child: RichBodyText(
+            ticket.body,
+            html: html,
+            imageLoader: (url) =>
+                getIt<SyncService>().fetchTicketImage(ticket, url),
+            imageFallbackUrl: imageFallback.resolveUrl,
+            onOpenImage: imageFallback.open,
+          ),
         ),
         if (subtasks.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl2),
@@ -152,14 +137,20 @@ class OriginalTab extends ConsumerWidget {
           SizedBox(height: context.spacing.xl3),
           BugAttachments(ticket: ticket, attachments: bug.attachments),
         ],
-        SizedBox(height: context.spacing.xl3),
+      ],
+    );
+
+    final activity = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionLabel('${l.comments} & ${l.activity}'),
         SizedBox(height: context.spacing.md),
         CommentsSection(ticket: ticket, imageFallback: imageFallback),
       ],
     );
 
-    // The typed metadata — a sidebar in two-pane, stacked below in document.
+    // The typed metadata — a sidebar in two-pane; in document it sits between
+    // the narrative and the activity thread.
     // A ZenTao bug shows its classification/lifecycle card; other providers
     // fall back to the generic key/value table.
     final Widget sidebar;
@@ -170,16 +161,14 @@ class OriginalTab extends ConsumerWidget {
     } else if (github != null) {
       sidebar = GitHubDetailSections(ticket: ticket, entity: github);
     } else {
-      sidebar = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(height: 1, color: c.border),
-          SizedBox(height: context.spacing.xs),
-          DetailFieldRows(rows: meta, labelWidth: 96),
-        ],
-      );
+      sidebar = DetailMetaCard(title: l.details, rows: meta);
     }
 
-    return DetailScrollBody(layout: layout, content: content, sidebar: sidebar);
+    return DetailScrollBody(
+      layout: layout,
+      content: content,
+      sidebar: sidebar,
+      activity: activity,
+    );
   }
 }

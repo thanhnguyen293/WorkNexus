@@ -41,7 +41,7 @@ class GitLabDetailSections extends ConsumerWidget {
       if (isMr) (l.mergeStatus, humanizeMergeState(entity.mergeStatus)),
       (l.updated, formatWhen(context, ticket.updatedAt, format: dateFormat)),
     ];
-    return _MetaCard(title: l.details, rows: rows);
+    return DetailMetaCard(title: l.details, rows: rows);
   }
 }
 
@@ -74,7 +74,7 @@ class GitHubDetailSections extends ConsumerWidget {
       if (isPr) (l.mergeStatus, humanizeMergeState(entity.mergeableState)),
       (l.updated, formatWhen(context, ticket.updatedAt, format: dateFormat)),
     ];
-    return _MetaCard(title: l.details, rows: rows);
+    return DetailMetaCard(title: l.details, rows: rows);
   }
 }
 
@@ -85,10 +85,10 @@ String humanizeMergeState(String? raw) {
   return words.isEmpty ? '' : '${words[0].toUpperCase()}${words.substring(1)}';
 }
 
-/// The bordered metadata card shared by both provider sidebars — a labeled
+/// The bordered metadata card shared by the detail sidebars — a labeled
 /// section over a hairline key/value table, with empty rows filtered out.
-class _MetaCard extends StatelessWidget {
-  const _MetaCard({required this.title, required this.rows});
+class DetailMetaCard extends StatelessWidget {
+  const DetailMetaCard({super.key, required this.title, required this.rows});
 
   final String title;
   final List<(String, String)> rows;

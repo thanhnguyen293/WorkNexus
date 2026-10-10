@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -206,17 +208,29 @@ class _Initials extends StatelessWidget {
     final ink = background == null
         ? readableOn(hue, fill, towards: c.textPrimary)
         : c.onAccent;
+    // Two letters don't fit a tiny avatar (a board card's): it shows one, and
+    // the letter shrinks with the circle instead of filling it.
+    final tiny = diameter < context.spacing.xl5;
+    final initials = chatInitials(name);
+    final base = big
+        ? context.typography.captionStrong
+        : context.typography.captionSm;
+    final fitted = diameter * (tiny ? 0.5 : 0.4);
     return ColoredBox(
       color: Color.alphaBlend(fill, c.surface),
       child: Center(
         child: Text(
-          custom ? label!.trim() : chatInitials(name),
+          custom
+              ? label!.trim()
+              : tiny
+              ? initials.characters.take(1).toString()
+              : initials,
           maxLines: 1,
-          style:
-              (big
-                      ? context.typography.captionStrong
-                      : context.typography.captionSm)
-                  .copyWith(color: ink, fontWeight: FontWeight.w600),
+          style: base.copyWith(
+            color: ink,
+            fontWeight: FontWeight.w600,
+            fontSize: math.min(base.fontSize ?? fitted, fitted),
+          ),
         ),
       ),
     );

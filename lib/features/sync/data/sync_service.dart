@@ -32,6 +32,7 @@ import '../../connections/data/zentao/zentao_adapter.dart';
 import '../../connections/data/zentao/zentao_client.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
+import 'source_list_cache.dart';
 import 'timed_slice_cache.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
@@ -61,7 +62,8 @@ class SyncService
   }) : _zentaoExecutionTaskCache =
            zentaoExecutionTaskCache ??
            TimedSliceCache<int>(ttl: zentaoTabCacheTtl),
-       _attachmentCache = attachmentCache ?? AttachmentFileCache();
+       _attachmentCache = attachmentCache ?? AttachmentFileCache(),
+       _listCache = SourceListCache(_db);
 
   static const zentaoTabCacheTtl = Duration(minutes: 15);
 
@@ -69,6 +71,7 @@ class SyncService
   final CredentialStore _credentials;
   final TimedSliceCache<int> _zentaoExecutionTaskCache;
   final AttachmentFileCache _attachmentCache;
+  final SourceListCache _listCache;
 
   /// Returns the number of tickets synced, or a [Failure].
   Future<Result<int>> syncAccount(Account account) async {
@@ -104,8 +107,17 @@ class SyncService
     if (adapter == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
-    return adapter.listProducts();
+    final res = await adapter.listProducts();
+    if (res case Ok(:final value)) {
+      await _listCache.saveProducts(accountId, value);
+    }
+    return res;
   }
+
+  /// The products [listProducts] last returned for [accountId], or null when
+  /// none were stored yet — lets the sidebar paint before the network answers.
+  Future<List<ProviderProduct>?> cachedProducts(String accountId) =>
+      _listCache.readProducts(accountId);
 
   Future<Result<int>> syncProductBugs(ProviderProduct product) async {
     final accountRow = await (_db.select(
@@ -167,8 +179,17 @@ class SyncService
     if (adapter == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
-    return adapter.listProjects();
+    final res = await adapter.listProjects();
+    if (res case Ok(:final value)) {
+      await _listCache.saveProjects(accountId, value);
+    }
+    return res;
   }
+
+  /// The projects/repos [listProjects] last returned for [accountId], or null
+  /// when none were stored yet.
+  Future<List<ProviderProject>?> cachedProjects(String accountId) =>
+      _listCache.readProjects(accountId);
 
   /// [syncAccount] by id: fetches every ticket assigned to the account's user
   /// (all pages) into drift. Returns how many were synced.

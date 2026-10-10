@@ -83,6 +83,37 @@ class ChatPersonChip extends ConsumerWidget {
   }
 }
 
+/// Just the photo of a ZenTao person as chat knows them, with no tap — for a
+/// spot that is itself tappable (a board card). Someone chat doesn't know is
+/// drawn as their initial.
+class ChatPersonAvatar extends ConsumerWidget {
+  const ChatPersonAvatar({
+    super.key,
+    required this.accountId,
+    required this.name,
+    required this.diameter,
+  });
+
+  final String accountId;
+
+  /// Display name or login handle: tickets carry either.
+  final String name;
+  final double diameter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final users =
+        ref.watch(chatUsersProvider(accountId)).value ??
+        const <int, ChatUser>{};
+    final user = _find(users.values, name);
+    return ChatAvatar(
+      name: user?.realname.isNotEmpty == true ? user!.realname : name,
+      imageUrl: user?.avatarUrl,
+      diameter: diameter,
+    );
+  }
+}
+
 /// The chat user [name] refers to: by login handle first (unique), then by
 /// display name.
 ChatUser? _find(Iterable<ChatUser> users, String name) {

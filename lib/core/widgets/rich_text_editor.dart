@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../util/dropped_files.dart';
 import 'editor_color_button.dart';
 import 'editor_image_embed.dart';
@@ -223,6 +224,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
                     scrollable: false,
                     minHeight: widget.minHeight,
                     placeholder: widget.placeholder,
+                    customStyles: _bodyStyles(context),
                     embedBuilders: [
                       EditorImageEmbedBuilder(loader: widget.imageLoader),
                     ],
@@ -268,5 +270,44 @@ QuillIconTheme _toolbarIconTheme(BuildContext context) {
         backgroundColor: WidgetStatePropertyAll(c.mixT(c.accent, 0.14)),
       ),
     ),
+  );
+}
+
+/// Quill writes body text at 16 (placeholder 20), larger than the app's body
+/// that the rendered description and comments use; every plain-text block is
+/// set in that body size instead, with its placeholder alongside it.
+DefaultStyles _bodyStyles(BuildContext context) {
+  final c = context.colors;
+  final body = DefaultTextStyle.of(context).style
+      .merge(context.typography.body)
+      .copyWith(
+        color: c.textPrimary,
+        height: 1.55,
+        decoration: TextDecoration.none,
+      );
+  const none = HorizontalSpacing(0, 0);
+  const gap = VerticalSpacing(6, 0);
+  DefaultTextBlockStyle block(VerticalSpacing v, VerticalSpacing line) =>
+      DefaultTextBlockStyle(body, none, v, line, null);
+  return DefaultStyles(
+    paragraph: block(VerticalSpacing.zero, VerticalSpacing.zero),
+    placeHolder: DefaultTextBlockStyle(
+      body.copyWith(color: c.textTertiary),
+      none,
+      VerticalSpacing.zero,
+      VerticalSpacing.zero,
+      null,
+    ),
+    lists: DefaultListBlockStyle(
+      body,
+      none,
+      gap,
+      const VerticalSpacing(0, 6),
+      null,
+      null,
+    ),
+    indent: block(gap, const VerticalSpacing(0, 6)),
+    align: block(VerticalSpacing.zero, VerticalSpacing.zero),
+    leading: block(VerticalSpacing.zero, VerticalSpacing.zero),
   );
 }

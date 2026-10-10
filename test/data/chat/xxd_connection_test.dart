@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_connection.dart';
@@ -9,6 +10,7 @@ import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_connection_sta
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_packet.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_server_info.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_signing.dart';
+import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_traffic_log.dart';
 
 import 'support/fake_xxd_server.dart';
 
@@ -26,6 +28,7 @@ void main() {
   XxdConnection connect({
     Duration ping = const Duration(minutes: 5),
     Duration timeout = const Duration(seconds: 2),
+    XxdTrafficLog log = const XxdTrafficLog(),
   }) => connection = XxdConnection(
     credentials: credentials,
     http: http,
@@ -33,6 +36,7 @@ void main() {
     pingInterval: ping,
     requestTimeout: timeout,
     backoff: (_) => const Duration(milliseconds: 10),
+    log: log,
   );
 
   Future<T> waitForState<T extends XxdConnectionState>() async {
@@ -110,6 +114,40 @@ void main() {
       expect(server.requests.last['rid'], isNotEmpty);
     },
   );
+
+  test('logs commands, replies and pushes without their payloads', () async {
+    final talker = Talker(settings: TalkerSettings(useConsoleLogs: false));
+    server.onRequest = (req) => {
+      'method': req['method'],
+      'rid': req['rid'],
+      'result': 'success',
+      'data': {'echo': req['params']},
+    };
+    connect(log: XxdTrafficLog(talker));
+    await connection.start();
+    await connection.request(
+      const XxdRequest('chatGetMembers', params: ['private-gid']),
+    );
+    await pumpEventQueue();
+
+    final lines = [for (final e in talker.history) '${e.key} ${e.message}'];
+    expect(
+      lines,
+      containsAllInOrder([
+        'ws-state connecting',
+        'ws-request → userLogin',
+        startsWith('ws-response ← userlogin ok'),
+        'ws-state online',
+        'ws-request → chatGetMembers',
+        startsWith('ws-response ← chatgetmembers ok'),
+      ]),
+    );
+    expect(lines, contains('ws-push ⇠ chatgetlist'));
+    expect(lines.where((l) => l == 'ws-state online'), hasLength(1));
+    final all = lines.join('\n');
+    expect(all, isNot(contains('private-gid')));
+    expect(all, isNot(contains(xxdPasswordAuthKey('secret'))));
+  });
 
   test('a failed reply becomes an Err with the server message', () async {
     server.onRequest = (req) => {

@@ -373,6 +373,21 @@ class DashboardSnapshots extends Table {
   Set<Column> get primaryKey => {accountId};
 }
 
+/// The last provider container list (ZenTao products / projects, GitLab
+/// projects, GitHub repos) per account and [kind], stored raw so the sidebar
+/// tree — and the pins resolved against it — renders instantly on launch
+/// instead of waiting for the network; parsed on read.
+@DataClassName('SourceListSnapshotRow')
+class SourceListSnapshots extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get kind => text()();
+  TextColumn get json => text()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, kind};
+}
+
 /// ZenTao web notifications (the bell menu), per account. The server's list
 /// replaces an account's rows on every refresh.
 @DataClassName('ZenTaoNotificationRow')
@@ -410,6 +425,7 @@ class ZenTaoNotifications extends Table {
     ChatMessageTranslations,
     DashboardSnapshots,
     ZenTaoNotifications,
+    SourceListSnapshots,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -423,7 +439,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 40;
+  int get schemaVersion => 41;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -608,6 +624,11 @@ class AppDatabase extends _$AppDatabase {
       // profiles on one, the dashboard on another). After a rebase, a DB can
       // report the latest version while still missing another branch's tables
       // or columns. Reconcile them once before any row is read.
+      if (from < 41) {
+        if (!await _hasTable('source_list_snapshots')) {
+          await m.createTable(sourceListSnapshots);
+        }
+      }
       if (from < 40) {
         if (!await _hasColumn('chat_messages', 'detached')) {
           await m.addColumn(chatMessages, chatMessages.detached);

@@ -17,6 +17,7 @@ class TintedPill extends StatelessWidget {
     required this.label,
     this.icon,
     this.pill = false,
+    this.large = false,
   });
 
   final Color color;
@@ -24,13 +25,16 @@ class TintedPill extends StatelessWidget {
   final IconData? icon;
   final bool pill;
 
+  /// The roomier size for a prominent spot (the detail header).
+  final bool large;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xxs,
+        horizontal: large ? context.spacing.md : context.spacing.sm,
+        vertical: large ? context.spacing.xs : context.spacing.xxs,
       ),
       decoration: BoxDecoration(
         color: c.mixT(color, 0.15),
@@ -45,10 +49,15 @@ class TintedPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 12, color: color),
+            Icon(icon, size: large ? 14 : 12, color: color),
             SizedBox(width: context.spacing.xs),
           ],
-          Text(label, style: context.typography.badge.copyWith(color: color)),
+          Text(
+            label,
+            style:
+                (large ? context.typography.badgeXl : context.typography.badge)
+                    .copyWith(color: color),
+          ),
         ],
       ),
     );
@@ -58,8 +67,9 @@ class TintedPill extends StatelessWidget {
 /// ZenTao severity tag (`S1 · Critical`), colored by severity. Renders nothing
 /// for an unknown/absent severity.
 class SeverityTag extends StatelessWidget {
-  const SeverityTag(this.severity, {super.key});
+  const SeverityTag(this.severity, {super.key, this.large = false});
   final int? severity;
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +77,6 @@ class SeverityTag extends StatelessWidget {
     final color = severityColor(c, severity);
     final name = zentaoSeverityLabel(severity);
     if (color == null || name == null) return const SizedBox.shrink();
-    return TintedPill(color: color, label: 'S$severity · $name');
+    return TintedPill(color: color, label: 'S$severity · $name', large: large);
   }
 }

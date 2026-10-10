@@ -24,6 +24,7 @@ void main() {
             layout: layout,
             content: const Text('content-body'),
             sidebar: const Text('sidebar-meta'),
+            activity: const Text('activity-thread'),
           ),
         ),
       ),
@@ -39,6 +40,10 @@ void main() {
 
     // Sidebar sits to the right of the content, roughly on the same row.
     expect(sidebar.left, greaterThan(content.right));
+    // Activity closes the main column, under the content.
+    final activity = tester.getRect(find.text('activity-thread'));
+    expect(activity.top, greaterThan(content.top));
+    expect(activity.right, lessThan(sidebar.left));
     expect(tester.takeException(), isNull);
   });
 
@@ -53,6 +58,9 @@ void main() {
     // Sidebar drops below the content in the single reading column.
     expect(sidebar.top, greaterThan(content.top));
     expect(sidebar.left, closeTo(content.left, 1));
+    // Metadata precedes the activity thread rather than trailing the composer.
+    final activity = tester.getRect(find.text('activity-thread'));
+    expect(activity.top, greaterThan(sidebar.top));
 
     // The reading column is capped, not stretched across the 1200px viewport.
     final column = tester.getSize(

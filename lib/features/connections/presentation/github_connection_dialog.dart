@@ -63,7 +63,9 @@ class _GitHubConnectionDialogState
     final c = context.colors;
     final l = AppL10n.of(context);
     final workspaces = ref.watch(lookupsProvider).workspaces.values.toList();
-    _workspaceId ??= workspaces.isEmpty ? null : workspaces.first.id;
+    _workspaceId ??= initialWorkspaceId(workspaces);
+    // No workspace yet: skip the picker; connecting creates a default one.
+    final noWorkspace = workspaces.isEmpty;
     final state = ref.watch(addConnectionControllerProvider);
 
     ref.listen(addConnectionControllerProvider, (_, s) {
@@ -118,13 +120,14 @@ class _GitHubConnectionDialogState
                 trailing: GenerateTokenLink(onTap: _openTokenPage),
               ),
               SizedBox(height: context.spacing.xl),
-              WorkspacePicker(
-                workspaces: workspaces,
-                value: _workspaceId,
-                newValue: _kNewWorkspace,
-                onChanged: (v) => setState(() => _workspaceId = v),
-              ),
-              if (_workspaceId == _kNewWorkspace) ...[
+              if (!noWorkspace)
+                WorkspacePicker(
+                  workspaces: workspaces,
+                  value: _workspaceId,
+                  newValue: _kNewWorkspace,
+                  onChanged: (v) => setState(() => _workspaceId = v),
+                ),
+              if (!noWorkspace && _workspaceId == _kNewWorkspace) ...[
                 SizedBox(height: context.spacing.lg),
                 ConnectionTextField(
                   label: l.newWorkspaceName,
@@ -163,16 +166,20 @@ class _GitHubConnectionDialogState
                   SizedBox(width: context.spacing.md),
                   AppButton.filled(
                     isLoading: state.busy,
-                    onPressed: _canConnect(state)
+                    onPressed: _canConnect(state, noWorkspace: noWorkspace)
                         ? () => ref
                               .read(addConnectionControllerProvider.notifier)
                               .connectGitHub(
                                 baseUrl: _baseUrl.text,
                                 token: _token.text,
-                                workspaceId: _workspaceId == _kNewWorkspace
+                                workspaceId:
+                                    noWorkspace ||
+                                        _workspaceId == _kNewWorkspace
                                     ? null
                                     : _workspaceId,
-                                newWorkspaceName: _workspaceId == _kNewWorkspace
+                                newWorkspaceName: noWorkspace
+                                    ? l.defaultWorkspaceName
+                                    : _workspaceId == _kNewWorkspace
                                     ? _newWorkspace.text
                                     : null,
                               )
@@ -188,9 +195,11 @@ class _GitHubConnectionDialogState
     );
   }
 
-  bool _canConnect(AddConnectionState state) {
-    if (state.busy || _workspaceId == null) return false;
+  bool _canConnect(AddConnectionState state, {required bool noWorkspace}) {
+    if (state.busy) return false;
     if (_token.text.trim().isEmpty) return false;
+    if (noWorkspace) return true;
+    if (_workspaceId == null) return false;
     if (_workspaceId == _kNewWorkspace) {
       return _newWorkspace.text.trim().isNotEmpty;
     }

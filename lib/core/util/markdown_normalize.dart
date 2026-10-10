@@ -202,3 +202,40 @@ final _markdownSyntax = RegExp(
 /// Whether [text] uses any Markdown syntax — when not, it can be shown as
 /// plain text, which is far cheaper to lay out than the Markdown renderer.
 bool hasMarkdownSyntax(String text) => _markdownSyntax.hasMatch(text);
+
+/// Code, an existing link / image, or an angle-bracket autolink — kept as is —
+/// else (group `url`) a bare web address, without trailing punctuation that
+/// ends the sentence.
+final _linkable = RegExp(
+  r'`[^`\n]*`'
+  r'|!?\[[^\]\n]*\]\([^)\s]*\)'
+  r'|<(?<auto>https?://[^>\s]+)>'
+  r'''|(?<url>https?://[^\s<>()\[\]`]+[^\s<>()\[\]`.,;:!?'"])''',
+);
+
+/// Turns bare web addresses (and `<https://…>` autolinks) into Markdown links,
+/// which the renderer otherwise draws as plain text. Code — fenced or inline —
+/// and existing links are left alone.
+String linkifyBareUrls(String text) {
+  if (!text.contains('http')) return text;
+  var inFence = false;
+  final out = <String>[];
+  for (final line in text.split('\n')) {
+    if (_fence.hasMatch(line)) inFence = !inFence;
+    out.add(inFence || _fence.hasMatch(line) ? line : _linkifyLine(line));
+  }
+  return out.join('\n');
+}
+
+String _linkifyLine(String line) {
+  final buf = StringBuffer();
+  var at = 0;
+  for (final m in _linkable.allMatches(line)) {
+    final url = m.namedGroup('url') ?? m.namedGroup('auto');
+    buf
+      ..write(line.substring(at, m.start))
+      ..write(url == null ? m[0] : '[$url]($url)');
+    at = m.end;
+  }
+  return (buf..write(line.substring(at))).toString();
+}

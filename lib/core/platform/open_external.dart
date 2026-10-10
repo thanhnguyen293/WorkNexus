@@ -25,3 +25,12 @@ Future<void> openExternally(String url) async {
     // Nothing to surface if the platform lacks `open`.
   }
 }
+
+/// Opens a link tapped in rendered content (a description, a comment) in the
+/// browser. Only web/mail links: `open` would launch a scheme-less path (e.g. a
+/// provider-relative `/zentao/…` href) as a local file.
+Future<void> openLinkExternally(String url) async {
+  final scheme = Uri.tryParse(url.trim())?.scheme.toLowerCase();
+  if (scheme != 'http' && scheme != 'https' && scheme != 'mailto') return;
+  await openExternally(url.trim());
+}

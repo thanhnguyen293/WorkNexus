@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +26,15 @@ class UserAvatar extends StatelessWidget {
       backgroundColor: context.colors.selectionFill,
       child: Text(
         name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(),
-        style: context.typography.title.copyWith(color: context.colors.accent),
+        // The initial scales down with a small avatar (a timeline's) so it
+        // sits inside the circle instead of filling it.
+        style: context.typography.title.copyWith(
+          color: context.colors.accent,
+          fontSize: math.min(
+            context.typography.title.fontSize ?? 16,
+            diameter * 0.45,
+          ),
+        ),
       ),
     );
     final url = imageUrl;

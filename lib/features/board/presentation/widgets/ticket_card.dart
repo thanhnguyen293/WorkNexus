@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -121,7 +122,15 @@ class TicketCard extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: AssigneeChip(ticket.assignee, wsColor),
+                              child: AssigneeChip(
+                                ticket.assignee,
+                                wsColor,
+                                // Chat photos exist for ZenTao people only.
+                                accountId:
+                                    ticket.providerType == ProviderType.zentao
+                                    ? ticket.accountId
+                                    : null,
+                              ),
                             ),
                             SizedBox(width: context.spacing.sm),
                             TranslationDot(trStatus),

@@ -20,6 +20,7 @@ class DriftLocalCacheRepository implements LocalCacheRepository {
           _db.activities,
           _db.tickets,
           _db.projects,
+          _db.sourceListSnapshots,
         ],
         CacheSection.dashboard => [
           _db.dashboardSnapshots,
