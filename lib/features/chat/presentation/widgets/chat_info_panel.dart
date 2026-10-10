@@ -55,11 +55,13 @@ class ChatInfoPanel extends ConsumerWidget {
         .firstOrNull;
     final created = chat.createdAt;
     final avatar = chatAvatarStyle(chat, users);
+    // The kept count the chat header shows too, so switching chats does not
+    // blank "N members" while the member list is refetched.
     final members = oneToOne
         ? null
-        : ref.watch(chatMembersProvider(thread)).value;
+        : ref.watch(chatMemberCountProvider(thread)).value;
     final subtitle = switch (members) {
-      Ok(:final value) => l.chatMembers(value.length),
+      Ok(:final value) => l.chatMembers(value),
       _ when peer?.status != null => chatPresenceLabel(
         context,
         ChatPresence.fromStatus(peer?.status),
@@ -205,7 +207,7 @@ class ChatInfoPanel extends ConsumerWidget {
               icon: PhosphorIconsLight.usersThree,
               label: l.chatMembersTitle,
               count: switch (members) {
-                Ok(:final value) => value.length,
+                Ok(:final value) => value,
                 _ => null,
               },
               onTap: () => toggleChatSidePanel(

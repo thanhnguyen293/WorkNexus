@@ -157,6 +157,8 @@
   "githubTokenHint": "ghp_… (scopes: repo, read:org)",
   "generateToken": "Generate token",
   "newWorkspaceOption": "➕ New workspace…",
+  "defaultWorkspaceName": "MyWorkspace",
+  "commentedAction": "commented",
   "newWorkspaceName": "New workspace name",
   "newWorkspaceHint": "e.g. Company C",
   "cancel": "Cancel",

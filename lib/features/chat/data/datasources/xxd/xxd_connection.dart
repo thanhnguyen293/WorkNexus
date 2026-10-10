@@ -16,6 +16,7 @@ import 'xxd_server_info.dart';
 import 'xxd_signing.dart';
 import 'xxd_socket.dart';
 import 'xxd_tls.dart';
+import 'xxd_traffic_log.dart';
 
 /// 1 s, 2 s, 4 s … capped at 60 s.
 Duration defaultXxdBackoff(int attempt) =>
@@ -34,8 +35,10 @@ class XxdConnection {
     this.pingInterval = const Duration(seconds: 60),
     this.requestTimeout = const Duration(seconds: 15),
     this.backoff = defaultXxdBackoff,
+    XxdTrafficLog log = const XxdTrafficLog(),
   }) : _http = http,
-       _connector = connector;
+       _connector = connector,
+       _log = log;
 
   final XxdCredentials credentials;
   final Duration pingInterval;
@@ -43,6 +46,7 @@ class XxdConnection {
   final Duration Function(int attempt) backoff;
   final XxdHttpDatasource _http;
   final XxdSocketConnector _connector;
+  final XxdTrafficLog _log;
 
   final _states = StreamController<XxdConnectionState>.broadcast();
   final _packets = StreamController<XxdResponse>.broadcast();
@@ -88,6 +92,7 @@ class XxdConnection {
     }
     final rid = request.rid ?? _uuid.v4();
     final reply = _expect(rid, request.apiName);
+    final watch = Stopwatch()..start();
     final sent = _send(
       XxdRequest(
         request.method,
@@ -99,9 +104,16 @@ class XxdConnection {
     );
     if (sent case Err(:final failure)) {
       _pending.remove(rid);
+      _log.failed(request.apiName, watch.elapsed, failure);
       return Err(failure);
     }
     final result = await reply;
+    switch (result) {
+      case Ok(:final value):
+        _log.reply(request.apiName, watch.elapsed, value);
+      case Err(:final failure):
+        _log.failed(request.apiName, watch.elapsed, failure);
+    }
     return switch (result) {
       Ok(:final value) when !value.isSuccess => Err(
         UnexpectedFailure(value.message ?? '${value.apiName} failed'),
@@ -179,6 +191,7 @@ class XxdConnection {
 
     final rid = 'login_${_http.device}_${credentials.account}';
     final reply = _expect(rid, 'userlogin');
+    final watch = Stopwatch()..start();
     final sent = _send(
       XxdRequest(
         'userLogin',
@@ -193,6 +206,12 @@ class XxdConnection {
     );
     if (sent case Err(:final failure)) return Err(failure);
     final login = await reply;
+    switch (login) {
+      case Ok(:final value):
+        _log.reply('userlogin', watch.elapsed, value);
+      case Err(:final failure):
+        _log.failed('userlogin', watch.elapsed, failure);
+    }
     switch (login) {
       case Err(:final failure):
         return Err(failure);
@@ -264,6 +283,7 @@ class XxdConnection {
     }
     try {
       socket.send(codec.encode(request));
+      _log.request(request);
       return const Ok(null);
     } on XxdProtocolException catch (e) {
       return Err(ParseFailure(e.message, cause: e.cause));
@@ -323,7 +343,11 @@ class XxdConnection {
     final pending = rid != null && rid.isNotEmpty
         ? _pending.remove(rid)
         : _takeFirstPending(packet.apiName);
-    pending?.completer.complete(Ok(packet));
+    if (pending == null) {
+      _log.push(packet);
+    } else {
+      pending.completer.complete(Ok(packet));
+    }
   }
 
   _Pending? _takeFirstPending(String apiName) {
@@ -414,6 +438,8 @@ class XxdConnection {
   }
 
   void _setState(XxdConnectionState state) {
+    // Online → online is only the session id arriving; not worth a log line.
+    if (!(_state is XxdOnline && state is XxdOnline)) _log.state(state);
     _state = state;
     if (!_states.isClosed) _states.add(state);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 
+import '../platform/open_external.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
@@ -54,7 +55,7 @@ class MarkdownText extends StatelessWidget {
   /// Link colour; defaults to the accent (override on accent backgrounds).
   final Color? linkColor;
 
-  /// Handles a tapped link; null leaves it to the markdown renderer.
+  /// Handles a tapped link; null opens web links in the browser.
   final void Function(String url)? onLinkTap;
 
   /// Links drawn in the link colour only, without an underline (e.g. chat
@@ -69,15 +70,15 @@ class MarkdownText extends StatelessWidget {
       height: height,
       color: color ?? c.textPrimary,
     );
-    final text = normalizeMarkdown(data.trim());
+    final text = linkifyBareUrls(normalizeMarkdown(data.trim()));
     if (text.isEmpty) {
       return Text('—', style: base.copyWith(color: c.textTertiary));
     }
-    final onLink = onLinkTap;
+    final onLink = onLinkTap ?? openLinkExternally;
     return GptMarkdown(
       text,
       style: base,
-      onLinkTap: onLink == null ? null : (url, _) => onLink(url),
+      onLinkTap: (url, _) => onLink(url),
       // Keyed by URL so that when a body refresh (e.g. the detail sync landing
       // in drift) changes an image's URL, the old element's state — and the
       // failed/stale future memoized inside it — is discarded and the new URL
@@ -97,7 +98,6 @@ class MarkdownText extends StatelessWidget {
       linkBuilder: (context, label, url, style) {
         final plain = isPlainLink?.call(url) ?? false;
         return HoverRegion(
-          enabled: onLink != null,
           cursor: SystemMouseCursors.click,
           builder: (context, hovered, _) => Text(
             label.toPlainText(),

@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -24,6 +23,12 @@ class ZenTaoAdapter implements ProviderAdapter {
 
   final String accountId;
   final ZenTaoClient _client;
+
+  /// Detail replies fetched by this adapter, keyed by type + id. Opening a
+  /// ticket asks for its detail, comments and activity in turn, and all three
+  /// come from the same reply — without this the endpoint is hit three times.
+  /// Adapters are built per operation, so the memo never outlives one sync.
+  final _details = <String, Future<ZenTaoEntity>>{};
 
   @override
   ProviderType get providerType => ProviderType.zentao;
@@ -596,7 +601,22 @@ class ZenTaoAdapter implements ProviderAdapter {
   /// Fetches a ticket's full detail (with its embedded `actions`), preferring
   /// REST v1 and falling back to the classic `{type}-view-{id}.json` endpoint
   /// when v1 returns an empty body.
-  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) async {
+  Future<ZenTaoEntity> _fetchDetail(Ticket ticket) {
+    final key = '${ticket.externalType}:${ticket.externalKey}';
+    final cached = _details[key];
+    if (cached != null) return cached;
+    final future = _details[key] = _loadDetail(ticket);
+    // A failed fetch is not kept, so a later call retries it.
+    future.then<void>(
+      (_) {},
+      onError: (Object _) {
+        if (identical(_details[key], future)) _details.remove(key);
+      },
+    );
+    return future;
+  }
+
+  Future<ZenTaoEntity> _loadDetail(Ticket ticket) async {
     final type = _typeOf(ticket);
     final entity = await _client.api.entity(_plural(type), ticket.externalKey);
     if (entity.idString.isNotEmpty) return entity;

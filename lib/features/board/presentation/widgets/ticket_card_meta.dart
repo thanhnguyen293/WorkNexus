@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+import '../../../../core/navigation/person_chip.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -51,13 +54,20 @@ class SeverityTag extends StatelessWidget {
 
 /// The card's assignee line: a small initial avatar + name (tinted by the
 /// ticket's workspace [accent]), or a muted "unassigned" placeholder.
-class AssigneeChip extends StatelessWidget {
-  const AssigneeChip(this.assignee, this.accent, {super.key});
+/// Diameter of the assignee avatar on a card.
+const double _kAvatar = 18;
+
+class AssigneeChip extends ConsumerWidget {
+  const AssigneeChip(this.assignee, this.accent, {super.key, this.accountId});
   final String? assignee;
   final Color accent;
 
+  /// The ZenTao account the ticket came through; when set (and chat is wired
+  /// in), the assignee shows their chat photo instead of an initial.
+  final String? accountId;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final l = AppL10n.of(context);
     final name = assignee?.trim() ?? '';
@@ -79,19 +89,27 @@ class AssigneeChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 16,
-          height: 16,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: c.mixT(accent, 0.22),
-            shape: BoxShape.circle,
+        switch ((accountId, ref.watch(personAvatarBuilderProvider))) {
+          (final id?, final avatar?) => avatar(
+            context,
+            accountId: id,
+            name: name,
+            diameter: _kAvatar,
           ),
-          child: Text(
-            name.characters.first.toUpperCase(),
-            style: context.typography.badgeSm.copyWith(color: accent),
+          _ => Container(
+            width: _kAvatar,
+            height: _kAvatar,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: c.mixT(accent, 0.22),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              name.characters.first.toUpperCase(),
+              style: context.typography.badgeSm.copyWith(color: accent),
+            ),
           ),
-        ),
+        },
         SizedBox(width: context.spacing.sm),
         Flexible(
           child: Text(

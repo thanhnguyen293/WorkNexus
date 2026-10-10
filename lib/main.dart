@@ -73,6 +73,14 @@ Future<void> main(List<String> arguments) async {
                 avatarSize: avatarSize,
               ),
         ),
+        personAvatarBuilderProvider.overrideWithValue(
+          (context, {required accountId, required name, required diameter}) =>
+              ChatPersonAvatar(
+                accountId: accountId,
+                name: name,
+                diameter: diameter,
+              ),
+        ),
       ],
       child: WorkNexusApp(lifecycle: lifecycle),
     ),

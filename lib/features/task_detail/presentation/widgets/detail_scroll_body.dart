@@ -14,7 +14,11 @@ const double kDetailMetaPaneWidth = 320;
 /// - [DetailLayout.twoPane]: [content] fills the remaining width beside a
 ///   fixed-width [sidebar] pane (when provided).
 /// - [DetailLayout.document]: a centered column capped at [kDetailDocMaxWidth],
-///   with [sidebar] (if any) stacked below [content].
+///   reading [content] → [sidebar] → [activity].
+///
+/// [activity] (comments, timeline, composer) closes the main column in
+/// two-pane. In document it is split off so the metadata sits right after the
+/// narrative instead of being buried beneath an open-ended comment thread.
 ///
 /// Tabs with no metadata pane pass [sidebar] as null; they still get the
 /// document layout's centered, capped column.
@@ -24,25 +28,38 @@ class DetailScrollBody extends StatelessWidget {
     required this.layout,
     required this.content,
     this.sidebar,
+    this.activity,
   });
 
   final DetailLayout layout;
   final Widget content;
   final Widget? sidebar;
+  final Widget? activity;
 
   @override
   Widget build(BuildContext context) {
     final s = context.spacing;
     final sb = sidebar;
+    final act = activity;
 
     final Widget body;
     if (layout == DetailLayout.twoPane) {
-      body = sb == null
+      final main = act == null
           ? content
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                content,
+                SizedBox(height: s.xl3),
+                act,
+              ],
+            );
+      body = sb == null
+          ? main
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: content),
+                Expanded(child: main),
                 SizedBox(width: s.xl3),
                 SizedBox(width: kDetailMetaPaneWidth, child: sb),
               ],
@@ -51,16 +68,14 @@ class DetailScrollBody extends StatelessWidget {
       body = Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: kDetailDocMaxWidth),
-          child: sb == null
-              ? content
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    content,
-                    SizedBox(height: s.xl3),
-                    sb,
-                  ],
-                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              content,
+              if (sb != null) ...[SizedBox(height: s.xl3), sb],
+              if (act != null) ...[SizedBox(height: s.xl3), act],
+            ],
+          ),
         ),
       );
     }

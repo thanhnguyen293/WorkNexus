@@ -10,8 +10,8 @@ import '../../../../core/util/zentao_labels.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The at-a-glance chip row for a ZenTao bug: raw status, confirmation, reopen
-/// count, and resolution — signals that were buried in the flat details table.
+/// The at-a-glance chip row for a ZenTao bug, in the detail header: raw status, confirmation, reopen
+/// count — signals that were buried in the flat details table.
 class BugStatusStrip extends StatelessWidget {
   const BugStatusStrip({super.key, required this.ticket, required this.bug});
 
@@ -23,34 +23,33 @@ class BugStatusStrip extends StatelessWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final raw = ticket.providerStatus.trim();
+    final active = raw.toLowerCase() == 'active';
+    // The resolution is how the bug was resolved, so it reads as part of the
+    // status ("Resolved · Fixed") rather than as a chip of its own.
+    final resolution = active ? null : zentaoResolutionLabel(bug.resolution);
     final chips = <Widget>[
       if (raw.isNotEmpty)
         TintedPill(
           color: statusColor(c, ticket.status),
           icon: _statusIcon(raw),
-          label: _capitalize(raw),
-          pill: true,
+          label: [_capitalize(raw), ?resolution].join(' · '),
+          large: true,
         ),
-      if (bug.confirmed == 1)
+      // Whether an open bug was confirmed matters for triage; once it is
+      // resolved or closed the flag is history.
+      if (active && bug.confirmed == 1)
         TintedPill(
           color: c.success,
-          icon: PhosphorIconsLight.checkCircle,
+          icon: PhosphorIconsLight.sealCheck,
           label: l.confirmed,
-          pill: true,
+          large: true,
         ),
       if ((bug.activatedCount ?? 0) > 0)
         TintedPill(
           color: c.warning,
-          icon: PhosphorIconsLight.arrowClockwise,
-          label: l.reopenedTimes(bug.activatedCount!),
-          pill: true,
-        ),
-      if (zentaoResolutionLabel(bug.resolution) != null)
-        TintedPill(
-          color: c.info,
-          icon: PhosphorIconsLight.checkCircle,
-          label: zentaoResolutionLabel(bug.resolution)!,
-          pill: true,
+          icon: PhosphorIconsLight.arrowCounterClockwise,
+          label: l.reopenedTimes(bug.activatedCount ?? 0),
+          large: true,
         ),
     ];
     if (chips.isEmpty) return const SizedBox.shrink();
@@ -64,7 +63,7 @@ class BugStatusStrip extends StatelessWidget {
   IconData _statusIcon(String raw) => switch (raw.toLowerCase()) {
     'active' => PhosphorIconsLight.warningCircle,
     'resolved' => PhosphorIconsLight.checkCircle,
-    'closed' => PhosphorIconsLight.checkCircle,
+    'closed' => PhosphorIconsLight.xCircle,
     _ => PhosphorIconsLight.circle,
   };
 
