@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/error/result.dart';
@@ -14,22 +14,22 @@ ZenTaoActionLook zenTaoBugActionLook(AppL10n l, ZenTaoBugAction action) =>
     switch (action) {
       ZenTaoBugAction.confirm => (
         label: l.zentaoConfirm,
-        icon: PhosphorIconsLight.sealCheck,
+        icon: LucideIcons.badgeCheck300,
         emoji: '🔎',
       ),
       ZenTaoBugAction.resolve => (
         label: l.resolve,
-        icon: PhosphorIconsLight.checkCircle,
+        icon: LucideIcons.checkCircle300,
         emoji: '✅',
       ),
       ZenTaoBugAction.close => (
         label: l.close,
-        icon: PhosphorIconsLight.archive,
+        icon: LucideIcons.archive300,
         emoji: '🔒',
       ),
       ZenTaoBugAction.activate => (
         label: l.activate,
-        icon: PhosphorIconsLight.arrowCounterClockwise,
+        icon: LucideIcons.rotateCcw300,
         emoji: '🔁',
       ),
     };
@@ -38,37 +38,37 @@ ZenTaoActionLook zenTaoTaskActionLook(AppL10n l, ZenTaoTaskAction action) =>
     switch (action) {
       ZenTaoTaskAction.start => (
         label: l.zentaoStart,
-        icon: PhosphorIconsLight.play,
+        icon: LucideIcons.play300,
         emoji: '▶️',
       ),
       ZenTaoTaskAction.restart => (
         label: l.zentaoRestart,
-        icon: PhosphorIconsLight.playCircle,
+        icon: LucideIcons.playCircle300,
         emoji: '⏯️',
       ),
       ZenTaoTaskAction.pause => (
         label: l.zentaoPause,
-        icon: PhosphorIconsLight.pause,
+        icon: LucideIcons.pause300,
         emoji: '⏸️',
       ),
       ZenTaoTaskAction.finish => (
         label: l.zentaoFinish,
-        icon: PhosphorIconsLight.flagCheckered,
+        icon: LucideIcons.flag300,
         emoji: '🏁',
       ),
       ZenTaoTaskAction.activate => (
         label: l.activate,
-        icon: PhosphorIconsLight.arrowCounterClockwise,
+        icon: LucideIcons.rotateCcw300,
         emoji: '🔁',
       ),
       ZenTaoTaskAction.close => (
         label: l.close,
-        icon: PhosphorIconsLight.archive,
+        icon: LucideIcons.archive300,
         emoji: '🔒',
       ),
       ZenTaoTaskAction.cancel => (
         label: l.zentaoCancelTask,
-        icon: PhosphorIconsLight.prohibit,
+        icon: LucideIcons.ban300,
         emoji: '🚫',
       ),
     };
@@ -80,15 +80,15 @@ ZenTaoActionLook zenTaoTaskActionLook(AppL10n l, ZenTaoTaskAction action) =>
 ) => switch (action) {
   ZenTaoCreateAction.copyBug => (
     label: l.zentaoCopyBug,
-    icon: PhosphorIconsLight.copy,
+    icon: LucideIcons.copy300,
   ),
   ZenTaoCreateAction.subtask => (
     label: l.zentaoAddSubtask,
-    icon: PhosphorIconsLight.treeStructure,
+    icon: LucideIcons.network300,
   ),
   ZenTaoCreateAction.bugFromTask => (
     label: l.zentaoReportBug,
-    icon: PhosphorIconsLight.bug,
+    icon: LucideIcons.bug300,
   ),
 };
 

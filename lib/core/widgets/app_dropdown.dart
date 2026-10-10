@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
@@ -56,7 +56,7 @@ class AppDropdown<T> extends StatelessWidget {
                   ),
                 ),
                 if (option == value)
-                  Icon(PhosphorIconsLight.check, color: c.accent),
+                  Icon(LucideIcons.check300, color: c.accent),
               ],
             ),
           ),
@@ -86,7 +86,7 @@ class AppDropdown<T> extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.xs),
             Icon(
-              PhosphorIconsLight.caretDown,
+              LucideIcons.chevronDown300,
               size: context.spacing.xl3,
               color: c.textSecondary,
             ),

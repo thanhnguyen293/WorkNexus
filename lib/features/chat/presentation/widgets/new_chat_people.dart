@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -83,7 +83,7 @@ class _NewChatPeopleState extends ConsumerState<NewChatPeople> {
               decoration: chatFieldDecoration(
                 context,
                 hint: l.chatSearchPeople,
-                icon: PhosphorIconsLight.magnifyingGlass,
+                icon: LucideIcons.search300,
               ),
             ),
             if (selected.isNotEmpty)
@@ -224,11 +224,7 @@ class _PersonRow extends StatelessWidget {
                   ),
                 ),
                 child: picked
-                    ? Icon(
-                        PhosphorIconsLight.check,
-                        size: s.xl2,
-                        color: c.onAccent,
-                      )
+                    ? Icon(LucideIcons.check300, size: s.xl2, color: c.onAccent)
                     : null,
               ),
             ],
@@ -281,7 +277,7 @@ class _PickedPill extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(s.xs),
               child: Icon(
-                PhosphorIconsLight.x,
+                LucideIcons.x300,
                 size: s.xl2,
                 color: c.textSecondary,
               ),

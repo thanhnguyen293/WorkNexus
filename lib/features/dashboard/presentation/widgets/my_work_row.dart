@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -131,14 +131,14 @@ class MyWorkRow extends ConsumerWidget {
         [
           if (executionName ?? productName case final where?)
             MyWorkFact(
-              icon: PhosphorIconsLight.kanban,
+              icon: LucideIcons.kanban300,
               text: where,
               maxWidth: nameWidth,
             ),
           if (parseZenTaoDate(deadline) case final due?) MyWorkDueFact(due),
           if (activatedCount case final n? when n > 0)
             MyWorkFact(
-              icon: PhosphorIconsLight.arrowCounterClockwise,
+              icon: LucideIcons.rotateCcw300,
               text: l.myWorkReopened(n),
               color: context.colors.warning,
             ),
@@ -146,13 +146,13 @@ class MyWorkRow extends ConsumerWidget {
       ZenTaoTaskEntity(:final parentName, :final subtasks) => [
         if (parentName case final parent? when parent.isNotEmpty)
           MyWorkFact(
-            icon: PhosphorIconsLight.arrowElbowLeftUp,
+            icon: LucideIcons.cornerLeftUp300,
             text: parent,
             maxWidth: nameWidth,
           ),
         if (subtasks.isNotEmpty)
           MyWorkFact(
-            icon: PhosphorIconsLight.treeStructure,
+            icon: LucideIcons.network300,
             text: l.myWorkSubtasks(subtasks.length),
           ),
       ],

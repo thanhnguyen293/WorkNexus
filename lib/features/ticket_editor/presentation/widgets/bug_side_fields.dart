@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -36,7 +36,7 @@ class BugSideFields extends ConsumerWidget {
       children: [
         EditorSection(
           title: l.editorSectionLocation,
-          icon: PhosphorIconsLight.folders,
+          icon: LucideIcons.folders300,
           children: [
             EditorField(
               label: l.fieldProduct,
@@ -112,7 +112,7 @@ class BugSideFields extends ConsumerWidget {
         ),
         EditorSection(
           title: l.editorSectionClassification,
-          icon: PhosphorIconsLight.tag,
+          icon: LucideIcons.tag300,
           children: [
             EditorField(
               label: l.fieldType,
@@ -162,7 +162,7 @@ class BugSideFields extends ConsumerWidget {
         ),
         EditorSection(
           title: l.editorSectionAssignment,
-          icon: PhosphorIconsLight.userCircle,
+          icon: LucideIcons.userCircle300,
           children: [
             EditorField(
               label: l.fieldAssignTo,
@@ -186,7 +186,7 @@ class BugSideFields extends ConsumerWidget {
         ),
         EditorSection(
           title: l.editorSectionMore,
-          icon: PhosphorIconsLight.dotsThreeCircle,
+          icon: LucideIcons.circleEllipsis300,
           children: [
             EditorField(
               label: l.fieldStory,

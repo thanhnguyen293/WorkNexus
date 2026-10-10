@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -24,8 +24,7 @@ class UpdateRailButton extends ConsumerWidget {
     return switch (state) {
       UpdateReady(:final update) ||
       UpdateInstalling(:final update) => AppRailButton(
-        icon: PhosphorIconsLight.arrowCircleUp,
-        selectedIcon: PhosphorIconsFill.arrowCircleUp,
+        icon: LucideIcons.circleArrowUp300,
         label: l.updateRestartToUpdate(update.latestVersion),
         selected: false,
         onTap: () =>
@@ -34,8 +33,7 @@ class UpdateRailButton extends ConsumerWidget {
       ),
       UpdateManual(:final update) ||
       UpdateFailed(:final update) => AppRailButton(
-        icon: PhosphorIconsLight.arrowCircleUp,
-        selectedIcon: PhosphorIconsFill.arrowCircleUp,
+        icon: LucideIcons.circleArrowUp300,
         label: l.updateAvailable(update.latestVersion),
         selected: false,
         onTap: () => openExternally(update.releaseUrl),

@@ -63,7 +63,7 @@ class _MetadataOverlay extends StatelessWidget {
                       context,
                     ).closeButtonTooltip,
                     onPressed: onClose,
-                    icon: const Icon(PhosphorIconsLight.x),
+                    icon: const Icon(LucideIcons.x300),
                     iconSize: spacing.xl4,
                     visualDensity: VisualDensity.compact,
                   ),

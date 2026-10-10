@@ -1,6 +1,6 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
@@ -94,11 +94,7 @@ class _DropOverlay extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: s.sm,
             children: [
-              Icon(
-                PhosphorIconsLight.uploadSimple,
-                size: s.xl3,
-                color: c.onAccent,
-              ),
+              Icon(LucideIcons.upload300, size: s.xl3, color: c.onAccent),
               Text(
                 hint,
                 style: context.typography.bodySmStrong.copyWith(

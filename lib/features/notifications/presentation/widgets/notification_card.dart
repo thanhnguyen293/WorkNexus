@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -185,7 +185,7 @@ class _Actions extends ConsumerWidget {
           iconSize: s.xl3,
           color: c.textTertiary,
           icon: Icon(
-            n.read ? PhosphorIconsLight.circle : PhosphorIconsLight.checkCircle,
+            n.read ? LucideIcons.circle300 : LucideIcons.checkCircle300,
           ),
           onPressed: () => runNotificationCommand(
             context,
@@ -200,7 +200,7 @@ class _Actions extends ConsumerWidget {
           visualDensity: VisualDensity.compact,
           iconSize: s.xl3,
           color: c.textTertiary,
-          icon: const Icon(PhosphorIconsLight.trash),
+          icon: const Icon(LucideIcons.trash300),
           onPressed: () => runNotificationCommand(
             context,
             ref,

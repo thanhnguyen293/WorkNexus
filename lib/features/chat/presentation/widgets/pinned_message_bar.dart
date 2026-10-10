@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -87,7 +87,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                 ),
               ),
               SizedBox(width: s.lg),
-              Icon(PhosphorIconsFill.pushPin, size: s.xl3, color: c.accent),
+              Icon(LucideIcons.pin500, size: s.xl3, color: c.accent),
               SizedBox(width: s.lg),
               Expanded(
                 child: Column(
@@ -115,7 +115,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
               ),
               SizedBox(width: s.md),
               Icon(
-                PhosphorIconsLight.caretRight,
+                LucideIcons.chevronRight300,
                 size: s.xl4,
                 color: c.textTertiary,
               ),

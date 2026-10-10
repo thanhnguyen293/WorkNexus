@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -149,7 +149,7 @@ class _MiniPlayer extends StatelessWidget {
                           child: Padding(
                             padding: EdgeInsets.only(left: s.xxs),
                             child: Icon(
-                              PhosphorIconsFill.play,
+                              Icons.play_arrow_rounded,
                               size: s.xl4,
                               color: c.onScrim,
                             ),
@@ -162,7 +162,7 @@ class _MiniPlayer extends StatelessWidget {
               top: s.sm,
               right: s.sm,
               child: ChatVideoCornerButton(
-                icon: PhosphorIconsLight.x,
+                icon: LucideIcons.x300,
                 tooltip: AppL10n.of(context).close,
                 onPressed: onClose,
               ),

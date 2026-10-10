@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -64,7 +64,7 @@ class AttachmentDownloadBadge extends ConsumerWidget {
                 ),
               )
             else
-              Icon(PhosphorIconsLight.downloadSimple, size: s.xl3, color: ink),
+              Icon(LucideIcons.download300, size: s.xl3, color: ink),
             if (label != null) ...[
               SizedBox(width: s.xs),
               Text(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/person_chip.dart';
 
@@ -76,7 +76,7 @@ class AssigneeChip extends ConsumerWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(PhosphorIconsLight.userMinus, size: 13, color: c.textTertiary),
+          Icon(LucideIcons.userMinus300, size: 13, color: c.textTertiary),
           SizedBox(width: context.spacing.xs),
           Text(
             l.unassigned,

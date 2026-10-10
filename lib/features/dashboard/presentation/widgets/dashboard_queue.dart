@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -38,7 +38,7 @@ class DashboardQueue extends ConsumerWidget {
         ref.read(dashboardWorkKindProvider.notifier).state = kind;
     return DashboardCard(
       title: l.dashboardMyWork,
-      icon: PhosphorIconsLight.tray,
+      icon: LucideIcons.inbox300,
       count: work.openBugs + work.openTasks,
       padding: EdgeInsets.fromLTRB(s.sm, s.md, s.sm, s.md),
       child: Column(
@@ -80,12 +80,12 @@ class DashboardQueue extends ConsumerWidget {
           Row(
             children: [
               _FooterButton(
-                icon: PhosphorIconsLight.clipboardText,
+                icon: LucideIcons.clipboardList300,
                 label: l.dashboardAllTasks,
                 onPressed: () => open(DashboardItemKind.task),
               ),
               _FooterButton(
-                icon: PhosphorIconsLight.bug,
+                icon: LucideIcons.bug300,
                 label: l.dashboardAllBugs,
                 onPressed: () => open(DashboardItemKind.bug),
               ),

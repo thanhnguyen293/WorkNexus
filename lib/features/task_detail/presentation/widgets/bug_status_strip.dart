@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -40,14 +40,14 @@ class BugStatusStrip extends StatelessWidget {
       if (active && bug.confirmed == 1)
         TintedPill(
           color: c.success,
-          icon: PhosphorIconsLight.sealCheck,
+          icon: LucideIcons.badgeCheck300,
           label: l.confirmed,
           large: true,
         ),
       if ((bug.activatedCount ?? 0) > 0)
         TintedPill(
           color: c.warning,
-          icon: PhosphorIconsLight.arrowCounterClockwise,
+          icon: LucideIcons.rotateCcw300,
           label: l.reopenedTimes(bug.activatedCount ?? 0),
           large: true,
         ),
@@ -61,10 +61,10 @@ class BugStatusStrip extends StatelessWidget {
   }
 
   IconData _statusIcon(String raw) => switch (raw.toLowerCase()) {
-    'active' => PhosphorIconsLight.warningCircle,
-    'resolved' => PhosphorIconsLight.checkCircle,
-    'closed' => PhosphorIconsLight.xCircle,
-    _ => PhosphorIconsLight.circle,
+    'active' => LucideIcons.circleAlert300,
+    'resolved' => LucideIcons.checkCircle300,
+    'closed' => LucideIcons.xCircle300,
+    _ => LucideIcons.circle300,
   };
 
   String _capitalize(String s) =>

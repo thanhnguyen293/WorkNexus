@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -104,10 +104,10 @@ class ChatThreadHeader extends ConsumerWidget {
                             children: [
                               Icon(
                                 !oneToOne
-                                    ? PhosphorIconsLight.user
+                                    ? LucideIcons.user300
                                     : presence != null
-                                    ? PhosphorIconsFill.circle
-                                    : PhosphorIconsLight.at,
+                                    ? Icons.circle
+                                    : LucideIcons.atSign300,
                                 size: presence != null
                                     ? context.spacing.md
                                     : context.spacing.xl3,

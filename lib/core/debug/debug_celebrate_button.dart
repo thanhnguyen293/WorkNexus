@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
@@ -29,7 +29,7 @@ class DebugCelebrateButton extends ConsumerWidget {
         alignment: Alignment.center,
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Icon(
-          PhosphorIconsLight.confetti,
+          LucideIcons.partyPopper300,
           size: s.xl3,
           color: context.colors.warning,
         ),

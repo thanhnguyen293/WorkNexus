@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -86,8 +86,8 @@ class _EditorColorButtonState extends State<EditorColorButton> {
         onPressed: () => menu.isOpen ? menu.close() : menu.open(),
         icon: _ColorGlyph(
           icon: widget.isBackground
-              ? PhosphorIconsLight.highlighterCircle
-              : PhosphorIconsLight.textAa,
+              ? LucideIcons.highlighter300
+              : LucideIcons.aLargeSmall300,
           size: widget.iconSize,
           color: current == null ? null : _parse(current),
         ),
@@ -152,11 +152,7 @@ class _Palette extends StatelessWidget {
               borderRadius: BorderRadius.circular(context.radii.md),
               child: Row(
                 children: [
-                  Icon(
-                    PhosphorIconsLight.prohibit,
-                    size: s.xl3,
-                    color: c.textTertiary,
-                  ),
+                  Icon(LucideIcons.ban300, size: s.xl3, color: c.textTertiary),
                   SizedBox(width: s.md),
                   Text(
                     AppL10n.of(context).colorDefault,
@@ -193,7 +189,7 @@ class _Palette extends StatelessWidget {
                     alignment: Alignment.center,
                     child: hex == current
                         ? Icon(
-                            PhosphorIconsBold.check,
+                            LucideIcons.check500,
                             size: s.xl2,
                             color: _onSwatch(hex),
                           )

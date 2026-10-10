@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -56,7 +56,7 @@ class DashboardWorkHeader extends ConsumerWidget {
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: () =>
                   ref.read(dashboardWorkKindProvider.notifier).state = null,
-              icon: Icon(PhosphorIconsLight.arrowLeft, color: c.textSecondary),
+              icon: Icon(LucideIcons.arrowLeft300, color: c.textSecondary),
             ),
             SizedBox(width: s.sm),
             ZenTaoKindIcon(kind.name, large: true),
@@ -108,7 +108,7 @@ class DashboardWorkHeader extends ConsumerWidget {
                   dimension: s.xl3,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(PhosphorIconsLight.arrowClockwise, color: c.textSecondary),
+              : Icon(LucideIcons.rotateCw300, color: c.textSecondary),
         ),
       ],
     );

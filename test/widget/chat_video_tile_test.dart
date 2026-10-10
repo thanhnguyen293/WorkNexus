@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -71,14 +71,14 @@ void main() {
 
     final frame = tester.getRect(find.byType(ChatVideoTile));
     final time = tester.getRect(find.text('0:10'));
-    final full = tester.getRect(find.byIcon(PhosphorIconsLight.cornersOut));
+    final full = tester.getRect(find.byIcon(LucideIcons.maximize300));
     expect(time.center.dx, lessThan(frame.center.dx));
     expect(time.center.dy, greaterThan(frame.center.dy));
     expect(full.center.dx, greaterThan(frame.center.dx));
     expect(full.center.dy, greaterThan(frame.center.dy));
-    expect(find.byIcon(PhosphorIconsFill.play), findsOneWidget);
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
 
-    await tester.tap(find.byIcon(PhosphorIconsLight.cornersOut));
+    await tester.tap(find.byIcon(LucideIcons.maximize300));
     expect(fullScreens, 1);
   });
 }

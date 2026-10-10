@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../domain/value_objects/provider_type.dart';
@@ -39,9 +39,7 @@ class MergeRequestStatePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            gitlab
-                ? PhosphorIconsLight.treeStructure
-                : PhosphorIconsLight.gitMerge,
+            gitlab ? LucideIcons.network300 : LucideIcons.gitMerge300,
             size: context.spacing.xl2,
             color: color,
           ),

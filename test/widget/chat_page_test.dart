@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
@@ -527,7 +527,7 @@ void main() {
   ) async {
     await pumpChat(tester);
     await openTeamChat(tester);
-    expect(find.byIcon(PhosphorIconsLight.info), findsNothing);
+    expect(find.byIcon(LucideIcons.info300), findsNothing);
     expect(find.byType(ChatInfoPanel), findsOneWidget, reason: 'room beside');
 
     await pumpChat(tester, size: const Size(900, 700));
@@ -542,7 +542,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byIcon(PhosphorIconsLight.x));
+    await tester.tap(find.byIcon(LucideIcons.x300));
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsNothing);
   });

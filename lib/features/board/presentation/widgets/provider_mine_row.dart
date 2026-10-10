@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
@@ -61,11 +61,7 @@ class ProviderMineRow extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                PhosphorIconsLight.gitMerge,
-                size: 14,
-                color: c.textTertiary,
-              ),
+              Icon(LucideIcons.gitMerge300, size: 14, color: c.textTertiary),
               SizedBox(width: context.spacing.sm),
               Expanded(
                 child: Text(

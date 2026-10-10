@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -152,11 +152,7 @@ class _ClosedField extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                PhosphorIconsLight.caretDown,
-                size: 20,
-                color: c.textTertiary,
-              ),
+              Icon(LucideIcons.chevronDown300, size: 20, color: c.textTertiary),
             ],
           ),
         ),
@@ -322,7 +318,7 @@ class _OptionRow extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  Icon(PhosphorIconsLight.check, size: 16, color: c.accent),
+                  Icon(LucideIcons.check300, size: 16, color: c.accent),
               ],
             ),
           ),

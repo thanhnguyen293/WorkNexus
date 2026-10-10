@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -57,7 +57,7 @@ class _ChatSearchFieldState extends ConsumerState<ChatSearchField> {
             hintText: widget.hint,
             hintStyle: context.typography.body.copyWith(color: c.textTertiary),
             prefixIcon: Icon(
-              PhosphorIconsLight.magnifyingGlass,
+              LucideIcons.search300,
               size: s.xl3,
               color: c.textTertiary,
             ),
@@ -74,7 +74,7 @@ class _ChatSearchFieldState extends ConsumerState<ChatSearchField> {
                       _search('');
                     },
                     icon: Icon(
-                      PhosphorIconsLight.x,
+                      LucideIcons.x300,
                       size: s.xl2,
                       color: c.textTertiary,
                     ),

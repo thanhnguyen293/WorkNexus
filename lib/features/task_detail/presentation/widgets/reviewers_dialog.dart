@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -201,7 +201,7 @@ class _UserSearchBox extends StatelessWidget {
         hintText: hint,
         hintStyle: context.typography.body.copyWith(color: c.textTertiary),
         prefixIcon: Icon(
-          PhosphorIconsLight.magnifyingGlass,
+          LucideIcons.search300,
           size: 18,
           color: c.textTertiary,
         ),
@@ -248,9 +248,7 @@ class _ReviewerTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected
-                  ? PhosphorIconsFill.checkSquare
-                  : PhosphorIconsLight.square,
+              selected ? LucideIcons.checkSquare500 : LucideIcons.square300,
               size: 18,
               color: selected ? c.accent : c.textTertiary,
             ),
