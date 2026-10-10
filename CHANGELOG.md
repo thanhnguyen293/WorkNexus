@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/thanhnguyen293/WorkNexus/compare/v1.1.0...v1.2.0) (2026-10-10)
+
+
+### 🚀 Features
+
+* **chat:** inline video playback, mini player, upload previews, storage view ([3b6fff0](https://github.com/thanhnguyen293/WorkNexus/commit/3b6fff0ce3b17666c6926195ff80f694406eb794))
+* compact ticket editor, app menu for "+", clear local cache ([600ddb1](https://github.com/thanhnguyen293/WorkNexus/commit/600ddb18ae227f247f79d46f714f37d40ed36005))
+* detail timeline & header polish, rich comments, board avatars ([3b032b6](https://github.com/thanhnguyen293/WorkNexus/commit/3b032b65e5a677eaa3320249ef658f612fa0a9ee))
+* hover/cursor polish, chat & editor UX, drag-and-drop, fireworks ([48a8188](https://github.com/thanhnguyen293/WorkNexus/commit/48a81887c624fb3d2cfc7126725962692af202f2))
+* **settings:** regroup Quick Settings into tabs and grouped cards ([38a2e29](https://github.com/thanhnguyen293/WorkNexus/commit/38a2e29729ae75ba6e8476696f4b47695bd50331))
+
+
+### 🐛 Bug Fixes
+
+* **chat:** keep history contiguous; jump far back through a window ([e08505d](https://github.com/thanhnguyen293/WorkNexus/commit/e08505db210f27f2e94a21bb6845c66670030606))
+* **chat:** roomier storage dialog, larger avatars, tighter rows ([7549a85](https://github.com/thanhnguyen293/WorkNexus/commit/7549a854b078b16ba2e5c09cd5e8aa926abeda41))
+
+
+### ♻️ Refactoring
+
+* switch the app's icons from Phosphor to Lucide ([209db2c](https://github.com/thanhnguyen293/WorkNexus/commit/209db2cdd56f2590654b4cfd5817df80bb77c802))
+
 ## [1.1.0](https://github.com/thanhnguyen293/WorkNexus/compare/v1.0.0...v1.1.0) (2026-10-09)
 
 
