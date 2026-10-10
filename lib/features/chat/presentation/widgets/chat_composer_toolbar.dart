@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -42,17 +42,17 @@ class ChatComposerTools extends StatelessWidget {
       child: Row(
         children: [
           _ToolButton(
-            icon: PhosphorIconsLight.image,
+            icon: LucideIcons.image300,
             tooltip: l.chatSendImage,
             onPressed: onPickImage,
           ),
           _ToolButton(
-            icon: PhosphorIconsLight.paperclip,
+            icon: LucideIcons.paperclip300,
             tooltip: l.chatAttach,
             onPressed: onAttach,
           ),
           _ToolButton(
-            icon: PhosphorIconsLight.at,
+            icon: LucideIcons.atSign300,
             tooltip: l.chatMention,
             onPressed: onMention,
           ),
@@ -95,7 +95,7 @@ class ChatComposerSendButton extends StatelessWidget {
                   backgroundColor: c.accent,
                   foregroundColor: c.onAccent,
                 ),
-                icon: Icon(PhosphorIconsFill.paperPlaneRight, size: s.xl4),
+                icon: Icon(LucideIcons.send500, size: s.xl4),
               )
             : IconButton(
                 tooltip: l.chatSendLike,
@@ -153,7 +153,7 @@ class _MarkdownToggle extends ConsumerWidget {
     final on = ref.watch(appSettingsProvider.select((s) => s.chatSendMarkdown));
     final l = AppL10n.of(context);
     return _ToolButton(
-      icon: PhosphorIconsLight.textAa,
+      icon: LucideIcons.aLargeSmall300,
       tooltip: on ? l.chatMarkdownOn : l.chatMarkdownOff,
       selected: on,
       onPressed: () =>

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -64,7 +64,7 @@ class ChatImageViewerBar extends StatelessWidget {
       onClose: onClose,
       actions: [
         ChatViewerButton(
-          icon: PhosphorIconsLight.magnifyingGlassMinus,
+          icon: LucideIcons.zoomOut300,
           tooltip: l.chatZoomOut,
           onPressed: onZoomOut,
         ),
@@ -82,42 +82,42 @@ class ChatImageViewerBar extends StatelessWidget {
           ),
         ),
         ChatViewerButton(
-          icon: PhosphorIconsLight.magnifyingGlassPlus,
+          icon: LucideIcons.zoomIn300,
           tooltip: l.chatZoomIn,
           onPressed: onZoomIn,
         ),
         ChatViewerButton(
-          icon: PhosphorIconsLight.arrowsIn,
+          icon: LucideIcons.minimize2300,
           tooltip: l.chatZoomFit,
           onPressed: onFit,
         ),
         ChatViewerButton(
-          icon: PhosphorIconsLight.arrowClockwise,
+          icon: LucideIcons.rotateCw300,
           tooltip: l.chatRotate,
           onPressed: onRotate,
         ),
         const ChatViewerDivider(),
         ChatViewerButton(
-          icon: PhosphorIconsLight.copy,
+          icon: LucideIcons.copy300,
           tooltip: l.chatCopyImage,
           onPressed: onCopy,
         ),
         ChatViewerButton(
-          icon: PhosphorIconsLight.downloadSimple,
+          icon: LucideIcons.download300,
           tooltip: l.chatSaveAs,
           onPressed: onSave,
         ),
         ChatViewerButton(
           icon: onSaveSticker == null
-              ? PhosphorIconsLight.check
-              : PhosphorIconsLight.sticker,
+              ? LucideIcons.check300
+              : LucideIcons.sticker300,
           tooltip: onSaveSticker == null
               ? l.chatStickerSaved
               : l.chatSaveSticker,
           onPressed: onSaveSticker,
         ),
         ChatViewerButton(
-          icon: PhosphorIconsLight.arrowSquareOut,
+          icon: LucideIcons.squareArrowOutUpRight300,
           tooltip: l.chatOpenWith,
           onPressed: onOpenExternally,
         ),

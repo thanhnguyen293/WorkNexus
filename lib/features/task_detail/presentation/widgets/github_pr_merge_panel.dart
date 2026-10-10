@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -56,7 +56,7 @@ class GitHubPrMergePanel extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(
-                PhosphorIconsFill.info,
+                LucideIcons.info500,
                 size: context.spacing.xl4,
                 color: c.info,
               ),
@@ -93,8 +93,8 @@ class GitHubPrMergePanel extends StatelessWidget {
               children: [
                 Icon(
                   needsUpdate
-                      ? PhosphorIconsLight.minusCircle
-                      : PhosphorIconsFill.info,
+                      ? LucideIcons.minusCircle300
+                      : LucideIcons.info500,
                   size: context.spacing.xl4,
                   color: needsUpdate ? c.warning : c.info,
                 ),

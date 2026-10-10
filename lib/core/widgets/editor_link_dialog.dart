@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -74,7 +74,7 @@ class _EditorLinkDialogState extends State<EditorLinkDialog> {
               spacing: s.sm,
               children: [
                 Icon(
-                  PhosphorIconsLight.linkBreak,
+                  LucideIcons.unlink300,
                   size: s.xl3,
                   color: context.colors.error,
                 ),
@@ -103,7 +103,7 @@ class _EditorLinkDialogState extends State<EditorLinkDialog> {
               controller: _url,
               hint: 'https://',
               autofocus: true,
-              prefixIcon: PhosphorIconsLight.link,
+              prefixIcon: LucideIcons.link300,
               errorText: _showError ? l.editorLinkInvalid : null,
               onChanged: (_) {
                 if (_showError) setState(() => _showError = false);
@@ -113,7 +113,7 @@ class _EditorLinkDialogState extends State<EditorLinkDialog> {
             ConnectionTextField(
               label: l.editorLinkText,
               controller: _text,
-              prefixIcon: PhosphorIconsLight.textT,
+              prefixIcon: LucideIcons.type300,
               onSubmitted: (_) => _save(),
             ),
           ],

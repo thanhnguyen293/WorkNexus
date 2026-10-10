@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -21,7 +21,7 @@ class LocalCacheQuickSettings extends ConsumerWidget {
       title: l.localCacheTitle,
       children: [
         QuickSettingsLinkField(
-          icon: PhosphorIconsLight.broom,
+          icon: LucideIcons.broom300,
           label: l.clearCache,
           onTap: () => clearLocalCacheFlow(context, ref, onCleared),
         ),

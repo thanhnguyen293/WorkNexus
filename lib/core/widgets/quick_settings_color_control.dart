@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../settings/app_settings.dart';
@@ -130,7 +130,7 @@ class _Swatch extends StatelessWidget {
         ),
         child: color == null
             ? Icon(
-                PhosphorIconsLight.plus,
+                LucideIcons.plus300,
                 size: size * 0.45,
                 color: c.textSecondary,
               )

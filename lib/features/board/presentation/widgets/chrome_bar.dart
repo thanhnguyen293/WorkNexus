@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -110,11 +110,7 @@ class _RefreshButton extends ConsumerWidget {
         border: context.cardBorder,
         child: busy
             ? const SidebarSyncIndicator()
-            : Icon(
-                PhosphorIconsLight.arrowClockwise,
-                size: 16,
-                color: c.textSecondary,
-              ),
+            : Icon(LucideIcons.rotateCw300, size: 16, color: c.textSecondary),
       ),
     );
   }
@@ -172,7 +168,7 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
             color: c.textTertiary,
           ),
           prefixIcon: Icon(
-            PhosphorIconsLight.magnifyingGlass,
+            LucideIcons.search300,
             size: 15,
             color: c.textTertiary,
           ),
@@ -237,7 +233,7 @@ class _FiltersButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            active ? PhosphorIconsFill.funnel : PhosphorIconsLight.funnel,
+            active ? LucideIcons.funnel500 : LucideIcons.funnel300,
             size: s.xl3,
             color: color,
           ),

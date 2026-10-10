@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -50,7 +50,7 @@ class EditorHeader extends StatelessWidget {
           IconButton(
             tooltip: l.close,
             visualDensity: VisualDensity.compact,
-            icon: Icon(PhosphorIconsLight.arrowLeft, size: s.xl3),
+            icon: Icon(LucideIcons.arrowLeft300, size: s.xl3),
             onPressed: onClose,
           ),
           SizedBox(width: s.md),
@@ -86,7 +86,7 @@ class EditorHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: s.sm,
               children: [
-                Icon(PhosphorIconsLight.floppyDisk, size: s.xl2),
+                Icon(LucideIcons.save300, size: s.xl2),
                 Text(l.save),
               ],
             ),

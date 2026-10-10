@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
@@ -51,7 +50,7 @@ void main() {
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(
-      tester.getCenter(find.byIcon(PhosphorIconsFill.sealCheck)),
+      tester.getCenter(find.byIcon(Icons.verified_rounded)),
     );
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -70,6 +69,6 @@ void main() {
 
   testWidgets('engineers get no check', (tester) async {
     await pumpAvatar(tester, 'dev');
-    expect(find.byIcon(PhosphorIconsFill.sealCheck), findsNothing);
+    expect(find.byIcon(Icons.verified_rounded), findsNothing);
   });
 }

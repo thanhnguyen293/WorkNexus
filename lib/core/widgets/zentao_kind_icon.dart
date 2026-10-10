@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
@@ -22,12 +22,12 @@ class ZenTaoKindIcon extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     final (icon, color) = switch (objectType?.trim().toLowerCase()) {
-      'bug' => (PhosphorIconsFill.bug, c.error),
-      'task' => (PhosphorIconsFill.clipboardText, c.accent),
-      'story' => (PhosphorIconsFill.bookOpenText, c.info),
-      'todo' => (PhosphorIconsFill.listChecks, c.notice),
-      'execution' || 'project' => (PhosphorIconsFill.kanban, c.caution),
-      _ => (PhosphorIconsFill.bell, c.textTertiary),
+      'bug' => (LucideIcons.bug500, c.error),
+      'task' => (LucideIcons.clipboardList500, c.accent),
+      'story' => (LucideIcons.bookOpenText500, c.info),
+      'todo' => (LucideIcons.listChecks500, c.notice),
+      'execution' || 'project' => (LucideIcons.kanban500, c.caution),
+      _ => (LucideIcons.bell500, c.textTertiary),
     };
     final box = large ? s.xl6 * 0.8 : s.xl5 + s.xxs;
     return Container(

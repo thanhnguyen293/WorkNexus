@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
@@ -230,7 +230,7 @@ class QuickSettingsLinkField extends StatelessWidget {
             SizedBox(width: s.md),
             Expanded(child: _RowLabel(label: label)),
             Icon(
-              PhosphorIconsLight.caretRight,
+              LucideIcons.chevronRight300,
               size: s.xl2,
               color: c.textTertiary,
             ),

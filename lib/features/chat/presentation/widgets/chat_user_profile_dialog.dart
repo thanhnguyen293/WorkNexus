@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/open_account_profile.dart';
@@ -170,19 +170,19 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
               ],
               if (user?.email case final email?)
                 ChatDetailRow(
-                  icon: PhosphorIconsLight.envelopeSimple,
+                  icon: LucideIcons.mail300,
                   label: l.chatEmail,
                   value: email,
                 ),
               if (user?.mobile case final mobile?)
                 ChatDetailRow(
-                  icon: PhosphorIconsLight.deviceMobile,
+                  icon: LucideIcons.smartphone300,
                   label: l.chatMobile,
                   value: mobile,
                 ),
               if (user?.phone case final phone?)
                 ChatDetailRow(
-                  icon: PhosphorIconsLight.phone,
+                  icon: LucideIcons.phone300,
                   label: l.chatPhone,
                   value: phone,
                 ),
@@ -285,7 +285,7 @@ class _EditableAvatar extends StatelessWidget {
                     border: Border.all(color: c.surface, width: 2),
                   ),
                   child: Icon(
-                    PhosphorIconsLight.camera,
+                    LucideIcons.camera300,
                     size: s.xl3,
                     color: c.onAccent,
                   ),

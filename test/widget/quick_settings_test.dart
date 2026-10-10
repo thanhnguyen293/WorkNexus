@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
@@ -125,7 +125,7 @@ void main() {
     final trigger = find.byKey(
       const ValueKey<String>('quick-settings-trigger'),
     );
-    final iconFinder = find.byIcon(PhosphorIconsLight.gear);
+    final iconFinder = find.byIcon(LucideIcons.settings300);
     expect(iconFinder, findsOneWidget);
     expect(tester.widget<Icon>(iconFinder).size, 16);
     expect(tester.getSize(trigger), const Size(28, 28));
@@ -348,7 +348,7 @@ void main() {
     await pumpTitleBar(tester);
     await openQuickSettings(tester);
 
-    await tester.tap(find.byIcon(PhosphorIconsLight.x));
+    await tester.tap(find.byIcon(LucideIcons.x300));
     await tester.pumpAndSettle();
 
     expect(

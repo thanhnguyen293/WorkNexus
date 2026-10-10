@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/widgets/quick_settings_parts.dart';
@@ -48,7 +48,7 @@ class ChatAutoDownloadSettings extends ConsumerWidget {
             ),
           ),
         QuickSettingsLinkField(
-          icon: PhosphorIconsLight.database,
+          icon: LucideIcons.database300,
           label: l.chatStorage,
           onTap: () => ChatStorageDialog.show(context),
         ),

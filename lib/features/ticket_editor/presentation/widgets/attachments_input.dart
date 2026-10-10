@@ -1,6 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
@@ -45,7 +45,7 @@ class AttachmentsInput extends StatelessWidget {
       children: [
         for (final f in files)
           EditorChip(
-            icon: PhosphorIconsLight.paperclip,
+            icon: LucideIcons.paperclip300,
             label: f.title,
             maxWidth: s.xl6 * 7,
             onRemove: () => onFilesChanged([
@@ -55,7 +55,7 @@ class AttachmentsInput extends StatelessWidget {
           ),
         for (final f in newFiles)
           EditorChip(
-            icon: PhosphorIconsLight.uploadSimple,
+            icon: LucideIcons.upload300,
             label: f.name,
             maxWidth: s.xl6 * 7,
             onRemove: () => onNewFilesChanged([
@@ -70,7 +70,7 @@ class AttachmentsInput extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: s.xs,
             children: [
-              Icon(PhosphorIconsLight.plus, size: s.xl2),
+              Icon(LucideIcons.plus300, size: s.xl2),
               Text(AppL10n.of(context).addFiles),
             ],
           ),

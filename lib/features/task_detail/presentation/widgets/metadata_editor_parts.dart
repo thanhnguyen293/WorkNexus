@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -67,7 +67,7 @@ class EditorSearchField extends StatelessWidget {
           hintText: hint,
           hintStyle: context.typography.body.copyWith(color: c.textTertiary),
           prefixIcon: Icon(
-            PhosphorIconsLight.magnifyingGlass,
+            LucideIcons.search300,
             size: context.spacing.xl4,
             color: c.textTertiary,
           ),
@@ -122,7 +122,7 @@ class EditorOptionTile extends StatelessWidget {
               width: context.spacing.xl5,
               child: selected
                   ? Icon(
-                      PhosphorIconsLight.check,
+                      LucideIcons.check300,
                       size: context.spacing.xl4,
                       color: c.accent,
                     )

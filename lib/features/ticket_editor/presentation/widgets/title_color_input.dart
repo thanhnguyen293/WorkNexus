@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -48,11 +48,7 @@ class TitleColorInput extends StatelessWidget {
               width: hex.toLowerCase() == value.toLowerCase() ? 2 : 1,
             ),
             child: hex.isEmpty
-                ? Icon(
-                    PhosphorIconsLight.prohibit,
-                    size: s.xl2,
-                    color: c.textTertiary,
-                  )
+                ? Icon(LucideIcons.ban300, size: s.xl2, color: c.textTertiary)
                 : null,
           ),
       ],

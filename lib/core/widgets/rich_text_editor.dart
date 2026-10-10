@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -204,7 +204,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
                                   strokeWidth: 1.6,
                                 ),
                               )
-                            : Icon(PhosphorIconsLight.image, size: s.xl2),
+                            : Icon(LucideIcons.image300, size: s.xl2),
                         onPressed: _uploading ? null : _pickImage,
                       ),
                   ],

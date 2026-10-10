@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -83,7 +83,7 @@ class ConversationListPane extends ConsumerWidget {
                 tooltip: l.chatNewChat,
                 onPressed: () => NewChatDialog.show(context, accountId),
                 icon: Icon(
-                  PhosphorIconsLight.notePencil,
+                  LucideIcons.squarePen300,
                   size: context.spacing.xl4,
                   color: c.textSecondary,
                 ),
@@ -107,7 +107,7 @@ class ConversationListPane extends ConsumerWidget {
                   SizedBox(width: context.spacing.xs),
                   _HeaderButton(
                     tooltip: l.chatNewChat,
-                    icon: PhosphorIconsLight.notePencil,
+                    icon: LucideIcons.squarePen300,
                     onPressed: () => NewChatDialog.show(context, accountId),
                   ),
                 ],

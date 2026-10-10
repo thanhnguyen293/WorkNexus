@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -89,7 +89,7 @@ class GitLabMrHeader extends StatelessWidget {
                   target != null &&
                   target.isNotEmpty)
                 Icon(
-                  PhosphorIconsLight.arrowRight,
+                  LucideIcons.arrowRight300,
                   size: context.spacing.xl2,
                   color: c.textTertiary,
                 ),

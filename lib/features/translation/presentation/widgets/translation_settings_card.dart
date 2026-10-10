@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -99,7 +99,7 @@ class _Header extends StatelessWidget {
         padding: EdgeInsets.all(context.spacing.xl2),
         child: Row(
           children: [
-            Icon(PhosphorIconsLight.translate, size: 20, color: c.accent),
+            Icon(LucideIcons.languages300, size: 20, color: c.accent),
             SizedBox(width: context.spacing.lg),
             Expanded(
               child: Column(
@@ -125,7 +125,7 @@ class _Header extends StatelessWidget {
               turns: expanded ? 0.5 : 0,
               duration: const Duration(milliseconds: 180),
               child: Icon(
-                PhosphorIconsLight.caretDown,
+                LucideIcons.chevronDown300,
                 size: 18,
                 color: c.textTertiary,
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -74,7 +74,7 @@ class DashboardHeadlineStatus extends ConsumerWidget {
                   dimension: s.xl3,
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(PhosphorIconsLight.arrowClockwise, color: c.textSecondary),
+              : Icon(LucideIcons.rotateCw300, color: c.textSecondary),
         ),
       ],
     );

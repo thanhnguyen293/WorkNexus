@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -90,7 +90,7 @@ class SidebarPinButton extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(context.spacing.xxs),
           child: Icon(
-            pinned ? PhosphorIconsFill.pushPin : PhosphorIconsLight.pushPin,
+            pinned ? LucideIcons.pin500 : LucideIcons.pin300,
             size: 13,
             color: pinned ? c.accent : c.textTertiary,
           ),
@@ -136,7 +136,7 @@ class SidebarPinnedHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
       child: Row(
         children: [
-          Icon(PhosphorIconsFill.pushPin, size: 12, color: c.accent),
+          Icon(LucideIcons.pin500, size: 12, color: c.accent),
           SizedBox(width: context.spacing.xs),
           Text(
             l.pinned,

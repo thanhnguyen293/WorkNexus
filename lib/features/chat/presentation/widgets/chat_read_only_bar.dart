@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -29,11 +29,7 @@ class ChatReadOnlyBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            PhosphorIconsLight.lockSimple,
-            size: s.xl3,
-            color: c.textTertiary,
-          ),
+          Icon(LucideIcons.lock300, size: s.xl3, color: c.textTertiary),
           SizedBox(width: s.md),
           Flexible(
             child: Text(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -84,7 +84,7 @@ class ChatStorageChatList extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          PhosphorIconsLight.folder,
+                          LucideIcons.folder300,
                           size: s.xl4,
                           color: c.textSecondary,
                         ),
@@ -244,7 +244,7 @@ class _UsageRow extends StatelessWidget {
               mouseCursor: SystemMouseCursors.click,
               hoverColor: c.mixT(c.error, 0.12),
               icon: Icon(
-                PhosphorIconsLight.trash,
+                LucideIcons.trash300,
                 size: s.xl3,
                 color: c.textSecondary,
               ),

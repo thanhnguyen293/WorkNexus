@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/di/providers.dart';
 import '../../core/domain/entities/account.dart';
@@ -97,8 +97,8 @@ class NewTicketRailButton extends ConsumerWidget {
             for (final choice in choices)
               AppMenuEntry(
                 icon: choice.isBug
-                    ? PhosphorIconsLight.bug
-                    : PhosphorIconsLight.checkSquare,
+                    ? LucideIcons.bug300
+                    : LucideIcons.checkSquare300,
                 label: severalAccounts
                     ? l.zentaoNewInAccount(
                         choice.isBug ? l.newBug : l.newTask,
@@ -116,8 +116,7 @@ class NewTicketRailButton extends ConsumerWidget {
         ),
       ],
       builder: (context, menu, _) => AppRailButton(
-        icon: PhosphorIconsLight.plusCircle,
-        selectedIcon: PhosphorIconsFill.plusCircle,
+        icon: LucideIcons.plusCircle300,
         label: l.zentaoNewTicket(_isMac ? '⌘N' : 'Ctrl+N'),
         selected: menu.isOpen,
         onTap: () => menu.isOpen ? menu.close() : menu.open(),

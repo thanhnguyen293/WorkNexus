@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -68,7 +67,7 @@ class _PlayGlyph extends StatelessWidget {
     child: Padding(
       padding: EdgeInsets.only(left: context.spacing.xxs),
       child: Icon(
-        PhosphorIconsFill.play,
+        Icons.play_arrow_rounded,
         size: context.spacing.xl4,
         color: context.colors.onScrim,
       ),

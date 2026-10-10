@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
@@ -50,7 +50,7 @@ class EditorLinkButton extends StatelessWidget {
         ),
       ),
       onPressed: () => _open(context),
-      icon: const Icon(PhosphorIconsLight.link),
+      icon: const Icon(LucideIcons.link300),
     );
   }
 }

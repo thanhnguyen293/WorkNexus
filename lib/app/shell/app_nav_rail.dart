@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_borders.dart';
@@ -45,8 +45,7 @@ class AppNavRail extends ConsumerWidget {
           const NotificationsRailButton(),
           const ChatRailButton(),
           AppRailButton(
-            icon: PhosphorIconsLight.kanban,
-            selectedIcon: PhosphorIconsFill.kanban,
+            icon: LucideIcons.kanban300,
             label: l.board,
             selected: view == MainView.board && !integrations,
             onTap: () => showBoardView(ref),
@@ -54,8 +53,7 @@ class AppNavRail extends ConsumerWidget {
           const Spacer(),
           const UpdateRailButton(),
           AppRailButton(
-            icon: PhosphorIconsLight.gear,
-            selectedIcon: PhosphorIconsLight.gear,
+            icon: LucideIcons.settings300,
             label: l.integrations,
             selected: integrations,
             onTap: () =>

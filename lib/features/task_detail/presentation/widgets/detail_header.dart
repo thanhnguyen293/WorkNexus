@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
@@ -73,7 +73,7 @@ class DetailHeader extends ConsumerWidget {
               const Spacer(),
               if (_editRoute(ticket) case final route?) ...[
                 DetailHeaderIconButton(
-                  icon: PhosphorIconsLight.pencilSimple,
+                  icon: LucideIcons.pencil300,
                   tooltip: l.edit,
                   onTap: () {
                     // The editor takes the screen; the detail reopens on save.
@@ -83,7 +83,7 @@ class DetailHeader extends ConsumerWidget {
                 SizedBox(width: context.spacing.md),
               ],
               DetailHeaderIconButton(
-                icon: PhosphorIconsLight.arrowsClockwise,
+                icon: LucideIcons.refreshCw300,
                 tooltip: l.refresh,
                 onTap: () =>
                     ref.invalidate(ticketDetailSyncProvider(ticket.id)),
@@ -93,14 +93,14 @@ class DetailHeader extends ConsumerWidget {
                 DetailHeaderCopyLinkButton(url: ticket.url!),
                 SizedBox(width: context.spacing.md),
                 DetailHeaderIconButton(
-                  icon: PhosphorIconsLight.arrowSquareOut,
+                  icon: LucideIcons.squareArrowOutUpRight300,
                   tooltip: l.openInBrowser,
                   onTap: () => openExternally(ticket.url!),
                 ),
                 SizedBox(width: context.spacing.md),
               ],
               DetailHeaderIconButton(
-                icon: PhosphorIconsLight.x,
+                icon: LucideIcons.x300,
                 tooltip: l.close,
                 onTap: onClose,
               ),

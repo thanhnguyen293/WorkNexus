@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/error/result.dart';
@@ -230,12 +230,12 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                 onClose: () => Navigator.of(context).pop(),
                 actions: [
                   ChatViewerButton(
-                    icon: PhosphorIconsLight.downloadSimple,
+                    icon: LucideIcons.download300,
                     tooltip: l.chatSaveAs,
                     onPressed: path == null ? null : _save,
                   ),
                   ChatViewerButton(
-                    icon: PhosphorIconsLight.arrowSquareOut,
+                    icon: LucideIcons.squareArrowOutUpRight300,
                     tooltip: l.chatOpenWith,
                     onPressed: path == null ? null : () => openExternally(path),
                   ),

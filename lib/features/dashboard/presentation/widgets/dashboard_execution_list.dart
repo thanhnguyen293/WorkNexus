@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -140,7 +140,7 @@ class _EndLine extends StatelessWidget {
     return Row(
       children: [
         MyWorkFact(
-          icon: PhosphorIconsLight.flagCheckered,
+          icon: LucideIcons.flag300,
           text: l.dashboardEnds(DateFormat.MMMd(locale).format(end)),
         ),
         const Spacer(),

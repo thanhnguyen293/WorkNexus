@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
@@ -125,7 +125,7 @@ class AccountRow extends ConsumerWidget {
               tooltip: 'Sync now',
               visualDensity: VisualDensity.compact,
               icon: Icon(
-                PhosphorIconsLight.arrowsClockwise,
+                LucideIcons.refreshCw300,
                 size: 16,
                 color: c.textSecondary,
               ),
@@ -134,11 +134,7 @@ class AccountRow extends ConsumerWidget {
             IconButton(
               tooltip: 'Remove',
               visualDensity: VisualDensity.compact,
-              icon: Icon(
-                PhosphorIconsLight.trash,
-                size: 16,
-                color: c.textTertiary,
-              ),
+              icon: Icon(LucideIcons.trash300, size: 16, color: c.textTertiary),
               onPressed: () => _remove(ref),
             ),
           ] else

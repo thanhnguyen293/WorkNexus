@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -103,8 +103,8 @@ class NotificationBody extends ConsumerWidget {
                     ),
                     icon: Icon(
                       i == 0 && url != null && ticketUrl == null
-                          ? PhosphorIconsLight.arrowCircleRight
-                          : PhosphorIconsLight.arrowSquareOut,
+                          ? LucideIcons.circleArrowRight300
+                          : LucideIcons.squareArrowOutUpRight300,
                       size: s.xl3,
                     ),
                     label: Text(link.label),

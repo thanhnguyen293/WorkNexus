@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -124,7 +124,7 @@ class _AppBadge extends StatelessWidget {
         border: Border.all(color: c.border),
       ),
       child: Icon(
-        PhosphorIconsLight.downloadSimple,
+        LucideIcons.download300,
         size: context.spacing.xl5,
         color: c.accent,
       ),
@@ -149,7 +149,7 @@ class _VersionChange extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
           child: Icon(
-            PhosphorIconsLight.arrowRight,
+            LucideIcons.arrowRight300,
             size: context.spacing.xl3,
             color: c.textTertiary,
           ),

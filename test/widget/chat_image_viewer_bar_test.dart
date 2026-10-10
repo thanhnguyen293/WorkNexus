@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
@@ -50,11 +50,11 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(PhosphorIconsLight.magnifyingGlassPlus), findsOneWidget);
-    expect(find.byIcon(PhosphorIconsLight.downloadSimple), findsOneWidget);
-    expect(find.byIcon(PhosphorIconsLight.dotsThree), findsNothing);
+    expect(find.byIcon(LucideIcons.zoomIn300), findsOneWidget);
+    expect(find.byIcon(LucideIcons.download300), findsOneWidget);
+    expect(find.byIcon(LucideIcons.ellipsis300), findsNothing);
 
-    await tester.tap(find.byIcon(PhosphorIconsLight.arrowClockwise));
+    await tester.tap(find.byIcon(LucideIcons.rotateCw300));
     await tester.pumpAndSettle();
     expect(rotated, 1);
   });

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/platform/open_external.dart';
@@ -36,25 +36,25 @@ class DetailPanelHeaderActions extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         DetailHeaderIconButton(
-          icon: PhosphorIconsLight.arrowsClockwise,
+          icon: LucideIcons.refreshCw300,
           tooltip: l.refresh,
           onTap: onSync,
         ),
         if (hasUrl) DetailHeaderCopyLinkButton(url: url),
         if (hasUrl)
           DetailHeaderIconButton(
-            icon: PhosphorIconsLight.arrowSquareOut,
+            icon: LucideIcons.squareArrowOutUpRight300,
             tooltip: l.openInBrowser,
             onTap: () => openExternally(url),
           ),
         if (hasUrl)
           DetailHeaderIconButton(
-            icon: PhosphorIconsLight.pencilSimple,
+            icon: LucideIcons.pencil300,
             tooltip: l.edit,
             onTap: () => openExternally('$url/edit'),
           ),
         DetailHeaderIconButton(
-          icon: PhosphorIconsLight.x,
+          icon: LucideIcons.x300,
           tooltip: l.close,
           onTap: onClosePanel,
         ),

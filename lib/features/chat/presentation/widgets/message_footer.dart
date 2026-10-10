@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -48,11 +48,7 @@ class MessageFooter extends ConsumerWidget {
           Text(DateFormat('HH:mm').format(message.sentAt), style: style),
           if (tick case final color?) ...[
             SizedBox(width: context.spacing.xxs),
-            Icon(
-              PhosphorIconsLight.check,
-              size: context.spacing.xl,
-              color: color,
-            ),
+            Icon(LucideIcons.check300, size: context.spacing.xl, color: color),
           ],
         ],
       ),

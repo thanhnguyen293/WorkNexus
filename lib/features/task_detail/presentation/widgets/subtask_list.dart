@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -139,7 +139,7 @@ class _Row extends StatelessWidget {
               )
             else
               Icon(
-                PhosphorIconsLight.caretRight,
+                LucideIcons.chevronRight300,
                 size: s.lg,
                 color: c.textTertiary,
               ),

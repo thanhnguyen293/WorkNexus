@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
@@ -128,7 +128,7 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                   IconButton(
                     tooltip: l.chatCancel,
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
+                    icon: Icon(LucideIcons.x300, color: c.textSecondary),
                   ),
                 ],
               ),
@@ -147,7 +147,7 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                   decoration: chatFieldDecoration(
                     context,
                     hint: '${l.chatGroupName} · ${_defaultName(users)}',
-                    icon: PhosphorIconsLight.usersThree,
+                    icon: LucideIcons.users300,
                   ),
                 ),
                 SizedBox(height: s.xl),

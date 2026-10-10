@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -51,7 +51,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
       at: at,
       entries: [
         AppMenuEntry(
-          icon: PhosphorIconsLight.trash,
+          icon: LucideIcons.trash300,
           label: l.chatWallpaperRemove,
           destructive: true,
         ),
@@ -116,10 +116,8 @@ class ChatWallpaperPicker extends ConsumerWidget {
                       File(path),
                       fit: BoxFit.cover,
                       cacheWidth: (s.xl6 * 4).round(),
-                      errorBuilder: (_, _, _) => Icon(
-                        PhosphorIconsLight.imageBroken,
-                        color: c.textTertiary,
-                      ),
+                      errorBuilder: (_, _, _) =>
+                          Icon(LucideIcons.imageOff300, color: c.textTertiary),
                     ),
                   ),
                 ),
@@ -129,10 +127,7 @@ class ChatWallpaperPicker extends ConsumerWidget {
                 onTap: () => _add(context, ref),
                 child: ColoredBox(
                   color: c.surfaceSubtle,
-                  child: Icon(
-                    PhosphorIconsLight.imageSquare,
-                    color: c.textSecondary,
-                  ),
+                  child: Icon(LucideIcons.image300, color: c.textSecondary),
                 ),
               ),
             ],

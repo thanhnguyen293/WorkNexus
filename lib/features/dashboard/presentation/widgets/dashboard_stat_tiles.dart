@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/priority.dart';
@@ -53,7 +53,7 @@ class DashboardStatTiles extends ConsumerWidget {
         ref.read(dashboardWorkKindProvider.notifier).state = kind;
     final tiles = [
       _Tile(
-        icon: PhosphorIconsFill.bug,
+        icon: LucideIcons.bug500,
         color: c.error,
         value: queue.openBugs,
         label: l.dashboardStatBugs,
@@ -61,7 +61,7 @@ class DashboardStatTiles extends ConsumerWidget {
         onTap: () => open(DashboardItemKind.bug),
       ),
       _Tile(
-        icon: PhosphorIconsFill.clipboardText,
+        icon: LucideIcons.clipboardList500,
         color: c.accent,
         value: queue.openTasks,
         label: l.dashboardStatTasks,
@@ -69,14 +69,14 @@ class DashboardStatTiles extends ConsumerWidget {
         onTap: () => open(DashboardItemKind.task),
       ),
       _Tile(
-        icon: PhosphorIconsFill.bookOpenText,
+        icon: LucideIcons.bookOpenText500,
         color: c.info,
         value: d?.storyTotal,
         label: l.dashboardStatStories,
         caption: l.dashboardStatAssigned,
       ),
       _Tile(
-        icon: PhosphorIconsFill.kanban,
+        icon: LucideIcons.kanban500,
         color: c.caution,
         value: d?.executionTotal,
         label: l.dashboardStatSprints,
@@ -169,7 +169,7 @@ class _TileState extends State<_Tile> {
                   const Spacer(),
                   if (tappable)
                     Icon(
-                      PhosphorIconsLight.arrowUpRight,
+                      LucideIcons.arrowUpRight300,
                       size: s.xl3,
                       color: active ? widget.color : c.textTertiary,
                     ),

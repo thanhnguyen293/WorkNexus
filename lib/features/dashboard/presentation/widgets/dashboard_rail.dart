@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -32,14 +32,14 @@ class DashboardRail extends StatelessWidget {
       if (d.executions.isNotEmpty)
         DashboardCard(
           title: l.dashboardSprints,
-          icon: PhosphorIconsLight.kanban,
+          icon: LucideIcons.kanban300,
           count: d.executionTotal,
           child: DashboardExecutionList(executions: d.executions),
         ),
       if (d.todos.isNotEmpty)
         DashboardCard(
           title: l.dashboardTodos,
-          icon: PhosphorIconsLight.listChecks,
+          icon: LucideIcons.listChecks300,
           count: d.todoTotal,
           padding: EdgeInsets.fromLTRB(s.sm, s.md, s.sm, s.md),
           child: DashboardWorkList(account: account, items: d.todos),
@@ -47,7 +47,7 @@ class DashboardRail extends StatelessWidget {
       if (d.activities.isNotEmpty)
         DashboardCard(
           title: l.dashboardActivity,
-          icon: PhosphorIconsLight.clockCounterClockwise,
+          icon: LucideIcons.history300,
           padding: EdgeInsets.fromLTRB(s.md, s.xl, s.md, s.sm),
           child: DashboardActivityList(
             account: account,

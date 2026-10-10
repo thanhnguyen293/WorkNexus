@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
@@ -43,7 +43,7 @@ class NewTicketButton extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(PhosphorIconsBold.plus, size: context.spacing.xl2),
+          Icon(LucideIcons.plus500, size: context.spacing.xl2),
           SizedBox(width: context.spacing.sm),
           Text(label),
         ],

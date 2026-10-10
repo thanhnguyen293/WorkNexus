@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../navigation/navigation_providers.dart';
@@ -128,7 +128,7 @@ class _PanelState extends ConsumerState<_Panel> {
                   IconButton(
                     tooltip: MaterialLocalizations.of(context).closeButtonLabel,
                     onPressed: close,
-                    icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
+                    icon: Icon(LucideIcons.x300, color: c.textSecondary),
                   ),
                 ],
               ),

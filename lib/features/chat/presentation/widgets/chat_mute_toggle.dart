@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -44,10 +44,10 @@ class ChatMuteToggle extends ConsumerWidget {
       },
       icon: Icon(
         blocked
-            ? PhosphorIconsLight.bellSimpleRinging
+            ? LucideIcons.bellRing300
             : muted
-            ? PhosphorIconsLight.bellSlash
-            : PhosphorIconsLight.bell,
+            ? LucideIcons.bellOff300
+            : LucideIcons.bell300,
         color: blocked ? c.warning : c.textSecondary,
       ),
     );

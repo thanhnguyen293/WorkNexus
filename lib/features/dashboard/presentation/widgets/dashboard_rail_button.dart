@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/widgets/app_rail_button.dart';
@@ -18,8 +18,7 @@ class DashboardRailButton extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     return AppRailButton(
-      icon: PhosphorIconsLight.squaresFour,
-      selectedIcon: PhosphorIconsFill.squaresFour,
+      icon: LucideIcons.layoutGrid300,
       label: AppL10n.of(context).dashboard,
       selected:
           ref.watch(mainViewProvider) == MainView.dashboard &&

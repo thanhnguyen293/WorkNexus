@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -75,7 +75,7 @@ class ChatSidePanelFrame extends StatelessWidget {
                     tooltip: AppL10n.of(context).chatBackToInfo,
                     onPressed: back,
                     icon: Icon(
-                      PhosphorIconsLight.arrowLeft,
+                      LucideIcons.arrowLeft300,
                       color: c.textSecondary,
                     ),
                   ),
@@ -93,7 +93,7 @@ class ChatSidePanelFrame extends StatelessWidget {
                   IconButton(
                     tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
                     onPressed: close,
-                    icon: Icon(PhosphorIconsLight.x, color: c.textSecondary),
+                    icon: Icon(LucideIcons.x300, color: c.textSecondary),
                   ),
               ],
             ),

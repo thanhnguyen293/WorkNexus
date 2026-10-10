@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -87,7 +87,7 @@ class ThreadChip extends StatelessWidget {
               ),
               SizedBox(width: s.xs),
               Icon(
-                PhosphorIconsLight.caretRight,
+                LucideIcons.chevronRight300,
                 size: s.xl3,
                 color: c.textTertiary,
               ),

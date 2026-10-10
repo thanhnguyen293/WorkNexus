@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
@@ -53,8 +53,8 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
               children: [
                 Icon(
                   expanded
-                      ? PhosphorIconsLight.caretDown
-                      : PhosphorIconsLight.caretRight,
+                      ? LucideIcons.chevronDown300
+                      : LucideIcons.chevronRight300,
                   size: 14,
                   color: c.textTertiary,
                 ),
@@ -144,17 +144,13 @@ class _ProjectNode extends ConsumerWidget {
               children: [
                 Icon(
                   expanded
-                      ? PhosphorIconsLight.caretDown
-                      : PhosphorIconsLight.caretRight,
+                      ? LucideIcons.chevronDown300
+                      : LucideIcons.chevronRight300,
                   size: 14,
                   color: c.textTertiary,
                 ),
                 SizedBox(width: context.spacing.xs),
-                Icon(
-                  PhosphorIconsLight.folder,
-                  size: 13,
-                  color: c.textTertiary,
-                ),
+                Icon(LucideIcons.folder300, size: 13, color: c.textTertiary),
                 SizedBox(width: context.spacing.sm),
                 Expanded(
                   child: Text(

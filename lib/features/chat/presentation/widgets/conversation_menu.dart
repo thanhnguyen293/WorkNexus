@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -29,9 +29,7 @@ Future<void> showConversationMenu(
         child: ListTile(
           dense: true,
           contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            pin ? PhosphorIconsLight.pushPin : PhosphorIconsFill.pushPin,
-          ),
+          leading: Icon(pin ? LucideIcons.pin300 : LucideIcons.pin500),
           title: Text(pin ? l.chatPinChat : l.chatUnpinChat),
         ),
       ),
@@ -41,9 +39,7 @@ Future<void> showConversationMenu(
           dense: true,
           contentPadding: EdgeInsets.zero,
           leading: Icon(
-            mute
-                ? PhosphorIconsLight.bellSlash
-                : PhosphorIconsLight.bellRinging,
+            mute ? LucideIcons.bellOff300 : LucideIcons.bellRing300,
           ),
           title: Text(mute ? l.chatMuteChat : l.chatUnmuteChat),
         ),

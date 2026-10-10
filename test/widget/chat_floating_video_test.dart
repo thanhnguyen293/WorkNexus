@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -61,7 +61,7 @@ void main() {
 
   testWidgets('floats top-left, drags, and × stops it', (tester) async {
     final container = await pump(tester);
-    final close = find.byIcon(PhosphorIconsLight.x);
+    final close = find.byIcon(LucideIcons.x300);
     expect(close, findsOneWidget);
     final mini = find.byType(VideoPlayer);
     final start = tester.getTopLeft(mini);

@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_hover_actions.dart';
@@ -11,7 +10,7 @@ void main() {
   Future<List<String>> pumpBubble(WidgetTester tester) async {
     final ran = <String>[];
     MessageAction action(String name, {bool destructive = false}) => (
-      icon: PhosphorIconsFill.circle,
+      icon: Icons.circle,
       tooltip: name,
       onTap: () => ran.add(name),
       destructive: destructive,

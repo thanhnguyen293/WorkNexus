@@ -197,7 +197,7 @@ class _ClosedField extends StatelessWidget {
                 ),
               ),
               Icon(
-                PhosphorIconsLight.caretDown,
+                LucideIcons.chevronDown300,
                 size: spacing.xl2,
                 color: c.textTertiary,
               ),

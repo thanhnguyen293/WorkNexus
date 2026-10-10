@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -99,7 +99,7 @@ class MyWorkDueFact extends StatelessWidget {
     final overdue = due.isBefore(DateTime(now.year, now.month, now.day));
     final locale = Localizations.localeOf(context).toString();
     return MyWorkFact(
-      icon: PhosphorIconsLight.calendarBlank,
+      icon: LucideIcons.calendar300,
       text: AppL10n.of(
         context,
       ).dashboardDue(DateFormat.MMMd(locale).format(due)),

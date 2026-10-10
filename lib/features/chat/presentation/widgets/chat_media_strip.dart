@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -125,7 +125,7 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
       child: Row(
         children: [
           ChatViewerButton(
-            icon: PhosphorIconsLight.caretLeft,
+            icon: LucideIcons.chevronLeft300,
             tooltip: l.chatPrevious,
             onPressed: () => _page(-1),
           ),
@@ -148,7 +148,7 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
             ),
           ),
           ChatViewerButton(
-            icon: PhosphorIconsLight.caretRight,
+            icon: LucideIcons.chevronRight300,
             tooltip: l.chatNext,
             onPressed: () => _page(1),
           ),
@@ -221,7 +221,7 @@ class _Thumb extends ConsumerWidget {
                   if (content is FileContent)
                     Center(
                       child: Icon(
-                        PhosphorIconsFill.playCircle,
+                        Icons.play_circle_rounded,
                         size: s.xl4,
                         color: c.onScrim,
                       ),

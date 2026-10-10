@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -46,7 +46,7 @@ class ScrollToLatestButton extends StatelessWidget {
               child: SizedBox.square(
                 dimension: s.xl6,
                 child: Icon(
-                  PhosphorIconsLight.caretDoubleDown,
+                  LucideIcons.chevronsDown300,
                   color: unseen > 0 ? c.accent : c.textSecondary,
                 ),
               ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -118,7 +117,7 @@ class _Thumb extends ConsumerWidget {
             if (video)
               Center(
                 child: Icon(
-                  PhosphorIconsFill.playCircle,
+                  Icons.play_circle_rounded,
                   color: c.onScrim,
                   size: context.spacing.xl5,
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
@@ -80,7 +80,7 @@ class SettingsPage extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(PhosphorIconsLight.plus, size: 16),
+                            const Icon(LucideIcons.plus300, size: 16),
                             SizedBox(width: context.spacing.sm),
                             Text(l.connect),
                           ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -82,11 +82,7 @@ class OptionMultiSelect extends StatelessWidget {
                     ],
                   ),
           ),
-          Icon(
-            PhosphorIconsLight.caretDown,
-            size: s.xl2,
-            color: c.textTertiary,
-          ),
+          Icon(LucideIcons.chevronDown300, size: s.xl2, color: c.textTertiary),
         ],
       ),
     );

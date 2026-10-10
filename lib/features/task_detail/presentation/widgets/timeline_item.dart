@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -88,17 +88,14 @@ class TimelineEventIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final (icon, color) = switch (kind) {
-      ActivityKind.created => (PhosphorIconsLight.plus, c.textSecondary),
-      ActivityKind.assigned => (PhosphorIconsLight.user, c.textSecondary),
-      ActivityKind.edited => (PhosphorIconsLight.pencilSimple, c.textSecondary),
-      ActivityKind.resolved => (PhosphorIconsLight.check, c.success),
-      ActivityKind.reopened => (
-        PhosphorIconsLight.arrowCounterClockwise,
-        c.warning,
-      ),
-      ActivityKind.confirmed => (PhosphorIconsLight.sealCheck, c.accent),
-      ActivityKind.closed => (PhosphorIconsLight.x, c.textSecondary),
-      ActivityKind.other => (PhosphorIconsLight.dotOutline, c.textTertiary),
+      ActivityKind.created => (LucideIcons.plus300, c.textSecondary),
+      ActivityKind.assigned => (LucideIcons.user300, c.textSecondary),
+      ActivityKind.edited => (LucideIcons.pencil300, c.textSecondary),
+      ActivityKind.resolved => (LucideIcons.check300, c.success),
+      ActivityKind.reopened => (LucideIcons.rotateCcw300, c.warning),
+      ActivityKind.confirmed => (LucideIcons.badgeCheck300, c.accent),
+      ActivityKind.closed => (LucideIcons.x300, c.textSecondary),
+      ActivityKind.other => (LucideIcons.dot300, c.textTertiary),
     };
     const side = kTimelineGutter * 0.8;
     return Container(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/domain/entities/workspace.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -33,8 +33,8 @@ void main() {
     expect(find.text('Workspace style'), findsOneWidget);
     expect(find.text('Choose file'), findsOneWidget);
     expect(find.text('No file selected'), findsOneWidget);
-    expect(find.byIcon(PhosphorIconsLight.house), findsNothing);
-    expect(find.byIcon(PhosphorIconsLight.buildings), findsNothing);
-    expect(find.byIcon(PhosphorIconsLight.rocketLaunch), findsNothing);
+    expect(find.byIcon(LucideIcons.house300), findsNothing);
+    expect(find.byIcon(LucideIcons.building2300), findsNothing);
+    expect(find.byIcon(LucideIcons.rocket300), findsNothing);
   });
 }

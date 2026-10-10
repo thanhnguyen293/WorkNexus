@@ -11,7 +11,6 @@ class AppRailButton extends StatelessWidget {
   const AppRailButton({
     super.key,
     required this.icon,
-    required this.selectedIcon,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -19,7 +18,6 @@ class AppRailButton extends StatelessWidget {
   });
 
   final IconData icon;
-  final IconData selectedIcon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -48,7 +46,9 @@ class AppRailButton extends StatelessWidget {
                 child: SizedBox.square(
                   dimension: s.xl6,
                   child: Icon(
-                    selected ? selectedIcon : icon,
+                    // Same weight either way: the fill and the accent
+                    // colour mark the selection.
+                    icon,
                     size: s.xl5,
                     color: selected ? c.accent : c.textSecondary,
                   ),

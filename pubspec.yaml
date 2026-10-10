@@ -23,7 +23,9 @@ dependencies:
 
   # UI / icons / fonts
   cupertino_icons: 1.0.9
-  phosphor_flutter: 2.1.0
+  # Even strokes at every size (Phosphor's font has uneven ones); the
+  # weight is picked per icon (`…300` regular UI, `…500` emphasis).
+  lucide_icons_flutter: 3.1.24
   # Renders the bundled monochrome provider brand logos (assets/brands/*.svg),
   # tinted at draw time. Pure-Dart (vector_graphics) — no native-assets build
   # hook, so it does not affect build_runner.
@@ -142,9 +144,6 @@ dev_dependencies:
 # Remove once build_runner tolerates build hooks on the pinned SDK.
 # ─────────────────────────────────────────────────────────────────────────────
 dependency_overrides:
-  # The upstream 2.1.0 extends IconData and does not build with Flutter 3.43+.
-  phosphor_flutter:
-    path: packages/phosphor_flutter
   path_provider_foundation: '>=2.4.0 <2.6.0'
 
 # NOTE: riverpod_lint + custom_lint are intentionally NOT added — they cannot

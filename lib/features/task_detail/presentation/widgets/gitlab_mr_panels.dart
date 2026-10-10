@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -61,8 +61,8 @@ class GitLabMrMergePanel extends StatelessWidget {
               children: [
                 Icon(
                   needsRebase
-                      ? PhosphorIconsLight.minusCircle
-                      : PhosphorIconsFill.info,
+                      ? LucideIcons.minusCircle300
+                      : LucideIcons.info500,
                   size: context.spacing.xl4,
                   color: needsRebase ? c.error : c.info,
                 ),

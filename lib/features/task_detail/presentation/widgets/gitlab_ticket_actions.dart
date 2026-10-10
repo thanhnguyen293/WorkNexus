@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
@@ -50,7 +50,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
         runSpacing: context.spacing.md,
         children: [
           DetailActionButton(
-            icon: PhosphorIconsLight.userPlus,
+            icon: LucideIcons.userPlus300,
             label: l.assign,
             onTap: _busy
                 ? null
@@ -61,7 +61,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
           ),
           if (isMr && active)
             DetailActionButton(
-              icon: PhosphorIconsLight.notePencil,
+              icon: LucideIcons.squarePen300,
               label: l.reviewers,
               onTap: _busy
                   ? null
@@ -72,7 +72,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
             ),
           if (needsRebase)
             DetailActionButton(
-              icon: PhosphorIconsLight.arrowsClockwise,
+              icon: LucideIcons.refreshCw300,
               label: l.rebase,
               onTap: _busy
                   ? null
@@ -83,7 +83,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
             ),
           if (isMr && active)
             DetailActionButton(
-              icon: PhosphorIconsLight.gitMerge,
+              icon: LucideIcons.gitMerge300,
               label: l.gitlabMerge,
               onTap: _busy
                   ? null
@@ -94,7 +94,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
             ),
           if (active)
             DetailActionButton(
-              icon: PhosphorIconsLight.checkCircle,
+              icon: LucideIcons.checkCircle300,
               label: l.close,
               onTap: _busy
                   ? null
@@ -105,7 +105,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
             ),
           if (isClosed)
             DetailActionButton(
-              icon: PhosphorIconsLight.arrowClockwise,
+              icon: LucideIcons.rotateCw300,
               label: l.gitlabReopen,
               onTap: _busy
                   ? null

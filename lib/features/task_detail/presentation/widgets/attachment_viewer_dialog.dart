@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
@@ -135,7 +135,7 @@ class _AttachmentViewerDialogState
     final path = _path;
     if (path == null) {
       return _Message(
-        icon: PhosphorIconsLight.warningCircle,
+        icon: LucideIcons.circleAlert300,
         text: AppL10n.of(context).attachmentLoadFailed,
       );
     }
@@ -150,7 +150,7 @@ class _AttachmentViewerDialogState
       return AttachmentVideoView(path: path);
     }
     return _Message(
-      icon: PhosphorIconsLight.file,
+      icon: LucideIcons.file300,
       text: AppL10n.of(context).previewUnavailable,
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -69,11 +69,7 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                PhosphorIconsLight.treeStructure,
-                size: s.xl3,
-                color: c.accent,
-              ),
+              Icon(LucideIcons.network300, size: s.xl3, color: c.accent),
               SizedBox(width: s.sm),
               Text(
                 l.parentTask,
@@ -110,11 +106,7 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
                   ),
                 )
               else
-                Icon(
-                  PhosphorIconsLight.caretRight,
-                  size: s.lg,
-                  color: c.accent,
-                ),
+                Icon(LucideIcons.chevronRight300, size: s.lg, color: c.accent),
             ],
           ),
         ),

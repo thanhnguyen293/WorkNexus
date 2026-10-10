@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
@@ -120,7 +120,7 @@ void main() {
     expect(find.text('Edit'), findsWidgets);
     expect(
       find.ancestor(
-        of: find.byIcon(PhosphorIconsLight.plus),
+        of: find.byIcon(LucideIcons.plus300),
         matching: find.byType(InkWell),
       ),
       findsOneWidget,

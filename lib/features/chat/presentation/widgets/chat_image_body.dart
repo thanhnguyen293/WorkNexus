@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -133,7 +133,7 @@ class ChatImageBody extends ConsumerWidget {
       AsyncData(value: Err()) || AsyncError() => ColoredBox(
         color: c.surface,
         child: Center(
-          child: Icon(PhosphorIconsLight.imageBroken, color: c.textTertiary),
+          child: Icon(LucideIcons.imageOff300, color: c.textTertiary),
         ),
       ),
       _ => ColoredBox(color: c.skeleton),
