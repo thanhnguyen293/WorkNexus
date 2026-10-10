@@ -99,6 +99,15 @@ class AppTypography extends ThemeExtension<AppTypography> {
     fontFamily: kMonoFont,
     height: 1,
   );
+
+  /// A badge in a prominent spot (the detail header), sized to sit beside a
+  /// ticket ref instead of inside a dense card.
+  TextStyle get badgeXl => const TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    fontFamily: kMonoFont,
+    height: 1,
+  );
   TextStyle get badgeSm => const TextStyle(
     fontSize: 9.5,
     fontWeight: FontWeight.w700,

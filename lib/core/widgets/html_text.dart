@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
+import '../platform/open_external.dart';
 import '../theme/app_colors.dart';
 import 'inline_image.dart';
 
@@ -29,7 +30,7 @@ class HtmlText extends StatelessWidget {
   final ImageUrlResolver? imageFallbackUrl;
   final ImageExternalOpener? onOpenImage;
 
-  /// Handles a tapped link; null leaves it to the renderer.
+  /// Handles a tapped link; null opens web links in the browser.
   final void Function(String url)? onLinkTap;
 
   @override
@@ -44,7 +45,7 @@ class HtmlText extends StatelessWidget {
       return Text('—', style: style.copyWith(color: c.textTertiary));
     }
     final loader = imageLoader;
-    final onLink = onLinkTap;
+    final onLink = onLinkTap ?? openLinkExternally;
     final link = _cssColor(c.accent);
     return HtmlWidget(
       html,
@@ -65,12 +66,10 @@ class HtmlText extends StatelessWidget {
           onOpenImage: onOpenImage,
         );
       },
-      onTapUrl: onLink == null
-          ? null
-          : (url) {
-              onLink(url);
-              return true;
-            },
+      onTapUrl: (url) {
+        onLink(url);
+        return true;
+      },
     );
   }
 }

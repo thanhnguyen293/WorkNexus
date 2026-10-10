@@ -47,9 +47,17 @@ SvgGenImage _brandMark(ProviderType p) => switch (p) {
 
 /// Provider-specific priority tag (P0 / priority::1 / ◆ High / Pri 1).
 class PriorityTag extends StatelessWidget {
-  const PriorityTag(this.provider, this.priority, {super.key});
+  const PriorityTag(
+    this.provider,
+    this.priority, {
+    super.key,
+    this.large = false,
+  });
   final ProviderType provider;
   final Priority priority;
+
+  /// The roomier size for the detail header (see `TintedPill.large`).
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +65,8 @@ class PriorityTag extends StatelessWidget {
     final color = priorityColor(c, priority);
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xxs,
+        horizontal: large ? context.spacing.md : context.spacing.sm,
+        vertical: large ? context.spacing.xs : context.spacing.xxs,
       ),
       decoration: BoxDecoration(
         color: c.mixT(color, 0.17),
@@ -71,7 +79,8 @@ class PriorityTag extends StatelessWidget {
       ),
       child: Text(
         priorityLabel(provider, priority),
-        style: context.typography.badge.copyWith(color: color),
+        style: (large ? context.typography.badgeXl : context.typography.badge)
+            .copyWith(color: color),
       ),
     );
   }

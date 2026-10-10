@@ -149,6 +149,8 @@
   "githubTokenHint": "ghp_… (scopes: repo, read:org)",
   "generateToken": "Tạo token",
   "newWorkspaceOption": "➕ Workspace mới…",
+  "defaultWorkspaceName": "MyWorkspace",
+  "commentedAction": "đã bình luận",
   "newWorkspaceName": "Tên workspace mới",
   "newWorkspaceHint": "vd Công ty C",
   "cancel": "Hủy",

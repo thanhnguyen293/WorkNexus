@@ -250,33 +250,38 @@ final zentaoExecutionProjectsExpandedProvider =
       ZenTaoExecutionProjectsExpanded.new,
     );
 
+/// Emits the stored list first (so the sidebar tree and its pins paint
+/// immediately on launch), then the network's answer. A failed fetch surfaces
+/// as an error only when there was nothing stored to show.
+Stream<List<T>> _cachedThenFresh<T>(
+  Future<List<T>?> cached,
+  Future<Result<List<T>>> Function() fetch,
+) async* {
+  final stored = await cached;
+  if (stored != null) yield stored;
+  switch (await fetch()) {
+    case Ok(:final value):
+      yield value;
+    case Err(:final failure):
+      if (stored == null) throw failure;
+  }
+}
+
 final zentaoProductsProvider =
-    FutureProvider.family<List<ProviderProduct>, String>((
-      ref,
-      accountId,
-    ) async {
-      final res = await getIt<SyncService>().listProducts(accountId);
-      switch (res) {
-        case Ok(:final value):
-          return value;
-        case Err(:final failure):
-          throw failure;
-      }
-    });
+    StreamProvider.family<List<ProviderProduct>, String>(
+      (ref, accountId) => _cachedThenFresh(
+        getIt<SyncService>().cachedProducts(accountId),
+        () => getIt<SyncService>().listProducts(accountId),
+      ),
+    );
 
 final zentaoProjectsProvider =
-    FutureProvider.family<List<ProviderProject>, String>((
-      ref,
-      accountId,
-    ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
-      switch (res) {
-        case Ok(:final value):
-          return value;
-        case Err(:final failure):
-          throw failure;
-      }
-    });
+    StreamProvider.family<List<ProviderProject>, String>(
+      (ref, accountId) => _cachedThenFresh(
+        getIt<SyncService>().cachedProjects(accountId),
+        () => getIt<SyncService>().listProjects(accountId),
+      ),
+    );
 
 typedef ZenTaoExecutionsKey = ({String accountId, String projectId});
 
@@ -379,18 +384,12 @@ final gitlabProjectsExpandedProvider =
 
 /// GitLab projects the account is a member of (the sidebar Projects tree).
 final gitlabProjectsProvider =
-    FutureProvider.family<List<ProviderProject>, String>((
-      ref,
-      accountId,
-    ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
-      switch (res) {
-        case Ok(:final value):
-          return value;
-        case Err(:final failure):
-          throw failure;
-      }
-    });
+    StreamProvider.family<List<ProviderProject>, String>(
+      (ref, accountId) => _cachedThenFresh(
+        getIt<SyncService>().cachedProjects(accountId),
+        () => getIt<SyncService>().listProjects(accountId),
+      ),
+    );
 
 /// The selected project + kind's server slice: syncs that project's recent
 /// issues/MRs into drift and returns their ids so the board renders just that
@@ -715,18 +714,12 @@ final githubReposExpandedProvider =
 
 /// GitHub repos the account can access (the sidebar Repositories tree).
 final githubReposProvider =
-    FutureProvider.family<List<ProviderProject>, String>((
-      ref,
-      accountId,
-    ) async {
-      final res = await getIt<SyncService>().listProjects(accountId);
-      switch (res) {
-        case Ok(:final value):
-          return value;
-        case Err(:final failure):
-          throw failure;
-      }
-    });
+    StreamProvider.family<List<ProviderProject>, String>(
+      (ref, accountId) => _cachedThenFresh(
+        getIt<SyncService>().cachedProjects(accountId),
+        () => getIt<SyncService>().listProjects(accountId),
+      ),
+    );
 
 /// The selected repo + kind's server slice: syncs that repo's recent issues/PRs
 /// into drift and returns their ids so the board renders just that slice.
