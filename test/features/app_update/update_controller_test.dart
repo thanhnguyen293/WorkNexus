@@ -17,6 +17,7 @@ const _release = (
   currentVersion: '1.0.0',
   latestVersion: 'v1.1.0',
   releaseUrl: 'https://github.com/example/WorkNexus/releases',
+  releaseNotes: '',
   downloadUrl: 'https://example.com/WorkNexus.zip',
   sha256: 'abc',
 );
@@ -33,6 +34,7 @@ void main() {
         currentVersion: '',
         latestVersion: '',
         releaseUrl: '',
+        releaseNotes: '',
       ),
     );
   });
@@ -124,6 +126,7 @@ void main() {
           currentVersion: '1.0.0',
           latestVersion: 'v1.1.0',
           releaseUrl: 'https://github.com/example/WorkNexus/releases',
+          releaseNotes: '',
           downloadUrl: null,
           sha256: null,
         )),

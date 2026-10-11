@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/open_storage.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,7 +12,6 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_storage_bar.dart';
-import 'chat_storage_dialog.dart';
 
 /// The info panel's storage card: how much of the chat cache limit this
 /// chat's downloads take, split into photos, videos and files.
@@ -67,7 +67,7 @@ class ChatInfoStorageCard extends ConsumerWidget {
               // Compact like the other cards' "See all": no taller than the
               // title.
               TextButton(
-                onPressed: () => ChatStorageDialog.show(context),
+                onPressed: () => ref.read(openStorageProvider)?.call(context),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: s.md),
                   minimumSize: Size.zero,

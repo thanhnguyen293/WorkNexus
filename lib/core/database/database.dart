@@ -406,6 +406,39 @@ class ZenTaoNotifications extends Table {
   Set<Column> get primaryKey => {accountId, id};
 }
 
+/// Link previews (OpenGraph / oEmbed) for URLs shared in chat, so a card
+/// shows at once after a restart instead of refetching the page. [empty]
+/// records a page with nothing to show; failures are never stored.
+@DataClassName('ChatLinkPreviewRow')
+class ChatLinkPreviews extends Table {
+  TextColumn get url => text()();
+  BoolColumn get empty => boolean().withDefault(const Constant(false))();
+
+  /// Where the link landed after redirects (the preview's own URL).
+  TextColumn get pageUrl => text().nullable()();
+  TextColumn get siteName => text().nullable()();
+  TextColumn get title => text().nullable()();
+  TextColumn get description => text().nullable()();
+  TextColumn get imageUrl => text().nullable()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {url};
+}
+
+/// Where the user last saved a copy of a chat attachment ("Save as…"), so
+/// "Show in folder" opens that copy rather than the app's cache.
+@DataClassName('ChatSavedFileRow')
+class ChatSavedFiles extends Table {
+  TextColumn get accountId => text()();
+  IntColumn get fileId => integer()();
+  TextColumn get path => text()();
+  DateTimeColumn get savedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, fileId};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -426,6 +459,8 @@ class ZenTaoNotifications extends Table {
     DashboardSnapshots,
     ZenTaoNotifications,
     SourceListSnapshots,
+    ChatLinkPreviews,
+    ChatSavedFiles,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -439,7 +474,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 41;
+  int get schemaVersion => 43;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -624,6 +659,16 @@ class AppDatabase extends _$AppDatabase {
       // profiles on one, the dashboard on another). After a rebase, a DB can
       // report the latest version while still missing another branch's tables
       // or columns. Reconcile them once before any row is read.
+      if (from < 43) {
+        if (!await _hasTable('chat_saved_files')) {
+          await m.createTable(chatSavedFiles);
+        }
+      }
+      if (from < 42) {
+        if (!await _hasTable('chat_link_previews')) {
+          await m.createTable(chatLinkPreviews);
+        }
+      }
       if (from < 41) {
         if (!await _hasTable('source_list_snapshots')) {
           await m.createTable(sourceListSnapshots);

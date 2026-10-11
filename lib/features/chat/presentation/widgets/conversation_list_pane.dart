@@ -124,7 +124,10 @@ class ConversationListPane extends ConsumerWidget {
           Expanded(
             child: switch (chatsAsync) {
               AsyncError() => Center(
-                child: AppInlineNote(text: l.chatOffline, isError: true),
+                child: AppInlineNote(
+                  text: l.chatConnectionOffline,
+                  isError: true,
+                ),
               ),
               _ when chatsAsync.isLoading && !chatsAsync.hasValue =>
                 const AppInlineSpinner(),

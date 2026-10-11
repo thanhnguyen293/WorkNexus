@@ -13,10 +13,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/translation_api_preset.dart';
 import '../translation_api_providers.dart';
 import 'translation_api_form.dart';
-import 'translation_model_picker.dart';
 
 /// One collapsible settings card for everything translation: the target
-/// language, the OpenCode model and the optional own-API-key backend. Collapsed
+/// language and the one provider (with its model) that translates. Collapsed
 /// it states what is in force (`Tiếng Việt · Google Gemini`).
 class TranslationSettingsCard extends ConsumerStatefulWidget {
   const TranslationSettingsCard({super.key});
@@ -160,13 +159,8 @@ class _Body extends ConsumerWidget {
           ),
         ),
         _Section(
-          title: l.translationModelSection,
-          hint: l.translationModelSubtitle,
-          child: const TranslationModelPicker(),
-        ),
-        _Section(
-          title: l.translationApiSection,
-          hint: l.translationApiSubtitle,
+          title: l.translationProviderSection,
+          hint: l.translationProviderSubtitle,
           child: const TranslationApiForm(),
         ),
       ],
@@ -208,7 +202,7 @@ class _Section extends StatelessWidget {
                   title,
                   style: context.typography.body.copyWith(
                     color: c.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),

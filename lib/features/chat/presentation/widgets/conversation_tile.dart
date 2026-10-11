@@ -114,7 +114,7 @@ class ConversationTile extends StatelessWidget {
                           style: context.typography.body.copyWith(
                             color: c.textPrimary,
                             fontWeight: unread
-                                ? FontWeight.w700
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                           ),
                         ),
@@ -123,7 +123,7 @@ class ConversationTile extends StatelessWidget {
                         chatListTime(context, chat.lastActiveAt),
                         style: context.typography.captionSm.copyWith(
                           color: unread ? c.accent : c.textTertiary,
-                          fontWeight: unread ? FontWeight.w600 : null,
+                          fontWeight: unread ? FontWeight.w500 : null,
                         ),
                       ),
                     ],
@@ -138,9 +138,17 @@ class ConversationTile extends StatelessWidget {
                               if (lastSender case final sender?)
                                 TextSpan(
                                   text: '$sender: ',
+                                  // Set apart by color only, a step above the
+                                  // preview: bolder or full-ink text here
+                                  // outweighs the chat title above it.
                                   style: TextStyle(
-                                    color: c.textPrimary,
-                                    fontWeight: FontWeight.w600,
+                                    color: unread
+                                        ? c.textPrimary
+                                        : Color.lerp(
+                                            c.textSecondary,
+                                            c.textPrimary,
+                                            0.4,
+                                          ),
                                   ),
                                 ),
                               TextSpan(

@@ -93,12 +93,7 @@ class ChatAvatar extends StatelessWidget {
       ),
     );
     final c = context.colors;
-    final dot = switch (presence) {
-      ChatPresence.online => c.success,
-      ChatPresence.away => c.warning,
-      ChatPresence.busy => c.error,
-      ChatPresence.offline || null => null,
-    };
+    final dot = chatPresenceColor(context, presence);
     if (dot == null && verified == null) return picture;
     final dotSize = (diameter * 0.3).clamp(s.md, s.xl3);
     final checkSize = (diameter * 0.36).clamp(s.lg, s.xl5);
@@ -230,4 +225,17 @@ class _Initials extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The colour of a presence dot; null when nothing is shown (offline or
+/// unknown).
+Color? chatPresenceColor(BuildContext context, ChatPresence? presence) {
+  final c = context.colors;
+  return switch (presence) {
+    ChatPresence.online => c.success,
+    ChatPresence.away => c.warning,
+    ChatPresence.busy => c.error,
+    ChatPresence.meeting => c.info,
+    ChatPresence.offline || null => null,
+  };
 }

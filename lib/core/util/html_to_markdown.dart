@@ -2,7 +2,7 @@ import 'package:html2md/html2md.dart' as html2md;
 
 /// Converts rich-text HTML (ZenTao's bug steps / task desc / story spec /
 /// comments) into Markdown — for where Markdown is wanted rather than shown,
-/// such as the text sent to translate or to a coding agent. Falls back to the
+/// such as the text sent to translate. Falls back to the
 /// text without its tags if conversion throws. Plain/empty input passes through
 /// unchanged.
 ///

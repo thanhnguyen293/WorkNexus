@@ -36,7 +36,7 @@ class TimelineHeadline extends ConsumerWidget {
     final base = compact ? t.secondary : t.body;
     final person = base.copyWith(
       color: c.textPrimary,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
     );
     const lineHeight = 1.4;
     // Centers the first line on the gutter marker beside it.

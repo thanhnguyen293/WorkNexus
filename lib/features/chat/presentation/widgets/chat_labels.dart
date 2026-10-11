@@ -314,13 +314,14 @@ Color chatRankColor(BuildContext context, ChatRoleRank rank) {
   };
 }
 
-/// "Online", "Away", "Busy" or "Offline".
+/// "Online", "Away", "Busy", "In meeting" or "Offline".
 String chatPresenceLabel(BuildContext context, ChatPresence presence) {
   final l = AppL10n.of(context);
   return switch (presence) {
     ChatPresence.online => l.chatOnline,
     ChatPresence.away => l.chatAway,
     ChatPresence.busy => l.chatBusy,
+    ChatPresence.meeting => l.chatInMeeting,
     ChatPresence.offline => l.chatOffline,
   };
 }

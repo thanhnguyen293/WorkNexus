@@ -221,16 +221,14 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
                 ),
               ),
             ),
-            IgnorePointer(
-              child: Center(
-                child: ChatVideoCentreControl(
-                  accountId: widget.accountId,
-                  file: widget.file,
-                  uploadGid: gid,
-                  uploading: widget.uploading,
-                  starting: _starting,
-                  player: player,
-                ),
+            Center(
+              child: ChatVideoCentreControl(
+                accountId: widget.accountId,
+                file: widget.file,
+                uploadGid: gid,
+                uploading: widget.uploading,
+                starting: _starting,
+                player: player,
               ),
             ),
             Positioned(
@@ -246,16 +244,23 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
                 ),
               ),
             ),
-            if (gid == null && widget.onFullScreen != null)
-              Positioned(
-                right: s.md,
-                bottom: s.md,
-                child: ChatVideoCornerButton(
-                  icon: LucideIcons.maximize300,
-                  tooltip: AppL10n.of(context).chatFullScreen,
-                  onPressed: _fullScreen,
-                ),
+            Positioned(
+              right: s.md,
+              bottom: s.md,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: s.sm,
+                children: [
+                  if (player != null) ChatVideoMuteButton(player: player),
+                  if (gid == null && widget.onFullScreen != null)
+                    ChatVideoCornerButton(
+                      icon: LucideIcons.maximize300,
+                      tooltip: AppL10n.of(context).chatFullScreen,
+                      onPressed: _fullScreen,
+                    ),
+                ],
               ),
+            ),
             if (player != null)
               Positioned(
                 left: 0,

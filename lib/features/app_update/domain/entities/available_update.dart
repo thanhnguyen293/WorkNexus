@@ -8,6 +8,7 @@ class AvailableUpdate {
     required this.currentVersion,
     required this.latestVersion,
     required this.releaseUrl,
+    this.releaseNotes = '',
     this.downloadUrl,
     this.sha256,
   });
@@ -15,6 +16,9 @@ class AvailableUpdate {
   final String currentVersion;
   final String latestVersion;
   final String releaseUrl;
+
+  /// What changed, as GitHub Markdown; empty when the release has none.
+  final String releaseNotes;
   final String? downloadUrl;
   final String? sha256;
 

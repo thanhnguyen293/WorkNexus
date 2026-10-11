@@ -4,8 +4,10 @@ import 'package:fvp/fvp.dart' as fvp;
 import 'package:injectable/injectable.dart';
 
 import 'app/app.dart';
+import 'app/shell/storage_dialog.dart';
 import 'core/database/database.dart';
 import 'core/di/service_locator.dart';
+import 'core/navigation/open_storage.dart';
 import 'core/navigation/person_chip.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
@@ -65,6 +67,9 @@ Future<void> main(List<String> arguments) async {
         ),
         // Ticket screens show people as chat knows them (photo, "verified",
         // tap to chat) without importing the chat feature.
+        // One storage dialog spans chat files and the synced data; features
+        // open it without importing each other.
+        openStorageProvider.overrideWithValue(StorageDialog.show),
         personChipBuilderProvider.overrideWithValue(
           (context, {required accountId, required name, required avatarSize}) =>
               ChatPersonChip(

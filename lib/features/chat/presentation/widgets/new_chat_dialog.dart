@@ -121,7 +121,6 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                       l.chatNewChat,
                       style: context.typography.titleLg.copyWith(
                         color: c.textPrimary,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

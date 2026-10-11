@@ -17,6 +17,7 @@ import '../../domain/entities/chat_user.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_local_datasource.dart';
@@ -34,6 +35,7 @@ import 'chat_cache_manager.dart';
 import 'chat_credentials_resolver.dart';
 import 'chat_history_sync.dart';
 import 'chat_packet_ingestor.dart';
+import 'chat_saved_copies.dart';
 import 'chat_sender.dart';
 import 'chat_session.dart';
 
@@ -90,6 +92,7 @@ class XxdChatRepository implements ChatRepository {
   late final ChatAttachmentLoader _attachments;
   late final ChatCacheManager _cache;
   late final ChatAvatarService _avatars;
+  late final _savedCopies = ChatSavedCopies(_local, _attachments, now: _now);
   final VideoDurationReader _durations;
   final VideoThumbnailer _thumbnailer;
   late final ChatSender _sender = ChatSender(
@@ -100,6 +103,10 @@ class XxdChatRepository implements ChatRepository {
     now: _now,
   );
   final _sessions = <String, ChatSession>{};
+
+  /// Presence picked by the user. Sign-in always says `online`, so a
+  /// reconnect re-applies anything else.
+  final _presences = <String, ChatPresence>{};
 
   final _statuses = <String, StatusChannel>{};
 
@@ -212,6 +219,10 @@ class XxdChatRepository implements ChatRepository {
           ),
         ),
       );
+      final presence = _presences[accountId];
+      if (presence != null && presence != ChatPresence.online) {
+        unawaited(session.connection.request(_userChange(session, presence)));
+      }
     }
   }
 
@@ -528,6 +539,20 @@ class XxdChatRepository implements ChatRepository {
     MessageContent content,
   ) => _attachments.localFile(accountId, _sessions[accountId], content);
 
+  @override
+  Future<Result<void>> saveAttachmentCopy(
+    String accountId,
+    MessageContent content,
+    String targetPath,
+  ) =>
+      _savedCopies.saveTo(accountId, _sessions[accountId], content, targetPath);
+
+  @override
+  Future<String?> savedAttachmentCopy(
+    String accountId,
+    MessageContent content,
+  ) => _savedCopies.find(accountId, content);
+
   /// Role names by account, asked once per session.
   final _roleNames = <String, Map<String, String>>{};
 
@@ -803,6 +828,43 @@ class XxdChatRepository implements ChatRepository {
   }
 
   @override
+  Future<Result<void>> setMyPresence(
+    String accountId,
+    ChatPresence presence,
+  ) async {
+    final session = _sessions[accountId];
+    final self = session?.selfUserId;
+    if (session == null || self == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    final result = await _requestAndStore(
+      accountId,
+      session,
+      _userChange(session, presence),
+    );
+    if (result is Ok) {
+      _presences[accountId] = presence;
+      // The reply may omit the status; the dot should follow the pick anyway.
+      await _local.setUserStatus(accountId, self, presence.status);
+    }
+    return result;
+  }
+
+  /// xxd 7.x `userupdate` (its API scheme's `userUpdateData`: the account
+  /// plus the changed fields). Older servers named it `userchange`, which 7.x
+  /// rejects.
+  XxdRequest _userChange(ChatSession session, ChatPresence presence) =>
+      XxdRequest(
+        'userupdate',
+        params: [
+          {
+            'account': session.connection.credentials.account,
+            'status': presence.status,
+          },
+        ],
+      );
+
+  @override
   Future<Result<void>> setChatStarred(
     String accountId,
     String chatGid, {
@@ -920,4 +982,8 @@ class XxdChatRepository implements ChatRepository {
   @override
   Future<Result<void>> retrySend(String accountId, String messageGid) =>
       _sender.retrySend(accountId, messageGid);
+
+  @override
+  Future<Result<void>> cancelUpload(String accountId, String messageGid) =>
+      _sender.cancelUpload(accountId, messageGid);
 }

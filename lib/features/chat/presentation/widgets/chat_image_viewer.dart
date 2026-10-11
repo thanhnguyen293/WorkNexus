@@ -5,10 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
-import 'chat_attachments.dart';
+import 'attachment_download.dart';
+import 'chat_image_context_menu.dart';
 import 'chat_image_stage.dart';
 import 'chat_image_viewer_bar.dart';
 import 'chat_media_strip.dart';
@@ -136,20 +136,8 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
     if (saved && mounted) setState(() => _stickers.add(image));
   }
 
-  Future<void> _copy() async {
-    final l = AppL10n.of(context);
-    final bytes = await ref.read(
-      chatAttachmentProvider((
-        accountId: widget.accountId,
-        content: _image,
-        thumbnail: false,
-      )).future,
-    );
-    if (bytes case Ok(:final value)) {
-      await copyImageToClipboard(value);
-      if (mounted) showChatSnack(context, l.chatCopied);
-    }
-  }
+  Future<void> _copy() =>
+      copyChatImage(context, ref, accountId: widget.accountId, image: _image);
 
   Future<void> _withFile(Future<void> Function(String path) use) async {
     final path = await ref
@@ -164,12 +152,15 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
     }
   }
 
-  Future<void> _save() => _withFile((path) async {
-    final l = AppL10n.of(context);
-    if (await saveAttachmentAs(path, _image.name) && mounted) {
-      showChatSnack(context, l.chatSaved);
-    }
-  });
+  Future<void> _save() => _withFile(
+    (_) => saveAttachmentCopyAs(
+      context,
+      ref,
+      accountId: widget.accountId,
+      content: _image,
+      name: _image.name,
+    ),
+  );
 
   Future<void> _openExternally() => _withFile(openExternally);
 
@@ -284,6 +275,13 @@ class _ChatImageViewerState extends ConsumerState<ChatImageViewer> {
                           : _zoom(2),
                       onPrevious: hasPrev ? () => _go(-1) : null,
                       onNext: hasNext ? () => _go(1) : null,
+                      onContextMenu: (at) => showChatImageContextMenu(
+                        context,
+                        at: at,
+                        onCopy: full is Ok ? _copy : null,
+                        onSave: _save,
+                        onOpenExternally: _openExternally,
+                      ),
                     );
                   },
                 ),

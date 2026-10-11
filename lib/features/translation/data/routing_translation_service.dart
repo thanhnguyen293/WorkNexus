@@ -52,7 +52,7 @@ class RoutingTranslationService implements TranslationService {
   }
 
   @override
-  Future<Result<String>> translateText({
+  Future<Result<TextTranslation>> translateText({
     required String key,
     required String text,
     required String targetLang,

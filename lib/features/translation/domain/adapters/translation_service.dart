@@ -9,6 +9,17 @@ class TicketSource {
   final String body;
 }
 
+/// A free-form text translation and the model that produced it — which may
+/// differ from the one asked for when the user's API key is in charge.
+class TextTranslation {
+  const TextTranslation(this.text, {this.model});
+
+  final String text;
+
+  /// Null when the backend picked its own default and did not say which.
+  final String? model;
+}
+
 /// Produces a translation of a ticket (OpenCode-backed) into a chosen language.
 /// Caching and state (none/loading/done/outdated/error) are orchestrated by the
 /// translation use case + [TranslationRepository]; this only performs the
@@ -35,7 +46,7 @@ abstract class TranslationService {
   /// Translate a free-form [text] (e.g. a chat message) into [targetLang].
   /// [key] identifies the run so [cancel] can stop it. Nothing is cached — the
   /// caller owns the result.
-  Future<Result<String>> translateText({
+  Future<Result<TextTranslation>> translateText({
     required String key,
     required String text,
     required String targetLang,

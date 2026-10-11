@@ -10,6 +10,11 @@ import 'fonts.dart';
 /// user-selected UI font); mono styles pin [kMonoFont]. Read it with the
 /// `context.typography` getter.
 ///
+/// Weights are tuned for the bundled Be Vietnam Pro, whose real 500–700 faces
+/// read heavier than most UI fonts: 400 for content, 500 for emphasis
+/// (`*Strong`, `subtitle`), 600 for titles and small uppercase labels; 700 is
+/// left to Markdown bold.
+///
 /// The ramp is identical across theme variants, so [lerp]/[copyWith] are no-ops.
 @immutable
 class AppTypography extends ThemeExtension<AppTypography> {
@@ -38,40 +43,40 @@ class AppTypography extends ThemeExtension<AppTypography> {
     height: 1.36,
   );
   TextStyle get subtitle =>
-      const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600);
+      const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500);
 
   // ---- Body ----
   TextStyle get body => const TextStyle(fontSize: 13);
   TextStyle get bodyStrong =>
-      const TextStyle(fontSize: 13, fontWeight: FontWeight.w600);
+      const TextStyle(fontSize: 13, fontWeight: FontWeight.w500);
   TextStyle get secondary => const TextStyle(fontSize: 12.5);
   TextStyle get secondaryStrong =>
-      const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600);
+      const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500);
   TextStyle get paragraph => const TextStyle(fontSize: 12.5, height: 1.5);
   TextStyle get paragraphSm => const TextStyle(fontSize: 12, height: 1.5);
   TextStyle get bodySm => const TextStyle(fontSize: 12);
   TextStyle get bodySmStrong =>
-      const TextStyle(fontSize: 12, fontWeight: FontWeight.w600);
+      const TextStyle(fontSize: 12, fontWeight: FontWeight.w500);
   TextStyle get meta => const TextStyle(fontSize: 11.5);
   TextStyle get caption => const TextStyle(fontSize: 11);
   TextStyle get captionStrong =>
-      const TextStyle(fontSize: 11, fontWeight: FontWeight.w600);
+      const TextStyle(fontSize: 11, fontWeight: FontWeight.w500);
   TextStyle get captionSm => const TextStyle(fontSize: 10.5);
 
   // ---- Labels (typically uppercased at the call site) ----
   TextStyle get label => const TextStyle(
     fontSize: 10,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: 0.6,
   );
   TextStyle get labelWide => const TextStyle(
     fontSize: 10.5,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
   );
   TextStyle get labelLoose => const TextStyle(
     fontSize: 10.5,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: 1.1,
   );
 

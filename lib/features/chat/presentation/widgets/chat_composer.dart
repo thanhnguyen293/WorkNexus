@@ -7,11 +7,13 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/usecases/is_single_emoji.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
-import 'chat_composer_input.dart';
+import 'chat_composer_field.dart';
 import 'chat_composer_toolbar.dart';
 import 'chat_file_send.dart';
+import 'chat_markdown_controller.dart';
 import 'chat_mention_overlay.dart';
 import 'chat_snack.dart';
 import 'mention_autocomplete.dart';
@@ -38,13 +40,15 @@ class ChatComposer extends ConsumerStatefulWidget {
 }
 
 class _ChatComposerState extends ConsumerState<ChatComposer> {
-  final _text = TextEditingController();
+  final _text = ChatMarkdownController();
   late final _focus = FocusNode(onKeyEvent: _onKey);
   final _mentions = MentionAutocomplete();
+  final _undo = UndoHistoryController();
 
   @override
   void initState() {
     super.initState();
+    _text.markdown = ref.read(appSettingsProvider).chatSendMarkdown;
     _text.addListener(() => _mentions.update(_text.value));
   }
 
@@ -63,6 +67,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   void dispose() {
     _text.dispose();
     _focus.dispose();
+    _undo.dispose();
     _mentions.dispose();
     super.dispose();
   }
@@ -81,6 +86,15 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     if (key == LogicalKeyboardKey.escape &&
         ref.read(chatReplyDraftProvider(_draftKey)) != null) {
       _cancelReply();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyX &&
+        keys.isShiftPressed &&
+        (keys.isMetaPressed || keys.isControlPressed)) {
+      final settings = ref.read(appSettingsProvider.notifier);
+      settings.setChatSendMarkdown(
+        !ref.read(appSettingsProvider).chatSendMarkdown,
+      );
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyV &&
@@ -164,27 +178,30 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     return true;
   }
 
-  /// Sends a like the way the official client does: one large 👍, not a
+  /// Sends [emoji] the way the official client does: shown large, not in a
   /// text bubble. A large emoji can't answer a message, so while replying
-  /// (or in a thread) the like goes as text with the reply instead.
-  Future<void> _sendLike() async {
-    if (_replyToId != null) return _deliver('👍', const {});
+  /// (or in a thread) it goes as text with the reply instead.
+  Future<void> _sendLargeEmoji(String emoji) async {
+    if (_replyToId != null) return _deliver(emoji, const {});
     final t = widget.thread;
     final result = await ref
         .read(chatControllerProvider)
-        .sendLargeEmoji(t.accountId, t.chatGid, '👍');
+        .sendLargeEmoji(t.accountId, t.chatGid, emoji);
     if (result case Err(:final failure)) {
       if (mounted) showChatFailure(context, failure);
     }
   }
 
-  /// Sends the input.
+  /// Sends the input; a lone emoji goes large.
   Future<void> _send() async {
     final text = _text.text;
     if (text.trim().isEmpty) return;
     final mentions = Map.of(_mentions.mentions);
     _text.clear();
     _mentions.reset();
+    if (mentions.isEmpty && const IsSingleEmoji()(text)) {
+      return _sendLargeEmoji(text.trim());
+    }
     await _deliver(text, mentions);
   }
 
@@ -212,6 +229,10 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
+    ref.listen(
+      appSettingsProvider.select((s) => s.chatSendMarkdown),
+      (_, on) => _text.markdown = on,
+    );
     ref.listen(chatReplyDraftProvider(_draftKey), (_, next) {
       if (next != null) _focus.requestFocus();
     });
@@ -255,27 +276,17 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
               _mentions.insert(_text, candidate);
               _focus.requestFocus();
             },
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(s.xl3, s.sm, s.lg, s.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: ChatComposerInput(
-                      controller: _text,
-                      focus: _focus,
-                      autofocus: widget.threadRootId == null,
-                      hint: widget.hint,
-                    ),
-                  ),
-                  SizedBox(width: s.md),
-                  ChatComposerSendButton(
-                    text: _text,
-                    onSend: _send,
-                    onLike: _sendLike,
-                  ),
-                ],
+            child: ChatComposerField(
+              controller: _text,
+              focus: _focus,
+              undo: _undo,
+              autofocus: widget.threadRootId == null,
+              markdown: ref.watch(
+                appSettingsProvider.select((s) => s.chatSendMarkdown),
               ),
+              hint: widget.hint,
+              onSend: _send,
+              onLike: () => _sendLargeEmoji('👍'),
             ),
           ),
         ],

@@ -12,10 +12,6 @@ import '../../data/local/repositories/local_activity_repository.dart';
 import '../../data/local/repositories/local_comment_repository.dart';
 import '../../data/local/repositories/local_ticket_repository.dart';
 import '../../data/local/repositories/local_workspace_repository.dart';
-import '../../features/agents/data/datasources/opencode_auth_file.dart';
-import '../../features/agents/data/datasources/opencode_cli_runner.dart';
-import '../../features/agents/data/in_memory_agent_session_repository.dart';
-import '../../features/agents/data/repositories/opencode_auth_file_repository.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
 import '../../features/app_update/data/datasources/windows_update_installer.dart';
@@ -27,9 +23,11 @@ import '../../features/app_update/domain/usecases/install_update.dart';
 import '../../features/board/data/repositories/local_saved_filter_repository.dart';
 import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
+import '../../features/chat/data/datasources/link_preview_http_datasource.dart';
+import '../../features/chat/data/datasources/link_preview_local_datasource.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
-import '../../features/chat/data/repositories/http_link_preview_repository.dart';
+import '../../features/chat/data/repositories/cached_link_preview_repository.dart';
 import '../../features/chat/data/repositories/local_message_translation_repository.dart';
 import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
@@ -62,13 +60,19 @@ import '../../features/sync/data/sync_service.dart';
 import '../../features/sync/data/zentao_ticket_editor_service.dart';
 import '../../features/sync/data/zentao_workflow_actions.dart';
 import '../../features/translation/data/api_translation_service.dart';
+import '../../features/translation/data/datasources/openai_model_catalog_datasource.dart';
+import '../../features/translation/data/datasources/opencode_auth_file.dart';
+import '../../features/translation/data/datasources/opencode_cli_runner.dart';
 import '../../features/translation/data/opencode_translation_service.dart';
 import '../../features/translation/data/repositories/credential_translation_api_config_repository.dart';
 import '../../features/translation/data/repositories/local_translation_repository.dart';
+import '../../features/translation/data/repositories/opencode_auth_file_key_repository.dart';
 import '../../features/translation/data/routing_translation_service.dart';
 import '../../features/translation/domain/adapters/translation_service.dart';
 import '../../features/translation/domain/entities/translation_api_config.dart';
+import '../../features/translation/domain/repositories/opencode_key_repository.dart';
 import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
+import '../../features/translation/domain/repositories/translation_api_model_catalog.dart';
 import '../config/app_config.dart';
 import '../database/database.dart';
 import '../debug/app_talker.dart';
@@ -80,10 +84,8 @@ import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/adapters/zentao_workflow_service.dart';
 import '../domain/repositories/activity_repository.dart';
-import '../domain/repositories/agent_session_repository.dart';
 import '../domain/repositories/comment_repository.dart';
 import '../domain/repositories/dev_link_repository.dart';
-import '../domain/repositories/opencode_auth_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
@@ -254,17 +256,20 @@ abstract class ServiceModule {
   );
 
   @lazySingleton
-  LinkPreviewRepository get linkPreviewRepository =>
-      HttpLinkPreviewRepository();
-
-  @lazySingleton
-  AgentSessionRepository get agentSessionRepository =>
-      InMemoryAgentSessionRepository();
+  LinkPreviewRepository linkPreviewRepository(AppDatabase db) =>
+      CachedLinkPreviewRepository(
+        local: LinkPreviewLocalDatasource(db),
+        http: LinkPreviewHttpDatasource(),
+      );
 
   @lazySingleton
   TranslationApiConfigRepository translationApiConfigRepository(
     CredentialStore credentials,
   ) => CredentialTranslationApiConfigRepository(credentials);
+
+  @lazySingleton
+  TranslationApiModelCatalog get translationApiModelCatalog =>
+      OpenAiModelCatalogDatasource(Dio());
 
   @lazySingleton
   TranslationService translationService(
@@ -284,15 +289,15 @@ abstract class ServiceModule {
 
   @prod
   @lazySingleton
-  OpenCodeAuthRepository get openCodeAuthRepository =>
-      const OpenCodeAuthFileRepository();
+  OpenCodeKeyRepository get openCodeKeyRepository =>
+      const OpenCodeAuthFileKeyRepository();
 
   /// Tests read a throwaway path so they never see — let alone rewrite — the
   /// developer's real OpenCode credentials.
   @test
   @lazySingleton
-  OpenCodeAuthRepository get testOpenCodeAuthRepository =>
-      OpenCodeAuthFileRepository(
+  OpenCodeKeyRepository get testOpenCodeKeyRepository =>
+      OpenCodeAuthFileKeyRepository(
         OpenCodeAuthFile(
           pathOverride:
               '${Directory.systemTemp.path}/work_nexus_test_opencode_auth.json',

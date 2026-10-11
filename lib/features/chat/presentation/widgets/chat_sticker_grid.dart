@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -15,8 +13,22 @@ import '../../domain/entities/chat_sticker.dart';
 import '../providers/sticker_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_snack.dart';
+import 'chat_sticker_image.dart';
 
 const int _kColumns = 3;
+
+/// Lets the user pick images and keeps each as one of their own stickers.
+Future<void> addStickersFromImages(BuildContext context, WidgetRef ref) async {
+  final files = await pickChatAttachments(imagesOnly: true);
+  final controller = ref.read(stickerControllerProvider);
+  for (final file in files) {
+    final result = await controller.add(file.bytes, file.name);
+    if (result case Err(:final failure)) {
+      if (context.mounted) showChatFailure(context, failure);
+      return;
+    }
+  }
+}
 
 /// A sticker set; tap sends. With [editable] (the user's own set) the first
 /// tile adds images and a right-click removes a sticker.
@@ -31,18 +43,6 @@ class ChatStickerGrid extends ConsumerWidget {
   final List<ChatSticker> stickers;
   final ValueChanged<ChatSticker> onPick;
   final bool editable;
-
-  Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final files = await pickChatAttachments(imagesOnly: true);
-    final controller = ref.read(stickerControllerProvider);
-    for (final file in files) {
-      final result = await controller.add(file.bytes, file.name);
-      if (result case Err(:final failure)) {
-        if (context.mounted) showChatFailure(context, failure);
-        return;
-      }
-    }
-  }
 
   Future<void> _remove(
     BuildContext context,
@@ -75,7 +75,7 @@ class ChatStickerGrid extends ConsumerWidget {
     final l = AppL10n.of(context);
     final add = _Tile(
       tooltip: l.chatAddSticker,
-      onTap: () => _add(context, ref),
+      onTap: () => addStickersFromImages(context, ref),
       child: Icon(LucideIcons.image300, color: context.colors.textSecondary),
     );
     if (editable && stickers.isEmpty) {
@@ -113,7 +113,7 @@ class ChatStickerGrid extends ConsumerWidget {
               : null,
           child: _Tile(
             onTap: () => onPick(sticker),
-            child: _StickerImage(sticker: sticker),
+            child: ChatStickerImage(sticker: sticker),
           ),
         );
       },
@@ -144,34 +144,5 @@ class _Tile extends StatelessWidget {
     );
     final message = tooltip;
     return message == null ? tile : Tooltip(message: message, child: tile);
-  }
-}
-
-class _StickerImage extends StatelessWidget {
-  const _StickerImage({required this.sticker});
-
-  final ChatSticker sticker;
-
-  @override
-  Widget build(BuildContext context) {
-    // Tiles are small: decode at about their size.
-    final width =
-        (context.spacing.xl6 * 2 * MediaQuery.devicePixelRatioOf(context))
-            .round();
-    final broken = Icon(
-      LucideIcons.imageOff300,
-      color: context.colors.textTertiary,
-    );
-    return sticker.custom
-        ? Image.file(
-            File(sticker.location),
-            cacheWidth: width,
-            errorBuilder: (_, _, _) => broken,
-          )
-        : Image.asset(
-            sticker.location,
-            cacheWidth: width,
-            errorBuilder: (_, _, _) => broken,
-          );
   }
 }

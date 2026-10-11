@@ -46,6 +46,9 @@ class ChatSender {
   /// can show the picked image before the server stores it.
   Uint8List? pendingBytes(String gid) => _pendingUploads[gid]?.bytes;
 
+  /// Uploads in flight, by message gid: completing one aborts it.
+  final _uploadCancels = <String, Completer<void>>{};
+
   /// Files whose upload has not succeeded yet, kept for retry.
   final _pendingUploads =
       <String, ({String name, Uint8List bytes, String? mimeType})>{};
@@ -151,6 +154,7 @@ class ChatSender {
   ) async {
     final file = _pendingUploads[gid];
     if (file == null) return _deliver(accountId, gid);
+    final cancel = _uploadCancels[gid] = Completer<void>();
     final uploaded = await _attachments.upload(
       accountId,
       _session(accountId),
@@ -159,7 +163,11 @@ class ChatSender {
       bytes: file.bytes,
       mimeType: file.mimeType,
       onProgress: (sent) => _progress.add((gid: gid, sent: sent)),
+      cancel: cancel.future,
     );
+    _uploadCancels.remove(gid);
+    // Cancelled as the upload finished: the message is already gone.
+    if (cancel.isCompleted) return const Ok(null);
     switch (uploaded) {
       case Ok(:final value):
         _pendingUploads.remove(gid);
@@ -170,9 +178,30 @@ class ChatSender {
           content: value.content,
         );
         return _deliver(accountId, gid);
+      // [cancelUpload] already removed the message.
+      case Err(failure: CancelledFailure()):
+        return const Ok(null);
       case Err(:final failure):
         await _local.setSendState(accountId, gid, SendState.failed);
         return Err(failure);
+    }
+  }
+
+  /// Stops sending file message [gid] while its file uploads (or after the
+  /// upload failed) and removes it: the server never saw it. Once uploaded,
+  /// the message is past cancelling.
+  Future<Result<void>> cancelUpload(String accountId, String gid) async {
+    final inFlight = _uploadCancels.remove(gid);
+    if (inFlight == null && !_pendingUploads.containsKey(gid)) {
+      return const Err(NotFoundFailure('Nothing is uploading'));
+    }
+    inFlight?.complete();
+    _pendingUploads.remove(gid);
+    try {
+      await _local.deleteMessage(accountId, gid);
+      return const Ok(null);
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not remove the message', cause: e));
     }
   }
 

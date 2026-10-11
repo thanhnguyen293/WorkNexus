@@ -31,6 +31,7 @@ class ChatImageStage extends StatelessWidget {
     required this.onDoubleTap,
     required this.onPrevious,
     required this.onNext,
+    this.onContextMenu,
   });
 
   final TransformationController transform;
@@ -61,6 +62,9 @@ class ChatImageStage extends StatelessWidget {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
+  /// Right-click on the picture, with the pointer's global position.
+  final void Function(Offset at)? onContextMenu;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -73,6 +77,9 @@ class ChatImageStage extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onDoubleTap: onDoubleTap,
+            onSecondaryTapUp: onContextMenu == null
+                ? null
+                : (d) => onContextMenu?.call(d.globalPosition),
             child: InteractiveViewer(
               transformationController: transform,
               minScale: minScale,
