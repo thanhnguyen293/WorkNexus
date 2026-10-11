@@ -7,6 +7,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/cache_section.dart';
 import '../providers/local_cache_providers.dart';
@@ -35,7 +36,6 @@ class _LocalCachePanelState extends ConsumerState<LocalCachePanel> {
 
   Future<void> _clear() async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final sections = {..._picked};
     setState(() => _clearing = true);
     final result = await ref.read(clearLocalCacheProvider)(sections);
@@ -43,9 +43,15 @@ class _LocalCachePanelState extends ConsumerState<LocalCachePanel> {
     switch (result) {
       case Ok():
         widget.onCleared(sections);
-        messenger.showSnackBar(SnackBar(content: Text(l.cacheCleared)));
+        if (mounted) showAppSnack(context, l.cacheCleared);
       case Err(:final failure):
-        messenger.showSnackBar(SnackBar(content: Text(failure.message)));
+        if (mounted) {
+          showAppSnack(
+            context,
+            l.connectionsCacheClearFailed(failure.message),
+            isError: true,
+          );
+        }
     }
   }
 

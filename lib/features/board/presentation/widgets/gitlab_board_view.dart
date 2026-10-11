@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/build_gitlab_issue_board.dart';
 import '../../domain/usecases/build_gitlab_mr_board.dart';
@@ -14,6 +12,7 @@ import '../../domain/value_objects/gitlab_issue_column.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../../domain/value_objects/gitlab_mr_column.dart';
 import '../board_providers.dart';
+import 'board_column_frame.dart';
 import 'board_horizontal_scroll.dart';
 import 'ticket_card.dart';
 
@@ -109,92 +108,12 @@ class _GitLabColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      width: 272,
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        border: context.cardBorder,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.spacing.xl,
-              context.spacing.xl,
-              context.spacing.xl,
-              context.spacing.md,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: data.color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: context.spacing.md),
-                Expanded(
-                  child: Text(
-                    data.label,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.bodySmStrong.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-                SizedBox(width: context.spacing.md),
-                _CountBadge(data.tickets.length),
-              ],
-            ),
-          ),
-          Flexible(
-            child: ListView.separated(
-              padding: EdgeInsets.fromLTRB(
-                context.spacing.sm,
-                context.spacing.xxs,
-                context.spacing.sm,
-                context.spacing.md,
-              ),
-              itemCount: data.tickets.length,
-              itemBuilder: (context, i) => TicketCard(data.tickets[i]),
-              separatorBuilder: (_, _) => SizedBox(height: context.spacing.md),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CountBadge extends StatelessWidget {
-  const _CountBadge(this.count);
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20),
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.xl),
-        border: context.cardBorder,
-      ),
-      child: Text(
-        '$count',
-        style: context.typography.monoSm.copyWith(color: c.textTertiary),
-      ),
+    return BoardColumnFrame(
+      dot: BoardColumnDot(data.color),
+      label: data.label,
+      badge: AppCountBadge(data.tickets.length),
+      itemCount: data.tickets.length,
+      itemBuilder: (context, i) => TicketCard(data.tickets[i]),
     );
   }
 }

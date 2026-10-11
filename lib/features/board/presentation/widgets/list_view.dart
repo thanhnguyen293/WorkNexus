@@ -192,10 +192,14 @@ class _Row extends ConsumerWidget {
                 children: [
                   StatusDot(ticket.status, size: 7),
                   SizedBox(width: context.spacing.sm),
-                  Text(
-                    statusLabel(l, ticket.status),
-                    style: context.typography.meta.copyWith(
-                      color: c.textSecondary,
+                  Expanded(
+                    child: Text(
+                      statusLabel(l, ticket.status),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.typography.meta.copyWith(
+                        color: c.textSecondary,
+                      ),
                     ),
                   ),
                 ],

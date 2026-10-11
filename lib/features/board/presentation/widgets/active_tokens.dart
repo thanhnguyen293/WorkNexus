@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
@@ -90,11 +92,10 @@ class ActiveTokens extends ConsumerWidget {
           ...tokens,
           HoverSurface(
             onTap: ctrl.clearAll,
+            height: context.sizes.controlSm,
+            alignment: Alignment.center,
             borderRadius: BorderRadius.circular(context.radii.sm),
-            padding: EdgeInsets.symmetric(
-              horizontal: context.spacing.md,
-              vertical: context.spacing.xs,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
             child: Text(
               l.clear,
               style: context.typography.caption.copyWith(color: c.textTertiary),
@@ -106,6 +107,10 @@ class ActiveTokens extends ConsumerWidget {
   }
 }
 
+/// Longest a token's label grows before it ellipsizes (the full text is in
+/// the tooltip), so one long name can't push the rest off the toolbar.
+const _kTokenLabelMaxWidth = 180.0;
+
 class _Token extends StatelessWidget {
   const _Token({required this.label, required this.onRemove, this.dotColor});
   final String label;
@@ -115,39 +120,51 @@ class _Token extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return HoverSurface(
-      onTap: onRemove,
-      height: 31,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-      color: c.selectionFill,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (dotColor != null) ...[
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: dotColor,
-                borderRadius: BorderRadius.circular(context.radii.dot),
+    final s = context.spacing;
+    final tooltip = AppL10n.of(context).boardRemoveFilterTooltip(label);
+    return Tooltip(
+      message: tooltip,
+      child: HoverSurface(
+        onTap: onRemove,
+        semanticLabel: tooltip,
+        height: context.sizes.controlSm,
+        padding: EdgeInsets.symmetric(horizontal: s.md),
+        color: c.selectionFill,
+        borderRadius: BorderRadius.circular(context.radii.sm),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (dotColor != null) ...[
+              Container(
+                width: s.sm,
+                height: s.sm,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  borderRadius: BorderRadius.circular(context.radii.dot),
+                ),
+              ),
+              SizedBox(width: s.xs),
+            ],
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _kTokenLabelMaxWidth),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.typography.caption.copyWith(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-            SizedBox(width: context.spacing.xs),
-          ],
-          Text(
-            label,
-            style: context.typography.caption.copyWith(
-              color: c.textPrimary,
-              fontWeight: FontWeight.w500,
+            SizedBox(width: s.xs),
+            Icon(
+              LucideIcons.x300,
+              size: context.sizes.iconXs,
+              color: c.textTertiary,
             ),
-          ),
-          SizedBox(width: context.spacing.xs),
-          Text(
-            '✕',
-            style: context.typography.caption.copyWith(color: c.textTertiary),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

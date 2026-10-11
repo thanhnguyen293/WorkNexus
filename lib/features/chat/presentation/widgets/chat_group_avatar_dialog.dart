@@ -2,14 +2,19 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../core/widgets/hover_surface.dart';
+import '../../../../core/widgets/quick_settings_segmented.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_group_avatar.dart';
@@ -20,7 +25,8 @@ import 'chat_labels.dart';
 import 'chat_snack.dart';
 
 /// Colours offered for a text avatar — the official client's palette, so
-/// both clients show the same choices.
+/// both clients show the same choices. Data sent to the server, not theme
+/// colours, hence the literals.
 const _kColors = [
   '#37C3A4', '#66ADFF', '#E05151', '#E0B751', '#A2E051', //
   '#51E067', '#7C51E0', '#E051DE', '#E05177', '#E09A51',
@@ -130,100 +136,92 @@ class _ChatGroupAvatarDialogState extends ConsumerState<ChatGroupAvatarDialog> {
               diameter: s.xl6 * 2.2,
             ),
           );
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400),
-        child: Padding(
-          padding: EdgeInsets.all(s.xl5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l.chatChangeGroupAvatar,
-                style: context.typography.titleLg.copyWith(
-                  color: c.textPrimary,
+    final canSave = !_saving && !(_imageMode && image == null);
+    return AppDialogFrame(
+      title: l.chatChangeGroupAvatar,
+      maxWidth: context.sizes.dialogSm,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.chatCancel),
+        ),
+        AppButton.filled(
+          size: AppButtonSize.small,
+          isLoading: _saving,
+          isDisabled: _imageMode && image == null,
+          onPressed: canSave ? _save : null,
+          child: Text(l.chatSave),
+        ),
+      ],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            QuickSettingsSegmented<bool>(
+              value: _imageMode,
+              options: {false: l.chatAvatarText, true: l.chatAvatarImage},
+              onChanged: (v) => setState(() => _imageMode = v),
+            ),
+            SizedBox(height: s.xl4),
+            Center(child: preview),
+            SizedBox(height: s.xl4),
+            if (_imageMode)
+              Center(
+                child: AppButton.outlinedNeutral(
+                  size: AppButtonSize.small,
+                  icon: LucideIcons.imageUp300,
+                  onPressed: _pick,
+                  child: Text(l.chatAvatarPick),
+                ),
+              )
+            else ...[
+              TextField(
+                controller: _text,
+                maxLength: 4,
+                onSubmitted: (_) {
+                  if (canSave) _save();
+                },
+                style: context.typography.body.copyWith(color: c.textPrimary),
+                decoration: appInputDecoration(
+                  context,
+                  hint: l.chatAvatarTextHint,
                 ),
               ),
-              SizedBox(height: s.xl3),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: false, label: Text(l.chatAvatarText)),
-                  ButtonSegment(value: true, label: Text(l.chatAvatarImage)),
-                ],
-                selected: {_imageMode},
-                onSelectionChanged: (v) => setState(() => _imageMode = v.first),
-              ),
-              SizedBox(height: s.xl4),
-              Center(child: preview),
-              SizedBox(height: s.xl4),
-              if (_imageMode)
-                Center(
-                  child: AppButton.outlinedNeutral(
-                    onPressed: _pick,
-                    child: Text(l.chatAvatarPick),
-                  ),
-                )
-              else ...[
-                TextField(
-                  controller: _text,
-                  maxLength: 4,
-                  decoration: InputDecoration(
-                    labelText: l.chatAvatarText,
-                    helperText: l.chatAvatarTextHint,
-                    isDense: true,
-                  ),
-                ),
-                SizedBox(height: s.md),
-                Wrap(
-                  spacing: s.md,
-                  runSpacing: s.md,
-                  children: [
-                    for (final hex in _kColors)
-                      HoverSurface(
-                        onTap: () => setState(() => _hex = hex),
-                        width: s.xl6 * 0.8,
-                        height: s.xl6 * 0.8,
-                        shape: BoxShape.circle,
-                        color: chatHexColor(hex),
-                        // The ring answers hover: a tint would shift the colour.
-                        tintOnHover: false,
-                        border: hex == _hex
-                            ? Border.all(color: c.textPrimary, width: 2.5)
-                            : null,
-                        hoverBorder: Border.all(
-                          color: hex == _hex ? c.textPrimary : c.borderStrong,
-                          width: 2.5,
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-              SizedBox(height: s.xl4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              SizedBox(height: s.md),
+              Wrap(
+                spacing: s.md,
+                runSpacing: s.md,
                 children: [
-                  AppButton.textNeutral(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l.chatCancel),
-                  ),
-                  SizedBox(width: s.md),
-                  AppButton.filled(
-                    isLoading: _saving,
-                    isDisabled: _imageMode && image == null,
-                    onPressed: _saving || (_imageMode && image == null)
-                        ? null
-                        : _save,
-                    child: Text(l.chatSave),
-                  ),
+                  for (final hex in _kColors)
+                    HoverSurface(
+                      onTap: () => setState(() => _hex = hex),
+                      width: context.sizes.controlMd,
+                      height: context.sizes.controlMd,
+                      shape: BoxShape.circle,
+                      color: chatHexColor(hex),
+                      selected: hex == _hex,
+                      semanticLabel: hex,
+                      // The ring answers hover: a tint would shift the colour.
+                      tintOnHover: false,
+                      border: hex == _hex
+                          ? Border.all(
+                              color: c.textPrimary,
+                              width: context.borders.thick,
+                            )
+                          : null,
+                      hoverBorder: Border.all(
+                        color: hex == _hex ? c.textPrimary : c.borderStrong,
+                        width: context.borders.thick,
+                      ),
+                    ),
                 ],
               ),
             ],
-          ),
+          ],
         ),
       ),
     );

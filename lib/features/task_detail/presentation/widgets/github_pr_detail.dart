@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/post_github_comment.dart';
 import '../detail_providers.dart';
@@ -99,16 +100,13 @@ class GitHubPrDetail extends ConsumerWidget {
     String body,
   ) async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final res = await postComment(ticket, body);
     if (!context.mounted) return false;
     if (res case Err<void>()) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l.actionFailed(res.failureOrNull?.message ?? l.commentPostFailed),
-          ),
-        ),
+      showAppSnack(
+        context,
+        l.actionFailed(res.failureOrNull?.message ?? l.commentPostFailed),
+        isError: true,
       );
       return false;
     }
@@ -121,19 +119,16 @@ class GitHubPrDetail extends ConsumerWidget {
     String okMessage,
   ) async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final res = await action;
     if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          res.isOk
-              ? okMessage
-              : l.actionFailed(
-                  res.failureOrNull?.message ?? l.providerActionFailed,
-                ),
-        ),
-      ),
+    showAppSnack(
+      context,
+      res.isOk
+          ? okMessage
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
     );
   }
 }

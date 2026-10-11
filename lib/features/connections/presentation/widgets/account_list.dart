@@ -10,7 +10,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/repositories/connection_repository.dart';
@@ -30,6 +31,7 @@ class WorkspaceAccounts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
     final ws = lookups.workspaces[workspaceId];
     if (ws == null) return const SizedBox.shrink();
@@ -38,7 +40,7 @@ class WorkspaceAccounts extends StatelessWidget {
         .toList();
 
     return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.xl4),
+      padding: EdgeInsets.only(bottom: s.xl4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -50,50 +52,44 @@ class WorkspaceAccounts extends StatelessWidget {
                 big: true,
                 iconKey: ws.iconKey,
               ),
-              SizedBox(width: context.spacing.md),
-              Text(
-                ws.isPersonal ? l.personal : ws.name,
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textPrimary,
+              SizedBox(width: s.md),
+              Flexible(
+                child: Text(
+                  ws.isPersonal ? l.personal : ws.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.bodyStrong.copyWith(
+                    color: c.textPrimary,
+                  ),
                 ),
               ),
-              SizedBox(width: context.spacing.lg),
-              Expanded(child: Container(height: 1, color: c.border)),
-              SizedBox(width: context.spacing.lg),
+              SizedBox(width: s.lg),
+              Expanded(child: Divider(height: 1, color: c.border)),
+              SizedBox(width: s.lg),
               Text(
-                '${accounts.length} account${accounts.length == 1 ? '' : 's'}',
+                l.connectionsAccountCount(accounts.length),
                 style: context.typography.caption.copyWith(
                   color: c.textTertiary,
                 ),
               ),
-              SizedBox(width: context.spacing.sm),
-              IconButton(
-                tooltip: 'Edit workspace',
-                visualDensity: VisualDensity.compact,
-                icon: Icon(
-                  LucideIcons.palette300,
-                  size: 16,
-                  color: c.textSecondary,
-                ),
+              SizedBox(width: s.sm),
+              AppIconButton(
+                icon: LucideIcons.palette300,
+                tooltip: l.connectionsEditWorkspace,
                 onPressed: () => _editWorkspace(context, ws),
               ),
-              IconButton(
-                tooltip: 'Delete workspace',
-                visualDensity: VisualDensity.compact,
-                icon: Icon(
-                  LucideIcons.trash300,
-                  size: 16,
-                  color: c.textTertiary,
-                ),
+              AppIconButton(
+                icon: LucideIcons.trash300,
+                tooltip: l.connectionsDeleteWorkspace,
                 onPressed: () => _deleteWorkspace(context, ws.id, accounts),
               ),
             ],
           ),
-          SizedBox(height: context.spacing.md),
+          SizedBox(height: s.md),
           DecoratedBox(
             decoration: BoxDecoration(
               color: c.surface,
-              borderRadius: BorderRadius.circular(context.radii.md),
+              borderRadius: BorderRadius.circular(context.radii.lg),
               border: Border.all(color: c.border),
             ),
             child: Column(
@@ -103,7 +99,6 @@ class WorkspaceAccounts extends StatelessWidget {
                     account: accounts[i],
                     lookups: lookups,
                     first: i == 0,
-                    index: i,
                   ),
               ],
             ),
@@ -127,97 +122,17 @@ class WorkspaceAccounts extends StatelessWidget {
     String id,
     List<Account> accounts,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => _DeleteWorkspaceDialog(
-        accountCount: accounts.length,
-        onCancel: () => Navigator.of(dialogContext).pop(false),
-        onDelete: () => Navigator.of(dialogContext).pop(true),
-      ),
+    final l = AppL10n.of(context);
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: l.connectionsDeleteWorkspaceTitle,
+      message: l.connectionsDeleteWorkspaceMessage(accounts.length),
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final credentials = await getIt<ConnectionRepository>().deleteWorkspace(id);
     for (final ref in credentials) {
       await getIt<CredentialStore>().delete(ref);
     }
-  }
-}
-
-class _DeleteWorkspaceDialog extends StatelessWidget {
-  const _DeleteWorkspaceDialog({
-    required this.accountCount,
-    required this.onCancel,
-    required this.onDelete,
-  });
-
-  final int accountCount;
-  final VoidCallback onCancel;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final accountLabel = accountCount == 1 ? 'account' : 'accounts';
-    return Dialog(
-      backgroundColor: c.card,
-      surfaceTintColor: Colors.transparent,
-      insetPadding: EdgeInsets.all(context.spacing.xl3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        side: BorderSide(color: c.border),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.xl2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(LucideIcons.trash300, size: 20, color: c.error),
-                  SizedBox(width: context.spacing.md),
-                  Expanded(
-                    child: Text(
-                      'Delete workspace?',
-                      style: context.typography.titleLg.copyWith(
-                        color: c.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: context.spacing.lg),
-              Text(
-                'This removes $accountCount $accountLabel and local synced '
-                'data in this workspace.',
-                style: context.typography.secondary.copyWith(
-                  color: c.textSecondary,
-                  height: 1.45,
-                ),
-              ),
-              SizedBox(height: context.spacing.xl2),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                spacing: context.spacing.sm,
-                children: [
-                  AppButton.textNeutral(
-                    size: AppButtonSize.small,
-                    onPressed: onDelete,
-                    child: Text('Delete', style: TextStyle(color: c.error)),
-                  ),
-                  AppButton.filled(
-                    size: AppButtonSize.small,
-                    onPressed: onCancel,
-                    child: const Text('Cancel'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

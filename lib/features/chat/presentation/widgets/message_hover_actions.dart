@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'message_context_menu.dart';
@@ -58,7 +60,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final rest = actions.skip(widget.buttons).toList();
     final buttons = AnimatedOpacity(
       opacity: _hover || _menuOpen ? 1 : 0,
-      duration: const Duration(milliseconds: 100),
+      duration: AppMotion.fast,
       child: IgnorePointer(
         ignoring: !(_hover || _menuOpen),
         child: Padding(
@@ -104,7 +106,9 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
   }
 }
 
-/// A round button in the surface colour with a hairline border.
+/// A round button in the surface colour with a hairline border. Not
+/// `AppIconButton`: it floats over the chat wallpaper, so it needs its own
+/// opaque disc to stay legible.
 class _RoundButton extends StatelessWidget {
   const _RoundButton({
     required this.icon,
@@ -121,7 +125,6 @@ class _RoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final s = context.spacing;
     final button = Material(
       color: c.surface,
       shape: CircleBorder(side: BorderSide(color: c.border)),
@@ -130,8 +133,8 @@ class _RoundButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: SizedBox.square(
-          dimension: s.xl6 * 0.8,
-          child: Icon(icon, size: s.xl3, color: c.textSecondary),
+          dimension: context.sizes.controlMd,
+          child: Icon(icon, size: context.sizes.iconMd, color: c.textSecondary),
         ),
       ),
     );

@@ -5,11 +5,13 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../../domain/value_objects/emoji_shortnames.dart';
 import '../providers/chat_providers.dart';
 import '../providers/sticker_providers.dart';
+import 'chat_snack.dart';
 import 'chat_sticker_panel.dart';
 
 const int _kEmojiColumns = 8;
@@ -42,22 +44,19 @@ class ChatEmojiPanel extends ConsumerWidget {
   /// Called as a sticker is sent (closes the panel).
   final VoidCallback onSent;
 
-  /// Closes the panel and sends; a failure is reported through the
-  /// messenger captured first, as the panel's context is gone by then.
+  /// Closes the panel and sends; a failure is reported from the navigator's
+  /// context, captured first, as the panel's own context is gone by then.
   Future<void> _send(
     BuildContext context,
     WidgetRef ref,
     ChatSticker sticker,
   ) async {
     final controller = ref.read(stickerControllerProvider);
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final l = AppL10n.of(context);
+    final host = Navigator.of(context).context;
     onSent();
     final result = await controller.send(thread, sticker);
-    if (result case Err(:final failure)) {
-      messenger?.showSnackBar(
-        SnackBar(content: Text(l.chatActionFailed(failure.message))),
-      );
+    if (result case Err(:final failure) when host.mounted) {
+      showChatFailure(host, failure);
     }
   }
 
@@ -65,9 +64,16 @@ class ChatEmojiPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final s = context.spacing;
-    final stickers = switch (ref.watch(chatStickersProvider)) {
-      AsyncData(value: Ok(:final value)) => value,
-      _ => const <ChatSticker>[],
+    final stickerTab = switch (ref.watch(chatStickersProvider)) {
+      AsyncData(value: Ok(:final value)) => ChatStickerPanel(
+        stickers: value,
+        onPick: (sticker) => _send(context, ref, sticker),
+      ),
+      AsyncData() || AsyncError() => AppStateView.error(
+        compact: true,
+        onRetry: () => ref.invalidate(chatStickersProvider),
+      ),
+      _ => const AppStateView.loading(compact: true),
     };
     return SizedBox(
       width: s.xl6 * _kEmojiColumns + s.md * 2,
@@ -87,10 +93,7 @@ class ChatEmojiPanel extends ConsumerWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  ChatStickerPanel(
-                    stickers: stickers,
-                    onPick: (sticker) => _send(context, ref, sticker),
-                  ),
+                  stickerTab,
                   _EmojiGrid(onPick: onInsert),
                 ],
               ),

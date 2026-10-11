@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -47,28 +48,34 @@ class EditorHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l.close,
-            visualDensity: VisualDensity.compact,
-            icon: Icon(LucideIcons.arrowLeft300, size: s.xl3),
+          AppIconButton(
+            icon: LucideIcons.arrowLeft300,
+            tooltip: l.ticketEditorBack,
             onPressed: onClose,
           ),
           SizedBox(width: s.md),
           ZenTaoKindIcon(kind),
           SizedBox(width: s.md),
-          Text(
-            title,
-            style: context.typography.titleSm.copyWith(color: c.textPrimary),
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.titleSm.copyWith(color: c.textPrimary),
+            ),
           ),
           SizedBox(width: s.xl),
           Expanded(
             child: message == null
                 ? const SizedBox.shrink()
-                : Text(
-                    message,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.bodySm.copyWith(color: c.error),
+                : Tooltip(
+                    message: message,
+                    child: Text(
+                      l.ticketEditorSaveFailed(message),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.typography.bodySm.copyWith(color: c.error),
+                    ),
                   ),
           ),
           SizedBox(width: s.xl),
@@ -80,16 +87,10 @@ class EditorHeader extends StatelessWidget {
           SizedBox(width: s.md),
           AppButton.filled(
             size: AppButtonSize.small,
+            icon: LucideIcons.save300,
             onPressed: onSave,
             isLoading: saving,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: s.sm,
-              children: [
-                Icon(LucideIcons.save300, size: s.xl2),
-                Text(l.save),
-              ],
-            ),
+            child: Text(l.save),
           ),
         ],
       ),

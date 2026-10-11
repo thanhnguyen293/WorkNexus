@@ -157,22 +157,22 @@ class _EmptyFieldsToggle extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: HoverRegion(
-        cursor: SystemMouseCursors.click,
-        builder: (context, hovered, _) => GestureDetector(
+        // HoverSurface makes the link focusable and keyboard-activatable; the
+        // underline stays the hover cue, so it paints no tint.
+        builder: (context, hovered, _) => HoverSurface(
           onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-            child: Text(
-              expanded
-                  ? AppL10n.of(context).hideEmptyFields
-                  : AppL10n.of(context).showEmptyFields(count),
-              style: context.typography.caption.copyWith(
-                color: c.accent,
-                // A text link underlines on hover.
-                decoration: hovered ? TextDecoration.underline : null,
-                decorationColor: c.accent,
-              ),
+          tintOnHover: false,
+          borderRadius: BorderRadius.circular(context.radii.sm),
+          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+          child: Text(
+            expanded
+                ? AppL10n.of(context).hideEmptyFields
+                : AppL10n.of(context).showEmptyFields(count),
+            style: context.typography.caption.copyWith(
+              color: c.accent,
+              // A text link underlines on hover.
+              decoration: hovered ? TextDecoration.underline : null,
+              decorationColor: c.accent,
             ),
           ),
         ),

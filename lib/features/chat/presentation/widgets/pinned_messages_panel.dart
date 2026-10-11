@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
@@ -33,16 +37,32 @@ class PinnedMessagesPanel extends ConsumerStatefulWidget {
 }
 
 class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
+  /// Ids asked for (in flight or answered), and those whose fetch answered.
   final _requested = <int>{};
+  final _answered = <int>{};
 
-  void _fetchMissing(List<int> ids) {
+  /// The last fetch failed: its ids stop spinning and offer a retry.
+  bool _failed = false;
+
+  Future<void> _fetchMissing(List<int> ids) async {
     final missing = ids.where(_requested.add).toList();
     if (missing.isEmpty) return;
     final t = widget.thread;
-    ref
+    final result = await ref
         .read(chatControllerProvider)
         .fetchMessages(t.accountId, t.chatGid, missing);
+    if (!mounted) return;
+    setState(() {
+      _answered.addAll(missing);
+      _failed = result is Err;
+    });
   }
+
+  void _retry(List<int> missing) => setState(() {
+    _failed = false;
+    _requested.removeAll(missing);
+    _answered.removeAll(missing);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +77,14 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
           .value;
       found == null ? missing.add(id) : messages.add(found);
     }
-    if (missing.isNotEmpty) {
+    if (missing.isNotEmpty && !_failed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _fetchMissing(missing);
       });
     }
+    // A message the server answered for but didn't return is gone: it
+    // isn't waited for.
+    final waiting = missing.any((id) => !_answered.contains(id));
     return ChatSidePanelFrame(
       title: l.chatPinnedMessages,
       onBack: () => backToChatInfo(
@@ -73,10 +96,13 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
           ? null
           : () => closeChatSidePanel(ref, t),
       child: ids.isEmpty
-          ? Padding(
-              padding: EdgeInsets.all(context.spacing.xl3),
-              child: AppInlineNote(text: l.chatNoPinned),
+          ? AppStateView.empty(
+              compact: true,
+              icon: LucideIcons.pin300,
+              title: l.chatNoPinned,
             )
+          : messages.isEmpty && _failed
+          ? AppStateView.error(compact: true, onRetry: () => _retry(missing))
           : ListView(
               padding: EdgeInsets.all(context.spacing.xl3),
               children: [
@@ -98,7 +124,28 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
                                 .state =
                             m,
                   ),
-                if (missing.isNotEmpty) const AppInlineSpinner(),
+                if (_failed)
+                  Padding(
+                    padding: EdgeInsets.only(top: context.spacing.md),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: AppInlineNote(
+                            text: l.stateLoadFailedTitle,
+                            isError: true,
+                          ),
+                        ),
+                        AppButton.textNeutral(
+                          size: AppButtonSize.extraSmall,
+                          icon: LucideIcons.refreshCw300,
+                          onPressed: () => _retry(missing),
+                          child: Text(l.retry),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (waiting)
+                  const AppInlineSpinner(),
               ],
             ),
     );

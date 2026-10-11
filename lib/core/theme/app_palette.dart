@@ -115,22 +115,25 @@ class AppPalette {
     panel: Color(0xFFF8F8F8), // sidebar / column
     panel2: Color(0xFFEBEBEB), // insets, chips, inputs
     card: Color(0xFFFFFFFF), // ticket card
-    line: Color(0xFFDEDEDE),
-    line2: Color(0xFFC8C8C8),
+    line: Color(0xFFDCDCDC),
+    line2: Color(0xFFC4C4C4),
     tx: Color(0xFF1C1C1C), // neutral near-black
-    tx2: Color(0xFF5A5A5A),
-    tx3: Color(0xFF8A8A8A),
+    // tx2/tx3 both clear WCAG AA (4.5:1) on every light surface, bg included.
+    tx2: Color(0xFF4A4A4A),
+    tx3: Color(0xFF666666),
     accent: Color(0xFF5A57D6),
     accentTx: Color(0xFFFFFFFF),
     titlebar: Color(0xFFE4E4E4),
     sel: Color.fromRGBO(90, 87, 214, .10),
     selLine: Color.fromRGBO(90, 87, 214, .5),
-    red: Color(0xFFDC2626),
-    orange: Color(0xFFC56A12),
-    yellow: Color(0xFFA67C10),
-    green: Color(0xFF2F8A52),
-    amber: Color(0xFFB1740E),
-    violet: Color(0xFF7C53C8),
+    // Status inks are dark enough to read as text (≥ 4.5:1 on every light
+    // surface, the grey canvas included), not just as dots and tinted fills.
+    red: Color(0xFFC81E1E),
+    orange: Color(0xFFA84C08),
+    yellow: Color(0xFF805F00),
+    green: Color(0xFF1B7340),
+    amber: Color(0xFF935C00),
+    violet: Color(0xFF744CBF),
     skel: Color.fromRGBO(0, 0, 0, .05),
     skel2: Color.fromRGBO(0, 0, 0, .09),
     scrim: Color(0xFF000000),
@@ -149,8 +152,9 @@ class AppPalette {
     line: Color(0xFF323232),
     line2: Color(0xFF3D3D3D),
     tx: Color(0xFFEDEDED),
-    tx2: Color(0xFFA5A5A5),
-    tx3: Color(0xFF707070),
+    // tx3 clears WCAG AA (4.5:1) on cards; tx2 stays a clear step above it.
+    tx2: Color(0xFFB4B4B4),
+    tx3: Color(0xFF8F8F8F),
     accent: Color(0xFF7F83F0),
     accentTx: Color(0xFFFFFFFF),
     titlebar: Color(0xFF191919),
@@ -181,8 +185,9 @@ class AppPalette {
     line: Color(0xFF2A303D),
     line2: Color(0xFF38404F),
     tx: Color(0xFFE9ECF3),
-    tx2: Color(0xFF9AA4B8),
-    tx3: Color(0xFF697386),
+    // tx3 clears WCAG AA (4.5:1) on cards; tx2 stays a clear step above it.
+    tx2: Color(0xFFAAB3C5),
+    tx3: Color(0xFF8A95AA),
     accent: Color(0xFF6A86FF),
     accentTx: Color(0xFFFFFFFF),
     titlebar: Color(0xFF090B10),

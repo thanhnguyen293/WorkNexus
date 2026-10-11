@@ -4,7 +4,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/translation_languages.dart';
@@ -42,11 +44,13 @@ class _TranslationSettingsCardState
         : 'OpenCode';
     final summary = '${translationLanguageFor(lang).nativeName} · $backend';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(color: c.border),
+    // A Material, not a filled Container, so the header's InkWell hover
+    // paints on top of the card's fill.
+    return Material(
+      color: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        side: BorderSide(color: c.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -58,8 +62,8 @@ class _TranslationSettingsCardState
             onTap: () => setState(() => _expanded = !_expanded),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
+            duration: AppMotion.base,
+            curve: AppMotion.enter,
             alignment: Alignment.topCenter,
             child: _expanded
                 ? _Body(lang: lang)
@@ -98,7 +102,11 @@ class _Header extends StatelessWidget {
         padding: EdgeInsets.all(context.spacing.xl2),
         child: Row(
           children: [
-            Icon(LucideIcons.languages300, size: 20, color: c.accent),
+            Icon(
+              LucideIcons.languages300,
+              size: context.sizes.iconLg,
+              color: c.accent,
+            ),
             SizedBox(width: context.spacing.lg),
             Expanded(
               child: Column(
@@ -122,10 +130,10 @@ class _Header extends StatelessWidget {
             ),
             AnimatedRotation(
               turns: expanded ? 0.5 : 0,
-              duration: const Duration(milliseconds: 180),
+              duration: AppMotion.base,
               child: Icon(
                 LucideIcons.chevronDown300,
-                size: 18,
+                size: context.sizes.iconMd,
                 color: c.textTertiary,
               ),
             ),
@@ -200,9 +208,8 @@ class _Section extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: context.typography.body.copyWith(
+                  style: context.typography.bodyStrong.copyWith(
                     color: c.textPrimary,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),

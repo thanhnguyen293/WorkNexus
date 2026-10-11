@@ -18,7 +18,7 @@ class DashboardRailButton extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     return AppRailButton(
-      icon: LucideIcons.layoutGrid300,
+      icon: LucideIcons.layoutDashboard300,
       label: AppL10n.of(context).dashboard,
       selected:
           ref.watch(mainViewProvider) == MainView.dashboard &&

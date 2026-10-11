@@ -10,8 +10,10 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
@@ -56,7 +58,7 @@ class ZenTaoExecutionRow extends ConsumerWidget {
         onTap: loading ? null : () => _select(context, ref),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(
-          height: 27,
+          height: context.sizes.controlSm,
           padding: EdgeInsets.only(
             left: context.spacing.sm,
             right: context.spacing.xxs,
@@ -119,8 +121,6 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     // Switch to this execution's task board immediately, then stream its tasks
     // into the DB, which the board reads reactively. Selecting a task board and
     // a bug board are mutually exclusive, so clear the product selection first.
-    // Capture before the await so no BuildContext is used across the async gap.
-    final messenger = ScaffoldMessenger.of(context);
     final failedMessage = AppL10n.of(context).executionOpenFailed;
     showBoardView(ref);
     ref.read(selectedGitLabProjectProvider.notifier).clear();
@@ -136,7 +136,8 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     final res = await getIt<SyncService>().syncExecutionTasks(execution);
     ref.read(zentaoExecutionSyncingProvider.notifier).finish();
     if (res case Err()) {
-      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+      if (!context.mounted) return;
+      showAppSnack(context, failedMessage, isError: true);
     }
   }
 }

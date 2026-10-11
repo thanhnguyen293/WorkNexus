@@ -10,10 +10,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/update_controller.dart';
 import '../providers/update_state.dart';
 
-/// The rail's "restart to update" button, above Integrations: hidden until the
-/// background check has a newer release downloaded and verified, then restarts
-/// into it on tap. Watching the controller here also starts the hourly check
-/// with the app. A release without an in-app build opens its release page.
+/// The rail's "restart to update" button, in the utilities group above
+/// Integrations: hidden until the background check has a newer release
+/// downloaded and verified, then restarts into it on tap. Watching the
+/// controller here also starts the hourly check with the app. A release
+/// without an in-app build opens its release page.
 class UpdateRailButton extends ConsumerWidget {
   const UpdateRailButton({super.key});
 
@@ -24,7 +25,7 @@ class UpdateRailButton extends ConsumerWidget {
     return switch (state) {
       UpdateReady(:final update) ||
       UpdateInstalling(:final update) => AppRailButton(
-        icon: LucideIcons.circleArrowUp300,
+        icon: LucideIcons.circleFadingArrowUp300,
         label: l.updateRestartToUpdate(update.latestVersion),
         selected: false,
         onTap: () =>
@@ -33,7 +34,7 @@ class UpdateRailButton extends ConsumerWidget {
       ),
       UpdateManual(:final update) ||
       UpdateFailed(:final update) => AppRailButton(
-        icon: LucideIcons.circleArrowUp300,
+        icon: LucideIcons.circleFadingArrowUp300,
         label: l.updateAvailable(update.latestVersion),
         selected: false,
         onTap: () => openExternally(update.releaseUrl),

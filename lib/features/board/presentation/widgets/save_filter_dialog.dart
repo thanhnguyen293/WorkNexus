@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../saved_filter_providers.dart';
 
@@ -42,6 +44,7 @@ class _SaveFilterDialogState extends ConsumerState<SaveFilterDialog> {
     final name = _controller.text;
     if (name.trim().isEmpty || _saving) return;
     final navigator = Navigator.of(context);
+    final failed = AppL10n.of(context).actionFailed;
     setState(() {
       _saving = true;
       _error = null;
@@ -56,7 +59,7 @@ class _SaveFilterDialogState extends ConsumerState<SaveFilterDialog> {
       case Err(:final failure):
         setState(() {
           _saving = false;
-          _error = failure.message;
+          _error = failed(failure.message);
         });
     }
   }
@@ -64,68 +67,65 @@ class _SaveFilterDialogState extends ConsumerState<SaveFilterDialog> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    );
-    return AlertDialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      title: Text(
-        l.saveFilterTitle,
-        style: context.typography.title.copyWith(color: c.textPrimary),
-      ),
-      content: SizedBox(
-        width: 360,
+    final canSave = _controller.text.trim().isNotEmpty && !_saving;
+    return AppDialogFrame(
+      title: l.saveFilterTitle,
+      maxWidth: context.sizes.dialogSm,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        AppButton.filled(
+          size: AppButtonSize.small,
+          isLoading: _saving,
+          onPressed: canSave ? _save : null,
+          child: Text(l.save),
+        ),
+      ],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text(
+              l.saveFilterNameLabel,
+              style: context.typography.bodySmStrong.copyWith(
+                color: c.textSecondary,
+              ),
+            ),
+            SizedBox(height: s.sm),
             TextField(
               controller: _controller,
               autofocus: true,
               onSubmitted: (_) => _save(),
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() {
+                _error = null;
+              }),
               style: context.typography.body.copyWith(color: c.textPrimary),
-              decoration: InputDecoration(
-                isDense: true,
-                labelText: l.saveFilterNameLabel,
-                hintText: l.saveFilterNameHint,
-                hintStyle: context.typography.body.copyWith(
+              decoration: appInputDecoration(
+                context,
+                hint: l.saveFilterNameHint,
+                errorText: _error,
+              ),
+            ),
+            if (_error == null) ...[
+              SizedBox(height: s.md),
+              Text(
+                l.saveFilterExistsHint,
+                style: context.typography.caption.copyWith(
                   color: c.textTertiary,
                 ),
-                border: border,
-                enabledBorder: border,
-                focusedBorder: border.copyWith(
-                  borderSide: BorderSide(color: c.accent),
-                ),
               ),
-            ),
-            SizedBox(height: context.spacing.md),
-            Text(
-              _error ?? l.saveFilterExistsHint,
-              style: context.typography.captionSm.copyWith(
-                color: _error == null ? c.textTertiary : c.error,
-              ),
-            ),
+            ],
           ],
         ),
       ),
-      actions: [
-        AppButton.textNeutral(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
-        ),
-        SizedBox(width: context.spacing.md),
-        AppButton.filled(
-          isLoading: _saving,
-          onPressed: _controller.text.trim().isEmpty || _saving ? null : _save,
-          child: Text(l.save),
-        ),
-      ],
     );
   }
 }

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
@@ -43,7 +47,7 @@ const double _kAwayThreshold = 400;
 /// Further than this from the bottom, jumping is better than a long animation.
 const double _kAnimateLimit = 4000;
 
-const Duration _kScrollDuration = Duration(milliseconds: 250);
+const Duration _kScrollDuration = AppMotion.slow;
 
 class _MessageListState extends ConsumerState<MessageList>
     with MessageListPaging {
@@ -198,6 +202,11 @@ class _MessageListState extends ConsumerState<MessageList>
     if (messagesAsync.isLoading && messages.isEmpty) {
       return const AppInlineSpinner();
     }
+    if (messagesAsync.hasError && messages.isEmpty) {
+      return AppStateView.error(
+        onRetry: () => ref.invalidate(chatMessagesProvider(t)),
+      );
+    }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
     final style = ChatStyle.watch(ref, context);
     final items = _items = chatListItems(messages, style.separatorGap);
@@ -213,6 +222,7 @@ class _MessageListState extends ConsumerState<MessageList>
       jump: _jump,
       header: MessageListHeader(
         reachedStart: reachedStart,
+        isEmpty: messages.isEmpty,
         failed: loadFailed,
         onLoadOlder: loadOlder,
       ),
@@ -221,9 +231,21 @@ class _MessageListState extends ConsumerState<MessageList>
       onMouseUp: _onMouseUp,
     );
     final s = context.spacing;
+    final l = AppL10n.of(context);
     return Stack(
       children: [
         list,
+        // In the list it would scroll with it: over it, centred in the pane.
+        if (messages.isEmpty && !loadFailed)
+          Positioned.fill(
+            child: loadingOlder
+                ? const AppStateView.loading(compact: true)
+                : AppStateView.empty(
+                    compact: true,
+                    icon: LucideIcons.messagesSquare300,
+                    title: l.chatNoMessages,
+                  ),
+          ),
         Positioned(
           right: s.xl5,
           bottom: s.xl3,

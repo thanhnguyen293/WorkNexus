@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_dashboard.dart';
 import '../providers/dashboard_providers.dart';
@@ -59,22 +60,14 @@ class DashboardHeadlineStatus extends ConsumerWidget {
           ],
         ),
         SizedBox(width: s.sm),
-        IconButton(
+        AppIconButton(
+          icon: LucideIcons.rotateCw300,
           tooltip: l.refresh,
-          onPressed: refreshing
-              ? null
-              : () {
-                  ref
-                      .read(dashboardRefreshProvider(account.id).notifier)
-                      .refresh();
-                  ref.read(myWorkSyncProvider(account.id).notifier).refresh();
-                },
-          icon: refreshing
-              ? SizedBox.square(
-                  dimension: s.xl3,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(LucideIcons.rotateCw300, color: c.textSecondary),
+          isLoading: refreshing,
+          onPressed: () {
+            ref.read(dashboardRefreshProvider(account.id).notifier).refresh();
+            ref.read(myWorkSyncProvider(account.id).notifier).refresh();
+          },
         ),
       ],
     );

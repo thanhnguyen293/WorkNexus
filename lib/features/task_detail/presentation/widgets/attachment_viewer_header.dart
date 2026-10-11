@@ -4,16 +4,17 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/zentao_labels.dart';
-import '../../../../core/widgets/hover_surface.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'attachment_kinds.dart';
 
 /// The attachment viewer's top bar: type icon, name + size, download, close —
-/// styled to match the detail-panel header (hairline divider, bordered controls).
+/// styled to match the detail-panel header (hairline divider, app controls).
 class AttachmentViewerHeader extends StatelessWidget {
   const AttachmentViewerHeader({
     super.key,
@@ -42,7 +43,11 @@ class AttachmentViewerHeader extends StatelessWidget {
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
       child: Row(
         children: [
-          Icon(_iconFor(attachment.extension), size: 18, color: c.accent),
+          Icon(
+            _iconFor(attachment.extension),
+            size: context.sizes.iconLg,
+            color: c.accent,
+          ),
           SizedBox(width: context.spacing.md),
           Expanded(
             child: Column(
@@ -67,9 +72,19 @@ class AttachmentViewerHeader extends StatelessWidget {
             ),
           ),
           SizedBox(width: context.spacing.md),
-          _DownloadButton(saving: saving, onTap: onSave),
+          AppButton.outlinedNeutral(
+            size: AppButtonSize.small,
+            icon: LucideIcons.download300,
+            isLoading: saving,
+            onPressed: onSave,
+            child: Text(AppL10n.of(context).download),
+          ),
           SizedBox(width: context.spacing.sm),
-          _CloseButton(onTap: onClose),
+          AppIconButton(
+            icon: LucideIcons.x300,
+            tooltip: AppL10n.of(context).close,
+            onPressed: onClose,
+          ),
         ],
       ),
     );
@@ -80,70 +95,5 @@ class AttachmentViewerHeader extends StatelessWidget {
     if (kVideoExts.contains(e)) return LucideIcons.video300;
     if (kImageExts.contains(e)) return LucideIcons.image300;
     return LucideIcons.file300;
-  }
-}
-
-/// A subtle bordered "download" button matching the detail-panel header style.
-class _DownloadButton extends StatelessWidget {
-  const _DownloadButton({required this.saving, required this.onTap});
-
-  final bool saving;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final tint = c.accent;
-    return HoverSurface(
-      onTap: onTap,
-      height: 28,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-      color: c.surfaceSubtle,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      border: Border.all(color: c.border),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (saving)
-            SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: tint),
-            )
-          else
-            Icon(LucideIcons.download300, size: 15, color: tint),
-          SizedBox(width: context.spacing.sm),
-          Text(
-            l.download,
-            style: context.typography.bodySm.copyWith(color: tint),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A bordered square close button, mirroring the detail-panel header control.
-class _CloseButton extends StatelessWidget {
-  const _CloseButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Tooltip(
-      message: AppL10n.of(context).close,
-      child: HoverSurface(
-        onTap: onTap,
-        width: 28,
-        height: 28,
-        alignment: Alignment.center,
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.sm),
-        border: Border.all(color: c.border),
-        child: Icon(LucideIcons.x300, size: 15, color: c.textSecondary),
-      ),
-    );
   }
 }

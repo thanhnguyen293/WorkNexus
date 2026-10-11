@@ -5,6 +5,7 @@ import '../../../../core/platform/open_external.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -37,7 +38,6 @@ class _TranslationOpenCodeKeyFieldState
   }
 
   Future<void> _save(String providerId) async {
-    final messenger = ScaffoldMessenger.of(context);
     final l = AppL10n.of(context);
     setState(() {
       _saving = true;
@@ -46,12 +46,10 @@ class _TranslationOpenCodeKeyFieldState
     final result = await ref
         .read(openCodeKeyControllerProvider.notifier)
         .save(providerId: providerId, key: _key.text);
-    if (result.isOk) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.translationOpenCodeKeySaveDone(providerId))),
-      );
-    }
     if (!mounted) return;
+    if (result.isOk) {
+      showAppSnack(context, l.translationOpenCodeKeySaveDone(providerId));
+    }
     setState(() {
       _saving = false;
       if (result.isOk) {
@@ -73,6 +71,7 @@ class _TranslationOpenCodeKeyFieldState
       AsyncData(:final value) => _statusOf(l, value.valueOrNull),
       _ => null,
     };
+    final canSave = !_saving && _key.text.trim().isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,14 +81,19 @@ class _TranslationOpenCodeKeyFieldState
           controller: _key,
           obscure: _obscure,
           onChanged: (_) => setState(() {}),
+          onSubmitted: (_) {
+            if (canSave) _save(providerId);
+          },
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
+              AppButton.text(
+                size: AppButtonSize.small,
                 onPressed: () => openExternally(openCodeKeyUrl(providerId)),
                 child: Text(l.translationApiGetKey),
               ),
-              TextButton(
+              AppButton.text(
+                size: AppButtonSize.small,
                 onPressed: () => setState(() => _obscure = !_obscure),
                 child: Text(_obscure ? l.openCodeShowKey : l.openCodeHideKey),
               ),
@@ -107,9 +111,7 @@ class _TranslationOpenCodeKeyFieldState
         SizedBox(height: context.spacing.lg),
         AppButton.filled(
           isLoading: _saving,
-          onPressed: !_saving && _key.text.trim().isNotEmpty
-              ? () => _save(providerId)
-              : null,
+          onPressed: canSave ? () => _save(providerId) : null,
           child: Text(l.translationApiSave),
         ),
       ],

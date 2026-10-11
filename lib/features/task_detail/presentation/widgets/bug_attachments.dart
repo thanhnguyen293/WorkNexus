@@ -5,6 +5,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/zentao_labels.dart';
@@ -70,8 +71,8 @@ class _AttachmentRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: context.sizes.controlSm,
+            height: context.sizes.controlSm,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: c.mixT(c.info, 0.16),
@@ -79,7 +80,7 @@ class _AttachmentRow extends StatelessWidget {
             ),
             child: Icon(
               _iconFor(attachment.extension),
-              size: 16,
+              size: context.sizes.iconMd,
               color: c.info,
             ),
           ),
@@ -110,8 +111,8 @@ class _AttachmentRow extends StatelessWidget {
           ),
           SizedBox(width: context.spacing.md),
           Container(
-            width: 30,
-            height: 30,
+            width: context.sizes.controlSm,
+            height: context.sizes.controlSm,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(context.radii.md),
@@ -121,7 +122,7 @@ class _AttachmentRow extends StatelessWidget {
               _isViewable(attachment.extension)
                   ? LucideIcons.eye300
                   : LucideIcons.download300,
-              size: 15,
+              size: context.sizes.iconSm,
               color: c.textTertiary,
             ),
           ),
@@ -145,8 +146,9 @@ class _AttachmentRow extends StatelessWidget {
     if (video.contains(e)) return LucideIcons.video300;
     if (image.contains(e)) return LucideIcons.image300;
     if (e == 'pdf') return LucideIcons.fileText300;
-    if (e == 'zip' || e == 'rar' || e == '7z')
+    if (e == 'zip' || e == 'rar' || e == '7z') {
       return LucideIcons.fileArchive300;
+    }
     return LucideIcons.file300;
   }
 }

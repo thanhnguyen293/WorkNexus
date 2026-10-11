@@ -5,8 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -102,24 +105,34 @@ class ChatThreadHeader extends ConsumerWidget {
                         if (subtitle != null)
                           Row(
                             children: [
-                              Icon(
-                                !oneToOne
-                                    ? LucideIcons.user300
-                                    : presence != null
-                                    ? Icons.circle
-                                    : LucideIcons.atSign300,
-                                size: presence != null
-                                    ? context.spacing.md
-                                    : context.spacing.xl3,
-                                color: presence?.isAround ?? false
-                                    ? c.success
-                                    : c.textSecondary,
-                              ),
-                              SizedBox(width: context.spacing.xs),
-                              Text(
-                                subtitle,
-                                style: context.typography.secondary.copyWith(
+                              if (presence != null)
+                                Container(
+                                  width: context.spacing.md,
+                                  height: context.spacing.md,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: presence.isAround
+                                        ? c.success
+                                        : c.textSecondary,
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  oneToOne
+                                      ? LucideIcons.atSign300
+                                      : LucideIcons.user300,
+                                  size: context.sizes.iconSm,
                                   color: c.textSecondary,
+                                ),
+                              SizedBox(width: context.spacing.xs),
+                              Flexible(
+                                child: Text(
+                                  subtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.typography.secondary.copyWith(
+                                    color: c.textSecondary,
+                                  ),
                                 ),
                               ),
                             ],
@@ -146,15 +159,21 @@ class _InfoTap extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: AppL10n.of(context).chatInfo,
-    child: MouseRegion(
-      cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+  Widget build(BuildContext context) {
+    final label = AppL10n.of(context).chatInfo;
+    return Tooltip(
+      message: label,
+      child: HoverSurface(
         onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        semanticLabel: label,
+        // The header stays flat under the pointer (the hand cursor and the
+        // tooltip already say it opens the info panel); keyboard focus still
+        // draws the ring.
+        tintOnHover: false,
+        borderRadius: BorderRadius.circular(context.radii.md),
         child: child,
       ),
-    ),
-  );
+    );
+  }
 }

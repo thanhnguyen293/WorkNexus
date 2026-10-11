@@ -7,10 +7,12 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/labels.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../util/open_zentao_task.dart';
@@ -34,16 +36,13 @@ class _SubtaskListState extends ConsumerState<SubtaskList> {
   String? _opening;
 
   Future<void> _open(String id) async {
-    final messenger = ScaffoldMessenger.of(context);
     final l = AppL10n.of(context);
     setState(() => _opening = id);
     final res = await openZenTaoTask(ref, widget.ticket, id);
     if (!mounted) return;
     setState(() => _opening = null);
     if (res case Err(:final failure)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.actionFailed(failure.message))),
-      );
+      showAppSnack(context, l.actionFailed(failure.message), isError: true);
     }
   }
 
@@ -131,16 +130,13 @@ class _Row extends StatelessWidget {
             SizedBox(width: s.sm),
             if (opening)
               SizedBox.square(
-                dimension: s.lg,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.6,
-                  color: c.accent,
-                ),
+                dimension: context.sizes.iconSm,
+                child: const CircularProgressIndicator(),
               )
             else
               Icon(
                 LucideIcons.chevronRight300,
-                size: s.lg,
+                size: context.sizes.iconSm,
                 color: c.textTertiary,
               ),
           ],

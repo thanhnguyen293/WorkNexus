@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/dashboard_execution.dart';
 import '../util/dashboard_status_color.dart';
@@ -64,7 +65,8 @@ class _Execution extends StatelessWidget {
             ),
             if (status != null) ...[
               SizedBox(width: s.md),
-              MyWorkStatusChip(
+              TintedPill(
+                pill: true,
                 label: _statusLabel(l, status),
                 color: dashboardStatusColor(c, status),
               ),

@@ -66,7 +66,8 @@ final newTicketMenuProvider = Provider<MenuController>(
 /// ⌘N on macOS, Ctrl+N elsewhere.
 bool get _isMac => defaultTargetPlatform == TargetPlatform.macOS;
 
-/// The "+" rail button: a menu of the new bugs and tasks
+/// The "+" rail button (the rail's accent-filled primary action, with a
+/// divider under it): a menu of the new bugs and tasks
 /// [newTicketChoicesProvider] offers; hidden without a ZenTao account.
 class NewTicketRailButton extends ConsumerWidget {
   const NewTicketRailButton({super.key});
@@ -79,7 +80,7 @@ class NewTicketRailButton extends ConsumerWidget {
     final severalAccounts = choices.map((c) => c.account.id).toSet().length > 1;
     final s = context.spacing;
     final menu = ref.watch(newTicketMenuProvider);
-    return MenuAnchor(
+    final anchor = MenuAnchor(
       controller: menu,
       // Beside the rail rather than over it.
       alignmentOffset: Offset(s.xl6 + s.sm, -s.xl6),
@@ -116,11 +117,19 @@ class NewTicketRailButton extends ConsumerWidget {
         ),
       ],
       builder: (context, menu, _) => AppRailButton(
-        icon: LucideIcons.plusCircle300,
+        icon: LucideIcons.plus300,
         label: l.zentaoNewTicket(_isMac ? '⌘N' : 'Ctrl+N'),
         selected: menu.isOpen,
+        primary: true,
         onTap: () => menu.isOpen ? menu.close() : menu.open(),
       ),
+    );
+    return Column(
+      children: [
+        anchor,
+        // Sets the action apart from the destinations under it.
+        const AppRailDivider(),
+      ],
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -23,17 +24,17 @@ class GenerateTokenLink extends StatelessWidget {
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.sm),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.xs,
-          vertical: context.spacing.xxs,
-        ),
+      // At least the minimum pointer target, though the label itself is small.
+      child: Container(
+        constraints: BoxConstraints(minHeight: context.sizes.controlSm),
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+        alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               LucideIcons.squareArrowOutUpRight300,
-              size: 12,
+              size: context.sizes.iconXs,
               color: c.accent,
             ),
             SizedBox(width: context.spacing.xxs),

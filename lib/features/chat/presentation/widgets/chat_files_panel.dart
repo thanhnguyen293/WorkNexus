@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
@@ -24,27 +25,20 @@ class ChatFilesPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final c = context.colors;
-    final s = context.spacing;
-    final all = ref.watch(chatAttachmentsProvider(thread)).value ?? const [];
-    final (:media, :files) = splitChatAttachments(all);
-    final hint = Padding(
-      padding: EdgeInsets.only(top: s.xl),
-      child: Text(
-        l.chatFilesLoadedHint,
-        style: context.typography.caption.copyWith(color: c.textTertiary),
-      ),
-    );
-    return ChatSidePanelFrame(
-      title: l.chatFilesAndMedia,
-      onBack: () => backToChatInfo(
-        ref,
-        thread,
-        infoRoom: ChatLayoutScope.of(context).infoRoom,
-      ),
-      onClose: ChatLayoutScope.of(context).infoRoom
-          ? null
-          : () => closeChatSidePanel(ref, thread),
-      child: DefaultTabController(
+    final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    final attachments = ref.watch(chatAttachmentsProvider(thread));
+    final all = attachments.value;
+    final Widget body;
+    if (all == null) {
+      body = attachments.hasError
+          ? AppStateView.error(
+              compact: true,
+              onRetry: () => ref.invalidate(chatAttachmentsProvider(thread)),
+            )
+          : const AppStateView.loading(compact: true);
+    } else {
+      final (:media, :files) = splitChatAttachments(all);
+      body = DefaultTabController(
         length: 2,
         child: Column(
           children: [
@@ -60,27 +54,25 @@ class ChatFilesPanel extends ConsumerWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  ListView(
-                    padding: EdgeInsets.all(s.xl),
+                  _FilesTab(
+                    isEmpty: media.isEmpty,
+                    emptyIcon: LucideIcons.image300,
+                    emptyTitle: l.chatNoMedia,
                     children: [
-                      if (media.isEmpty)
-                        AppInlineNote(text: l.chatNoMedia)
-                      else
-                        ChatMediaGrid(
-                          accountId: thread.accountId,
-                          media: media,
-                          columns: 3,
-                        ),
-                      hint,
+                      ChatMediaGrid(
+                        accountId: thread.accountId,
+                        media: media,
+                        columns: 3,
+                      ),
                     ],
                   ),
-                  ListView(
-                    padding: EdgeInsets.all(s.xl),
+                  _FilesTab(
+                    isEmpty: files.isEmpty,
+                    emptyIcon: LucideIcons.file300,
+                    emptyTitle: l.chatNoFiles,
                     children: [
-                      if (files.isEmpty) AppInlineNote(text: l.chatNoFiles),
                       for (final m in files)
                         ChatFileRow(message: m, file: m.content as FileContent),
-                      hint,
                     ],
                   ),
                 ],
@@ -88,7 +80,58 @@ class ChatFilesPanel extends ConsumerWidget {
             ),
           ],
         ),
-      ),
+      );
+    }
+    return ChatSidePanelFrame(
+      title: l.chatFilesAndMedia,
+      onBack: () => backToChatInfo(ref, thread, infoRoom: infoRoom),
+      onClose: infoRoom ? null : () => closeChatSidePanel(ref, thread),
+      child: body,
+    );
+  }
+}
+
+/// One tab of the panel: its items above the "only what's loaded here" hint,
+/// or an empty state carrying that hint.
+class _FilesTab extends StatelessWidget {
+  const _FilesTab({
+    required this.isEmpty,
+    required this.emptyIcon,
+    required this.emptyTitle,
+    required this.children,
+  });
+
+  final bool isEmpty;
+  final IconData emptyIcon;
+  final String emptyTitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    final s = context.spacing;
+    if (isEmpty) {
+      return AppStateView.empty(
+        compact: true,
+        icon: emptyIcon,
+        title: emptyTitle,
+        message: l.chatFilesLoadedHint,
+      );
+    }
+    return ListView(
+      padding: EdgeInsets.all(s.xl),
+      children: [
+        ...children,
+        Padding(
+          padding: EdgeInsets.only(top: s.xl),
+          child: Text(
+            l.chatFilesLoadedHint,
+            style: context.typography.caption.copyWith(
+              color: context.colors.textTertiary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

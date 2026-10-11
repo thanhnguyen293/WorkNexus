@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
-import 'chat_field_decoration.dart';
 import 'chat_labels.dart';
 import 'chat_role_tabs.dart';
 
@@ -24,12 +27,21 @@ class NewChatPeople extends ConsumerStatefulWidget {
     required this.search,
     required this.selected,
     required this.onToggle,
+    required this.loading,
+    required this.failed,
+    required this.onRetry,
   });
 
   final String accountId;
   final TextEditingController search;
   final List<int> selected;
   final void Function(int userId) onToggle;
+
+  /// The directory is still loading / failed to load: with no one to list
+  /// yet, that is what the list says instead of "No one found".
+  final bool loading;
+  final bool failed;
+  final VoidCallback onRetry;
 
   @override
   ConsumerState<NewChatPeople> createState() => _NewChatPeopleState();
@@ -74,17 +86,10 @@ class _NewChatPeopleState extends ConsumerState<NewChatPeople> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            AppSearchField(
               controller: search,
               autofocus: true,
-              style: context.typography.body.copyWith(
-                color: context.colors.textPrimary,
-              ),
-              decoration: chatFieldDecoration(
-                context,
-                hint: l.chatSearchPeople,
-                icon: LucideIcons.search300,
-              ),
+              hint: l.chatSearchPeople,
             ),
             if (selected.isNotEmpty)
               Padding(
@@ -111,12 +116,15 @@ class _NewChatPeopleState extends ConsumerState<NewChatPeople> {
             ),
             SizedBox(height: s.sm),
             Expanded(
-              child: people.isEmpty
-                  ? Padding(
-                      padding: EdgeInsets.all(s.xl),
-                      child: users.isEmpty
-                          ? const AppInlineSpinner()
-                          : AppInlineNote(text: l.chatNoPeople),
+              child: people.isEmpty && users.isEmpty && widget.failed
+                  ? AppStateView.error(compact: true, onRetry: widget.onRetry)
+                  : people.isEmpty && users.isEmpty && widget.loading
+                  ? const AppStateView.loading(compact: true)
+                  : people.isEmpty
+                  ? AppStateView.empty(
+                      compact: true,
+                      icon: LucideIcons.userX300,
+                      title: l.chatNoPeople,
                     )
                   : ListView.builder(
                       itemCount: people.length,
@@ -212,7 +220,7 @@ class _PersonRow extends StatelessWidget {
                 ),
               ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
+                duration: AppMotion.fast,
                 width: tick,
                 height: tick,
                 decoration: BoxDecoration(
@@ -224,7 +232,11 @@ class _PersonRow extends StatelessWidget {
                   ),
                 ),
                 child: picked
-                    ? Icon(LucideIcons.check300, size: s.xl2, color: c.onAccent)
+                    ? Icon(
+                        LucideIcons.check300,
+                        size: context.sizes.iconSm,
+                        color: c.onAccent,
+                      )
                     : null,
               ),
             ],
@@ -252,7 +264,7 @@ class _PickedPill extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return Container(
-      padding: EdgeInsets.fromLTRB(s.xxs, s.xxs, s.xs, s.xxs),
+      padding: EdgeInsets.all(s.xxs),
       decoration: BoxDecoration(
         color: c.selectionFill,
         borderRadius: BorderRadius.circular(context.radii.pill),
@@ -270,18 +282,11 @@ class _PickedPill extends StatelessWidget {
             name,
             style: context.typography.secondary.copyWith(color: c.textPrimary),
           ),
-          InkWell(
-            mouseCursor: WidgetStateMouseCursor.clickable,
-            customBorder: const CircleBorder(),
-            onTap: onRemove,
-            child: Padding(
-              padding: EdgeInsets.all(s.xs),
-              child: Icon(
-                LucideIcons.x300,
-                size: s.xl2,
-                color: c.textSecondary,
-              ),
-            ),
+          AppIconButton(
+            icon: LucideIcons.x300,
+            tooltip: AppL10n.of(context).chatUnpickPerson(name),
+            size: AppIconButtonSize.small,
+            onPressed: onRemove,
           ),
         ],
       ),

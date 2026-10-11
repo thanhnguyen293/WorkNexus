@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/hover_surface.dart';
 
 /// A labeled group of filter chips (uppercase heading + wrapped chips). Shared by
@@ -24,13 +26,8 @@ class FilterGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: context.typography.label.copyWith(
-              color: context.colors.textTertiary,
-            ),
-          ),
-          SizedBox(height: context.spacing.sm),
+          AppSectionHeader(title: label),
+          SizedBox(height: context.spacing.xs),
           Wrap(
             spacing: context.spacing.sm,
             runSpacing: context.spacing.sm,
@@ -63,7 +60,8 @@ class FilterOptionChip extends StatelessWidget {
     final c = context.colors;
     return HoverSurface(
       onTap: onTap,
-      height: 26,
+      selected: active,
+      height: context.sizes.controlSm,
       padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
       color: active ? c.selectionFill : c.surfaceSubtle,
       borderRadius: BorderRadius.circular(context.radii.pill),
@@ -73,8 +71,8 @@ class FilterOptionChip extends StatelessWidget {
         children: [
           if (dotColor != null) ...[
             Container(
-              width: 7,
-              height: 7,
+              width: context.spacing.sm,
+              height: context.spacing.sm,
               decoration: BoxDecoration(
                 color: dotColor,
                 shape: BoxShape.circle,
@@ -82,11 +80,15 @@ class FilterOptionChip extends StatelessWidget {
             ),
             SizedBox(width: context.spacing.xs),
           ],
-          Text(
-            label,
-            style: context.typography.meta.copyWith(
-              fontWeight: FontWeight.w500,
-              color: active ? c.textPrimary : c.textSecondary,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.meta.copyWith(
+                fontWeight: FontWeight.w500,
+                color: active ? c.textPrimary : c.textSecondary,
+              ),
             ),
           ),
           if (count != null) ...[

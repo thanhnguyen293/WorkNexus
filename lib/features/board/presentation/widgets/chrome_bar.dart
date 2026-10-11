@@ -7,16 +7,19 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import '../board_refresh.dart';
 import 'active_tokens.dart';
-import 'board_view_tabs.dart';
 import 'new_ticket_button.dart';
-import 'sidebar_primitives.dart';
 
 /// Whether the advanced-filter popover is open.
 final advFilterOpenProvider = StateProvider<bool>((ref) => false);
@@ -95,34 +98,20 @@ class _RefreshButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final busy = ref.watch(boardRefreshingProvider);
-    return Tooltip(
-      message: l.refresh,
-      child: HoverSurface(
-        onTap: busy ? null : () => _refresh(context, ref),
-        width: kBoardToolbarControlHeight,
-        height: kBoardToolbarControlHeight,
-        alignment: Alignment.center,
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: context.cardBorder,
-        child: busy
-            ? const SidebarSyncIndicator()
-            : Icon(LucideIcons.rotateCw300, size: 16, color: c.textSecondary),
-      ),
+    return AppIconButton(
+      icon: LucideIcons.rotateCw300,
+      tooltip: AppL10n.of(context).refresh,
+      isLoading: ref.watch(boardRefreshingProvider),
+      onPressed: () => _refresh(context, ref),
     );
   }
 
   Future<void> _refresh(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
     final l = AppL10n.of(context);
     final res = await ref.read(refreshBoardProvider)();
     if (res case Err(:final failure)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.actionFailed(failure.message))),
-      );
+      if (!context.mounted) return;
+      showAppSnack(context, l.actionFailed(failure.message), isError: true);
     }
   }
 }
@@ -147,57 +136,14 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
     // Keep the field in sync when search is cleared externally (Clear all).
     ref.listen(filterStateProvider.select((f) => f.search), (_, next) {
       if (next != controller.text) controller.text = next;
     });
-    return SizedBox(
-      height: kBoardToolbarControlHeight,
-      child: TextField(
-        controller: controller,
-        onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
-        style: context.typography.secondary.copyWith(color: c.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: c.surface,
-          hintText: l.search,
-          hintStyle: context.typography.secondary.copyWith(
-            color: c.textTertiary,
-          ),
-          prefixIcon: Icon(
-            LucideIcons.search300,
-            size: 15,
-            color: c.textTertiary,
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 30,
-            minHeight: 30,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            vertical: context.spacing.sm,
-            horizontal: context.spacing.xs,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: context.borders.showOutline
-                ? BorderSide(color: c.border)
-                : BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: context.borders.showOutline
-                ? BorderSide(color: c.border)
-                : BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: BorderSide(color: c.accent),
-          ),
-        ),
-      ),
+    return AppSearchField(
+      controller: controller,
+      hint: AppL10n.of(context).search,
+      onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
     );
   }
 }
@@ -224,7 +170,7 @@ class _FiltersButton extends StatelessWidget {
     final radius = BorderRadius.circular(context.radii.md);
     return HoverSurface(
       onTap: onTap,
-      height: kBoardToolbarControlHeight,
+      height: context.sizes.controlMd,
       padding: EdgeInsets.symmetric(horizontal: compact ? s.md : s.lg),
       color: active ? c.selectionFill : c.surface,
       borderRadius: radius,
@@ -234,7 +180,7 @@ class _FiltersButton extends StatelessWidget {
         children: [
           Icon(
             active ? LucideIcons.funnel500 : LucideIcons.funnel300,
-            size: s.xl3,
+            size: context.sizes.iconMd,
             color: color,
           ),
           if (!compact) ...[
@@ -249,20 +195,7 @@ class _FiltersButton extends StatelessWidget {
           ],
           if (active) ...[
             SizedBox(width: s.sm),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: s.sm),
-              decoration: BoxDecoration(
-                color: c.accent,
-                borderRadius: BorderRadius.circular(context.radii.pill),
-              ),
-              child: Text(
-                '$count',
-                style: context.typography.monoXs.copyWith(
-                  color: c.onAccent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            AppCountBadge(count, active: true),
           ],
         ],
       ),

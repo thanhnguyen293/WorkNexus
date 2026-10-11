@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
 import 'chat_sticker_image.dart';
@@ -58,13 +59,10 @@ class ChatStickerPackBar extends StatelessWidget {
             ),
           ),
           VerticalDivider(width: 1, color: context.colors.border),
-          IconButton(
+          AppIconButton(
+            icon: LucideIcons.plus300,
             tooltip: l.chatAddSticker,
             onPressed: onAdd,
-            icon: Icon(
-              LucideIcons.plus300,
-              color: context.colors.textSecondary,
-            ),
           ),
           SizedBox(width: s.xs),
         ],

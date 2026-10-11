@@ -6,6 +6,8 @@ import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
@@ -57,8 +59,8 @@ class ConversationListPane extends ConsumerWidget {
 
     final visible =
         [
-              for (final chat
-                  in chatsAsync.asData?.value ?? const <ChatConversation>[])
+              // `value`: a failed refresh keeps the chats already listed.
+              for (final chat in chatsAsync.value ?? const <ChatConversation>[])
                 if (!chat.hidden && !chat.archived && tab.matches(chat))
                   (chat: chat, title: chatTitle(context, chat, users)),
             ]
@@ -79,13 +81,11 @@ class ConversationListPane extends ConsumerWidget {
           if (compact)
             SizedBox(
               height: kChatHeaderHeight - context.borders.hairline,
-              child: IconButton(
-                tooltip: l.chatNewChat,
-                onPressed: () => NewChatDialog.show(context, accountId),
-                icon: Icon(
-                  LucideIcons.squarePen300,
-                  size: context.spacing.xl4,
-                  color: c.textSecondary,
+              child: Center(
+                child: AppIconButton(
+                  icon: LucideIcons.squarePen300,
+                  tooltip: l.chatNewChat,
+                  onPressed: () => NewChatDialog.show(context, accountId),
                 ),
               ),
             )
@@ -105,9 +105,9 @@ class ConversationListPane extends ConsumerWidget {
                   SizedBox(width: context.spacing.md),
                   Expanded(child: ChatSearchField(hint: l.chatSearch)),
                   SizedBox(width: context.spacing.xs),
-                  _HeaderButton(
-                    tooltip: l.chatNewChat,
+                  AppIconButton(
                     icon: LucideIcons.squarePen300,
+                    tooltip: l.chatNewChat,
                     onPressed: () => NewChatDialog.show(context, accountId),
                   ),
                 ],
@@ -121,20 +121,49 @@ class ConversationListPane extends ConsumerWidget {
             SizedBox(height: context.spacing.sm),
             const _SectionDivider(),
           ],
+          // The list stays when a refresh fails; the failure shows above it.
+          if (chatsAsync.hasError && chatsAsync.hasValue && !compact)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.xl3,
+                vertical: context.spacing.sm,
+              ),
+              child: AppInlineNote(
+                text: l.chatConnectionOffline,
+                isError: true,
+              ),
+            ),
           Expanded(
             child: switch (chatsAsync) {
-              AsyncError() => Center(
-                child: AppInlineNote(
-                  text: l.chatConnectionOffline,
-                  isError: true,
+              // Collapsed to avatars: too narrow for a message, so only Retry.
+              _ when chatsAsync.hasError && !chatsAsync.hasValue && compact =>
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: AppIconButton(
+                    icon: LucideIcons.refreshCw300,
+                    tooltip: l.retry,
+                    color: c.error,
+                    onPressed: () =>
+                        ref.invalidate(chatConversationsProvider(accountId)),
+                  ),
                 ),
+              _ when chatsAsync.hasError && !chatsAsync.hasValue =>
+                AppStateView.error(
+                  compact: true,
+                  message: l.chatConnectionOffline,
+                  onRetry: () =>
+                      ref.invalidate(chatConversationsProvider(accountId)),
+                ),
+              _ when !chatsAsync.hasValue => const AppStateView.loading(
+                compact: true,
               ),
-              _ when chatsAsync.isLoading && !chatsAsync.hasValue =>
-                const AppInlineSpinner(),
-              _ when visible.isEmpty => Center(
-                child: AppInlineNote(
-                  text: query.isEmpty ? l.chatNoConversations : l.chatNoMatches,
-                ),
+              _ when visible.isEmpty && compact => const SizedBox.shrink(),
+              _ when visible.isEmpty => AppStateView.empty(
+                compact: true,
+                icon: query.isEmpty
+                    ? LucideIcons.messagesSquare300
+                    : LucideIcons.searchX300,
+                title: query.isEmpty ? l.chatNoConversations : l.chatNoMatches,
               ),
               // Rows run edge to edge: the selection fills the whole row.
               // The rows follow the chat text size, like the messages.
@@ -212,30 +241,5 @@ class _SectionDivider extends StatelessWidget {
     height: context.borders.hairline,
     thickness: context.borders.hairline,
     color: context.colors.border,
-  );
-}
-
-/// The new-chat button beside the chat search box.
-class _HeaderButton extends StatelessWidget {
-  const _HeaderButton({
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    onPressed: onPressed,
-    visualDensity: VisualDensity.compact,
-    icon: Icon(
-      icon,
-      size: context.spacing.xl4,
-      color: context.colors.textSecondary,
-    ),
   );
 }

@@ -37,7 +37,9 @@ class EditorField extends StatelessWidget {
                 if (required)
                   TextSpan(
                     text: ' *',
-                    style: TextStyle(color: c.error),
+                    style: context.typography.captionStrong.copyWith(
+                      color: c.error,
+                    ),
                   ),
               ],
             ),

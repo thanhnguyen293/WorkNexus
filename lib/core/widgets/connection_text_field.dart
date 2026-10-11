@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import 'app_input_decoration.dart';
 
 /// A labeled text field in the app's input style: the connection dialogs
 /// (ZenTao / GitLab) and the editor's link dialog share it.
@@ -66,48 +66,11 @@ class ConnectionTextField extends StatelessWidget {
           onChanged: onChanged,
           onSubmitted: onSubmitted,
           style: context.typography.body.copyWith(color: c.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surfaceSubtle,
-            hintText: hint,
-            hintStyle: context.typography.body.copyWith(color: c.textTertiary),
+          decoration: appInputDecoration(
+            context,
+            hint: hint,
             errorText: errorText,
-            errorStyle: context.typography.caption.copyWith(color: c.error),
-            prefixIcon: prefixIcon == null
-                ? null
-                : Icon(
-                    prefixIcon,
-                    size: context.spacing.xl3,
-                    color: c.textTertiary,
-                  ),
-            prefixIconConstraints: BoxConstraints(
-              minWidth: context.spacing.xl6,
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: context.spacing.lg,
-              vertical: context.spacing.lg,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.accent),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.error),
-            ),
+            prefixIcon: prefixIcon,
           ),
         ),
       ],

@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'detail_section_title.dart';
 
 /// Shared activity timeline (comments + system events, merged and time-sorted)
 /// plus a composer, used by the GitLab MR and GitHub PR two-pane details. The
@@ -66,13 +67,7 @@ class _DetailActivityTimelineState extends State<DetailActivityTimeline> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l.activity,
-          style: context.typography.display.copyWith(
-            color: context.colors.textPrimary,
-          ),
-        ),
-        SizedBox(height: context.spacing.lg),
+        DetailSectionTitle(l.activity),
         if (entries.isEmpty)
           Padding(
             padding: EdgeInsets.only(bottom: context.spacing.md),

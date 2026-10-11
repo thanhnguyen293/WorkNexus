@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/hover_surface.dart';
+import '../theme/app_borders.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radii.dart';
+import '../theme/app_sizes.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import 'app_count_badge.dart';
+import 'hover_surface.dart';
 
-/// The height every control on the board toolbar shares, so the tabs, search,
-/// filters and refresh line up.
-const kBoardToolbarControlHeight = 32.0;
-
-/// One segment of [BoardViewTabs].
-class BoardViewTab {
-  const BoardViewTab({
+/// One segment of [AppSegmentedTabs].
+class AppSegmentedTab {
+  const AppSegmentedTab({
     required this.label,
     required this.active,
     required this.onTap,
@@ -32,20 +30,20 @@ class BoardViewTab {
   final bool loading;
 }
 
-/// A board's view tabs (All / Unclosed, Issues / Merge Requests…) as a
-/// segmented control on the toolbar: the active segment is raised on the
-/// toolbar's inset track, at the toolbar's control height.
-class BoardViewTabs extends StatelessWidget {
-  const BoardViewTabs({super.key, required this.tabs});
+/// View tabs (All / Unclosed, Issues / Merge Requests…) as a segmented
+/// control: the active segment is raised on an inset track, at the toolbar's
+/// control height, with an optional count (or a spinner while it loads).
+class AppSegmentedTabs extends StatelessWidget {
+  const AppSegmentedTabs({super.key, required this.tabs});
 
-  final List<BoardViewTab> tabs;
+  final List<AppSegmentedTab> tabs;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
     return Container(
-      height: kBoardToolbarControlHeight,
+      height: context.sizes.controlMd,
       padding: EdgeInsets.all(s.xxs),
       decoration: BoxDecoration(
         color: c.surfaceSubtle,
@@ -63,7 +61,7 @@ class BoardViewTabs extends StatelessWidget {
 class _Segment extends StatelessWidget {
   const _Segment(this.tab);
 
-  final BoardViewTab tab;
+  final AppSegmentedTab tab;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +70,7 @@ class _Segment extends StatelessWidget {
     final radius = BorderRadius.circular(context.radii.sm);
     return HoverSurface(
       onTap: tab.onTap,
-      duration: const Duration(milliseconds: 150),
+      selected: tab.active,
       padding: EdgeInsets.symmetric(horizontal: s.lg),
       alignment: Alignment.center,
       color: tab.active ? c.surface : c.surfaceSubtle,
@@ -92,46 +90,14 @@ class _Segment extends StatelessWidget {
           if (tab.loading) ...[
             SizedBox(width: s.sm),
             SizedBox.square(
-              dimension: s.lg,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.6,
-                color: c.textTertiary,
-              ),
+              dimension: context.sizes.iconXs,
+              child: CircularProgressIndicator(color: c.textTertiary),
             ),
           ] else if (tab.count case final count?) ...[
             SizedBox(width: s.sm),
-            _CountPill(count, active: tab.active),
+            AppCountBadge(count, active: tab.active),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _CountPill extends StatelessWidget {
-  const _CountPill(this.count, {required this.active});
-
-  final int count;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: active ? c.mixT(c.accent, 0.14) : c.surface,
-        borderRadius: BorderRadius.circular(context.radii.pill),
-      ),
-      child: Text(
-        '$count',
-        style: context.typography.monoXs.copyWith(
-          color: active ? c.accent : c.textTertiary,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

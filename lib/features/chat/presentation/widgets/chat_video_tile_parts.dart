@@ -105,7 +105,7 @@ class ChatVideoCancelDisc extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: HoverRegion(
-        cursor: SystemMouseCursors.click,
+        cursor: WidgetStateMouseCursor.clickable,
         builder: (context, hovered, _) => Material(
           type: MaterialType.transparency,
           child: InkWell(

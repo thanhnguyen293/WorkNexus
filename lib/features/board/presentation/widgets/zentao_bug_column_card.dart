@@ -4,16 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/celebration_overlay.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
+import 'board_column_frame.dart';
 import 'non_fix_resolution_dialog.dart';
 import 'ticket_card.dart';
 import 'zentao_bug_column_footer.dart';
@@ -36,11 +34,11 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final col = widget.column;
     final more = ref.watch(
       zentaoBugColumnStreamProvider(col.column).select((s) => s.hasMore),
     );
+    final (label, color) = bugColumnVisual(context, col.column);
     return DragTarget<Ticket>(
       onWillAcceptWithDetails: (details) {
         final accepted = _canDrop(details.data, col.column);
@@ -52,77 +50,28 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
         setState(() => _over = false);
         await _handleDrop(details.data, col.column);
       },
-      builder: (context, _, _) {
-        return Container(
-          width: 272,
-          decoration: BoxDecoration(
-            color: _over ? c.selectionFill : c.surface,
-            borderRadius: BorderRadius.circular(context.radii.lg),
-            border: context.cardBorder,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  context.spacing.xl,
-                  context.spacing.xl,
-                  context.spacing.xl,
-                  context.spacing.md,
-                ),
-                child: Row(
-                  children: [
-                    BugColumnDot(col.column),
-                    SizedBox(width: context.spacing.md),
-                    Expanded(
-                      child: Text(
-                        _columnLabel(col.column),
-                        overflow: TextOverflow.ellipsis,
-                        style: context.typography.bodySmStrong.copyWith(
-                          color: c.textPrimary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: context.spacing.md),
-                    BugColumnCountBadge(col.count, more: more),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    context.spacing.sm,
-                    context.spacing.xxs,
-                    context.spacing.sm,
-                    context.spacing.md,
-                  ),
-                  itemCount: col.tickets.length + (more ? 1 : 0),
-                  itemBuilder: (context, i) {
-                    if (i == col.tickets.length) {
-                      return ZenTaoBugColumnFooter(
-                        column: col.column,
-                        empty: col.tickets.isEmpty,
-                      );
-                    }
-                    final ticket = col.tickets[i];
-                    return Draggable<Ticket>(
-                      data: ticket,
-                      feedback: BugCardDragFeedback(child: TicketCard(ticket)),
-                      childWhenDragging: Opacity(
-                        opacity: 0.4,
-                        child: TicketCard(ticket),
-                      ),
-                      child: TicketCard(ticket),
-                    );
-                  },
-                  separatorBuilder: (_, _) =>
-                      SizedBox(height: context.spacing.md),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (context, _, _) => BoardColumnFrame(
+        highlighted: _over,
+        dot: BoardColumnDot(color),
+        label: label,
+        badge: BugColumnCount(col.count, more: more),
+        itemCount: col.tickets.length + (more ? 1 : 0),
+        itemBuilder: (context, i) {
+          if (i == col.tickets.length) {
+            return ZenTaoBugColumnFooter(
+              column: col.column,
+              empty: col.tickets.isEmpty,
+            );
+          }
+          final ticket = col.tickets[i];
+          return Draggable<Ticket>(
+            data: ticket,
+            feedback: BugCardDragFeedback(child: TicketCard(ticket)),
+            childWhenDragging: Opacity(opacity: 0.4, child: TicketCard(ticket)),
+            child: TicketCard(ticket),
+          );
+        },
+      ),
     );
   }
 
@@ -174,7 +123,7 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     };
     if (resolution == null || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppL10n.of(context);
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
@@ -191,13 +140,15 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     if (result.isOk && target == ZenTaoBugColumn.resolvedVerify) {
       ref.read(celebrationProvider.notifier).celebrate();
     }
-    messenger.showSnackBar(
-      SnackBar(content: Text(_snackMessage(result, resolution))),
-    );
+    final label = zentaoBugResolutionLabels[resolution] ?? resolution;
+    showAppSnack(context, switch (result) {
+      Ok() => l.boardBugResolvedAs(label),
+      Err(:final failure) => l.boardBugResolveFailed(failure.message),
+    }, isError: !result.isOk);
   }
 
   Future<void> _activate(Ticket ticket) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppL10n.of(context);
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
@@ -208,13 +159,14 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
     if (!mounted) return;
-    messenger.showSnackBar(
-      SnackBar(content: Text(_activateSnackMessage(result))),
-    );
+    showAppSnack(context, switch (result) {
+      Ok() => l.boardBugActivated,
+      Err(:final failure) => l.boardBugActivateFailed(failure.message),
+    }, isError: !result.isOk);
   }
 
   Future<void> _confirm(Ticket ticket) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppL10n.of(context);
     ref.read(ticketActionPendingProvider.notifier).start(ticket.id);
     final Result<void> result;
     try {
@@ -225,33 +177,9 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
       ref.read(ticketActionPendingProvider.notifier).finish(ticket.id);
     }
     if (!mounted) return;
-    messenger.showSnackBar(
-      SnackBar(content: Text(_confirmSnackMessage(result))),
-    );
+    showAppSnack(context, switch (result) {
+      Ok() => l.boardBugConfirmed,
+      Err(:final failure) => l.boardBugConfirmFailed(failure.message),
+    }, isError: !result.isOk);
   }
 }
-
-String _snackMessage(Result<void> result, String resolution) {
-  final label = zentaoBugResolutionLabels[resolution] ?? resolution;
-  if (result.isOk) return 'Resolved as $label';
-  return 'Resolve failed: ${result.failureOrNull?.message ?? 'error'}';
-}
-
-String _activateSnackMessage(Result<void> result) {
-  if (result.isOk) return 'Activated bug';
-  return 'Activate failed: ${result.failureOrNull?.message ?? 'error'}';
-}
-
-String _confirmSnackMessage(Result<void> result) {
-  if (result.isOk) return 'Confirmed bug';
-  return 'Confirm failed: ${result.failureOrNull?.message ?? 'error'}';
-}
-
-String _columnLabel(ZenTaoBugColumn column) => switch (column) {
-  ZenTaoBugColumn.newUnconfirmed => 'New / Unconfirmed',
-  ZenTaoBugColumn.confirmedToFix => 'Confirmed / To Fix',
-  ZenTaoBugColumn.resolvedVerify => 'Resolved / Verify',
-  ZenTaoBugColumn.postponed => 'Postponed',
-  ZenTaoBugColumn.nonFix => 'Non-Fix',
-  ZenTaoBugColumn.closed => 'Closed',
-};

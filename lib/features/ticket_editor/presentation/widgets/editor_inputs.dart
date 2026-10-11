@@ -2,30 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-
-/// The editor's text inputs share one look.
-InputDecoration editorInputDecoration(BuildContext context, {String? hint}) {
-  final c = context.colors;
-  final s = context.spacing;
-  OutlineInputBorder border(Color color) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(context.radii.md),
-    borderSide: BorderSide(color: color),
-  );
-  return InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: c.surfaceSubtle,
-    hintText: hint,
-    hintStyle: context.typography.bodySm.copyWith(color: c.textTertiary),
-    contentPadding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.md),
-    border: border(c.border),
-    enabledBorder: border(c.border),
-    focusedBorder: border(c.accent),
-  );
-}
+import '../../../../core/widgets/app_input_decoration.dart';
 
 /// A one-line text input that reports each change; its text is set once, from
 /// [initial].
@@ -77,7 +56,14 @@ class _EditorTextInputState extends State<EditorTextInput> {
       style: (widget.big ? type.bodySmStrong : type.bodySm).copyWith(
         color: context.colors.textPrimary,
       ),
-      decoration: editorInputDecoration(context, hint: widget.hint),
+      decoration: appInputDecoration(
+        context,
+        hint: widget.hint,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: context.spacing.lg,
+          vertical: context.spacing.md,
+        ),
+      ),
     );
   }
 }

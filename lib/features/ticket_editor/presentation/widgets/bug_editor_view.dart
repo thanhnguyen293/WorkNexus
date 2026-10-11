@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
-import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/bug_editor_controller.dart';
 import 'bug_main_fields.dart';
 import 'bug_side_fields.dart';
 import 'editor_columns.dart';
 import 'editor_header.dart';
+import 'editor_shortcuts.dart';
 
 /// Adds or edits a bug, full screen; saving opens the saved bug.
 class BugEditorView extends ConsumerStatefulWidget {
@@ -44,7 +46,7 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
     if (ticketId == null || !mounted) return;
     _close();
     ref.read(openTicketIdProvider.notifier).open(ticketId);
-    messenger.showSnackBar(SnackBar(content: Text(saved)));
+    showAppSnackOn(messenger, saved);
   }
 
   @override
@@ -57,36 +59,40 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
     };
     final async = ref.watch(bugEditorProvider(route));
     final state = async.asData?.value;
-    if (state != null)
+    if (state != null) {
       _steps ??= HtmlEditingController(html: state.draft.steps);
+    }
     final steps = _steps;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        EditorHeader(
-          title: title,
-          kind: 'bug',
-          onClose: _close,
-          onSave: state == null ? null : _save,
-          saving: state?.saving ?? false,
-          error: state?.failure?.message,
-        ),
-        Expanded(
-          child: switch (async) {
-            AsyncData() when state != null && steps != null => EditorColumns(
-              main: BugMainFields(route: route, state: state, steps: steps),
-              side: BugSideFields(route: route, state: state),
-            ),
-            AsyncError(:final error) => Center(
-              child: AppInlineNote(
-                text: '${l.formLoadFailed}: $error',
-                isError: true,
+    final save = state == null || state.saving ? null : _save;
+    return EditorShortcuts(
+      onClose: _close,
+      onSave: save,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          EditorHeader(
+            title: title,
+            kind: 'bug',
+            onClose: _close,
+            onSave: state == null ? null : _save,
+            saving: state?.saving ?? false,
+            error: state?.failure?.message,
+          ),
+          Expanded(
+            child: switch (async) {
+              AsyncData() when state != null && steps != null => EditorColumns(
+                main: BugMainFields(route: route, state: state, steps: steps),
+                side: BugSideFields(route: route, state: state),
               ),
-            ),
-            _ => const AppInlineSpinner(),
-          },
-        ),
-      ],
+              AsyncError() => AppStateView.error(
+                title: l.formLoadFailed,
+                onRetry: () => ref.invalidate(bugEditorProvider(route)),
+              ),
+              _ => const AppStateView.loading(),
+            },
+          ),
+        ],
+      ),
     );
   }
 }

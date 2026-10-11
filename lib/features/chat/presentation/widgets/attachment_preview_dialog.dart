@@ -4,9 +4,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_attachments.dart';
 import 'chat_labels.dart';
@@ -40,7 +43,7 @@ class _AttachmentPreviewDialogState extends State<AttachmentPreviewDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
     void send() => Navigator.of(context).pop(_files);
     // Enter sends, so paste → Enter works without reaching for the mouse.
@@ -52,42 +55,36 @@ class _AttachmentPreviewDialogState extends State<AttachmentPreviewDialog> {
       },
       child: Focus(
         autofocus: true,
-        child: AlertDialog(
-          backgroundColor: c.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.radii.lg),
-          ),
-          title: Text(
-            l.chatSendFilesTitle(_files.length),
-            style: context.typography.title.copyWith(color: c.textPrimary),
-          ),
-          content: SizedBox(
-            width: 460,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 420),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _files.length,
-                separatorBuilder: (_, _) =>
-                    SizedBox(height: context.spacing.md),
-                itemBuilder: (context, i) => _PreviewRow(
-                  file: _files[i],
-                  onRemove: () => setState(() => _files.removeAt(i)),
-                ),
-              ),
-            ),
-          ),
+        child: AppDialogFrame(
+          title: l.chatSendFilesTitle(_files.length),
+          maxWidth: context.sizes.dialogMd,
           actions: [
+            const Spacer(),
             AppButton.textNeutral(
+              size: AppButtonSize.small,
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l.cancel),
             ),
-            SizedBox(width: context.spacing.md),
             AppButton.filled(
+              size: AppButtonSize.small,
+              icon: LucideIcons.send300,
               onPressed: _files.isEmpty ? null : send,
               child: Text(l.chatSend),
             ),
           ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 420),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+              itemCount: _files.length,
+              separatorBuilder: (_, _) => SizedBox(height: s.md),
+              itemBuilder: (context, i) => _PreviewRow(
+                file: _files[i],
+                onRemove: () => setState(() => _files.removeAt(i)),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -147,14 +144,10 @@ class _PreviewRow extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
+        AppIconButton(
+          icon: LucideIcons.x300,
           tooltip: AppL10n.of(context).chatRemoveAttachment,
           onPressed: onRemove,
-          icon: Icon(
-            LucideIcons.x300,
-            size: context.spacing.xl3,
-            color: c.textSecondary,
-          ),
         ),
       ],
     );

@@ -93,7 +93,7 @@ class _FakeChatRepository implements ChatRepository {
 
   @override
   Stream<List<ChatMessage>> watchAttachments(String a, String c) =>
-      const Stream.empty();
+      Stream.value(const []);
 
   @override
   Future<Result<ChatCacheUsage>> cacheUsage() async => const Ok(
@@ -324,8 +324,7 @@ class _FakeChatRepository implements ChatRepository {
   ) async => const Ok(null);
 
   @override
-  Future<String?> savedAttachmentCopy(String a, MessageContent c) async =>
-      null;
+  Future<String?> savedAttachmentCopy(String a, MessageContent c) async => null;
 
   @override
   Future<Result<void>> cancelUpload(String a, String g) async => const Ok(null);
@@ -482,7 +481,8 @@ void main() {
     await tester.enterText(box, 'dyn');
     await tester.pumpAndSettle();
 
-    expect(empty, greaterThanOrEqualTo(36));
+    // The toolbar control height (sizes.controlMd).
+    expect(empty, greaterThanOrEqualTo(32));
     expect(tester.getSize(box).height, empty);
   });
 

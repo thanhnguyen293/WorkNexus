@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -34,13 +35,17 @@ class LocalCacheSectionRow extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: s.xl6 * 0.9,
-              height: s.xl6 * 0.9,
+              width: context.sizes.controlLg,
+              height: context.sizes.controlLg,
               decoration: BoxDecoration(
                 color: c.surfaceSubtle,
                 shape: BoxShape.circle,
               ),
-              child: Icon(_icon(section), size: s.xl4, color: c.textSecondary),
+              child: Icon(
+                _icon(section),
+                size: context.sizes.iconLg,
+                color: c.textSecondary,
+              ),
             ),
             SizedBox(width: s.lg),
             Expanded(

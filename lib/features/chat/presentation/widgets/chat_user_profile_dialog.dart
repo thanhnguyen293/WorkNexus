@@ -5,10 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_presence.dart';
@@ -16,9 +17,12 @@ import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
+import 'chat_editable_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_snack.dart';
+
+export 'chat_profile_tap.dart';
 
 class ChatUserProfileDialog extends ConsumerStatefulWidget {
   const ChatUserProfileDialog({
@@ -101,200 +105,118 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
     final self = ref.watch(chatSelfUserIdProvider(widget.accountId)).value;
     final user = users[widget.userId];
     final name = chatUserName(context, users, widget.userId);
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: EdgeInsets.all(s.xl5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: _EditableAvatar(
-                  editable: widget.userId == self && !_uploading,
-                  tooltip: l.chatChangeMyAvatar,
-                  onTap: _changePicture,
-                  child: ChatAvatar(
-                    name: name,
-                    imageUrl: user?.avatarUrl,
-                    presence: chatPresenceOf(users, widget.userId),
-                    verified: chatVerifiedBadge(context, users, widget.userId),
-                    diameter: s.xl6 * 2,
-                  ),
+    return AppDialogFrame(
+      title: l.chatUserProfile,
+      maxWidth: context.sizes.dialogSm,
+      actions: const [],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl5, 0, s.xl5, s.xl5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: ChatEditableAvatar(
+                editable: widget.userId == self && !_uploading,
+                tooltip: l.chatChangeMyAvatar,
+                onTap: _changePicture,
+                child: ChatAvatar(
+                  name: name,
+                  imageUrl: user?.avatarUrl,
+                  presence: chatPresenceOf(users, widget.userId),
+                  verified: chatVerifiedBadge(context, users, widget.userId),
+                  diameter: s.xl6 * 2,
                 ),
               ),
-              SizedBox(height: s.xl),
-              SelectableText(
-                name,
-                textAlign: TextAlign.center,
-                style: context.typography.titleLg.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-              if (user != null)
-                Text(
-                  [
-                    '@${user.account}',
-                    if (user.status != null)
-                      chatPresenceLabel(
-                        context,
-                        ChatPresence.fromStatus(user.status),
-                      ),
-                  ].join('  ·  '),
-                  textAlign: TextAlign.center,
-                  style: context.typography.secondary.copyWith(
-                    color: c.textSecondary,
-                  ),
-                ),
-              if (user?.role case final role?) ...[
-                SizedBox(height: s.md),
-                Center(
-                  child: TintedPill(
-                    color: c.accent,
-                    large: true,
-                    pill: true,
-                    label: chatRoleLabel(
+            ),
+            SizedBox(height: s.xl),
+            SelectableText(
+              name,
+              textAlign: TextAlign.center,
+              style: context.typography.titleLg.copyWith(color: c.textPrimary),
+            ),
+            if (user != null)
+              Text(
+                [
+                  '@${user.account}',
+                  if (user.status != null)
+                    chatPresenceLabel(
                       context,
-                      role,
-                      serverNames:
-                          ref
-                              .watch(chatRoleNamesProvider(widget.accountId))
-                              .value ??
-                          const {},
+                      ChatPresence.fromStatus(user.status),
                     ),
-                  ),
+                ].join('  ·  '),
+                textAlign: TextAlign.center,
+                style: context.typography.secondary.copyWith(
+                  color: c.textSecondary,
                 ),
-              ],
-              if (user?.email case final email?)
-                ChatDetailRow(
-                  icon: LucideIcons.mail300,
-                  label: l.chatEmail,
-                  value: email,
-                ),
-              if (user?.mobile case final mobile?)
-                ChatDetailRow(
-                  icon: LucideIcons.smartphone300,
-                  label: l.chatMobile,
-                  value: mobile,
-                ),
-              if (user?.phone case final phone?)
-                ChatDetailRow(
-                  icon: LucideIcons.phone300,
-                  label: l.chatPhone,
-                  value: phone,
-                ),
-              if (widget.userId == self) ...[
-                SizedBox(height: s.xl5),
-                if (widget.onViewProfile != null) ...[
-                  AppButton.outlinedNeutral(
-                    onPressed: _viewProfile,
-                    child: Text(l.chatViewFullProfile),
-                  ),
-                  SizedBox(height: s.sm),
-                ],
-                Tooltip(
-                  message: l.chatChangeMyAvatarHint,
-                  child: AppButton.outlinedNeutral(
-                    isLoading: _uploading,
-                    onPressed: _uploading ? null : _changePicture,
-                    child: Text(l.chatChangeMyAvatar),
-                  ),
-                ),
-              ],
-              if (widget.userId != self) ...[
-                SizedBox(height: s.xl5),
-                AppButton.filled(
-                  isLoading: _opening,
-                  onPressed: _opening ? null : _message,
-                  child: Text(l.chatSendMessage),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Makes [child] (an avatar or a sender name) open that user's profile.
-class ChatProfileTap extends StatelessWidget {
-  const ChatProfileTap({
-    super.key,
-    required this.accountId,
-    required this.userId,
-    required this.child,
-  });
-
-  final String accountId;
-  final int userId;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-    cursor: SystemMouseCursors.click,
-    child: GestureDetector(
-      onTap: () => ChatUserProfileDialog.show(
-        context,
-        accountId: accountId,
-        userId: userId,
-      ),
-      child: child,
-    ),
-  );
-}
-
-class _EditableAvatar extends StatelessWidget {
-  const _EditableAvatar({
-    required this.editable,
-    required this.tooltip,
-    required this.onTap,
-    required this.child,
-  });
-
-  final bool editable;
-  final String tooltip;
-  final VoidCallback onTap;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!editable) return child;
-    final c = context.colors;
-    final s = context.spacing;
-    return Tooltip(
-      message: tooltip,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: Stack(
-            children: [
-              child,
-              Positioned(
-                left: 0,
-                bottom: 0,
-                child: Container(
-                  padding: EdgeInsets.all(s.sm),
-                  decoration: BoxDecoration(
-                    color: c.accent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: c.surface, width: 2),
-                  ),
-                  child: Icon(
-                    LucideIcons.camera300,
-                    size: s.xl3,
-                    color: c.onAccent,
+              ),
+            if (user?.role case final role?) ...[
+              SizedBox(height: s.md),
+              Center(
+                child: TintedPill(
+                  color: c.accent,
+                  large: true,
+                  pill: true,
+                  label: chatRoleLabel(
+                    context,
+                    role,
+                    serverNames:
+                        ref
+                            .watch(chatRoleNamesProvider(widget.accountId))
+                            .value ??
+                        const {},
                   ),
                 ),
               ),
             ],
-          ),
+            if (user?.email case final email?)
+              ChatDetailRow(
+                icon: LucideIcons.mail300,
+                label: l.chatEmail,
+                value: email,
+              ),
+            if (user?.mobile case final mobile?)
+              ChatDetailRow(
+                icon: LucideIcons.smartphone300,
+                label: l.chatMobile,
+                value: mobile,
+              ),
+            if (user?.phone case final phone?)
+              ChatDetailRow(
+                icon: LucideIcons.phone300,
+                label: l.chatPhone,
+                value: phone,
+              ),
+            if (widget.userId == self) ...[
+              SizedBox(height: s.xl5),
+              if (widget.onViewProfile != null) ...[
+                AppButton.outlinedNeutral(
+                  icon: LucideIcons.userRound300,
+                  onPressed: _viewProfile,
+                  child: Text(l.chatViewFullProfile),
+                ),
+                SizedBox(height: s.sm),
+              ],
+              Tooltip(
+                message: l.chatChangeMyAvatarHint,
+                child: AppButton.outlinedNeutral(
+                  icon: LucideIcons.camera300,
+                  isLoading: _uploading,
+                  onPressed: _uploading ? null : _changePicture,
+                  child: Text(l.chatChangeMyAvatar),
+                ),
+              ),
+            ],
+            if (widget.userId != self) ...[
+              SizedBox(height: s.xl5),
+              AppButton.filled(
+                icon: LucideIcons.messageSquare300,
+                isLoading: _opening,
+                onPressed: _opening ? null : _message,
+                child: Text(l.chatSendMessage),
+              ),
+            ],
+          ],
         ),
       ),
     );

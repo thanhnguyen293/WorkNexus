@@ -13,6 +13,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../core/widgets/rich_text_editor.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -59,7 +60,6 @@ class _CommentComposerState extends ConsumerState<CommentComposer> {
   Future<void> _post() async {
     final body = _rich ? _html.html : _text.text.trim();
     if (body.isEmpty || _posting) return;
-    final messenger = ScaffoldMessenger.of(context);
     final failed = AppL10n.of(context).commentPostFailed;
     setState(() => _posting = true);
     final res = await getIt<SyncService>().postComment(widget.ticket, body);
@@ -69,7 +69,7 @@ class _CommentComposerState extends ConsumerState<CommentComposer> {
       case Ok():
         _rich ? _html.quill.clear() : _text.clear();
       case Err():
-        messenger.showSnackBar(SnackBar(content: Text(failed)));
+        showAppSnack(context, failed, isError: true);
     }
   }
 

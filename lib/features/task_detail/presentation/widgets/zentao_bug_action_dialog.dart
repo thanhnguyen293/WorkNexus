@@ -6,6 +6,8 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_action.dart';
 import 'action_dialog_scaffold.dart';
@@ -44,7 +46,6 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
 
   Future<void> _submit(String label) async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final service = ref.read(zenTaoWorkflowServiceProvider);
     final ticket = widget.ticket;
@@ -69,12 +70,12 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
       ),
     };
     if (!mounted) return;
-    navigator.pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(zenTaoActionOutcome(l, res, label, ticket.externalKey)),
-      ),
+    showAppSnack(
+      context,
+      zenTaoActionOutcome(l, res, label, ticket.externalKey),
+      isError: !res.isOk,
     );
+    navigator.pop();
   }
 
   @override
@@ -83,9 +84,9 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
     final c = context.colors;
     final look = zenTaoBugActionLook(l, widget.action);
     return ActionScaffold(
-      emoji: look.emoji,
       title: l.zentaoActionTitle(look.label, widget.ticket.externalKey),
       submitLabel: look.label,
+      icon: look.icon,
       busy: _busy,
       onSubmit: () => _submit(look.label),
       child: Column(
@@ -97,7 +98,7 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
             TextField(
               controller: _build,
               style: context.typography.body.copyWith(color: c.textPrimary),
-              decoration: dropDecoration(context),
+              decoration: appInputDecoration(context),
             ),
             SizedBox(height: context.spacing.xl2),
           ],

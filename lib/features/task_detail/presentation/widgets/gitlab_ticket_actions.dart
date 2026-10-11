@@ -7,6 +7,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'assign_dialog.dart';
@@ -78,7 +79,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().rebaseGitLabMr(ticket),
-                      'Rebased !${ticket.externalKey}',
+                      l.taskDetailRebased('!${ticket.externalKey}'),
                     ),
             ),
           if (isMr && active)
@@ -89,7 +90,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().mergeGitLabMr(ticket),
-                      'Merged !${ticket.externalKey}',
+                      l.taskDetailMerged('!${ticket.externalKey}'),
                     ),
             ),
           if (active)
@@ -100,7 +101,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().closeGitLabItem(ticket),
-                      'Closed #${ticket.externalKey}',
+                      l.taskDetailClosed('#${ticket.externalKey}'),
                     ),
             ),
           if (isClosed)
@@ -111,7 +112,7 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().reopenGitLabItem(ticket),
-                      'Reopened #${ticket.externalKey}',
+                      l.taskDetailReopened('#${ticket.externalKey}'),
                     ),
             ),
         ],
@@ -123,19 +124,19 @@ class _GitLabActionsState extends ConsumerState<GitLabActions> {
     Future<Result<void>> Function() action,
     String okMessage,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppL10n.of(context);
     setState(() => _busy = true);
     final res = await action();
     if (!mounted) return;
     setState(() => _busy = false);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          res.isOk
-              ? okMessage
-              : 'Failed: ${res.failureOrNull?.message ?? 'error'}',
-        ),
-      ),
+    showAppSnack(
+      context,
+      res.isOk
+          ? okMessage
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
     );
   }
 }

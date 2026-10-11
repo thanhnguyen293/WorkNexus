@@ -6,8 +6,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -150,15 +152,16 @@ class ChatInfoPanel extends ConsumerWidget {
           ),
           if (!oneToOne && ref.watch(chatCanPinProvider(thread)))
             Center(
-              child: TextButton.icon(
+              child: AppButton.textNeutral(
+                size: AppButtonSize.extraSmall,
+                icon: LucideIcons.camera300,
                 onPressed: () => ChatGroupAvatarDialog.show(
                   context,
                   thread: thread,
                   chat: chat,
                   title: title,
                 ),
-                icon: const Icon(LucideIcons.camera300),
-                label: Text(l.chatChangeGroupAvatar),
+                child: Text(l.chatChangeGroupAvatar),
               ),
             ),
           SizedBox(height: s.xl),
@@ -256,7 +259,7 @@ class _PanelLink extends StatelessWidget {
           borderRadius: BorderRadius.circular(context.radii.lg),
         ),
         // The details rows' size, so the card icons line up as one set.
-        leading: Icon(icon, size: context.spacing.xl4, color: c.accent),
+        leading: Icon(icon, size: context.sizes.iconLg, color: c.accent),
         title: Text(
           label,
           style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
@@ -273,7 +276,7 @@ class _PanelLink extends StatelessWidget {
               ),
             Icon(
               LucideIcons.chevronRight300,
-              size: context.spacing.xl4,
+              size: context.sizes.iconLg,
               color: c.textTertiary,
             ),
           ],

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_search_field.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'option_check_list.dart';
 
@@ -30,7 +31,14 @@ class OptionMultiSelectDialog extends StatefulWidget {
 
 class _OptionMultiSelectDialogState extends State<OptionMultiSelectDialog> {
   late final Set<String> _picked = {...widget.selected};
+  final _search = TextEditingController();
   String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   void _toggle(String value) => setState(
     () => _picked.contains(value) ? _picked.remove(value) : _picked.add(value),
@@ -80,9 +88,12 @@ class _OptionMultiSelectDialogState extends State<OptionMultiSelectDialog> {
         children: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: s.xl3),
-            child: OptionSearchBox(
+            child: AppSearchField(
+              controller: _search,
               hint: l.searchOptions,
+              autofocus: true,
               onChanged: (v) => setState(() => _query = v),
+              onSubmitted: (_) => Navigator.pop(context, _result),
             ),
           ),
           SizedBox(height: s.md),

@@ -5,6 +5,7 @@ import 'package:work_nexus/core/domain/entities/workspace.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/connections/presentation/widgets/workspace_editor_dialog.dart';
+import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('workspace editor uses file picker instead of preset icons', (
@@ -12,6 +13,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
         theme: buildAppTheme(
           variant: AppThemeVariant.light,
           surface: SurfaceStyle.outline,

@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_typography.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
@@ -41,7 +42,7 @@ class _MentionTextState extends ConsumerState<MentionText> {
   Widget build(BuildContext context) {
     _disposeRecognizers();
     final ink = ChatBubbleTheme.of(context);
-    final base = TextStyle(
+    final base = context.typography.body.copyWith(
       fontSize: ink.fontSize,
       height: 1.45,
       color: ink.text,

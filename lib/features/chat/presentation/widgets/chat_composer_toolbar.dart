@@ -5,8 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_emoji_picker.dart';
@@ -41,17 +41,17 @@ class ChatComposerTools extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.xs),
       child: Row(
         children: [
-          _ToolButton(
+          ChatComposerToolButton(
             icon: LucideIcons.image300,
             tooltip: l.chatSendImage,
             onPressed: onPickImage,
           ),
-          _ToolButton(
+          ChatComposerToolButton(
             icon: LucideIcons.paperclip300,
             tooltip: l.chatAttach,
             onPressed: onAttach,
           ),
-          _ToolButton(
+          ChatComposerToolButton(
             icon: LucideIcons.atSign300,
             tooltip: l.chatMention,
             onPressed: onMention,
@@ -64,7 +64,7 @@ class ChatComposerTools extends StatelessWidget {
   }
 }
 
-/// Right of the input: 👍 sends a like while the input is empty; once there
+/// Right of the input: a thumbs-up sends a like (👍) while the input is empty; once there
 /// is text it becomes the send button.
 class ChatComposerSendButton extends StatelessWidget {
   const ChatComposerSendButton({
@@ -81,40 +81,42 @@ class ChatComposerSendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final s = context.spacing;
     final l = AppL10n.of(context);
     return ValueListenableBuilder(
       valueListenable: text,
       builder: (context, value, _) {
         final ready = value.text.trim().isNotEmpty;
+        final box = BoxConstraints.tightFor(
+          width: context.sizes.controlLg,
+          height: context.sizes.controlLg,
+        );
         return ready
             ? IconButton(
                 tooltip: '${l.chatSend} · ${l.chatSendHint}',
                 onPressed: onSend,
+                padding: EdgeInsets.zero,
+                constraints: box,
                 style: IconButton.styleFrom(
                   backgroundColor: c.accent,
                   foregroundColor: c.onAccent,
                 ),
-                icon: Icon(LucideIcons.send500, size: s.xl4),
+                icon: Icon(LucideIcons.send500, size: context.sizes.iconLg),
               )
-            : IconButton(
+            : ChatComposerToolButton(
+                icon: LucideIcons.thumbsUp300,
                 tooltip: l.chatSendLike,
                 onPressed: onLike,
-                icon: Text(
-                  '👍',
-                  style: context.typography.titleLg.copyWith(
-                    fontSize: s.xl5,
-                    height: 1,
-                  ),
-                ),
               );
       },
     );
   }
 }
 
-class _ToolButton extends StatelessWidget {
-  const _ToolButton({
+/// A composer tool: a roomier icon button than `AppIconButton`'s, as the
+/// composer's controls are the chat's most used.
+class ChatComposerToolButton extends StatelessWidget {
+  const ChatComposerToolButton({
+    super.key,
     required this.icon,
     required this.tooltip,
     required this.onPressed,
@@ -129,11 +131,16 @@ class _ToolButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final box = context.sizes.controlLg;
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      iconSize: context.spacing.xl5,
+      isSelected: selected,
+      iconSize: context.sizes.iconLg,
+      padding: EdgeInsets.zero,
+      constraints: BoxConstraints.tightFor(width: box, height: box),
       style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         backgroundColor: selected ? c.selectionFill : null,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(context.radii.md),
@@ -152,7 +159,7 @@ class _MarkdownToggle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final on = ref.watch(appSettingsProvider.select((s) => s.chatSendMarkdown));
     final l = AppL10n.of(context);
-    return _ToolButton(
+    return ChatComposerToolButton(
       icon: LucideIcons.aLargeSmall300,
       tooltip: on ? l.chatMarkdownOn : l.chatMarkdownOff,
       selected: on,

@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/group_notifications_by_day.dart';
 import 'notification_card.dart';
@@ -45,9 +43,7 @@ class _DayHeading extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final s = context.spacing;
-    final t = context.typography;
     final l = AppL10n.of(context);
     final format = ref.watch(appSettingsProvider.select((s) => s.dateFormat));
     final locale = Localizations.localeOf(context).toString();
@@ -63,33 +59,10 @@ class _DayHeading extends ConsumerWidget {
         DateDisplayFormat.long => DateFormat.yMMMEd(locale).format(d),
       },
     };
-    return Padding(
-      padding: EdgeInsets.fromLTRB(s.md, s.xl3, s.md, s.sm),
-      child: Row(
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: t.labelWide.copyWith(color: c.textTertiary),
-          ),
-          SizedBox(width: s.sm),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: s.sm,
-              vertical: s.xxs / 2,
-            ),
-            decoration: BoxDecoration(
-              color: c.surfaceSubtle,
-              borderRadius: BorderRadius.circular(context.radii.pill),
-            ),
-            child: Text(
-              '$count',
-              style: t.captionStrong.copyWith(color: c.textSecondary),
-            ),
-          ),
-          SizedBox(width: s.md),
-          Expanded(child: Divider(height: 1, thickness: 1, color: c.border)),
-        ],
-      ),
+    return AppSectionHeader(
+      title: label,
+      count: count,
+      padding: EdgeInsets.fromLTRB(s.md, s.xl, s.md, s.xs),
     );
   }
 }

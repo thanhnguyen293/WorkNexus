@@ -1,12 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_state_view.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// In-app video playback for a cached attachment file, with a tap-to-toggle
@@ -61,57 +66,44 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     if (_failed) {
-      return Padding(
-        padding: EdgeInsets.all(context.spacing.xl4),
-        child: Center(
-          child: Text(
-            AppL10n.of(context).attachmentLoadFailed,
-            style: context.typography.secondary.copyWith(
-              color: c.textSecondary,
-            ),
-          ),
-        ),
-      );
+      return AppStateView.error(title: l.attachmentLoadFailed);
     }
-    if (!_ready) {
-      return Padding(
-        padding: EdgeInsets.all(context.spacing.xl4),
-        child: Center(child: CircularProgressIndicator(color: c.accent)),
-      );
-    }
+    if (!_ready) return const AppStateView.loading();
     final playing = _controller.value.isPlaying;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: _toggle,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
-                  ),
-                  if (!playing)
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: c.scrim.withValues(alpha: 0.55),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.play_arrow_rounded,
-                        color: c.onAccent,
-                        size: 34,
-                      ),
+          // Clicking the picture toggles playback; the play button below is
+          // the keyboard-reachable control, so this surface stays unfocusable.
+          child: HoverSurface(
+            onTap: _toggle,
+            focusable: false,
+            tintOnHover: false,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
+                if (!playing)
+                  Container(
+                    width: context.sizes.stateTile,
+                    height: context.sizes.stateTile,
+                    decoration: BoxDecoration(
+                      color: c.scrim.withValues(alpha: 0.55),
+                      shape: BoxShape.circle,
                     ),
-                ],
-              ),
+                    child: Icon(
+                      LucideIcons.play300,
+                      color: c.onAccent,
+                      size: context.sizes.iconXl,
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -124,9 +116,10 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
           ),
           child: Row(
             children: [
-              _ControlButton(
-                icon: playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                onTap: _toggle,
+              AppIconButton(
+                icon: playing ? LucideIcons.pause300 : LucideIcons.play300,
+                tooltip: playing ? l.taskDetailPause : l.taskDetailPlay,
+                onPressed: _toggle,
               ),
               SizedBox(width: context.spacing.md),
               Expanded(child: _SeekBar(controller: _controller)),
@@ -134,9 +127,7 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
               Text(
                 '${_fmt(_controller.value.position)} / '
                 '${_fmt(_controller.value.duration)}',
-                style: context.typography.monoXs.copyWith(
-                  color: c.textSecondary,
-                ),
+                style: context.typography.mono.copyWith(color: c.textSecondary),
               ),
             ],
           ),
@@ -149,35 +140,6 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
-  }
-}
-
-/// A small circular play/pause control tinted to the app surface.
-class _ControlButton extends StatelessWidget {
-  const _ControlButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return InkResponse(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: onTap,
-      radius: 22,
-      child: Container(
-        width: 34,
-        height: 34,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          shape: BoxShape.circle,
-          border: Border.all(color: c.border),
-        ),
-        child: Icon(icon, size: 20, color: c.textPrimary),
-      ),
-    );
   }
 }
 
@@ -219,7 +181,7 @@ class _SeekBar extends StatelessWidget {
                 _seekToFraction(d.localPosition.dx, width),
             // Tall, full-width hit area so the thin bar is easy to grab.
             child: SizedBox(
-              height: 32,
+              height: context.sizes.controlMd,
               child: Stack(
                 alignment: Alignment.center,
                 children: [

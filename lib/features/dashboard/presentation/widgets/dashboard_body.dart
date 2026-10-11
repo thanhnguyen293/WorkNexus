@@ -20,6 +20,7 @@ class DashboardBody extends StatelessWidget {
   final ZenTaoDashboard dashboard;
 
   static const double _twoColumnWidth = 900;
+  static const double _railWidth = 360;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class DashboardBody extends StatelessWidget {
           children: [
             Expanded(child: queue),
             SizedBox(width: s.xl),
-            SizedBox(width: s.xl6 * 9, child: rail),
+            SizedBox(width: _railWidth, child: rail),
           ],
         );
       },

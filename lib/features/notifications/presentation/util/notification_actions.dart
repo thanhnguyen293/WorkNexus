@@ -7,6 +7,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/open_external.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
@@ -22,7 +23,7 @@ Future<void> openNotification(
   WidgetRef ref,
   ZenTaoNotification n,
 ) async {
-  final messenger = ScaffoldMessenger.of(context);
+  final toastContext = _toastContext(context);
   final failed = AppL10n.of(context).notificationsOpenFailed;
   if (!n.read) {
     unawaited(
@@ -57,7 +58,7 @@ Future<void> openNotification(
     await openExternally(url);
     return;
   }
-  messenger.showSnackBar(SnackBar(content: Text(failed)));
+  if (toastContext.mounted) showAppSnack(toastContext, failed, isError: true);
 }
 
 /// Runs a notification [command] and reports a failure in a snackbar (the
@@ -67,8 +68,16 @@ Future<void> runNotificationCommand(
   WidgetRef ref,
   Future<Result<void>> Function(NotificationRepository repository) command,
 ) async {
-  final messenger = ScaffoldMessenger.of(context);
+  final toastContext = _toastContext(context);
   final failed = AppL10n.of(context).notificationsActionFailed;
   final res = await command(ref.read(notificationRepositoryProvider));
-  if (res is Err) messenger.showSnackBar(SnackBar(content: Text(failed)));
+  if (res is Err && toastContext.mounted) {
+    showAppSnack(toastContext, failed, isError: true);
+  }
 }
+
+/// A context that outlives the card that started the action: reading or
+/// deleting a notification can drop its card from the list before the
+/// server answers, and the failure toast must still show.
+BuildContext _toastContext(BuildContext context) =>
+    Navigator.maybeOf(context, rootNavigator: true)?.context ?? context;

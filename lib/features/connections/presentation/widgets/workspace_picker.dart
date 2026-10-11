@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+
+part 'workspace_picker_popover.dart';
 
 /// The workspace a connect dialog starts on: the only one when there is
 /// exactly one. With several the user must pick explicitly; with none the
@@ -40,11 +44,14 @@ class WorkspacePicker extends StatefulWidget {
 class _WorkspacePickerState extends State<WorkspacePicker> {
   final _link = LayerLink();
   final _portal = OverlayPortalController();
-  double _fieldWidth = 260;
+  // Taps on the field and the popover count as "inside" one another.
+  final _tapGroup = Object();
+  double _fieldWidth = 0;
 
-  void _open() {
+  void _toggle() {
+    if (_portal.isShowing) return _portal.hide();
     final box = context.findRenderObject() as RenderBox?;
-    _fieldWidth = box?.size.width ?? 260;
+    _fieldWidth = box?.size.width ?? 0;
     _portal.show();
   }
 
@@ -83,21 +90,25 @@ class _WorkspacePickerState extends State<WorkspacePicker> {
           controller: _portal,
           overlayChildBuilder: (_) => _WorkspacePopover(
             link: _link,
+            tapGroup: _tapGroup,
             fieldWidth: _fieldWidth,
             workspaces: widget.workspaces,
             selectedId: widget.value,
             labelOf: _labelOf,
-            newLabel: l.newWorkspaceOption,
+            newLabel: l.connectionsNewWorkspace,
             onClose: _portal.hide,
             onSelect: _select,
             onSelectNew: () => _select(widget.newValue),
           ),
-          child: CompositedTransformTarget(
-            link: _link,
-            child: _ClosedField(
-              label: _selectedLabel(),
-              hint: l.workspace,
-              onTap: _open,
+          child: TapRegion(
+            groupId: _tapGroup,
+            child: CompositedTransformTarget(
+              link: _link,
+              child: _ClosedField(
+                label: _selectedLabel(),
+                hint: l.workspace,
+                onTap: _toggle,
+              ),
             ),
           ),
         ),
@@ -152,175 +163,12 @@ class _ClosedField extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(LucideIcons.chevronDown300, size: 20, color: c.textTertiary),
+              Icon(
+                LucideIcons.chevronDown300,
+                size: context.sizes.iconMd,
+                color: c.textTertiary,
+              ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The anchored dropdown card: workspace rows plus the "New workspace…" action.
-class _WorkspacePopover extends StatelessWidget {
-  const _WorkspacePopover({
-    required this.link,
-    required this.fieldWidth,
-    required this.workspaces,
-    required this.selectedId,
-    required this.labelOf,
-    required this.newLabel,
-    required this.onClose,
-    required this.onSelect,
-    required this.onSelectNew,
-  });
-
-  final LayerLink link;
-  final double fieldWidth;
-  final List<Workspace> workspaces;
-  final String? selectedId;
-  final String Function(Workspace) labelOf;
-  final String newLabel;
-  final VoidCallback onClose;
-  final ValueChanged<String?> onSelect;
-  final VoidCallback onSelectNew;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final spacing = context.spacing;
-    final card = Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: c.surface,
-          borderRadius: BorderRadius.circular(context.radii.lg),
-          border: Border.all(color: c.border),
-          boxShadow: [
-            BoxShadow(
-              color: c.mixT(c.scrim, 0.18),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 260),
-                child: ListView(
-                  padding: EdgeInsets.all(spacing.xs),
-                  shrinkWrap: true,
-                  children: [
-                    for (final w in workspaces)
-                      _OptionRow(
-                        label: labelOf(w),
-                        selected: w.id == selectedId,
-                        onTap: () => onSelect(w.id),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            Divider(height: 1, thickness: 1, color: c.border),
-            Padding(
-              padding: EdgeInsets.all(spacing.xs),
-              child: _OptionRow(
-                label: newLabel,
-                selected: false,
-                isAction: true,
-                onTap: onSelectNew,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: onClose,
-          ),
-        ),
-        CompositedTransformFollower(
-          link: link,
-          targetAnchor: Alignment.bottomLeft,
-          offset: Offset(0, spacing.xs),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(width: fieldWidth, child: card),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// A single selectable row in the workspace popover. [isAction] renders the
-/// "New workspace…" entry in the accent color.
-class _OptionRow extends StatelessWidget {
-  const _OptionRow({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.isAction = false,
-  });
-
-  final String label;
-  final bool selected;
-  final bool isAction;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final spacing = context.spacing;
-    final Color? fill = selected ? c.selectionFill : null;
-    final Color textColor = isAction
-        ? c.accent
-        : selected
-        ? c.accent
-        : c.textPrimary;
-    return Padding(
-      padding: EdgeInsets.only(bottom: spacing.xxs),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          mouseCursor: WidgetStateMouseCursor.clickable,
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          // Ink, not Container, so the fill sits under the hover highlight.
-          child: Ink(
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: BorderRadius.circular(context.radii.sm),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: spacing.lg,
-              vertical: spacing.md,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.body.copyWith(
-                      color: textColor,
-                      fontWeight: selected ? FontWeight.w500 : null,
-                    ),
-                  ),
-                ),
-                if (selected)
-                  Icon(LucideIcons.check300, size: 16, color: c.accent),
-              ],
-            ),
           ),
         ),
       ),

@@ -4,53 +4,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/hover_surface.dart';
-
-/// The search field at the top of an option picker.
-class OptionSearchBox extends StatelessWidget {
-  const OptionSearchBox({
-    super.key,
-    required this.hint,
-    required this.onChanged,
-  });
-
-  final String hint;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    OutlineInputBorder border(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: color),
-    );
-    return TextField(
-      autofocus: true,
-      onChanged: onChanged,
-      style: context.typography.body.copyWith(color: c.textPrimary),
-      decoration: InputDecoration(
-        isDense: true,
-        filled: true,
-        fillColor: c.surfaceSubtle,
-        hintText: hint,
-        hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-        prefixIcon: Icon(
-          LucideIcons.search300,
-          size: s.xl3,
-          color: c.textTertiary,
-        ),
-        prefixIconConstraints: BoxConstraints(minWidth: s.xl6),
-        contentPadding: EdgeInsets.symmetric(vertical: s.lg),
-        border: border(c.border),
-        enabledBorder: border(c.border),
-        focusedBorder: border(c.accent),
-      ),
-    );
-  }
-}
 
 /// The options as checkable rows; [emptyLabel] when none match.
 class OptionCheckList extends StatelessWidget {
@@ -71,15 +29,10 @@ class OptionCheckList extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.spacing;
     if (options.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.all(s.xl4),
-        child: Text(
-          emptyLabel,
-          textAlign: TextAlign.center,
-          style: context.typography.bodySm.copyWith(
-            color: context.colors.textTertiary,
-          ),
-        ),
+      return AppStateView.empty(
+        compact: true,
+        icon: LucideIcons.searchX300,
+        title: emptyLabel,
       );
     }
     return ListView.builder(
@@ -117,12 +70,13 @@ class _CheckRow extends StatelessWidget {
       onTap: onTap,
       padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.md),
       color: checked ? c.selectionFill : null,
+      selected: checked,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: Row(
         children: [
           Icon(
             checked ? LucideIcons.checkSquare500 : LucideIcons.square300,
-            size: s.xl4,
+            size: context.sizes.iconLg,
             color: checked ? c.accent : c.textTertiary,
           ),
           SizedBox(width: s.lg),

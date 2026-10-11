@@ -9,6 +9,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'settings_section_heading.dart';
 
 /// Settings' "Storage & cache" card: the way into the app's storage dialog
 /// (downloaded chat files and the synced local data).
@@ -23,21 +24,16 @@ class LocalCacheCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l.storageTitle,
-          style: context.typography.titleLg.copyWith(color: c.textPrimary),
-        ),
-        SizedBox(height: s.xs),
-        Text(
-          l.localCacheSubtitle,
-          style: context.typography.paragraph.copyWith(color: c.textSecondary),
+        SettingsSectionHeading(
+          title: l.storageTitle,
+          subtitle: l.localCacheSubtitle,
         ),
         SizedBox(height: s.xl2),
         Container(
           padding: EdgeInsets.all(s.xl2),
           decoration: BoxDecoration(
             color: c.surface,
-            borderRadius: BorderRadius.circular(context.radii.md),
+            borderRadius: BorderRadius.circular(context.radii.lg),
             border: Border.all(color: c.border),
           ),
           child: Row(
@@ -52,15 +48,9 @@ class LocalCacheCard extends ConsumerWidget {
               ),
               SizedBox(width: s.xl),
               AppButton.outlinedNeutral(
+                icon: LucideIcons.broom300,
                 onPressed: () => ref.read(openStorageProvider)?.call(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: s.sm,
-                  children: [
-                    Icon(LucideIcons.broom300, size: s.xl3),
-                    Text(l.storageOpen),
-                  ],
-                ),
+                child: Text(l.storageOpen),
               ),
             ],
           ),

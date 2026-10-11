@@ -13,17 +13,24 @@ class MessageListHeader extends StatelessWidget {
   const MessageListHeader({
     super.key,
     required this.reachedStart,
+    required this.isEmpty,
     required this.failed,
     required this.onLoadOlder,
   });
 
   final bool reachedStart;
+
+  /// No messages to show: the list's empty state (or a load's spinner)
+  /// stands in for the marker.
+  final bool isEmpty;
   final bool failed;
   final VoidCallback onLoadOlder;
 
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
+    // An empty chat shows its empty state over the list instead.
+    if (isEmpty && !failed) return const SizedBox.shrink();
     if (!reachedStart && !failed) return const AppInlineSpinner();
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.xl),

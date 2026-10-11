@@ -8,8 +8,10 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_dashboard.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
@@ -24,6 +26,9 @@ class DashboardStatTiles extends ConsumerWidget {
     required this.account,
     required this.dashboard,
   });
+
+  /// Narrower than this, the tiles go two by two.
+  static const double _fourAcrossWidth = 720;
 
   final Account account;
   final ZenTaoDashboard? dashboard;
@@ -86,7 +91,7 @@ class DashboardStatTiles extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Four across on a wide window, two by two on a narrow one.
-        final perRow = constraints.maxWidth < s.xl6 * 18 ? 2 : 4;
+        final perRow = constraints.maxWidth < _fourAcrossWidth ? 2 : 4;
         final width = (constraints.maxWidth - s.xl * (perRow - 1)) / perRow;
         return Wrap(
           spacing: s.xl,
@@ -100,7 +105,7 @@ class DashboardStatTiles extends ConsumerWidget {
   }
 }
 
-class _Tile extends StatefulWidget {
+class _Tile extends StatelessWidget {
   const _Tile({
     required this.icon,
     required this.color,
@@ -120,85 +125,66 @@ class _Tile extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<_Tile> createState() => _TileState();
-}
-
-class _TileState extends State<_Tile> {
-  bool _hover = false;
-
-  @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
     final t = context.typography;
-    final tappable = widget.onTap != null;
-    final active = tappable && _hover;
-    return MouseRegion(
-      cursor: tappable ? SystemMouseCursors.click : MouseCursor.defer,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          padding: EdgeInsets.all(s.xl3),
-          decoration: BoxDecoration(
-            color: active ? c.mix(c.surface, widget.color, 0.05) : c.surface,
-            borderRadius: BorderRadius.circular(context.radii.lg),
-            border: Border.fromBorderSide(
-              active
-                  ? BorderSide(color: c.mixT(widget.color, 0.5))
-                  : context.hairlineSide,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final sizes = context.sizes;
+    final radius = BorderRadius.circular(context.radii.lg);
+    return HoverSurface(
+      onTap: onTap,
+      padding: EdgeInsets.all(s.xl3),
+      color: c.surface,
+      borderRadius: radius,
+      border: Border.fromBorderSide(context.hairlineSide),
+      // The kind's colour on the edge says which list the tile opens.
+      hoverBorder: Border.all(color: c.mixT(color, 0.5)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: s.xl6 * 0.8,
-                    height: s.xl6 * 0.8,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: c.mixT(widget.color, 0.14),
-                      borderRadius: BorderRadius.circular(context.radii.md),
-                    ),
-                    child: Icon(widget.icon, size: s.xl3, color: widget.color),
-                  ),
-                  const Spacer(),
-                  if (tappable)
-                    Icon(
-                      LucideIcons.arrowUpRight300,
-                      size: s.xl3,
-                      color: active ? widget.color : c.textTertiary,
-                    ),
-                ],
-              ),
-              SizedBox(height: s.xl),
-              Text(
-                widget.value?.toString() ?? '–',
-                style: t.displayLg.copyWith(
-                  color: c.textPrimary,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              Container(
+                width: sizes.controlMd,
+                height: sizes.controlMd,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: c.mixT(color, 0.14),
+                  borderRadius: BorderRadius.circular(context.radii.md),
                 ),
+                child: Icon(icon, size: sizes.iconMd, color: color),
               ),
-              Text(
-                widget.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: t.bodySmStrong.copyWith(color: c.textSecondary),
-              ),
-              SizedBox(height: s.xxs),
-              Text(
-                widget.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: t.caption.copyWith(color: c.textTertiary),
-              ),
+              const Spacer(),
+              if (onTap != null)
+                Icon(
+                  LucideIcons.arrowUpRight300,
+                  size: sizes.iconMd,
+                  color: c.textTertiary,
+                ),
             ],
           ),
-        ),
+          SizedBox(height: s.xl),
+          Text(
+            value?.toString() ?? '–',
+            style: t.displayLg.copyWith(
+              color: c.textPrimary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: t.bodySmStrong.copyWith(color: c.textSecondary),
+          ),
+          SizedBox(height: s.xxs),
+          Text(
+            caption,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: t.caption.copyWith(color: c.textTertiary),
+          ),
+        ],
       ),
     );
   }

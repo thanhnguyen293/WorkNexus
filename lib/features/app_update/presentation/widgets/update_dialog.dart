@@ -5,18 +5,16 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/available_update.dart';
 import '../providers/update_controller.dart';
 import '../providers/update_state.dart';
 import 'update_release_notes.dart';
-
-/// Widest the dialog grows, in logical pixels: roomy enough for release
-/// notes to read like a page rather than a narrow column.
-const _dialogMaxWidth = 640.0;
 
 /// Shows [update] after a manual check: the download the controller already
 /// started, then a restart into it. Without an in-app build for this platform,
@@ -30,6 +28,7 @@ class UpdateDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
     final state = ref.watch(updateControllerProvider);
     final ready = state is UpdateReady;
@@ -38,101 +37,65 @@ class UpdateDialog extends ConsumerWidget {
     // Downloading or installing; also the moment before the download starts.
     final busy = !ready && !manual;
 
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.xl3),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _AppBadge(),
-              SizedBox(height: context.spacing.xl),
-              Text(
-                l.updateDialogHeadline,
-                textAlign: TextAlign.center,
-                style: context.typography.title.copyWith(color: c.textPrimary),
-              ),
-              SizedBox(height: context.spacing.md),
-              _VersionChange(
+    return AppDialogFrame(
+      title: l.updateDialogHeadline,
+      // Roomy enough for release notes to read like a page.
+      maxWidth: context.sizes.dialogLg,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.updateLater),
+        ),
+        if (manual)
+          AppButton.filled(
+            size: AppButtonSize.small,
+            onPressed: () => openExternally(update.releaseUrl),
+            child: Text(l.updateOpenReleasePage),
+          )
+        else
+          AppButton.filled(
+            size: AppButtonSize.small,
+            isLoading: busy,
+            onPressed: () =>
+                ref.read(updateControllerProvider.notifier).installAndRestart(),
+            child: Text(l.updateRestartNow),
+          ),
+      ],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _VersionChange(
                 from: update.currentVersion,
                 to: update.latestVersion,
               ),
-              if (update.releaseNotes.isNotEmpty) ...[
-                SizedBox(height: context.spacing.xl2),
-                UpdateReleaseNotes(notes: update.releaseNotes),
-              ],
-              SizedBox(height: context.spacing.xl2),
-              if (busy)
-                _Progress(state: state)
-              else
-                Text(
-                  failed
-                      ? l.updateInstallFailed
-                      : manual
-                      ? l.updateManualInstall
-                      : l.updateReadyHint,
-                  textAlign: TextAlign.center,
-                  style: context.typography.paragraph.copyWith(
-                    color: failed ? c.error : c.textSecondary,
-                  ),
-                ),
-              SizedBox(height: context.spacing.xl3),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton.outlinedNeutral(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l.updateLater),
-                    ),
-                  ),
-                  SizedBox(width: context.spacing.lg),
-                  Expanded(
-                    child: manual
-                        ? AppButton.filled(
-                            onPressed: () => openExternally(update.releaseUrl),
-                            child: Text(l.updateOpenReleasePage),
-                          )
-                        : AppButton.filled(
-                            isLoading: busy,
-                            onPressed: () => ref
-                                .read(updateControllerProvider.notifier)
-                                .installAndRestart(),
-                            child: Text(l.updateRestartNow),
-                          ),
-                  ),
-                ],
-              ),
+            ),
+            if (update.releaseNotes.isNotEmpty) ...[
+              SizedBox(height: s.xl2),
+              UpdateReleaseNotes(notes: update.releaseNotes),
             ],
-          ),
+            SizedBox(height: s.xl2),
+            if (busy)
+              _Progress(state: state)
+            else
+              Text(
+                failed
+                    ? l.updateInstallFailed
+                    : manual
+                    ? l.updateManualInstall
+                    : l.updateReadyHint,
+                style: context.typography.paragraph.copyWith(
+                  color: failed ? c.error : c.textSecondary,
+                ),
+              ),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-class _AppBadge extends StatelessWidget {
-  const _AppBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      width: context.spacing.xl6 + context.spacing.xl5,
-      height: context.spacing.xl6 + context.spacing.xl5,
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        border: Border.all(color: c.border),
-      ),
-      child: Icon(
-        LucideIcons.download300,
-        size: context.spacing.xl5,
-        color: c.accent,
       ),
     );
   }
@@ -156,7 +119,7 @@ class _VersionChange extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
           child: Icon(
             LucideIcons.arrowRight300,
-            size: context.spacing.xl3,
+            size: context.sizes.iconMd,
             color: c.textTertiary,
           ),
         ),
@@ -210,6 +173,7 @@ class _Progress extends StatelessWidget {
     final progress = state is UpdateDownloading ? state.progress : null;
     final installing = state is UpdateInstalling;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(context.radii.xl),

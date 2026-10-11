@@ -6,11 +6,12 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
 import '../providers/dashboard_providers.dart';
-import 'dashboard_segmented.dart';
 
 /// The full list's header: back to the overview, which list (tasks or bugs,
 /// switchable in place), open-only or everything, and refresh.
@@ -44,6 +45,10 @@ class DashboardWorkHeader extends ConsumerWidget {
         )
         .length;
     final bug = kind == DashboardItemKind.bug;
+    void showKind(DashboardItemKind k) =>
+        ref.read(dashboardWorkKindProvider.notifier).state = k;
+    void showOpenOnly(bool v) =>
+        ref.read(dashboardWorkOpenOnlyProvider.notifier).state = v;
     return Wrap(
       spacing: s.xl,
       runSpacing: s.md,
@@ -52,11 +57,11 @@ class DashboardWorkHeader extends ConsumerWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
+            AppIconButton(
+              icon: LucideIcons.arrowLeft300,
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: () =>
                   ref.read(dashboardWorkKindProvider.notifier).state = null,
-              icon: Icon(LucideIcons.arrowLeft300, color: c.textSecondary),
             ),
             SizedBox(width: s.sm),
             ZenTaoKindIcon(kind.name, large: true),
@@ -67,48 +72,44 @@ class DashboardWorkHeader extends ConsumerWidget {
             ),
           ],
         ),
-        DashboardSegmented<DashboardItemKind>(
-          selected: kind,
-          onChanged: (k) =>
-              ref.read(dashboardWorkKindProvider.notifier).state = k,
-          segments: [
-            (
-              value: DashboardItemKind.task,
+        AppSegmentedTabs(
+          tabs: [
+            AppSegmentedTab(
               label: l.dashboardTasksTab,
               count: work.openTasks,
+              active: kind == DashboardItemKind.task,
+              onTap: () => showKind(DashboardItemKind.task),
             ),
-            (
-              value: DashboardItemKind.bug,
+            AppSegmentedTab(
               label: l.dashboardBugsTab,
               count: work.openBugs,
+              active: bug,
+              onTap: () => showKind(DashboardItemKind.bug),
             ),
           ],
         ),
-        DashboardSegmented<bool>(
-          selected: openOnly,
-          onChanged: (v) =>
-              ref.read(dashboardWorkOpenOnlyProvider.notifier).state = v,
-          segments: [
-            (value: true, label: l.dashboardOpenOnly, count: count(open: true)),
-            (
-              value: false,
+        AppSegmentedTabs(
+          tabs: [
+            AppSegmentedTab(
+              label: l.dashboardOpenOnly,
+              count: count(open: true),
+              active: openOnly,
+              onTap: () => showOpenOnly(true),
+            ),
+            AppSegmentedTab(
               label: l.dashboardAllItems,
               count: count(open: false),
+              active: !openOnly,
+              onTap: () => showOpenOnly(false),
             ),
           ],
         ),
-        IconButton(
+        AppIconButton(
+          icon: LucideIcons.rotateCw300,
           tooltip: l.refresh,
-          onPressed: syncing
-              ? null
-              : () =>
-                    ref.read(myWorkSyncProvider(account.id).notifier).refresh(),
-          icon: syncing
-              ? SizedBox.square(
-                  dimension: s.xl3,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(LucideIcons.rotateCw300, color: c.textSecondary),
+          isLoading: syncing,
+          onPressed: () =>
+              ref.read(myWorkSyncProvider(account.id).notifier).refresh(),
         ),
       ],
     );

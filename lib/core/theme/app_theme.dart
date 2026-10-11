@@ -6,6 +6,7 @@ import 'app_button_theme.dart';
 import 'app_colors.dart';
 import 'app_palette.dart';
 import 'app_radii.dart';
+import 'app_sizes.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
 import 'fonts.dart';
@@ -108,6 +109,57 @@ ThemeData buildAppTheme({
     // Every InkWell / ListTile hover reads this. Flutter's default (~4% ink)
     // is invisible on these flat surfaces, so point it at the hover token.
     hoverColor: colors.hoverFill,
+    // Keyboard focus must read on flat surfaces too: an accent wash, not the
+    // near-invisible default.
+    focusColor: accent.withValues(alpha: 0.16),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: accent,
+      selectionColor: accent.withValues(alpha: 0.28),
+      selectionHandleColor: accent,
+    ),
+    dividerTheme: DividerThemeData(color: p.line, thickness: 1, space: 1),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: accent,
+      linearTrackColor: p.panel2,
+      circularTrackColor: Colors.transparent,
+      strokeWidth: 2,
+    ),
+    // Raw AlertDialog / Dialog call sites get the same chrome as
+    // AppDialogFrame: the panel surface, a hairline and the large radius.
+    dialogTheme: DialogThemeData(
+      backgroundColor: p.panel,
+      surfaceTintColor: Colors.transparent,
+      barrierColor: p.scrim.withValues(alpha: 0.45),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radii.lg),
+        side: BorderSide(color: p.line),
+      ),
+      titleTextStyle: const AppTypography().title.copyWith(
+        color: p.tx,
+        fontFamily: family,
+      ),
+      contentTextStyle: const AppTypography().body.copyWith(
+        color: p.tx2,
+        fontFamily: family,
+      ),
+    ),
+    // One floating, inverse-surface toast everywhere a feature shows a
+    // SnackBar, instead of Material's full-width bar.
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: p.tx,
+      contentTextStyle: const AppTypography().body.copyWith(
+        color: p.bg,
+        fontFamily: family,
+      ),
+      // The accent can't be trusted to read on an inverse surface (custom
+      // accents included), so the action takes the content ink.
+      actionTextColor: p.bg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radii.md),
+      ),
+      elevation: 2,
+    ),
     // Flutter 3.44 made Material's tappables default to an "adaptive" cursor:
     // the hand on web only, the arrow on desktop. This is a desktop app whose
     // controls are mostly flat and borderless, so put the hand back wherever
@@ -120,8 +172,14 @@ ThemeData buildAppTheme({
     iconButtonTheme: const IconButtonThemeData(style: _clickable),
     menuButtonTheme: const MenuButtonThemeData(style: _clickable),
     segmentedButtonTheme: const SegmentedButtonThemeData(style: _clickable),
-    popupMenuTheme: const PopupMenuThemeData(
+    popupMenuTheme: PopupMenuThemeData(
       mouseCursor: WidgetStateMouseCursor.clickable,
+      color: p.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radii.md),
+        side: BorderSide(color: p.line),
+      ),
     ),
     checkboxTheme: const CheckboxThemeData(
       mouseCursor: WidgetStateMouseCursor.clickable,
@@ -140,7 +198,15 @@ ThemeData buildAppTheme({
         border: Border.all(color: p.line2),
         borderRadius: BorderRadius.circular(radii.sm),
       ),
-      textStyle: TextStyle(color: p.tx, fontSize: 11, fontFamily: family),
+      padding: EdgeInsets.symmetric(
+        horizontal: spacing.md,
+        vertical: spacing.xs,
+      ),
+      waitDuration: const Duration(milliseconds: 400),
+      textStyle: const AppTypography().bodySm.copyWith(
+        color: p.tx,
+        fontFamily: family,
+      ),
     ),
     extensions: [
       colors,
@@ -148,6 +214,7 @@ ThemeData buildAppTheme({
       spacing,
       radii,
       borders,
+      const AppSizes(),
       AppButtonTheme.build(colors, borders),
     ],
   );

@@ -7,8 +7,10 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'github_pinned_branch.dart';
@@ -39,7 +41,10 @@ class WorkspaceTreeSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SidebarSectionLabel(l.workspace),
+        AppSectionHeader(
+          title: l.workspace,
+          padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
+        ),
         for (final w in workspaces)
           _WorkspaceNode(workspace: w, tickets: tickets, lookups: lookups),
       ],
@@ -79,7 +84,7 @@ class _WorkspaceNode extends StatelessWidget {
         children: [
           // Structural header — intentionally not tappable.
           Container(
-            height: 33,
+            height: context.sizes.controlMd,
             padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
             child: Row(
               children: [
@@ -92,6 +97,7 @@ class _WorkspaceNode extends StatelessWidget {
                 Expanded(
                   child: Text(
                     workspace.isPersonal ? l.personal : workspace.name,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.secondary.copyWith(
                       fontWeight: FontWeight.w600,
@@ -109,12 +115,7 @@ class _WorkspaceNode extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (final a in accounts)
-                    if (a.providerType == ProviderType.gitlab)
-                      _GitLabNode(account: a, tickets: tickets)
-                    else if (a.providerType == ProviderType.github)
-                      _GitHubNode(account: a, tickets: tickets)
-                    else
-                      _ZenTaoNode(account: a, tickets: tickets),
+                    _AccountNode(account: a, tickets: tickets),
                 ],
               ),
             ),
@@ -124,155 +125,97 @@ class _WorkspaceNode extends StatelessWidget {
   }
 }
 
-class _ZenTaoNode extends StatelessWidget {
-  const _ZenTaoNode({required this.account, required this.tickets});
+/// Picks the branches an account shows by its provider.
+class _AccountNode extends StatelessWidget {
+  const _AccountNode({required this.account, required this.tickets});
 
   final Account account;
   final List<Ticket> tickets;
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 31,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-            child: Row(
-              children: [
-                const ProviderBadge(ProviderType.zentao),
-                SizedBox(width: context.spacing.md),
-                Expanded(
-                  child: Text(
-                    ProviderType.zentao.displayName,
-                    style: context.typography.bodySm.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SidebarTreeBranch(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ZenTaoPinnedBranch(account: account, tickets: tickets),
-                ZenTaoProjectsBranch(account: account, tickets: tickets),
-                ZenTaoExecutionsBranch(account: account, tickets: tickets),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => switch (account.providerType) {
+    ProviderType.gitlab => _ProviderNode(
+      provider: ProviderType.gitlab,
+      children: [
+        ProviderMineRow(account: account),
+        GitLabPinnedBranch(account: account, tickets: tickets),
+        GitLabProjectsBranch(account: account, tickets: tickets),
+      ],
+    ),
+    ProviderType.github => _ProviderNode(
+      provider: ProviderType.github,
+      count: tickets.where((tk) => tk.accountId == account.id).length,
+      children: [
+        ProviderMineRow(account: account),
+        GitHubPinnedBranch(account: account, tickets: tickets),
+        GitHubReposBranch(account: account, tickets: tickets),
+      ],
+    ),
+    _ => _ProviderNode(
+      provider: ProviderType.zentao,
+      children: [
+        ZenTaoPinnedBranch(account: account, tickets: tickets),
+        ZenTaoProjectsBranch(account: account, tickets: tickets),
+        ZenTaoExecutionsBranch(account: account, tickets: tickets),
+      ],
+    ),
+  };
 }
 
-class _GitLabNode extends StatelessWidget {
-  const _GitLabNode({required this.account, required this.tickets});
+/// One connected account in a workspace: its provider header over the
+/// provider's own branches ([children]). [count] adds a ticket tally.
+class _ProviderNode extends StatelessWidget {
+  const _ProviderNode({
+    required this.provider,
+    required this.children,
+    this.count,
+  });
 
-  final Account account;
-  final List<Ticket> tickets;
+  final ProviderType provider;
+  final List<Widget> children;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-
+    final count = this.count;
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 31,
+            height: context.sizes.controlMd,
             padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
             child: Row(
               children: [
-                const ProviderBadge(ProviderType.gitlab),
+                ProviderBadge(provider),
                 SizedBox(width: context.spacing.md),
                 Expanded(
                   child: Text(
-                    ProviderType.gitlab.displayName,
+                    provider.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: context.typography.bodySm.copyWith(
                       fontWeight: FontWeight.w600,
                       color: c.textPrimary,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          SidebarTreeBranch(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ProviderMineRow(account: account),
-                GitLabPinnedBranch(account: account, tickets: tickets),
-                GitLabProjectsBranch(account: account, tickets: tickets),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GitHubNode extends StatelessWidget {
-  const _GitHubNode({required this.account, required this.tickets});
-
-  final Account account;
-  final List<Ticket> tickets;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final count = tickets.where((tk) => tk.accountId == account.id).length;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 31,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-            child: Row(
-              children: [
-                const ProviderBadge(ProviderType.github),
-                SizedBox(width: context.spacing.md),
-                Expanded(
-                  child: Text(
-                    ProviderType.github.displayName,
-                    style: context.typography.bodySm.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: c.textPrimary,
+                if (count != null)
+                  Text(
+                    '$count',
+                    style: context.typography.monoXs.copyWith(
+                      color: c.textTertiary,
                     ),
                   ),
-                ),
-                Text(
-                  '$count',
-                  style: context.typography.monoXs.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
               ],
             ),
           ),
           SidebarTreeBranch(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ProviderMineRow(account: account),
-                GitHubPinnedBranch(account: account, tickets: tickets),
-                GitHubReposBranch(account: account, tickets: tickets),
-              ],
+              children: children,
             ),
           ),
         ],

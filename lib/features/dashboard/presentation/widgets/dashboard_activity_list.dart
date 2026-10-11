@@ -9,6 +9,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/dashboard_activity.dart';
@@ -61,10 +62,11 @@ class _Activity extends ConsumerWidget {
     WidgetRef ref,
     DashboardItemKind kind,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
     final failed = AppL10n.of(context).dashboardOpenFailed;
     final res = await openDashboardItem(ref, account, kind, activity.objectId);
-    if (res is Err) messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (res is Err && context.mounted) {
+      showAppSnack(context, failed, isError: true);
+    }
   }
 
   @override
@@ -80,7 +82,6 @@ class _Activity extends ConsumerWidget {
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: opensTicket ? () => _open(context, ref, kind) : null,
       borderRadius: BorderRadius.circular(context.radii.md),
-      hoverColor: c.selectionFill,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,

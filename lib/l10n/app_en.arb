@@ -111,14 +111,6 @@
   "viewReview": "In review",
   "viewBlocked": "Blocked",
   "allSynced": "All synced",
-  "assignedToYou": "{count} tasks assigned to you",
-  "@assignedToYou": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "syncedAgo": "Synced 2m ago",
   "justNow": "just now",
   "minutesAgo": "{count}m ago",
@@ -196,7 +188,6 @@
   "githubServerHint": "https://github.com or your GitHub Enterprise URL",
   "githubTokenHint": "ghp_… (scopes: repo, read:org)",
   "generateToken": "Generate token",
-  "newWorkspaceOption": "➕ New workspace…",
   "defaultWorkspaceName": "MyWorkspace",
   "commentedAction": "commented",
   "newWorkspaceName": "New workspace name",
@@ -1139,14 +1130,6 @@
   },
   "dashboardOpenFailed": "Couldn't open this item",
   "notifications": "Notifications",
-  "notificationsUnread": "Unread ({count})",
-  "@notificationsUnread": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "notificationsAll": "All",
   "notificationsMarkAllRead": "Mark all as read",
   "notificationsDeleteRead": "Delete read notifications",
@@ -1348,5 +1331,269 @@
     }
   },
   "dropFilesToSend": "Drop files to send",
-  "dropFilesToInsert": "Drop images to insert, other files to attach"
+  "dropFilesToInsert": "Drop images to insert, other files to attach",
+  "stateLoadFailedTitle": "Couldn't load this",
+  "stateLoadFailedHint": "Check your connection, then try again.",
+  "clearSearch": "Clear search",
+  "boardEmptyTitle": "Nothing here yet",
+  "boardEmptyDesc": "Tasks show up here as soon as they sync.",
+  "confirmDelete": "Delete",
+  "confirm": "Confirm",
+  "noItems": "No items",
+  "connectZenTao": "Connect ZenTao",
+  "zentaoConnectionSubtitle": "Enter your ZenTao server URL and login. Your password is stored in the macOS Keychain — never in the local database.",
+  "zentaoServerHint": "https://host:port/zentao (include the subpath)",
+  "connectionsUsername": "Account (username)",
+  "connectionsUsernameHint": "your-username",
+  "connectionsPassword": "Password",
+  "connectionsNewWorkspace": "New workspace…",
+  "connectionsSettingsSubtitle": "The same provider can be connected multiple times — one per company. Tasks assigned to you are pulled from every account below.",
+  "connectionsProviderComingSoon": "{provider} support is coming soon",
+  "@connectionsProviderComingSoon": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsWorkspaceStyle": "Workspace style",
+  "connectionsColor": "Color",
+  "connectionsIcon": "Icon",
+  "connectionsIconTooLarge": "Icon file must be 256 KB or smaller.",
+  "connectionsCustomIconSelected": "Custom icon selected",
+  "connectionsNoFileSelected": "No file selected",
+  "connectionsChooseFile": "Choose file",
+  "connectionsRemoveCustomIcon": "Remove custom icon",
+  "connectionsAccountCount": "{count, plural, =1{1 account} other{{count} accounts}}",
+  "@connectionsAccountCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionsEditWorkspace": "Edit workspace",
+  "connectionsDeleteWorkspace": "Delete workspace",
+  "connectionsDeleteWorkspaceTitle": "Delete workspace?",
+  "connectionsDeleteWorkspaceMessage": "{count, plural, =1{This removes 1 account and the local synced data in this workspace.} other{This removes {count} accounts and the local synced data in this workspace.}}",
+  "@connectionsDeleteWorkspaceMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionsSyncNow": "Sync now",
+  "connectionsRemoveAccount": "Remove account",
+  "connectionsRemoveAccountTitle": "Remove {handle}?",
+  "@connectionsRemoveAccountTitle": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsRemoveAccountMessage": "This disconnects the account and deletes its saved credentials from this device.",
+  "connectionsRemoveConfirm": "Remove",
+  "connectionsSyncing": "Syncing {handle}…",
+  "@connectionsSyncing": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsSynced": "{count, plural, =1{Synced 1 ticket from {handle}} other{Synced {count} tickets from {handle}}}",
+  "@connectionsSynced": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsSyncFailed": "Couldn't sync {handle}: {message}",
+  "@connectionsSyncFailed": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsCacheClearFailed": "Couldn't clear the local data: {message}",
+  "@connectionsCacheClearFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketEditorBack": "Back",
+  "ticketEditorSaveFailed": "Couldn't save: {message}",
+  "@ticketEditorSaveFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketEditorRemoveItem": "Remove",
+  "ticketEditorClearDate": "Clear date",
+  "notificationsUnreadTab": "Unread",
+  "dashboardWorkEmptyAll": "Nothing assigned to you",
+  "boardBugColNew": "New / Unconfirmed",
+  "boardBugColConfirmed": "Confirmed / To Fix",
+  "boardBugColResolved": "Resolved / Verify",
+  "boardBugColPostponed": "Postponed",
+  "boardBugColNonFix": "Non-Fix",
+  "boardBugColClosed": "Closed",
+  "boardTaskColNotStarted": "Not Started",
+  "boardTaskColInProgress": "In Progress",
+  "boardTaskColPaused": "Paused",
+  "boardTaskColDoneVerify": "Done / Verify",
+  "boardTaskColClosed": "Closed",
+  "boardTaskColCanceled": "Canceled",
+  "boardBugResolvedAs": "Resolved as {label}",
+  "@boardBugResolvedAs": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "boardBugResolveFailed": "Couldn't resolve the bug: {message}",
+  "@boardBugResolveFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "boardBugActivated": "Bug reactivated",
+  "boardBugActivateFailed": "Couldn't reactivate the bug: {message}",
+  "@boardBugActivateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "boardBugConfirmed": "Bug confirmed",
+  "boardBugConfirmFailed": "Couldn't confirm the bug: {message}",
+  "@boardBugConfirmFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "boardNonFixTitle": "Resolve as Non-Fix",
+  "boardNonFixReasonHint": "Select a reason",
+  "boardDeletePresetTitle": "Delete this preset?",
+  "boardDeletePresetMessage": "“{name}” will be removed from your saved filters.",
+  "@boardDeletePresetMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "boardRemoveFilterTooltip": "Remove filter: {label}",
+  "@boardRemoveFilterTooltip": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailNoAssignableUsers": "No assignable users",
+  "taskDetailUsersLoadFailed": "Couldn't load users",
+  "taskDetailSelectUser": "Select a user",
+  "taskDetailNoteHint": "Optional note…",
+  "taskDetailResolutionRequired": "Resolution *",
+  "taskDetailSelectResolution": "Select a resolution",
+  "taskDetailSearchResolutions": "Search resolutions…",
+  "taskDetailNoMatchingResolutions": "No matching resolutions",
+  "taskDetailResolutionFixed": "Fixed",
+  "taskDetailResolutionByDesign": "By design",
+  "taskDetailResolutionDuplicate": "Duplicate",
+  "taskDetailResolutionExternal": "External",
+  "taskDetailResolutionNotRepro": "Irreproducible",
+  "taskDetailResolutionWontFix": "Won't fix",
+  "taskDetailResolutionPostponed": "Postponed",
+  "taskDetailResolutionToStory": "To story",
+  "taskDetailResolvedAs": "Resolved ({resolution})",
+  "@taskDetailResolvedAs": {
+    "placeholders": {
+      "resolution": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailAssignedTo": "Assigned to {name}",
+  "@taskDetailAssignedTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailRebased": "Rebased {ref}",
+  "@taskDetailRebased": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailMerged": "Merged {ref}",
+  "@taskDetailMerged": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailClosed": "Closed {ref}",
+  "@taskDetailClosed": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailReopened": "Reopened {ref}",
+  "@taskDetailReopened": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailBranchUpdated": "Updated {ref}",
+  "@taskDetailBranchUpdated": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDetailPlay": "Play",
+  "taskDetailPause": "Pause",
+  "taskDetailNoMilestones": "No milestones",
+  "chatNoMessages": "No messages yet",
+  "chatUnpickPerson": "Remove {name}",
+  "@chatUnpickPerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStorageClearTitle": "Delete downloaded files?"
 }

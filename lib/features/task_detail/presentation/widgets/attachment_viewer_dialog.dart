@@ -9,8 +9,8 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'attachment_kinds.dart';
@@ -87,10 +87,10 @@ class _AttachmentViewerDialogState
     if (!mounted) return;
     setState(() => _saving = false);
     final l = AppL10n.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(saved != null ? l.savedToDownloads : l.saveFailed),
-      ),
+    showAppSnack(
+      context,
+      saved != null ? l.savedToDownloads : l.saveFailed,
+      isError: saved == null,
     );
   }
 
@@ -117,29 +117,42 @@ class _AttachmentViewerDialogState
               onSave: _save,
               onClose: () => Navigator.of(context).pop(),
             ),
-            Flexible(child: _body(context)),
+            Flexible(
+              child: _ViewerBody(
+                loading: _loading,
+                path: _path,
+                attachment: widget.attachment,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _body(BuildContext context) {
-    final c = context.colors;
-    if (_loading) {
-      return Padding(
-        padding: EdgeInsets.all(context.spacing.xl4),
-        child: Center(child: CircularProgressIndicator(color: c.accent)),
-      );
-    }
-    final path = _path;
+/// What the viewer shows under its header: a spinner while the file caches,
+/// then the image / video, or why there is nothing to preview.
+class _ViewerBody extends StatelessWidget {
+  const _ViewerBody({
+    required this.loading,
+    required this.path,
+    required this.attachment,
+  });
+
+  final bool loading;
+  final String? path;
+  final TicketAttachment attachment;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    if (loading) return const AppStateView.loading();
+    final path = this.path;
     if (path == null) {
-      return _Message(
-        icon: LucideIcons.circleAlert300,
-        text: AppL10n.of(context).attachmentLoadFailed,
-      );
+      return AppStateView.error(title: l.attachmentLoadFailed);
     }
-    final ext = widget.attachment.extension?.toLowerCase() ?? '';
+    final ext = attachment.extension?.toLowerCase() ?? '';
     if (kImageExts.contains(ext)) {
       return InteractiveViewer(
         maxScale: 5,
@@ -149,37 +162,9 @@ class _AttachmentViewerDialogState
     if (kVideoExts.contains(ext)) {
       return AttachmentVideoView(path: path);
     }
-    return _Message(
+    return AppStateView.empty(
       icon: LucideIcons.file300,
-      text: AppL10n.of(context).previewUnavailable,
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Padding(
-      padding: EdgeInsets.all(context.spacing.xl4),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 40, color: c.textTertiary),
-          SizedBox(height: context.spacing.md),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: context.typography.secondary.copyWith(
-              color: c.textSecondary,
-            ),
-          ),
-        ],
-      ),
+      title: l.previewUnavailable,
     );
   }
 }

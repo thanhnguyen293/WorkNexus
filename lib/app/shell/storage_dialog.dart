@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radii.dart';
+import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_dialog_frame.dart';
 import '../../features/chat/presentation/widgets/chat_storage_panel.dart';
 import '../../features/connections/presentation/widgets/local_cache_panel.dart';
 import '../../l10n/app_localizations.dart';
 import 'reload_after_cache_clear.dart';
 
-/// Widest / tallest the dialog grows, in logical pixels.
-const _maxWidth = 640.0;
+/// Tallest the dialog grows, in logical pixels.
 const _maxHeight = 900.0;
 
 /// The one place to free space: downloaded chat files on top, the synced
@@ -28,58 +27,26 @@ class StorageDialog extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: _maxWidth,
-          maxHeight: _maxHeight,
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(s.xl5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l.storageTitle,
-                style: context.typography.titleLg.copyWith(
-                  color: c.textPrimary,
-                ),
-              ),
-              SizedBox(height: s.xl3),
-              // Title and Close stay put; both sections scroll between them
-              // when the window is short.
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _SectionTitle(l.chatStorage),
-                      const ChatStoragePanel(),
-                      Divider(height: s.xl5 * 2, color: c.border),
-                      _SectionTitle(l.localCacheTitle),
-                      LocalCachePanel(
-                        onCleared: (sections) =>
-                            reloadAfterCacheClear(ref, sections),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: s.xl3),
-              Align(
-                alignment: Alignment.centerRight,
-                child: AppButton.textNeutral(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l.close),
-                ),
-              ),
-            ],
-          ),
+    return AppDialogFrame(
+      title: l.storageTitle,
+      maxWidth: context.sizes.dialogLg,
+      maxHeight: _maxHeight,
+      // Close sits in the header; both sections scroll under it when the
+      // window is short.
+      actions: const [],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _SectionTitle(l.chatStorage),
+            const ChatStoragePanel(),
+            Divider(height: s.xl5 * 2, color: c.border),
+            _SectionTitle(l.localCacheTitle),
+            LocalCachePanel(
+              onCleared: (sections) => reloadAfterCacheClear(ref, sections),
+            ),
+          ],
         ),
       ),
     );
@@ -96,7 +63,7 @@ class _SectionTitle extends StatelessWidget {
     padding: EdgeInsets.only(bottom: context.spacing.lg),
     child: Text(
       text,
-      style: context.typography.title.copyWith(
+      style: context.typography.titleSm.copyWith(
         color: context.colors.textPrimary,
       ),
     ),

@@ -4,17 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_dropdown.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_profile.dart';
 import '../../domain/entities/zentao_profile_update.dart';
 import '../providers/zentao_profile_edit_controller.dart';
 import '../providers/zentao_profile_providers.dart';
-import '../../../../core/widgets/connection_text_field.dart';
 
 class ZenTaoProfileEditDialog extends ConsumerStatefulWidget {
   const ZenTaoProfileEditDialog({
@@ -81,14 +84,12 @@ class _ZenTaoProfileEditDialogState
     }
   }
 
-  void _showMessage(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _showMessage(String message) =>
+      showAppSnack(context, message, isError: true);
 
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
-    final c = context.colors;
     final s = context.spacing;
     final busy = ref.watch(zenTaoProfileEditControllerProvider).isLoading;
     final departments =
@@ -98,20 +99,13 @@ class _ZenTaoProfileEditDialogState
         .watch(zenTaoProfileProvider(widget.account.id))
         .asData
         ?.value;
-    final departmentOptions = [
-      for (final department in departments)
-        DropdownMenuItem<int>(
-          value: department.id,
-          child: Text(department.path, overflow: TextOverflow.ellipsis),
-        ),
-      if (_departmentId != null &&
-          !departments.any((item) => item.id == _departmentId))
-        DropdownMenuItem<int>(
-          value: _departmentId,
-          child: Text(widget.profile.department ?? '$_departmentId'),
-        ),
-    ];
-    final roles = <String, String>{
+    final departmentLabels = <int?, String>{
+      for (final department in departments) department.id: department.path,
+      if (_departmentId case final id?
+          when !departments.any((item) => item.id == id))
+        id: widget.profile.department ?? '$id',
+    };
+    final roles = <String?, String>{
       'dev': l.chatRoleDev,
       'qa': l.chatRoleQa,
       'pm': l.chatRolePm,
@@ -121,106 +115,130 @@ class _ZenTaoProfileEditDialogState
       'qd': l.chatRoleQd,
       'top': l.chatRoleTop,
       'others': l.chatRoleOthers,
-      if (_roleCode != null &&
-          !{
-            'dev',
-            'qa',
-            'pm',
-            'po',
-            'td',
-            'pd',
-            'qd',
-            'top',
-            'others',
-          }.contains(_roleCode))
-        _roleCode!: widget.profile.role ?? _roleCode!,
     };
+    if (_roleCode case final code? when !roles.containsKey(code)) {
+      roles[code] = widget.profile.role ?? code;
+    }
+    void submit(String _) {
+      if (!busy) _save();
+    }
 
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 520,
-          maxHeight: MediaQuery.sizeOf(context).height - s.xl5 * 2,
+    return AppDialogFrame(
+      title: l.profileEditTitle,
+      maxWidth: context.sizes.dialogMd,
+      maxHeight: MediaQuery.sizeOf(context).height - s.xl5 * 2,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          onPressed: busy ? null : () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(s.xl4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l.profileEditTitle,
-                style: context.typography.title.copyWith(color: c.textPrimary),
+        AppButton.filled(
+          isLoading: busy,
+          onPressed: busy ? null : _save,
+          child: Text(l.save),
+        ),
+      ],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: UserAvatar(
+                name: current?.realname ?? widget.profile.realname,
+                imageUrl: current?.avatarUrl ?? widget.profile.avatarUrl,
+                diameter: s.xl6 * 1.5,
               ),
-              SizedBox(height: s.xl3),
-              Center(
-                child: UserAvatar(
-                  name: current?.realname ?? widget.profile.realname,
-                  imageUrl: current?.avatarUrl ?? widget.profile.avatarUrl,
-                  diameter: s.xl6 * 1.5,
-                ),
-              ),
-              SizedBox(height: s.xl3),
-              ConnectionTextField(label: l.profileName, controller: _name),
-              SizedBox(height: s.lg),
-              ConnectionTextField(label: l.profileEmail, controller: _email),
-              SizedBox(height: s.lg),
-              ConnectionTextField(label: l.profileMobile, controller: _mobile),
-              SizedBox(height: s.lg),
-              ConnectionTextField(label: l.profilePhone, controller: _phone),
-              SizedBox(height: s.lg),
-              Text(
-                l.profileDepartment,
-                style: context.typography.captionStrong,
-              ),
-              DropdownButtonFormField<int>(
-                mouseCursor: WidgetStateMouseCursor.clickable,
-                initialValue: _departmentId,
-                items: departmentOptions,
-                onChanged: busy
-                    ? null
-                    : (value) => setState(() => _departmentId = value),
-              ),
-              SizedBox(height: s.lg),
-              Text(l.profileRole, style: context.typography.captionStrong),
-              DropdownButtonFormField<String>(
-                mouseCursor: WidgetStateMouseCursor.clickable,
-                initialValue: _roleCode,
-                items: [
-                  for (final entry in roles.entries)
-                    DropdownMenuItem(
-                      value: entry.key,
-                      child: Text(entry.value),
-                    ),
-                ],
-                onChanged: busy
-                    ? null
-                    : (value) => setState(() => _roleCode = value),
-              ),
-              SizedBox(height: s.xl3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton.textNeutral(
-                    onPressed: busy ? null : () => Navigator.of(context).pop(),
-                    child: Text(l.cancel),
-                  ),
-                  SizedBox(width: s.sm),
-                  AppButton.filled(
-                    isLoading: busy,
-                    onPressed: busy ? null : _save,
-                    child: Text(l.save),
-                  ),
-                ],
-              ),
-            ],
+            ),
+            SizedBox(height: s.xl3),
+            ConnectionTextField(
+              label: l.profileName,
+              controller: _name,
+              onSubmitted: submit,
+            ),
+            SizedBox(height: s.lg),
+            ConnectionTextField(
+              label: l.profileEmail,
+              controller: _email,
+              onSubmitted: submit,
+            ),
+            SizedBox(height: s.lg),
+            ConnectionTextField(
+              label: l.profileMobile,
+              controller: _mobile,
+              onSubmitted: submit,
+            ),
+            SizedBox(height: s.lg),
+            ConnectionTextField(
+              label: l.profilePhone,
+              controller: _phone,
+              onSubmitted: submit,
+            ),
+            SizedBox(height: s.lg),
+            _DropdownField<int?>(
+              label: l.profileDepartment,
+              value: _departmentId,
+              labels: departmentLabels,
+              enabled: !busy,
+              onChanged: (value) => setState(() => _departmentId = value),
+            ),
+            SizedBox(height: s.lg),
+            _DropdownField<String?>(
+              label: l.profileRole,
+              value: _roleCode,
+              labels: roles,
+              enabled: !busy,
+              onChanged: (value) => setState(() => _roleCode = value),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A labelled [AppDropdown] laid out like [ConnectionTextField]. [labels]
+/// maps each choice to its text; an unset [value] reads as "—".
+class _DropdownField<T> extends StatelessWidget {
+  const _DropdownField({
+    required this.label,
+    required this.value,
+    required this.labels,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String label;
+  final T value;
+  final Map<T, String> labels;
+  final bool enabled;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: context.typography.captionStrong.copyWith(
+            color: context.colors.textSecondary,
           ),
         ),
-      ),
+        SizedBox(height: context.spacing.xs),
+        IgnorePointer(
+          ignoring: !enabled,
+          child: AppDropdown<T>(
+            value: value,
+            values: labels.keys.toList(),
+            labelOf: (v) => labels[v] ?? l.profileEmptyValue,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }

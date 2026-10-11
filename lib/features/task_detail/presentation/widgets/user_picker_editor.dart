@@ -4,6 +4,7 @@ import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'metadata_editor_parts.dart';
 import 'provider_user_avatar.dart';
@@ -129,18 +130,27 @@ class _UserPickerEditorState extends State<UserPickerEditor> {
           child: FutureBuilder<Result<List<ProviderUser>>>(
             future: _users,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const AppStateView.error(compact: true);
+              }
               final result = snapshot.data;
               if (result == null) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppStateView.loading(compact: true);
               }
               if (result case Err<List<ProviderUser>>(:final failure)) {
-                return EditorMessage(message: failure.message, isError: true);
+                return AppStateView.error(
+                  compact: true,
+                  message: failure.message,
+                );
               }
               final users = (result as Ok<List<ProviderUser>>).value;
               _initializeSelection(users);
               final visible = _visible(users);
               return _UserOptions(
                 users: visible,
+                emptyMessage: users.isEmpty
+                    ? l.taskDetailNoAssignableUsers
+                    : l.noMatchingUsers,
                 selected: _selected,
                 multiple: widget.multiple,
                 avatarLoader: widget.avatarLoader,
@@ -163,6 +173,7 @@ class _UserPickerEditorState extends State<UserPickerEditor> {
 class _UserOptions extends StatelessWidget {
   const _UserOptions({
     required this.users,
+    required this.emptyMessage,
     required this.selected,
     required this.multiple,
     required this.avatarLoader,
@@ -171,6 +182,9 @@ class _UserOptions extends StatelessWidget {
   });
 
   final List<ProviderUser> users;
+
+  /// Shown when [users] is empty: "none exist" vs "the search hid them all".
+  final String emptyMessage;
   final Set<String> selected;
   final bool multiple;
   final AvatarLoader avatarLoader;
@@ -181,7 +195,7 @@ class _UserOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
     if (users.isEmpty && !multiple) {
-      return EditorMessage(message: l.noMatchingUsers);
+      return EditorMessage(message: emptyMessage);
     }
     return ListView(
       padding: EdgeInsets.only(bottom: context.spacing.xs),
@@ -195,7 +209,7 @@ class _UserOptions extends StatelessWidget {
           ),
           Divider(height: 1, color: context.colors.border),
         ],
-        if (users.isEmpty) EditorMessage(message: l.noMatchingUsers),
+        if (users.isEmpty) EditorMessage(message: emptyMessage),
         for (final user in users)
           EditorOptionTile(
             title: user.displayName,

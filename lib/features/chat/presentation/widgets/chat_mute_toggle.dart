@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../providers/chat_providers.dart';
@@ -28,7 +29,13 @@ class ChatMuteToggle extends ConsumerWidget {
     final blocked =
         on && ref.watch(chatNotificationPermissionProvider).value == false;
     final muted = chat.muted;
-    return IconButton(
+    return AppIconButton(
+      icon: blocked
+          ? LucideIcons.bellRing300
+          : muted
+          ? LucideIcons.bellOff300
+          : LucideIcons.bell300,
+      color: blocked ? c.warning : null,
       tooltip: blocked
           ? l.chatNotificationsBlockedShort
           : muted
@@ -42,14 +49,6 @@ class ChatMuteToggle extends ConsumerWidget {
           if (context.mounted) showChatFailure(context, failure);
         }
       },
-      icon: Icon(
-        blocked
-            ? LucideIcons.bellRing300
-            : muted
-            ? LucideIcons.bellOff300
-            : LucideIcons.bell300,
-        color: blocked ? c.warning : c.textSecondary,
-      ),
     );
   }
 }

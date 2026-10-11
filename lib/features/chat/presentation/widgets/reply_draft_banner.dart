@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -83,10 +84,11 @@ class ReplyDraftBanner extends ConsumerWidget {
               ],
             ),
           ),
-          IconButton(
+          AppIconButton(
+            icon: LucideIcons.x300,
+            size: AppIconButtonSize.small,
             tooltip: l.chatCancelReply,
             onPressed: onCancel,
-            icon: Icon(LucideIcons.x300, color: c.textSecondary),
           ),
         ],
       ),

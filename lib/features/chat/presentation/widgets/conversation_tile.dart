@@ -141,7 +141,7 @@ class ConversationTile extends StatelessWidget {
                                   // Set apart by color only, a step above the
                                   // preview: bolder or full-ink text here
                                   // outweighs the chat title above it.
-                                  style: TextStyle(
+                                  style: context.typography.bodySm.copyWith(
                                     color: unread
                                         ? c.textPrimary
                                         : Color.lerp(

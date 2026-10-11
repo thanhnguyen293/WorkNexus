@@ -5,7 +5,9 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_video_playback.dart';
@@ -134,8 +136,13 @@ class _MiniPlayer extends StatelessWidget {
                 child: VideoPlayer(player),
               ),
             ),
-            GestureDetector(
+            // The drag's move cursor stays; no tint, which would veil the
+            // video. Enter / Space toggle it too.
+            HoverSurface(
               behavior: HitTestBehavior.opaque,
+              cursor: MouseCursor.defer,
+              tintOnHover: false,
+              semanticLabel: AppL10n.of(context).chatPlay,
               onTap: () =>
                   player.value.isPlaying ? player.pause() : player.play(),
             ),
@@ -149,8 +156,8 @@ class _MiniPlayer extends StatelessWidget {
                           child: Padding(
                             padding: EdgeInsets.only(left: s.xxs),
                             child: Icon(
-                              Icons.play_arrow_rounded,
-                              size: s.xl4,
+                              LucideIcons.play300,
+                              size: context.sizes.iconLg,
                               color: c.onScrim,
                             ),
                           ),

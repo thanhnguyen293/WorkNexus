@@ -7,6 +7,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'assign_dialog.dart';
@@ -80,7 +81,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().updateGitHubPrBranch(ticket),
-                      'Updated #${ticket.externalKey}',
+                      l.taskDetailBranchUpdated('#${ticket.externalKey}'),
                     ),
             ),
           if (isPr && active)
@@ -91,7 +92,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().mergeGitHubPr(ticket),
-                      'Merged #${ticket.externalKey}',
+                      l.taskDetailMerged('#${ticket.externalKey}'),
                     ),
             ),
           if (active)
@@ -102,7 +103,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().closeGitHubItem(ticket),
-                      'Closed #${ticket.externalKey}',
+                      l.taskDetailClosed('#${ticket.externalKey}'),
                     ),
             ),
           if (isClosed)
@@ -113,7 +114,7 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
                   ? null
                   : () => _run(
                       () => getIt<SyncService>().reopenGitHubItem(ticket),
-                      'Reopened #${ticket.externalKey}',
+                      l.taskDetailReopened('#${ticket.externalKey}'),
                     ),
             ),
         ],
@@ -125,19 +126,19 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
     Future<Result<void>> Function() action,
     String okMessage,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final l = AppL10n.of(context);
     setState(() => _busy = true);
     final res = await action();
     if (!mounted) return;
     setState(() => _busy = false);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          res.isOk
-              ? okMessage
-              : 'Failed: ${res.failureOrNull?.message ?? 'error'}',
-        ),
-      ),
+    showAppSnack(
+      context,
+      res.isOk
+          ? okMessage
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
     );
   }
 }

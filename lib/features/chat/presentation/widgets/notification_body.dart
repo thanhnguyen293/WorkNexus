@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/value_objects/message_content.dart';
@@ -94,20 +95,20 @@ class NotificationBody extends ConsumerWidget {
               runSpacing: s.sm,
               children: [
                 for (final (i, link) in links.indexed)
-                  TextButton.icon(
+                  AppButton(
+                    // The bubble's link ink: the neutral text colour can
+                    // fade into a tinted bubble.
+                    style: AppButtonVariant.textNeutral
+                        .style(context)
+                        .copyWith(
+                          foregroundColor: WidgetStatePropertyAll(ink.link),
+                        ),
+                    size: AppButtonSize.extraSmall,
+                    icon: i == 0 && url != null && ticketUrl == null
+                        ? LucideIcons.circleArrowRight300
+                        : LucideIcons.squareArrowOutUpRight300,
                     onPressed: () => openChatLink(ref, link.url),
-                    style: TextButton.styleFrom(
-                      foregroundColor: ink.link,
-                      padding: EdgeInsets.symmetric(horizontal: s.md),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: Icon(
-                      i == 0 && url != null && ticketUrl == null
-                          ? LucideIcons.circleArrowRight300
-                          : LucideIcons.squareArrowOutUpRight300,
-                      size: s.xl3,
-                    ),
-                    label: Text(link.label),
+                    child: Text(link.label),
                   ),
               ],
             ),

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 
@@ -86,14 +87,15 @@ class _ChatNotificationBannerState
             onPressed: _turnOn,
             child: Text(l.chatNotificationsAllow),
           ),
-          IconButton(
+          AppIconButton(
+            icon: LucideIcons.x300,
+            size: AppIconButtonSize.small,
             tooltip: l.chatDismiss,
             onPressed: () =>
                 ref
                         .read(chatNotificationWarningDismissedProvider.notifier)
                         .state =
                     true,
-            icon: Icon(LucideIcons.x300, color: c.textSecondary),
           ),
         ],
       ),

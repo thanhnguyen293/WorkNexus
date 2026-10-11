@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_search_field.dart';
 import '../providers/chat_providers.dart';
 
 /// The chat search box. Its text lives in [chatSearchProvider] (the list
@@ -30,66 +26,8 @@ class _ChatSearchFieldState extends ConsumerState<ChatSearchField> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    final shape = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide.none,
-    );
-    return SizedBox(
-      height: s.xl6 - s.xs,
-      child: ValueListenableBuilder(
-        valueListenable: _text,
-        builder: (context, value, _) => TextField(
-          controller: _text,
-          onChanged: _search,
-          // Fills the box: otherwise it is only as tall as its content, and
-          // shrinks once the clear button goes away with the text.
-          expands: true,
-          maxLines: null,
-          textAlignVertical: TextAlignVertical.center,
-          style: context.typography.body.copyWith(color: c.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surfaceSubtle,
-            hintText: widget.hint,
-            hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-            prefixIcon: Icon(
-              LucideIcons.search300,
-              size: s.xl3,
-              color: c.textTertiary,
-            ),
-            prefixIconConstraints: BoxConstraints(minWidth: s.xl6 - s.xs),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).clearButtonTooltip,
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      _text.clear();
-                      _search('');
-                    },
-                    icon: Icon(
-                      LucideIcons.x300,
-                      size: s.xl2,
-                      color: c.textTertiary,
-                    ),
-                  ),
-            contentPadding: EdgeInsets.zero,
-            border: shape,
-            enabledBorder: shape,
-            focusedBorder: shape.copyWith(
-              borderSide: BorderSide(color: c.accent),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      AppSearchField(controller: _text, hint: widget.hint, onChanged: _search);
 
   void _search(String text) =>
       ref.read(chatSearchProvider.notifier).state = text;

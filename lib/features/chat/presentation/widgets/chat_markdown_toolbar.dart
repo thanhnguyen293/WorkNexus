@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/markdown_format.dart';
 
@@ -72,7 +72,7 @@ class ChatMarkdownToolbar extends StatelessWidget {
         child: Row(
           children: [
             for (final (icon, tooltip, format) in formats)
-              _FormatButton(
+              AppIconButton(
                 icon: icon,
                 tooltip: tooltip,
                 onPressed: () => onFormat(format),
@@ -81,12 +81,12 @@ class ChatMarkdownToolbar extends StatelessWidget {
               valueListenable: undo,
               builder: (context, history, _) => Row(
                 children: [
-                  _FormatButton(
+                  AppIconButton(
                     icon: LucideIcons.undo2300,
                     tooltip: l.chatUndo,
                     onPressed: history.canUndo ? undo.undo : null,
                   ),
-                  _FormatButton(
+                  AppIconButton(
                     icon: LucideIcons.redo2300,
                     tooltip: l.chatRedo,
                     onPressed: history.canRedo ? undo.redo : null,
@@ -98,7 +98,7 @@ class ChatMarkdownToolbar extends StatelessWidget {
               height: s.xl4,
               child: VerticalDivider(width: s.lg, color: context.colors.border),
             ),
-            _FormatButton(
+            AppIconButton(
               icon: expanded
                   ? LucideIcons.minimize2300
                   : LucideIcons.maximize2300,
@@ -108,37 +108,6 @@ class ChatMarkdownToolbar extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _FormatButton extends StatelessWidget {
-  const _FormatButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      iconSize: context.spacing.xl4,
-      visualDensity: VisualDensity.compact,
-      style: IconButton.styleFrom(
-        foregroundColor: c.textSecondary,
-        disabledForegroundColor: c.textTertiary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(context.radii.md),
-        ),
-      ),
-      icon: Icon(icon),
     );
   }
 }
