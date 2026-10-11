@@ -81,6 +81,14 @@ class AppSearchField extends StatelessWidget {
                   hint: hint,
                   prefixIcon: LucideIcons.search300,
                   fillColor: fillColor,
+                  prefixIconConstraints: BoxConstraints.tightFor(
+                    width: boxHeight,
+                    height: boxHeight,
+                  ),
+                  suffixIconConstraints: BoxConstraints.tightFor(
+                    width: boxHeight,
+                    height: boxHeight,
+                  ),
                   contentPadding: EdgeInsetsDirectional.only(
                     end: context.spacing.md,
                   ),

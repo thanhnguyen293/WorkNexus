@@ -90,19 +90,19 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
         draftKey: (chat: t, inThread: false),
         files: files,
       ),
-      child: Column(
-        children: [
-          ChatThreadHeader(thread: t, chat: chat, users: users),
-          if (pinned.isNotEmpty)
-            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
-          Expanded(
-            // Behind the list rather than inside it, so it also shows while
-            // the messages load.
-            child: Stack(
-              children: [
-                ChatBackground(
-                  key: widget.backgroundKey,
-                  child: ChatTextScale(
+      child: ChatBackground(
+        key: widget.backgroundKey,
+        child: Column(
+          children: [
+            ChatThreadHeader(thread: t, chat: chat, users: users),
+            if (pinned.isNotEmpty)
+              PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+            Expanded(
+              // Sits over the persistent background while messages load
+              // and scroll.
+              child: Stack(
+                children: [
+                  ChatTextScale(
                     child: MessageList(
                       // The background is reused across chats; the list is
                       // not.
@@ -111,26 +111,26 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
                       showSenders: chat?.type != ChatType.one2one,
                     ),
                   ),
-                ),
-                // A video scrolled out of view plays on over the list.
-                Positioned.fill(child: ChatFloatingVideo(thread: t)),
-              ],
-            ),
-          ),
-          if (canSend)
-            ChatTextScale(
-              child: ChatComposer(
-                thread: t,
-                hint: chat == null
-                    ? null
-                    : AppL10n.of(
-                        context,
-                      ).chatMessageTo(chatTitle(context, chat, users)),
+                  // A video scrolled out of view plays on over the list.
+                  Positioned.fill(child: ChatFloatingVideo(thread: t)),
+                ],
               ),
-            )
-          else
-            ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
-        ],
+            ),
+            if (canSend)
+              ChatTextScale(
+                child: ChatComposer(
+                  thread: t,
+                  hint: chat == null
+                      ? null
+                      : AppL10n.of(
+                          context,
+                        ).chatMessageTo(chatTitle(context, chat, users)),
+                ),
+              )
+            else
+              ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
+          ],
+        ),
       ),
     );
     final Widget? panel = openThread != null
