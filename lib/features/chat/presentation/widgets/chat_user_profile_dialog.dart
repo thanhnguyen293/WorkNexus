@@ -156,6 +156,8 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 Center(
                   child: TintedPill(
                     color: c.accent,
+                    large: true,
+                    pill: true,
                     label: chatRoleLabel(
                       context,
                       role,

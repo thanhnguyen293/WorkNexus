@@ -150,7 +150,7 @@ class _ZenTaoNode extends StatelessWidget {
                   child: Text(
                     ProviderType.zentao.displayName,
                     style: context.typography.bodySm.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: c.textPrimary,
                     ),
                   ),
@@ -200,7 +200,7 @@ class _GitLabNode extends StatelessWidget {
                   child: Text(
                     ProviderType.gitlab.displayName,
                     style: context.typography.bodySm.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: c.textPrimary,
                     ),
                   ),
@@ -251,7 +251,7 @@ class _GitHubNode extends StatelessWidget {
                   child: Text(
                     ProviderType.github.displayName,
                     style: context.typography.bodySm.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: c.textPrimary,
                     ),
                   ),

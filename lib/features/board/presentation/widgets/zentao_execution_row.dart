@@ -81,7 +81,7 @@ class ZenTaoExecutionRow extends ConsumerWidget {
                   execution.name,
                   overflow: TextOverflow.ellipsis,
                   style: context.typography.mono.copyWith(
-                    fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: active ? FontWeight.w500 : FontWeight.w400,
                     color: c.textPrimary,
                   ),
                 ),

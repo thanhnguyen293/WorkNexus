@@ -132,7 +132,7 @@ class _CheckRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: context.typography.body.copyWith(
                 color: c.textPrimary,
-                fontWeight: checked ? FontWeight.w600 : null,
+                fontWeight: checked ? FontWeight.w500 : null,
               ),
             ),
           ),

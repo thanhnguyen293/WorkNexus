@@ -114,7 +114,7 @@ class ConversationTile extends StatelessWidget {
                           style: context.typography.body.copyWith(
                             color: c.textPrimary,
                             fontWeight: unread
-                                ? FontWeight.w700
+                                ? FontWeight.w600
                                 : FontWeight.w500,
                           ),
                         ),
@@ -123,7 +123,7 @@ class ConversationTile extends StatelessWidget {
                         chatListTime(context, chat.lastActiveAt),
                         style: context.typography.captionSm.copyWith(
                           color: unread ? c.accent : c.textTertiary,
-                          fontWeight: unread ? FontWeight.w600 : null,
+                          fontWeight: unread ? FontWeight.w500 : null,
                         ),
                       ),
                     ],

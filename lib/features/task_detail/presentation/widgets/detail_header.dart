@@ -66,7 +66,7 @@ class DetailHeader extends ConsumerWidget {
               Text(
                 ws?.isPersonal == true ? l.personal : (ws?.name ?? ''),
                 style: context.typography.bodySm.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: wsColor,
                 ),
               ),

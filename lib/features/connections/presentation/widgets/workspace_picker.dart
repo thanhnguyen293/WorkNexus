@@ -313,7 +313,7 @@ class _OptionRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.body.copyWith(
                       color: textColor,
-                      fontWeight: selected ? FontWeight.w600 : null,
+                      fontWeight: selected ? FontWeight.w500 : null,
                     ),
                   ),
                 ),

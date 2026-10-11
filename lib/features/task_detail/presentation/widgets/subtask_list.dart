@@ -110,7 +110,7 @@ class _Row extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: context.typography.bodySm.copyWith(
                   color: c.accent,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

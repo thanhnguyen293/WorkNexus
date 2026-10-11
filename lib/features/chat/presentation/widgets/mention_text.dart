@@ -46,7 +46,7 @@ class _MentionTextState extends ConsumerState<MentionText> {
       height: 1.45,
       color: ink.text,
     );
-    final mention = base.copyWith(color: ink.link, fontWeight: FontWeight.w600);
+    final mention = base.copyWith(color: ink.link, fontWeight: FontWeight.w500);
     final link = base.copyWith(
       color: ink.link,
       decoration: TextDecoration.underline,

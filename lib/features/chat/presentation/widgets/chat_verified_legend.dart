@@ -111,7 +111,7 @@ class _Row extends StatelessWidget {
                             chatRoleLabel(context, r),
                             style: text.copyWith(
                               color: c.accent,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
