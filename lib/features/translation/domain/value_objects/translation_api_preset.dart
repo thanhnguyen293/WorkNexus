@@ -22,6 +22,18 @@ class TranslationApiPreset {
   final String? keyUrl;
   final bool needsKey;
 
+  /// Not an endpoint: translating through the OpenCode CLI and its own login,
+  /// offered alongside the presets so the user picks exactly one backend.
+  static const openCode = TranslationApiPreset(
+    id: 'opencode',
+    name: 'OpenCode',
+    baseUrl: '',
+    defaultModel: '',
+    needsKey: false,
+  );
+
+  bool get isOpenCode => id == openCode.id;
+
   static const custom = TranslationApiPreset(
     id: 'custom',
     name: 'Custom',
@@ -34,7 +46,7 @@ class TranslationApiPreset {
       id: 'gemini',
       name: 'Google Gemini',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-      defaultModel: 'gemini-2.5-flash',
+      defaultModel: 'gemini-3.8-flash',
       keyUrl: 'https://aistudio.google.com/apikey',
     ),
     TranslationApiPreset(

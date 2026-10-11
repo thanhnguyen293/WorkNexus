@@ -68,24 +68,27 @@ class ApiTranslationService implements TranslationService {
   }
 
   @override
-  Future<Result<String>> translateText({
+  Future<Result<TextTranslation>> translateText({
     required String key,
     required String text,
     required String targetLang,
     String? model,
   }) async {
     final language = translationLanguageFor(targetLang);
+    final config = await _config();
     final reply = await _complete(
       key,
-      await _config(),
+      config,
       textPrompt(text, language.englishName),
     );
     return reply.fold((out) {
       final trimmed = out.trim();
       return trimmed.isEmpty
-          ? const Err<String>(ParseFailure('The model returned no text'))
-          : Ok(trimmed);
-    }, Err<String>.new);
+          ? const Err<TextTranslation>(
+              ParseFailure('The model returned no text'),
+            )
+          : Ok(TextTranslation(trimmed, model: config?.model));
+    }, Err<TextTranslation>.new);
   }
 
   Future<Result<String>> _complete(

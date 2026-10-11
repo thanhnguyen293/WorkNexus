@@ -73,12 +73,12 @@ class _Marker implements TranslationService {
   }) async => Err(AgentFailure(name));
 
   @override
-  Future<Result<String>> translateText({
+  Future<Result<TextTranslation>> translateText({
     required String key,
     required String text,
     required String targetLang,
     String? model,
-  }) async => Ok(name);
+  }) async => Ok(TextTranslation(name));
 }
 
 void main() {
@@ -96,7 +96,8 @@ void main() {
         adapter,
       ).translateText(key: 'k', text: 'Hello', targetLang: 'vi');
 
-      expect(result.valueOrNull, 'Xin chào');
+      expect(result.valueOrNull?.text, 'Xin chào');
+      expect(result.valueOrNull?.model, 'm-1');
       expect(
         adapter.last!.uri.toString(),
         'https://api.example.test/v1/chat/completions',
@@ -162,7 +163,7 @@ void main() {
         key: 'k',
         text: 'x',
         targetLang: 'vi',
-      )).valueOrNull;
+      )).valueOrNull?.text;
     }
 
     test('uses the API when a key is enabled', () async {

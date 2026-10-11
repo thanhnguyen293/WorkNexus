@@ -138,9 +138,17 @@ class ConversationTile extends StatelessWidget {
                               if (lastSender case final sender?)
                                 TextSpan(
                                   text: '$sender: ',
+                                  // Set apart by color only, a step above the
+                                  // preview: bolder or full-ink text here
+                                  // outweighs the chat title above it.
                                   style: TextStyle(
-                                    color: c.textPrimary,
-                                    fontWeight: FontWeight.w600,
+                                    color: unread
+                                        ? c.textPrimary
+                                        : Color.lerp(
+                                            c.textSecondary,
+                                            c.textPrimary,
+                                            0.4,
+                                          ),
                                   ),
                                 ),
                               TextSpan(

@@ -43,10 +43,12 @@ class MessageTranslationController
 
   /// Translates [message], showing it as in progress at once. [ready]
   /// (e.g. checking a translator is set up, which can take a moment) runs
-  /// after that; false stops without a translation.
+  /// after that; false stops without a translation. [force] replaces a stored
+  /// translation with a fresh one.
   Future<void> translate(
     ChatMessage message, {
     Future<bool> Function()? ready,
+    bool force = false,
   }) async {
     if (message.content is! TextContent ||
         state[message.gid]?.loading == true) {
@@ -64,6 +66,7 @@ class MessageTranslationController
       model: settings.translationModel.isEmpty
           ? null
           : settings.translationModel,
+      force: force,
     );
     switch (result) {
       // The stored translation takes over from here.

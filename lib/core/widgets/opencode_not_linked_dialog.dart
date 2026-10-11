@@ -11,10 +11,13 @@ import '../theme/fonts.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_button.dart';
 
-/// True when OpenCode has an authenticated provider. Otherwise explains how to
-/// link one (Settings → OpenCode, or `opencode auth login`) and returns false,
-/// rather than letting a translation fail with a raw CLI error.
+/// True when a translation can run: through the user's API key, or through
+/// an OpenCode CLI with an authenticated provider. Otherwise explains how to
+/// link OpenCode (`opencode auth login`, or pick an API provider in Settings)
+/// and returns false, rather than letting a translation fail with a raw CLI
+/// error.
 Future<bool> ensureOpenCodeLinked(BuildContext context, WidgetRef ref) async {
+  if (await ref.read(translatesWithApiKeyProvider.future)) return true;
   if (await ref.read(openCodeAuthedProvider.future)) return true;
   if (!context.mounted) return false;
   await showDialog<void>(
@@ -24,8 +27,8 @@ Future<bool> ensureOpenCodeLinked(BuildContext context, WidgetRef ref) async {
   return false;
 }
 
-/// Explains how to link OpenCode when no provider is authenticated: paste a key
-/// in Settings, or run the CLI login for an OAuth provider.
+/// Explains how to link OpenCode when no provider is authenticated: run the CLI
+/// login, or switch translation to an API-key provider in Settings.
 class OpenCodeNotLinkedDialog extends ConsumerWidget {
   const OpenCodeNotLinkedDialog();
 

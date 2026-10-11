@@ -15,13 +15,12 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
-import 'chat_attachments.dart';
+import 'attachment_download.dart';
 import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
 import 'chat_media_strip.dart';
 import 'chat_media_viewer_bar.dart';
 import 'chat_media_viewer_frame.dart';
-import 'chat_snack.dart';
 import 'chat_video_controls.dart';
 
 /// Player for a video sent in chat, centred over it in the image viewer's dark
@@ -184,12 +183,14 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   }
 
   Future<void> _save() async {
-    final path = _path;
-    if (path == null) return;
-    final saved = AppL10n.of(context).chatSaved;
-    if (await saveAttachmentAs(path, widget.video.name) && mounted) {
-      showChatSnack(context, saved);
-    }
+    if (_path == null) return;
+    await saveAttachmentCopyAs(
+      context,
+      ref,
+      accountId: widget.accountId,
+      content: widget.video,
+      name: widget.video.name,
+    );
   }
 
   @override

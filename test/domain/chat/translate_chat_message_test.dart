@@ -79,9 +79,32 @@ void main() {
         targetLang: 'vi',
         model: 'm',
       ),
-    ).thenAnswer((_) async => const Ok('chào @Bob'));
+    ).thenAnswer(
+      (_) async => const Ok(TextTranslation('chào @Bob', model: 'gemini-x')),
+    );
     final result = await translate(message, targetLang: 'vi', model: 'm');
-    expect((result as Ok<ChatMessageTranslation>).value.text, 'chào @Bob');
+    final value = (result as Ok<ChatMessageTranslation>).value;
+    expect(value.text, 'chào @Bob');
+    // The label names the model that answered, not the one asked for.
+    expect(value.model, 'gemini-x');
+    verify(() => repo.save(any())).called(1);
+  });
+
+  test('force translates again over a stored translation', () async {
+    when(() => repo.find('a', 'g1', 'vi')).thenAnswer((_) async => Ok(stored));
+    when(
+      () => service.translateText(
+        key: any(named: 'key'),
+        text: any(named: 'text'),
+        targetLang: 'vi',
+        model: any(named: 'model'),
+      ),
+    ).thenAnswer((_) async => const Ok(TextTranslation('xin chào')));
+    final result = await translate(message, targetLang: 'vi', force: true);
+    final value = (result as Ok<ChatMessageTranslation>).value;
+    expect(value.text, 'xin chào');
+    expect(value.visible, isTrue);
+    verifyNever(() => repo.find(any(), any(), any()));
     verify(() => repo.save(any())).called(1);
   });
 

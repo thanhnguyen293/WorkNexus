@@ -84,6 +84,16 @@ class ChatPacketIngestor {
             userFromXxd(accountId, Map<String, Object?>.from(data)),
           ]);
         }
+      // Someone (this account included) changed their status; `userchange`
+      // on servers before 7.x.
+      case 'userupdate' || 'userchange':
+        if (data is Map && data['id'] is num && data['status'] is String) {
+          await _local.setUserStatus(
+            accountId,
+            (data['id']! as num).toInt(),
+            data['status']! as String,
+          );
+        }
       case 'userlogout':
         if (data is Map && data['id'] is num) {
           await _local.setUserStatus(

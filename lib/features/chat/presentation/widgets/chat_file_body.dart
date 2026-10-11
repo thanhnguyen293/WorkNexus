@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
-import 'cancel_download_button.dart';
 import 'chat_bubble_theme.dart';
+import 'chat_file_action_button.dart';
+import 'chat_file_badge.dart';
 import 'chat_labels.dart';
+import 'chat_upload_overlay.dart';
 import 'chat_video_tile.dart';
 
 /// A file message. A sent video is a preview frame with a play button that
@@ -84,9 +86,34 @@ class _FileBodyState extends ConsumerState<FileBody> {
     return _FileTile(
       file: widget.file,
       opening: downloading,
-      needsDownload: cached == false && !downloading,
+      onDevice: downloading ? null : cached,
+      onReveal: _sent && !downloading && cached == true
+          ? () => revealAttachment(
+              context,
+              ref,
+              accountId: widget.accountId,
+              content: widget.file,
+            )
+          : null,
+      onSave: _sent && !downloading
+          ? () => saveAttachment(
+              context,
+              ref,
+              accountId: widget.accountId,
+              content: widget.file,
+              name: widget.file.name,
+            )
+          : null,
       onTap: _sent && !downloading ? _open : null,
-      onCancel: downloading
+      cancelTooltip: uploading ? AppL10n.of(context).chatCancelUpload : null,
+      onCancel: uploading
+          ? () => cancelChatUpload(
+              context,
+              ref,
+              accountId: widget.accountId,
+              messageGid: widget.message.gid,
+            )
+          : downloading
           ? () => cancelAttachmentDownload(
               ref,
               accountId: widget.accountId,
@@ -102,115 +129,125 @@ class _FileBodyState extends ConsumerState<FileBody> {
   }
 }
 
-/// Extension badge, name and size; [progress] (0–1) while uploading.
+/// Extension badge, name, size and where the file is (this device or only
+/// the server); while it uploads or downloads the badge turns into a ring
+/// filling with [progress] (0–1). A sent file has "save as" on the right,
+/// and "show in folder" once it is on this device.
 class _FileTile extends StatelessWidget {
   const _FileTile({
     required this.file,
     required this.opening,
     required this.onTap,
-    this.needsDownload = false,
+    this.onDevice,
     this.progress,
     this.onCancel,
+    this.cancelTooltip,
+    this.onReveal,
+    this.onSave,
   });
 
   final FileContent file;
   final bool opening;
-
-  /// Not downloaded yet: a download arrow next to the size.
-  final bool needsDownload;
   final VoidCallback? onTap;
+
+  /// Whether the file is downloaded; null while unknown or moving.
+  final bool? onDevice;
   final double? progress;
 
-  /// Set while it downloads: shows a button that stops the download.
+  /// Set while it downloads or uploads: hovering the badge shows a ✕ that
+  /// stops it.
   final VoidCallback? onCancel;
+
+  /// The stop button's tooltip; defaults to "Cancel download".
+  final String? cancelTooltip;
+
+  /// Shows the file in the system file manager; set once it is on this
+  /// device.
+  final VoidCallback? onReveal;
+
+  /// Saves a copy where the user picks (downloading it first).
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final s = context.spacing;
-    final badge = Container(
-      width: s.xl6,
-      height: s.xl6,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: c.accent,
-        borderRadius: BorderRadius.circular(context.radii.md),
-      ),
-      child: opening
-          ? SizedBox.square(
-              dimension: s.xl3,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: c.onAccent,
-              ),
-            )
-          : Text(
-              chatFileBadge(file.name),
-              style: context.typography.captionStrong.copyWith(
-                color: c.onAccent,
-              ),
-            ),
-    );
+    final l = AppL10n.of(context);
+    final meta = ChatBubbleTheme.of(context).meta;
+    final metaStyle = context.typography.caption.copyWith(color: meta);
     return InkWell(
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 220),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                badge,
-                SizedBox(width: s.lg),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            ChatFileBadge(
+              fileName: file.name,
+              busy: opening || progress != null,
+              progress: progress,
+              onCancel: onCancel,
+              cancelTooltip: cancelTooltip,
+            ),
+            SizedBox(width: s.lg),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    file.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.bodyStrong.copyWith(
+                      color: ChatBubbleTheme.of(context).text,
+                    ),
+                  ),
+                  SizedBox(height: s.xxs),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        file.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.typography.bodyStrong.copyWith(
-                          color: ChatBubbleTheme.of(context).text,
+                        formatTransfer(file.size, progress),
+                        style: metaStyle,
+                      ),
+                      if (onDevice case final here?) ...[
+                        SizedBox(width: s.md),
+                        Icon(
+                          here
+                              ? LucideIcons.circleCheck300
+                              : LucideIcons.cloudCheck300,
+                          size: s.xl2,
+                          color: meta,
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (needsDownload)
-                            Icon(
-                              LucideIcons.download300,
-                              size: s.xl2,
-                              color: ChatBubbleTheme.of(context).meta,
-                            ),
-                          Text(
-                            formatTransfer(file.size, progress),
-                            style: context.typography.caption.copyWith(
-                              color: ChatBubbleTheme.of(context).meta,
-                            ),
+                        SizedBox(width: s.xs),
+                        Flexible(
+                          child: Text(
+                            here ? l.chatFileOnDevice : l.chatFileOnCloud,
+                            overflow: TextOverflow.ellipsis,
+                            style: metaStyle,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ],
                   ),
-                ),
-                if (onCancel case final cancel?)
-                  CancelDownloadButton(
-                    onPressed: cancel,
-                    color: ChatBubbleTheme.of(context).meta,
-                  ),
-              ],
+                ],
+              ),
             ),
-            if (progress case final value?) ...[
-              SizedBox(height: s.md),
-              LinearProgressIndicator(
-                value: value,
-                minHeight: s.xs,
-                borderRadius: BorderRadius.circular(context.radii.pill),
+            if (onReveal case final reveal?) ...[
+              SizedBox(width: s.lg),
+              ChatFileActionButton(
+                icon: LucideIcons.folder300,
+                tooltip: l.chatShowInFolder,
+                onPressed: reveal,
+              ),
+            ],
+            if (onSave case final save?) ...[
+              SizedBox(width: s.md),
+              ChatFileActionButton(
+                icon: LucideIcons.download300,
+                tooltip: l.chatSaveAs,
+                onPressed: save,
               ),
             ],
           ],

@@ -6,6 +6,7 @@ import '../entities/chat_conversation.dart';
 import '../entities/chat_message.dart';
 import '../entities/chat_user.dart';
 import '../value_objects/chat_connection_status.dart';
+import '../value_objects/chat_presence.dart';
 import '../value_objects/message_content.dart';
 
 /// ZenTao chat for a connected ZenTao account ([accountId] is the WorkNexus
@@ -151,6 +152,17 @@ abstract class ChatRepository {
     MessageContent content,
   );
 
+  /// Copies an attachment (downloaded first if needed) to [targetPath],
+  /// remembering it for [savedAttachmentCopy].
+  Future<Result<void>> saveAttachmentCopy(
+    String accountId,
+    MessageContent content,
+    String targetPath,
+  );
+
+  /// The last copy of an attachment the user saved, while it still exists.
+  Future<String?> savedAttachmentCopy(String accountId, MessageContent content);
+
   /// The server's role names by role code (`dev` → its name, and roles an
   /// admin added), as the official client shows them.
   Future<Result<Map<String, String>>> roleNames(String accountId);
@@ -216,6 +228,10 @@ abstract class ChatRepository {
   /// format; cut to its centred square), then reloads users so it shows.
   Future<Result<void>> setMyAvatar(String accountId, Uint8List image);
 
+  /// Sets the signed-in user's own presence, shown to everyone. Kept across
+  /// reconnects for the rest of the app session.
+  Future<Result<void>> setMyPresence(String accountId, ChatPresence presence);
+
   /// Pins or unpins [chatGid] at the top of the chat list (synced with the
   /// server, so other clients see it too).
   Future<Result<void>> setChatStarred(
@@ -276,6 +292,10 @@ abstract class ChatRepository {
 
   /// Re-sends a message that failed.
   Future<Result<void>> retrySend(String accountId, String messageGid);
+
+  /// Stops sending file message [messageGid] while its file uploads (or
+  /// after the upload failed) and removes it; the server never saw it.
+  Future<Result<void>> cancelUpload(String accountId, String messageGid);
 
   /// Marks everything in the chat as read, locally and on the server.
   Future<Result<void>> markRead(String accountId, String chatGid);

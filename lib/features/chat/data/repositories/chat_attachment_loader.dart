@@ -215,6 +215,7 @@ class ChatAttachmentLoader {
     required Uint8List bytes,
     String? mimeType,
     void Function(double sent)? onProgress,
+    Future<void>? cancel,
   }) async {
     final state = session?.connection.state;
     final xxd = state is XxdOnline ? state.session : null;
@@ -242,6 +243,7 @@ class ChatAttachmentLoader {
       serverName: credentials.serverName,
       pinnedFingerprint: credentials.pinnedFingerprint,
       onProgress: onProgress,
+      cancel: cancel,
     );
     switch (uploaded) {
       case Ok(:final value):

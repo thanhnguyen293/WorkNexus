@@ -7,8 +7,8 @@ import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/content_hash.dart';
 import '../../../core/util/translation_languages.dart';
-import '../../agents/data/cli_agent_adapters.dart';
 import '../domain/adapters/translation_service.dart';
+import 'datasources/cli_runner.dart';
 import 'translation_prompts.dart';
 
 /// How long a single `opencode run` may take before we give up and kill it.
@@ -35,14 +35,14 @@ final RegExp _ansiEscape = RegExp(r'\x1B\[[0-9;]*[a-zA-Z]');
 /// bypass your OpenCode usage tracking.
 class OpenCodeTranslationService implements TranslationService {
   OpenCodeTranslationService({
-    AgentRunner runner = const AgentRunner(),
+    CliRunner runner = const CliRunner(),
     this.model,
     this.workingDir,
     this.binaryOverride,
     this.timeout = kOpenCodeTranslationTimeout,
   }) : _runner = runner;
 
-  final AgentRunner _runner;
+  final CliRunner _runner;
 
   /// Fallback model id (`provider/model`) when a call doesn't pin one. Null ⇒
   /// OpenCode's configured default.
@@ -135,7 +135,7 @@ class OpenCodeTranslationService implements TranslationService {
   }
 
   @override
-  Future<Result<String>> translateText({
+  Future<Result<TextTranslation>> translateText({
     required String key,
     required String text,
     required String targetLang,
@@ -170,7 +170,7 @@ class OpenCodeTranslationService implements TranslationService {
       if (run.exitCode != 0) return Err(AgentFailure(_exitMessage(run)));
       final out = run.stdout.replaceAll(_ansiEscape, '').trim();
       if (out.isEmpty) return Err(ParseFailure(_unparsableMessage(run)));
-      return Ok(out);
+      return Ok(TextTranslation(out, model: chosenModel));
     } catch (e) {
       return Err(AgentFailure('OpenCode translation failed: $e', cause: e));
     } finally {

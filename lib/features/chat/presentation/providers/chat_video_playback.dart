@@ -79,12 +79,16 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
   }
 
   /// Floats the video of [messageGid] (its message left the view) or docks
-  /// it back; nothing when another video, or none, plays.
+  /// it back; nothing when another video, or none, plays. A paused video
+  /// stays docked: the mini player is for one still playing.
   void setFloating(String messageGid, {required bool floating}) {
     // Called a frame late from widgets going away: the app may be too.
     if (!ref.mounted) return;
     final current = state;
     if (current == null || current.messageGid != messageGid) return;
+    if (floating && !current.floating && !current.player.value.isPlaying) {
+      return;
+    }
     if (current.floating != floating) {
       state = current.copyWith(floating: floating);
     }

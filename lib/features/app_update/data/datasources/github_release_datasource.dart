@@ -9,6 +9,9 @@ typedef GitHubRelease = ({
   String tagName,
   String htmlUrl,
 
+  /// The release description (GitHub Markdown); empty when there is none.
+  String notes,
+
   /// Asset name → browser download URL.
   Map<String, String> assets,
 });
@@ -54,7 +57,13 @@ class GitHubReleaseDatasource {
         if (name is String && url is String) assets[name] = url;
       }
     }
-    return (tagName: tagName, htmlUrl: htmlUrl, assets: assets);
+    final notes = body['body'];
+    return (
+      tagName: tagName,
+      htmlUrl: htmlUrl,
+      notes: notes is String ? notes.trim() : '',
+      assets: assets,
+    );
   }
 
   Future<String> readText(String url) async {

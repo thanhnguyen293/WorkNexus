@@ -33,4 +33,21 @@ void main() {
     expect(result.failureOrNull, isA<UnexpectedFailure>());
     verifyNever(() => repo.sendText(any(), any(), any()));
   });
+
+  test('markdown has trailing spaces moved out of emphasis', () async {
+    when(
+      () => repo.sendText('a', 'g', '**hi** there', markdown: true),
+    ).thenAnswer((_) async => const Ok(null));
+
+    await send(
+      accountId: 'a',
+      chatGid: 'g',
+      text: '**hi **there',
+      markdown: true,
+    );
+
+    verify(
+      () => repo.sendText('a', 'g', '**hi** there', markdown: true),
+    ).called(1);
+  });
 }

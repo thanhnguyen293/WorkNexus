@@ -2,24 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/error/result.dart';
+import '../../../../core/navigation/open_storage.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/cache_section.dart';
-import '../providers/local_cache_providers.dart';
-import 'clear_cache_dialog.dart';
 
-/// Settings' "Local data" card: clears picked parts of the synced cache.
-/// [onCleared] gets them back — the app shell resyncs and reconnects, which
-/// reaches into features this one must not know.
+/// Settings' "Storage & cache" card: the way into the app's storage dialog
+/// (downloaded chat files and the synced local data).
 class LocalCacheCard extends ConsumerWidget {
-  const LocalCacheCard({required this.onCleared, super.key});
-
-  final void Function(Set<CacheSection> sections) onCleared;
+  const LocalCacheCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,7 +24,7 @@ class LocalCacheCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l.localCacheTitle,
+          l.storageTitle,
           style: context.typography.titleLg.copyWith(color: c.textPrimary),
         ),
         SizedBox(height: s.xs),
@@ -58,13 +52,13 @@ class LocalCacheCard extends ConsumerWidget {
               ),
               SizedBox(width: s.xl),
               AppButton.outlinedNeutral(
-                onPressed: () => clearLocalCacheFlow(context, ref, onCleared),
+                onPressed: () => ref.read(openStorageProvider)?.call(context),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   spacing: s.sm,
                   children: [
                     Icon(LucideIcons.broom300, size: s.xl3),
-                    Text(l.clearCache),
+                    Text(l.storageOpen),
                   ],
                 ),
               ),
@@ -73,27 +67,5 @@ class LocalCacheCard extends ConsumerWidget {
         ),
       ],
     );
-  }
-}
-
-/// Asks which parts to clear, clears them, then hands them to [onCleared]
-/// and says so; a failure is shown instead. Shared by the Settings card and
-/// Quick Settings.
-Future<void> clearLocalCacheFlow(
-  BuildContext context,
-  WidgetRef ref,
-  void Function(Set<CacheSection> sections) onCleared,
-) async {
-  final l = AppL10n.of(context);
-  final messenger = ScaffoldMessenger.of(context);
-  final sections = await showClearCacheDialog(context);
-  if (sections == null) return;
-  final result = await ref.read(clearLocalCacheProvider)(sections);
-  switch (result) {
-    case Ok():
-      onCleared(sections);
-      messenger.showSnackBar(SnackBar(content: Text(l.cacheCleared)));
-    case Err(:final failure):
-      messenger.showSnackBar(SnackBar(content: Text(failure.message)));
   }
 }

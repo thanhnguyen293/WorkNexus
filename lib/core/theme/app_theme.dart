@@ -44,7 +44,7 @@ ThemeData buildAppTheme({
           selectionBorder: accent.withValues(alpha: 0.5),
         );
   final requestedFamily = fontFamily.trim();
-  // Some families (Be Vietnam Pro, Geist Mono) are served by google_fonts under
+  // Some families (Geist Mono) are served by google_fonts under
   // a generated family name; the rest are bundled/system names used as-is.
   final googleFont = kGoogleFontFamilies[requestedFamily];
   final String? family = requestedFamily.isEmpty

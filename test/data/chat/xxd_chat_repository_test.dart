@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +7,7 @@ import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
+import 'package:work_nexus/features/chat/data/datasources/chat_file_cache.dart';
 import 'package:work_nexus/features/chat/data/datasources/chat_local_datasource.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_connection.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_server_info.dart';
@@ -12,6 +15,7 @@ import 'package:work_nexus/features/chat/data/repositories/xxd_chat_repository.d
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 
 import 'support/fake_xxd_server.dart';
@@ -52,6 +56,7 @@ void main() {
   late AppDatabase db;
   late FakeXxdServer server;
   late FakeXxdHttp http;
+  late Directory filesDir;
   late _MemoryCredentialStore store;
   late XxdChatRepository repo;
   late List<XxdCredentials> opened;
@@ -120,6 +125,7 @@ void main() {
             },
         ],
         'chatstar' => {'gid': params[1], 'star': params[0]},
+        'userupdate' => {'id': 40, ...(params.first! as Map)},
         'chatgetmessageinfo' => {'lastMessage': 120, 'messageCount': 120},
         'chatsetlastreadmessagebyindex' => {'gid': params[0], 'id': params[1]},
         // `[cgid, startId, reverse, limit, returnID]`: 50 back from startId,
@@ -149,6 +155,7 @@ void main() {
             };
     };
     http = FakeXxdHttp(serverInfoOk());
+    filesDir = Directory.systemTemp.createTempSync('wn_chat_files_');
     opened = [];
     errors = [];
     repo = XxdChatRepository(
@@ -166,12 +173,14 @@ void main() {
       },
       onError: (e, _) => errors.add(e),
       http: http,
+      files: ChatFileCache(root: () async => filesDir),
       now: () => now,
     );
   });
 
   tearDown(() async {
     await repo.disconnect(_acc);
+    if (filesDir.existsSync()) filesDir.deleteSync(recursive: true);
     await db.close();
     expect(errors, isEmpty);
   });
@@ -407,6 +416,37 @@ void main() {
     );
   });
 
+  test('setting my presence sends userupdate; pushes update others', () async {
+    await repo.connect(_acc);
+    await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 40),
+    );
+
+    final r = await repo.setMyPresence(_acc, ChatPresence.meeting);
+    expect(r, isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'userupdate')['params'],
+      [
+        {'account': 'demo', 'status': 'meeting'},
+      ],
+    );
+    await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 40 && x.status == 'meeting'),
+    );
+
+    server.current.push({
+      'method': 'userupdate',
+      'result': 'success',
+      'data': {'id': 40, 'status': 'away'},
+    });
+    await eventually(
+      repo.watchUsers(_acc),
+      (u) => u.any((x) => x.userId == 40 && x.status == 'away'),
+    );
+  });
+
   test('role names come from sysgetdepts, asked once', () async {
     server.onRequest = (req) => req['method'] == 'sysgetdepts'
         ? {
@@ -513,6 +553,35 @@ void main() {
       after.singleWhere((m) => m.gid == failed.gid).sendState,
       SendState.sent,
     );
+  });
+
+  test('cancelling an upload removes the message, never sends it', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+    final sending = repo.sendFile(
+      _acc,
+      'g1',
+      name: 'a.pdf',
+      bytes: Uint8List.fromList([1, 2, 3]),
+    );
+    final pending = await eventually(
+      repo.watchMessages(_acc, 'g1'),
+      (l) => l.any((m) => m.sendState == SendState.pending),
+    );
+    final gid = pending
+        .singleWhere((m) => m.sendState == SendState.pending)
+        .gid;
+
+    expect((await repo.cancelUpload(_acc, gid)).isOk, isTrue);
+    expect((await sending).isOk, isTrue);
+    await eventually(
+      repo.watchMessages(_acc, 'g1'),
+      (l) => l.every((m) => m.gid != gid),
+    );
+    expect(server.requests.where((r) => r['method'] == 'messagesend'), isEmpty);
+    // Nothing left to cancel.
+    expect((await repo.cancelUpload(_acc, gid)).isOk, isFalse);
   });
 
   test(
@@ -776,6 +845,30 @@ void main() {
       expect(uri.queryParameters['sid'], hasLength(32));
     },
   );
+
+  test('a saved copy is remembered while it exists', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchStatus(_acc), (s) => s is ChatOnline);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    const file = MessageContent.file(
+      fileId: 501,
+      name: 'notes.md',
+      size: 3,
+      time: 1790842835000,
+    );
+    final dir = Directory.systemTemp.createTempSync('wn_saved_');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final target = '${dir.path}/notes.md';
+
+    expect(await repo.savedAttachmentCopy(_acc, file), isNull);
+    final saved = await repo.saveAttachmentCopy(_acc, file, target);
+    expect(saved.failureOrNull, isNull);
+    expect(File(target).readAsBytesSync(), [1, 2, 3]);
+    expect(await repo.savedAttachmentCopy(_acc, file), target);
+
+    File(target).deleteSync();
+    expect(await repo.savedAttachmentCopy(_acc, file), isNull);
+  });
 
   test('text messages have no attachment', () async {
     final result = await repo.loadAttachment(

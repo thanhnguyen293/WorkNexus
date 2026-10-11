@@ -5,6 +5,7 @@ typedef UpdateVersionSnapshot = ({
   String currentVersion,
   String latestVersion,
   String releaseUrl,
+  String releaseNotes,
   String? downloadUrl,
   String? sha256,
 });

@@ -235,13 +235,13 @@ class AppSettings {
 /// `null` can distinguish "reset to theme accent".
 const Object _unset = Object();
 
-/// The selectable UI fonts. Be Vietnam Pro / Geist Mono are served via
-/// `google_fonts`; Space Grotesk / Space Mono are bundled in `assets/fonts/`;
+/// The selectable UI fonts. Geist Mono is served via `google_fonts`; Be
+/// Vietnam Pro / Space Grotesk / Space Mono are bundled in `assets/fonts/`;
 /// the rest are standard macOS system families (rendered via the platform font
 /// manager, with a fallback to the bundled sans if unavailable).
 const List<String> kFontChoices = <String>[
   kSystemFont,
-  kVietnamFont, // Be Vietnam Pro (default, via google_fonts)
+  kVietnamFont, // Be Vietnam Pro (default, bundled)
   kSansFont, // Space Grotesk (bundled)
   'Helvetica Neue',
   'Avenir Next',

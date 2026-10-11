@@ -29,6 +29,7 @@ import '../../domain/usecases/send_sticker.dart';
 import '../../domain/usecases/send_text_message.dart';
 import '../../domain/usecases/should_notify_chat_message.dart';
 import '../../domain/usecases/trust_chat_certificate.dart';
+import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/message_content.dart';
 
 /// The chat view's commands. Each delegates to one use case; widgets show the
@@ -104,6 +105,10 @@ class ChatController {
     ChatConversation chat, {
     required bool muted,
   }) => _repository.setChatMuted(chat.accountId, chat.gid, muted: muted);
+
+  /// Sets your own presence (a CRUD pass-through).
+  Future<Result<void>> setMyPresence(String accountId, ChatPresence presence) =>
+      _repository.setMyPresence(accountId, presence);
 
   /// Pins or unpins a chat at the top of the list (a CRUD pass-through).
   Future<Result<void>> setChatStarred(
@@ -310,6 +315,24 @@ class ChatController {
   ) => _open(accountId: accountId, content: content);
 
   /// Stops downloading an attachment the user opened.
+  /// Saves a copy of an attachment at [targetPath] (a pass-through).
+  Future<Result<void>> saveAttachmentCopy(
+    String accountId,
+    MessageContent content,
+    String targetPath,
+  ) => _repository.saveAttachmentCopy(accountId, content, targetPath);
+
+  /// The user's last saved copy of an attachment, if still on disk.
+  Future<String?> savedAttachmentCopy(
+    String accountId,
+    MessageContent content,
+  ) => _repository.savedAttachmentCopy(accountId, content);
+
+  /// Stops sending a file still uploading and removes its message (a CRUD
+  /// pass-through).
+  Future<Result<void>> cancelUpload(String accountId, String messageGid) =>
+      _repository.cancelUpload(accountId, messageGid);
+
   void cancelDownload(String accountId, MessageContent content) =>
       _repository.cancelDownload(accountId, content);
 

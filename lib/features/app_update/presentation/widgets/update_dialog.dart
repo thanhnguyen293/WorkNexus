@@ -12,9 +12,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/available_update.dart';
 import '../providers/update_controller.dart';
 import '../providers/update_state.dart';
+import 'update_release_notes.dart';
 
-/// Widest the dialog grows, in logical pixels: a phone-sized card.
-const _dialogMaxWidth = 420.0;
+/// Widest the dialog grows, in logical pixels: roomy enough for release
+/// notes to read like a page rather than a narrow column.
+const _dialogMaxWidth = 640.0;
 
 /// Shows [update] after a manual check: the download the controller already
 /// started, then a restart into it. Without an in-app build for this platform,
@@ -60,6 +62,10 @@ class UpdateDialog extends ConsumerWidget {
                 from: update.currentVersion,
                 to: update.latestVersion,
               ),
+              if (update.releaseNotes.isNotEmpty) ...[
+                SizedBox(height: context.spacing.xl2),
+                UpdateReleaseNotes(notes: update.releaseNotes),
+              ],
               SizedBox(height: context.spacing.xl2),
               if (busy)
                 _Progress(state: state)

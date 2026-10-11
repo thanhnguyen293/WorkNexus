@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +43,10 @@ void main() {
 
   tearDown(() => mine.deleteSync(recursive: true));
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    ValueChanged<String>? onInsert,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -69,7 +71,7 @@ void main() {
             body: Center(
               child: ChatEmojiPanel(
                 thread: (accountId: 'acc', chatGid: 'g1'),
-                onInsert: (_) {},
+                onInsert: onInsert ?? (_) {},
                 onSent: () => sent++,
               ),
             ),
@@ -81,27 +83,25 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a large emoji is sent in its wire form and closes the panel', (
-    tester,
-  ) async {
-    await pump(tester);
-    await tester.tap(find.text('Stickers'));
+  testWidgets('an emoji is inserted and leaves the panel open', (tester) async {
+    final inserted = <String>[];
+    await pump(tester, onInsert: inserted.add);
+    await tester.tap(find.text('Emoji'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('😀').last);
+    await tester.tap(find.text('😀'));
     await tester.pumpAndSettle();
 
-    verify(() => chats.sendEmoji('acc', 'g1', ':grinning:')).called(1);
-    expect(sent, 1);
+    expect(inserted, ['😀']);
+    expect(sent, 0);
+    verifyNever(() => chats.sendEmoji(any(), any(), any()));
   });
 
-  testWidgets('the bundled set has its own tab and sends as an image', (
-    tester,
-  ) async {
+  testWidgets('sets are switched from the pack bar; a sticker sends as an '
+      'image and closes the panel', (tester) async {
     await pump(tester);
-    expect(find.text('My stickers'), findsOneWidget);
-    await tester.ensureVisible(find.text('WorkNexus'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('WorkNexus'));
+    // No stickers of the user's own yet: the first bundled set shows.
+    expect(find.byTooltip('My stickers'), findsOneWidget);
+    await tester.tap(find.byTooltip('WorkNexus'));
     await tester.pumpAndSettle();
     await tester.runAsync(() async {
       await tester.tap(find.byType(Image).first);
@@ -117,5 +117,14 @@ void main() {
         bytes: any(named: 'bytes', that: isNotEmpty),
       ),
     ).called(1);
+    expect(sent, 1);
+  });
+
+  testWidgets("the user's own set offers adding when empty", (tester) async {
+    await pump(tester);
+    await tester.tap(find.byTooltip('My stickers'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Save as sticker'), findsOneWidget);
   });
 }

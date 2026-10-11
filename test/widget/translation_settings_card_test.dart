@@ -23,6 +23,9 @@ void main() {
       ProviderScope(
         overrides: [
           openCodeModelsProvider.overrideWith((ref) async => const <String>[]),
+          translationApiModelsProvider.overrideWith(
+            (ref, query) async => const Ok(['m', 'm-2']),
+          ),
           translationApiConfigProvider.overrideWith(
             (ref) async => const Ok(
               TranslationApiConfig(
@@ -51,12 +54,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Google Gemini'), findsOneWidget);
-    expect(find.text('Translation model'), findsNothing);
+    expect(find.text('Translation provider'), findsNothing);
 
     await tester.tap(find.text('Translation'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Translation model'), findsOneWidget);
-    expect(find.text('Translate with an API key'), findsOneWidget);
+    // One provider section: the saved Gemini key, with Gemini's own models.
+    expect(find.text('Translation provider'), findsOneWidget);
+    expect(find.text('API key'), findsOneWidget);
+    expect(find.text('m'), findsOneWidget);
   });
 }

@@ -29,6 +29,7 @@ void main() {
             currentVersion: '1.0.9',
             latestVersion: 'v1.1.0',
             releaseUrl: 'https://github.com/example/WorkNexus/releases',
+            releaseNotes: '- Faster sync',
             downloadUrl: null,
             sha256: null,
           )),
@@ -38,6 +39,7 @@ void main() {
       final result = await useCase();
 
       expect(result.valueOrNull?.latestVersion, 'v1.1.0');
+      expect(result.valueOrNull?.releaseNotes, '- Faster sync');
     });
 
     test(
@@ -49,6 +51,7 @@ void main() {
               currentVersion: '1.2.0',
               latestVersion: 'v1.2.0',
               releaseUrl: 'https://github.com/example/WorkNexus/releases',
+              releaseNotes: '',
               downloadUrl: null,
               sha256: null,
             )),
@@ -60,6 +63,7 @@ void main() {
               currentVersion: '2.0.0',
               latestVersion: 'v1.9.9',
               releaseUrl: 'https://github.com/example/WorkNexus/releases',
+              releaseNotes: '',
               downloadUrl: null,
               sha256: null,
             )),
@@ -78,6 +82,7 @@ void main() {
             currentVersion: '1.2.0-rc.1',
             latestVersion: 'v1.2.0',
             releaseUrl: 'https://github.com/example/WorkNexus/releases',
+            releaseNotes: '',
             downloadUrl: null,
             sha256: null,
           )),
@@ -99,6 +104,7 @@ void main() {
               currentVersion: '1.0.0',
               latestVersion: 'v1.1.0-alpha.1',
               releaseUrl: 'https://github.com/example/WorkNexus/releases',
+              releaseNotes: '',
               downloadUrl: null,
               sha256: null,
             )),
@@ -117,6 +123,7 @@ void main() {
             currentVersion: '1.0',
             latestVersion: 'v1.1.0',
             releaseUrl: 'https://github.com/example/WorkNexus/releases',
+            releaseNotes: '',
             downloadUrl: null,
             sha256: null,
           )),
