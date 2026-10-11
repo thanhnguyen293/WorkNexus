@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/translation_languages.dart';
-import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
+import 'detail_underline_tabs.dart';
 
 /// The detail panel's horizontal tab strip.
 class DetailTabBar extends ConsumerWidget {
@@ -18,7 +14,6 @@ class DetailTabBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final lang = translationLanguageFor(
       ref.watch(appSettingsProvider.select((s) => s.translationLang)),
@@ -27,38 +22,10 @@ class DetailTabBar extends ConsumerWidget {
       DetailTab.original: l.original,
       DetailTab.translation: '${lang.flag} ${lang.nativeName}',
     };
-    return Container(
-      decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final e in labels.entries)
-              HoverSurface(
-                onTap: () => ref.read(detailTabProvider.notifier).set(e.key),
-                height: 38,
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-                border: Border(
-                  bottom: BorderSide(
-                    color: e.key == current ? c.accent : Colors.transparent,
-                    width: context.borders.thick,
-                  ),
-                ),
-                child: Text(
-                  e.value,
-                  style: context.typography.secondary.copyWith(
-                    fontWeight: e.key == current
-                        ? FontWeight.w600
-                        : FontWeight.w500,
-                    color: e.key == current ? c.textPrimary : c.textSecondary,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+    return DetailUnderlineTabs<DetailTab>(
+      labels: labels,
+      current: current,
+      onSelect: (tab) => ref.read(detailTabProvider.notifier).set(tab),
     );
   }
 }

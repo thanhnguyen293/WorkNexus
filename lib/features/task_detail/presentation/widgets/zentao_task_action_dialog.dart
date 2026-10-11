@@ -11,6 +11,8 @@ import '../../../../core/domain/value_objects/zentao_task_action_input.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/check_zentao_task_input.dart';
 import 'action_dialog_scaffold.dart';
@@ -72,7 +74,6 @@ class _ZenTaoTaskActionDialogState
 
   Future<void> _submit(String label) async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final ticket = widget.ticket;
     setState(() => _busy = true);
@@ -80,12 +81,12 @@ class _ZenTaoTaskActionDialogState
         .read(zenTaoWorkflowServiceProvider)
         .runTaskAction(ticket, widget.action, _input);
     if (!mounted) return;
-    navigator.pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(zenTaoActionOutcome(l, res, label, ticket.externalKey)),
-      ),
+    showAppSnack(
+      context,
+      zenTaoActionOutcome(l, res, label, ticket.externalKey),
+      isError: !res.isOk,
     );
+    navigator.pop();
   }
 
   @override
@@ -101,9 +102,9 @@ class _ZenTaoTaskActionDialogState
     ));
     final asksHours = action.asksSpent || action.asksLeft;
     return ActionScaffold(
-      emoji: look.emoji,
       title: l.zentaoActionTitle(look.label, widget.ticket.externalKey),
       submitLabel: look.label,
+      icon: look.icon,
       busy: _busy,
       canSubmit: problem == null,
       onSubmit: () => _submit(look.label),
@@ -206,7 +207,7 @@ class _HoursField extends StatelessWidget {
           style: context.typography.body.copyWith(
             color: context.colors.textPrimary,
           ),
-          decoration: dropDecoration(context),
+          decoration: appInputDecoration(context),
         ),
       ],
     );

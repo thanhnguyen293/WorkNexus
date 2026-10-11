@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
+import 'chat_composer_toolbar.dart';
 import 'chat_emoji_panel.dart';
 
 /// Tool-row button opening the emoji and sticker panel. Emoji are inserted
@@ -43,7 +42,6 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final s = context.spacing;
     return MenuAnchor(
       controller: _menu,
@@ -57,21 +55,11 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
           onSent: _menu.close,
         ),
       ],
-      builder: (context, menu, _) => IconButton(
+      builder: (context, menu, _) => ChatComposerToolButton(
+        icon: LucideIcons.smile300,
         tooltip: AppL10n.of(context).chatEmoji,
-        isSelected: menu.isOpen,
+        selected: menu.isOpen,
         onPressed: () => menu.isOpen ? menu.close() : menu.open(),
-        iconSize: s.xl5,
-        style: IconButton.styleFrom(
-          backgroundColor: menu.isOpen ? c.selectionFill : null,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-          ),
-        ),
-        icon: Icon(
-          LucideIcons.smile300,
-          color: menu.isOpen ? c.accent : c.textSecondary,
-        ),
       ),
     );
   }

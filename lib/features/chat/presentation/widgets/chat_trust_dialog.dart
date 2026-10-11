@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../providers/chat_providers.dart';
@@ -63,25 +66,33 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final s = context.spacing;
     final l = AppL10n.of(context);
-    final mono = context.typography.bodySm.copyWith(
-      color: c.textPrimary,
-      fontFamily: 'monospace',
-    );
+    final error = _error;
+    final mono = context.typography.mono.copyWith(color: c.textPrimary);
     final label = context.typography.captionStrong.copyWith(
       color: c.textSecondary,
     );
-    return AlertDialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      title: Text(
-        l.chatTrustTitle,
-        style: context.typography.title.copyWith(color: c.textPrimary),
-      ),
-      content: SizedBox(
-        width: 440,
+    return AppDialogFrame(
+      title: l.chatTrustTitle,
+      maxWidth: context.sizes.dialogMd,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        AppButton.filled(
+          size: AppButtonSize.small,
+          icon: LucideIcons.shieldCheck300,
+          isLoading: _busy,
+          onPressed: _busy ? null : _trust,
+          child: Text(l.chatTrustAction),
+        ),
+      ],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,36 +103,21 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
                 color: c.textSecondary,
               ),
             ),
-            SizedBox(height: context.spacing.xl3),
+            SizedBox(height: s.xl3),
             Text(l.chatTrustFingerprint, style: label),
-            SizedBox(height: context.spacing.xs),
+            SizedBox(height: s.xs),
             SelectableText(widget.request.fingerprint, style: mono),
-            SizedBox(height: context.spacing.xl),
+            SizedBox(height: s.xl),
             Text(l.chatTrustIssuer, style: label),
-            SizedBox(height: context.spacing.xs),
+            SizedBox(height: s.xs),
             SelectableText(widget.request.issuer, style: mono),
-            if (_error != null) ...[
-              SizedBox(height: context.spacing.xl),
-              Text(
-                _error!,
-                style: context.typography.bodySm.copyWith(color: c.error),
-              ),
+            if (error != null) ...[
+              SizedBox(height: s.xl),
+              AppInlineNote(text: error, isError: true),
             ],
           ],
         ),
       ),
-      actions: [
-        AppButton.textNeutral(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
-        ),
-        SizedBox(width: context.spacing.md),
-        AppButton.filled(
-          isLoading: _busy,
-          onPressed: _busy ? null : _trust,
-          child: Text(l.chatTrustAction),
-        ),
-      ],
     );
   }
 }

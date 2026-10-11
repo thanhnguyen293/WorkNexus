@@ -6,7 +6,9 @@ import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/notification_providers.dart';
 import '../util/notification_actions.dart';
@@ -31,7 +33,7 @@ class NotificationsHeader extends ConsumerWidget {
     void setTab(bool v) =>
         ref.read(notificationsUnreadOnlyProvider.notifier).state = v;
     return Container(
-      padding: EdgeInsets.fromLTRB(s.xl, s.md, s.sm, 0),
+      padding: EdgeInsets.fromLTRB(s.xl, s.md, s.sm, s.lg),
       decoration: BoxDecoration(
         color: c.surface,
         border: Border(bottom: context.hairlineSide),
@@ -44,15 +46,16 @@ class NotificationsHeader extends ConsumerWidget {
               Expanded(
                 child: Text(
                   l.notifications,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: context.typography.title.copyWith(
                     color: c.textPrimary,
                   ),
                 ),
               ),
-              IconButton(
+              AppIconButton(
+                icon: LucideIcons.checkCheck300,
                 tooltip: l.notificationsMarkAllRead,
-                color: c.textSecondary,
-                icon: const Icon(LucideIcons.checkCheck300),
                 onPressed: unread == 0
                     ? null
                     : () {
@@ -65,14 +68,18 @@ class NotificationsHeader extends ConsumerWidget {
                         }
                       },
               ),
-              IconButton(
+              AppIconButton(
+                icon: LucideIcons.trash300,
                 tooltip: l.notificationsDeleteRead,
-                color: c.textSecondary,
-                icon: const Icon(LucideIcons.trash300),
                 onPressed: () async {
-                  if (!await _confirmDeleteRead(context) || !context.mounted) {
-                    return;
-                  }
+                  final confirmed = await AppConfirmDialog.show(
+                    context,
+                    title: l.notificationsDeleteRead,
+                    message: l.notificationsDeleteReadConfirm,
+                    confirmLabel: l.notificationsDelete,
+                    destructive: true,
+                  );
+                  if (!confirmed || !context.mounted) return;
                   for (final a in accounts) {
                     await runNotificationCommand(
                       context,
@@ -83,107 +90,37 @@ class NotificationsHeader extends ConsumerWidget {
                   }
                 },
               ),
-              IconButton(
+              AppIconButton(
+                icon: LucideIcons.rotateCw300,
                 tooltip: l.refresh,
-                color: c.textSecondary,
-                onPressed: refreshing
-                    ? null
-                    : () => ref
-                          .read(notificationsRefreshProvider.notifier)
-                          .refresh(),
-                icon: refreshing
-                    ? SizedBox.square(
-                        dimension: s.xl3,
-                        child: const CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(LucideIcons.rotateCw300),
+                isLoading: refreshing,
+                onPressed: () =>
+                    ref.read(notificationsRefreshProvider.notifier).refresh(),
               ),
-              IconButton(
-                tooltip: MaterialLocalizations.of(context).closeButtonLabel,
-                color: c.textSecondary,
+              AppIconButton(
+                icon: LucideIcons.x300,
+                tooltip: l.close,
                 onPressed: onClose,
-                icon: const Icon(LucideIcons.x300),
               ),
             ],
           ),
-          Row(
-            children: [
-              _Tab(
-                label: l.notificationsUnread(unread),
-                selected: unreadOnly,
+          SizedBox(height: s.md),
+          AppSegmentedTabs(
+            tabs: [
+              AppSegmentedTab(
+                label: l.notificationsUnreadTab,
+                count: unread,
+                active: unreadOnly,
                 onTap: () => setTab(true),
               ),
-              SizedBox(width: s.lg),
-              _Tab(
+              AppSegmentedTab(
                 label: l.notificationsAll,
-                selected: !unreadOnly,
+                active: !unreadOnly,
                 onTap: () => setTab(false),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-Future<bool> _confirmDeleteRead(BuildContext context) async {
-  final l = AppL10n.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      content: Text(l.notificationsDeleteReadConfirm),
-      actions: [
-        AppButton.textNeutral(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(l.cancel),
-        ),
-        AppButton.error(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l.notificationsDelete),
-        ),
-      ],
-    ),
-  );
-  return ok ?? false;
-}
-
-/// A text tab with an accent underline when [selected].
-class _Tab extends StatelessWidget {
-  const _Tab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    final t = context.typography;
-    return InkWell(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.sm),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: selected ? c.accent : Colors.transparent,
-              width: context.borders.thick,
-            ),
-          ),
-        ),
-        child: Text(
-          label,
-          style: (selected ? t.bodyStrong : t.body).copyWith(
-            color: selected ? c.accent : c.textSecondary,
-          ),
-        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/provider_color.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'metadata_editor_parts.dart';
 
@@ -78,12 +79,18 @@ class _LabelsEditorState extends State<LabelsEditor> {
           child: FutureBuilder<Result<List<ProviderLabelOption>>>(
             future: _options,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const AppStateView.error(compact: true);
+              }
               final result = snapshot.data;
               if (result == null) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppStateView.loading(compact: true);
               }
               if (result case Err<List<ProviderLabelOption>>(:final failure)) {
-                return EditorMessage(message: failure.message, isError: true);
+                return AppStateView.error(
+                  compact: true,
+                  message: failure.message,
+                );
               }
               final options = (result as Ok<List<ProviderLabelOption>>).value;
               final query = _query.trim().toLowerCase();
@@ -95,7 +102,9 @@ class _LabelsEditorState extends State<LabelsEditor> {
                         )
                         .toList();
               if (visible.isEmpty) {
-                return EditorMessage(message: l.noProjectLabels);
+                return EditorMessage(
+                  message: options.isEmpty ? l.noProjectLabels : l.noMatches,
+                );
               }
               return ListView(
                 padding: EdgeInsets.only(bottom: context.spacing.xs),

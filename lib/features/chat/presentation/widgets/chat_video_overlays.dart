@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
@@ -89,8 +92,8 @@ class _PlayGlyph extends StatelessWidget {
     child: Padding(
       padding: EdgeInsets.only(left: context.spacing.xxs),
       child: Icon(
-        Icons.play_arrow_rounded,
-        size: context.spacing.xl4,
+        LucideIcons.play300,
+        size: context.sizes.iconLg,
         color: context.colors.onScrim,
       ),
     ),
@@ -140,6 +143,39 @@ class ChatVideoTimeCorner extends StatelessWidget {
           // The size already shows at the top: just the arrow.
           AttachmentDownloadBadge(accountId: accountId, content: file, size: 0),
         ],
+      ],
+    );
+  }
+}
+
+/// The player's failed state on the dark backdrop: a plain "couldn't play"
+/// with the cause as [detail] under it.
+class ChatVideoFailure extends StatelessWidget {
+  const ChatVideoFailure({super.key, required this.detail});
+
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = context.colors.onScrim;
+    final s = context.spacing;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(LucideIcons.videoOff300, size: context.sizes.iconXl, color: ink),
+        SizedBox(height: s.md),
+        Text(
+          AppL10n.of(context).chatVideoFailed,
+          style: context.typography.titleSm.copyWith(color: ink),
+        ),
+        SizedBox(height: s.xs),
+        Text(
+          detail,
+          textAlign: TextAlign.center,
+          style: context.typography.bodySm.copyWith(
+            color: ink.withValues(alpha: 0.75),
+          ),
+        ),
       ],
     );
   }

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_dashboard.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
@@ -108,12 +110,13 @@ class DashboardHeadline extends ConsumerWidget {
 class DashboardAvatar extends StatelessWidget {
   const DashboardAvatar({super.key, required this.name});
 
+  static const double _size = 56;
+
   final String name;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final size = context.spacing.xl6 * 1.4;
     final initials = name
         .trim()
         .split(RegExp(r'\s+'))
@@ -122,8 +125,8 @@ class DashboardAvatar extends StatelessWidget {
         .map((w) => w.characters.first.toUpperCase())
         .join();
     return Container(
-      width: size,
-      height: size,
+      width: _size,
+      height: _size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: c.mixT(c.accent, 0.16),
@@ -138,8 +141,9 @@ class DashboardAvatar extends StatelessWidget {
 }
 
 /// A count in the headline, tinted by its kind and underlined like a link;
-/// the underline takes the full color on hover.
-class _CountLink extends StatefulWidget {
+/// the underline takes the full color on hover. Focusable, so the counts open
+/// their lists from the keyboard too.
+class _CountLink extends StatelessWidget {
   const _CountLink({
     required this.text,
     required this.style,
@@ -153,27 +157,22 @@ class _CountLink extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_CountLink> createState() => _CountLinkState();
-}
-
-class _CountLinkState extends State<_CountLink> {
-  bool _hover = false;
-
-  @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return MouseRegion(
+    // HoverRegion feeds the underline; HoverSurface adds the tap, keyboard
+    // focus ring and button semantics without tinting a fill behind text.
+    return HoverRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
+      builder: (context, hovered, _) => HoverSurface(
+        onTap: onTap,
+        tintOnHover: false,
+        borderRadius: BorderRadius.circular(context.radii.xs),
         child: Text(
-          widget.text,
-          style: widget.style.copyWith(
-            color: widget.color,
+          text,
+          style: style.copyWith(
+            color: color,
             decoration: TextDecoration.underline,
-            decorationColor: _hover ? widget.color : c.mixT(widget.color, 0.35),
+            decorationColor: hovered ? color : c.mixT(color, 0.35),
             decorationThickness: 2,
           ),
         ),

@@ -8,11 +8,16 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
+import 'metadata_editor_parts.dart';
 
 /// Multi-select reviewer picker for a GitLab MR / GitHub PR. Candidates are the
 /// ticket's provider members; the current reviewers are pre-checked. Submitting
@@ -73,7 +78,6 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
 
   Future<void> _submit() async {
     final l = AppL10n.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     setState(() => _busy = true);
     final res = await getIt<SyncService>().setReviewers(
@@ -81,44 +85,43 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
       _selected.toList(),
     );
     if (!mounted) return;
-    navigator.pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          res.isOk
-              ? l.reviewersUpdated
-              : 'Failed: ${res.failureOrNull?.message ?? 'error'}',
-        ),
-      ),
+    showAppSnack(
+      context,
+      res.isOk
+          ? l.reviewersUpdated
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
     );
+    navigator.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
-    final c = context.colors;
     final users = ref.watch(providerUsersProvider(widget.ticket.id));
     return ActionScaffold(
-      emoji: '👀',
-      title: '${l.reviewers} #${widget.ticket.externalKey}',
+      title: l.zentaoActionTitle(l.reviewers, widget.ticket.externalKey),
       submitLabel: l.save,
+      icon: LucideIcons.users300,
       busy: _busy,
       onSubmit: _submit,
       child: users.when(
-        loading: () => Padding(
-          padding: EdgeInsets.all(context.spacing.xl2),
-          child: const Center(child: CircularProgressIndicator()),
-        ),
-        error: (_, _) => Text(
-          'Could not load users',
-          style: context.typography.bodySm.copyWith(color: c.error),
+        loading: () => const AppStateView.loading(compact: true),
+        error: (_, _) => AppStateView.error(
+          compact: true,
+          title: l.taskDetailUsersLoadFailed,
+          onRetry: () =>
+              ref.invalidate(providerUsersProvider(widget.ticket.id)),
         ),
         data: (list) {
           _initSelection(list);
           if (list.isEmpty) {
-            return Text(
-              'No assignable users',
-              style: context.typography.bodySm.copyWith(color: c.textTertiary),
+            return AppStateView.empty(
+              compact: true,
+              icon: LucideIcons.users300,
+              title: l.taskDetailNoAssignableUsers,
             );
           }
           final visible = _visible(list);
@@ -127,26 +130,20 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FieldLabel(l.reviewers),
-              _UserSearchBox(
+              AppSearchField(
                 controller: _search,
                 hint: l.searchUsers,
+                autofocus: true,
                 onChanged: (v) => setState(() => _query = v),
               ),
               SizedBox(height: context.spacing.sm),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 260),
+                // Room for about seven rows before the list scrolls.
+                constraints: BoxConstraints(
+                  maxHeight: context.sizes.controlLg * 7,
+                ),
                 child: visible.isEmpty
-                    ? Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: context.spacing.xl2,
-                        ),
-                        child: Text(
-                          l.noMatchingUsers,
-                          style: context.typography.bodySm.copyWith(
-                            color: c.textTertiary,
-                          ),
-                        ),
-                      )
+                    ? EditorMessage(message: l.noMatchingUsers)
                     : ListView(
                         shrinkWrap: true,
                         children: [
@@ -168,57 +165,6 @@ class _ReviewersDialogState extends ConsumerState<ReviewersDialog> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-/// Search input that filters the reviewer candidates. Mirrors the search box
-/// used by [SearchableDropdownField] so the two pickers read the same.
-class _UserSearchBox extends StatelessWidget {
-  const _UserSearchBox({
-    required this.controller,
-    required this.hint,
-    required this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final spacing = context.spacing;
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      style: context.typography.body.copyWith(color: c.textPrimary),
-      decoration: InputDecoration(
-        isDense: true,
-        filled: true,
-        fillColor: c.surfaceSubtle,
-        hintText: hint,
-        hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-        prefixIcon: Icon(
-          LucideIcons.search300,
-          size: 18,
-          color: c.textTertiary,
-        ),
-        prefixIconConstraints: BoxConstraints(minWidth: spacing.xl6),
-        contentPadding: EdgeInsets.symmetric(vertical: spacing.lg),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(context.radii.md),
-          borderSide: BorderSide(color: c.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(context.radii.md),
-          borderSide: BorderSide(color: c.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(context.radii.md),
-          borderSide: BorderSide(color: c.accent),
-        ),
       ),
     );
   }
@@ -248,8 +194,8 @@ class _ReviewerTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected ? LucideIcons.checkSquare500 : LucideIcons.square300,
-              size: 18,
+              selected ? LucideIcons.squareCheck500 : LucideIcons.square300,
+              size: context.sizes.iconMd,
               color: selected ? c.accent : c.textTertiary,
             ),
             SizedBox(width: context.spacing.md),

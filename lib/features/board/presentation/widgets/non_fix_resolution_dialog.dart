@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_dropdown.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 
+/// Asks which non-fix resolution a bug dropped on the Non-Fix column gets.
+/// Pops the resolution code, or null when dismissed.
 class NonFixResolutionDialog extends StatefulWidget {
   const NonFixResolutionDialog({super.key});
 
@@ -18,49 +22,40 @@ class _NonFixResolutionDialogState extends State<NonFixResolutionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return AlertDialog(
-      backgroundColor: c.surface,
-      title: Text(
-        'Resolve as Non-Fix',
-        style: context.typography.title.copyWith(color: c.textPrimary),
-      ),
-      content: DropdownButtonFormField<String>(
-        mouseCursor: WidgetStateMouseCursor.clickable,
-        initialValue: _resolution,
-        isExpanded: true,
-        dropdownColor: c.surface,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: c.surfaceSubtle,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            borderSide: BorderSide(color: c.border),
-          ),
-        ),
-        hint: Text(
-          'Select a reason',
-          style: context.typography.body.copyWith(color: c.textTertiary),
-        ),
-        style: context.typography.body.copyWith(color: c.textPrimary),
-        items: [
-          for (final entry in zentaoNonFixResolutionLabels.entries)
-            DropdownMenuItem(value: entry.key, child: Text(entry.value)),
-        ],
-        onChanged: (value) => setState(() => _resolution = value),
-      ),
+    final l = AppL10n.of(context);
+    final s = context.spacing;
+    final resolution = _resolution;
+    return AppDialogFrame(
+      title: l.boardNonFixTitle,
+      maxWidth: context.sizes.dialogSm,
       actions: [
+        const Spacer(),
         AppButton.textNeutral(
+          size: AppButtonSize.small,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l.cancel),
         ),
         AppButton.filled(
-          onPressed: _resolution == null
+          size: AppButtonSize.small,
+          onPressed: resolution == null
               ? null
-              : () => Navigator.of(context).pop(_resolution),
-          child: const Text('Resolve'),
+              : () => Navigator.of(context).pop(resolution),
+          child: Text(l.resolve),
         ),
       ],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        // Nothing is picked up front: a preselected reason would be one
+        // careless click away from the wrong resolution.
+        child: AppDropdown<String?>(
+          value: resolution,
+          values: zentaoNonFixResolutionLabels.keys.toList(),
+          labelOf: (code) => code == null
+              ? l.boardNonFixReasonHint
+              : zentaoNonFixResolutionLabels[code] ?? code,
+          onChanged: (code) => setState(() => _resolution = code),
+        ),
+      ),
     );
   }
 }

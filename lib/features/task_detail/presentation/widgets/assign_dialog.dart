@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
 import 'action_dialog_scaffold.dart';
 
@@ -28,33 +31,36 @@ class _AssignDialogState extends ConsumerState<AssignDialog> {
   }
 
   Future<void> _submit() async {
-    final messenger = ScaffoldMessenger.of(context);
+    final assignee = _assignee;
+    if (assignee == null) return;
+    final l = AppL10n.of(context);
     final navigator = Navigator.of(context);
     setState(() => _busy = true);
     final res = await getIt<SyncService>().assignTicket(
       widget.ticket,
-      assignee: _assignee!,
+      assignee: assignee,
       comment: _note.text,
     );
     if (!mounted) return;
-    navigator.pop();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          res.isOk
-              ? 'Assigned to $_assignee'
-              : 'Assign failed: ${res.failureOrNull?.message ?? 'error'}',
-        ),
-      ),
+    showAppSnack(
+      context,
+      res.isOk
+          ? l.taskDetailAssignedTo(assignee)
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
     );
+    navigator.pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
     return ActionScaffold(
-      emoji: '👤',
-      title: 'Assign #${widget.ticket.externalKey}',
-      submitLabel: 'Assign',
+      title: l.zentaoActionTitle(l.assign, widget.ticket.externalKey),
+      submitLabel: l.assign,
+      icon: LucideIcons.userPlus300,
       busy: _busy,
       canSubmit: _assignee != null,
       onSubmit: _submit,
@@ -62,14 +68,14 @@ class _AssignDialogState extends ConsumerState<AssignDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const FieldLabel('Assign to'),
+          FieldLabel(l.fieldAssignTo),
           AssigneeDropdown(
             ticketId: widget.ticket.id,
             value: _assignee,
             onChanged: (v) => setState(() => _assignee = v),
           ),
           SizedBox(height: context.spacing.xl2),
-          const FieldLabel('Note'),
+          FieldLabel(l.zentaoNote),
           NoteField(_note),
         ],
       ),

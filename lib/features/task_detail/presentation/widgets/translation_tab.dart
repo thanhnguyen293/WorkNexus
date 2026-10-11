@@ -8,6 +8,7 @@ import '../../../../core/domain/value_objects/translation_state.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/translation_languages.dart';
@@ -97,13 +98,9 @@ class TranslationTab extends ConsumerWidget {
           if (state == TranslationState.loading) ...[
             Row(
               children: [
-                SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: c.accent,
-                  ),
+                SizedBox.square(
+                  dimension: context.sizes.iconMd,
+                  child: const CircularProgressIndicator(),
                 ),
                 SizedBox(width: context.spacing.lg),
                 Text(

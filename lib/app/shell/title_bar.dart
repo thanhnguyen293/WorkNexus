@@ -18,6 +18,8 @@ class TitleBar extends ConsumerWidget {
 
   final int? assignedCount;
 
+  static const _height = 34.0;
+
   /// Windows' minimize / maximize / close buttons are 46px wide each.
   static const _windowsCaptionButtonWidth = 46.0;
   static const _windowsCaptionButtonsWidth = _windowsCaptionButtonWidth * 3;
@@ -42,25 +44,10 @@ class TitleBar extends ConsumerWidget {
             ),
           ),
         ),
-        // if (assignedCount != null) ...[
-        //   SizedBox(width: context.spacing.md),
-        //   Text(
-        //     '·',
-        //     style: context.typography.caption.copyWith(color: c.textTertiary),
-        //   ),
-        //   SizedBox(width: context.spacing.md),
-        //   Flexible(
-        //     child: Text(
-        //       l10n.assignedToYou(assignedCount!),
-        //       overflow: TextOverflow.ellipsis,
-        //       style: context.typography.caption.copyWith(color: c.textTertiary),
-        //     ),
-        //   ),
-        // ],
       ],
     );
     final bar = Container(
-      height: 34,
+      height: _height,
       decoration: BoxDecoration(
         color: c.titleBar,
         border: Border(bottom: context.hairlineSide),

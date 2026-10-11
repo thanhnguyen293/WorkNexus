@@ -14,9 +14,10 @@ import '../../features/notifications/presentation/widgets/notifications_rail_but
 import '../../l10n/app_localizations.dart';
 import 'new_ticket_menu.dart';
 
-/// The app's narrow left rail: the main destinations (dashboard,
-/// notifications, chat, board) on top and integrations at the bottom. The board's workspace tree is a separate
-/// panel shown only beside the board.
+/// The app's narrow left rail, in three groups: the "+ new" action on top, the
+/// places you work in (dashboard, board, chat), and the global utilities
+/// (notifications, update, integrations) at the bottom. The board's workspace
+/// tree is a separate panel shown only beside the board.
 class AppNavRail extends ConsumerWidget {
   const AppNavRail({super.key});
 
@@ -40,17 +41,21 @@ class AppNavRail extends ConsumerWidget {
       padding: EdgeInsets.symmetric(vertical: s.lg),
       child: Column(
         children: [
+          // The one action: create. Set apart from the places below it.
           const NewTicketRailButton(),
+          // Places you work in, by how often you go there.
           const DashboardRailButton(),
-          const NotificationsRailButton(),
-          const ChatRailButton(),
           AppRailButton(
-            icon: LucideIcons.kanban300,
+            icon: LucideIcons.squareKanban300,
             label: l.board,
             selected: view == MainView.board && !integrations,
             onTap: () => showBoardView(ref),
           ),
+          const ChatRailButton(),
           const Spacer(),
+          // Global utilities: panels, the updater and settings.
+          const AppRailDivider(),
+          const NotificationsRailButton(),
           const UpdateRailButton(),
           AppRailButton(
             icon: LucideIcons.settings300,

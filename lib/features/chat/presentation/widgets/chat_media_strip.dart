@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
@@ -72,8 +76,8 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
         position.pixels + direction * position.viewportDimension * 0.8;
     _scroll.animateTo(
       target.clamp(position.minScrollExtent, position.maxScrollExtent),
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+      duration: AppMotion.slow,
+      curve: AppMotion.enter,
     );
   }
 
@@ -97,8 +101,8 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
       } else {
         _scroll.animateTo(
           offset,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
+          duration: AppMotion.base,
+          curve: AppMotion.enter,
         );
       }
     });
@@ -111,8 +115,13 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
     final height = size + s.md * 2;
     // Room kept while the list loads (a new viewer reads it again), so the
     // media above does not shift when the strip appears.
-    if (!ref.watch(chatAttachmentsProvider(widget.thread)).hasValue) {
-      return SizedBox(height: height);
+    final attachments = ref.watch(chatAttachmentsProvider(widget.thread));
+    if (!attachments.hasValue) {
+      // A failed list has nothing to browse: drop the strip rather than
+      // keep its room empty for good.
+      return attachments.hasError
+          ? const SizedBox.shrink()
+          : SizedBox(height: height);
     }
     final media = chatMediaOf(ref, widget.thread);
     if (media.length < 2) return const SizedBox.shrink();
@@ -174,7 +183,6 @@ class _Thumb extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final s = context.spacing;
     final bytes = switch (content) {
       ImageContent() => ref.watch(
         chatAttachmentProvider((
@@ -188,46 +196,43 @@ class _Thumb extends ConsumerWidget {
       ),
     }.value;
     final radius = BorderRadius.circular(context.radii.sm);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
-          // The others recede so the shown one stands out.
-          opacity: selected ? 1 : 0.55,
-          // On top: the picture would cover a border drawn beneath it.
-          child: DecoratedBox(
-            position: DecorationPosition.foreground,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              border: Border.all(
-                color: selected ? c.accent : Colors.transparent,
-                width: 2,
-              ),
+    final l = AppL10n.of(context);
+    return HoverSurface(
+      onTap: onTap,
+      borderRadius: radius,
+      selected: selected,
+      semanticLabel: content is FileContent ? l.chatPlayVideo : l.chatImage,
+      child: AnimatedOpacity(
+        duration: AppMotion.fast,
+        // The others recede so the shown one stands out.
+        opacity: selected ? 1 : 0.55,
+        // On top: the picture would cover a border drawn beneath it.
+        child: DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(
+              color: selected ? c.accent : Colors.transparent,
+              width: context.borders.thick,
             ),
-            child: ClipRRect(
-              borderRadius: radius,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ColoredBox(color: c.onScrim.withValues(alpha: 0.12)),
-                  if (bytes case Ok(:final value))
-                    Image.memory(
-                      value,
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
+          ),
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: c.onScrim.withValues(alpha: 0.12)),
+                if (bytes case Ok(:final value))
+                  Image.memory(value, fit: BoxFit.cover, gaplessPlayback: true),
+                if (content is FileContent)
+                  Center(
+                    child: Icon(
+                      LucideIcons.circlePlay300,
+                      size: context.sizes.iconXl,
+                      color: c.onScrim,
                     ),
-                  if (content is FileContent)
-                    Center(
-                      child: Icon(
-                        Icons.play_circle_rounded,
-                        size: s.xl4,
-                        color: c.onScrim,
-                      ),
-                    ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         ),

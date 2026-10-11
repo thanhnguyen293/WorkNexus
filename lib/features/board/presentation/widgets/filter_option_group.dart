@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_search_field.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'filter_chip.dart';
 
@@ -86,13 +87,14 @@ class _SearchableFilterGroupState extends State<SearchableFilterGroup> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.label.toUpperCase(),
-            style: context.typography.label.copyWith(color: c.textTertiary),
-          ),
-          SizedBox(height: context.spacing.sm),
-          _GroupSearchField(
+          AppSectionHeader(title: widget.label),
+          SizedBox(height: context.spacing.xs),
+          // Shorter than the toolbar's board search so it reads as part of
+          // the group, not a second global search.
+          AppSearchField(
             controller: _controller,
+            hint: l.filterSearchHint,
+            height: context.sizes.controlSm,
             onChanged: (v) => setState(() => _query = v),
           ),
           SizedBox(height: context.spacing.sm),
@@ -119,56 +121,4 @@ class _SearchableFilterGroupState extends State<SearchableFilterGroup> {
     dotColor: o.dotColor,
     count: o.count,
   );
-}
-
-/// The compact in-popover search input. Narrower and quieter than the toolbar's
-/// board search so it reads as part of the group, not a second global search.
-class _GroupSearchField extends StatelessWidget {
-  const _GroupSearchField({required this.controller, required this.onChanged});
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    );
-    return SizedBox(
-      height: 28,
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: context.typography.meta.copyWith(color: c.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: c.surfaceSubtle,
-          hintText: l.filterSearchHint,
-          hintStyle: context.typography.meta.copyWith(color: c.textTertiary),
-          prefixIcon: Icon(
-            LucideIcons.search300,
-            size: 14,
-            color: c.textTertiary,
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 26,
-            minHeight: 26,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            vertical: context.spacing.xs,
-            horizontal: context.spacing.xs,
-          ),
-          border: border,
-          enabledBorder: border,
-          focusedBorder: border.copyWith(
-            borderSide: BorderSide(color: c.accent),
-          ),
-        ),
-      ),
-    );
-  }
 }

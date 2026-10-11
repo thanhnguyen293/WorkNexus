@@ -1,65 +1,50 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 
-/// Small status dot shown at the leading edge of a ZenTao bug column header.
-class BugColumnDot extends StatelessWidget {
-  const BugColumnDot(this.column, {super.key});
-
-  final ZenTaoBugColumn column;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final color = switch (column) {
-      ZenTaoBugColumn.newUnconfirmed => c.textTertiary,
-      ZenTaoBugColumn.confirmedToFix => c.accent,
-      ZenTaoBugColumn.resolvedVerify => c.success,
-      ZenTaoBugColumn.postponed => c.warning,
-      ZenTaoBugColumn.nonFix => c.error,
-      ZenTaoBugColumn.closed => c.textSecondary,
-    };
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
+/// A ZenTao bug column's header label and status-dot colour.
+(String, Color) bugColumnVisual(BuildContext context, ZenTaoBugColumn column) {
+  final c = context.colors;
+  final l = AppL10n.of(context);
+  return switch (column) {
+    ZenTaoBugColumn.newUnconfirmed => (l.boardBugColNew, c.textTertiary),
+    ZenTaoBugColumn.confirmedToFix => (l.boardBugColConfirmed, c.accent),
+    ZenTaoBugColumn.resolvedVerify => (l.boardBugColResolved, c.success),
+    ZenTaoBugColumn.postponed => (l.boardBugColPostponed, c.warning),
+    ZenTaoBugColumn.nonFix => (l.boardBugColNonFix, c.error),
+    ZenTaoBugColumn.closed => (l.boardBugColClosed, c.textSecondary),
+  };
 }
 
-/// Ticket-count pill shown at the trailing edge of a bug column header.
-class BugColumnCountBadge extends StatelessWidget {
-  const BugColumnCountBadge(this.count, {super.key, this.more = false});
+/// The column's ticket count; a trailing "+" while it can load more.
+class BugColumnCount extends StatelessWidget {
+  const BugColumnCount(this.count, {super.key, this.more = false});
 
   final int count;
-
-  /// Whether the column can load more than [count] (shown as "count+").
   final bool more;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20),
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.xl),
-        border: context.cardBorder,
-      ),
-      child: Text(
-        more ? '$count+' : '$count',
-        style: context.typography.monoSm.copyWith(color: c.textTertiary),
-      ),
+    if (!more) return AppCountBadge(count);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: context.spacing.xxs,
+      children: [
+        AppCountBadge(count),
+        Text(
+          '+',
+          style: context.typography.monoXs.copyWith(
+            color: context.colors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -75,7 +60,8 @@ class BugCardDragFeedback extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: SizedBox(
-        width: 258,
+        // A card's width inside a column (the list's side padding removed).
+        width: context.sizes.boardColumn - context.spacing.xl2,
         child: Transform.rotate(angle: -0.01, child: child),
       ),
     );

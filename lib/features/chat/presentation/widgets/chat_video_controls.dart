@@ -81,8 +81,8 @@ class ChatVideoControls extends StatelessWidget {
                     ),
                     ChatViewerButton(
                       icon: v.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
+                          ? LucideIcons.pause300
+                          : LucideIcons.play300,
                       tooltip: v.isPlaying ? l.chatPause : l.chatPlay,
                       onPressed: v.isPlaying ? player.pause : player.play,
                     ),

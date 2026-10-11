@@ -11,7 +11,6 @@ import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
@@ -22,6 +21,7 @@ import 'chat_media_strip.dart';
 import 'chat_media_viewer_bar.dart';
 import 'chat_media_viewer_frame.dart';
 import 'chat_video_controls.dart';
+import 'chat_video_overlays.dart';
 
 /// Player for a video sent in chat, centred over it in the image viewer's dark
 /// style. The file is played from the local cache: the platform player
@@ -247,15 +247,12 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                   padding: EdgeInsets.all(context.spacing.xl3),
                   child: Center(
                     child: switch ((player, _error)) {
-                      (_, final String error) => Text(
-                        error,
-                        style: context.typography.body.copyWith(
-                          color: c.onScrim,
-                        ),
+                      (_, final String error) => ChatVideoFailure(
+                        detail: error,
                       ),
                       (null, _) => CircularProgressIndicator(color: c.onScrim),
                       (final VideoPlayerController p, _) => MouseRegion(
-                        cursor: SystemMouseCursors.click,
+                        cursor: WidgetStateMouseCursor.clickable,
                         child: GestureDetector(
                           onTap: _togglePlay,
                           onDoubleTap: _toggleFullScreen,

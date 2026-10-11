@@ -17,6 +17,7 @@ import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/wallpaper_providers.dart';
 import 'chat_attachments.dart';
+import 'chat_hover_remove.dart';
 import 'chat_snack.dart';
 import 'chat_wallpaper.dart';
 
@@ -106,9 +107,9 @@ class ChatWallpaperPicker extends ConsumerWidget {
                 ),
               ),
               for (final path in images)
-                GestureDetector(
-                  onSecondaryTapDown: (d) =>
-                      _remove(context, ref, path, d.globalPosition),
+                ChatHoverRemove(
+                  tooltip: l.chatWallpaperRemove,
+                  onRemove: (at) => _remove(context, ref, path, at),
                   child: _Tile(
                     selected: current == path,
                     onTap: () => settings.setChatWallpaper(path),

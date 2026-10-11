@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../board_providers.dart';
-import 'board_view_tabs.dart';
 
 /// The GitHub board's kind tab strip (Issues / Pull Requests). Switching a tab
 /// refetches that kind's items for the selected repo; the active tab shows its
@@ -20,10 +20,10 @@ class GitHubTabs extends ConsumerWidget {
     final count = ref.watch(resultCountProvider);
 
     // Rendered inline on the ChromeBar toolbar row (see BoardPage).
-    return BoardViewTabs(
+    return AppSegmentedTabs(
       tabs: [
         for (final kind in GitHubItemKind.values)
-          BoardViewTab(
+          AppSegmentedTab(
             label: _label(l, kind),
             active: kind == active,
             count: kind == active ? count : null,

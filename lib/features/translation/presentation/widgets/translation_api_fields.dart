@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/translation_api_preset.dart';
@@ -18,6 +19,7 @@ class TranslationApiFields extends StatelessWidget {
     required this.obscure,
     required this.onToggleObscure,
     required this.onChanged,
+    required this.onSubmitted,
   });
 
   final TranslationApiPreset preset;
@@ -27,6 +29,9 @@ class TranslationApiFields extends StatelessWidget {
   final bool obscure;
   final VoidCallback onToggleObscure;
   final VoidCallback onChanged;
+
+  /// Enter in a field: saves when the form is complete.
+  final VoidCallback onSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +46,7 @@ class TranslationApiFields extends StatelessWidget {
             controller: baseUrl,
             hint: l.translationApiBaseUrlHint,
             onChanged: (_) => onChanged(),
+            onSubmitted: (_) => onSubmitted(),
           ),
           SizedBox(height: context.spacing.lg),
         ],
@@ -50,15 +56,18 @@ class TranslationApiFields extends StatelessWidget {
             controller: apiKey,
             obscure: obscure,
             onChanged: (_) => onChanged(),
+            onSubmitted: (_) => onSubmitted(),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (keyUrl != null)
-                  TextButton(
+                  AppButton.text(
+                    size: AppButtonSize.small,
                     onPressed: () => openExternally(keyUrl),
                     child: Text(l.translationApiGetKey),
                   ),
-                TextButton(
+                AppButton.text(
+                  size: AppButtonSize.small,
                   onPressed: onToggleObscure,
                   child: Text(obscure ? l.openCodeShowKey : l.openCodeHideKey),
                 ),
@@ -73,6 +82,7 @@ class TranslationApiFields extends StatelessWidget {
           needsKey: preset.needsKey,
           controller: model,
           onChanged: (_) => onChanged(),
+          onSubmitted: (_) => onSubmitted(),
         ),
       ],
     );

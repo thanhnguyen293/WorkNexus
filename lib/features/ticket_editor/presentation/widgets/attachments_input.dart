@@ -64,16 +64,10 @@ class AttachmentsInput extends StatelessWidget {
             ]),
           ),
         AppButton.text(
-          size: AppButtonSize.extraSmall,
+          size: AppButtonSize.small,
+          icon: LucideIcons.plus300,
           onPressed: _add,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: s.xs,
-            children: [
-              Icon(LucideIcons.plus300, size: s.xl2),
-              Text(AppL10n.of(context).addFiles),
-            ],
-          ),
+          child: Text(AppL10n.of(context).addFiles),
         ),
       ],
     );

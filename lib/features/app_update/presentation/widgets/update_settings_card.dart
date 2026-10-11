@@ -10,6 +10,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/build_issue_report_url.dart';
 import '../providers/update_controller.dart';
@@ -71,14 +72,8 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
                   AppButton.outlinedNeutral(
                     isLoading: _checking,
                     onPressed: _checkForUpdates,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(LucideIcons.rotateCw300, size: 16),
-                        SizedBox(width: context.spacing.sm),
-                        Text(l.checkForUpdates),
-                      ],
-                    ),
+                    icon: LucideIcons.rotateCw300,
+                    child: Text(l.checkForUpdates),
                   ),
                 ],
               ),
@@ -100,14 +95,8 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
                         system: Platform.operatingSystemVersion,
                       ).toString(),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(LucideIcons.bug300, size: 16),
-                        SizedBox(width: context.spacing.sm),
-                        Text(l.reportIssue),
-                      ],
-                    ),
+                    icon: LucideIcons.bug300,
+                    child: Text(l.reportIssue),
                   ),
                 ],
               ),
@@ -127,7 +116,7 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
     final l = AppL10n.of(context);
     result.fold<void>((update) {
       if (update == null) {
-        _toast(l.latestVersionInstalled);
+        showAppSnack(context, l.latestVersionInstalled);
         return;
       }
       // One dialog per check: the controller is already downloading.
@@ -135,12 +124,6 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
         context: context,
         builder: (_) => UpdateDialog(update: update),
       );
-    }, (_) => _toast(l.updateCheckFailed));
-  }
-
-  void _toast(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    }, (_) => showAppSnack(context, l.updateCheckFailed, isError: true));
   }
 }

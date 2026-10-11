@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
@@ -8,13 +9,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/group_my_work.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
 import '../providers/dashboard_providers.dart';
 import '../util/my_work_status.dart';
-import 'dashboard_card.dart';
 import 'dashboard_work_header.dart';
 import 'my_work_row.dart';
 
@@ -34,9 +36,7 @@ class DashboardWorkView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final s = context.spacing;
-    final t = context.typography;
     final l = AppL10n.of(context);
     final sync = ref.watch(myWorkSyncProvider(account.id));
     final openOnly = ref.watch(dashboardWorkOpenOnlyProvider);
@@ -49,30 +49,35 @@ class DashboardWorkView extends ConsumerWidget {
     final open = ref.watch(myWorkProvider(key(open: true)));
     final all = ref.watch(myWorkProvider(key(open: false)));
     final groups = const GroupMyWork()(openOnly ? open : all);
+    final failed = sync.hasError && !sync.isLoading;
+    void retry() => ref.read(myWorkSyncProvider(account.id).notifier).refresh();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (sync.hasError && !sync.isLoading) ...[
+        // With rows to show, a failed sync keeps them and says so above.
+        if (failed && groups.isNotEmpty) ...[
           AppInlineNote(text: l.dashboardWorkSyncFailed, isError: true),
           SizedBox(height: s.xl),
         ],
         Expanded(
-          child: groups.isEmpty
-              ? Center(
-                  child: sync.isLoading
-                      ? const CircularProgressIndicator()
-                      : Text(
-                          l.dashboardFocusEmpty,
-                          style: t.body.copyWith(color: c.textTertiary),
-                        ),
-                )
-              : ListView.separated(
+          child: groups.isNotEmpty
+              ? ListView.separated(
                   itemCount: groups.length,
                   separatorBuilder: (_, _) => SizedBox(height: s.xl4),
                   itemBuilder: (_, i) => _Section(
                     group: groups[i],
                     bug: kind == DashboardItemKind.bug,
                   ),
+                )
+              : sync.isLoading
+              ? const AppStateView.loading()
+              : failed
+              ? AppStateView.error(onRetry: retry)
+              : AppStateView.empty(
+                  icon: LucideIcons.circleCheck300,
+                  title: openOnly
+                      ? l.dashboardFocusEmpty
+                      : l.dashboardWorkEmptyAll,
                 ),
         ),
       ],
@@ -106,14 +111,18 @@ class _Section extends StatelessWidget {
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               SizedBox(width: s.md),
-              Text(
-                myWorkStatusLabel(l, group.status, bug: bug).toUpperCase(),
-                style: context.typography.labelWide.copyWith(
-                  color: c.textSecondary,
+              Flexible(
+                child: Text(
+                  myWorkStatusLabel(l, group.status, bug: bug).toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.labelWide.copyWith(
+                    color: c.textTertiary,
+                  ),
                 ),
               ),
               SizedBox(width: s.sm),
-              DashboardCountBadge(group.tickets.length),
+              AppCountBadge(group.tickets.length),
             ],
           ),
         ),

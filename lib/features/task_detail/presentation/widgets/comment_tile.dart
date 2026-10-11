@@ -5,6 +5,7 @@ import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/inline_image.dart';
@@ -172,14 +173,18 @@ class _AttachmentChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.paperclip300, size: 12, color: c.textTertiary),
+          Icon(
+            LucideIcons.paperclip300,
+            size: context.sizes.iconXs,
+            color: c.textTertiary,
+          ),
           SizedBox(width: context.spacing.xs),
           Flexible(
             child: Text(
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typography.captionSm.copyWith(
+              style: context.typography.caption.copyWith(
                 color: c.textSecondary,
               ),
             ),

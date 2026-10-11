@@ -5,9 +5,12 @@ import '../../../../core/domain/value_objects/repo_change.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'detail_section_title.dart';
 import 'unified_diff_view.dart';
 
 typedef ChangedFilesLoader = Future<Result<List<RepoFileChange>>> Function();
@@ -25,43 +28,46 @@ class ChangedFilesSection extends StatefulWidget {
 }
 
 class _ChangedFilesSectionState extends State<ChangedFilesSection> {
-  late final Future<Result<List<RepoFileChange>>> _future = widget.loader();
+  late Future<Result<List<RepoFileChange>>> _future = widget.loader();
+
+  void _retry() => setState(() => _future = widget.loader());
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     return FutureBuilder<Result<List<RepoFileChange>>>(
       future: _future,
       builder: (context, snap) {
         final res = snap.data;
         final files = res is Ok<List<RepoFileChange>> ? res.value : null;
+        final Widget body;
+        if (snap.hasError) {
+          body = AppStateView.error(compact: true, onRetry: _retry);
+        } else if (snap.connectionState != ConnectionState.done) {
+          body = const AppStateView.loading(compact: true);
+        } else if (res case Err<List<RepoFileChange>>(:final failure)) {
+          body = AppStateView.error(
+            compact: true,
+            message: failure.message,
+            onRetry: _retry,
+          );
+        } else if (files == null || files.isEmpty) {
+          body = AppStateView.empty(
+            compact: true,
+            icon: LucideIcons.fileDiff300,
+            title: l.noChangedFiles,
+          );
+        } else {
+          body = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [for (final file in files) _FileRow(file)],
+          );
+        }
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Text(
-                  l.changedFiles,
-                  style: context.typography.display.copyWith(
-                    color: c.textPrimary,
-                  ),
-                ),
-                if (files != null && files.isNotEmpty) ...[
-                  SizedBox(width: context.spacing.sm),
-                  _CountBadge(files.length),
-                ],
-              ],
-            ),
-            SizedBox(height: context.spacing.lg),
-            if (snap.connectionState != ConnectionState.done)
-              const _Loading()
-            else if (res is Err<List<RepoFileChange>>)
-              _Muted(res.failure.message)
-            else if (files == null || files.isEmpty)
-              _Muted(l.noChangedFiles)
-            else
-              for (final file in files) _FileRow(file),
+            DetailSectionTitle(l.changedFiles, count: files?.length),
+            body,
           ],
         );
       },
@@ -143,7 +149,7 @@ class _FileRowState extends State<_FileRow> {
                       _open
                           ? LucideIcons.chevronUp300
                           : LucideIcons.chevronDown300,
-                      size: context.spacing.xl3,
+                      size: context.sizes.iconMd,
                       color: c.textTertiary,
                     ),
                 ],
@@ -152,68 +158,6 @@ class _FileRowState extends State<_FileRow> {
           ),
           if (_open && hasDiff) UnifiedDiffView(file.diff!),
         ],
-      ),
-    );
-  }
-}
-
-class _CountBadge extends StatelessWidget {
-  const _CountBadge(this.count);
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.sm,
-        vertical: context.spacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.md),
-      ),
-      child: Text(
-        '$count',
-        style: context.typography.captionStrong.copyWith(
-          color: c.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _Loading extends StatelessWidget {
-  const _Loading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.md),
-      child: SizedBox(
-        height: context.spacing.xl4,
-        width: context.spacing.xl4,
-        child: const CircularProgressIndicator(strokeWidth: 2),
-      ),
-    );
-  }
-}
-
-class _Muted extends StatelessWidget {
-  const _Muted(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.md),
-      child: Text(
-        text,
-        style: context.typography.secondary.copyWith(
-          color: context.colors.textTertiary,
-        ),
       ),
     );
   }

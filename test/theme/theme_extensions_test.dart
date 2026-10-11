@@ -5,6 +5,7 @@ import 'package:work_nexus/core/theme/app_borders.dart';
 import 'package:work_nexus/core/theme/app_colors.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_radii.dart';
+import 'package:work_nexus/core/theme/app_sizes.dart';
 import 'package:work_nexus/core/theme/app_spacing.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/theme/app_typography.dart';
@@ -24,6 +25,7 @@ void main() {
         expect(theme.extension<AppSpacing>(), isNotNull);
         expect(theme.extension<AppRadii>(), isNotNull);
         expect(theme.extension<AppBorders>(), isNotNull);
+        expect(theme.extension<AppSizes>(), isNotNull);
       });
     }
 
@@ -124,7 +126,7 @@ void main() {
       expect(c.background, AppPalette.light.bg);
       expect(c.success, AppPalette.light.green);
       expect(c.error, AppPalette.light.red);
-      expect(c.error, const Color(0xFFDC2626));
+      expect(c.error, const Color(0xFFC81E1E));
       expect(c.textPrimary, AppPalette.light.tx);
     });
 

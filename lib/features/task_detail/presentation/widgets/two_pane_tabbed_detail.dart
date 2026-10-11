@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'detail_underline_tabs.dart';
 
 /// Below this panel width the overview content + metadata sidebar stack
 /// vertically; above it they sit side by side.
@@ -66,20 +65,32 @@ class _TwoPaneTabbedDetailState extends State<TwoPaneTabbedDetail> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l = AppL10n.of(context);
     return Material(
       color: c.card,
       child: Column(
         children: [
           widget.header,
-          if (widget.isSyncing)
-            LinearProgressIndicator(
-              minHeight: context.borders.thick,
-              backgroundColor: Colors.transparent,
-              color: c.accent,
-            )
-          else
-            SizedBox(height: context.borders.hairline),
-          _PaneTabs(current: _tab, onSelect: _select),
+          // A constant-height slot, so the bar coming and going never shifts
+          // the tabs below.
+          SizedBox(
+            height: context.borders.thick,
+            child: widget.isSyncing
+                ? LinearProgressIndicator(
+                    minHeight: context.borders.thick,
+                    backgroundColor: Colors.transparent,
+                  )
+                : null,
+          ),
+          DetailUnderlineTabs<_DetailPaneTab>(
+            labels: {
+              _DetailPaneTab.overview: l.overview,
+              _DetailPaneTab.commits: l.commits,
+              _DetailPaneTab.changes: l.changedFiles,
+            },
+            current: _tab,
+            onSelect: _select,
+          ),
           Expanded(
             child: IndexedStack(
               sizing: StackFit.expand,
@@ -167,78 +178,6 @@ class _ScrollBody extends StatelessWidget {
         context.spacing.xl3,
       ),
       child: child,
-    );
-  }
-}
-
-/// The two-pane detail's tab strip, matching the standard panel's [DetailTabBar]
-/// styling (accent underline on the active tab).
-class _PaneTabs extends StatelessWidget {
-  const _PaneTabs({required this.current, required this.onSelect});
-
-  final _DetailPaneTab current;
-  final ValueChanged<_DetailPaneTab> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    final labels = {
-      _DetailPaneTab.overview: l.overview,
-      _DetailPaneTab.commits: l.commits,
-      _DetailPaneTab.changes: l.changedFiles,
-    };
-    return Container(
-      decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final e in labels.entries)
-              _PaneTab(
-                label: e.value,
-                selected: e.key == current,
-                onTap: () => onSelect(e.key),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PaneTab extends StatelessWidget {
-  const _PaneTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return HoverSurface(
-      onTap: onTap,
-      height: context.spacing.xl6,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-      border: Border(
-        bottom: BorderSide(
-          color: selected ? c.accent : Colors.transparent,
-          width: context.borders.thick,
-        ),
-      ),
-      child: Text(
-        label,
-        style: context.typography.secondary.copyWith(
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-          color: selected ? c.textPrimary : c.textSecondary,
-        ),
-      ),
     );
   }
 }

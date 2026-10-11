@@ -11,6 +11,9 @@ import '../../../../core/platform/credential_store.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
@@ -31,12 +34,10 @@ class AccountRow extends ConsumerWidget {
     required this.account,
     required this.lookups,
     required this.first,
-    required this.index,
   });
   final Account account;
   final Lookups lookups;
   final bool first;
-  final int index;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,10 +69,14 @@ class AccountRow extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      account.handle,
-                      style: context.typography.monoStrong.copyWith(
-                        color: c.textPrimary,
+                    Flexible(
+                      child: Text(
+                        account.handle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typography.monoStrong.copyWith(
+                          color: c.textPrimary,
+                        ),
                       ),
                     ),
                     SizedBox(width: context.spacing.md),
@@ -110,8 +115,8 @@ class AccountRow extends ConsumerWidget {
             ),
           ),
           Container(
-            width: 6,
-            height: 6,
+            width: context.spacing.sm,
+            height: context.spacing.sm,
             decoration: BoxDecoration(color: c.success, shape: BoxShape.circle),
           ),
           SizedBox(width: context.spacing.sm),
@@ -119,48 +124,51 @@ class AccountRow extends ConsumerWidget {
             l.connected,
             style: context.typography.caption.copyWith(color: c.textSecondary),
           ),
-          SizedBox(width: context.spacing.xl),
           if (isLive) ...[
-            IconButton(
-              tooltip: 'Sync now',
-              visualDensity: VisualDensity.compact,
-              icon: Icon(
-                LucideIcons.refreshCw300,
-                size: 16,
-                color: c.textSecondary,
-              ),
-              onPressed: () => _sync(context, ref),
+            SizedBox(width: context.spacing.xl),
+            AppIconButton(
+              icon: LucideIcons.refreshCw300,
+              tooltip: l.connectionsSyncNow,
+              onPressed: () => _sync(context),
             ),
-            IconButton(
-              tooltip: 'Remove',
-              visualDensity: VisualDensity.compact,
-              icon: Icon(LucideIcons.trash300, size: 16, color: c.textTertiary),
-              onPressed: () => _remove(ref),
+            AppIconButton(
+              icon: LucideIcons.trash300,
+              tooltip: l.connectionsRemoveAccount,
+              onPressed: () => _remove(context),
             ),
-          ] else
-            Text(
-              '${2 + index}m synced',
-              style: context.typography.monoSm.copyWith(color: c.textTertiary),
-            ),
+          ],
         ],
       ),
     );
   }
 
-  Future<void> _sync(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      SnackBar(content: Text('Syncing ${account.handle}…')),
-    );
+  Future<void> _sync(BuildContext context) async {
+    final l = AppL10n.of(context);
+    showAppSnack(context, l.connectionsSyncing(account.handle));
     final res = await getIt<SyncService>().syncAccount(account);
-    final msg = switch (res) {
-      Ok(:final value) => 'Synced $value tickets from ${account.handle}',
-      Err(:final failure) => 'Sync failed: ${failure.message}',
-    };
-    messenger.showSnackBar(SnackBar(content: Text(msg)));
+    if (!context.mounted) return;
+    switch (res) {
+      case Ok(:final value):
+        showAppSnack(context, l.connectionsSynced(value, account.handle));
+      case Err(:final failure):
+        showAppSnack(
+          context,
+          l.connectionsSyncFailed(account.handle, failure.message),
+          isError: true,
+        );
+    }
   }
 
-  Future<void> _remove(WidgetRef ref) async {
+  Future<void> _remove(BuildContext context) async {
+    final l = AppL10n.of(context);
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: l.connectionsRemoveAccountTitle(account.handle),
+      message: l.connectionsRemoveAccountMessage,
+      confirmLabel: l.connectionsRemoveConfirm,
+      destructive: true,
+    );
+    if (!confirmed) return;
     await getIt<ConnectionRepository>().removeAccount(account.id);
     final credRef = account.credentialsRef;
     if (credRef != null) {

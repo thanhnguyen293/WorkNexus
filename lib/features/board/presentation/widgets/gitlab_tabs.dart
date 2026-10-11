@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../board_providers.dart';
-import 'board_view_tabs.dart';
 
 /// The GitLab board's kind tab strip (Issues / Merge Requests). Switching a tab
 /// refetches that kind's items for the selected project; the active tab shows
@@ -20,10 +20,10 @@ class GitLabTabs extends ConsumerWidget {
     final count = ref.watch(resultCountProvider);
 
     // Rendered inline on the ChromeBar toolbar row (see BoardPage).
-    return BoardViewTabs(
+    return AppSegmentedTabs(
       tabs: [
         for (final kind in GitLabItemKind.values)
-          BoardViewTab(
+          AppSegmentedTab(
             label: _label(l, kind),
             active: kind == active,
             count: kind == active ? count : null,

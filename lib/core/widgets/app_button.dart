@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_button_theme.dart';
 import '../theme/app_radii.dart';
+import '../theme/app_sizes.dart';
+import '../theme/app_spacing.dart';
 
 export '../theme/app_button_theme.dart' show AppButtonSize, AppButtonVariant;
 
@@ -20,6 +22,7 @@ class AppButton extends StatelessWidget {
     this.isDisabled = false,
     this.isLoading = false,
     this.onPressed,
+    this.icon,
     super.key,
   }) : _variant = null;
 
@@ -30,6 +33,7 @@ class AppButton extends StatelessWidget {
     this.isDisabled = false,
     this.isLoading = false,
     this.onPressed,
+    this.icon,
     super.key,
   }) : _variant = variant,
        style = null;
@@ -42,14 +46,20 @@ class AppButton extends StatelessWidget {
   final ButtonStyle? style;
   final AppButtonVariant? _variant;
 
+  /// A leading icon, sized and tinted with the label — instead of building a
+  /// `Row(Icon, Text)` child by hand.
+  final IconData? icon;
+
   factory AppButton.filled({
     required Widget child,
     AppButtonSize size = AppButtonSize.medium,
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.filled,
     size: size,
     isDisabled: isDisabled,
@@ -65,8 +75,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.filledNeutral,
     size: size,
     isDisabled: isDisabled,
@@ -82,8 +94,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.outlined,
     size: size,
     isDisabled: isDisabled,
@@ -99,8 +113,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.outlinedNeutral,
     size: size,
     isDisabled: isDisabled,
@@ -116,8 +132,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.text,
     size: size,
     isDisabled: isDisabled,
@@ -133,8 +151,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.textNeutral,
     size: size,
     isDisabled: isDisabled,
@@ -150,8 +170,10 @@ class AppButton extends StatelessWidget {
     bool isDisabled = false,
     bool isLoading = false,
     VoidCallback? onPressed,
+    IconData? icon,
     Key? key,
   }) => AppButton._(
+    icon: icon,
     variant: AppButtonVariant.error,
     size: size,
     isDisabled: isDisabled,
@@ -168,7 +190,20 @@ class AppButton extends StatelessWidget {
     return ElevatedButton(
       style: resolved,
       onPressed: enabled ? onPressed : null,
-      child: _Content(isLoading: isLoading, style: resolved, child: child),
+      child: _Content(
+        isLoading: isLoading,
+        style: resolved,
+        child: icon == null
+            ? child
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: context.spacing.sm,
+                children: [
+                  Icon(icon, size: context.sizes.iconMd),
+                  Flexible(child: child),
+                ],
+              ),
+      ),
     );
   }
 

@@ -6,6 +6,7 @@ import '../../../../core/navigation/open_storage.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_cache_usage.dart';
 import '../providers/chat_providers.dart';
@@ -64,16 +65,9 @@ class ChatInfoStorageCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              // Compact like the other cards' "See all": no taller than the
-              // title.
-              TextButton(
+              AppButton.textNeutral(
+                size: AppButtonSize.extraSmall,
                 onPressed: () => ref.read(openStorageProvider)?.call(context),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: s.md),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                ),
                 child: Text(l.chatStorageManage),
               ),
             ],

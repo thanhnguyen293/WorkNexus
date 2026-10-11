@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'app_input_decoration.dart';
 
 part 'searchable_dropdown_field.parts.dart';
 part 'searchable_dropdown_field.leaves.dart';

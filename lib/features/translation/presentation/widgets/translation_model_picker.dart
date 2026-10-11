@@ -34,7 +34,10 @@ class TranslationModelPicker extends ConsumerWidget {
         selected: selected,
         models: value,
       ),
-      AsyncError() => AppInlineNote(text: l.translationModelLoadFailed),
+      AsyncError() => AppInlineNote(
+        text: l.translationModelLoadFailed,
+        isError: true,
+      ),
       _ => const AppInlineSpinner(),
     };
   }

@@ -47,7 +47,6 @@ class MyWorkRow extends ConsumerWidget {
         mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
         borderRadius: BorderRadius.circular(context.radii.md),
-        hoverColor: c.selectionFill,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.lg),
           child: Row(
@@ -94,7 +93,8 @@ class MyWorkRow extends ConsumerWidget {
                           style: t.monoSm.copyWith(color: c.textTertiary),
                         ),
                         if (showStatus)
-                          MyWorkStatusChip(
+                          TintedPill(
+                            pill: true,
                             label: myWorkStatusLabel(
                               l,
                               ticket.status,
@@ -118,9 +118,10 @@ class MyWorkRow extends ConsumerWidget {
     );
   }
 
+  /// Caps sprint / parent names so the other facts stay on the line.
+  static const double _nameWidth = 200;
+
   List<Widget> _facts(BuildContext context, AppL10n l) {
-    final s = context.spacing;
-    final nameWidth = s.xl6 * 5;
     return switch (ticket.providerEntity) {
       ZenTaoBugEntity(
         :final executionName,
@@ -133,7 +134,7 @@ class MyWorkRow extends ConsumerWidget {
             MyWorkFact(
               icon: LucideIcons.kanban300,
               text: where,
-              maxWidth: nameWidth,
+              maxWidth: _nameWidth,
             ),
           if (parseZenTaoDate(deadline) case final due?) MyWorkDueFact(due),
           if (activatedCount case final n? when n > 0)
@@ -148,7 +149,7 @@ class MyWorkRow extends ConsumerWidget {
           MyWorkFact(
             icon: LucideIcons.cornerLeftUp300,
             text: parent,
-            maxWidth: nameWidth,
+            maxWidth: _nameWidth,
           ),
         if (subtasks.isNotEmpty)
           MyWorkFact(

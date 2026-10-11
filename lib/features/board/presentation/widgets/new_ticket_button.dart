@@ -4,7 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
@@ -39,15 +38,9 @@ class NewTicketButton extends ConsumerWidget {
     if (label == null || route == null) return const SizedBox.shrink();
     return AppButton.filled(
       size: AppButtonSize.small,
+      icon: LucideIcons.plus500,
       onPressed: () => openTicketEditor(ref, route),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(LucideIcons.plus500, size: context.spacing.xl2),
-          SizedBox(width: context.spacing.sm),
-          Text(label),
-        ],
-      ),
+      child: Text(label),
     );
   }
 }

@@ -22,6 +22,7 @@ class TranslationApiModelField extends ConsumerWidget {
     required this.needsKey,
     required this.controller,
     required this.onChanged,
+    this.onSubmitted,
   });
 
   final String baseUrl;
@@ -29,6 +30,7 @@ class TranslationApiModelField extends ConsumerWidget {
   final bool needsKey;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,6 +39,7 @@ class TranslationApiModelField extends ConsumerWidget {
       label: l.translationApiModel,
       controller: controller,
       onChanged: onChanged,
+      onSubmitted: onSubmitted,
     );
     final url = baseUrl.trim();
     final key = apiKey.trim();

@@ -4,6 +4,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'metadata_editor_parts.dart';
 
@@ -88,9 +89,10 @@ class _TimeTrackingEditorState extends State<TimeTrackingEditor> {
                 TextField(
                   controller: _estimate,
                   enabled: !_resetEstimate,
-                  decoration: editorInputDecoration(
+                  onSubmitted: _busy ? null : (_) => _save(),
+                  decoration: appInputDecoration(
                     context,
-                    hintText: l.estimateDurationHint,
+                    hint: l.estimateDurationHint,
                   ),
                 ),
                 CheckboxListTile(
@@ -106,9 +108,10 @@ class _TimeTrackingEditorState extends State<TimeTrackingEditor> {
                 TextField(
                   controller: _spent,
                   enabled: !_resetSpent,
-                  decoration: editorInputDecoration(
+                  onSubmitted: _busy ? null : (_) => _save(),
+                  decoration: appInputDecoration(
                     context,
-                    hintText: l.spentDurationHint,
+                    hint: l.spentDurationHint,
                   ),
                 ),
                 if ((widget.currentSpent ?? '').isNotEmpty)

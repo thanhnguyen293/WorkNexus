@@ -58,14 +58,11 @@ class _MetadataOverlay extends StatelessWidget {
                       ),
                     ),
                   ),
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
+                  AppIconButton(
+                    icon: LucideIcons.x300,
+                    tooltip: AppL10n.of(context).close,
+                    size: AppIconButtonSize.small,
                     onPressed: onClose,
-                    icon: const Icon(LucideIcons.x300),
-                    iconSize: spacing.xl4,
-                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
@@ -91,7 +88,13 @@ class _MetadataOverlay extends StatelessWidget {
               ? Alignment.bottomRight
               : Alignment.topRight,
           offset: Offset(0, showAbove ? -spacing.xs : spacing.xs),
-          child: SizedBox(width: width, child: popup),
+          // Esc closes the popover before it can reach the detail panel.
+          child: CallbackShortcuts(
+            bindings: {
+              const SingleActivator(LogicalKeyboardKey.escape): onClose,
+            },
+            child: SizedBox(width: width, child: popup),
+          ),
         ),
       ],
     );

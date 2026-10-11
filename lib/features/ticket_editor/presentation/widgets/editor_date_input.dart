@@ -4,8 +4,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -80,7 +82,7 @@ class _EditorDateInputState extends State<EditorDateInput> {
             children: [
               Icon(
                 LucideIcons.calendar300,
-                size: s.xl3,
+                size: context.sizes.iconMd,
                 color: picked == null ? c.textTertiary : c.accent,
               ),
               SizedBox(width: s.md),
@@ -95,10 +97,11 @@ class _EditorDateInputState extends State<EditorDateInput> {
                 ),
               ),
               if (picked != null)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
+                AppIconButton(
+                  icon: LucideIcons.x300,
+                  tooltip: AppL10n.of(context).ticketEditorClearDate,
+                  size: AppIconButtonSize.small,
                   color: c.textTertiary,
-                  icon: Icon(LucideIcons.x300, size: s.xl2),
                   onPressed: () => _pick(null),
                 ),
             ],

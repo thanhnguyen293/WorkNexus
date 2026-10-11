@@ -2,42 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_search_field.dart';
 import '../../../../l10n/app_localizations.dart';
 
-InputDecoration editorInputDecoration(
-  BuildContext context, {
-  required String hintText,
-}) {
-  final c = context.colors;
-  return InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: c.surfaceSubtle,
-    hintText: hintText,
-    hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: context.spacing.lg,
-      vertical: context.spacing.lg,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.accent),
-    ),
-  );
-}
-
+/// The search box at the top of a metadata editor popover; it takes focus as
+/// the popover opens so typing filters straight away.
 class EditorSearchField extends StatelessWidget {
   const EditorSearchField({
     super.key,
@@ -52,39 +25,14 @@ class EditorSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     return Padding(
       padding: EdgeInsets.all(context.spacing.md),
-      child: TextField(
+      child: AppSearchField(
         controller: controller,
+        hint: hint,
         autofocus: true,
         onChanged: onChanged,
-        style: context.typography.body.copyWith(color: c.textPrimary),
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: c.surfaceSubtle,
-          hintText: hint,
-          hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-          prefixIcon: Icon(
-            LucideIcons.search300,
-            size: context.spacing.xl4,
-            color: c.textTertiary,
-          ),
-          prefixIconConstraints: BoxConstraints(minWidth: context.spacing.xl6),
-          contentPadding: EdgeInsets.symmetric(vertical: context.spacing.lg),
-          border: _border(context, c.border),
-          enabledBorder: _border(context, c.border),
-          focusedBorder: _border(context, c.accent),
-        ),
       ),
-    );
-  }
-
-  OutlineInputBorder _border(BuildContext context, Color color) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: color),
     );
   }
 }
@@ -123,7 +71,7 @@ class EditorOptionTile extends StatelessWidget {
               child: selected
                   ? Icon(
                       LucideIcons.check300,
-                      size: context.spacing.xl4,
+                      size: context.sizes.iconMd,
                       color: c.accent,
                     )
                   : null,
@@ -211,10 +159,9 @@ class EditorFooter extends StatelessWidget {
 }
 
 class EditorMessage extends StatelessWidget {
-  const EditorMessage({super.key, required this.message, this.isError = false});
+  const EditorMessage({super.key, required this.message});
 
   final String message;
-  final bool isError;
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +170,7 @@ class EditorMessage extends StatelessWidget {
       child: Text(
         message,
         style: context.typography.body.copyWith(
-          color: isError ? context.colors.error : context.colors.textTertiary,
+          color: context.colors.textTertiary,
         ),
       ),
     );

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/dashboard_providers.dart';
@@ -29,11 +30,9 @@ class DashboardPage extends ConsumerWidget {
     if (account == null) {
       return ColoredBox(
         color: c.background,
-        child: Center(
-          child: Text(
-            l.dashboardNoAccount,
-            style: context.typography.body.copyWith(color: c.textTertiary),
-          ),
+        child: AppStateView.empty(
+          icon: LucideIcons.layoutGrid300,
+          title: l.dashboardNoAccount,
         ),
       );
     }
@@ -72,16 +71,14 @@ class DashboardPage extends ConsumerWidget {
                 ],
                 DashboardBody(account: account, dashboard: dashboard),
               ] else if (failed)
-                _LoadFailed(
+                AppStateView.error(
+                  title: l.dashboardLoadFailed,
                   onRetry: () => ref
                       .read(dashboardRefreshProvider(account.id).notifier)
                       .refresh(),
                 )
               else
-                Padding(
-                  padding: EdgeInsets.all(s.xl6),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
+                const AppStateView.loading(),
             ],
           ),
         ),
@@ -141,29 +138,4 @@ class _Frame extends StatelessWidget {
       child: SizedBox(width: double.infinity, child: child),
     ),
   );
-}
-
-class _LoadFailed extends StatelessWidget {
-  const _LoadFailed({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    return Padding(
-      padding: EdgeInsets.all(context.spacing.xl6),
-      child: Column(
-        children: [
-          Text(
-            l.dashboardLoadFailed,
-            style: context.typography.body.copyWith(color: c.textSecondary),
-          ),
-          SizedBox(height: context.spacing.md),
-          TextButton(onPressed: onRetry, child: Text(l.retry)),
-        ],
-      ),
-    );
-  }
 }

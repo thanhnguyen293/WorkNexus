@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
@@ -8,6 +9,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../l10n/app_localizations.dart';
 
 part 'detail_sidebar_section_overlay.dart';
 
@@ -167,22 +170,13 @@ class _SectionHeader extends StatelessWidget {
               ),
             ),
           ),
-        if (trailingIcon != null)
-          Tooltip(
-            message: actionTooltip ?? title,
-            child: InkWell(
-              mouseCursor: WidgetStateMouseCursor.clickable,
-              onTap: onAction,
-              borderRadius: BorderRadius.circular(context.radii.sm),
-              child: Padding(
-                padding: EdgeInsets.all(context.spacing.xs),
-                child: Icon(
-                  trailingIcon,
-                  size: context.spacing.xl3,
-                  color: actionColor,
-                ),
-              ),
-            ),
+        if (trailingIcon case final icon?)
+          AppIconButton(
+            icon: icon,
+            tooltip: actionTooltip ?? title,
+            size: AppIconButtonSize.small,
+            selected: isOpen,
+            onPressed: onAction,
           ),
       ],
     );

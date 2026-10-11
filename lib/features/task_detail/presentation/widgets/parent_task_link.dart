@@ -7,8 +7,10 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../util/open_zentao_task.dart';
 
@@ -37,16 +39,13 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
   String get _id => '${widget.ticket.accountId}:${widget.parentId}';
 
   Future<void> _open() async {
-    final messenger = ScaffoldMessenger.of(context);
     final l = AppL10n.of(context);
     setState(() => _opening = true);
     final res = await openZenTaoTask(ref, widget.ticket, widget.parentId);
     if (!mounted) return;
     setState(() => _opening = false);
     if (res case Err(:final failure)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.actionFailed(failure.message))),
-      );
+      showAppSnack(context, l.actionFailed(failure.message), isError: true);
     }
   }
 
@@ -69,7 +68,11 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.network300, size: s.xl3, color: c.accent),
+              Icon(
+                LucideIcons.network300,
+                size: context.sizes.iconMd,
+                color: c.accent,
+              ),
               SizedBox(width: s.sm),
               Text(
                 l.parentTask,
@@ -99,14 +102,15 @@ class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
               SizedBox(width: s.xs),
               if (_opening)
                 SizedBox.square(
-                  dimension: s.lg,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.6,
-                    color: c.accent,
-                  ),
+                  dimension: context.sizes.iconSm,
+                  child: const CircularProgressIndicator(),
                 )
               else
-                Icon(LucideIcons.chevronRight300, size: s.lg, color: c.accent),
+                Icon(
+                  LucideIcons.chevronRight300,
+                  size: context.sizes.iconSm,
+                  color: c.accent,
+                ),
             ],
           ),
         ),

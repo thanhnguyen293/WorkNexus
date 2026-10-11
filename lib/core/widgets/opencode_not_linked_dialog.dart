@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../di/providers.dart';
 import '../navigation/navigation_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
+import '../theme/app_sizes.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/fonts.dart';
-import '../../l10n/app_localizations.dart';
 import 'app_button.dart';
+import 'app_dialog_frame.dart';
 
 /// True when a translation can run: through the user's API key, or through
 /// an OpenCode CLI with an authenticated provider. Otherwise explains how to
@@ -30,29 +33,36 @@ Future<bool> ensureOpenCodeLinked(BuildContext context, WidgetRef ref) async {
 /// Explains how to link OpenCode when no provider is authenticated: run the CLI
 /// login, or switch translation to an API-key provider in Settings.
 class OpenCodeNotLinkedDialog extends ConsumerWidget {
-  const OpenCodeNotLinkedDialog();
+  const OpenCodeNotLinkedDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    return AlertDialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      title: Row(
-        children: [
-          Text('🔗', style: context.typography.title),
-          SizedBox(width: context.spacing.md),
-          Text(
-            l.openCodeNotLinkedTitle,
-            style: context.typography.title.copyWith(color: c.textPrimary),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 400,
+    final s = context.spacing;
+    return AppDialogFrame(
+      title: l.openCodeNotLinkedTitle,
+      maxWidth: context.sizes.dialogSm,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.gotIt),
+        ),
+        AppButton.filled(
+          size: AppButtonSize.small,
+          icon: LucideIcons.settings300,
+          onPressed: () {
+            Navigator.of(context).pop();
+            ref.read(openTicketIdProvider.notifier).close();
+            ref.read(settingsOpenProvider.notifier).state = true;
+          },
+          child: Text(l.openCodeOpenSettings),
+        ),
+      ],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,13 +73,10 @@ class OpenCodeNotLinkedDialog extends ConsumerWidget {
                 color: c.textSecondary,
               ),
             ),
-            SizedBox(height: context.spacing.xl),
+            SizedBox(height: s.xl),
             Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.xl,
-                vertical: context.spacing.lg,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.lg),
               decoration: BoxDecoration(
                 color: c.surfaceSubtle,
                 borderRadius: BorderRadius.circular(context.radii.md),
@@ -86,21 +93,6 @@ class OpenCodeNotLinkedDialog extends ConsumerWidget {
           ],
         ),
       ),
-      actions: [
-        AppButton.textNeutral(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.gotIt),
-        ),
-        SizedBox(width: context.spacing.md),
-        AppButton.filled(
-          onPressed: () {
-            Navigator.of(context).pop();
-            ref.read(openTicketIdProvider.notifier).close();
-            ref.read(settingsOpenProvider.notifier).state = true;
-          },
-          child: Text(l.openCodeOpenSettings),
-        ),
-      ],
     );
   }
 }

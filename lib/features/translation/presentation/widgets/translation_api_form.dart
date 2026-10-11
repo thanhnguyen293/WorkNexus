@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -138,9 +139,7 @@ class _ApiFormState extends ConsumerState<_ApiForm> {
         .read(translationApiControllerProvider.notifier)
         .save(config);
     if (result.isOk) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.translationApiSaved(_labelOf(l, inForce)))),
-      );
+      showAppSnackOn(messenger, l.translationApiSaved(_labelOf(l, inForce)));
     }
     if (!mounted) return;
     setState(() {
@@ -200,6 +199,9 @@ class _ApiFormState extends ConsumerState<_ApiForm> {
             obscure: _obscure,
             onToggleObscure: () => setState(() => _obscure = !_obscure),
             onChanged: () => setState(() {}),
+            onSubmitted: () {
+              if (_canSave) _save();
+            },
           ),
         if (_error != null) ...[
           SizedBox(height: context.spacing.md),

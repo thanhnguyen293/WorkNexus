@@ -7,71 +7,47 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_action.dart';
 import '../../domain/value_objects/zentao_create_action.dart';
 
-/// How a ZenTao action shows: its name, button icon and dialog emoji.
-typedef ZenTaoActionLook = ({String label, IconData icon, String emoji});
+/// How a ZenTao action shows: its name and button icon.
+typedef ZenTaoActionLook = ({String label, IconData icon});
 
 ZenTaoActionLook zenTaoBugActionLook(AppL10n l, ZenTaoBugAction action) =>
     switch (action) {
       ZenTaoBugAction.confirm => (
         label: l.zentaoConfirm,
         icon: LucideIcons.badgeCheck300,
-        emoji: '🔎',
       ),
       ZenTaoBugAction.resolve => (
         label: l.resolve,
         icon: LucideIcons.checkCircle300,
-        emoji: '✅',
       ),
-      ZenTaoBugAction.close => (
-        label: l.close,
-        icon: LucideIcons.archive300,
-        emoji: '🔒',
-      ),
+      ZenTaoBugAction.close => (label: l.close, icon: LucideIcons.archive300),
       ZenTaoBugAction.activate => (
         label: l.activate,
         icon: LucideIcons.rotateCcw300,
-        emoji: '🔁',
       ),
     };
 
-ZenTaoActionLook zenTaoTaskActionLook(AppL10n l, ZenTaoTaskAction action) =>
-    switch (action) {
-      ZenTaoTaskAction.start => (
-        label: l.zentaoStart,
-        icon: LucideIcons.play300,
-        emoji: '▶️',
-      ),
-      ZenTaoTaskAction.restart => (
-        label: l.zentaoRestart,
-        icon: LucideIcons.playCircle300,
-        emoji: '⏯️',
-      ),
-      ZenTaoTaskAction.pause => (
-        label: l.zentaoPause,
-        icon: LucideIcons.pause300,
-        emoji: '⏸️',
-      ),
-      ZenTaoTaskAction.finish => (
-        label: l.zentaoFinish,
-        icon: LucideIcons.flag300,
-        emoji: '🏁',
-      ),
-      ZenTaoTaskAction.activate => (
-        label: l.activate,
-        icon: LucideIcons.rotateCcw300,
-        emoji: '🔁',
-      ),
-      ZenTaoTaskAction.close => (
-        label: l.close,
-        icon: LucideIcons.archive300,
-        emoji: '🔒',
-      ),
-      ZenTaoTaskAction.cancel => (
-        label: l.zentaoCancelTask,
-        icon: LucideIcons.ban300,
-        emoji: '🚫',
-      ),
-    };
+ZenTaoActionLook zenTaoTaskActionLook(
+  AppL10n l,
+  ZenTaoTaskAction action,
+) => switch (action) {
+  ZenTaoTaskAction.start => (label: l.zentaoStart, icon: LucideIcons.play300),
+  ZenTaoTaskAction.restart => (
+    label: l.zentaoRestart,
+    icon: LucideIcons.playCircle300,
+  ),
+  ZenTaoTaskAction.pause => (label: l.zentaoPause, icon: LucideIcons.pause300),
+  ZenTaoTaskAction.finish => (label: l.zentaoFinish, icon: LucideIcons.flag300),
+  ZenTaoTaskAction.activate => (
+    label: l.activate,
+    icon: LucideIcons.rotateCcw300,
+  ),
+  ZenTaoTaskAction.close => (label: l.close, icon: LucideIcons.archive300),
+  ZenTaoTaskAction.cancel => (
+    label: l.zentaoCancelTask,
+    icon: LucideIcons.ban300,
+  ),
+};
 
 /// How starting something new from a bug or task shows: its name and icon.
 ({String label, IconData icon}) zenTaoCreateActionLook(

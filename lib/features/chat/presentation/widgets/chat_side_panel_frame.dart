@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
@@ -6,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Width of a panel beside the chat (info, pinned messages).
@@ -50,7 +52,8 @@ class ChatSidePanelFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    return Container(
+    final escape = onClose ?? onBack;
+    final panel = Container(
       width: width,
       decoration: BoxDecoration(
         color: c.background,
@@ -71,13 +74,10 @@ class ChatSidePanelFrame extends StatelessWidget {
             child: Row(
               children: [
                 if (onBack case final back?)
-                  IconButton(
+                  AppIconButton(
+                    icon: LucideIcons.arrowLeft300,
                     tooltip: AppL10n.of(context).chatBackToInfo,
                     onPressed: back,
-                    icon: Icon(
-                      LucideIcons.arrowLeft300,
-                      color: c.textSecondary,
-                    ),
                   ),
                 Expanded(
                   child: Text(
@@ -90,10 +90,10 @@ class ChatSidePanelFrame extends StatelessWidget {
                   ),
                 ),
                 if (onClose case final close?)
-                  IconButton(
+                  AppIconButton(
+                    icon: LucideIcons.x300,
                     tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
                     onPressed: close,
-                    icon: Icon(LucideIcons.x300, color: c.textSecondary),
                   ),
               ],
             ),
@@ -101,6 +101,12 @@ class ChatSidePanelFrame extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
+    );
+    if (escape == null) return panel;
+    // Esc from anywhere inside the panel closes it (or steps back to info).
+    return CallbackShortcuts(
+      bindings: {const SingleActivator(LogicalKeyboardKey.escape): escape},
+      child: panel,
     );
   }
 }

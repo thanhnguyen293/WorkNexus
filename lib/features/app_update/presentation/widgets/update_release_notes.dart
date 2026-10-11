@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_section_header.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -19,13 +19,11 @@ class UpdateReleaseNotes extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          AppL10n.of(context).updateWhatsNew.toUpperCase(),
-          style: context.typography.label.copyWith(color: c.textTertiary),
-        ),
-        SizedBox(height: s.md),
+        AppSectionHeader(title: AppL10n.of(context).updateWhatsNew),
+        SizedBox(height: s.xs),
         ConstrainedBox(
           // Half the window, so the buttons stay on screen; the rest scrolls.
           constraints: BoxConstraints(

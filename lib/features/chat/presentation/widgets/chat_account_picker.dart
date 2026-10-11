@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_dropdown.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 
@@ -15,31 +14,25 @@ class ChatAccountPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accounts = ref.watch(chatAccountsProvider);
     if (accounts.length < 2) return const SizedBox.shrink();
-    final c = context.colors;
     final selected = ref.watch(selectedChatAccountIdProvider);
+    final l = AppL10n.of(context);
+    final s = context.spacing;
+    String labelOf(String? id) {
+      final a = accounts.where((a) => a.id == id).firstOrNull;
+      if (a == null) return l.chatAccount;
+      final url = a.baseUrl;
+      return url == null
+          ? a.handle
+          : '${a.handle} · ${Uri.tryParse(url)?.host ?? url}';
+    }
+
     return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.md),
-      child: DropdownButton<String>(
-        mouseCursor: WidgetStateMouseCursor.clickable,
+      padding: EdgeInsets.fromLTRB(s.xl3, s.md, s.xl3, s.md),
+      child: AppDropdown<String?>(
         value: selected,
-        isExpanded: true,
-        isDense: true,
-        underline: const SizedBox.shrink(),
-        hint: Text(AppL10n.of(context).chatAccount),
-        style: context.typography.secondary.copyWith(color: c.textPrimary),
-        dropdownColor: c.surface,
-        items: [
-          for (final a in accounts)
-            DropdownMenuItem(
-              value: a.id,
-              child: Text(
-                a.baseUrl == null
-                    ? a.handle
-                    : '${a.handle} · ${Uri.tryParse(a.baseUrl!)?.host ?? a.baseUrl}',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
+        values: [for (final a in accounts) a.id],
+        labelOf: labelOf,
+        tooltip: l.chatAccount,
         onChanged: (id) =>
             ref.read(pickedChatAccountProvider.notifier).state = id,
       ),

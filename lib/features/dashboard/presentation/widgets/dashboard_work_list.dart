@@ -6,7 +6,9 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/dashboard_work_item.dart';
@@ -32,10 +34,11 @@ class DashboardWorkList extends ConsumerWidget {
     WidgetRef ref,
     DashboardWorkItem item,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
     final failed = AppL10n.of(context).dashboardOpenFailed;
     final res = await openDashboardItem(ref, account, item.kind, item.id);
-    if (res is Err) messenger.showSnackBar(SnackBar(content: Text(failed)));
+    if (res is Err && context.mounted) {
+      showAppSnack(context, failed, isError: true);
+    }
   }
 
   @override
@@ -54,7 +57,8 @@ class DashboardWorkList extends ConsumerWidget {
               if (item.priority case final pri? when pri > 0)
                 PriorityTag(ProviderType.zentao, Priority.fromLevel(pri - 1)),
               if (item.status case final status?)
-                MyWorkStatusChip(
+                TintedPill(
+                  pill: true,
                   label: item.statusLabel ?? _statusLabel(l, status),
                   color: dashboardStatusColor(
                     c,

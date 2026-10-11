@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/notification_providers.dart';
@@ -63,8 +66,8 @@ class _SlideIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
     tween: Tween(begin: -1, end: 0),
-    duration: const Duration(milliseconds: 180),
-    curve: Curves.easeOutCubic,
+    duration: AppMotion.slow,
+    curve: AppMotion.enter,
     builder: (context, dx, child) => FractionalTranslation(
       translation: Offset(dx * 0.15, 0),
       child: Opacity(opacity: 1 + dx, child: child),
@@ -84,22 +87,27 @@ class _Panel extends ConsumerWidget {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final refresh = ref.watch(notificationsRefreshProvider);
-    final loaded = ref.watch(notificationsProvider).hasValue;
+    final stored = ref.watch(notificationsProvider);
     final days = ref.watch(notificationDaysProvider);
     final unreadOnly = ref.watch(notificationsUnreadOnlyProvider);
-    final failed = refresh.hasError && !refresh.isLoading;
+    final failed = (refresh.hasError && !refresh.isLoading) || stored.hasError;
     final Widget body;
     if (days.isNotEmpty) {
       body = NotificationDayList(days: days);
-    } else if (!loaded || refresh.isLoading) {
-      body = const Center(child: CircularProgressIndicator());
+    } else if (refresh.isLoading || (!stored.hasValue && !failed)) {
+      body = const AppStateView.loading(compact: true);
+    } else if (failed) {
+      body = AppStateView.error(
+        compact: true,
+        title: l.notificationsLoadFailed,
+        onRetry: () =>
+            ref.read(notificationsRefreshProvider.notifier).refresh(),
+      );
     } else {
-      body = _Message(
-        failed
-            ? l.notificationsLoadFailed
-            : unreadOnly
-            ? l.notificationsEmptyUnread
-            : l.notificationsEmpty,
+      body = AppStateView.empty(
+        compact: true,
+        icon: unreadOnly ? LucideIcons.checkCheck300 : LucideIcons.bellOff300,
+        title: unreadOnly ? l.notificationsEmptyUnread : l.notificationsEmpty,
       );
     }
     return Focus(
@@ -113,7 +121,7 @@ class _Panel extends ConsumerWidget {
         return KeyEventResult.handled;
       },
       child: Container(
-        width: s.xl6 * 11,
+        width: context.sizes.sidePanel,
         decoration: BoxDecoration(
           color: c.background,
           border: Border(right: context.hairlineSide),
@@ -142,24 +150,4 @@ class _Panel extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _Message extends StatelessWidget {
-  const _Message(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: EdgeInsets.all(context.spacing.xl4),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: context.typography.body.copyWith(
-          color: context.colors.textTertiary,
-        ),
-      ),
-    ),
-  );
 }

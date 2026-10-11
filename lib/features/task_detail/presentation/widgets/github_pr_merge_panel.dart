@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -57,7 +58,7 @@ class GitHubPrMergePanel extends StatelessWidget {
             children: [
               Icon(
                 LucideIcons.info500,
-                size: context.spacing.xl4,
+                size: context.sizes.iconLg,
                 color: c.info,
               ),
               Text(
@@ -95,7 +96,7 @@ class GitHubPrMergePanel extends StatelessWidget {
                   needsUpdate
                       ? LucideIcons.minusCircle300
                       : LucideIcons.info500,
-                  size: context.spacing.xl4,
+                  size: context.sizes.iconLg,
                   color: needsUpdate ? c.warning : c.info,
                 ),
                 Text(

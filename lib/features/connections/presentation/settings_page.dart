@@ -9,6 +9,8 @@ import '../../../core/theme/app_radii.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_section_header.dart';
+import '../../../core/widgets/app_snack.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../l10n/app_localizations.dart';
 import 'add_connection_dialog.dart';
@@ -16,6 +18,7 @@ import 'github_connection_dialog.dart';
 import 'gitlab_connection_dialog.dart';
 import 'settings_providers.dart';
 import 'widgets/account_list.dart';
+import 'widgets/settings_section_heading.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({this.footer, super.key});
@@ -47,45 +50,16 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l.connectedAccounts,
-                              style: context.typography.titleLg.copyWith(
-                                color: c.textPrimary,
-                              ),
-                            ),
-                            SizedBox(height: context.spacing.xs),
-                            Text(
-                              'The same provider can be connected multiple times — one per company. '
-                              'Tasks assigned to you are pulled from every account below.',
-                              style: context.typography.paragraph.copyWith(
-                                color: c.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: context.spacing.xl3),
-                      AppButton.filled(
-                        onPressed: () => ref
-                            .read(connectPickerOpenProvider.notifier)
-                            .update((v) => !v),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(LucideIcons.plus300, size: 16),
-                            SizedBox(width: context.spacing.sm),
-                            Text(l.connect),
-                          ],
-                        ),
-                      ),
-                    ],
+                  SettingsSectionHeading(
+                    title: l.connectedAccounts,
+                    subtitle: l.connectionsSettingsSubtitle,
+                    trailing: AppButton.filled(
+                      icon: LucideIcons.plus300,
+                      onPressed: () => ref
+                          .read(connectPickerOpenProvider.notifier)
+                          .update((v) => !v),
+                      child: Text(l.connect),
+                    ),
                   ),
                   if (pickerOpen) ...[
                     SizedBox(height: context.spacing.xl3),
@@ -94,9 +68,9 @@ class SettingsPage extends ConsumerWidget {
                   SizedBox(height: context.spacing.xl4),
                   for (final w in workspaces)
                     WorkspaceAccounts(workspaceId: w.id, lookups: lookups),
-                  if (footer != null) ...[
+                  if (footer case final footer?) ...[
                     SizedBox(height: context.spacing.xl4),
-                    footer!,
+                    footer,
                   ],
                 ],
               ),
@@ -117,14 +91,14 @@ class _ProviderPicker extends ConsumerWidget {
       padding: EdgeInsets.all(context.spacing.xl2),
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
+        borderRadius: BorderRadius.circular(context.radii.lg),
         border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _uppercase(context, l.chooseProvider),
-          SizedBox(height: context.spacing.lg),
+          AppSectionHeader(title: l.chooseProvider),
+          SizedBox(height: context.spacing.md),
           Row(
             children: [
               for (final p in ProviderType.values) ...[
@@ -140,12 +114,9 @@ class _ProviderPicker extends ConsumerWidget {
                         case ProviderType.github:
                           GitHubConnectionDialog.show(context);
                         case ProviderType.jira:
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '${p.displayName} adapter coming soon',
-                              ),
-                            ),
+                          showAppSnack(
+                            context,
+                            l.connectionsProviderComingSoon(p.displayName),
                           );
                       }
                     },
@@ -174,12 +145,3 @@ class _ProviderPicker extends ConsumerWidget {
     );
   }
 }
-
-Widget _uppercase(BuildContext context, String text) => Text(
-  text.toUpperCase(),
-  style: context.typography.caption.copyWith(
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.5,
-    color: context.colors.textTertiary,
-  ),
-);

@@ -4,9 +4,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_cache_usage.dart';
@@ -237,21 +239,14 @@ class _UsageRow extends StatelessWidget {
           ),
           SizedBox(width: s.sm),
           if (onClear case final clear?)
-            IconButton(
+            AppIconButton(
+              icon: LucideIcons.trash300,
               tooltip: AppL10n.of(context).chatDelete,
               onPressed: clear,
-              visualDensity: VisualDensity.compact,
-              mouseCursor: SystemMouseCursors.click,
-              hoverColor: c.mixT(c.error, 0.12),
-              icon: Icon(
-                LucideIcons.trash300,
-                size: s.xl3,
-                color: c.textSecondary,
-              ),
             )
           else
             // Lines the sizes up with the deletable rows'.
-            SizedBox(width: s.xl6),
+            SizedBox(width: context.sizes.controlMd),
         ],
       ),
     );
@@ -259,26 +254,13 @@ class _UsageRow extends StatelessWidget {
 }
 
 /// Asks before deleting downloaded files; true when confirmed.
-Future<bool> confirmChatStorageClear(
-  BuildContext context,
-  String question,
-) async {
+Future<bool> confirmChatStorageClear(BuildContext context, String question) {
   final l = AppL10n.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      content: Text(question),
-      actions: [
-        AppButton.textNeutral(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(l.chatCancel),
-        ),
-        AppButton.error(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l.chatDelete),
-        ),
-      ],
-    ),
+  return AppConfirmDialog.show(
+    context,
+    title: l.chatStorageClearTitle,
+    message: question,
+    confirmLabel: l.chatDelete,
+    destructive: true,
   );
-  return ok ?? false;
 }

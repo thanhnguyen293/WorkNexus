@@ -3,8 +3,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// A small removable chip — an attached file, a picked build or user — in
 /// the app's quiet chip style instead of Material's outlined one.
@@ -45,7 +48,7 @@ class EditorChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon case final icon?) ...[
-            Icon(icon, size: s.xl, color: c.accent),
+            Icon(icon, size: context.sizes.iconSm, color: c.accent),
             SizedBox(width: s.xs),
           ],
           if (maxWidth case final w?)
@@ -56,14 +59,12 @@ class EditorChip extends StatelessWidget {
           else
             Flexible(child: text),
           SizedBox(width: s.xxs),
-          InkWell(
-            mouseCursor: WidgetStateMouseCursor.clickable,
-            onTap: onRemove,
-            borderRadius: BorderRadius.circular(context.radii.sm),
-            child: Padding(
-              padding: EdgeInsets.all(s.xs),
-              child: Icon(LucideIcons.x300, size: s.xl, color: c.textTertiary),
-            ),
+          AppIconButton(
+            icon: LucideIcons.x300,
+            tooltip: AppL10n.of(context).ticketEditorRemoveItem,
+            size: AppIconButtonSize.small,
+            color: c.textTertiary,
+            onPressed: onRemove,
           ),
         ],
       ),

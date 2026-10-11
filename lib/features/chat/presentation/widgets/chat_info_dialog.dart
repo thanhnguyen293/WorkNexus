@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -52,10 +53,15 @@ class _ChatInfoDialog extends ConsumerWidget {
         Navigator.of(context).pop();
       }
     });
+    // Not AppDialogFrame: the panel brings its own titled header and close
+    // button, so the frame's would show twice. The chrome matches it.
     return Dialog(
       clipBehavior: Clip.antiAlias,
+      backgroundColor: context.colors.surface,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.radii.lg),
+        side: BorderSide(color: context.colors.border),
       ),
       child: SizedBox(
         width: kChatSidePanelWidth,

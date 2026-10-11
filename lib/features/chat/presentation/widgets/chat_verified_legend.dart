@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -80,9 +81,19 @@ class _Row extends StatelessWidget {
       child: Row(
         children: [
           if (check != null)
-            Icon(Icons.verified_rounded, size: s.xl3, color: check)
+            // The familiar filled "verified" seal, kept on purpose: Lucide's
+            // outline badge doesn't read as one.
+            Icon(
+              Icons.verified_rounded,
+              size: context.sizes.iconMd,
+              color: check,
+            )
           else
-            Icon(LucideIcons.minus300, size: s.xl3, color: c.textTertiary),
+            Icon(
+              LucideIcons.minus300,
+              size: context.sizes.iconMd,
+              color: c.textTertiary,
+            ),
           SizedBox(width: s.md),
           // Wraps when the window is narrow rather than overflowing.
           Flexible(

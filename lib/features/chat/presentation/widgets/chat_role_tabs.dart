@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/order_chat_roles.dart';
 import 'chat_labels.dart';
@@ -108,12 +110,12 @@ class _ChatRoleTabsState extends State<ChatRoleTabs>
       onTap: (i) => widget.onSelect(i == 0 ? null : order[i - 1]),
       tabs: [
         Tab(
-          height: s.xl6 * 0.75,
+          height: context.sizes.controlMd,
           child: _TabLabel(label: l.chatTabAll, count: roles.length),
         ),
         for (final code in order)
           Tab(
-            height: s.xl6 * 0.75,
+            height: context.sizes.controlMd,
             child: _TabLabel(label: label(code), count: count(code)),
           ),
       ],
@@ -121,8 +123,8 @@ class _ChatRoleTabsState extends State<ChatRoleTabs>
   }
 }
 
-/// A tab's name with its count as a small pill beside it, tinted with the
-/// tab's own text colour (accent when picked).
+/// A tab's name with its count beside it, the count tinted like the tab
+/// (accent when picked).
 class _TabLabel extends StatelessWidget {
   const _TabLabel({required this.label, required this.count});
 
@@ -131,27 +133,16 @@ class _TabLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = context.spacing;
-    final ink =
-        DefaultTextStyle.of(context).style.color ??
-        context.colors.textSecondary;
+    final accent = context.colors.accent;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label),
-        SizedBox(width: s.sm),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: ink.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(context.radii.pill),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xxs),
-            child: Text(
-              '$count',
-              style: context.typography.captionStrong.copyWith(color: ink),
-            ),
-          ),
+        SizedBox(width: context.spacing.sm),
+        // The tab bar paints the picked label in the accent: follow it.
+        AppCountBadge(
+          count,
+          active: DefaultTextStyle.of(context).style.color == accent,
         ),
       ],
     );

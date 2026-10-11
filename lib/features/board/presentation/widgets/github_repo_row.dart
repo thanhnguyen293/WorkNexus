@@ -7,6 +7,7 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -45,7 +46,7 @@ class GitHubRepoRow extends ConsumerWidget {
         onTap: loading ? null : () => _select(ref),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(
-          height: 27,
+          height: context.sizes.controlSm,
           padding: EdgeInsets.only(
             left: context.spacing.sm,
             right: context.spacing.xxs,

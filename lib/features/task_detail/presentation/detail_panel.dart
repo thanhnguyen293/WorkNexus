@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
@@ -8,6 +9,7 @@ import '../../../core/navigation/navigation_providers.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_borders.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_motion.dart';
 import 'detail_providers.dart';
 import 'widgets/detail_header.dart';
 import 'widgets/detail_tab_bar.dart';
@@ -29,13 +31,15 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: AppMotion.slow,
   );
+  final _focus = FocusNode(debugLabel: 'detail-panel');
   String? _current;
 
   @override
   void dispose() {
     _c.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -52,6 +56,10 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
         // autoDispose provider was disposed).
         ref.invalidate(ticketDetailSyncProvider(next));
         _c.forward();
+        // Take focus so Esc closes the panel without a click into it first.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _focus.requestFocus();
+        });
       } else {
         _c.reverse().then((_) {
           if (mounted) setState(() => _current = null);
@@ -70,7 +78,7 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
     final width = (screenWidth * (twoPane ? 0.64 : 0.52))
         .clamp(twoPane ? 680.0 : 460.0, twoPane ? 1000.0 : 760.0)
         .clamp(0.0, screenWidth);
-    final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    final curve = CurvedAnimation(parent: _c, curve: AppMotion.enter);
 
     return AnimatedBuilder(
       animation: _c,
@@ -99,7 +107,16 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
                 translation: Offset(1 - curve.value, 0),
                 child: id == null
                     ? const SizedBox.shrink()
-                    : _DetailPanel(ticketId: id, onClose: _close),
+                    : CallbackShortcuts(
+                        bindings: {
+                          const SingleActivator(LogicalKeyboardKey.escape):
+                              _close,
+                        },
+                        child: Focus(
+                          focusNode: _focus,
+                          child: _DetailPanel(ticketId: id, onClose: _close),
+                        ),
+                      ),
               ),
             ),
           ],
@@ -156,12 +173,11 @@ class _DetailPanel extends ConsumerWidget {
           DetailHeader(ticket: ticket, wsColor: wsColor, onClose: onClose),
           DetailTabBar(current: tab),
           SizedBox(
-            height: 2,
+            height: context.borders.thick,
             child: detailLoading
                 ? LinearProgressIndicator(
-                    minHeight: 2,
+                    minHeight: context.borders.thick,
                     backgroundColor: Colors.transparent,
-                    color: c.accent,
                   )
                 : null,
           ),

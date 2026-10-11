@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -41,7 +43,10 @@ class ZenTaoBugColumnFooter extends ConsumerWidget {
               text: AppL10n.of(context).bugTabLoadFailed,
               isError: true,
             ),
-            TextButton(
+            SizedBox(height: context.spacing.xs),
+            AppButton.textNeutral(
+              size: AppButtonSize.small,
+              icon: LucideIcons.rotateCw300,
               onPressed: () => controller.retry(view),
               child: Text(AppL10n.of(context).retry),
             ),

@@ -9,7 +9,6 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/board/presentation/board_refresh.dart';
 import 'package:work_nexus/features/board/presentation/filter_providers.dart';
 import 'package:work_nexus/features/board/presentation/widgets/chrome_bar.dart';
-import 'package:work_nexus/features/board/presentation/widgets/sidebar_primitives.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 import '../support/di_test_harness.dart';
@@ -73,7 +72,7 @@ void main() {
     await tester.pump();
 
     expect(find.byIcon(LucideIcons.rotateCw300), findsNothing);
-    expect(find.byType(SidebarSyncIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     await disposeTree(tester);
   });

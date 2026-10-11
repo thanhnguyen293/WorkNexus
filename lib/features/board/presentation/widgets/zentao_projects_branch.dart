@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
+import 'sidebar_tree_rows.dart';
 import 'zentao_project_row.dart';
 
 /// A ZenTao node's collapsible "Bugs" group (collapsed by default) holding the
@@ -50,8 +46,12 @@ class ZenTaoProjectsBranch extends ConsumerWidget {
           tickets: tickets,
         );
       },
-      loading: () => _MutedRow(label: l.loadingProjects),
-      error: (_, _) => _MutedRow(label: l.projectsUnavailable),
+      loading: () => SidebarStatusRow(label: l.loadingProjects, loading: true),
+      error: (_, _) => SidebarStatusRow(
+        label: l.projectsUnavailable,
+        isError: true,
+        onRetry: () => ref.invalidate(zentaoProductsProvider(account.id)),
+      ),
     );
   }
 }
@@ -69,7 +69,6 @@ class _ProjectsGroup extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final expanded = ref.watch(
       zentaoProjectsExpandedProvider.select((s) => s.contains(accountId)),
@@ -78,37 +77,12 @@ class _ProjectsGroup extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          mouseCursor: WidgetStateMouseCursor.clickable,
+        SidebarGroupToggle(
+          label: l.bugs,
+          expanded: expanded,
           onTap: () => ref
               .read(zentaoProjectsExpandedProvider.notifier)
               .toggle(accountId),
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          child: Container(
-            height: 27,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-            child: Row(
-              children: [
-                Icon(
-                  expanded
-                      ? LucideIcons.chevronDown300
-                      : LucideIcons.chevronRight300,
-                  size: 14,
-                  color: c.textTertiary,
-                ),
-                SizedBox(width: context.spacing.xs),
-                Expanded(
-                  child: Text(
-                    l.bugs,
-                    style: context.typography.mono.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: c.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
         if (expanded)
           SidebarTreeBranch(
@@ -121,44 +95,6 @@ class _ProjectsGroup extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _MutedRow extends StatelessWidget {
-  const _MutedRow({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      height: 27,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(
-              color: c.textTertiary,
-              shape: BoxShape.circle,
-            ),
-          ),
-          SizedBox(width: context.spacing.sm),
-          Expanded(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.mono.copyWith(
-                fontWeight: FontWeight.w500,
-                color: c.textTertiary,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

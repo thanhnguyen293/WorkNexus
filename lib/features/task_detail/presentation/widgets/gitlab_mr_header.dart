@@ -7,6 +7,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
@@ -90,7 +91,7 @@ class GitLabMrHeader extends StatelessWidget {
                   target.isNotEmpty)
                 Icon(
                   LucideIcons.arrowRight300,
-                  size: context.spacing.xl2,
+                  size: context.sizes.iconSm,
                   color: c.textTertiary,
                 ),
               if (target != null && target.isNotEmpty) _BranchPill(target),

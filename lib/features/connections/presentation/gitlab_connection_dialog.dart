@@ -5,15 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radii.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/badges.dart';
+import '../../../core/widgets/connection_text_field.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
-import '../../../core/widgets/connection_text_field.dart';
+import 'widgets/connection_dialog_frame.dart';
 import 'widgets/generate_token_link.dart';
 import 'widgets/workspace_picker.dart';
 
@@ -60,11 +55,9 @@ class _GitLabConnectionDialogState
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final workspaces = ref.watch(lookupsProvider).workspaces.values.toList();
     _workspaceId ??= initialWorkspaceId(workspaces);
-    // No workspace yet: skip the picker; connecting creates a default one.
     final noWorkspace = workspaces.isEmpty;
     final state = ref.watch(addConnectionControllerProvider);
 
@@ -72,128 +65,59 @@ class _GitLabConnectionDialogState
       if (s.done && context.mounted) Navigator.of(context).pop();
     });
 
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.xl4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const ProviderBadge(ProviderType.gitlab, big: true),
-                  SizedBox(width: context.spacing.lg),
-                  Text(
-                    l.connectGitLab,
-                    style: context.typography.title.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: context.spacing.xs),
-              Text(
-                l.gitlabConnectionSubtitle,
-                style: context.typography.paragraphSm.copyWith(
-                  color: c.textSecondary,
-                ),
-              ),
-              SizedBox(height: context.spacing.xl3),
-              ConnectionTextField(
-                label: l.serverUrl,
-                controller: _baseUrl,
-                hint: l.gitlabServerHint,
-              ),
-              SizedBox(height: context.spacing.lg),
-              ConnectionTextField(
-                label: l.personalAccessToken,
-                controller: _token,
-                hint: l.gitlabTokenHint,
-                obscure: true,
-                onChanged: (_) => setState(() {}),
-                trailing: GenerateTokenLink(onTap: _openTokenPage),
-              ),
-              SizedBox(height: context.spacing.xl),
-              if (!noWorkspace)
-                WorkspacePicker(
-                  workspaces: workspaces,
-                  value: _workspaceId,
-                  newValue: _kNewWorkspace,
-                  onChanged: (v) => setState(() => _workspaceId = v),
-                ),
-              if (!noWorkspace && _workspaceId == _kNewWorkspace) ...[
-                SizedBox(height: context.spacing.lg),
-                ConnectionTextField(
-                  label: l.newWorkspaceName,
-                  controller: _newWorkspace,
-                  hint: l.newWorkspaceHint,
-                  onChanged: (_) => setState(() {}),
-                ),
-              ],
-              if (state.error != null) ...[
-                SizedBox(height: context.spacing.xl),
-                Container(
-                  padding: EdgeInsets.all(context.spacing.lg),
-                  decoration: BoxDecoration(
-                    color: c.mixT(c.error, 0.10),
-                    borderRadius: BorderRadius.circular(context.radii.md),
-                    border: Border.all(color: c.mixT(c.error, 0.35)),
-                  ),
-                  child: Text(
-                    state.error!,
-                    style: context.typography.bodySm.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-              SizedBox(height: context.spacing.xl3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton.textNeutral(
-                    onPressed: state.busy
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    child: Text(l.cancel),
-                  ),
-                  SizedBox(width: context.spacing.md),
-                  AppButton.filled(
-                    isLoading: state.busy,
-                    onPressed: _canConnect(state, noWorkspace: noWorkspace)
-                        ? () => ref
-                              .read(addConnectionControllerProvider.notifier)
-                              .connectGitLab(
-                                baseUrl: _baseUrl.text,
-                                token: _token.text,
-                                workspaceId:
-                                    noWorkspace ||
-                                        _workspaceId == _kNewWorkspace
-                                    ? null
-                                    : _workspaceId,
-                                newWorkspaceName: noWorkspace
-                                    ? l.defaultWorkspaceName
-                                    : _workspaceId == _kNewWorkspace
-                                    ? _newWorkspace.text
-                                    : null,
-                              )
-                        : null,
-                    child: Text(l.connectAndSync),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    final connect = _canConnect(state, noWorkspace: noWorkspace)
+        ? () => _connect(l, noWorkspace: noWorkspace)
+        : null;
+    void submit(String _) => connect?.call();
+
+    return ConnectionDialogFrame(
+      provider: ProviderType.gitlab,
+      title: l.connectGitLab,
+      subtitle: l.gitlabConnectionSubtitle,
+      fields: [
+        ConnectionTextField(
+          label: l.serverUrl,
+          controller: _baseUrl,
+          hint: l.gitlabServerHint,
+          onSubmitted: submit,
         ),
-      ),
+        ConnectionTextField(
+          label: l.personalAccessToken,
+          controller: _token,
+          hint: l.gitlabTokenHint,
+          obscure: true,
+          autofocus: true,
+          onChanged: (_) => setState(() {}),
+          onSubmitted: submit,
+          trailing: GenerateTokenLink(onTap: _openTokenPage),
+        ),
+      ],
+      workspaces: workspaces,
+      workspaceId: _workspaceId,
+      newWorkspaceValue: _kNewWorkspace,
+      newWorkspace: _newWorkspace,
+      onWorkspaceChanged: (v) => setState(() => _workspaceId = v),
+      onNewWorkspaceChanged: () => setState(() {}),
+      busy: state.busy,
+      error: state.error,
+      onConnect: connect,
     );
   }
+
+  void _connect(AppL10n l, {required bool noWorkspace}) => ref
+      .read(addConnectionControllerProvider.notifier)
+      .connectGitLab(
+        baseUrl: _baseUrl.text,
+        token: _token.text,
+        workspaceId: noWorkspace || _workspaceId == _kNewWorkspace
+            ? null
+            : _workspaceId,
+        newWorkspaceName: noWorkspace
+            ? l.defaultWorkspaceName
+            : _workspaceId == _kNewWorkspace
+            ? _newWorkspace.text
+            : null,
+      );
 
   bool _canConnect(AddConnectionState state, {required bool noWorkspace}) {
     if (state.busy) return false;

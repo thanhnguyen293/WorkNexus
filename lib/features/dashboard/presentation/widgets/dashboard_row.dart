@@ -34,7 +34,6 @@ class DashboardRow extends StatelessWidget {
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
       borderRadius: BorderRadius.circular(context.radii.md),
-      hoverColor: c.selectionFill,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.sm),
         child: Row(

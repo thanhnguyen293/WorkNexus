@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/unread_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 
-const Duration _kDuration = Duration(milliseconds: 200);
+const Duration _kDuration = AppMotion.base;
 
 /// Round button over the bottom of the messages while the user has scrolled
 /// up: jumps back to the newest message. [unseen] counts messages that

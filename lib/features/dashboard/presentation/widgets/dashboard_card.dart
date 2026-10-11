@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_count_badge.dart';
 
 /// A dashboard section in the app's panel-card style (like the chat info
 /// cards): a surface with a hairline border, a header with an optional icon,
@@ -37,11 +39,13 @@ class DashboardCard extends StatelessWidget {
     final s = context.spacing;
     final t = context.typography;
     final title = this.title;
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surface,
+    // A Material rather than a decorated Container, so the rows' InkWell
+    // hover and splash paint on the card instead of under it.
+    return Material(
+      color: c.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.radii.lg),
-        border: Border.fromBorderSide(context.hairlineSide),
+        side: context.hairlineSide,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -53,7 +57,11 @@ class DashboardCard extends StatelessWidget {
               child: Row(
                 children: [
                   if (icon case final icon?) ...[
-                    Icon(icon, size: s.xl3, color: c.textSecondary),
+                    Icon(
+                      icon,
+                      size: context.sizes.iconMd,
+                      color: c.textSecondary,
+                    ),
                     SizedBox(width: s.md),
                   ],
                   Flexible(
@@ -66,7 +74,7 @@ class DashboardCard extends StatelessWidget {
                   ),
                   if (count case final n?) ...[
                     SizedBox(width: s.sm),
-                    DashboardCountBadge(n),
+                    AppCountBadge(n),
                   ],
                   const Spacer(),
                   ?action,
@@ -78,55 +86,4 @@ class DashboardCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A muted pill holding a count, beside a section title.
-class DashboardCountBadge extends StatelessWidget {
-  const DashboardCountBadge(this.count, {super.key});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xxs / 2),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.pill),
-      ),
-      child: Text(
-        '$count',
-        style: context.typography.captionStrong.copyWith(
-          color: c.textSecondary,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
-    );
-  }
-}
-
-/// The compact text button for a card header ("See all").
-class DashboardCardAction extends StatelessWidget {
-  const DashboardCardAction({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => TextButton(
-    onPressed: onPressed,
-    style: TextButton.styleFrom(
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
-      minimumSize: Size.zero,
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-    ),
-    child: Text(label),
-  );
 }

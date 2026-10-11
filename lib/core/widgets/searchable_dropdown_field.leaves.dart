@@ -29,31 +29,10 @@ class _SearchBox extends StatelessWidget {
           focusNode: focusNode,
           onChanged: onChanged,
           style: context.typography.body.copyWith(color: c.textPrimary),
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: c.surfaceSubtle,
-            hintText: hint,
-            hintStyle: context.typography.body.copyWith(color: c.textTertiary),
-            prefixIcon: Icon(
-              LucideIcons.search300,
-              size: 18,
-              color: c.textTertiary,
-            ),
-            prefixIconConstraints: BoxConstraints(minWidth: spacing.xl6),
-            contentPadding: EdgeInsets.symmetric(vertical: spacing.lg),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(context.radii.md),
-              borderSide: BorderSide(color: c.accent),
-            ),
+          decoration: appInputDecoration(
+            context,
+            hint: hint,
+            prefixIcon: LucideIcons.search300,
           ),
         ),
       ),

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_state_view.dart';
+import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_profile.dart';
@@ -35,150 +40,138 @@ class ZenTaoProfileDialog extends ConsumerWidget {
     final profile = ref.watch(zenTaoProfileProvider(account.id)).asData?.value;
     final refreshing = ref.watch(refreshZenTaoProfileProvider(account));
     final failed = refreshing.hasError || refreshing.asData?.value is Err;
-    final name = profile?.realname.isNotEmpty == true
-        ? profile!.realname
-        : account.handle;
+    final realname = profile?.realname ?? '';
+    final name = realname.isNotEmpty ? realname : account.handle;
 
-    return Dialog(
-      backgroundColor: c.surface,
-      insetPadding: EdgeInsets.all(s.xl3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 740,
-          maxHeight: MediaQuery.sizeOf(context).height - s.xl5 * 2,
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(s.xl5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (profile != null)
-                    IconButton(
-                      tooltip: l.profileEditTitle,
-                      onPressed: () => ZenTaoProfileEditDialog.show(
-                        context,
-                        account: account,
-                        profile: profile,
-                      ),
-                      icon: Icon(Icons.edit_outlined, color: c.textSecondary),
-                    ),
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).closeButtonTooltip,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(Icons.close, color: c.textSecondary),
-                  ),
-                ],
+    return AppDialogFrame(
+      title: name,
+      maxWidth: context.sizes.dialogLg,
+      maxHeight: MediaQuery.sizeOf(context).height - s.xl5 * 2,
+      headerTrailing: profile == null
+          ? null
+          : AppIconButton(
+              icon: LucideIcons.pencil300,
+              tooltip: l.profileEditTitle,
+              onPressed: () => ZenTaoProfileEditDialog.show(
+                context,
+                account: account,
+                profile: profile,
               ),
-              Center(
-                child: UserAvatar(
-                  name: name,
-                  imageUrl: profile?.avatarUrl,
-                  diameter: s.xl6 * 1.3,
-                ),
+            ),
+      actions: const [],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: UserAvatar(
+                name: name,
+                imageUrl: profile?.avatarUrl,
+                diameter: s.xl6 * 1.3,
               ),
+            ),
+            if (profile?.role case final role?) ...[
               SizedBox(height: s.sm),
               Text(
-                name,
+                role,
                 textAlign: TextAlign.center,
-                style: context.typography.title.copyWith(color: c.textPrimary),
+                style: context.typography.secondary.copyWith(
+                  color: c.textSecondary,
+                ),
               ),
-              if (profile?.role case final role?)
-                Text(
-                  role,
-                  textAlign: TextAlign.center,
-                  style: context.typography.secondary.copyWith(
-                    color: c.textSecondary,
-                  ),
-                ),
-              SizedBox(height: s.xl3),
-              if (failed)
-                Padding(
-                  padding: EdgeInsets.only(bottom: s.xl3),
-                  child: Text(
-                    l.profileRefreshFailed,
-                    style: context.typography.secondary.copyWith(
-                      color: c.error,
-                    ),
-                  ),
-                ),
-              if (profile == null)
-                Padding(
-                  padding: EdgeInsets.all(s.xl5),
-                  child: Center(
-                    child: refreshing.isLoading
-                        ? const CircularProgressIndicator()
-                        : Text(l.profileUnavailable),
-                  ),
-                )
-              else ...[
-                _ProfileSection(
-                  title: l.profileBasicInfo,
-                  left: [
-                    (label: l.profileName, value: profile.realname),
-                    (label: l.profileAccount, value: profile.account),
-                    (label: l.profileDepartment, value: profile.department),
-                    (
-                      label: l.profileJoined,
-                      value: _date(profile.joined, false),
-                    ),
-                  ],
-                  right: [
-                    (label: l.profileGender, value: _gender(l, profile)),
-                    (label: l.profileEmail, value: profile.email),
-                    (label: l.profileRole, value: profile.role),
-                    (label: l.profilePrivilege, value: profile.privilege),
-                  ],
-                ),
-                SizedBox(height: s.xl3),
-                _ProfileSection(
-                  title: l.profileContactInfo,
-                  left: [
-                    (label: l.profileMobile, value: profile.mobile),
-                    (label: l.profilePhone, value: profile.phone),
-                    (label: l.profileZipcode, value: profile.zipcode),
-                  ],
-                  right: [
-                    (label: l.profileWechat, value: profile.wechat),
-                    (label: l.profileQq, value: profile.qq),
-                    (label: l.profileAddress, value: profile.address),
-                  ],
-                ),
-                SizedBox(height: s.xl3),
-                _ProfileSection(
-                  title: l.profileAccountInfo,
-                  left: [
-                    (
-                      label: l.profileSvnGitAccount,
-                      value: profile.svnGitAccount,
-                    ),
-                    (label: l.profileVisits, value: profile.visits?.toString()),
-                    (
-                      label: l.profileLastLogin,
-                      value: _date(profile.lastLogin, true),
-                    ),
-                    (label: l.profileLastIp, value: profile.lastIp),
-                  ],
-                  right: [
-                    (label: l.profileSkype, value: profile.skype),
-                    (label: l.profileWhatsapp, value: profile.whatsapp),
-                    (label: l.profileSlack, value: profile.slack),
-                    (label: l.profileDingding, value: profile.dingding),
-                  ],
-                ),
-              ],
             ],
-          ),
+            SizedBox(height: s.xl3),
+            if (profile == null)
+              if (refreshing.isLoading)
+                const AppStateView.loading(compact: true)
+              else if (failed)
+                AppStateView.error(
+                  compact: true,
+                  title: l.profileUnavailable,
+                  onRetry: () =>
+                      ref.invalidate(refreshZenTaoProfileProvider(account)),
+                )
+              else
+                AppStateView.empty(
+                  compact: true,
+                  icon: LucideIcons.userX300,
+                  title: l.profileUnavailable,
+                )
+            else ...[
+              if (failed) ...[
+                AppInlineNote(text: l.profileRefreshFailed, isError: true),
+                SizedBox(height: s.xl3),
+              ],
+              _ProfileSections(profile: profile),
+            ],
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// The profile's three groups of fields.
+class _ProfileSections extends StatelessWidget {
+  const _ProfileSections({required this.profile});
+
+  final ZenTaoProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.spacing;
+    final l = AppL10n.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _ProfileSection(
+          title: l.profileBasicInfo,
+          left: [
+            (label: l.profileName, value: profile.realname),
+            (label: l.profileAccount, value: profile.account),
+            (label: l.profileDepartment, value: profile.department),
+            (label: l.profileJoined, value: _date(profile.joined, false)),
+          ],
+          right: [
+            (label: l.profileGender, value: _gender(l, profile)),
+            (label: l.profileEmail, value: profile.email),
+            (label: l.profileRole, value: profile.role),
+            (label: l.profilePrivilege, value: profile.privilege),
+          ],
+        ),
+        SizedBox(height: s.xl3),
+        _ProfileSection(
+          title: l.profileContactInfo,
+          left: [
+            (label: l.profileMobile, value: profile.mobile),
+            (label: l.profilePhone, value: profile.phone),
+            (label: l.profileZipcode, value: profile.zipcode),
+          ],
+          right: [
+            (label: l.profileWechat, value: profile.wechat),
+            (label: l.profileQq, value: profile.qq),
+            (label: l.profileAddress, value: profile.address),
+          ],
+        ),
+        SizedBox(height: s.xl3),
+        _ProfileSection(
+          title: l.profileAccountInfo,
+          left: [
+            (label: l.profileSvnGitAccount, value: profile.svnGitAccount),
+            (label: l.profileVisits, value: profile.visits?.toString()),
+            (label: l.profileLastLogin, value: _date(profile.lastLogin, true)),
+            (label: l.profileLastIp, value: profile.lastIp),
+          ],
+          right: [
+            (label: l.profileSkype, value: profile.skype),
+            (label: l.profileWhatsapp, value: profile.whatsapp),
+            (label: l.profileSlack, value: profile.slack),
+            (label: l.profileDingding, value: profile.dingding),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -283,9 +276,10 @@ class _ProfileField extends StatelessWidget {
         Expanded(
           flex: 3,
           child: SelectableText(
-            info.value?.isNotEmpty == true
-                ? info.value!
-                : AppL10n.of(context).profileEmptyValue,
+            switch (info.value) {
+              final value? when value.isNotEmpty => value,
+              _ => AppL10n.of(context).profileEmptyValue,
+            },
             style: context.typography.secondary.copyWith(color: c.textPrimary),
           ),
         ),

@@ -15,6 +15,9 @@ import 'fonts.dart';
 /// (`*Strong`, `subtitle`), 600 for titles and small uppercase labels; 700 is
 /// left to Markdown bold.
 ///
+/// Nothing a person reads is set below 11px (`captionSm`, `monoSm`); 10–10.5px
+/// is reserved for uppercase labels and mono badges, which read larger.
+///
 /// The ramp is identical across theme variants, so [lerp]/[copyWith] are no-ops.
 @immutable
 class AppTypography extends ThemeExtension<AppTypography> {
@@ -61,30 +64,30 @@ class AppTypography extends ThemeExtension<AppTypography> {
   TextStyle get caption => const TextStyle(fontSize: 11);
   TextStyle get captionStrong =>
       const TextStyle(fontSize: 11, fontWeight: FontWeight.w500);
-  TextStyle get captionSm => const TextStyle(fontSize: 10.5);
+  TextStyle get captionSm => const TextStyle(fontSize: 11);
 
   // ---- Labels (typically uppercased at the call site) ----
   TextStyle get label => const TextStyle(
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.6,
   );
   TextStyle get labelWide => const TextStyle(
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
   );
   TextStyle get labelLoose => const TextStyle(
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 1.1,
   );
 
   // ---- Mono (code, refs, ids, timestamps) ----
   TextStyle get mono => const TextStyle(fontSize: 11, fontFamily: kMonoFont);
-  TextStyle get monoSm =>
+  TextStyle get monoSm => const TextStyle(fontSize: 11, fontFamily: kMonoFont);
+  TextStyle get monoXs =>
       const TextStyle(fontSize: 10.5, fontFamily: kMonoFont);
-  TextStyle get monoXs => const TextStyle(fontSize: 10, fontFamily: kMonoFont);
   TextStyle get monoStrong => const TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
@@ -114,7 +117,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
     height: 1,
   );
   TextStyle get badgeSm => const TextStyle(
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: FontWeight.w700,
     fontFamily: kMonoFont,
     letterSpacing: 0.2,

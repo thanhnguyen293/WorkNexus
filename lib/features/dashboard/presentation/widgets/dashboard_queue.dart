@@ -7,6 +7,9 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_count_badge.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
@@ -32,7 +35,8 @@ class DashboardQueue extends ConsumerWidget {
     final l = AppL10n.of(context);
     final work = ref.watch(workQueueProvider(account));
     final queue = work.queue;
-    final syncing = ref.watch(myWorkSyncProvider(account.id)).isLoading;
+    final sync = ref.watch(myWorkSyncProvider(account.id));
+    final syncing = sync.isLoading;
     final empty = queue.inProgress.isEmpty && queue.notStarted.isEmpty;
     void open(DashboardItemKind kind) =>
         ref.read(dashboardWorkKindProvider.notifier).state = kind;
@@ -50,17 +54,17 @@ class DashboardQueue extends ConsumerWidget {
                 padding: EdgeInsets.all(s.md),
                 child: SkeletonBox(height: s.xl6),
               )
+          else if (empty && sync.hasError)
+            AppStateView.error(
+              compact: true,
+              onRetry: () =>
+                  ref.read(myWorkSyncProvider(account.id).notifier).refresh(),
+            )
           else if (empty)
-            Padding(
-              padding: EdgeInsets.all(s.xl6),
-              child: Center(
-                child: Text(
-                  l.dashboardFocusEmpty,
-                  style: context.typography.body.copyWith(
-                    color: c.textTertiary,
-                  ),
-                ),
-              ),
+            AppStateView.empty(
+              compact: true,
+              icon: LucideIcons.circleCheck300,
+              title: l.dashboardFocusEmpty,
             ),
           if (queue.inProgress.isNotEmpty)
             _Group(
@@ -79,15 +83,17 @@ class DashboardQueue extends ConsumerWidget {
           Divider(height: s.xl, thickness: 1, color: c.border),
           Row(
             children: [
-              _FooterButton(
+              AppButton.text(
+                size: AppButtonSize.small,
                 icon: LucideIcons.clipboardList300,
-                label: l.dashboardAllTasks,
                 onPressed: () => open(DashboardItemKind.task),
+                child: Text(l.dashboardAllTasks),
               ),
-              _FooterButton(
+              AppButton.text(
+                size: AppButtonSize.small,
                 icon: LucideIcons.bug300,
-                label: l.dashboardAllBugs,
                 onPressed: () => open(DashboardItemKind.bug),
+                child: Text(l.dashboardAllBugs),
               ),
             ],
           ),
@@ -127,14 +133,18 @@ class _Group extends StatelessWidget {
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               SizedBox(width: s.md),
-              Text(
-                title.toUpperCase(),
-                style: context.typography.labelWide.copyWith(
-                  color: c.textSecondary,
+              Flexible(
+                child: Text(
+                  title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typography.labelWide.copyWith(
+                    color: c.textTertiary,
+                  ),
                 ),
               ),
               SizedBox(width: s.sm),
-              DashboardCountBadge(total),
+              AppCountBadge(total),
             ],
           ),
         ),
@@ -143,23 +153,4 @@ class _Group extends StatelessWidget {
       ],
     );
   }
-}
-
-class _FooterButton extends StatelessWidget {
-  const _FooterButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => TextButton.icon(
-    onPressed: onPressed,
-    icon: Icon(icon, size: context.spacing.xl3),
-    label: Text(label),
-  );
 }

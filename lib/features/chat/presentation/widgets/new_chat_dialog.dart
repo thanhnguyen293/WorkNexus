@@ -5,14 +5,15 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
-import 'chat_field_decoration.dart';
 import 'chat_snack.dart';
 import 'new_chat_people.dart';
 
@@ -39,11 +40,23 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
   final _selected = <int>[];
   bool _busy = false;
 
+  /// The directory load's outcome; null while it runs.
+  Result<void>? _directory;
+
   @override
   void initState() {
     super.initState();
-    // Only users seen in chats are cached: load the whole directory.
-    ref.read(chatControllerProvider).refreshUsers(widget.accountId);
+    _loadDirectory();
+  }
+
+  /// Only users seen in chats are cached: load the whole directory. Its
+  /// outcome is kept so an empty list can say "failed" rather than spin.
+  Future<void> _loadDirectory() async {
+    if (_directory != null) setState(() => _directory = null);
+    final result = await ref
+        .read(chatControllerProvider)
+        .refreshUsers(widget.accountId);
+    if (mounted) setState(() => _directory = result);
   }
 
   @override
@@ -97,56 +110,62 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final users = ref.watch(chatUsersProvider(widget.accountId)).value ?? {};
+    final usersAsync = ref.watch(chatUsersProvider(widget.accountId));
+    final users = usersAsync.value ?? {};
     final group = _selected.length > 1;
-    return Dialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      // A fixed size: switching tabs or searching changes how many people
-      // are listed, which must not make the dialog grow and shrink.
+    final canStart = _selected.isNotEmpty && !_busy;
+    void start() {
+      if (canStart) _start(users);
+    }
+
+    // A fixed height: switching tabs or searching changes how many people
+    // are listed, which must not make the dialog grow and shrink.
+    final height = (MediaQuery.sizeOf(context).height * 0.85).clamp(
+      320.0,
+      640.0,
+    );
+    return AppDialogFrame(
+      title: l.chatNewChat,
+      maxWidth: context.sizes.dialogMd,
+      maxHeight: height,
+      actions: [
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.chatCancel),
+        ),
+        AppButton.filled(
+          size: AppButtonSize.small,
+          isLoading: _busy,
+          isDisabled: _selected.isEmpty,
+          onPressed: canStart ? start : null,
+          child: Text(group ? l.chatCreateGroup : l.chatSendMessage),
+        ),
+      ],
       child: SizedBox(
-        width: 440,
-        height: (MediaQuery.sizeOf(context).height * 0.85).clamp(320, 640),
+        height: height,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(s.xl5, s.xl3, s.xl5, s.xl5),
+          padding: EdgeInsets.fromLTRB(s.xl3, 0, s.xl3, s.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.chatNewChat,
-                      style: context.typography.titleLg.copyWith(
-                        color: c.textPrimary,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: l.chatCancel,
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(LucideIcons.x300, color: c.textSecondary),
-                  ),
-                ],
-              ),
-              SizedBox(height: s.xs),
               Text(
                 l.chatNewChatHint,
-                style: context.typography.caption.copyWith(
+                style: context.typography.bodySm.copyWith(
                   color: c.textSecondary,
                 ),
               ),
-              SizedBox(height: s.xl3),
+              SizedBox(height: s.xl),
               if (group) ...[
                 TextField(
                   controller: _name,
+                  onSubmitted: (_) => start(),
                   style: context.typography.body.copyWith(color: c.textPrimary),
-                  decoration: chatFieldDecoration(
+                  decoration: appInputDecoration(
                     context,
                     hint: '${l.chatGroupName} · ${_defaultName(users)}',
-                    icon: LucideIcons.users300,
+                    prefixIcon: LucideIcons.users300,
                   ),
                 ),
                 SizedBox(height: s.xl),
@@ -157,26 +176,10 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                   search: _search,
                   selected: _selected,
                   onToggle: _toggle,
+                  loading: usersAsync.isLoading || _directory == null,
+                  failed: usersAsync.hasError || _directory is Err,
+                  onRetry: _loadDirectory,
                 ),
-              ),
-              SizedBox(height: s.xl3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AppButton.textNeutral(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l.chatCancel),
-                  ),
-                  SizedBox(width: s.md),
-                  AppButton.filled(
-                    isLoading: _busy,
-                    isDisabled: _selected.isEmpty,
-                    onPressed: _selected.isEmpty || _busy
-                        ? null
-                        : () => _start(users),
-                    child: Text(group ? l.chatCreateGroup : l.chatSendMessage),
-                  ),
-                ],
               ),
             ],
           ),

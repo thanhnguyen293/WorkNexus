@@ -3,43 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
-
-/// A status chip: a colored dot and ZenTao's word for the status.
-class MyWorkStatusChip extends StatelessWidget {
-  const MyWorkStatusChip({super.key, required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xxs),
-      decoration: BoxDecoration(
-        color: c.mixT(color, 0.12),
-        borderRadius: BorderRadius.circular(context.radii.pill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: s.sm,
-            height: s.sm,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          SizedBox(width: s.xs),
-          Text(label, style: context.typography.badge.copyWith(color: color)),
-        ],
-      ),
-    );
-  }
-}
 
 /// A quiet icon + text fact in a row's meta line (sprint, subtasks…).
 class MyWorkFact extends StatelessWidget {
@@ -73,7 +40,7 @@ class MyWorkFact extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: s.xl, color: color),
+        Icon(icon, size: context.sizes.iconXs, color: color),
         SizedBox(width: s.xs),
         if (maxWidth case final w?)
           ConstrainedBox(

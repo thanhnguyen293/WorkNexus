@@ -12,6 +12,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../providers/sticker_providers.dart';
 import 'chat_attachments.dart';
+import 'chat_hover_remove.dart';
 import 'chat_snack.dart';
 import 'chat_sticker_image.dart';
 
@@ -31,7 +32,8 @@ Future<void> addStickersFromImages(BuildContext context, WidgetRef ref) async {
 }
 
 /// A sticker set; tap sends. With [editable] (the user's own set) the first
-/// tile adds images and a right-click removes a sticker.
+/// tile adds images and a sticker is removed from its hover button or a
+/// right-click.
 class ChatStickerGrid extends ConsumerWidget {
   const ChatStickerGrid({
     super.key,
@@ -107,14 +109,15 @@ class ChatStickerGrid extends ConsumerWidget {
       itemBuilder: (context, i) {
         if (i < lead) return add;
         final sticker = stickers[i - lead];
-        return GestureDetector(
-          onSecondaryTapDown: editable
-              ? (d) => _remove(context, ref, sticker, d.globalPosition)
-              : null,
-          child: _Tile(
-            onTap: () => onPick(sticker),
-            child: ChatStickerImage(sticker: sticker),
-          ),
+        final tile = _Tile(
+          onTap: () => onPick(sticker),
+          child: ChatStickerImage(sticker: sticker),
+        );
+        if (!editable) return tile;
+        return ChatHoverRemove(
+          tooltip: l.chatRemoveSticker,
+          onRemove: (at) => _remove(context, ref, sticker, at),
+          child: tile,
         );
       },
     );

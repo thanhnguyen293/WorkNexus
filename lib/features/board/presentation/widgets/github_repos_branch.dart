@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import 'github_repo_row.dart';
 import 'sidebar_primitives.dart';
+import 'sidebar_tree_rows.dart';
 
 /// The children of a GitHub account node: a collapsible "Repositories" group
 /// (collapsed by default) listing the repos the account can access. Pinned
@@ -48,8 +44,13 @@ class GitHubReposBranch extends ConsumerWidget {
           tickets: tickets,
         );
       },
-      loading: () => _MutedRow(label: l.loadingRepositories),
-      error: (_, _) => _MutedRow(label: l.reposUnavailable),
+      loading: () =>
+          SidebarStatusRow(label: l.loadingRepositories, loading: true),
+      error: (_, _) => SidebarStatusRow(
+        label: l.reposUnavailable,
+        isError: true,
+        onRetry: () => ref.invalidate(githubReposProvider(account.id)),
+      ),
     );
   }
 }
@@ -67,7 +68,6 @@ class _ReposGroup extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final expanded = ref.watch(
       githubReposExpandedProvider.select((s) => s.contains(accountId)),
@@ -76,36 +76,11 @@ class _ReposGroup extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          mouseCursor: WidgetStateMouseCursor.clickable,
+        SidebarGroupToggle(
+          label: l.githubRepositories,
+          expanded: expanded,
           onTap: () =>
               ref.read(githubReposExpandedProvider.notifier).toggle(accountId),
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          child: Container(
-            height: 27,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-            child: Row(
-              children: [
-                Icon(
-                  expanded
-                      ? LucideIcons.chevronDown300
-                      : LucideIcons.chevronRight300,
-                  size: 14,
-                  color: c.textTertiary,
-                ),
-                SizedBox(width: context.spacing.xs),
-                Expanded(
-                  child: Text(
-                    l.githubRepositories,
-                    style: context.typography.mono.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: c.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
         if (expanded)
           SidebarTreeBranch(
@@ -118,44 +93,6 @@ class _ReposGroup extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _MutedRow extends StatelessWidget {
-  const _MutedRow({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      height: 27,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(
-              color: c.textTertiary,
-              shape: BoxShape.circle,
-            ),
-          ),
-          SizedBox(width: context.spacing.sm),
-          Expanded(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.mono.copyWith(
-                fontWeight: FontWeight.w500,
-                color: c.textTertiary,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

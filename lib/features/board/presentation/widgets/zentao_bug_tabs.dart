@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../board_providers.dart';
-import 'board_view_tabs.dart';
 
 /// The ZenTao bug-board tab strip (All / Unclosed): All adds the Closed column,
 /// Unclosed (the default) leaves it off. The active tab shows a spinner while
@@ -20,13 +20,13 @@ class ZenTaoBugTabs extends ConsumerWidget {
 
     // Rendered inline on the ChromeBar toolbar row (see BoardPage) — just the
     // tab strip; the toolbar owns the surrounding chrome.
-    return BoardViewTabs(
+    return AppSegmentedTabs(
       tabs: [
         for (final tab in const [
           ZenTaoBugBrowseType.all,
           ZenTaoBugBrowseType.unclosed,
         ])
-          BoardViewTab(
+          AppSegmentedTab(
             label: _label(l, tab),
             active: tab == active,
             loading: tab == active && slice.isLoading,

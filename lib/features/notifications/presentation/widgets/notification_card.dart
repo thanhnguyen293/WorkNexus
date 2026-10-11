@@ -6,8 +6,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_notification.dart';
@@ -56,7 +58,6 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
             mouseCursor: WidgetStateMouseCursor.clickable,
             onTap: () => openNotification(context, ref, n),
             borderRadius: BorderRadius.circular(context.radii.lg),
-            hoverColor: c.selectionFill,
             child: Padding(
               padding: EdgeInsets.fromLTRB(s.lg, s.lg, s.sm, s.lg),
               child: Row(
@@ -92,7 +93,9 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
                   ),
                   SizedBox(width: s.sm),
                   SizedBox(
-                    width: s.xl6 * 1.8,
+                    // Room for the two hover actions, so revealing them
+                    // never reflows the text.
+                    width: context.sizes.controlSm * 2,
                     child: Align(
                       alignment: Alignment.topRight,
                       child: _hover
@@ -172,21 +175,15 @@ class _Actions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    final s = context.spacing;
     final l = AppL10n.of(context);
     final n = notification;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
+        AppIconButton(
+          size: AppIconButtonSize.small,
           tooltip: n.read ? l.notificationsMarkUnread : l.notificationsMarkRead,
-          visualDensity: VisualDensity.compact,
-          iconSize: s.xl3,
-          color: c.textTertiary,
-          icon: Icon(
-            n.read ? LucideIcons.circle300 : LucideIcons.checkCircle300,
-          ),
+          icon: n.read ? LucideIcons.circle300 : LucideIcons.circleCheck300,
           onPressed: () => runNotificationCommand(
             context,
             ref,
@@ -195,12 +192,10 @@ class _Actions extends ConsumerWidget {
                 : r.markRead(n.accountId, id: n.id),
           ),
         ),
-        IconButton(
+        AppIconButton(
+          size: AppIconButtonSize.small,
           tooltip: l.notificationsDelete,
-          visualDensity: VisualDensity.compact,
-          iconSize: s.xl3,
-          color: c.textTertiary,
-          icon: const Icon(LucideIcons.trash300),
+          icon: LucideIcons.trash300,
           onPressed: () => runNotificationCommand(
             context,
             ref,

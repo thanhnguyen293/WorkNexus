@@ -15,13 +15,14 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/priority_labels.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 import '../ticket_actions.dart';
 import 'bug_status_strip.dart';
-import 'detail_header_icon_button.dart';
+import 'detail_header_copy_link_button.dart';
 import 'parent_task_link.dart';
 
 /// The detail panel header: workspace + provider identity, title, actions.
@@ -72,37 +73,37 @@ class DetailHeader extends ConsumerWidget {
               ),
               const Spacer(),
               if (_editRoute(ticket) case final route?) ...[
-                DetailHeaderIconButton(
+                AppIconButton(
                   icon: LucideIcons.pencil300,
                   tooltip: l.edit,
-                  onTap: () {
+                  onPressed: () {
                     // The editor takes the screen; the detail reopens on save.
                     openTicketEditor(ref, route);
                   },
                 ),
                 SizedBox(width: context.spacing.md),
               ],
-              DetailHeaderIconButton(
+              AppIconButton(
                 icon: LucideIcons.refreshCw300,
                 tooltip: l.refresh,
-                onTap: () =>
+                onPressed: () =>
                     ref.invalidate(ticketDetailSyncProvider(ticket.id)),
               ),
               SizedBox(width: context.spacing.md),
               if (ticket.url != null && ticket.url!.isNotEmpty) ...[
                 DetailHeaderCopyLinkButton(url: ticket.url!),
                 SizedBox(width: context.spacing.md),
-                DetailHeaderIconButton(
+                AppIconButton(
                   icon: LucideIcons.squareArrowOutUpRight300,
                   tooltip: l.openInBrowser,
-                  onTap: () => openExternally(ticket.url!),
+                  onPressed: () => openExternally(ticket.url!),
                 ),
                 SizedBox(width: context.spacing.md),
               ],
-              DetailHeaderIconButton(
+              AppIconButton(
                 icon: LucideIcons.x300,
                 tooltip: l.close,
-                onTap: onClose,
+                onPressed: onClose,
               ),
             ],
           ),

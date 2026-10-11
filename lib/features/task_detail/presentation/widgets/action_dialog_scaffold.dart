@@ -5,13 +5,17 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
+import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
+import 'section_label.dart';
 
 /// Users the ticket can be (re)assigned to, fetched from its provider.
 final providerUsersProvider = FutureProvider.family<List<ProviderUser>, String>(
@@ -23,48 +27,40 @@ final providerUsersProvider = FutureProvider.family<List<ProviderUser>, String>(
   },
 );
 
-/// Shared chrome for the ticket action dialogs (Assign / Resolve).
+/// Shared chrome for the ticket action dialogs (Assign / Resolve / Reviewers /
+/// ZenTao actions): the app dialog frame with Cancel + the submit action.
 class ActionScaffold extends StatelessWidget {
   const ActionScaffold({
     super.key,
     required this.title,
-    required this.emoji,
     required this.child,
     required this.submitLabel,
     required this.onSubmit,
     required this.busy,
     this.canSubmit = true,
+    this.icon,
   });
 
   final String title;
-  final String emoji;
   final Widget child;
   final String submitLabel;
   final VoidCallback onSubmit;
   final bool busy;
   final bool canSubmit;
 
+  /// The action's glyph, shown before the title.
+  final IconData? icon;
+
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final l = AppL10n.of(context);
-    return AlertDialog(
-      backgroundColor: c.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
-      ),
-      title: Row(
-        children: [
-          Text(emoji, style: context.typography.title),
-          SizedBox(width: context.spacing.md),
-          Text(
-            title,
-            style: context.typography.title.copyWith(color: c.textPrimary),
-          ),
-        ],
-      ),
-      content: SizedBox(width: 420, child: child),
+    final s = context.spacing;
+    return AppDialogFrame(
+      title: title,
+      leadingIcon: icon,
+      maxWidth: context.sizes.dialogMd,
       actions: [
+        const Spacer(),
         AppButton.textNeutral(
           onPressed: busy ? null : () => Navigator.of(context).pop(),
           child: Text(l.cancel),
@@ -75,11 +71,15 @@ class ActionScaffold extends StatelessWidget {
           child: Text(submitLabel),
         ),
       ],
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(s.xl3, s.xs, s.xl3, s.xl3),
+        child: child,
+      ),
     );
   }
 }
 
-/// Small uppercase label above a dialog field.
+/// A field's label in an action dialog, with the gap above its input.
 class FieldLabel extends StatelessWidget {
   const FieldLabel(this.text, {super.key});
   final String text;
@@ -88,36 +88,9 @@ class FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.sm),
-      child: Text(
-        text.toUpperCase(),
-        style: context.typography.label.copyWith(
-          color: context.colors.textTertiary,
-        ),
-      ),
+      child: SectionLabel(text),
     );
   }
-}
-
-/// Shared input decoration for the dialog dropdowns / fields.
-InputDecoration dropDecoration(BuildContext context) {
-  final c = context.colors;
-  return InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: c.surfaceSubtle,
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: context.spacing.lg,
-      vertical: context.spacing.lg,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(context.radii.md),
-      borderSide: BorderSide(color: c.border),
-    ),
-  );
 }
 
 /// The optional free-text note field shared by both dialogs.
@@ -133,9 +106,9 @@ class NoteField extends StatelessWidget {
       minLines: 3,
       maxLines: 6,
       style: context.typography.body.copyWith(color: c.textPrimary),
-      decoration: dropDecoration(context).copyWith(
-        hintText: 'Optional note…',
-        hintStyle: context.typography.body.copyWith(color: c.textTertiary),
+      decoration: appInputDecoration(
+        context,
+        hint: AppL10n.of(context).taskDetailNoteHint,
       ),
     );
   }
@@ -155,30 +128,18 @@ class AssigneeDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
+    final l = AppL10n.of(context);
     final users = ref.watch(providerUsersProvider(ticketId));
     return users.when(
-      loading: () => const SizedBox(
-        height: 20,
-        width: 20,
-        child: Center(
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      ),
-      error: (_, _) => Text(
-        'Could not load users',
-        style: context.typography.bodySm.copyWith(color: c.error),
-      ),
+      loading: () => const AppInlineSpinner(),
+      error: (_, _) =>
+          AppInlineNote(text: l.taskDetailUsersLoadFailed, isError: true),
       data: (list) => SearchableDropdownField<ProviderUser>(
         items: list,
         value: _selected(list),
-        hintText: 'Select a user',
-        searchHint: 'Search users…',
-        emptyLabel: 'No matching users',
+        hintText: l.taskDetailSelectUser,
+        searchHint: l.searchUsers,
+        emptyLabel: l.noMatchingUsers,
         labelOf: (u) => u.displayName,
         searchTextOf: (u) => '${u.displayName} ${u.account}',
         onChanged: (u) => onChanged(u.account),

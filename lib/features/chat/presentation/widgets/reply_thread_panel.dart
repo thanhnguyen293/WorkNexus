@@ -30,10 +30,10 @@ class ReplyThreadPanel extends ConsumerWidget {
     final users =
         ref.watch(chatUsersProvider(chat.accountId)).asData?.value ??
         const <int, ChatUser>{};
-    final root = ref
-        .watch(chatMessageByIdProvider((chat: chat, serverId: rootId)))
-        .asData
-        ?.value;
+    final rootAsync = ref.watch(
+      chatMessageByIdProvider((chat: chat, serverId: rootId)),
+    );
+    final root = rootAsync.value;
     final allReplies =
         ref.watch(chatRepliesProvider(chat)).asData?.value ??
         const <ChatMessage>[];
@@ -74,7 +74,11 @@ class ReplyThreadPanel extends ConsumerWidget {
             child: ListView(
               padding: EdgeInsets.all(context.spacing.xl3),
               children: [
-                if (root == null)
+                if (root == null && rootAsync.isLoading)
+                  const AppInlineSpinner()
+                else if (root == null && rootAsync.hasError)
+                  AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
+                else if (root == null)
                   AppInlineNote(text: l.chatReplyMissing)
                 else
                   MessageBubble(

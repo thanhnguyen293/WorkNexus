@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'metadata_editor_parts.dart';
 
@@ -76,14 +77,20 @@ class _MilestoneEditorState extends State<MilestoneEditor> {
           child: FutureBuilder<Result<List<ProviderMilestoneOption>>>(
             future: _options,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const AppStateView.error(compact: true);
+              }
               final result = snapshot.data;
               if (result == null) {
-                return const Center(child: CircularProgressIndicator());
+                return const AppStateView.loading(compact: true);
               }
               if (result case Err<List<ProviderMilestoneOption>>(
                 :final failure,
               )) {
-                return EditorMessage(message: failure.message, isError: true);
+                return AppStateView.error(
+                  compact: true,
+                  message: failure.message,
+                );
               }
               final options =
                   (result as Ok<List<ProviderMilestoneOption>>).value;
@@ -110,6 +117,12 @@ class _MilestoneEditorState extends State<MilestoneEditor> {
                       title: option.title,
                       selected: _selected == option.id,
                       onTap: () => setState(() => _selected = option.id),
+                    ),
+                  if (visible.isEmpty)
+                    EditorMessage(
+                      message: options.isEmpty
+                          ? l.taskDetailNoMilestones
+                          : l.noMatches,
                     ),
                 ],
               );

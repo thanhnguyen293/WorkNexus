@@ -76,7 +76,7 @@ void main() {
     expect(time.center.dy, greaterThan(frame.center.dy));
     expect(full.center.dx, greaterThan(frame.center.dx));
     expect(full.center.dy, greaterThan(frame.center.dy));
-    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.play300), findsOneWidget);
 
     await tester.tap(find.byIcon(LucideIcons.maximize300));
     expect(fullScreens, 1);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_motion.dart';
 
 /// Builds a subtree for the current pointer-hover state. [child] is the
 /// hover-independent subtree handed to [HoverRegion.child], if any.
@@ -80,7 +82,13 @@ class _HoverRegionState extends State<HoverRegion> {
 /// border alone. Hover feedback and the hand cursor are off while no tap
 /// handler is set, unless [enabled] says otherwise — e.g. a block whose tap
 /// targets are its children.
-class HoverSurface extends StatelessWidget {
+///
+/// With an [onTap] it is also a keyboard control: it joins the focus
+/// traversal, Enter / Space activate it, it draws an accent focus ring while
+/// focused by keyboard, and it reports itself as a button to assistive tech
+/// ([semanticLabel] names it when its child has no text; [selected] exposes a
+/// toggled state).
+class HoverSurface extends StatefulWidget {
   const HoverSurface({
     super.key,
     this.child,
@@ -104,7 +112,12 @@ class HoverSurface extends StatelessWidget {
     this.clipBehavior = Clip.none,
     this.behavior,
     this.cursor = SystemMouseCursors.click,
-    this.duration = const Duration(milliseconds: 120),
+    this.duration = AppMotion.fast,
+    this.focusable = true,
+    this.focusNode,
+    this.autofocus = false,
+    this.semanticLabel,
+    this.selected,
   });
 
   final Widget? child;
@@ -146,47 +159,107 @@ class HoverSurface extends StatelessWidget {
   /// Length of the rest ↔ hovered transition.
   final Duration duration;
 
+  /// False keeps it out of keyboard traversal — for a surface nested in
+  /// another focusable control, or one whose children are the real targets.
+  final bool focusable;
+  final FocusNode? focusNode;
+  final bool autofocus;
+
+  /// Accessible name, for a surface whose child carries no readable text.
+  final String? semanticLabel;
+
+  /// Toggled state (a picked tab / chip), announced to assistive tech.
+  final bool? selected;
+
+  @override
+  State<HoverSurface> createState() => _HoverSurfaceState();
+}
+
+class _HoverSurfaceState extends State<HoverSurface> {
+  bool _focused = false;
+
+  late final Map<Type, Action<Intent>> _actions = {
+    ActivateIntent: CallbackAction<ActivateIntent>(
+      onInvoke: (_) {
+        widget.onTap?.call();
+        return null;
+      },
+    ),
+  };
+
+  void _setFocused(bool value) {
+    if (_focused != value) setState(() => _focused = value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final w = widget;
     final interactive =
-        onTap != null || onLongPress != null || onSecondaryTapUp != null;
-    return HoverRegion(
-      enabled: enabled ?? interactive,
-      cursor: cursor,
-      child: child,
+        w.onTap != null || w.onLongPress != null || w.onSecondaryTapUp != null;
+    final keyboard = w.focusable && w.onTap != null;
+    Widget surface = HoverRegion(
+      enabled: w.enabled ?? interactive,
+      cursor: w.cursor,
+      child: w.child,
       builder: (context, hovered, child) {
-        final base = color ?? Colors.transparent;
-        final tint = tintOnHover
-            ? hoverColor ?? context.colors.hoverFill
-            : null;
+        final c = context.colors;
+        final base = w.color ?? Colors.transparent;
+        final tint = w.tintOnHover ? w.hoverColor ?? c.hoverFill : null;
+        final radius = w.shape == BoxShape.circle ? null : w.borderRadius;
         return GestureDetector(
-          behavior: behavior,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          onSecondaryTapUp: onSecondaryTapUp,
+          behavior: w.behavior,
+          onTap: w.onTap,
+          onLongPress: w.onLongPress,
+          onSecondaryTapUp: w.onSecondaryTapUp,
           child: AnimatedContainer(
-            duration: duration,
-            curve: Curves.easeOut,
-            width: width,
-            height: height,
-            alignment: alignment,
-            constraints: constraints,
-            padding: padding,
-            clipBehavior: clipBehavior,
+            duration: w.duration,
+            curve: AppMotion.enter,
+            width: w.width,
+            height: w.height,
+            alignment: w.alignment,
+            constraints: w.constraints,
+            padding: w.padding,
+            clipBehavior: w.clipBehavior,
             decoration: BoxDecoration(
               color: hovered && tint != null
                   ? Color.alphaBlend(tint, base)
                   : base,
-              border: hovered ? (hoverBorder ?? border) : border,
+              border: hovered ? (w.hoverBorder ?? w.border) : w.border,
               // A circle can't carry a radius; the shape rounds it instead.
-              borderRadius: shape == BoxShape.circle ? null : borderRadius,
-              shape: shape,
-              boxShadow: boxShadow,
+              borderRadius: radius,
+              shape: w.shape,
+              boxShadow: w.boxShadow,
             ),
+            // Painted over the content so it never shifts the layout.
+            foregroundDecoration: _focused
+                ? BoxDecoration(
+                    border: Border.all(
+                      color: c.accent,
+                      width: context.borders.thick,
+                    ),
+                    borderRadius: radius,
+                    shape: w.shape,
+                  )
+                : null,
             child: child,
           ),
         );
       },
+    );
+    if (!keyboard) return surface;
+    surface = FocusableActionDetector(
+      focusNode: w.focusNode,
+      autofocus: w.autofocus,
+      actions: _actions,
+      // Only keyboard focus draws the ring; a click doesn't.
+      onShowFocusHighlight: _setFocused,
+      child: surface,
+    );
+    return Semantics(
+      button: true,
+      selected: w.selected,
+      label: w.semanticLabel,
+      child: surface,
     );
   }
 }

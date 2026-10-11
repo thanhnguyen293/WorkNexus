@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -71,7 +72,9 @@ class ChatMediaViewerBar extends StatelessWidget {
   }
 }
 
-/// An icon button in the viewers' light-on-dark style.
+/// An icon button in the viewers' light-on-dark style. Not `AppIconButton`:
+/// that one's resting, hover and disabled inks are made for the app's
+/// surfaces, not for a scrim over a photo.
 class ChatViewerButton extends StatelessWidget {
   const ChatViewerButton({
     super.key,
@@ -93,11 +96,14 @@ class ChatViewerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final box = context.sizes.controlLg;
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      visualDensity: VisualDensity.compact,
-      iconSize: context.spacing.xl4,
+      padding: EdgeInsets.zero,
+      constraints: BoxConstraints.tightFor(width: box, height: box),
+      mouseCursor: WidgetStateMouseCursor.clickable,
+      iconSize: context.sizes.iconLg,
       color: selected ? c.accent : c.onScrim,
       disabledColor: c.onScrim.withValues(alpha: 0.35),
       icon: Icon(icon),
@@ -150,7 +156,8 @@ class ChatViewerSideArrow extends StatelessWidget {
             backgroundColor: c.scrim.withValues(alpha: 0.5),
             foregroundColor: c.onScrim,
           ),
-          iconSize: context.spacing.xl6 * 0.8,
+          mouseCursor: WidgetStateMouseCursor.clickable,
+          iconSize: context.sizes.iconXl,
           icon: Icon(icon),
         ),
       ),

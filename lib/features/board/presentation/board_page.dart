@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_state_view.dart';
 import '../../../l10n/app_localizations.dart';
 import 'board_providers.dart';
+import 'board_refresh.dart';
 import 'widgets/board_view.dart';
 import 'widgets/chrome_bar.dart';
 import 'widgets/empty_state.dart';
-import 'widgets/filter_popover.dart';
+import 'widgets/filter_popover_layer.dart';
 import 'widgets/github_board_view.dart';
 import 'widgets/github_tabs.dart';
 import 'widgets/gitlab_board_view.dart';
@@ -95,11 +94,11 @@ class BoardPage extends ConsumerWidget {
     if (showSkeleton) {
       body = const BoardSkeleton();
     } else if (bugSlice != null && bugSlice.hasError && count == 0) {
-      body = _SliceError(message: AppL10n.of(context).bugTabLoadFailed);
+      body = _SliceError(title: AppL10n.of(context).bugTabLoadFailed);
     } else if (gitlabSlice != null && gitlabSlice.hasError && count == 0) {
-      body = _SliceError(message: AppL10n.of(context).gitlabItemsLoadFailed);
+      body = _SliceError(title: AppL10n.of(context).gitlabItemsLoadFailed);
     } else if (githubSlice != null && githubSlice.hasError && count == 0) {
-      body = _SliceError(message: AppL10n.of(context).githubItemsLoadFailed);
+      body = _SliceError(title: AppL10n.of(context).githubItemsLoadFailed);
     } else if (count == 0 &&
         !(mode == ViewMode.zentaoBugs && ref.watch(zentaoBugHasMoreProvider))) {
       // A bug board whose columns can load more stays up, so they can.
@@ -126,21 +125,7 @@ class BoardPage extends ConsumerWidget {
             child: Stack(
               children: [
                 Positioned.fill(child: body),
-                if (advOpen) ...[
-                  Positioned.fill(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () =>
-                          ref.read(advFilterOpenProvider.notifier).state =
-                              false,
-                    ),
-                  ),
-                  Positioned(
-                    top: context.spacing.sm,
-                    left: context.spacing.xl2,
-                    child: const FilterPopover(),
-                  ),
-                ],
+                if (advOpen) const Positioned.fill(child: FilterPopoverLayer()),
               ],
             ),
           ),
@@ -150,28 +135,19 @@ class BoardPage extends ConsumerWidget {
   }
 }
 
-/// Shown when the active board slice's fetch fails (rule 11.3: render the error,
-/// don't swallow it). The tab strip stays visible so the user can retry.
-class _SliceError extends StatelessWidget {
-  const _SliceError({required this.message});
+/// Shown when the active board slice's fetch fails and nothing is cached (rule
+/// 11.3: render the error, don't swallow it). Retry runs the toolbar's own
+/// refresh; the tab strip stays visible above it.
+class _SliceError extends ConsumerWidget {
+  const _SliceError({required this.title});
 
-  final String message;
+  final String title;
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(LucideIcons.cloudOff300, size: 28, color: c.textTertiary),
-          SizedBox(height: context.spacing.md),
-          Text(
-            message,
-            style: context.typography.bodySm.copyWith(color: c.textSecondary),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AppStateView.error(
+      title: title,
+      onRetry: () => ref.read(refreshBoardProvider)(),
     );
   }
 }
