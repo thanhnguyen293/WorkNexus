@@ -1,37 +1,108 @@
-name: Build (macOS & Windows)
+name: Build & Release
 
-# Automatically build the app for macOS and Windows on every push to main.
-# Can also be triggered manually from the Actions tab (workflow_dispatch), or
-# called by another workflow (workflow_call) — release-please calls it with a
-# release_tag to attach the build zips to a versioned GitHub Release.
+# Automatically bump version, build macOS & Windows, and publish a new GitHub Release
+# whenever new code is merged into main.
+# Can also be triggered manually from Actions tab with an optional version override.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
   workflow_dispatch:
-  workflow_call:
     inputs:
-      release_tag:
-        description: "Attach the build zips to this existing release tag instead of refreshing nightly."
+      version_override:
+        description: "Custom version override (e.g. 1.3.0). Leave empty for auto-bump."
         type: string
         required: false
         default: ""
 
-# Back-to-back pushes to main cancel the older run and keep only the newest.
-# The versioned-release build (workflow_call with a tag) gets its own group so
-# it never cancels — or gets cancelled by — the nightly push build on main.
+# Sequential releases: never run concurrent release jobs to avoid race conditions.
 concurrency:
-  group: build-${{ github.ref }}-${{ inputs.release_tag || 'nightly' }}
-  cancel-in-progress: true
+  group: release-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
 
 env:
   # Pin the repo's exact toolchain (Flutter 3.44.8).
-  # No fvm on CI; subosito downloads this exact version.
   FLUTTER_VERSION: "3.44.8"
 
 jobs:
+  # ────────────────────────── Version Calculation ──────────────────────────
+  version:
+    name: Calculate release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+      build_number: ${{ steps.bump.outputs.build_number }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history needed to inspect previous tags
+
+      - name: Determine next version
+        id: bump
+        shell: bash
+        run: |
+          OVERRIDE="${{ inputs.version_override }}"
+          if [ -n "$OVERRIDE" ]; then
+            CLEAN_VERSION="${OVERRIDE#v}"
+            TAG="v${CLEAN_VERSION}"
+            echo "Using version override: $CLEAN_VERSION ($TAG)"
+            echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "build_number=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Find highest existing release tag matching vX.Y.Z
+          LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v1.0.0"
+          fi
+          echo "Previous release tag: $LATEST_TAG"
+
+          RAW_VERSION="${LATEST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$RAW_VERSION"
+          MAJOR=${MAJOR:-1}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+
+          # Commits since last tag
+          COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%B" 2>/dev/null || git log -n 1 --pretty=format:"%B")
+
+          # Semantic Versioning rules based on Conventional Commits:
+          # - BREAKING CHANGE or <type>!: -> Major
+          # - feat: or feat(...): -> Minor
+          # - all others (fix, refactor, perf, chore, etc.) -> Patch
+          if echo "$COMMITS" | grep -qE "BREAKING CHANGE|^[a-zA-Z]+(\([^)]+\))?!:"; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif echo "$COMMITS" | grep -qE "^feat(\([^)]+\))?:"; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_TAG="v${NEW_VERSION}"
+          BUILD_NUM="${{ github.run_number }}"
+
+          echo "Calculated version: $NEW_VERSION ($NEW_TAG) build $BUILD_NUM"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUM" >> "$GITHUB_OUTPUT"
+
   # ───────────────────────────── macOS ─────────────────────────────
   build-macos:
-    name: Build macOS
+    name: Build macOS (${{ needs.version.outputs.tag }})
+    needs: version
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -55,8 +126,13 @@ jobs:
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
 
-      # Release build. No Apple cert on CI: the project defaults to ad-hoc
-      # (CODE_SIGN_IDENTITY = "-"), so the .app is ad-hoc signed, no secret needed.
+      # Stamp version in pubspec.yaml inside runner
+      - name: Stamp version
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
+          rm -f pubspec.yaml.bak
+
       # Owner/repo come from the repository this workflow runs in, so upstream
       # and forks each build an app that updates from their own releases.
       - name: Point the build at this repository
@@ -67,7 +143,7 @@ jobs:
           rm -f .env.bak
 
       - name: Build macOS (release, ad-hoc signed)
-        run: flutter build macos --release --dart-define-from-file=.env
+        run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
 
       # Zip the .app while preserving the bundle (use ditto, not plain zip).
       - name: Package .app
@@ -78,13 +154,14 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: worknexus-macos-${{ github.run_number }}
+          name: worknexus-macos
           path: work_nexus-macos.zip
           if-no-files-found: error
 
   # ──────────────────────────── Windows ────────────────────────────
   build-windows:
-    name: Build Windows
+    name: Build Windows (${{ needs.version.outputs.tag }})
+    needs: version
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -112,6 +189,13 @@ jobs:
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
 
+      # Stamp version in pubspec.yaml inside runner
+      - name: Stamp version
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
+          rm -f pubspec.yaml.bak
+
       # Owner/repo come from the repository this workflow runs in, so upstream
       # and forks each build an app that updates from their own releases.
       - name: Point the build at this repository
@@ -122,7 +206,7 @@ jobs:
           rm -f .env.bak
 
       - name: Build Windows (release)
-        run: flutter build windows --release --dart-define-from-file=.env
+        run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
 
       # Zip the whole Release folder (exe + DLLs + data/ must stay together).
       - name: Package build output
@@ -132,25 +216,18 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: worknexus-windows-${{ github.run_number }}
+          name: worknexus-windows
           path: worknexus-windows.zip
           if-no-files-found: error
 
-  # ───────────────────── Publish build artifacts ─────────────────────
-  # Runs after both builds succeed. Collects the two zips, then either:
-  #   • release_tag set (called by release-please) → attach zips to that
-  #     versioned release (vX.Y.Z, changelog already written by release-please);
-  #   • otherwise → refresh the single moving `nightly` pre-release on main.
-  # Only publishes from main or a workflow_call (not a dispatch on a branch).
+  # ───────────────────── Publish GitHub Release ─────────────────────
   release:
-    name: Publish release assets
-    needs: [build-macos, build-windows]
+    name: Publish Release ${{ needs.version.outputs.tag }}
+    needs: [version, build-macos, build-windows]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || inputs.release_tag != ''
     permissions:
-      contents: write # required to create/replace the release and move its tag
+      contents: write
     steps:
-      # Pull both build artifacts flat into dist/ (no per-artifact subfolders).
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -162,28 +239,13 @@ jobs:
         working-directory: dist
         run: sha256sum *.zip > SHA256SUMS.txt
 
-      # Attach to the versioned release that release-please just published.
-      # --clobber overwrites assets if the build is re-run for the same tag.
-      - name: Attach assets to versioned release
-        if: inputs.release_tag != ''
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" dist/*.zip dist/SHA256SUMS.txt \
-            --repo "$GITHUB_REPOSITORY" --clobber
-
-      # Delete the previous nightly release + its tag, then recreate at this
-      # commit — the reliable way to make `nightly` a moving pointer. The
-      # `|| true` covers the very first run when nightly does not exist yet.
-      - name: Publish/refresh nightly release
-        if: inputs.release_tag == ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
-          gh release create nightly dist/*.zip dist/SHA256SUMS.txt \
+          gh release create "${{ needs.version.outputs.tag }}" \
+            dist/*.zip dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Nightly build (main)" \
-            --notes "Automated build from main @ ${GITHUB_SHA:0:7} ($(date -u +'%Y-%m-%d %H:%M UTC'))." \
-            --prerelease
+            --title "${{ needs.version.outputs.tag }}" \
+            --generate-notes
