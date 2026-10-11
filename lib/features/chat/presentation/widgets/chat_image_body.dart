@@ -12,7 +12,6 @@ import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
 import 'attachment_download_badge.dart';
 import 'chat_image_viewer.dart';
-import 'chat_upload_overlay.dart';
 
 /// Box an inline image is fitted into (its aspect ratio is kept).
 const double _kImageMaxSide = 360;
@@ -86,7 +85,7 @@ class ChatImageBody extends ConsumerWidget {
     final radius = BorderRadius.circular(context.radii.lg);
     final size = _size;
     // An own image not uploaded yet has no file on the server: it shows the
-    // picked bytes, with the upload's progress over them while it is sent.
+    // picked bytes while it is sent (no progress over them).
     final local = image.fileId == 0 && message.sendState != SendState.sent
         ? ref.watch(chatPendingUploadBytesProvider(message.gid))
         : null;
@@ -95,20 +94,12 @@ class ChatImageBody extends ConsumerWidget {
         borderRadius: radius,
         child: SizedBox.fromSize(
           size: size,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.memory(
-                local,
-                fit: BoxFit.cover,
-                gaplessPlayback: true,
-                cacheWidth:
-                    (size.width * MediaQuery.devicePixelRatioOf(context))
-                        .round(),
-              ),
-              if (message.sendState == SendState.pending)
-                ChatUploadOverlay(messageGid: message.gid),
-            ],
+          child: Image.memory(
+            local,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
+                .round(),
           ),
         ),
       );

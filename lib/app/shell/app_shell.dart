@@ -28,7 +28,6 @@ import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart'
 import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import 'app_nav_rail.dart';
 import 'new_ticket_menu.dart';
-import 'reload_after_cache_clear.dart';
 import 'resizable_sidebar.dart';
 import 'title_bar.dart';
 
@@ -77,13 +76,7 @@ class AppShell extends ConsumerWidget {
                                       SizedBox(height: context.spacing.xl4),
                                       const UpdateSettingsCard(),
                                       SizedBox(height: context.spacing.xl4),
-                                      LocalCacheCard(
-                                        onCleared: (sections) =>
-                                            reloadAfterCacheClear(
-                                              ref,
-                                              sections,
-                                            ),
-                                      ),
+                                      const LocalCacheCard(),
                                     ],
                                   ),
                                 )
@@ -113,14 +106,9 @@ class AppShell extends ConsumerWidget {
                     ),
                     NotificationsPanel(leftInset: AppNavRail.widthOf(context)),
                     const DetailOverlay(),
-                    QuickSettingsSidePanel(
-                      generalSections: [
-                        LocalCacheQuickSettings(
-                          onCleared: (sections) =>
-                              reloadAfterCacheClear(ref, sections),
-                        ),
-                      ],
-                      chatSections: const [
+                    const QuickSettingsSidePanel(
+                      generalSections: [LocalCacheQuickSettings()],
+                      chatSections: [
                         ChatAppearanceSettings(),
                         ChatAutoDownloadSettings(),
                         ChatNotificationSettings(),

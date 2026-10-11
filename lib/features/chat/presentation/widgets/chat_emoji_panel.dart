@@ -10,7 +10,7 @@ import '../../domain/entities/chat_sticker.dart';
 import '../../domain/value_objects/emoji_shortnames.dart';
 import '../providers/chat_providers.dart';
 import '../providers/sticker_providers.dart';
-import 'chat_sticker_grid.dart';
+import 'chat_sticker_panel.dart';
 
 const int _kEmojiColumns = 8;
 const int _kVisibleRows = 7;
@@ -26,8 +26,8 @@ final List<String> _emoji = [
         : '${String.fromCharCode(rune)}\u{FE0F}',
 ];
 
-/// Tabs: emoji to type, large emoji to send, the user's own stickers, then
-/// one tab per bundled sticker set.
+/// Two tabs: stickers (every set, switched from the bar at the bottom) and
+/// emoji to type — an emoji sent on its own shows large.
 class ChatEmojiPanel extends ConsumerWidget {
   const ChatEmojiPanel({
     super.key,
@@ -39,7 +39,7 @@ class ChatEmojiPanel extends ConsumerWidget {
   final ChatThreadKey thread;
   final ValueChanged<String> onInsert;
 
-  /// Called as a sticker or large emoji is sent (closes the panel).
+  /// Called as a sticker is sent (closes the panel).
   final VoidCallback onSent;
 
   /// Closes the panel and sends; a failure is reported through the
@@ -47,13 +47,13 @@ class ChatEmojiPanel extends ConsumerWidget {
   Future<void> _send(
     BuildContext context,
     WidgetRef ref,
-    Future<Result<void>> Function(StickerController c) send,
+    ChatSticker sticker,
   ) async {
     final controller = ref.read(stickerControllerProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
     final l = AppL10n.of(context);
     onSent();
-    final result = await send(controller);
+    final result = await controller.send(thread, sticker);
     if (result case Err(:final failure)) {
       messenger?.showSnackBar(
         SnackBar(content: Text(l.chatActionFailed(failure.message))),
@@ -69,51 +69,31 @@ class ChatEmojiPanel extends ConsumerWidget {
       AsyncData(value: Ok(:final value)) => value,
       _ => const <ChatSticker>[],
     };
-    final packs = <String, List<ChatSticker>>{};
-    for (final sticker in stickers.where((s) => !s.custom)) {
-      (packs[sticker.pack] ??= []).add(sticker);
-    }
-    final mine = [
-      for (final s in stickers)
-        if (s.custom) s,
-    ];
-    void sendSticker(ChatSticker sticker) =>
-        _send(context, ref, (c) => c.send(thread, sticker));
-
-    final tabs = <(String, Widget)>[
-      (l.chatEmoji, _EmojiGrid(onPick: onInsert)),
-      (
-        l.chatStickersTab,
-        _EmojiGrid(
-          large: true,
-          onPick: (e) => _send(context, ref, (c) => c.sendEmoji(thread, e)),
-        ),
-      ),
-      (
-        l.chatMyStickers,
-        ChatStickerGrid(stickers: mine, editable: true, onPick: sendSticker),
-      ),
-      for (final MapEntry(:key, :value) in packs.entries)
-        (key, ChatStickerGrid(stickers: value, onPick: sendSticker)),
-    ];
     return SizedBox(
       width: s.xl6 * _kEmojiColumns + s.md * 2,
-      height: s.xl6 * (_kVisibleRows + 1),
+      height: s.xl6 * (_kVisibleRows + 2),
       child: DefaultTabController(
-        // A new set changes the tab count.
-        key: ValueKey(tabs.length),
-        length: tabs.length,
+        length: 2,
         child: Column(
           children: [
             TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
               labelStyle: context.typography.bodySmStrong,
               unselectedLabelStyle: context.typography.bodySm,
-              tabs: [for (final (label, _) in tabs) Tab(text: label)],
+              tabs: [
+                Tab(text: l.chatStickersTab),
+                Tab(text: l.chatEmoji),
+              ],
             ),
             Expanded(
-              child: TabBarView(children: [for (final (_, view) in tabs) view]),
+              child: TabBarView(
+                children: [
+                  ChatStickerPanel(
+                    stickers: stickers,
+                    onPick: (sticker) => _send(context, ref, sticker),
+                  ),
+                  _EmojiGrid(onPick: onInsert),
+                ],
+              ),
             ),
           ],
         ),
@@ -123,34 +103,25 @@ class ChatEmojiPanel extends ConsumerWidget {
 }
 
 class _EmojiGrid extends StatelessWidget {
-  const _EmojiGrid({required this.onPick, this.large = false});
+  const _EmojiGrid({required this.onPick});
 
   final ValueChanged<String> onPick;
-
-  /// Fewer, bigger cells: the large emoji sent as stickers.
-  final bool large;
 
   @override
   Widget build(BuildContext context) {
     final s = context.spacing;
-    final columns = large ? _kEmojiColumns ~/ 2 : _kEmojiColumns;
     final style = context.typography.titleLg.copyWith(height: 1);
     return GridView.builder(
       padding: EdgeInsets.all(s.md),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: columns,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _kEmojiColumns,
       ),
       itemCount: _emoji.length,
       itemBuilder: (context, i) => InkWell(
         mouseCursor: WidgetStateMouseCursor.clickable,
         borderRadius: BorderRadius.circular(context.radii.md),
         onTap: () => onPick(_emoji[i]),
-        child: Center(
-          child: Text(
-            _emoji[i],
-            style: large ? style.copyWith(fontSize: s.xl6 * 0.9) : style,
-          ),
-        ),
+        child: Center(child: Text(_emoji[i], style: style)),
       ),
     );
   }

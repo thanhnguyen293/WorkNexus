@@ -11,15 +11,20 @@
   },
   "updateRestartToUpdate": "Restart to update to {version}",
   "@updateRestartToUpdate": {
-    "placeholders": { "version": { "type": "String" } }
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   },
   "trayOpenApp": "Open WorkNexus",
   "trayQuitApp": "Quit WorkNexus",
-  "localCacheTitle": "Local data",
-  "localCacheSubtitle": "What your accounts sync is kept on this device, so the app opens fast and works offline. Clearing it downloads it again.",
+  "storageTitle": "Storage & cache",
+  "storageOpen": "Manage storage…",
+  "localCacheTitle": "Local database",
+  "localCacheSubtitle": "Downloaded chat files and what your accounts sync are kept on this device, so the app opens fast and works offline.",
   "localCacheHint": "Out-of-date or broken data? Clear the cache and sync again.",
-  "clearCache": "Clear cache…",
-  "clearCacheTitle": "Clear cached data",
+  "localCacheDbHint": "Copies of what your accounts sync, kept in this device's local database so the app opens fast and works offline. Clearing a part deletes only the local copy; it downloads again from your accounts.",
   "clearCacheKept": "Accounts, workspaces, settings and saved filters are kept.",
   "cacheSectionTickets": "Tickets & board",
   "cacheSectionTicketsHint": "Tickets, comments, activity and projects",
@@ -56,9 +61,21 @@
   "newBug": "New bug",
   "newTask": "New task",
   "editBugTitle": "Edit bug #{id}",
-  "@editBugTitle": {"placeholders": {"id": {"type": "String"}}},
+  "@editBugTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "editTaskTitle": "Edit task #{id}",
-  "@editTaskTitle": {"placeholders": {"id": {"type": "String"}}},
+  "@editTaskTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "formRequired": "Required",
   "formLoadFailed": "Couldn't load the form",
   "formSaved": "Saved",
@@ -96,7 +113,11 @@
   "allSynced": "All synced",
   "assignedToYou": "{count} tasks assigned to you",
   "@assignedToYou": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "syncedAgo": "Synced 2m ago",
   "justNow": "just now",
@@ -104,13 +125,25 @@
   "hoursAgo": "{count}h ago",
   "daysAgo": "{count}d ago",
   "@hoursAgo": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "@daysAgo": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "@minutesAgo": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "task": "Task",
   "summary": "Summary",
@@ -123,7 +156,6 @@
   "vietnamese": "Vietnamese",
   "description": "Description",
   "comments": "Comments",
-  "development": "Development",
   "translate": "Translate with OpenCode",
   "retranslate": "Re-translate with OpenCode",
   "translating": "Translating with OpenCode…",
@@ -132,14 +164,22 @@
   "translationLanguage": "Translation language",
   "runOpenCodeToTranslate": "Run OpenCode to generate a {language} version.",
   "@runOpenCodeToTranslate": {
-    "placeholders": { "language": { "type": "String" } }
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
   },
   "translationOutdated": "Outdated translation",
   "translationOutdatedBanner": "Original changed since last translation. Showing the earlier version.",
   "translationFailed": "Translation failed",
   "translationFailedWithReason": "Translation failed — {reason}",
   "@translationFailedWithReason": {
-    "placeholders": { "reason": { "type": "String" } }
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   },
   "connectedAccounts": "Connected accounts",
   "connect": "Connect account",
@@ -188,11 +228,22 @@
   "zentaoReportBug": "Report bug",
   "zentaoNewTicket": "New bug or task ({shortcut})",
   "@zentaoNewTicket": {
-    "placeholders": { "shortcut": { "type": "String" } }
+    "placeholders": {
+      "shortcut": {
+        "type": "String"
+      }
+    }
   },
   "zentaoNewInAccount": "{item} · {account}",
   "@zentaoNewInAccount": {
-    "placeholders": { "item": { "type": "String" }, "account": { "type": "String" } }
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
   },
   "zentaoConfirm": "Confirm",
   "zentaoStart": "Start",
@@ -202,11 +253,25 @@
   "zentaoCancelTask": "Cancel task",
   "zentaoActionTitle": "{action} #{key}",
   "@zentaoActionTitle": {
-    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "zentaoActionDone": "{action} #{key}: done",
   "@zentaoActionDone": {
-    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "zentaoAssignToOptional": "Assign to (optional)",
   "zentaoNote": "Note",
@@ -215,7 +280,11 @@
   "zentaoHoursLeft": "Hours left",
   "zentaoHoursLogged": "{hours} h logged so far",
   "@zentaoHoursLogged": {
-    "placeholders": { "hours": { "type": "String" } }
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
   },
   "zentaoHoursInvalid": "Enter hours as a number, 0 or more",
   "zentaoHoursLeftRequired": "Enter the hours left (more than 0)",
@@ -224,29 +293,48 @@
   "gitlabReopen": "Reopen",
   "gitlabMrClosed": "Closed merge request !{key}",
   "@gitlabMrClosed": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrApproved": "Approved !{key}",
   "@gitlabMrApproved": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrMerged": "Merged !{key}",
   "@gitlabMrMerged": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrRebased": "Rebased !{key}",
   "@gitlabMrRebased": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "mrRequestedToMerge": "{author} requested to merge",
   "@mrRequestedToMerge": {
-    "placeholders": { "author": { "type": "String" } }
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
   },
   "sourceBranch": "Source branch",
   "targetBranch": "Target branch",
   "noDescription": "No description provided.",
   "approve": "Approve",
-  "activity": "Activity",
   "noActivityYet": "No activity yet",
   "writeCommentHint": "Write a comment…",
   "commentAction": "Comment",
@@ -261,35 +349,63 @@
   "needsRebase": "Needs rebase",
   "mergeStatusValue": "Merge status: {status}",
   "@mergeStatusValue": {
-    "placeholders": { "status": { "type": "String" } }
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
   },
   "commitsBehindTarget": "{count, plural, =1{The source branch is 1 commit behind the target branch.} other{The source branch is {count} commits behind the target branch.}}",
   "@commitsBehindTarget": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "prBehindBase": "This branch is out of date with the base branch.",
   "prClosed": "This pull request is closed.",
   "githubItemClosed": "Closed #{key}",
   "@githubItemClosed": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubItemReopened": "Reopened #{key}",
   "@githubItemReopened": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubPrMerged": "Merged #{key}",
   "@githubPrMerged": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubPrBranchUpdated": "Updated branch for #{key}",
   "@githubPrBranchUpdated": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "actionFailed": "Failed: {message}",
   "@actionFailed": {
-    "placeholders": { "message": { "type": "String" } }
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   },
-  "commentPostFailed": "Could not post comment",
+  "commentPostFailed": "Couldn't post comment",
   "providerActionFailed": "Provider action failed",
   "githubMerge": "Merge",
   "githubReopen": "Reopen",
@@ -313,11 +429,19 @@
   "participants": "Participants",
   "estimateSummary": "Estimate {value}",
   "@estimateSummary": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "spentSummary": "Spent {value}",
   "@spentSummary": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "noEstimateOrTimeSpent": "No estimate or time spent",
   "editLabels": "Edit labels",
@@ -332,11 +456,13 @@
   "spentDurationHint": "For example, 30m",
   "currentTotal": "Current total: {value}",
   "@currentTotal": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "resetSpentTime": "Reset spent time",
-  "sourceBranch": "Source branch",
-  "targetBranch": "Target branch",
   "mergeStatus": "Merge status",
   "emptyTitle": "No tasks match these filters",
   "emptyDesc": "Try clearing a filter or switching workspace.",
@@ -402,7 +528,6 @@
   "pinned": "Pinned",
   "pinTask": "Pin task",
   "unpinTask": "Unpin task",
-  "commentPostFailed": "Couldn't post comment",
   "close": "Close",
   "download": "Download",
   "attachments": "Attachments",
@@ -413,7 +538,11 @@
   "confirmed": "Confirmed",
   "reopenedTimes": "Reopened ×{count}",
   "@reopenedTimes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "openedBy": "Opened by",
   "assignedTo": "Assigned to",
@@ -422,7 +551,11 @@
   "lifecycle": "Lifecycle",
   "showEmptyFields": "Show {count} empty fields",
   "@showEmptyFields": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "hideEmptyFields": "Hide empty fields",
   "stepsToReproduce": "Steps to reproduce",
@@ -451,7 +584,13 @@
   "selectNone": "None",
   "searchOptions": "Search…",
   "selectSome": "{count} selected",
-  "@selectSome": {"placeholders": {"count": {"type": "int"}}},
+  "@selectSome": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fieldOs": "OS",
   "fieldBrowser": "Browser",
   "fieldTitle": "Title",
@@ -472,44 +611,14 @@
   "openInBrowser": "Open in browser",
   "more": "More",
   "code": "Code",
-  "openCodeSection": "OpenCode",
-  "openCodeSectionSubtitle": "Ticket translation and dispatched coding agents run through the opencode CLI. A key saved here is written to OpenCode's own credential store — the same one `opencode auth login` uses — so usage stays on your account.",
-  "openCodeNoCredentials": "No provider is linked to OpenCode yet.",
-  "openCodeCredentialsLoadFailed": "Couldn't read OpenCode's credentials",
-  "openCodeAddKey": "Add API key",
-  "openCodeChangeKey": "Change key",
-  "openCodeUnlink": "Unlink",
-  "openCodeAuthTypeApi": "API key",
-  "openCodeAuthTypeOauth": "OAuth",
-  "openCodeAuthTypeOther": "Other",
-  "openCodeOauthReadOnly": "Signed in with OAuth — change it with `opencode auth login`.",
-  "openCodeGetKey": "Get an API key ↗",
-  "openCodeProviderLabel": "Provider",
-  "openCodeProviderHint": "e.g. opencode, opencode-go, anthropic",
-  "openCodeApiKeyLabel": "API key",
-  "openCodeApiKeyHint": "Paste the key",
-  "openCodeAddKeyTitle": "Add an OpenCode API key",
-  "openCodeChangeKeyTitle": "Change the {provider} key",
-  "@openCodeChangeKeyTitle": {
-    "placeholders": { "provider": { "type": "String" } }
-  },
-  "openCodeKeyDialogSubtitle": "The key is written to OpenCode's credential file, never to WorkNexus' database.",
-  "openCodeSaveKey": "Save key",
   "openCodeShowKey": "Show",
   "openCodeHideKey": "Hide",
-  "openCodeUnlinkTitle": "Unlink {provider}?",
-  "@openCodeUnlinkTitle": {
-    "placeholders": { "provider": { "type": "String" } }
-  },
-  "openCodeUnlinkBody": "OpenCode loses access to this provider until a key is added again. Other providers are left alone.",
   "openCodeNotLinkedTitle": "OpenCode not linked",
-  "openCodeNotLinkedBody": "No authenticated OpenCode provider was found. Add an API key under Settings → OpenCode, or link one from your terminal:",
+  "openCodeNotLinkedBody": "No authenticated OpenCode provider was found. Add an API key under Settings → Translation, run the command below in a terminal, or pick another translation provider (Gemini, Groq, …).",
   "openCodeOpenSettings": "Open settings",
   "gotIt": "Got it",
   "translationLanguageSection": "Translation language",
   "translationLanguageSubtitle": "The language tickets and chat messages are translated into.",
-  "translationModelSection": "Translation model",
-  "translationModelSubtitle": "Which OpenCode model translates tickets. Left on the default, OpenCode picks — a broken or queued default is the usual cause of a translation that never finishes.",
   "translationModelDefault": "OpenCode default",
   "translationModelLoadFailed": "Couldn't ask OpenCode for its models",
   "translationModelListUnavailable": "OpenCode returned no models — check `opencode models` in a terminal.",
@@ -521,7 +630,6 @@
   "saveFilterNameLabel": "Name",
   "saveFilterNameHint": "e.g. My open blockers",
   "saveFilterExistsHint": "An existing name overwrites that preset.",
-  "save": "Save",
   "deleteSavedFilter": "Delete preset",
   "noSavedFiltersYet": "No presets yet — set up a filter, then save it.",
   "filterSearchHint": "Search…",
@@ -531,7 +639,7 @@
   "machineTranslationNote": "Machine translation · review before relying on it",
   "chat": "Chat",
   "chatNoZentaoAccount": "Connect a ZenTao account in Integrations to use chat.",
-  "chatAccount": "Chat account",
+  "chatAccount": "Account",
   "chatMembersFailed": "Couldn't load the members",
   "chatPin": "Pin",
   "chatUnpin": "Unpin",
@@ -553,6 +661,7 @@
   "chatOnline": "Online",
   "chatAway": "Away",
   "chatBusy": "Busy",
+  "chatInMeeting": "In meeting",
   "chatOffline": "Offline",
   "chatChangeGroupAvatar": "Change group picture",
   "chatMyProfile": "Your profile",
@@ -599,6 +708,10 @@
   "chatRoleTop": "Senior Manager",
   "chatRoleOthers": "Others",
   "chatCancelDownload": "Cancel download",
+  "chatCancelUpload": "Cancel sending",
+  "chatShowInFolder": "Show in folder",
+  "chatFileOnCloud": "Available on Cloud",
+  "chatFileOnDevice": "On this device",
   "chatRoleBadges": "Role badges",
   "chatRoleNoBadge": "No check",
   "chatAutoDownloadVideos": "Download videos automatically",
@@ -638,12 +751,20 @@
   "chatMrLoading": "Loading status…",
   "chatMrFiles": "{count, plural, =1{1 file} other{{count} files}}",
   "@chatMrFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatMrUnavailable": "Status unavailable — tap to open",
   "chatMrNoAccount": "Connect an account for {host} to see its status",
   "@chatMrNoAccount": {
-    "placeholders": { "host": { "type": "String" } }
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
   },
   "chatBotName": "Xuanbot",
   "chatViewDetail": "View details",
@@ -683,16 +804,31 @@
   "chatFullScreen": "Full screen",
   "chatBack10": "Back 10 seconds",
   "chatForward10": "Forward 10 seconds",
-  "chatStorage": "Chat storage",
+  "chatStorage": "Downloaded chat files",
   "chatStorageUsed": "{used} of {limit} used",
-  "@chatStorageUsed": {"placeholders": {"used": {"type": "String"}, "limit": {"type": "String"}}},
+  "@chatStorageUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "chatStorageLimit": "Size limit",
   "chatStorageLimitHint": "When the limit is reached, the files viewed longest ago are removed first.",
   "chatStorageByChat": "By chat",
   "chatStorageOther": "Other files",
   "chatStorageClearAll": "Clear all",
   "chatStorageClearChatConfirm": "Delete the downloaded files of {chat}? Messages are kept; files download again when opened.",
-  "@chatStorageClearChatConfirm": {"placeholders": {"chat": {"type": "String"}}},
+  "@chatStorageClearChatConfirm": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
   "chatStorageClearAllConfirm": "Delete all downloaded chat files? Messages are kept; files download again when opened.",
   "chatStorageEmpty": "Nothing downloaded yet",
   "chatDelete": "Delete",
@@ -705,13 +841,21 @@
   "chatConnecting": "Connecting to ZenTao chat…",
   "chatReconnecting": "Connection lost — retrying in {seconds}s",
   "@chatReconnecting": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
-  "chatOffline": "Chat is offline",
+  "chatConnectionOffline": "Chat is offline",
   "chatConnect": "Connect",
   "chatSignedOut": "Chat signed out: {reason}",
   "@chatSignedOut": {
-    "placeholders": { "reason": { "type": "String" } }
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   },
   "chatKicked": "Signed out because this account signed in somewhere else.",
   "chatUntrusted": "The chat server certificate needs your confirmation.",
@@ -719,13 +863,16 @@
   "chatTrustTitle": "Trust the chat server certificate?",
   "chatTrustBody": "{host} uses a self-signed certificate. Compare the fingerprint with your administrator before trusting it.",
   "@chatTrustBody": {
-    "placeholders": { "host": { "type": "String" } }
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
   },
   "chatTrustFingerprint": "SHA-256 fingerprint",
   "chatTrustIssuer": "Issued by",
   "chatTrustAction": "Trust and connect",
   "chatComposerHint": "Message — Enter to send, Shift+Enter for a new line",
-  "chatSend": "Send",
   "chatSending": "Sending…",
   "chatSendFailed": "Not sent · Retry",
   "chatLoadOlder": "Load earlier messages",
@@ -733,23 +880,39 @@
   "chatScrollToLatest": "Jump to the latest message",
   "chatNewMessages": "{count, plural, =1{1 new message} other{{count} new messages}}",
   "@chatNewMessages": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatImage": "Image",
   "chatFile": "File",
   "chatUnsupportedMessage": "Unsupported message ({type})",
   "@chatUnsupportedMessage": {
-    "placeholders": { "type": { "type": "String" } }
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
   },
   "chatUntitled": "Untitled chat",
   "chatUnknownUser": "User #{id}",
   "@chatUnknownUser": {
-    "placeholders": { "id": { "type": "int" } }
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
   },
   "chatYou": "You",
   "chatActionFailed": "Couldn't complete that: {reason}",
   "@chatActionFailed": {
-    "placeholders": { "reason": { "type": "String" } }
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   },
   "chatAttachmentFailed": "Couldn't load the attachment",
   "chatReply": "Reply",
@@ -776,24 +939,36 @@
   "chatMobile": "Mobile",
   "chatPhone": "Phone",
   "chatRole": "Role",
-  "chatAccount": "Account",
   "chatAttach": "Attach files",
   "chatUploading": "Uploading…",
   "chatTranslate": "Translate",
   "chatShowOriginal": "Hide translation",
+  "chatRetranslate": "Translate again",
   "chatTranslatedBy": "Translated by {model}",
   "@chatTranslatedBy": {
-    "placeholders": { "model": { "type": "String" } }
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
   },
   "chatTranslating": "Translating…",
   "chatTranslateFailed": "Translation failed: {error}",
   "@chatTranslateFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "chatCopy": "Copy text",
   "chatReplies": "{count, plural, =1{1 reply} other{{count} replies}}",
   "@chatReplies": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatRemoveAttachment": "Remove",
   "chatPlayVideo": "Play video",
@@ -802,7 +977,11 @@
   "chatVideoFailed": "Couldn't play this video",
   "chatSendFilesTitle": "{count, plural, =1{Send 1 file?} other{Send {count} files?}}",
   "@chatSendFilesTitle": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatToday": "Today",
   "chatYesterday": "Yesterday",
@@ -810,11 +989,19 @@
   "chatMoreActions": "More",
   "chatMembers": "{count, plural, =1{1 member} other{{count} members}}",
   "@chatMembers": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatMessageTo": "Type @ to mention, message {name}",
   "@chatMessageTo": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "chatAppearance": "Bubble style",
   "chatAppearanceDefault": "Default",
@@ -828,6 +1015,30 @@
   "chatWallpaperDim": "Darken",
   "chatMarkdownOn": "Markdown on — messages are sent formatted",
   "chatMarkdownOff": "Markdown off — messages are sent as plain text",
+  "chatFormatBold": "Bold",
+  "chatFormatItalic": "Italic",
+  "chatFormatUnderline": "Underline",
+  "chatFormatStrikethrough": "Strikethrough",
+  "chatFormatCode": "Code",
+  "chatFormatHeading": "Heading",
+  "chatFormatQuote": "Quote",
+  "chatFormatBulletList": "Bulleted list",
+  "chatFormatNumberedList": "Numbered list",
+  "chatFormatIndent": "Indent",
+  "chatFormatOutdent": "Outdent",
+  "chatFormatClear": "Clear formatting",
+  "chatUndo": "Undo",
+  "chatRedo": "Redo",
+  "chatComposerExpand": "Expand the input",
+  "chatComposerCollapse": "Shrink the input",
+  "chatMarkdownHint": "Format with the toolbar below — {shortcut} turns Markdown off",
+  "@chatMarkdownHint": {
+    "placeholders": {
+      "shortcut": {
+        "type": "String"
+      }
+    }
+  },
   "chatNotificationsSetting": "New message notifications",
   "chatNotificationsSettingHint": "Show a system notification when a chat message arrives.",
   "chatNotifyWhileViewing": "Notify while viewing the chat",
@@ -847,15 +1058,41 @@
   "updateRestartNow": "Update & restart",
   "updateInstallFailed": "The update could not be installed automatically. Download it from the release page instead.",
   "updateOpenReleasePage": "Open release page",
-  "translationApiSection": "Translate with an API key",
-  "translationApiSubtitle": "Use your own key (Gemini, Groq, OpenRouter, a local Ollama…) instead of the OpenCode CLI. The key is kept in the OS keychain.",
   "translationApiProvider": "Provider",
+  "translationProviderSection": "Translation provider",
+  "translationProviderSubtitle": "Who translates tickets and chat messages. OpenCode uses the CLI and its own login; the others use your API key.",
+  "translationProviderOpenCode": "OpenCode (CLI)",
+  "translationOpenCodeKey": "API key · {provider}",
+  "@translationOpenCodeKey": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "translationOpenCodeKeySaved": "Saved key {preview} — type a new one to replace it.",
+  "@translationOpenCodeKeySaved": {
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "translationOpenCodeKeyOauth": "Signed in through `opencode auth login`. A key typed here replaces that login for this provider.",
+  "translationOpenCodeKeyNone": "No key saved for this provider yet.",
+  "translationOpenCodeKeySaveDone": "Saved the {provider} key for OpenCode",
+  "@translationOpenCodeKeySaveDone": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "translationApiBaseUrl": "API base URL",
   "translationApiModel": "Model",
+  "translationApiModelsLoadFailed": "Couldn't load the model list — type the model name instead",
   "translationApiKey": "API key",
   "translationApiGetKey": "Get a key",
-  "translationApiUse": "Translate with this key",
-  "translationApiUseHint": "Off: translations go through OpenCode again.",
   "translationApiSave": "Save",
   "translationApiRemove": "Remove key",
   "translationApiLoadFailed": "Couldn't read the saved translation key.",
@@ -865,24 +1102,51 @@
   "reportIssueHint": "Found a problem? Open a GitHub issue with your version filled in.",
   "translationSection": "Translation",
   "updateManualInstall": "Download this version from the release page.",
+  "updateWhatsNew": "What's new",
   "translationApiCustom": "Custom (OpenAI-compatible)",
   "translationApiBaseUrlHint": "https://api.example.com/v1",
   "translationApiSaveFailed": "Couldn't save the translation key.",
+  "translationApiSaved": "Saved — {provider} now translates",
+  "@translationApiSaved": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
   "dashboard": "Dashboard",
   "dashboardNoAccount": "Connect a ZenTao account in Integrations to see your dashboard.",
   "dashboardAccount": "ZenTao account",
   "dashboardUpdated": "Updated {when}",
-  "@dashboardUpdated": {"placeholders": {"when": {"type": "String"}}},
+  "@dashboardUpdated": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardLoadFailed": "Couldn't load the dashboard",
   "dashboardRefreshFailed": "Couldn't refresh — showing the last saved data",
   "dashboardTodos": "Todos",
   "dashboardActivity": "Recent activity",
   "dashboardDue": "Due {date}",
-  "@dashboardDue": {"placeholders": {"date": {"type": "String"}}},
+  "@dashboardDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardOpenFailed": "Couldn't open this item",
   "notifications": "Notifications",
   "notificationsUnread": "Unread ({count})",
-  "@notificationsUnread": {"placeholders": {"count": {"type": "int"}}},
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notificationsAll": "All",
   "notificationsMarkAllRead": "Mark all as read",
   "notificationsDeleteRead": "Delete read notifications",
@@ -904,14 +1168,32 @@
   "dashboardOpenOnly": "Open",
   "dashboardAllItems": "All",
   "dashboardHello": "Hi {name},",
-  "@dashboardHello": {"placeholders": {"name": {"type": "String"}}},
+  "@dashboardHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardYouHave": "you have",
   "dashboardAnd": "and",
   "dashboardStillOpen": "still open.",
   "dashboardBugCount": "{count, plural, =1{1 bug} other{{count} bugs}}",
-  "@dashboardBugCount": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardBugCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardTaskCount": "{count, plural, =1{1 task} other{{count} tasks}}",
-  "@dashboardTaskCount": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardTaskCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardAllClear": "nothing is waiting on you.",
   "dashboardInProgress": "In progress",
   "dashboardNotStarted": "Not started",
@@ -926,37 +1208,109 @@
   "myWorkStatusPaused": "Paused",
   "myWorkStatusDone": "Done",
   "myWorkSubtasks": "{count, plural, =1{1 subtask} other{{count} subtasks}}",
-  "@myWorkSubtasks": {"placeholders": {"count": {"type": "int"}}},
+  "@myWorkSubtasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "myWorkReopened": "Reopened {count}×",
-  "@myWorkReopened": {"placeholders": {"count": {"type": "int"}}},
+  "@myWorkReopened": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "myWorkUnassignedContext": "No sprint",
   "dashboardStatBugs": "Open bugs",
   "dashboardStatTasks": "Open tasks",
   "dashboardStatStories": "Stories",
   "dashboardStatSprints": "Sprints",
   "dashboardStatUrgent": "{count} urgent",
-  "@dashboardStatUrgent": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardStatUrgent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardStatInProgress": "{count} in progress",
-  "@dashboardStatInProgress": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardStatInProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardStatAssigned": "assigned to you",
   "dashboardStatRunning": "{count} running",
-  "@dashboardStatRunning": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardStatRunning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardProjectCount": "{count, plural, =1{1 project} other{{count} projects}}",
-  "@dashboardProjectCount": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardProjectCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardProductCount": "{count, plural, =1{1 product} other{{count} products}}",
-  "@dashboardProductCount": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardProductCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardDocCount": "{count, plural, =1{1 doc} other{{count} docs}}",
-  "@dashboardDocCount": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardDocCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardLastLogin": "Last login {when}",
-  "@dashboardLastLogin": {"placeholders": {"when": {"type": "String"}}},
+  "@dashboardLastLogin": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardAllTasks": "All tasks",
   "dashboardAllBugs": "All bugs",
   "dashboardEnds": "Ends {date}",
-  "@dashboardEnds": {"placeholders": {"date": {"type": "String"}}},
+  "@dashboardEnds": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardDaysLeft": "{count, plural, =0{ends today} =1{1 day left} other{{count} days left}}",
-  "@dashboardDaysLeft": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardDaysOverdue": "{count, plural, =1{1 day overdue} other{{count} days overdue}}",
-  "@dashboardDaysOverdue": {"placeholders": {"count": {"type": "int"}}},
+  "@dashboardDaysOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardSeeAll": "See all",
   "notificationsToday": "Today",
   "notificationsYesterday": "Yesterday",
@@ -987,7 +1341,11 @@
   "editorLinkInvalid": "Enter a full link, e.g. https://example.com",
   "chatWithPerson": "Chat with {name}",
   "@chatWithPerson": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "dropFilesToSend": "Drop files to send",
   "dropFilesToInsert": "Drop images to insert, other files to attach"

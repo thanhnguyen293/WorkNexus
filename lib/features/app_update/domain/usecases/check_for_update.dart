@@ -32,6 +32,7 @@ class CheckForUpdate {
           currentVersion: snapshot.currentVersion,
           latestVersion: snapshot.latestVersion,
           releaseUrl: snapshot.releaseUrl,
+          releaseNotes: snapshot.releaseNotes,
           downloadUrl: snapshot.downloadUrl,
           sha256: snapshot.sha256,
         ),

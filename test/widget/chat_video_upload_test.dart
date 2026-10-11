@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -10,8 +12,8 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_file_body.dart';
-import 'package:work_nexus/features/chat/presentation/widgets/chat_upload_overlay.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_video_tile.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_video_tile_parts.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 // A 1×1 transparent PNG, standing in for the video's preview frame.
@@ -97,6 +99,19 @@ void main() {
   ) async {
     await pump(tester, SendState.failed);
     expect(find.byType(ChatVideoTile), findsOneWidget);
-    expect(find.byType(ChatUploadOverlay), findsNothing);
+  });
+
+  testWidgets('hovering a sending video\'s progress shows a ✕', (tester) async {
+    await pump(tester, SendState.pending);
+    expect(find.byIcon(LucideIcons.x300), findsNothing);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.byType(ChatVideoCancelDisc)));
+    await tester.pump();
+
+    expect(find.byIcon(LucideIcons.x300), findsOneWidget);
+    expect(find.text('40%'), findsNothing);
   });
 }

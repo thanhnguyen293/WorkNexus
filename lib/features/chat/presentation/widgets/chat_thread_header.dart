@@ -96,7 +96,7 @@ class ChatThreadHeader extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: context.typography.titleLg.copyWith(
                             color: c.textPrimary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (subtitle != null)

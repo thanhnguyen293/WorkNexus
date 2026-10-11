@@ -167,7 +167,7 @@ class ChatInfoPanel extends ConsumerWidget {
             textAlign: TextAlign.center,
             style: context.typography.titleLg.copyWith(
               color: c.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           if (subtitle != null)

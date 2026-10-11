@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
 import 'cancel_download_button.dart';
+import 'chat_file_action_button.dart';
 import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
 
@@ -151,6 +154,8 @@ class ChatFileRow extends ConsumerWidget {
     final progress = downloading
         ? ref.watch(chatDownloadProgressProvider(key)).value ?? 0
         : null;
+    final cached = ref.watch(chatAttachmentCachedProvider(key)).value;
+    final l = AppL10n.of(context);
     return InkWell(
       mouseCursor: WidgetStateMouseCursor.clickable,
       borderRadius: BorderRadius.circular(context.radii.md),
@@ -229,7 +234,35 @@ class ChatFileRow extends ConsumerWidget {
                   accountId: message.accountId,
                   content: file,
                 ),
+              )
+            else ...[
+              // The same actions as the file's message.
+              if (cached == true) ...[
+                SizedBox(width: s.md),
+                ChatFileActionButton(
+                  icon: LucideIcons.folder300,
+                  tooltip: l.chatShowInFolder,
+                  onPressed: () => revealAttachment(
+                    context,
+                    ref,
+                    accountId: message.accountId,
+                    content: file,
+                  ),
+                ),
+              ],
+              SizedBox(width: s.md),
+              ChatFileActionButton(
+                icon: LucideIcons.download300,
+                tooltip: l.chatSaveAs,
+                onPressed: () => saveAttachment(
+                  context,
+                  ref,
+                  accountId: message.accountId,
+                  content: file,
+                  name: file.name,
+                ),
               ),
+            ],
           ],
         ),
       ),

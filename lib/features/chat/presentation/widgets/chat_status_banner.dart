@@ -36,7 +36,7 @@ class ChatStatusBanner extends ConsumerWidget {
         c.warning,
         null,
       ),
-      ChatOffline() => (l.chatOffline, c.textSecondary, connect),
+      ChatOffline() => (l.chatConnectionOffline, c.textSecondary, connect),
       ChatNeedsTrust() => (
         l.chatUntrusted,
         c.warning,

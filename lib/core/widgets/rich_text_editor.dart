@@ -11,9 +11,8 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../util/dropped_files.dart';
-import 'editor_color_button.dart';
 import 'editor_image_embed.dart';
-import 'editor_link_button.dart';
+import 'editor_toolbar_buttons.dart';
 import 'file_drop_target.dart';
 import 'html_editing_controller.dart';
 import 'inline_image.dart';
@@ -152,36 +151,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
                 config: QuillSimpleToolbarConfig(
                   color: c.surfaceSubtle,
                   sectionDividerColor: c.border,
-                  buttonOptions: QuillSimpleToolbarButtonOptions(
-                    base: QuillToolbarBaseButtonOptions(
-                      iconSize: s.xl2,
-                      iconButtonFactor: 1.1,
-                      iconTheme: _toolbarIconTheme(context),
-                    ),
-                    // Swatch drop-downs in place of quill's Material dialog. Quill
-                    // calls the builder through a dynamic-typed function, so its
-                    // parameters must be untyped (typed ones fail at runtime).
-                    color: QuillToolbarColorButtonOptions(
-                      childBuilder: (Object? _, Object? _) => EditorColorButton(
-                        controller: quill,
-                        isBackground: false,
-                        iconSize: s.xl2 * 1.1,
-                      ),
-                    ),
-                    linkStyle: QuillToolbarLinkStyleButtonOptions(
-                      childBuilder: (Object? _, Object? _) => EditorLinkButton(
-                        controller: quill,
-                        iconSize: s.xl2 * 1.1,
-                      ),
-                    ),
-                    backgroundColor: QuillToolbarColorButtonOptions(
-                      childBuilder: (Object? _, Object? _) => EditorColorButton(
-                        controller: quill,
-                        isBackground: true,
-                        iconSize: s.xl2 * 1.1,
-                      ),
-                    ),
-                  ),
+                  buttonOptions: editorToolbarButtons(context, quill),
                   multiRowsDisplay: true,
                   toolbarIconAlignment: WrapAlignment.start,
                   showFontFamily: false,
@@ -237,40 +207,6 @@ class _RichTextEditorState extends State<RichTextEditor> {
       ),
     );
   }
-}
-
-/// Toolbar buttons in the app's tones: muted glyphs, and the active format
-/// on a soft accent fill instead of Material's solid primary.
-QuillIconTheme _toolbarIconTheme(BuildContext context) {
-  final c = context.colors;
-  final shape = WidgetStatePropertyAll(
-    RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(context.radii.sm),
-    ),
-  );
-  // Material's 40–48px touch targets spread the toolbar over two rows on a
-  // desktop form; a snug button per glyph keeps it to one. A minimum, not a
-  // fixed size: the paragraph-style picker shares this theme and is wider.
-  final side = context.spacing.xl6 * 0.7;
-  final style = ButtonStyle(
-    shape: shape,
-    minimumSize: WidgetStatePropertyAll(Size.square(side)),
-    padding: WidgetStatePropertyAll(EdgeInsets.all(context.spacing.xs)),
-    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    visualDensity: VisualDensity.compact,
-  );
-  return QuillIconTheme(
-    iconButtonUnselectedData: IconButtonData(
-      color: c.textSecondary,
-      style: style,
-    ),
-    iconButtonSelectedData: IconButtonData(
-      color: c.accent,
-      style: style.copyWith(
-        backgroundColor: WidgetStatePropertyAll(c.mixT(c.accent, 0.14)),
-      ),
-    ),
-  );
 }
 
 /// Quill writes body text at 16 (placeholder 20), larger than the app's body

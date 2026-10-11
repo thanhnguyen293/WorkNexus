@@ -12,12 +12,20 @@ class ChatComposerInput extends StatelessWidget {
     required this.controller,
     required this.focus,
     required this.autofocus,
+    this.undo,
     this.hint,
+    this.minLines = 1,
+    this.maxLines,
   });
 
   final TextEditingController controller;
   final FocusNode focus;
   final bool autofocus;
+  final UndoHistoryController? undo;
+
+  /// Rows shown empty, and at most before it scrolls (default 10).
+  final int minLines;
+  final int? maxLines;
 
   /// Replaces the default "Message — Enter to send" hint.
   final String? hint;
@@ -29,8 +37,9 @@ class ChatComposerInput extends StatelessWidget {
       controller: controller,
       focusNode: focus,
       autofocus: autofocus,
-      minLines: 1,
-      maxLines: 10,
+      undoController: undo,
+      minLines: minLines,
+      maxLines: maxLines ?? 10,
       keyboardType: TextInputType.multiline,
       style: context.typography.body.copyWith(color: c.textPrimary),
       decoration: InputDecoration(

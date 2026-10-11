@@ -4,14 +4,19 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'attachment_download.dart';
 import 'attachment_download_badge.dart';
+import 'chat_upload_overlay.dart';
 import 'chat_video_controls.dart' show formatVideoTime;
 import 'chat_video_tile_parts.dart';
 
-/// The middle of the frame: the upload's or download's progress, a spinner
-/// while the player starts, else play — hidden while it plays.
+/// The middle of the frame: the upload's or download's progress (hover for a
+/// ✕ that stops it), a spinner while the player starts, else play — hidden
+/// while it plays. Only the progress takes the pointer; the rest lets taps
+/// through to the frame.
 class ChatVideoCentreControl extends ConsumerWidget {
   const ChatVideoCentreControl({
     super.key,
@@ -32,28 +37,45 @@ class ChatVideoCentreControl extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
     if (uploadGid case final gid?) {
       return uploading
-          ? ChatVideoDisc(child: ChatVideoUploadRing(messageGid: gid))
+          ? ChatVideoCancelDisc(
+              tooltip: l.chatCancelUpload,
+              onCancel: () => cancelChatUpload(
+                context,
+                ref,
+                accountId: accountId,
+                messageGid: gid,
+              ),
+              child: ChatVideoUploadRing(messageGid: gid),
+            )
           : const SizedBox.shrink();
     }
     final key = (accountId: accountId, content: file);
     if (ref.watch(chatDownloadingProvider.select((d) => d.contains(key)))) {
-      return ChatVideoDisc(
+      return ChatVideoCancelDisc(
+        tooltip: l.chatCancelDownload,
+        onCancel: () =>
+            cancelAttachmentDownload(ref, accountId: accountId, content: file),
         child: ChatVideoProgressRing(
           value: ref.watch(chatDownloadProgressProvider(key)).value,
         ),
       );
     }
     if (starting) {
-      return const ChatVideoDisc(child: ChatVideoProgressRing(value: null));
+      return const IgnorePointer(
+        child: ChatVideoDisc(child: ChatVideoProgressRing(value: null)),
+      );
     }
     final p = player;
-    if (p == null) return const _PlayGlyph();
-    return ValueListenableBuilder(
-      valueListenable: p,
-      builder: (context, v, _) =>
-          v.isPlaying ? const SizedBox.shrink() : const _PlayGlyph(),
+    if (p == null) return const IgnorePointer(child: _PlayGlyph());
+    return IgnorePointer(
+      child: ValueListenableBuilder(
+        valueListenable: p,
+        builder: (context, v, _) =>
+            v.isPlaying ? const SizedBox.shrink() : const _PlayGlyph(),
+      ),
     );
   }
 }

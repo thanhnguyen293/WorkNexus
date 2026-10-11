@@ -34,3 +34,20 @@ Future<void> openLinkExternally(String url) async {
   if (scheme != 'http' && scheme != 'https' && scheme != 'mailto') return;
   await openExternally(url.trim());
 }
+
+/// Shows the file at [path] in the system file manager, selected where the
+/// platform can (Finder, Explorer); Linux opens its folder.
+///
+/// Best-effort like [openExternally].
+Future<void> revealInFileManager(String path) async {
+  try {
+    final (executable, arguments) = switch (defaultTargetPlatform) {
+      TargetPlatform.windows => ('explorer.exe', ['/select,', path]),
+      TargetPlatform.linux => ('xdg-open', [File(path).parent.path]),
+      _ => ('open', ['-R', path]),
+    };
+    await Process.run(executable, arguments);
+  } catch (_) {
+    // Nothing to surface if the platform lacks a file manager.
+  }
+}

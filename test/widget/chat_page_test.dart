@@ -17,6 +17,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
@@ -314,6 +315,24 @@ class _FakeChatRepository implements ChatRepository {
     String? mimeType,
     int? replyToId,
   }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> saveAttachmentCopy(
+    String a,
+    MessageContent c,
+    String t,
+  ) async => const Ok(null);
+
+  @override
+  Future<String?> savedAttachmentCopy(String a, MessageContent c) async =>
+      null;
+
+  @override
+  Future<Result<void>> cancelUpload(String a, String g) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setMyPresence(String a, ChatPresence p) async =>
+      const Ok(null);
 
   @override
   Future<Result<void>> setChatStarred(

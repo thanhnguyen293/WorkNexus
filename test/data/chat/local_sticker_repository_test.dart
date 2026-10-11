@@ -27,7 +27,13 @@ void main() {
       Err() => fail('could not list'),
     };
     expect(all, isNotEmpty);
-    expect(all.every((s) => s.pack == 'WorkNexus' && !s.custom), isTrue);
+    expect(all.map((s) => s.pack).toSet(), {'PepeAnim', 'Pepe', 'WorkNexus'});
+    expect(
+      all.every(
+        (s) => !s.custom && s.location == 'assets/stickers/${s.pack}/${s.name}',
+      ),
+      isTrue,
+    );
   });
 
   test("the user's own stickers can be added, read and removed", () async {

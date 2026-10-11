@@ -11,15 +11,20 @@
   },
   "updateRestartToUpdate": "Khởi động lại để cập nhật lên {version}",
   "@updateRestartToUpdate": {
-    "placeholders": { "version": { "type": "String" } }
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   },
   "trayOpenApp": "Mở WorkNexus",
   "trayQuitApp": "Thoát WorkNexus",
-  "localCacheTitle": "Dữ liệu cục bộ",
-  "localCacheSubtitle": "Dữ liệu sync từ các tài khoản được lưu trên máy để app mở nhanh và dùng được khi offline. Xoá đi thì app sẽ tải lại.",
+  "storageTitle": "Bộ nhớ & cache",
+  "storageOpen": "Quản lý bộ nhớ…",
+  "localCacheTitle": "Database cục bộ",
+  "localCacheSubtitle": "File chat đã tải và dữ liệu sync từ các tài khoản được lưu trên máy để app mở nhanh và dùng được khi offline.",
   "localCacheHint": "Dữ liệu cũ hoặc bị lỗi? Xoá cache rồi sync lại.",
-  "clearCache": "Xoá cache…",
-  "clearCacheTitle": "Xoá dữ liệu cache",
+  "localCacheDbHint": "Bản sao dữ liệu sync từ các tài khoản, lưu trong database cục bộ trên máy để app mở nhanh và dùng được khi offline. Xoá một phần chỉ xoá bản sao trên máy; app sẽ tải lại từ tài khoản.",
   "clearCacheKept": "Tài khoản, workspace, cài đặt và bộ lọc đã lưu được giữ nguyên.",
   "cacheSectionTickets": "Ticket & board",
   "cacheSectionTicketsHint": "Ticket, bình luận, hoạt động và project",
@@ -94,7 +99,11 @@
   "allSynced": "Đã đồng bộ",
   "assignedToYou": "{count} công việc được giao cho bạn",
   "@assignedToYou": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "syncedAgo": "Đồng bộ 2 phút trước",
   "justNow": "vừa xong",
@@ -102,7 +111,11 @@
   "hoursAgo": "{count} giờ trước",
   "daysAgo": "{count} ngày trước",
   "@minutesAgo": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "task": "Công việc",
   "summary": "Nội dung",
@@ -115,7 +128,6 @@
   "vietnamese": "Tiếng Việt",
   "description": "Mô tả",
   "comments": "Bình luận",
-  "development": "Phát triển",
   "translate": "Dịch bằng OpenCode",
   "retranslate": "Dịch lại bằng OpenCode",
   "translating": "Đang dịch bằng OpenCode…",
@@ -124,14 +136,22 @@
   "translationLanguage": "Ngôn ngữ dịch",
   "runOpenCodeToTranslate": "Chạy OpenCode để tạo bản dịch {language}.",
   "@runOpenCodeToTranslate": {
-    "placeholders": { "language": { "type": "String" } }
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
   },
   "translationOutdated": "Bản dịch cũ",
   "translationOutdatedBanner": "Bản gốc đã thay đổi kể từ lần dịch trước. Đang hiển thị bản dịch cũ.",
   "translationFailed": "Dịch thất bại",
   "translationFailedWithReason": "Dịch thất bại — {reason}",
   "@translationFailedWithReason": {
-    "placeholders": { "reason": { "type": "String" } }
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   },
   "connectedAccounts": "Tài khoản đã kết nối",
   "connect": "Kết nối tài khoản",
@@ -180,11 +200,22 @@
   "zentaoReportBug": "Báo bug",
   "zentaoNewTicket": "Tạo bug hoặc task ({shortcut})",
   "@zentaoNewTicket": {
-    "placeholders": { "shortcut": { "type": "String" } }
+    "placeholders": {
+      "shortcut": {
+        "type": "String"
+      }
+    }
   },
   "zentaoNewInAccount": "{item} · {account}",
   "@zentaoNewInAccount": {
-    "placeholders": { "item": { "type": "String" }, "account": { "type": "String" } }
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      }
+    }
   },
   "zentaoConfirm": "Xác nhận",
   "zentaoStart": "Bắt đầu",
@@ -194,11 +225,25 @@
   "zentaoCancelTask": "Hủy task",
   "zentaoActionTitle": "{action} #{key}",
   "@zentaoActionTitle": {
-    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "zentaoActionDone": "{action} #{key}: xong",
   "@zentaoActionDone": {
-    "placeholders": { "action": { "type": "String" }, "key": { "type": "String" } }
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "zentaoAssignToOptional": "Giao cho (tùy chọn)",
   "zentaoNote": "Ghi chú",
@@ -207,7 +252,11 @@
   "zentaoHoursLeft": "Số giờ còn lại",
   "zentaoHoursLogged": "Đã ghi {hours} giờ",
   "@zentaoHoursLogged": {
-    "placeholders": { "hours": { "type": "String" } }
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
   },
   "zentaoHoursInvalid": "Nhập số giờ là một số từ 0 trở lên",
   "zentaoHoursLeftRequired": "Nhập số giờ còn lại (lớn hơn 0)",
@@ -216,29 +265,48 @@
   "gitlabReopen": "Mở lại",
   "gitlabMrClosed": "Đã đóng merge request !{key}",
   "@gitlabMrClosed": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrApproved": "Đã phê duyệt !{key}",
   "@gitlabMrApproved": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrMerged": "Đã merge !{key}",
   "@gitlabMrMerged": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "gitlabMrRebased": "Đã rebase !{key}",
   "@gitlabMrRebased": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "mrRequestedToMerge": "{author} muốn merge",
   "@mrRequestedToMerge": {
-    "placeholders": { "author": { "type": "String" } }
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
   },
   "sourceBranch": "Nhánh nguồn",
   "targetBranch": "Nhánh đích",
   "noDescription": "Chưa có mô tả.",
   "approve": "Phê duyệt",
-  "activity": "Hoạt động",
   "noActivityYet": "Chưa có hoạt động",
   "writeCommentHint": "Viết bình luận…",
   "commentAction": "Bình luận",
@@ -253,35 +321,63 @@
   "needsRebase": "Cần rebase",
   "mergeStatusValue": "Trạng thái merge: {status}",
   "@mergeStatusValue": {
-    "placeholders": { "status": { "type": "String" } }
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
   },
   "commitsBehindTarget": "{count, plural, other{Nhánh nguồn đang chậm hơn nhánh đích {count} commit.}}",
   "@commitsBehindTarget": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "prBehindBase": "Nhánh này đang lỗi thời so với nhánh đích.",
   "prClosed": "Pull request này đã đóng.",
   "githubItemClosed": "Đã đóng #{key}",
   "@githubItemClosed": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubItemReopened": "Đã mở lại #{key}",
   "@githubItemReopened": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubPrMerged": "Đã merge #{key}",
   "@githubPrMerged": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "githubPrBranchUpdated": "Đã cập nhật nhánh cho #{key}",
   "@githubPrBranchUpdated": {
-    "placeholders": { "key": { "type": "String" } }
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   },
   "actionFailed": "Thất bại: {message}",
   "@actionFailed": {
-    "placeholders": { "message": { "type": "String" } }
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   },
-  "commentPostFailed": "Không thể đăng bình luận",
+  "commentPostFailed": "Không gửi được bình luận",
   "providerActionFailed": "Thao tác provider thất bại",
   "githubMerge": "Merge",
   "githubReopen": "Mở lại",
@@ -305,11 +401,19 @@
   "participants": "Người tham gia",
   "estimateSummary": "Ước tính {value}",
   "@estimateSummary": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "spentSummary": "Đã dùng {value}",
   "@spentSummary": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "noEstimateOrTimeSpent": "Chưa có ước tính hoặc thời gian đã dùng",
   "editLabels": "Sửa nhãn",
@@ -324,11 +428,13 @@
   "spentDurationHint": "Ví dụ: 30m",
   "currentTotal": "Hiện tại: {value}",
   "@currentTotal": {
-    "placeholders": { "value": { "type": "String" } }
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   },
   "resetSpentTime": "Xóa thời gian đã dùng",
-  "sourceBranch": "Nhánh nguồn",
-  "targetBranch": "Nhánh đích",
   "mergeStatus": "Trạng thái merge",
   "emptyTitle": "Không có công việc khớp bộ lọc",
   "emptyDesc": "Thử bỏ bớt bộ lọc hoặc đổi không gian.",
@@ -394,7 +500,6 @@
   "pinned": "Đã ghim",
   "pinTask": "Ghim task",
   "unpinTask": "Bỏ ghim task",
-  "commentPostFailed": "Không gửi được bình luận",
   "close": "Đóng",
   "download": "Tải xuống",
   "attachments": "Tệp đính kèm",
@@ -405,7 +510,11 @@
   "confirmed": "Đã xác nhận",
   "reopenedTimes": "Mở lại ×{count}",
   "@reopenedTimes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "openedBy": "Người mở",
   "assignedTo": "Được giao cho",
@@ -414,7 +523,11 @@
   "lifecycle": "Vòng đời",
   "showEmptyFields": "Hiện {count} trường trống",
   "@showEmptyFields": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "hideEmptyFields": "Ẩn trường trống",
   "stepsToReproduce": "Các bước tái hiện",
@@ -463,44 +576,14 @@
   "openInBrowser": "Mở trong trình duyệt",
   "more": "Thêm",
   "code": "Code",
-  "openCodeSection": "OpenCode",
-  "openCodeSectionSubtitle": "Việc dịch ticket và điều phối coding agent đều chạy qua CLI opencode. Key lưu ở đây được ghi vào kho thông tin đăng nhập của chính OpenCode — đúng nơi `opencode auth login` dùng — nên mức sử dụng vẫn tính vào tài khoản của bạn.",
-  "openCodeNoCredentials": "Chưa có nhà cung cấp nào được liên kết với OpenCode.",
-  "openCodeCredentialsLoadFailed": "Không đọc được thông tin đăng nhập của OpenCode",
-  "openCodeAddKey": "Thêm API key",
-  "openCodeChangeKey": "Đổi key",
-  "openCodeUnlink": "Gỡ liên kết",
-  "openCodeAuthTypeApi": "API key",
-  "openCodeAuthTypeOauth": "OAuth",
-  "openCodeAuthTypeOther": "Khác",
-  "openCodeOauthReadOnly": "Đăng nhập bằng OAuth — hãy đổi bằng `opencode auth login`.",
-  "openCodeGetKey": "Lấy API key ↗",
-  "openCodeProviderLabel": "Nhà cung cấp",
-  "openCodeProviderHint": "ví dụ: opencode, opencode-go, anthropic",
-  "openCodeApiKeyLabel": "API key",
-  "openCodeApiKeyHint": "Dán key vào đây",
-  "openCodeAddKeyTitle": "Thêm API key cho OpenCode",
-  "openCodeChangeKeyTitle": "Đổi key của {provider}",
-  "@openCodeChangeKeyTitle": {
-    "placeholders": { "provider": { "type": "String" } }
-  },
-  "openCodeKeyDialogSubtitle": "Key được ghi vào tệp thông tin đăng nhập của OpenCode, không lưu trong cơ sở dữ liệu của WorkNexus.",
-  "openCodeSaveKey": "Lưu key",
   "openCodeShowKey": "Hiện",
   "openCodeHideKey": "Ẩn",
-  "openCodeUnlinkTitle": "Gỡ liên kết {provider}?",
-  "@openCodeUnlinkTitle": {
-    "placeholders": { "provider": { "type": "String" } }
-  },
-  "openCodeUnlinkBody": "OpenCode sẽ mất quyền truy cập nhà cung cấp này cho đến khi bạn thêm key lại. Các nhà cung cấp khác không bị ảnh hưởng.",
   "openCodeNotLinkedTitle": "Chưa liên kết OpenCode",
-  "openCodeNotLinkedBody": "Không tìm thấy nhà cung cấp OpenCode nào đã xác thực. Hãy thêm API key trong Cài đặt → OpenCode, hoặc liên kết từ terminal:",
+  "openCodeNotLinkedBody": "Không tìm thấy nhà cung cấp OpenCode nào đã xác thực. Hãy thêm API key trong Cài đặt → Dịch thuật, chạy lệnh bên dưới trong terminal, hoặc chọn nhà cung cấp dịch khác (Gemini, Groq, …).",
   "openCodeOpenSettings": "Mở cài đặt",
   "gotIt": "Đã hiểu",
   "translationLanguageSection": "Ngôn ngữ dịch",
   "translationLanguageSubtitle": "Ngôn ngữ mà ticket và tin nhắn chat được dịch sang.",
-  "translationModelSection": "Model dịch",
-  "translationModelSubtitle": "Model OpenCode dùng để dịch ticket. Nếu để mặc định, OpenCode tự chọn — một model mặc định hỏng hoặc đang xếp hàng chính là nguyên nhân thường gặp khiến bản dịch không bao giờ xong.",
   "translationModelDefault": "Mặc định của OpenCode",
   "translationModelLoadFailed": "Không hỏi được danh sách model từ OpenCode",
   "translationModelListUnavailable": "OpenCode không trả về model nào — hãy kiểm tra `opencode models` trong terminal.",
@@ -512,7 +595,6 @@
   "saveFilterNameLabel": "Tên",
   "saveFilterNameHint": "vd. Việc đang chặn của tôi",
   "saveFilterExistsHint": "Trùng tên sẽ ghi đè bộ lọc cũ.",
-  "save": "Lưu",
   "deleteSavedFilter": "Xoá bộ lọc",
   "noSavedFiltersYet": "Chưa có bộ lọc nào — hãy thiết lập bộ lọc rồi lưu lại.",
   "filterSearchHint": "Tìm…",
@@ -522,7 +604,7 @@
   "machineTranslationNote": "Dịch máy · hãy kiểm tra lại trước khi tin dùng",
   "chat": "Chat",
   "chatNoZentaoAccount": "Kết nối một tài khoản ZenTao trong Tích hợp để dùng chat.",
-  "chatAccount": "Tài khoản chat",
+  "chatAccount": "Tài khoản",
   "chatMembersFailed": "Không tải được danh sách thành viên",
   "chatPin": "Ghim",
   "chatUnpin": "Bỏ ghim",
@@ -544,6 +626,7 @@
   "chatOnline": "Đang hoạt động",
   "chatAway": "Tạm vắng",
   "chatBusy": "Bận",
+  "chatInMeeting": "Đang họp",
   "chatOffline": "Ngoại tuyến",
   "chatChangeGroupAvatar": "Đổi ảnh nhóm",
   "chatMyProfile": "Hồ sơ của bạn",
@@ -590,6 +673,10 @@
   "chatRoleTop": "Quản lý cấp cao",
   "chatRoleOthers": "Khác",
   "chatCancelDownload": "Huỷ tải xuống",
+  "chatCancelUpload": "Huỷ gửi",
+  "chatShowInFolder": "Mở thư mục chứa file",
+  "chatFileOnCloud": "Đã có trên Cloud",
+  "chatFileOnDevice": "Đã có trên máy",
   "chatRoleBadges": "Huy hiệu vai trò",
   "chatRoleNoBadge": "Không có tích",
   "chatAutoDownloadVideos": "Tự động tải video",
@@ -668,7 +755,7 @@
   "chatFullScreen": "Toàn màn hình",
   "chatBack10": "Lùi 10 giây",
   "chatForward10": "Tới 10 giây",
-  "chatStorage": "Bộ nhớ đệm chat",
+  "chatStorage": "File chat đã tải",
   "chatStorageUsed": "Đang dùng {used} / {limit}",
   "chatStorageLimit": "Giới hạn dung lượng",
   "chatStorageLimitHint": "Khi vượt giới hạn, file được xem lâu nhất sẽ bị xoá trước.",
@@ -687,7 +774,7 @@
   "chatSelectConversation": "Chọn một cuộc trò chuyện",
   "chatConnecting": "Đang kết nối chat ZenTao…",
   "chatReconnecting": "Mất kết nối — thử lại sau {seconds}s",
-  "chatOffline": "Chat đang ngoại tuyến",
+  "chatConnectionOffline": "Chat đang ngoại tuyến",
   "chatConnect": "Kết nối",
   "chatSignedOut": "Chat đã đăng xuất: {reason}",
   "chatKicked": "Đã đăng xuất vì tài khoản này vừa đăng nhập ở nơi khác.",
@@ -699,7 +786,6 @@
   "chatTrustIssuer": "Cấp bởi",
   "chatTrustAction": "Tin cậy và kết nối",
   "chatComposerHint": "Nhập tin — Enter để gửi, Shift+Enter để xuống dòng",
-  "chatSend": "Gửi",
   "chatSending": "Đang gửi…",
   "chatSendFailed": "Chưa gửi được · Thử lại",
   "chatLoadOlder": "Tải tin nhắn cũ hơn",
@@ -738,11 +824,11 @@
   "chatMobile": "Di động",
   "chatPhone": "Điện thoại",
   "chatRole": "Vai trò",
-  "chatAccount": "Tài khoản",
   "chatAttach": "Đính kèm tệp",
   "chatUploading": "Đang tải lên…",
   "chatTranslate": "Dịch",
   "chatShowOriginal": "Ẩn bản dịch",
+  "chatRetranslate": "Dịch lại",
   "chatTranslatedBy": "Dịch bởi {model}",
   "chatTranslating": "Đang dịch…",
   "chatTranslateFailed": "Dịch thất bại: {error}",
@@ -772,6 +858,23 @@
   "chatWallpaperDim": "Làm tối",
   "chatMarkdownOn": "Đang bật Markdown — tin gửi đi có định dạng",
   "chatMarkdownOff": "Đang tắt Markdown — tin gửi đi là chữ thường",
+  "chatFormatBold": "In đậm",
+  "chatFormatItalic": "In nghiêng",
+  "chatFormatUnderline": "Gạch chân",
+  "chatFormatStrikethrough": "Gạch ngang",
+  "chatFormatCode": "Mã",
+  "chatFormatHeading": "Tiêu đề",
+  "chatFormatQuote": "Trích dẫn",
+  "chatFormatBulletList": "Danh sách dấu đầu dòng",
+  "chatFormatNumberedList": "Danh sách đánh số",
+  "chatFormatIndent": "Thụt lề",
+  "chatFormatOutdent": "Giảm thụt lề",
+  "chatFormatClear": "Xoá định dạng",
+  "chatUndo": "Hoàn tác",
+  "chatRedo": "Làm lại",
+  "chatComposerExpand": "Mở rộng ô nhập",
+  "chatComposerCollapse": "Thu nhỏ ô nhập",
+  "chatMarkdownHint": "Định dạng bằng thanh công cụ bên dưới — {shortcut} để tắt Markdown",
   "chatNotificationsSetting": "Thông báo tin nhắn mới",
   "chatNotificationsSettingHint": "Hiện thông báo hệ thống khi có tin nhắn chat mới.",
   "chatNotifyWhileViewing": "Thông báo cả khi đang xem đoạn chat",
@@ -791,15 +894,20 @@
   "updateRestartNow": "Cập nhật & khởi động lại",
   "updateInstallFailed": "Không thể tự động cài bản cập nhật. Hãy tải về từ trang phát hành.",
   "updateOpenReleasePage": "Mở trang phát hành",
-  "translationApiSection": "Dịch bằng API key",
-  "translationApiSubtitle": "Dùng key của bạn (Gemini, Groq, OpenRouter, Ollama chạy local…) thay cho OpenCode CLI. Key được lưu trong keychain của hệ điều hành.",
   "translationApiProvider": "Nhà cung cấp",
+  "translationProviderSection": "Nhà cung cấp dịch",
+  "translationProviderSubtitle": "Ai dịch ticket và tin nhắn chat. OpenCode dùng CLI và tài khoản đã đăng nhập của nó; các lựa chọn khác dùng API key của bạn.",
+  "translationProviderOpenCode": "OpenCode (CLI)",
+  "translationOpenCodeKey": "API key · {provider}",
+  "translationOpenCodeKeySaved": "Đã lưu key {preview} — nhập key mới để thay.",
+  "translationOpenCodeKeyOauth": "Đã đăng nhập qua `opencode auth login`. Key nhập ở đây sẽ thay lần đăng nhập đó cho provider này.",
+  "translationOpenCodeKeyNone": "Provider này chưa có key.",
+  "translationOpenCodeKeySaveDone": "Đã lưu key {provider} cho OpenCode",
   "translationApiBaseUrl": "API base URL",
   "translationApiModel": "Model",
+  "translationApiModelsLoadFailed": "Không tải được danh sách model — hãy nhập tên model",
   "translationApiKey": "API key",
   "translationApiGetKey": "Lấy key",
-  "translationApiUse": "Dịch bằng key này",
-  "translationApiUseHint": "Tắt: bản dịch lại đi qua OpenCode.",
   "translationApiSave": "Lưu",
   "translationApiRemove": "Xoá key",
   "translationApiLoadFailed": "Không đọc được key dịch đã lưu.",
@@ -809,9 +917,11 @@
   "reportIssueHint": "Gặp lỗi? Mở issue trên GitHub, đã điền sẵn phiên bản của bạn.",
   "translationSection": "Dịch thuật",
   "updateManualInstall": "Hãy tải phiên bản này từ trang phát hành.",
+  "updateWhatsNew": "Có gì mới",
   "translationApiCustom": "Tuỳ chỉnh (tương thích OpenAI)",
   "translationApiBaseUrlHint": "https://api.example.com/v1",
   "translationApiSaveFailed": "Không lưu được key dịch.",
+  "translationApiSaved": "Đã lưu — {provider} sẽ dịch từ giờ",
   "dashboard": "Tổng quan",
   "dashboardNoAccount": "Kết nối một tài khoản ZenTao trong Tích hợp để xem tổng quan.",
   "dashboardAccount": "Tài khoản ZenTao",

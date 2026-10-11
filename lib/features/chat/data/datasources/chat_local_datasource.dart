@@ -220,6 +220,36 @@ class ChatLocalDatasource {
             ..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid)))
           .write(ChatMessagesCompanion(sendState: Value(state.name)));
 
+  /// Where a copy of attachment [fileId] was last saved, if anywhere.
+  Future<String?> savedFilePath(String accountId, int fileId) async =>
+      (await (_db.select(_db.chatSavedFiles)..where(
+                (f) => f.accountId.equals(accountId) & f.fileId.equals(fileId),
+              ))
+              .getSingleOrNull())
+          ?.path;
+
+  Future<void> saveSavedFilePath(
+    String accountId,
+    int fileId,
+    String path,
+    DateTime savedAt,
+  ) => _db
+      .into(_db.chatSavedFiles)
+      .insertOnConflictUpdate(
+        ChatSavedFilesCompanion.insert(
+          accountId: accountId,
+          fileId: fileId,
+          path: path,
+          savedAt: savedAt,
+        ),
+      );
+
+  /// Removes a message only this device knows of (a send cancelled before
+  /// it reached the server).
+  Future<void> deleteMessage(String accountId, String gid) => (_db.delete(
+    _db.chatMessages,
+  )..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid))).go();
+
   /// Replaces a pending message's content (e.g. once its upload finished).
   Future<void> setContent(
     String accountId,

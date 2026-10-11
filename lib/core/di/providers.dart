@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 
-import '../../features/agents/data/cli_agent_adapters.dart';
-import '../../features/agents/data/mock_coding_agent_adapter.dart';
-import '../../features/agents/domain/adapters/coding_agent_adapter.dart';
+import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
@@ -14,31 +11,12 @@ import '../domain/entities/ticket.dart';
 import '../domain/entities/workspace.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
-import '../domain/value_objects/agent_kind.dart';
 import 'service_locator.dart';
 
 // Reactive Riverpod state only. The object graph (databases, repositories,
 // services) is wired by the GetIt service locator (`service_locator.dart`) — the
 // single composition root — and read here via `getIt<T>()`. This file holds the
 // reactive reads and derived state layered on top of those services.
-
-/// Dry-run (mock) agents vs the real installed CLIs. Defaults to dry-run so the
-/// demo never spawns a process unless the user opts in.
-final dryRunAgentsProvider = StateProvider<bool>((ref) => true);
-
-/// AgentKind → adapter. Mock adapters in dry-run; the real `claude`/`codex`/
-/// `opencode` CLI adapters otherwise. Reactive to [dryRunAgentsProvider].
-final codingAgentRegistryProvider =
-    Provider<Map<AgentKind, CodingAgentAdapter>>((ref) {
-      if (ref.watch(dryRunAgentsProvider)) {
-        return {for (final k in AgentKind.values) k: MockCodingAgentAdapter(k)};
-      }
-      return {
-        AgentKind.claudeCode: ClaudeCodeAdapter(),
-        AgentKind.codex: CodexAdapter(),
-        AgentKind.opencode: OpenCodeCliAdapter(),
-      };
-    });
 
 // ---- Shared reactive reads (drift streams via the service locator) ----
 
@@ -97,8 +75,18 @@ final lookupsProvider = Provider<Lookups>((ref) {
   );
 });
 
+/// Whether translations go through the user's own API key rather than the
+/// OpenCode CLI — in which case OpenCode needs no linking first.
+final translatesWithApiKeyProvider = FutureProvider.autoDispose<bool>(
+  (ref) async =>
+      (await getIt<TranslationApiConfigRepository>().load())
+          .valueOrNull
+          ?.isUsable ??
+      false,
+);
+
 /// Whether OpenCode is authenticated (`opencode auth login` has been run, or a
-/// key was saved in Settings → OpenCode). When true, translation uses OpenCode's
+/// key was added to its own credential store). When true, translation uses OpenCode's
 /// own provider/auth so it shows in usage.
 ///
 /// `autoDispose` so, until it is linked, each translation re-asks the CLI: a
@@ -106,8 +94,10 @@ final lookupsProvider = Provider<Lookups>((ref) {
 final openCodeAuthedProvider = FutureProvider.autoDispose<bool>((ref) async {
   final authed = await getIt<OpenCodeCli>().hasAuthenticatedProvider();
   // Asking runs the CLI (a second or two): once linked, the answer is kept
-  // rather than asked again on every translation.
-  if (authed) ref.keepAlive();
+  // rather than asked again on every translation. The provider can be disposed
+  // while the CLI runs (its last listener left, or a hot restart), and a
+  // disposed Ref throws on use.
+  if (authed && ref.mounted) ref.keepAlive();
   return authed;
 });
 

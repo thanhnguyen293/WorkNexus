@@ -16,7 +16,6 @@ import 'github_connection_dialog.dart';
 import 'gitlab_connection_dialog.dart';
 import 'settings_providers.dart';
 import 'widgets/account_list.dart';
-import 'widgets/opencode_key_card.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({this.footer, super.key});
@@ -95,8 +94,6 @@ class SettingsPage extends ConsumerWidget {
                   SizedBox(height: context.spacing.xl4),
                   for (final w in workspaces)
                     WorkspaceAccounts(workspaceId: w.id, lookups: lookups),
-                  const OpenCodeKeyCard(),
-                  SizedBox(height: context.spacing.xl4),
                   if (footer != null) ...[
                     SizedBox(height: context.spacing.xl4),
                     footer!,

@@ -1,8 +1,8 @@
 /// Read-only questions the app asks the locally-installed `opencode` CLI.
 ///
-/// A shared-kernel contract (CLAUDE.md 5.2): `translation` gates the Translate
-/// action on it and `connections` fills the Settings model picker from it, while
-/// `agents` owns the CLI-backed implementation. Presentation depends on this
+/// A shared-kernel contract (CLAUDE.md 5.2): the Translate actions in `chat`
+/// and `task_detail` gate on it and `translation` fills its model picker from
+/// it (and owns the CLI-backed implementation). Presentation depends on this
 /// interface, never on the process-spawning detail behind it.
 abstract class OpenCodeCli {
   /// Whether OpenCode has at least one authenticated provider — i.e. whether a

@@ -9,7 +9,6 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_image_body.dart';
-import 'package:work_nexus/features/chat/presentation/widgets/chat_upload_overlay.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 // A 1×1 transparent PNG.
@@ -68,19 +67,17 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('a sending image shows the picked bytes and the % sent', (
+  testWidgets('a sending image shows the picked bytes, without progress', (
     tester,
   ) async {
     await pump(tester, SendState.pending);
     expect(find.byType(Image), findsOneWidget);
-    expect(find.text('40%'), findsOneWidget);
+    expect(find.text('40%'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('a failed upload keeps the picture, without progress', (
-    tester,
-  ) async {
+  testWidgets('a failed upload keeps the picture', (tester) async {
     await pump(tester, SendState.failed);
     expect(find.byType(Image), findsOneWidget);
-    expect(find.byType(ChatUploadOverlay), findsNothing);
   });
 }

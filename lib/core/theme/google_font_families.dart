@@ -15,12 +15,12 @@ typedef GoogleFontFamily = ({
 
 /// The entries of `kFontChoices` that are google-fonts-backed, keyed by their
 /// marker family name. Everything else is bundled (`Space Grotesk` / `Space
-/// Mono`), a platform family, or the system marker.
+/// Mono`, `Be Vietnam Pro`), a platform family, or the system marker.
+///
+/// google_fonts names each weight its own family (`…_regular`, `…_700`), so
+/// a style that only changes `fontWeight` (Markdown bold, `bodyStrong`) keeps
+/// the regular face; a family whose bold must show is bundled instead.
 final Map<String, GoogleFontFamily> kGoogleFontFamilies = {
-  kVietnamFont: (
-    style: () => GoogleFonts.beVietnamPro(),
-    textTheme: (base) => GoogleFonts.beVietnamProTextTheme(base),
-  ),
   kGeistMonoFont: (
     style: () => GoogleFonts.geistMono(),
     textTheme: (base) => GoogleFonts.geistMonoTextTheme(base),

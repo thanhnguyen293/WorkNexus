@@ -37,6 +37,34 @@ class FakeXxdHttp extends XxdHttpDatasource {
     return Ok(downloadBytes);
   }
 
+  /// Uploads wait here until completed with their result (or cancelled).
+  Completer<Result<({int id, int time})>>? uploadGate;
+
+  @override
+  Future<Result<({int id, int time})>> upload({
+    required Uri server,
+    required String token,
+    required int userId,
+    required String chatGid,
+    required String fileName,
+    required Uint8List bytes,
+    String? mimeType,
+    String serverName = '',
+    String? pinnedFingerprint,
+    void Function(double sent)? onProgress,
+    Future<void>? cancel,
+  }) {
+    final gate = uploadGate ??= Completer();
+    unawaited(
+      cancel?.then((_) {
+        if (!gate.isCompleted) {
+          gate.complete(const Err(CancelledFailure('Upload cancelled')));
+        }
+      }),
+    );
+    return gate.future;
+  }
+
   @override
   Future<Result<XxdServerInfo>> fetchServerInfo(XxdCredentials c) async {
     calls++;

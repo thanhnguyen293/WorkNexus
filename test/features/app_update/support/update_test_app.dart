@@ -22,6 +22,7 @@ const manualRelease = (
   currentVersion: '1.0.0',
   latestVersion: 'v1.1.0',
   releaseUrl: updateReleaseUrl,
+  releaseNotes: '',
   downloadUrl: null,
   sha256: null,
 );
@@ -31,6 +32,7 @@ const installableRelease = (
   currentVersion: '1.0.0',
   latestVersion: 'v1.1.0',
   releaseUrl: updateReleaseUrl,
+  releaseNotes: '',
   downloadUrl: 'https://example.com/WorkNexus.zip',
   sha256: 'abc',
 );
@@ -42,6 +44,7 @@ MockUpdateRepository mockUpdateRepository() {
       currentVersion: '',
       latestVersion: '',
       releaseUrl: '',
+      releaseNotes: '',
     ),
   );
   final repository = MockUpdateRepository();

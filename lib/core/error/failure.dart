@@ -30,7 +30,7 @@ class ParseFailure extends Failure {
   const ParseFailure(super.message, {super.cause});
 }
 
-/// A coding-agent or translation process failed.
+/// The OpenCode CLI translation process failed.
 class AgentFailure extends Failure {
   const AgentFailure(super.message, {super.cause});
 }

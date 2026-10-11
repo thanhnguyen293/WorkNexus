@@ -8,7 +8,8 @@ import '../value_objects/message_content.dart';
 
 /// Translates a text message into [targetLang]: the stored translation when
 /// there is one (shown again), otherwise a fresh one, which is stored — shown
-/// — for next time.
+/// — for next time. [force] skips the stored one and replaces it (translate
+/// again, e.g. after switching provider or model).
 class TranslateChatMessage {
   const TranslateChatMessage(this._repository, this._service);
 
@@ -22,16 +23,15 @@ class TranslateChatMessage {
     ChatMessage message, {
     required String targetLang,
     String? model,
+    bool force = false,
   }) async {
     final content = message.content;
     if (content is! TextContent) {
       return const Err(UnexpectedFailure('Only text can be translated'));
     }
-    final stored = await _repository.find(
-      message.accountId,
-      message.gid,
-      targetLang,
-    );
+    final stored = force
+        ? const Ok<ChatMessageTranslation?>(null)
+        : await _repository.find(message.accountId, message.gid, targetLang);
     if (stored case Ok(:final value?)) {
       if (!value.visible) {
         await _repository.setVisible(
@@ -58,8 +58,8 @@ class TranslateChatMessage {
           accountId: message.accountId,
           gid: message.gid,
           targetLang: targetLang,
-          text: value,
-          model: model,
+          text: value.text,
+          model: value.model,
           createdAt: DateTime.now(),
         );
         // A failed save only costs a re-translation later; show what we have.

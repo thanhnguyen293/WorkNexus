@@ -100,6 +100,19 @@ List<MessageAction> messageActions(
           );
         },
       ),
+    if (text != null && storedTranslation != null)
+      (
+        icon: LucideIcons.rotateCw300,
+        tooltip: l.chatRetranslate,
+        destructive: false,
+        onTap: () => ref
+            .read(messageTranslationControllerProvider.notifier)
+            .translate(
+              message,
+              force: true,
+              ready: () => ensureOpenCodeLinked(context, ref),
+            ),
+      ),
     if (message.content case final ImageContent image
         when serverId != null && !message.deleted)
       (

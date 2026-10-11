@@ -26,7 +26,6 @@ class DetailTabBar extends ConsumerWidget {
     final labels = {
       DetailTab.original: l.original,
       DetailTab.translation: '${lang.flag} ${lang.nativeName}',
-      // DetailTab.development: l.development,
     };
     return Container(
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),

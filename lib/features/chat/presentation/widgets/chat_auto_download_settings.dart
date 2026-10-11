@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../core/widgets/quick_settings_segmented.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'chat_storage_dialog.dart';
 
 /// Sizes offered for the video auto-download limit, in MB.
 const List<int> kChatAutoDownloadSizesMb = [10, 20, 50, 100];
 
-/// A Quick Settings section: whether chat videos download on their own, up to
-/// what size, and the way into the downloaded-files storage.
+/// A Quick Settings section: whether chat videos download on their own, and
+/// up to what size.
 class ChatAutoDownloadSettings extends ConsumerWidget {
   const ChatAutoDownloadSettings({super.key});
 
@@ -47,11 +45,6 @@ class ChatAutoDownloadSettings extends ConsumerWidget {
               onChanged: settings.setChatAutoDownloadVideoMb,
             ),
           ),
-        QuickSettingsLinkField(
-          icon: LucideIcons.database300,
-          label: l.chatStorage,
-          onTap: () => ChatStorageDialog.show(context),
-        ),
       ],
     );
   }

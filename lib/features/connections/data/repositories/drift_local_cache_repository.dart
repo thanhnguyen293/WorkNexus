@@ -31,6 +31,8 @@ class DriftLocalCacheRepository implements LocalCacheRepository {
           _db.chatMessages,
           _db.chatConversations,
           _db.chatUsers,
+          _db.chatLinkPreviews,
+          _db.chatSavedFiles,
         ],
         CacheSection.translations => [
           _db.translations,

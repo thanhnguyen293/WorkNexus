@@ -56,6 +56,7 @@ class GitHubUpdateRepository implements UpdateRepository {
         currentVersion: packageInfo.version,
         latestVersion: release.tagName,
         releaseUrl: release.htmlUrl,
+        releaseNotes: release.notes,
         // Never offer a download that cannot be verified.
         downloadUrl: sha256 == null ? null : downloadUrl,
         sha256: sha256,

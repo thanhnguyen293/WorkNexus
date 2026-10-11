@@ -4,8 +4,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_radii.dart';
 import 'editor_link_dialog.dart';
+import 'editor_toolbar_buttons.dart';
 
 /// The rich-text toolbar's link button, opening [EditorLinkDialog] in place
 /// of flutter_quill's Material one. Lit while the cursor is on a link.
@@ -39,15 +39,10 @@ class EditorLinkButton extends StatelessWidget {
           : AppL10n.of(context).editorInsertLink,
       iconSize: iconSize,
       color: on ? c.accent : c.textSecondary,
-      style: ButtonStyle(
+      style: editorToolbarButtonStyle(context).copyWith(
         backgroundColor: on
             ? WidgetStatePropertyAll(c.mixT(c.accent, 0.14))
             : null,
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.radii.sm),
-          ),
-        ),
       ),
       onPressed: () => _open(context),
       icon: const Icon(LucideIcons.link300),

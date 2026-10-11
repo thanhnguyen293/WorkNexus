@@ -6,10 +6,8 @@ import '../../../core/domain/adapters/github_pr_service.dart';
 import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/entities/activity_event.dart';
 import '../../../core/domain/entities/comment.dart';
-import '../../../core/domain/entities/dev_link.dart';
 import '../../../core/domain/repositories/activity_repository.dart';
 import '../../../core/domain/repositories/comment_repository.dart';
-import '../../../core/domain/repositories/dev_link_repository.dart';
 import '../../sync/data/sync_service.dart';
 import '../domain/usecases/approve_gitlab_mr.dart';
 import '../domain/usecases/close_github_item.dart';
@@ -22,7 +20,7 @@ import '../domain/usecases/rebase_gitlab_mr.dart';
 import '../domain/usecases/reopen_github_item.dart';
 import '../domain/usecases/update_github_pr_branch.dart';
 
-enum DetailTab { original, translation, development }
+enum DetailTab { original, translation }
 
 final gitLabMrServiceProvider = Provider<GitLabMrService>(
   (ref) => getIt<GitLabMrService>(),
@@ -89,10 +87,6 @@ final commentsProvider = StreamProvider.family<List<Comment>, String>(
 
 final activityProvider = StreamProvider.family<List<ActivityEvent>, String>(
   (ref, id) => getIt<ActivityRepository>().watchActivity(id),
-);
-
-final devLinksProvider = StreamProvider.family<List<DevLink>, String>(
-  (ref, id) => getIt<DevLinkRepository>().watchDevLinks(id),
 );
 
 /// On opening a ticket, pull its full detail + comments from the provider into

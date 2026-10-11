@@ -8,6 +8,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../util/editor_text_colors.dart';
+import 'editor_toolbar_buttons.dart';
 import 'hover_surface.dart';
 
 /// The rich-text toolbar's text-colour (or, with [isBackground], highlight)
@@ -76,13 +77,7 @@ class _EditorColorButtonState extends State<EditorColorButton> {
             : l.editorTextColor,
         iconSize: widget.iconSize,
         color: c.textSecondary,
-        style: ButtonStyle(
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(context.radii.sm),
-            ),
-          ),
-        ),
+        style: editorToolbarButtonStyle(context),
         onPressed: () => menu.isOpen ? menu.close() : menu.open(),
         icon: _ColorGlyph(
           icon: widget.isBackground

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 
@@ -80,6 +83,49 @@ class ChatVideoDisc extends StatelessWidget {
     ),
     child: child,
   );
+}
+
+/// A [ChatVideoDisc] showing [child] (a transfer's progress) that turns into
+/// a ✕ while hovered; tapping it calls [onCancel].
+class ChatVideoCancelDisc extends StatelessWidget {
+  const ChatVideoCancelDisc({
+    super.key,
+    required this.child,
+    required this.onCancel,
+    required this.tooltip,
+  });
+
+  final Widget child;
+  final VoidCallback onCancel;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Tooltip(
+      message: tooltip,
+      child: HoverRegion(
+        cursor: SystemMouseCursors.click,
+        builder: (context, hovered, _) => Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            mouseCursor: WidgetStateMouseCursor.clickable,
+            customBorder: const CircleBorder(),
+            onTap: onCancel,
+            child: ChatVideoDisc(
+              child: hovered
+                  ? Icon(
+                      LucideIcons.x300,
+                      size: context.spacing.xl4,
+                      color: c.onScrim,
+                    )
+                  : child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A ring filling with [value] (0–1, null spins) and the percentage inside.
@@ -187,6 +233,26 @@ class ChatVideoCornerButton extends StatelessWidget {
             child: Icon(icon, size: s.xl2, color: c.onScrim),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A [ChatVideoCornerButton] muting / unmuting a playing video.
+class ChatVideoMuteButton extends StatelessWidget {
+  const ChatVideoMuteButton({super.key, required this.player});
+
+  final VideoPlayerController player;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return ValueListenableBuilder(
+      valueListenable: player,
+      builder: (context, v, _) => ChatVideoCornerButton(
+        icon: v.volume == 0 ? LucideIcons.volumeX300 : LucideIcons.volume2300,
+        tooltip: v.volume == 0 ? l.chatUnmute : l.chatMute,
+        onPressed: () => player.setVolume(v.volume == 0 ? 1 : 0),
       ),
     );
   }

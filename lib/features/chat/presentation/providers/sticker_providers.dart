@@ -27,28 +27,24 @@ final stickerControllerProvider = Provider<StickerController>((ref) {
   return StickerController(
     stickers,
     sendSticker: SendSticker(chats, stickers),
-    sendLargeEmoji: SendLargeEmoji(chats),
     saveImage: SaveImageAsSticker(chats, stickers),
     onChanged: () => ref.invalidate(chatStickersProvider),
   );
 });
 
-/// Sending stickers and large emoji, and keeping the user's own stickers.
+/// Sending stickers, and keeping the user's own stickers.
 class StickerController {
   StickerController(
     this._stickers, {
     required SendSticker sendSticker,
-    required SendLargeEmoji sendLargeEmoji,
     required SaveImageAsSticker saveImage,
     required void Function() onChanged,
   }) : _sendSticker = sendSticker,
-       _sendLargeEmoji = sendLargeEmoji,
        _saveImage = saveImage,
        _onChanged = onChanged;
 
   final StickerRepository _stickers;
   final SendSticker _sendSticker;
-  final SendLargeEmoji _sendLargeEmoji;
   final SaveImageAsSticker _saveImage;
   final void Function() _onChanged;
 
@@ -57,13 +53,6 @@ class StickerController {
         accountId: chat.accountId,
         chatGid: chat.chatGid,
         sticker: sticker,
-      );
-
-  Future<Result<void>> sendEmoji(ChatThreadKey chat, String emoji) =>
-      _sendLargeEmoji(
-        accountId: chat.accountId,
-        chatGid: chat.chatGid,
-        emoji: emoji,
       );
 
   /// Keeps a chat image (its original) as one of the user's stickers.

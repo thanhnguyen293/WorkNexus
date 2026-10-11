@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
@@ -12,10 +13,18 @@ class AppMenuEntry {
     required this.label,
     this.destructive = false,
     this.dividerBefore = false,
+    this.iconColor,
+    this.checked = false,
   });
 
   final IconData icon;
   final String label;
+
+  /// Tints the icon (e.g. a status colour); defaults to secondary text.
+  final Color? iconColor;
+
+  /// Shows a trailing check: the current choice in a pick-one menu.
+  final bool checked;
 
   /// Drawn in the error colour (delete, retract, remove).
   final bool destructive;
@@ -216,14 +225,24 @@ class _MenuItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.md),
         child: Row(
           children: [
-            Icon(entry.icon, size: s.xl3, color: tint ?? c.textSecondary),
+            Icon(
+              entry.icon,
+              size: s.xl3,
+              color: tint ?? entry.iconColor ?? c.textSecondary,
+            ),
             SizedBox(width: s.lg),
-            Text(
-              entry.label,
-              style: context.typography.body.copyWith(
-                color: tint ?? c.textPrimary,
+            Expanded(
+              child: Text(
+                entry.label,
+                style: context.typography.body.copyWith(
+                  color: tint ?? c.textPrimary,
+                ),
               ),
             ),
+            if (entry.checked) ...[
+              SizedBox(width: s.lg),
+              Icon(LucideIcons.check, size: s.xl3, color: c.textSecondary),
+            ],
           ],
         ),
       ),

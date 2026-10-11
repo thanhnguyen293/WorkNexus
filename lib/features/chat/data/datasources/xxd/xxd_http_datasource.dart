@@ -149,7 +149,8 @@ class XxdHttpDatasource {
 
   /// Uploads a chat attachment: multipart POST `{server}/fileUpload` with the
   /// session token (as the 9.x client does). Returns the stored file's id and
-  /// upload time (ms), which the message content must carry.
+  /// upload time (ms), which the message content must carry. Completing
+  /// [cancel] aborts it with a [CancelledFailure].
   Future<Result<({int id, int time})>> upload({
     required Uri server,
     required String token,
@@ -161,11 +162,20 @@ class XxdHttpDatasource {
     String serverName = '',
     String? pinnedFingerprint,
     void Function(double sent)? onProgress,
+    Future<void>? cancel,
   }) async {
     XxdCertificate? rejected;
     final client = createPinnedHttpClient(
       pinnedFingerprint: pinnedFingerprint,
       onRejected: (cert) => rejected = cert,
+    );
+    // Closing the client aborts the transfer: the next write or read fails.
+    var cancelled = false;
+    unawaited(
+      cancel?.then((_) {
+        cancelled = true;
+        client.close(force: true);
+      }),
     );
     final boundary = '----worknexus${DateTime.now().microsecondsSinceEpoch}';
     String field(String name, String value) =>
@@ -195,6 +205,7 @@ class XxdHttpDatasource {
       // actually been handed to the socket.
       const chunk = 64 * 1024;
       for (var offset = 0; offset < bytes.length; offset += chunk) {
+        if (cancelled) return const Err(CancelledFailure('Upload cancelled'));
         final end = offset + chunk < bytes.length
             ? offset + chunk
             : bytes.length;
@@ -207,12 +218,14 @@ class XxdHttpDatasource {
         const Duration(minutes: 5),
       );
       final text = await response.transform(utf8.decoder).join();
+      if (cancelled) return const Err(CancelledFailure('Upload cancelled'));
       return _parseUpload(response.statusCode, text);
     } on HandshakeException catch (e) {
       final cert = rejected;
       if (cert != null) return Err(untrustedCertificate(cert, e));
       return Err(NetworkFailure('TLS handshake with xxd failed', cause: e));
     } on Exception catch (e) {
+      if (cancelled) return Err(CancelledFailure('Upload cancelled', cause: e));
       return Err(NetworkFailure('Upload failed', cause: e));
     } finally {
       client.close(force: true);
