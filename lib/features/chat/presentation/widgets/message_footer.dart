@@ -68,7 +68,7 @@ class MessageFooter extends ConsumerWidget {
         },
         child: Text(
           l.chatSendFailed,
-          style: style.copyWith(color: c.error, fontWeight: FontWeight.w600),
+          style: style.copyWith(color: c.error, fontWeight: FontWeight.w500),
         ),
       ),
     };

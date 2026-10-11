@@ -192,7 +192,7 @@ class SidebarNavRow extends StatelessWidget {
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: context.typography.secondary.copyWith(
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: active ? FontWeight.w500 : FontWeight.w400,
                   color: active ? c.textPrimary : c.textSecondary,
                 ),
               ),

@@ -202,7 +202,7 @@ class _Section extends StatelessWidget {
                   title,
                   style: context.typography.body.copyWith(
                     color: c.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),

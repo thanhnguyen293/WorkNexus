@@ -24,7 +24,7 @@ class UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: context.typography.captionSm.copyWith(
           color: c.onAccent,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

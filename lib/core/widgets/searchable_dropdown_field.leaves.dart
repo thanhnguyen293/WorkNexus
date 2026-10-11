@@ -111,7 +111,7 @@ class _OptionTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.body.copyWith(
                       color: selected ? c.accent : c.textPrimary,
-                      fontWeight: selected ? FontWeight.w600 : null,
+                      fontWeight: selected ? FontWeight.w500 : null,
                     ),
                   ),
                 ),
