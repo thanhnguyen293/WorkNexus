@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.1](https://github.com/thanhnguyen293/WorkNexus/compare/v1.2.0...v1.2.1) (2026-10-11)
+
+
+### 🐛 Bug Fixes
+
+* **ui:** match search field height, remove filter tokens, and stabilize chat wallpaper ([43deb90](https://github.com/thanhnguyen293/WorkNexus/commit/43deb90988e659af8d7698a89419273dad1efeb2))
+* **ui:** tone font weights down for the bundled Be Vietnam Pro ([2998831](https://github.com/thanhnguyen293/WorkNexus/commit/2998831602222d9f8816eedada0cfd6ed6c9ac6b))
+
+
+### ♻️ Refactoring
+
+* drop agents feature, move opencode into translation; chat & storage polish ([fd05032](https://github.com/thanhnguyen293/WorkNexus/commit/fd05032d4488d61bb4a21e1f1e47fe1eacececa2))
+* **ui:** unify design system tokens and extract reusable core components ([bb26a72](https://github.com/thanhnguyen293/WorkNexus/commit/bb26a72cca9103f8ef73c679f512e5c554a97314))
+
 ## [1.2.0](https://github.com/thanhnguyen293/WorkNexus/compare/v1.1.0...v1.2.0) (2026-10-10)
 
 
