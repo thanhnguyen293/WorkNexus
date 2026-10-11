@@ -18,7 +18,6 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import '../board_refresh.dart';
-import 'active_tokens.dart';
 import 'new_ticket_button.dart';
 
 /// Whether the advanced-filter popover is open.
@@ -77,7 +76,7 @@ class ChromeBar extends ConsumerWidget {
                       .read(advFilterOpenProvider.notifier)
                       .update((v) => !v),
                 ),
-              if (!narrow) const Expanded(child: ActiveTokens()),
+              const Spacer(),
               const NewTicketButton(),
               const _RefreshButton(),
             ],

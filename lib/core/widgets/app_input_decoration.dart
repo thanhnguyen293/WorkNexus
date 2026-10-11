@@ -21,6 +21,8 @@ InputDecoration appInputDecoration(
   String? errorText,
   Color? fillColor,
   EdgeInsetsGeometry? contentPadding,
+  BoxConstraints? prefixIconConstraints,
+  BoxConstraints? suffixIconConstraints,
 }) {
   final c = context.colors;
   final s = context.spacing;
@@ -45,15 +47,19 @@ InputDecoration appInputDecoration(
     prefixIcon: prefixIcon == null
         ? null
         : Icon(prefixIcon, size: context.sizes.iconSm, color: c.textTertiary),
-    prefixIconConstraints: BoxConstraints(
-      minWidth: context.sizes.controlMd,
-      minHeight: context.sizes.iconSm,
-    ),
+    prefixIconConstraints:
+        prefixIconConstraints ??
+        BoxConstraints(
+          minWidth: context.sizes.controlMd,
+          minHeight: context.sizes.iconSm,
+        ),
     suffixIcon: suffix,
-    suffixIconConstraints: BoxConstraints(
-      minWidth: context.sizes.controlSm,
-      minHeight: context.sizes.iconSm,
-    ),
+    suffixIconConstraints:
+        suffixIconConstraints ??
+        BoxConstraints(
+          minWidth: context.sizes.controlSm,
+          minHeight: context.sizes.iconSm,
+        ),
     contentPadding:
         contentPadding ??
         EdgeInsets.symmetric(horizontal: s.lg, vertical: s.lg),
