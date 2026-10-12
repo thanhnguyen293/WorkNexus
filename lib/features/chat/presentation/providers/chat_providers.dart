@@ -243,8 +243,9 @@ final chatJumpRequestProvider = StateProvider.family<int?, ChatThreadKey>(
 final chatHighlightedMessageProvider =
     StateProvider.family<int?, ChatThreadKey>((ref, key) => null);
 
-/// Panels that can open beside a chat instead of a reply thread.
-enum ChatSidePanel { info, pinned, files, members }
+/// Panels that can open beside a chat instead of a reply thread. [emoji] is
+/// the emoji and sticker picker, expanded out of its popup.
+enum ChatSidePanel { info, pinned, files, members, emoji }
 
 /// A chat's image and file messages stored locally, newest first.
 final chatAttachmentsProvider = StreamProvider.autoDispose
@@ -274,6 +275,17 @@ final chatRoleNamesProvider = FutureProvider.autoDispose
 
 final chatSidePanelProvider =
     StateProvider.family<ChatSidePanel?, ChatThreadKey>((ref, key) => null);
+
+/// Whether the emoji and sticker picker opens beside the chat (expanded)
+/// rather than as a popup over the composer; kept until collapsed.
+final chatEmojiDockedProvider = StateProvider<bool>((ref) => false);
+
+/// An emoji picked in the expanded picker of a chat, for its composer to
+/// insert at the cursor. Set through null, so the same emoji twice inserts
+/// twice.
+final chatEmojiInsertProvider = StateProvider.family<String?, ChatThreadKey>(
+  (ref, key) => null,
+);
 
 /// The signed-in chat user's id per account.
 final chatSelfUserIdProvider = StreamProvider.autoDispose.family<int?, String>(

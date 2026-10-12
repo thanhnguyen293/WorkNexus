@@ -32,6 +32,7 @@ class ChatSidePanelFrame extends StatelessWidget {
     required this.child,
     this.width = kChatSidePanelWidth,
     this.closeTooltip,
+    this.closeIcon,
     this.onBack,
   });
 
@@ -42,6 +43,9 @@ class ChatSidePanelFrame extends StatelessWidget {
 
   /// Close button tooltip; defaults to "Close".
   final String? closeTooltip;
+
+  /// Close button glyph; defaults to an ×.
+  final IconData? closeIcon;
   final String title;
 
   /// Null hides the close button (the info panel while there is room).
@@ -91,7 +95,7 @@ class ChatSidePanelFrame extends StatelessWidget {
                 ),
                 if (onClose case final close?)
                   AppIconButton(
-                    icon: LucideIcons.x300,
+                    icon: closeIcon ?? LucideIcons.x300,
                     tooltip: closeTooltip ?? AppL10n.of(context).chatClosePanel,
                     onPressed: close,
                   ),

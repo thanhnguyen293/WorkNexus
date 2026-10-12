@@ -64,7 +64,12 @@ class ChatComposerTools extends StatelessWidget {
             tooltip: l.chatMention,
             onPressed: onMention,
           ),
-          ChatEmojiButton(thread: thread, text: text, focus: focus),
+          ChatEmojiButton(
+            thread: thread,
+            text: text,
+            focus: focus,
+            dockable: !draftKey.inThread,
+          ),
           ChatSendCodeButton(draftKey: draftKey, threadRootId: threadRootId),
           const _MarkdownToggle(),
         ],
