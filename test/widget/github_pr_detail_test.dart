@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
@@ -23,15 +24,17 @@ Widget _emptyEditor(BuildContext context, VoidCallback close) {
   return const SizedBox.shrink();
 }
 
-Widget _host(Widget child) => MaterialApp(
-  localizationsDelegates: AppL10n.localizationsDelegates,
-  supportedLocales: AppL10n.supportedLocales,
-  theme: buildAppTheme(
-    variant: AppThemeVariant.light,
-    surface: SurfaceStyle.outline,
-    density: AppDensity.comfortable,
+Widget _host(Widget child) => ProviderScope(
+  child: MaterialApp(
+    localizationsDelegates: AppL10n.localizationsDelegates,
+    supportedLocales: AppL10n.supportedLocales,
+    theme: buildAppTheme(
+      variant: AppThemeVariant.light,
+      surface: SurfaceStyle.outline,
+      density: AppDensity.comfortable,
+    ),
+    home: Scaffold(body: child),
   ),
-  home: Scaffold(body: child),
 );
 
 Ticket _pr({required String providerStatus, required String mergeableState}) =>

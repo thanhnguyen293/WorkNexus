@@ -177,34 +177,36 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppL10n.localizationsDelegates,
-        supportedLocales: AppL10n.supportedLocales,
-        theme: buildAppTheme(
-          variant: AppThemeVariant.light,
-          surface: SurfaceStyle.outline,
-          density: AppDensity.comfortable,
-        ),
-        home: Scaffold(
-          body: GitLabMrOverview(
-            ticket: ticket,
-            entity: ticket.providerEntity! as GitLabItemEntity,
-            isSyncing: false,
-            onClose: () {},
-            onSync: () {},
-            onComment: (_) async => true,
-            onCloseMergeRequest: () => closeCalls++,
-            onApprove: () => approveCalls++,
-            onMerge: () {},
-            onRebase: () {},
-            commitsLoader: () async => const Ok(<RepoCommit>[]),
-            changesLoader: () async => const Ok(<RepoFileChange>[]),
-            assigneeEditorBuilder: _emptyEditor,
-            reviewersEditorBuilder: _emptyEditor,
-            labelsEditorBuilder: _emptyEditor,
-            milestoneEditorBuilder: _emptyEditor,
-            timeTrackingEditorBuilder: _emptyEditor,
-            avatarLoader: (_) async => _avatarBytes,
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          home: Scaffold(
+            body: GitLabMrOverview(
+              ticket: ticket,
+              entity: ticket.providerEntity! as GitLabItemEntity,
+              isSyncing: false,
+              onClose: () {},
+              onSync: () {},
+              onComment: (_) async => true,
+              onCloseMergeRequest: () => closeCalls++,
+              onApprove: () => approveCalls++,
+              onMerge: () {},
+              onRebase: () {},
+              commitsLoader: () async => const Ok(<RepoCommit>[]),
+              changesLoader: () async => const Ok(<RepoFileChange>[]),
+              assigneeEditorBuilder: _emptyEditor,
+              reviewersEditorBuilder: _emptyEditor,
+              labelsEditorBuilder: _emptyEditor,
+              milestoneEditorBuilder: _emptyEditor,
+              timeTrackingEditorBuilder: _emptyEditor,
+              avatarLoader: (_) async => _avatarBytes,
+            ),
           ),
         ),
       ),
@@ -331,37 +333,39 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppL10n.localizationsDelegates,
-        supportedLocales: AppL10n.supportedLocales,
-        theme: buildAppTheme(
-          variant: AppThemeVariant.light,
-          surface: SurfaceStyle.outline,
-          density: AppDensity.comfortable,
-        ),
-        home: Scaffold(
-          body: GitLabMrOverview(
-            ticket: ticket,
-            entity: ticket.providerEntity! as GitLabItemEntity,
-            isSyncing: false,
-            onClose: () {},
-            onSync: () {},
-            onComment: (_) async => true,
-            onCloseMergeRequest: () {},
-            onApprove: () {},
-            onMerge: () {},
-            onRebase: () {},
-            commitsLoader: () async {
-              commitCalls++;
-              return const Ok(<RepoCommit>[]);
-            },
-            changesLoader: () async => const Ok(<RepoFileChange>[]),
-            assigneeEditorBuilder: _emptyEditor,
-            reviewersEditorBuilder: _emptyEditor,
-            labelsEditorBuilder: _emptyEditor,
-            milestoneEditorBuilder: _emptyEditor,
-            timeTrackingEditorBuilder: _emptyEditor,
-            avatarLoader: (_) async => _avatarBytes,
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          home: Scaffold(
+            body: GitLabMrOverview(
+              ticket: ticket,
+              entity: ticket.providerEntity! as GitLabItemEntity,
+              isSyncing: false,
+              onClose: () {},
+              onSync: () {},
+              onComment: (_) async => true,
+              onCloseMergeRequest: () {},
+              onApprove: () {},
+              onMerge: () {},
+              onRebase: () {},
+              commitsLoader: () async {
+                commitCalls++;
+                return const Ok(<RepoCommit>[]);
+              },
+              changesLoader: () async => const Ok(<RepoFileChange>[]),
+              assigneeEditorBuilder: _emptyEditor,
+              reviewersEditorBuilder: _emptyEditor,
+              labelsEditorBuilder: _emptyEditor,
+              milestoneEditorBuilder: _emptyEditor,
+              timeTrackingEditorBuilder: _emptyEditor,
+              avatarLoader: (_) async => _avatarBytes,
+            ),
           ),
         ),
       ),
