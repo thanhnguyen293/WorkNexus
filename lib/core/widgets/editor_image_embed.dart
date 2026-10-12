@@ -41,6 +41,8 @@ class EditorImageEmbedBuilder extends EmbedBuilder {
               width: w,
               // The frame spaces it, so its outline hugs the image.
               padding: EdgeInsets.zero,
+              // A click selects / resizes the image here.
+              zoomable: false,
             ),
     );
   }
