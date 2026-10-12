@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_sticker.dart';
+import '../../domain/repositories/sticker_pack_source.dart';
 import '../../domain/repositories/sticker_repository.dart';
 
 /// Where bundled sets live: one folder per set (each folder is listed in
@@ -22,11 +23,17 @@ class LocalStickerRepository implements StickerRepository {
   LocalStickerRepository({
     required AssetBundle bundle,
     required Future<Directory> Function() directory,
+    StickerConverter? converter,
   }) : _bundle = bundle,
-       _directory = directory;
+       _directory = directory,
+       _converter = converter;
 
   final AssetBundle _bundle;
   final Future<Directory> Function() _directory;
+
+  /// Fits a sticker the user adds to the bundled sets' size; without one
+  /// (tests) it is kept as it came.
+  final StickerConverter? _converter;
 
   @override
   Future<Result<List<ChatSticker>>> stickers() async {
@@ -149,6 +156,13 @@ class LocalStickerRepository implements StickerRepository {
   }) async {
     if (bytes.isEmpty) {
       return const Err(UnexpectedFailure('Cannot keep an empty sticker'));
+    }
+    // An image that cannot be fitted is still worth keeping as it came.
+    final fitted = (await _converter?.imageToWebp(bytes))?.valueOrNull;
+    if (fitted != null) {
+      bytes = fitted;
+      final dot = name.lastIndexOf('.');
+      name = '${dot > 0 ? name.substring(0, dot) : name}.webp';
     }
     try {
       final dir = await _directory();

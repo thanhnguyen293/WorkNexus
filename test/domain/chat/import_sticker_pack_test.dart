@@ -52,7 +52,7 @@ void main() {
       stickers = _Stickers();
       import = ImportStickerPack(source, converter, stickers);
       // Scaling a still marks it, so a test can tell it was scaled.
-      when(() => converter.stillToWebp(any())).thenAnswer(
+      when(() => converter.imageToWebp(any())).thenAnswer(
         (call) async => Ok(
           Uint8List.fromList([
             100 + (call.positionalArguments.single as Uint8List).single,
@@ -182,7 +182,7 @@ void main() {
       set(const [RemoteSticker(fileId: 'a', kind: RemoteStickerKind.still)]);
       file('a', 7);
       when(
-        () => converter.stillToWebp(any()),
+        () => converter.imageToWebp(any()),
       ).thenAnswer((_) async => const Err(ParseFailure('unreadable')));
 
       final res = await import('Cats', token: 't');

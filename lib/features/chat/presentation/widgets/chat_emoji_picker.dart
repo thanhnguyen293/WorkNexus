@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer_toolbar.dart';
@@ -48,6 +49,8 @@ class _ChatEmojiButtonState extends State<ChatEmojiButton> {
       // Back to typing once the panel closes.
       onClose: widget.focus.requestFocus,
       alignmentOffset: Offset(0, -s.xs),
+      // The panel draws the app's popup card itself.
+      style: appMenuAnchorStyle,
       menuChildren: [
         ChatEmojiPanel(
           thread: widget.thread,
