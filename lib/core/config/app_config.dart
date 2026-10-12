@@ -72,6 +72,12 @@ abstract final class AppConfig {
     defaultValue: 'work_nexus-macos.zip',
   );
 
+  /// Release asset holding the Linux build (tarball of the bundle folder).
+  static const updateAssetLinux = String.fromEnvironment(
+    'UPDATE_ASSET_LINUX',
+    defaultValue: 'worknexus-linux-x64.tar.gz',
+  );
+
   /// Release asset listing `sha256  filename` lines the updater verifies
   /// a download against.
   static const updateChecksumsAsset = String.fromEnvironment(
