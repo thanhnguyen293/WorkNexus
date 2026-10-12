@@ -76,6 +76,7 @@ class DetailHeader extends ConsumerWidget {
               const Spacer(),
               if (_editRoute(ticket) case final route?) ...[
                 AppIconButton(
+                  outlined: true,
                   icon: LucideIcons.pencil300,
                   tooltip: l.edit,
                   onPressed: () {
@@ -87,6 +88,7 @@ class DetailHeader extends ConsumerWidget {
                 SizedBox(width: context.spacing.md),
               ],
               AppIconButton(
+                outlined: true,
                 icon: LucideIcons.refreshCw300,
                 tooltip: l.refresh,
                 onPressed: () =>
@@ -97,6 +99,7 @@ class DetailHeader extends ConsumerWidget {
                 DetailHeaderCopyLinkButton(url: ticket.url!),
                 SizedBox(width: context.spacing.md),
                 AppIconButton(
+                  outlined: true,
                   icon: LucideIcons.squareArrowOutUpRight300,
                   tooltip: l.openInBrowser,
                   onPressed: () => openExternally(ticket.url!),
@@ -104,6 +107,7 @@ class DetailHeader extends ConsumerWidget {
                 SizedBox(width: context.spacing.md),
               ],
               AppIconButton(
+                outlined: true,
                 icon: LucideIcons.x300,
                 tooltip: l.close,
                 onPressed: onClose,

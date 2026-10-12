@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_borders.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_sizes.dart';
@@ -13,7 +14,8 @@ enum AppIconButtonSize { small, medium }
 /// that keeps the footprint.
 ///
 /// `small` (28px, 14px glyph) sits in dense rows and chips; `medium` (32px,
-/// 16px glyph) in toolbars and headers.
+/// 16px glyph) in toolbars and headers. [outlined] draws a hairline border so
+/// a row of them reads as buttons on a plain header.
 class AppIconButton extends StatelessWidget {
   const AppIconButton({
     super.key,
@@ -23,6 +25,7 @@ class AppIconButton extends StatelessWidget {
     this.size = AppIconButtonSize.medium,
     this.selected = false,
     this.isLoading = false,
+    this.outlined = false,
     this.color,
   });
 
@@ -32,6 +35,7 @@ class AppIconButton extends StatelessWidget {
   final AppIconButtonSize size;
   final bool selected;
   final bool isLoading;
+  final bool outlined;
 
   /// Overrides the resting glyph colour (e.g. `colors.error` for a delete).
   final Color? color;
@@ -60,6 +64,18 @@ class AppIconButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(context.radii.md),
           ),
         ),
+        side: outlined
+            ? WidgetStateProperty.resolveWith(
+                (states) => BorderSide(
+                  color: selected
+                      ? c.selectionBorder
+                      : states.contains(WidgetState.hovered)
+                      ? c.borderStrong
+                      : c.border,
+                  width: context.borders.hairline,
+                ),
+              )
+            : null,
         backgroundColor: WidgetStatePropertyAll(
           selected ? c.selectionFill : Colors.transparent,
         ),

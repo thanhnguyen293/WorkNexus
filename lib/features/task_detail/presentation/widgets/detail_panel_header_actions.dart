@@ -37,6 +37,7 @@ class DetailPanelHeaderActions extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         AppIconButton(
+          outlined: true,
           icon: LucideIcons.refreshCw300,
           tooltip: l.refresh,
           onPressed: onSync,
@@ -44,17 +45,20 @@ class DetailPanelHeaderActions extends StatelessWidget {
         if (hasUrl) DetailHeaderCopyLinkButton(url: url),
         if (hasUrl)
           AppIconButton(
+            outlined: true,
             icon: LucideIcons.squareArrowOutUpRight300,
             tooltip: l.openInBrowser,
             onPressed: () => openExternally(url),
           ),
         if (hasUrl)
           AppIconButton(
+            outlined: true,
             icon: LucideIcons.pencil300,
             tooltip: l.edit,
             onPressed: () => openExternally('$url/edit'),
           ),
         AppIconButton(
+          outlined: true,
           icon: LucideIcons.x300,
           tooltip: l.close,
           onPressed: onClosePanel,

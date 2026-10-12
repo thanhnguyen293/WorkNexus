@@ -45,6 +45,7 @@ class _DetailHeaderCopyLinkButtonState
     final l = AppL10n.of(context);
     return AppIconButton(
       icon: _copied ? LucideIcons.check300 : LucideIcons.link300,
+      outlined: true,
       tooltip: _copied ? l.linkCopied : l.copyLink,
       onPressed: _copy,
     );
