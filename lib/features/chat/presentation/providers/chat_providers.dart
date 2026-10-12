@@ -8,6 +8,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/app_icon_badge.dart';
 import '../../../../core/platform/desktop_notifier.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../domain/entities/chat_cache_usage.dart';
@@ -18,6 +19,7 @@ import '../../domain/entities/link_preview.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/repositories/link_preview_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
+import '../../domain/usecases/count_badge_unread.dart';
 import '../../domain/usecases/load_link_preview.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_list_tab.dart';
@@ -37,6 +39,11 @@ final chatRepositoryProvider = Provider<ChatRepository>(
 /// OS notifications for new messages.
 final desktopNotifierProvider = Provider<DesktopNotifier>(
   (ref) => getIt<DesktopNotifier>(),
+);
+
+/// The unread count on the app's icon.
+final appIconBadgeProvider = Provider<AppIconBadge>(
+  (ref) => getIt<AppIconBadge>(),
 );
 
 /// Whether the OS lets the app show notifications; null where unknown.
@@ -130,6 +137,20 @@ final chatUnreadTotalProvider = Provider<int>((ref) {
     for (final c in chats) {
       if (!c.hidden && !c.archived) total += c.unreadCount;
     }
+  }
+  return total;
+});
+
+/// Unread messages across all ZenTao accounts for the app icon badge: like
+/// [chatUnreadTotalProvider], but muted chats stay out of it.
+final chatBadgeUnreadProvider = Provider<int>((ref) {
+  const count = CountBadgeUnread();
+  var total = 0;
+  for (final account in ref.watch(chatAccountsProvider)) {
+    total += count(
+      ref.watch(chatConversationsProvider(account.id)).asData?.value ??
+          const [],
+    );
   }
   return total;
 });

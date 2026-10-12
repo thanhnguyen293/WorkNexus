@@ -40,9 +40,9 @@ class DesktopNotifier {
     try {
       final ok = await _plugin.initialize(
         settings: InitializationSettings(
-          macOS: const DarwinInitializationSettings(
-            requestBadgePermission: false,
-          ),
+          // Badge permission is asked too (the default): macOS hides the
+          // Dock badge of unread chats (AppIconBadge) when it is not given.
+          macOS: const DarwinInitializationSettings(),
           windows: WindowsInitializationSettings(
             appName: AppConfig.appName,
             appUserModelId: AppConfig.windowsAppId,
