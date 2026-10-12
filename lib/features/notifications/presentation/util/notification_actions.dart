@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
-import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/navigation/open_zentao_ticket.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -39,22 +37,14 @@ Future<void> openNotification(
   final id = n.objectId;
   final url = n.url;
   if (type != null && id != null && _ticketTypes.contains(type)) {
-    final nav = ref.read(appNavProvider.notifier);
-    final synced = ref.read(
-      ticketByIdProvider(zenTaoTicketId(n.accountId, type, id)),
+    final res = await openZenTaoTicket(
+      ref,
+      accountId: n.accountId,
+      host: Uri.tryParse(url ?? '')?.host ?? '',
+      type: type,
+      id: id,
     );
-    if (synced != null) {
-      nav.openTicket(synced.id);
-      return;
-    }
-    final host = Uri.tryParse(url ?? '')?.host ?? '';
-    final res = await ref
-        .read(zenTaoTicketServiceProvider)
-        .fetchZenTaoTicket(host: host, type: type, id: id);
-    if (res case Ok(:final value)) {
-      nav.openTicket(value);
-      return;
-    }
+    if (res is Ok) return;
   }
   if (url != null && url.startsWith('http')) {
     await openExternally(url);
