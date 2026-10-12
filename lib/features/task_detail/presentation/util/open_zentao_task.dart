@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
@@ -14,9 +15,10 @@ Future<Result<void>> openZenTaoTask(
   String taskId,
 ) async {
   final opener = ref.read(openTicketIdProvider.notifier);
-  final synced = ref.read(ticketByIdProvider('${from.accountId}:$taskId'));
-  // Bugs and tasks share id numbers: only a synced *task* is the one.
-  if (synced != null && synced.externalType?.toLowerCase() == 'task') {
+  final synced = ref.read(
+    ticketByIdProvider(zenTaoTicketId(from.accountId, 'task', taskId)),
+  );
+  if (synced != null) {
     opener.open(synced.id);
     return const Ok(null);
   }

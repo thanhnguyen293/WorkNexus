@@ -474,7 +474,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 43;
+  int get schemaVersion => 44;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -712,8 +712,33 @@ class AppDatabase extends _$AppDatabase {
           'WHERE chat_notify_while_viewing IS NULL',
         );
       }
+      if (from < 44) await _typeZenTaoTicketIds();
     },
   );
+
+  /// Rewrites ZenTao ticket ids from `account:6492` to `account:bug:6492`
+  /// (see `zenTaoTicketId`), and the comments, activity and translations that
+  /// point at them. Bugs and tasks numbered alike used to share one row.
+  /// Only ids still in the old form are touched, so a re-run is a no-op.
+  Future<void> _typeZenTaoTicketIds() async {
+    if (!await _hasTable('tickets')) return;
+    const old =
+        "provider_type = 'zentao' AND external_type IS NOT NULL "
+        "AND id = account_id || ':' || external_key";
+    const typed =
+        "account_id || ':' || lower(external_type) || ':' || external_key";
+    await transaction(() async {
+      for (final table in ['comments', 'activities', 'translations']) {
+        if (!await _hasTable(table)) continue;
+        await customStatement(
+          'UPDATE $table SET ticket_id = '
+          '(SELECT $typed FROM tickets WHERE tickets.id = $table.ticket_id) '
+          'WHERE ticket_id IN (SELECT id FROM tickets WHERE $old)',
+        );
+      }
+      await customStatement('UPDATE tickets SET id = $typed WHERE $old');
+    });
+  }
 
   /// Whether [table] already has [column]. Used to keep column-add migrations
   /// idempotent when a dev DB carries a column from a half-applied migration
