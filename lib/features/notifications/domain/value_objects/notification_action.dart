@@ -1,0 +1,20 @@
+/// What a ZenTao notification says was done to its object.
+enum NotificationAction {
+  created,
+  opened,
+  changed,
+  edited,
+  assigned,
+  closed,
+  deleted,
+  commented,
+  activated,
+  resolved,
+  reviewed,
+  confirmed,
+  started,
+  restarted,
+  finished,
+  paused,
+  canceled,
+}

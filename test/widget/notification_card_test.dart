@@ -19,11 +19,15 @@ final _notification = ZenTaoNotification(
   createdAt: DateTime(2026, 10, 9, 11, 22),
 );
 
-Future<void> pumpCard(WidgetTester tester, ZenTaoNotification n) async {
+Future<void> pumpCard(
+  WidgetTester tester,
+  ZenTaoNotification n, {
+  Locale locale = const Locale('en'),
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
-        locale: const Locale('en'),
+        locale: locale,
         theme: buildAppTheme(
           variant: AppThemeVariant.light,
           surface: SurfaceStyle.outline,
@@ -69,5 +73,26 @@ void main() {
 
     expect(find.text('11:22'), findsNothing);
     expect(find.byTooltip('Mark as read'), findsOneWidget);
+  });
+
+  testWidgets("ZenTao's Chinese text shows in the app's language", (
+    tester,
+  ) async {
+    final chinese = _notification.copyWith(summary: 'Thanh-VN-Flutter指派了Bug');
+
+    await pumpCard(tester, chinese);
+    expect(find.text('Thanh-VN-Flutter assigned Bug'), findsOneWidget);
+
+    await pumpCard(tester, chinese, locale: const Locale('vi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Thanh-VN-Flutter đã giao Bug'), findsOneWidget);
+  });
+
+  testWidgets('an event it cannot read is shown as ZenTao wrote it', (
+    tester,
+  ) async {
+    await pumpCard(tester, _notification.copyWith(summary: 'JunNg 提到了你'));
+
+    expect(find.text('JunNg 提到了你'), findsOneWidget);
   });
 }
