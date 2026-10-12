@@ -51,7 +51,7 @@ void main() {
       overrides: [zenTaoTicketEditorProvider.overrideWithValue(editor)],
     );
     addTearDown(container.dispose);
-    container.read(ticketEditorProvider.notifier).open(_route);
+    container.read(appNavProvider.notifier).openEditor(_route);
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,

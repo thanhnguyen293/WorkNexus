@@ -45,7 +45,7 @@ class MyWorkRow extends ConsumerWidget {
       borderRadius: BorderRadius.circular(context.radii.md),
       child: InkWell(
         mouseCursor: WidgetStateMouseCursor.clickable,
-        onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
+        onTap: () => ref.read(appNavProvider.notifier).openTicket(ticket.id),
         borderRadius: BorderRadius.circular(context.radii.md),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.lg),

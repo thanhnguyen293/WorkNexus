@@ -1,5 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 /// Which ZenTao bug or task the full-screen editor is open on.
 sealed class TicketEditorRoute {
   const TicketEditorRoute({required this.accountId});
@@ -95,18 +93,3 @@ class EditTaskRoute extends TicketEditorRoute {
   /// The task's WorkNexus ticket, reopened once it is saved.
   final String ticketId;
 }
-
-/// The open bug / task editor, which replaces the board and sidebar; null when
-/// none is open.
-class TicketEditorController extends Notifier<TicketEditorRoute?> {
-  @override
-  TicketEditorRoute? build() => null;
-
-  void open(TicketEditorRoute route) => state = route;
-  void close() => state = null;
-}
-
-final ticketEditorProvider =
-    NotifierProvider<TicketEditorController, TicketEditorRoute?>(
-      TicketEditorController.new,
-    );

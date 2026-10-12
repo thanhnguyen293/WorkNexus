@@ -22,10 +22,8 @@ class ChatRailButton extends ConsumerWidget {
     return AppRailButton(
       icon: LucideIcons.messageCircle300,
       label: AppL10n.of(context).chat,
-      selected:
-          ref.watch(chatOpenProvider) &&
-          !ref.watch(integrationsVisibleProvider),
-      onTap: () => showChatView(ref),
+      selected: ref.watch(selectedMainViewProvider) == MainView.chat,
+      onTap: () => ref.read(appNavProvider.notifier).show(MainView.chat),
       badge: unread > 0 ? UnreadBadge(count: unread) : null,
     );
   }

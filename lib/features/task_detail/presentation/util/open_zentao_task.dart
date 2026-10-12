@@ -14,12 +14,12 @@ Future<Result<void>> openZenTaoTask(
   Ticket from,
   String taskId,
 ) async {
-  final opener = ref.read(openTicketIdProvider.notifier);
+  final nav = ref.read(appNavProvider.notifier);
   final synced = ref.read(
     ticketByIdProvider(zenTaoTicketId(from.accountId, 'task', taskId)),
   );
   if (synced != null) {
-    opener.open(synced.id);
+    nav.openTicket(synced.id);
     return const Ok(null);
   }
   final host = Uri.tryParse(from.url ?? '')?.host ?? '';
@@ -31,7 +31,7 @@ Future<Result<void>> openZenTaoTask(
       .fetchZenTaoTicket(host: host, type: 'task', id: taskId);
   switch (res) {
     case Ok(:final value):
-      if (ref.context.mounted) opener.open(value);
+      if (ref.context.mounted) nav.openTicket(value);
       return const Ok(null);
     case Err(:final failure):
       return Err(failure);

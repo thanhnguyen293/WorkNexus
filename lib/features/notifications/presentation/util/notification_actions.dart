@@ -39,12 +39,12 @@ Future<void> openNotification(
   final id = n.objectId;
   final url = n.url;
   if (type != null && id != null && _ticketTypes.contains(type)) {
-    final opener = ref.read(openTicketIdProvider.notifier);
+    final nav = ref.read(appNavProvider.notifier);
     final synced = ref.read(
       ticketByIdProvider(zenTaoTicketId(n.accountId, type, id)),
     );
     if (synced != null) {
-      opener.open(synced.id);
+      nav.openTicket(synced.id);
       return;
     }
     final host = Uri.tryParse(url ?? '')?.host ?? '';
@@ -52,7 +52,7 @@ Future<void> openNotification(
         .read(zenTaoTicketServiceProvider)
         .fetchZenTaoTicket(host: host, type: type, id: id);
     if (res case Ok(:final value)) {
-      opener.open(value);
+      nav.openTicket(value);
       return;
     }
   }

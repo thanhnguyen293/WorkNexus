@@ -50,7 +50,7 @@ class MergeRequestCard extends ConsumerWidget {
       bar: state?.$1,
       onTap: () => ticket == null
           ? openExternally(url)
-          : ref.read(openTicketIdProvider.notifier).open(ticket.id),
+          : ref.read(appNavProvider.notifier).openTicket(ticket.id),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

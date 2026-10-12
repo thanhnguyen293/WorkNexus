@@ -75,7 +75,9 @@ class ZenTaoActions extends ConsumerWidget {
               label: zenTaoCreateActionLook(l, action).label,
               onTap: () {
                 // The editor takes the screen; the new one opens on save.
-                openTicketEditor(ref, _editorRoute(action, ticket));
+                ref
+                    .read(appNavProvider.notifier)
+                    .openEditor(_editorRoute(action, ticket));
               },
             ),
         ],

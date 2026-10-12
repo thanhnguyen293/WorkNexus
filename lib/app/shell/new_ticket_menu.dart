@@ -160,4 +160,4 @@ class NewTicketShortcut extends ConsumerWidget {
 
 /// Opens the editor on [route] over whatever is showing.
 void _openEditor(WidgetRef ref, TicketEditorRoute route) =>
-    openTicketEditor(ref, route);
+    ref.read(appNavProvider.notifier).openEditor(route);

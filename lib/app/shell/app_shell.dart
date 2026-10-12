@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
 import '../../core/navigation/navigation_providers.dart';
-import '../../core/navigation/ticket_editor_route.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/quick_settings_side_panel.dart';

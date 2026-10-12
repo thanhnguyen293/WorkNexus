@@ -79,7 +79,7 @@ Future<void> openDirectChatWith(
   if (!context.mounted) return;
   switch (result) {
     case Ok(:final value):
-      showChatView(ref);
+      ref.read(appNavProvider.notifier).show(MainView.chat);
       ref.read(pickedChatAccountProvider.notifier).state = accountId;
       ref.read(selectedChatGidProvider(accountId).notifier).state = value;
     case Err(:final failure):

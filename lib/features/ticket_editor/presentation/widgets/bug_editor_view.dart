@@ -34,7 +34,7 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
     super.dispose();
   }
 
-  void _close() => ref.read(ticketEditorProvider.notifier).close();
+  void _close() => ref.read(appNavProvider.notifier).closeEditor();
 
   Future<void> _save() async {
     final controller = ref.read(bugEditorProvider(widget.route).notifier);
@@ -45,7 +45,7 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
     final ticketId = await controller.save();
     if (ticketId == null || !mounted) return;
     _close();
-    ref.read(openTicketIdProvider.notifier).open(ticketId);
+    ref.read(appNavProvider.notifier).openTicket(ticketId);
     showAppSnackOn(messenger, saved);
   }
 
