@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -14,7 +15,9 @@ const String kStickerAssetRoot = 'assets/stickers/';
 const _imageExtensions = {'png', 'gif', 'webp', 'jpg', 'jpeg'};
 
 /// Bundled sets come from the asset manifest; the user's own stickers are
-/// files in [directory], named `<epoch ms>_<name>` so the newest sort first.
+/// files in [directory], named `<epoch ms>_<name>` so the newest sort first;
+/// an imported set is a folder under `packs/` holding its images and a
+/// `pack.json` with its id and title.
 class LocalStickerRepository implements StickerRepository {
   LocalStickerRepository({
     required AssetBundle bundle,
@@ -28,7 +31,11 @@ class LocalStickerRepository implements StickerRepository {
   @override
   Future<Result<List<ChatSticker>>> stickers() async {
     try {
-      return Ok([...await _bundled(), ...await _custom()]);
+      return Ok([
+        ...await _bundled(),
+        ...await _imported(),
+        ...await _custom(),
+      ]);
     } on Exception catch (e) {
       return Err(StorageFailure('Could not list stickers', cause: e));
     }
@@ -59,6 +66,55 @@ class LocalStickerRepository implements StickerRepository {
         dir.listSync().whereType<File>().where((f) => _isImage(f.path)).toList()
           ..sort((a, b) => b.path.compareTo(a.path));
     return [for (final f in files) _customSticker(f)];
+  }
+
+  Future<Directory> _packsDir() async =>
+      Directory('${(await _directory()).path}${Platform.pathSeparator}packs');
+
+  /// Where set [pack] is kept: its id made safe as a folder name.
+  Future<Directory> _packDir(String pack) async => Directory(
+    '${(await _packsDir()).path}${Platform.pathSeparator}'
+    '${pack.replaceAll(RegExp(r'[^\w.\-]'), '_')}',
+  );
+
+  Future<List<ChatSticker>> _imported() async {
+    final root = await _packsDir();
+    if (!root.existsSync()) return const [];
+    final folders =
+        root
+            .listSync()
+            .whereType<Directory>()
+            .where((d) => !_nameOf(d).startsWith('.'))
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+    return [for (final folder in folders) ...await _packStickers(folder)];
+  }
+
+  Future<List<ChatSticker>> _packStickers(Directory folder) async {
+    final meta = File('${folder.path}${Platform.pathSeparator}$_packMeta');
+    if (!meta.existsSync()) return const [];
+    final json = jsonDecode(await meta.readAsString());
+    if (json is! Map || json['id'] is! String) return const [];
+    final pack = json['id'] as String;
+    final title = json['title'] is String ? json['title'] as String : pack;
+    final files =
+        folder
+            .listSync()
+            .whereType<File>()
+            .where((f) => _isImage(f.path))
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+    return [
+      for (final f in files)
+        ChatSticker(
+          id: f.path,
+          pack: pack,
+          packTitle: title,
+          name: f.uri.pathSegments.last,
+          location: f.path,
+          custom: true,
+        ),
+    ];
   }
 
   ChatSticker _customSticker(File file) {
@@ -123,6 +179,58 @@ class LocalStickerRepository implements StickerRepository {
       return Err(StorageFailure('Could not remove the sticker', cause: e));
     }
   }
+
+  @override
+  Future<Result<void>> addPack(
+    String pack, {
+    required String title,
+    required List<StickerFile> stickers,
+  }) async {
+    if (stickers.isEmpty) {
+      return const Err(UnexpectedFailure('Cannot keep an empty set'));
+    }
+    try {
+      final target = await _packDir(pack);
+      final sep = Platform.pathSeparator;
+      // Written beside the set first, so a failed write never leaves a half
+      // set (or loses the one it replaces).
+      final staging = Directory(
+        '${target.parent.path}$sep.${_nameOf(target)}.tmp',
+      );
+      if (staging.existsSync()) await staging.delete(recursive: true);
+      await staging.create(recursive: true);
+      for (final sticker in stickers) {
+        final safe = sticker.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
+        await File('${staging.path}$sep$safe').writeAsBytes(sticker.bytes);
+      }
+      await File(
+        '${staging.path}$sep$_packMeta',
+      ).writeAsString(jsonEncode({'id': pack, 'title': title}), flush: true);
+      if (target.existsSync()) await target.delete(recursive: true);
+      await staging.rename(target.path);
+      return const Ok(null);
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not keep the sticker set', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<void>> removePack(String pack) async {
+    try {
+      final dir = await _packDir(pack);
+      if (dir.existsSync()) await dir.delete(recursive: true);
+      return const Ok(null);
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not remove the sticker set', cause: e));
+    }
+  }
+
+  static const _packMeta = 'pack.json';
+
+  /// The last part of [entity]'s path (a folder's own name).
+  static String _nameOf(FileSystemEntity entity) => entity.path
+      .split(Platform.pathSeparator)
+      .lastWhere((part) => part.isNotEmpty);
 
   static bool _isImage(String path) =>
       _imageExtensions.contains(path.split('.').last.toLowerCase());

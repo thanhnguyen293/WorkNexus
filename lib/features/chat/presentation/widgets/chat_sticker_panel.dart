@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
+import '../providers/sticker_providers.dart';
+import 'chat_snack.dart';
 import 'chat_sticker_grid.dart';
 import 'chat_sticker_pack_bar.dart';
+import 'import_sticker_pack_dialog.dart';
 
 /// The sticker tab: one set's grid at a time, picked from the pack bar
-/// below. Opens on the user's own stickers, or the first bundled set while
-/// they have none.
+/// below — the user's own, imported Telegram sets, then the bundled ones.
+/// Opens on the user's own stickers, or the first other set while they have
+/// none.
 class ChatStickerPanel extends ConsumerStatefulWidget {
   const ChatStickerPanel({
     super.key,
@@ -33,20 +40,60 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
     await addStickersFromImages(context, ref);
   }
 
+  Future<void> _import() async {
+    final l = AppL10n.of(context);
+    final imported = await ImportStickerPackDialog.show(context);
+    if (imported == null || !mounted) return;
+    setState(() => _pack = imported.pack);
+    final done = l.stickerImportDone(imported.title, imported.added);
+    showChatSnack(
+      context,
+      imported.stills == 0
+          ? done
+          : '$done · ${l.stickerImportStills(imported.stills)}',
+    );
+  }
+
+  Future<void> _remove(ChatStickerPackCover pack) async {
+    final l = AppL10n.of(context);
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: l.stickerPackRemoveTitle(pack.title ?? pack.pack),
+      message: l.stickerPackRemoveMessage,
+      confirmLabel: l.stickerPackRemove,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    final result = await ref
+        .read(stickerControllerProvider)
+        .removePack(pack.pack);
+    if (!mounted) return;
+    switch (result) {
+      case Ok():
+        if (_pack == pack.pack) setState(() => _pack = null);
+      case Err(:final failure):
+        showChatFailure(context, failure);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mine = <ChatSticker>[];
+    final imported = <String, List<ChatSticker>>{};
     final bundled = <String, List<ChatSticker>>{};
     for (final sticker in widget.stickers) {
-      if (sticker.custom) {
+      if (sticker.custom && sticker.pack.isEmpty) {
         mine.add(sticker);
       } else {
-        (bundled[sticker.pack] ??= []).add(sticker);
+        ((sticker.custom ? imported : bundled)[sticker.pack] ??= []).add(
+          sticker,
+        );
       }
     }
+    final sets = {...imported, ...bundled};
     final pack =
-        _pack ?? (mine.isEmpty && bundled.isNotEmpty ? bundled.keys.first : '');
-    final shown = pack.isEmpty ? mine : bundled[pack] ?? const <ChatSticker>[];
+        _pack ?? (mine.isEmpty && sets.isNotEmpty ? sets.keys.first : '');
+    final shown = pack.isEmpty ? mine : sets[pack] ?? const <ChatSticker>[];
     return Column(
       children: [
         Expanded(
@@ -60,13 +107,22 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
         Divider(height: 1, thickness: 1, color: context.colors.border),
         ChatStickerPackBar(
           packs: [
-            (pack: '', cover: null),
+            (pack: '', title: null, cover: null, removable: false),
+            for (final MapEntry(:key, :value) in imported.entries)
+              (
+                pack: key,
+                title: value.first.packTitle,
+                cover: value.first,
+                removable: true,
+              ),
             for (final MapEntry(:key, :value) in bundled.entries)
-              (pack: key, cover: value.first),
+              (pack: key, title: null, cover: value.first, removable: false),
           ],
           selected: pack,
           onSelect: (p) => setState(() => _pack = p),
           onAdd: _add,
+          onImport: _import,
+          onRemove: _remove,
         ),
       ],
     );
