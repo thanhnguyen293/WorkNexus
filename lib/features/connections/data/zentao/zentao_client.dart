@@ -418,6 +418,29 @@ class ZenTaoClient {
     return ZenTaoProjectsResponse.fromJson(_responseMap(res.data));
   }
 
+  /// Full detail for one entity, e.g. `GET /bugs/4302`. Empty (no id) when
+  /// the reply holds no object: ZenTao answers some items with an empty 200,
+  /// and the caller then reads the classic page instead.
+  ///
+  /// The write actions (assign / resolve / activate / confirm) are NOT here:
+  /// this ZenTao build has no `/bugs/{id}/<action>` REST endpoints (they 404),
+  /// so they go through the classic `index.php` channel in [ZenTaoAdapter] via
+  /// [classicActionPost].
+  Future<ZenTaoEntity> entity(String type, String id) async {
+    final res = await _dio.get<dynamic>('$_v1/$type/$id');
+    Object? data = res.data;
+    if (data is String) {
+      try {
+        data = jsonDecode(data);
+      } on FormatException {
+        return const ZenTaoEntity();
+      }
+    }
+    return data is Map
+        ? ZenTaoEntity.fromJson(Map<String, dynamic>.from(data))
+        : const ZenTaoEntity();
+  }
+
   /// Executions of a project (`GET /projects/{id}/executions`).
   Future<ZenTaoExecutionsResponse> projectExecutions(
     String projectId, {

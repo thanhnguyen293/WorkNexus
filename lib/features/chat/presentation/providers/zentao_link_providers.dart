@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/debug/app_talker.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/failure.dart';
@@ -23,9 +24,22 @@ final chatZenTaoFetchProvider = FutureProvider.autoDispose
       if (link == null) {
         return const Err(UnexpectedFailure('Not a ZenTao ticket link'));
       }
-      return ref
-          .watch(zenTaoTicketServiceProvider)
-          .fetchZenTaoTicket(host: link.host, type: link.type, id: link.id);
+      final service = ref.watch(zenTaoTicketServiceProvider);
+      // The card only says "unavailable": the reason goes to the debug log.
+      try {
+        final result = await service.fetchZenTaoTicket(
+          host: link.host,
+          type: link.type,
+          id: link.id,
+        );
+        if (result case Err(:final failure)) {
+          appTalker.warning('ZenTao link $url: $failure', failure.cause);
+        }
+        return result;
+      } on Object catch (e, st) {
+        appTalker.handle(e, st, 'ZenTao link $url');
+        rethrow;
+      }
     });
 
 /// The ticket a ZenTao link points to: the synced one, else the one fetched

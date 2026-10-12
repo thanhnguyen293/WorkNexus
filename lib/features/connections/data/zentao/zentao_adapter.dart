@@ -618,7 +618,7 @@ class ZenTaoAdapter implements ProviderAdapter {
 
   Future<ZenTaoEntity> _loadDetail(Ticket ticket) async {
     final type = _typeOf(ticket);
-    final entity = await _client.api.entity(_plural(type), ticket.externalKey);
+    final entity = await _client.entity(_plural(type), ticket.externalKey);
     if (entity.idString.isNotEmpty) return entity;
     final fallback = await _client.classicViewJson(
       type.pathSegment,
