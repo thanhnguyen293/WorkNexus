@@ -57,6 +57,8 @@ class DashboardPage extends ConsumerWidget {
     return _Layout(
       header: DashboardHeadline(account: account, dashboard: dashboard),
       body: SingleChildScrollView(
+        // Brings the scroll back when the dashboard is reopened.
+        key: const PageStorageKey('dashboard'),
         padding: padding,
         child: _Frame(
           child: Column(

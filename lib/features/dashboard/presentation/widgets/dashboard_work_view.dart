@@ -62,6 +62,7 @@ class DashboardWorkView extends ConsumerWidget {
         Expanded(
           child: groups.isNotEmpty
               ? ListView.separated(
+                  key: PageStorageKey('dashboard-work-${kind.name}'),
                   itemCount: groups.length,
                   separatorBuilder: (_, _) => SizedBox(height: s.xl4),
                   itemBuilder: (_, i) => _Section(
