@@ -9,6 +9,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'image_viewer_dialog.dart';
 
 /// Loads the bytes for an inline image URL (e.g. via an authenticated client).
 typedef ImageBytesLoader = Future<Uint8List?> Function(String url);
@@ -22,7 +23,8 @@ typedef ImageExternalOpener = Future<void> Function(String url);
 
 /// An inline image in a description or comment (Markdown or HTML), fetched
 /// through [ImageBytesLoader] (memoized so it isn't refetched on every
-/// rebuild), with loading / broken states.
+/// rebuild), with loading / broken states. A click opens it enlarged in
+/// [ImageViewerDialog] unless [zoomable] is off.
 class InlineImage extends StatefulWidget {
   const InlineImage({
     super.key,
@@ -32,6 +34,7 @@ class InlineImage extends StatefulWidget {
     this.onOpenImage,
     this.width,
     this.padding,
+    this.zoomable = true,
   });
 
   final String url;
@@ -42,6 +45,10 @@ class InlineImage extends StatefulWidget {
 
   /// Space around the image; a little above and below by default.
   final EdgeInsets? padding;
+
+  /// Opens the image enlarged on click; off where a click means something
+  /// else (an image being edited in the rich-text editor).
+  final bool zoomable;
 
   @override
   State<InlineImage> createState() => InlineImageState();
@@ -110,14 +117,34 @@ class InlineImageState extends State<InlineImage> {
               : null,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(context.radii.md),
-            child: Image.memory(
-              bytes,
-              width: widget.width,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => _frame(
-                context,
-                Icon(LucideIcons.imageOff300, color: c.textTertiary),
-              ),
+            child: Stack(
+              children: [
+                Image.memory(
+                  bytes,
+                  width: widget.width,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => _frame(
+                    context,
+                    Icon(LucideIcons.imageOff300, color: c.textTertiary),
+                  ),
+                ),
+                if (widget.zoomable)
+                  // Over the image, so the hover tint shows on it.
+                  Positioned.fill(
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(
+                        mouseCursor: SystemMouseCursors.zoomIn,
+                        onTap: () => ImageViewerDialog.show(
+                          context,
+                          bytes: bytes,
+                          externalUrl: widget.fallbackUrl?.call(widget.url),
+                          onOpenExternally: widget.onOpenImage,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
