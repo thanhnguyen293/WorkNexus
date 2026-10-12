@@ -13,6 +13,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/merge_request_state_pill.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'detail_back_button.dart';
 import 'detail_panel_header_actions.dart';
 
 /// The two-pane GitHub PR header: title, panel-level actions, then a metadata
@@ -52,6 +53,7 @@ class GitHubPrHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const DetailBackButton(),
               Expanded(
                 child: Text(
                   ticket.title,

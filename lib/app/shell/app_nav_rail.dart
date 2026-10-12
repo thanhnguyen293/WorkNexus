@@ -31,7 +31,7 @@ class AppNavRail extends ConsumerWidget {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final integrations = ref.watch(integrationsVisibleProvider);
-    final view = ref.watch(mainViewProvider);
+    final view = ref.watch(selectedMainViewProvider);
     return Container(
       width: widthOf(context),
       decoration: BoxDecoration(
@@ -48,8 +48,8 @@ class AppNavRail extends ConsumerWidget {
           AppRailButton(
             icon: LucideIcons.squareKanban300,
             label: l.board,
-            selected: view == MainView.board && !integrations,
-            onTap: () => showBoardView(ref),
+            selected: view == MainView.board,
+            onTap: () => ref.read(appNavProvider.notifier).show(MainView.board),
           ),
           const ChatRailButton(),
           const Spacer(),
@@ -61,8 +61,7 @@ class AppNavRail extends ConsumerWidget {
             icon: LucideIcons.settings300,
             label: l.integrations,
             selected: integrations,
-            onTap: () =>
-                ref.read(settingsOpenProvider.notifier).state = !integrations,
+            onTap: () => ref.read(appNavProvider.notifier).toggleSettings(),
           ),
         ],
       ),

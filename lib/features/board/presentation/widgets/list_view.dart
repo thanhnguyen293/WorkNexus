@@ -114,7 +114,7 @@ class _Row extends ConsumerWidget {
 
     return InkWell(
       mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
+      onTap: () => ref.read(appNavProvider.notifier).openTicket(ticket.id),
       child: Container(
         padding: EdgeInsets.fromLTRB(
           context.spacing.lg,

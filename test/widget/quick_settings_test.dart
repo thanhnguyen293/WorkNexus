@@ -418,7 +418,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.read(mainViewProvider.notifier).state = view;
+    container.read(appNavProvider.notifier).show(view);
     container.read(quickSettingsOpenProvider.notifier).state = true;
     await tester.pumpWidget(
       UncontrolledProviderScope(

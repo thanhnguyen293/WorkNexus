@@ -25,9 +25,7 @@ class NotificationsRailButton extends ConsumerWidget {
       icon: LucideIcons.bell300,
       label: AppL10n.of(context).notifications,
       selected: ref.watch(notificationsPanelOpenProvider),
-      onTap: () => ref
-          .read(notificationsPanelOpenProvider.notifier)
-          .update((open) => !open),
+      onTap: () => ref.read(appNavProvider.notifier).toggleNotifications(),
       badge: unread > 0 ? UnreadBadge(count: unread) : null,
     );
   }

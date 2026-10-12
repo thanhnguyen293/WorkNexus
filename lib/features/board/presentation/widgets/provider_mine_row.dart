@@ -88,7 +88,7 @@ class ProviderMineRow extends ConsumerWidget {
   /// Opens this account's "mine" board: clears other selections/filters, marks
   /// the mine selection, sets the MR/PR kind, and switches the view mode.
   void _select(WidgetRef ref) {
-    showBoardView(ref);
+    ref.read(appNavProvider.notifier).show(MainView.board);
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     if (_isGitLab) {

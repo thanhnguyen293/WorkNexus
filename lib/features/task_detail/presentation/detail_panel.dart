@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +45,16 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
     super.dispose();
   }
 
-  void _close() => ref.read(openTicketIdProvider.notifier).close();
+  void _close() => ref.read(appNavProvider.notifier).closeTicket();
+
+  void _back() => ref.read(appNavProvider.notifier).back();
+
+  /// The platform's "go back": Cmd+[ on macOS, Alt+Left elsewhere (neither
+  /// moves the caret in a text field there, so typing a comment is unaffected).
+  static SingleActivator get _backShortcut =>
+      defaultTargetPlatform == TargetPlatform.macOS
+      ? const SingleActivator(LogicalKeyboardKey.bracketLeft, meta: true)
+      : const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true);
 
   @override
   Widget build(BuildContext context) {
@@ -107,14 +118,20 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
                 translation: Offset(1 - curve.value, 0),
                 child: id == null
                     ? const SizedBox.shrink()
-                    : CallbackShortcuts(
-                        bindings: {
-                          const SingleActivator(LogicalKeyboardKey.escape):
-                              _close,
+                    : Listener(
+                        onPointerDown: (event) {
+                          if (event.buttons & kBackMouseButton != 0) _back();
                         },
-                        child: Focus(
-                          focusNode: _focus,
-                          child: _DetailPanel(ticketId: id, onClose: _close),
+                        child: CallbackShortcuts(
+                          bindings: {
+                            const SingleActivator(LogicalKeyboardKey.escape):
+                                _close,
+                            _backShortcut: _back,
+                          },
+                          child: Focus(
+                            focusNode: _focus,
+                            child: _DetailPanel(ticketId: id, onClose: _close),
+                          ),
                         ),
                       ),
               ),

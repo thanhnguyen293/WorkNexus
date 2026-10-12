@@ -95,7 +95,7 @@ class GitLabProjectRow extends ConsumerWidget {
   /// Opens this project's board: clears any ZenTao selection, selects the
   /// project, resets to Merge Requests, and switches to the GitLab view mode.
   void _select(WidgetRef ref) {
-    showBoardView(ref);
+    ref.read(appNavProvider.notifier).show(MainView.board);
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();

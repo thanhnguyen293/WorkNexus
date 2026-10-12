@@ -122,7 +122,7 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     // into the DB, which the board reads reactively. Selecting a task board and
     // a bug board are mutually exclusive, so clear the product selection first.
     final failedMessage = AppL10n.of(context).executionOpenFailed;
-    showBoardView(ref);
+    ref.read(appNavProvider.notifier).show(MainView.board);
     ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).clear();

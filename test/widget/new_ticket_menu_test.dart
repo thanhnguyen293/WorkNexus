@@ -79,7 +79,7 @@ void main() {
     tester,
   ) async {
     final container = await pump(tester, const [_zentao, _gitlab]);
-    container.read(openTicketIdProvider.notifier).open('zt:1');
+    container.read(appNavProvider.notifier).openTicket('zt:1');
 
     await tester.tap(find.byType(AppRailButton));
     await tester.pumpAndSettle();
