@@ -54,6 +54,12 @@ List<MessageAction> messageActions(
     TextContent(:final text) when !message.deleted => text,
     _ => null,
   };
+  // Code is copied verbatim but not translated.
+  final copyText = switch (message.content) {
+    _ when message.deleted => null,
+    CodeContent(:final code) => code,
+    _ => text?.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
+  };
   return [
     if (serverId != null && !message.deleted)
       (
@@ -69,16 +75,12 @@ List<MessageAction> messageActions(
         destructive: false,
         onTap: () => onOpenThread(serverId),
       ),
-    if (text != null)
+    if (copyText != null)
       (
         icon: LucideIcons.copy300,
         tooltip: l.chatCopy,
         destructive: false,
-        onTap: () => Clipboard.setData(
-          ClipboardData(
-            text: text.replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}'),
-          ),
-        ),
+        onTap: () => Clipboard.setData(ClipboardData(text: copyText)),
       ),
     if (text != null)
       (

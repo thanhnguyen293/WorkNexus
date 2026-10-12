@@ -103,4 +103,23 @@ void main() {
       const MessageContent.unsupported('object'),
     );
   });
+
+  test('code snippets keep their language and file name', () {
+    expect(
+      parse('code', r'{"lang":"go","code":"x := `raw`\n","name":"main.go"}'),
+      const MessageContent.code(
+        'x := `raw`\n',
+        language: 'go',
+        name: 'main.go',
+      ),
+    );
+    expect(
+      parse('code', '{"lang":"text","code":"abc","name":""}'),
+      const MessageContent.code('abc', language: 'text'),
+    );
+    expect(
+      parse('code', '{"lang":"text"}'),
+      const MessageContent.unsupported('code'),
+    );
+  });
 }

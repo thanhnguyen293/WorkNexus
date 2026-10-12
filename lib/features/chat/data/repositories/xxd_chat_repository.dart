@@ -520,6 +520,23 @@ class XxdChatRepository implements ChatRepository {
   ) => _sender.sendEmoji(accountId, chatGid, code);
 
   @override
+  Future<Result<void>> sendCode(
+    String accountId,
+    String chatGid, {
+    required String code,
+    required String language,
+    String? name,
+    int? replyToId,
+  }) => _sender.sendCode(
+    accountId,
+    chatGid,
+    code: code,
+    language: language,
+    name: name,
+    replyToId: replyToId,
+  );
+
+  @override
   Future<Result<void>> sendFile(
     String accountId,
     String chatGid, {

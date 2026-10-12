@@ -96,6 +96,8 @@ String chatPreview(BuildContext context, ChatMessage message) {
     ImageContent() => l.chatImage,
     FileContent(:final name) => '${l.chatFile}: $name',
     LinkContent(:final title, :final url) => title ?? url,
+    CodeContent(:final code, :final name) =>
+      '${l.chatCode}: ${name ?? code.trim().split('\n').first.trim()}',
     UnsupportedContent(:final contentType) => l.chatUnsupportedMessage(
       contentType,
     ),

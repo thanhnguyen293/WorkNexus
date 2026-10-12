@@ -25,6 +25,7 @@ import '../../domain/usecases/refresh_chat_messages.dart';
 import '../../domain/usecases/retract_message.dart';
 import '../../domain/usecases/retry_send_message.dart';
 import '../../domain/usecases/send_chat_file.dart';
+import '../../domain/usecases/send_code_message.dart';
 import '../../domain/usecases/send_sticker.dart';
 import '../../domain/usecases/send_text_message.dart';
 import '../../domain/usecases/should_notify_chat_message.dart';
@@ -205,6 +206,23 @@ class ChatController {
     text: const EncodeMentions()(text, mentions),
     replyToId: replyToId,
     markdown: markdown,
+  );
+
+  /// Sends a code snippet (see [SendCodeMessage]).
+  Future<Result<void>> sendCode(
+    String accountId,
+    String chatGid, {
+    required String code,
+    required String language,
+    String? name,
+    int? replyToId,
+  }) => SendCodeMessage(_repository)(
+    accountId: accountId,
+    chatGid: chatGid,
+    code: code,
+    language: language,
+    name: name,
+    replyToId: replyToId,
   );
 
   /// Sends [emoji] alone, shown large without a bubble (e.g. a like).

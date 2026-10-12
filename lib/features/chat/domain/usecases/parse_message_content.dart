@@ -6,7 +6,7 @@ import 'decode_emoji.dart';
 /// Turns xxd's (`contentType`, `content`) pair into a [MessageContent].
 ///
 /// `plain` is literal text; `text` is Markdown (the official client's
-/// "send as Markdown" option). Image/file/object contents are JSON; anything malformed or
+/// "send as Markdown" option). Image/file/object/code contents are JSON; anything malformed or
 /// unknown degrades to [UnsupportedContent] instead of failing the message.
 class ParseMessageContent {
   const ParseMessageContent();
@@ -139,6 +139,17 @@ class ParseMessageContent {
         final inline = _object(content)?['content'] ?? content.trim();
         if (inline is String && inline.isNotEmpty) {
           return _emoji(inline);
+        }
+      case 'code':
+        // `{lang: go, code: …, name: main.go}`.
+        final json = _object(content);
+        final code = json?['code'];
+        if (code is String) {
+          return MessageContent.code(
+            code,
+            language: _str(json?['lang']),
+            name: _str(json?['name']),
+          );
         }
       case 'notification':
         if (_object(content) case final json?) return _notification(json);

@@ -80,6 +80,23 @@ class ChatSender {
     content: jsonEncode({'type': 'emoji', 'content': code}),
   );
 
+  /// The official client's code message: `{lang, code, name}`, key for key
+  /// as it sends it (an empty name when none).
+  Future<Result<void>> sendCode(
+    String accountId,
+    String chatGid, {
+    required String code,
+    required String language,
+    String? name,
+    int? replyToId,
+  }) => _sendInline(
+    accountId,
+    chatGid,
+    contentType: 'code',
+    content: jsonEncode({'lang': language, 'code': code, 'name': name ?? ''}),
+    replyToId: replyToId,
+  );
+
   /// Queues a message whose content needs no upload, then sends it.
   Future<Result<void>> _sendInline(
     String accountId,

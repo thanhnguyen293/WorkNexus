@@ -357,6 +357,16 @@ class _FakeChatRepository implements ChatRepository {
   }
 
   @override
+  Future<Result<void>> sendCode(
+    String a,
+    String c, {
+    required String code,
+    required String language,
+    String? name,
+    int? replyToId,
+  }) async => const Ok(null);
+
+  @override
   Future<Result<void>> retract(String a, String g) async => const Ok(null);
 
   @override
