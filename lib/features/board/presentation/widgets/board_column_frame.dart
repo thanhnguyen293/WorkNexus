@@ -78,6 +78,7 @@ class BoardColumnFrame extends StatelessWidget {
           else
             Flexible(
               child: ListView.separated(
+                key: PageStorageKey('board-column-$label'),
                 padding: EdgeInsets.fromLTRB(s.sm, s.xxs, s.sm, s.md),
                 itemCount: itemCount,
                 itemBuilder: itemBuilder,
