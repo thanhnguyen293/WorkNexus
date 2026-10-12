@@ -164,6 +164,21 @@ void main() {
       expect(drafts.all, hasLength(1));
     });
 
+    // The editor's provider keeps the change as it is disposed — when its
+    // state can no longer be read.
+    testWidgets('closing before the pause still keeps the draft', (
+      tester,
+    ) async {
+      final container = await pump(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'Crash on login');
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      await tester.pump();
+
+      expect(drafts.all.single.title, 'Crash on login');
+    });
+
     testWidgets('opening an untouched form keeps nothing', (tester) async {
       await pump(tester);
       await tester.pump(pause);

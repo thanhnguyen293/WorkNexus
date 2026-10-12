@@ -120,26 +120,25 @@ class BugEditorController extends AsyncNotifier<BugEditorState> {
 
   /// Keeps the draft once typing pauses — once something was written.
   void _keepDraft() {
-    final id = _current?.draftId;
-    if (id == null) return;
+    final now = _current;
+    final id = now?.draftId;
+    if (now == null || id == null) return;
+    if (now.draftSavedAt == null && now.draft == now.form.draft) {
+      return _autosave.cancel();
+    }
     _autosave.schedule(
-      () {
-        final now = _current;
-        if (now == null) return null;
-        if (now.draftSavedAt == null && now.draft == now.form.draft) {
-          return null;
-        }
-        return SavedTicketDraft.bug(
-          id: id,
-          accountId: route.accountId,
-          uid: now.uid,
-          updatedAt: DateTime.now(),
-          draft: now.draft.copyWith(newFiles: const []),
-        );
-      },
+      SavedTicketDraft.bug(
+        id: id,
+        accountId: route.accountId,
+        uid: now.uid,
+        updatedAt: DateTime.now(),
+        draft: now.draft.copyWith(newFiles: const []),
+      ),
       onKept: (kept) {
+        // Kept after the editor closed: there is no state to update.
+        if (!ref.mounted) return;
         final now = _current;
-        if (!ref.mounted || now == null) return;
+        if (now == null) return;
         state = AsyncData(switch (kept) {
           Ok(:final value) => now.copyWith(draftSavedAt: value),
           Err(:final failure) => now.copyWith(failure: failure),
