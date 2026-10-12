@@ -265,5 +265,53 @@ void main() {
         verifyNever(() => editor.newBugForm(any(), any()));
       },
     );
+
+    testWidgets('the editor offers no draft picker without other drafts', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      expect(find.textContaining('Drafts ('), findsNothing);
+    });
+
+    testWidgets('the draft picker lists the other bug drafts and opens one', (
+      tester,
+    ) async {
+      SavedTicketDraft bugDraft(String id, String account, String title) =>
+          SavedTicketDraft.bug(
+            id: id,
+            accountId: account,
+            uid: 'u-$id',
+            updatedAt: DateTime(2026, 10, 12),
+            draft: BugDraft(product: '4', title: title),
+          );
+      await drafts.save(bugDraft('d1', 'zt', 'Login crash'));
+      await drafts.save(bugDraft('d2', 'other', 'Other account'));
+      await drafts.save(
+        SavedTicketDraft.task(
+          id: 'd3',
+          accountId: 'zt',
+          uid: 'u-d3',
+          updatedAt: DateTime(2026, 10, 12),
+          draft: const TaskDraft(execution: '9', name: 'A task'),
+        ),
+      );
+      final container = await pump(tester);
+      await tester.enterText(find.byType(TextField).first, 'Being written');
+
+      await tester.tap(find.text('Drafts (1)'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Other account'), findsNothing);
+      expect(find.textContaining('A task'), findsNothing);
+      await tester.tap(find.textContaining('Login crash'));
+      await tester.pump(pause);
+
+      expect(
+        container.read(ticketEditorProvider),
+        const NewBugRoute(accountId: 'zt', productId: '4', draftId: 'd1'),
+      );
+      // The draft being written is kept, not lost by the switch.
+      expect(drafts.all.map((d) => d.title), contains('Being written'));
+    });
   });
 }

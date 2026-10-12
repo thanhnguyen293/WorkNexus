@@ -1449,6 +1449,25 @@
     }
   },
   "ticketDraftUntitled": "Untitled",
+  "ticketDraftLabel": "{title} · {when}",
+  "@ticketDraftLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketDrafts": "Drafts ({count})",
+  "@ticketDrafts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ticketEditorSaveFailed": "Couldn't save: {message}",
   "@ticketEditorSaveFailed": {
     "placeholders": {
