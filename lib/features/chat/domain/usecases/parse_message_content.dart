@@ -47,12 +47,23 @@ class ParseMessageContent {
     return out.toString();
   }
 
+  /// U+FFFC, which a sender's rich-text editor leaves in place of an inline
+  /// object (a pasted image or sticker) whose object never reached the wire.
+  static const _objectReplacement = '\u{FFFC}';
+
   MessageContent call(String contentType, String content) {
     switch (contentType) {
-      case 'plain':
-        return MessageContent.text(_text(content));
-      case 'text':
-        return MessageContent.text(_text(content), markdown: true);
+      case 'plain' || 'text':
+        final text = content.replaceAll(_objectReplacement, '');
+        // Nothing but lost objects: say so rather than show an empty bubble
+        // (or the platform's "OBJ" glyph).
+        if (text.trim().isEmpty && text.length != content.length) {
+          return const MessageContent.unsupported('object');
+        }
+        return MessageContent.text(
+          _text(text),
+          markdown: contentType == 'text',
+        );
       case 'image' || 'file':
         final json = _object(content);
         final inline = json?['content'];

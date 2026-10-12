@@ -88,4 +88,19 @@ void main() {
       ),
     );
   });
+
+  test('drops object placeholders whose object was lost', () {
+    expect(
+      parse('plain', 'see \u{FFFC} this'),
+      const MessageContent.text('see  this'),
+    );
+    expect(
+      parse('plain', '\u{FFFC}'),
+      const MessageContent.unsupported('object'),
+    );
+    expect(
+      parse('text', ' \u{FFFC}\u{FFFC} '),
+      const MessageContent.unsupported('object'),
+    );
+  });
 }
