@@ -1,8 +1,65 @@
 #include "flutter_window.h"
 
+#include <flutter/standard_method_codec.h>
+#include <shobjidl.h>
+
+#include <cstdint>
 #include <optional>
+#include <vector>
 
 #include "flutter/generated_plugin_registrant.h"
+
+namespace {
+
+// An icon from |size|×|size| straight RGBA pixels, or null when they do not
+// add up to that size.
+HICON CreateBadgeIcon(const std::vector<uint8_t>& rgba, int size) {
+  if (size <= 0 || rgba.size() != static_cast<size_t>(size) * size * 4) {
+    return nullptr;
+  }
+  BITMAPV5HEADER header = {};
+  header.bV5Size = sizeof(header);
+  header.bV5Width = size;
+  header.bV5Height = -size;  // Top-down rows, as Dart drew them.
+  header.bV5Planes = 1;
+  header.bV5BitCount = 32;
+  header.bV5Compression = BI_BITFIELDS;
+  header.bV5RedMask = 0x00FF0000;
+  header.bV5GreenMask = 0x0000FF00;
+  header.bV5BlueMask = 0x000000FF;
+  header.bV5AlphaMask = 0xFF000000;
+  void* bits = nullptr;
+  HDC screen = GetDC(nullptr);
+  HBITMAP color =
+      CreateDIBSection(screen, reinterpret_cast<BITMAPINFO*>(&header),
+                       DIB_RGB_COLORS, &bits, nullptr, 0);
+  ReleaseDC(nullptr, screen);
+  if (!color || !bits) {
+    if (color) DeleteObject(color);
+    return nullptr;
+  }
+  // Icons keep straight (not premultiplied) alpha, in BGRA order.
+  auto* out = static_cast<uint8_t*>(bits);
+  for (size_t i = 0; i < rgba.size(); i += 4) {
+    out[i] = rgba[i + 2];
+    out[i + 1] = rgba[i + 1];
+    out[i + 2] = rgba[i];
+    out[i + 3] = rgba[i + 3];
+  }
+  // The alpha channel decides transparency; the mask only has to exist.
+  std::vector<uint8_t> mask_bits(((size + 15) / 16) * 2 * size, 0);
+  HBITMAP mask = CreateBitmap(size, size, 1, 1, mask_bits.data());
+  ICONINFO info = {};
+  info.fIcon = TRUE;
+  info.hbmMask = mask;
+  info.hbmColor = color;
+  HICON icon = mask ? CreateIconIndirect(&info) : nullptr;
+  if (mask) DeleteObject(mask);
+  DeleteObject(color);
+  return icon;
+}
+
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -25,6 +82,7 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  SetUpBadgeChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -40,6 +98,11 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  badge_channel_ = nullptr;
+  if (badge_icon_) {
+    DestroyIcon(badge_icon_);
+    badge_icon_ = nullptr;
+  }
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -47,10 +110,64 @@ void FlutterWindow::OnDestroy() {
   Win32Window::OnDestroy();
 }
 
+void FlutterWindow::SetUpBadgeChannel() {
+  badge_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(),
+          "worknexus/app_icon_badge",
+          &flutter::StandardMethodCodec::GetInstance());
+  badge_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() != "set") {
+          result->NotImplemented();
+          return;
+        }
+        // No arguments clears the badge.
+        HICON icon = nullptr;
+        if (const auto* args =
+                std::get_if<flutter::EncodableMap>(call.arguments())) {
+          const auto rgba = args->find(flutter::EncodableValue("rgba"));
+          const auto size = args->find(flutter::EncodableValue("size"));
+          if (rgba != args->end() && size != args->end()) {
+            const auto* pixels =
+                std::get_if<std::vector<uint8_t>>(&rgba->second);
+            const auto* side = std::get_if<int32_t>(&size->second);
+            if (pixels && side) icon = CreateBadgeIcon(*pixels, *side);
+          }
+        }
+        if (badge_icon_) DestroyIcon(badge_icon_);
+        badge_icon_ = icon;
+        ApplyBadge();
+        result->Success();
+      });
+}
+
+void FlutterWindow::ApplyBadge() {
+  ITaskbarList3* taskbar = nullptr;
+  if (FAILED(CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARGS(&taskbar)))) {
+    return;
+  }
+  if (SUCCEEDED(taskbar->HrInit())) {
+    taskbar->SetOverlayIcon(GetHandle(), badge_icon_, L"");
+  }
+  taskbar->Release();
+}
+
 LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  // The taskbar button is (re)made after the window first shows and whenever
+  // it comes back from the tray; an overlay set before then is lost.
+  static const UINT taskbar_button_created =
+      RegisterWindowMessage(L"TaskbarButtonCreated");
+  if (message == taskbar_button_created && badge_icon_) {
+    ApplyBadge();
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

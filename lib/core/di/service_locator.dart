@@ -97,6 +97,7 @@ import '../domain/repositories/dev_link_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
+import '../platform/app_icon_badge.dart';
 import '../platform/credential_store.dart';
 import '../platform/desktop_notifier.dart';
 import 'service_locator.config.dart';
@@ -173,6 +174,9 @@ abstract class ServiceModule {
 
   @lazySingleton
   DesktopNotifier get desktopNotifier => DesktopNotifier();
+
+  @lazySingleton
+  AppIconBadge get appIconBadge => AppIconBadge();
 
   @lazySingleton
   ConnectionRepository connectionRepository(AppDatabase db) =>

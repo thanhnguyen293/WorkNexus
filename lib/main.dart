@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fvp/fvp.dart' as fvp;
@@ -13,6 +16,7 @@ import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
 import 'core/platform/desktop_tray_service.dart';
 import 'core/platform/desktop_window_service.dart';
+import 'core/platform/linux_desktop_entry.dart';
 import 'core/settings/app_settings.dart';
 import 'data/local/database_seeder.dart';
 import 'data/local/mappers.dart';
@@ -24,6 +28,10 @@ Future<void> main(List<String> arguments) async {
   const window = DesktopWindowService();
   await const DesktopSingleInstanceService().initialize(arguments, window);
   await window.initialize();
+  // A dev build would point the entry at build/; only a release registers.
+  if (kReleaseMode && Platform.isLinux) {
+    await LinuxDesktopEntry().ensureInstalled();
+  }
   // The official video_player has no Windows/Linux implementation; fvp
   // (libmdk) provides one there, so chat videos play in-app everywhere.
   fvp.registerWith(

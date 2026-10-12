@@ -40,6 +40,11 @@ abstract final class AppConfig {
     defaultValue: 'com.worknexus.workNexus',
   );
 
+  /// Linux application id: the `.desktop` entry's name and the window's
+  /// class, by which docks tie the window (and its badge) to the entry. Must
+  /// match `APPLICATION_ID` in `linux/CMakeLists.txt`.
+  static const linuxAppId = 'com.worknexus.workNexus';
+
   /// Windows AppUserModelID — ties toast notifications to this app entry.
   /// Must stay stable across releases or Windows treats it as a different app.
   static const windowsAppId = String.fromEnvironment(
