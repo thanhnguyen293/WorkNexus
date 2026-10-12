@@ -123,8 +123,12 @@ class XxdChatRepository implements ChatRepository {
       _status(accountId).watch();
 
   @override
-  Future<Result<void>> connect(String accountId) => _connecting[accountId] ??=
-      _connectOnce(accountId).whenComplete(() => _connecting.remove(accountId));
+  Future<Result<void>> connect(String accountId) =>
+      _connecting[accountId] ??= _connectOnce(accountId).whenComplete(() {
+        // A block, not `=>`: `remove` returns this very future, and
+        // whenComplete would wait on it — a future waiting on itself.
+        _connecting.remove(accountId);
+      });
 
   Future<Result<void>> _connectOnce(String accountId) async {
     final existing = _sessions[accountId];
