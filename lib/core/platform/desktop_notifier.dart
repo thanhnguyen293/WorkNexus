@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../config/app_config.dart';
 import '../debug/app_talker.dart';
+import 'windows_toast_activation.dart';
 
 /// OS notifications (Notification Center, Windows toasts, freedesktop) so
 /// the rest of the app never imports the plugin. [taps] emits the payload of
@@ -37,6 +38,7 @@ class DesktopNotifier {
             defaultTargetPlatform == TargetPlatform.linux)) {
       return false;
     }
+    await _registerWindowsLauncher();
     try {
       final ok = await _plugin.initialize(
         settings: InitializationSettings(
@@ -62,6 +64,14 @@ class DesktopNotifier {
       appTalker.handle(e, st, 'Notifications: initialize failed');
       return false;
     }
+  }
+
+  Future<void> _registerWindowsLauncher() async {
+    if (kIsWeb || !Platform.isWindows) return;
+    await WindowsToastActivation(
+      guid: AppConfig.windowsGuid,
+      exePath: Platform.resolvedExecutable,
+    ).ensureRegistered();
   }
 
   /// Whether the OS lets the app show alerts: false when notifications or
