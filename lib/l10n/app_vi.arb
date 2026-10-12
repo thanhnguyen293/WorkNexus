@@ -1054,7 +1054,6 @@
   "ticketDraftDiscard": "Bỏ nháp",
   "ticketDraftDiscardTitle": "Bỏ bản nháp này?",
   "ticketDraftDiscardMessage": "Nội dung đã viết sẽ bị xoá.",
-  "ticketDraftEntry": "Nháp: {title}",
   "ticketDraftUntitled": "Chưa có tiêu đề",
   "ticketDraftLabel": "{title} · {when}",
   "ticketDrafts": "Bản nháp ({count})",
