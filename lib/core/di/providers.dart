@@ -11,6 +11,7 @@ import '../domain/entities/ticket.dart';
 import '../domain/entities/workspace.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
+import '../domain/usecases/resolve_zentao_ticket.dart';
 import 'service_locator.dart';
 
 // Reactive Riverpod state only. The object graph (databases, repositories,
@@ -105,6 +106,14 @@ final openCodeAuthedProvider = FutureProvider.autoDispose<bool>((ref) async {
 /// subtask's parent) so it can open in the detail panel.
 final zenTaoTicketServiceProvider = Provider<ZenTaoTicketService>(
   (ref) => getIt<ZenTaoTicketService>(),
+);
+
+/// Finds a ZenTao ticket to open: synced, or fetched from ZenTao.
+final resolveZenTaoTicketProvider = Provider<ResolveZenTaoTicket>(
+  (ref) => ResolveZenTaoTicket(
+    ref.watch(zenTaoTicketServiceProvider),
+    isSynced: (id) => ref.read(ticketByIdProvider(id)) != null,
+  ),
 );
 
 /// Creates and edits ZenTao bugs and tasks through ZenTao's own forms.

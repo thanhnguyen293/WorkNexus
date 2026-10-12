@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/navigation/open_zentao_ticket.dart';
 import '../../domain/value_objects/dashboard_item_kind.dart';
 
 /// Opens ZenTao [kind] [id] of [account] in the detail panel, fetching it from
@@ -19,26 +17,11 @@ Future<Result<void>> openDashboardItem(
   if (!kind.isTicket) {
     return const Err(NotFoundFailure('Todos have no detail view'));
   }
-  final nav = ref.read(appNavProvider.notifier);
-  final synced = ref.read(
-    ticketByIdProvider(zenTaoTicketId(account.id, kind.name, id)),
+  return openZenTaoTicket(
+    ref,
+    accountId: account.id,
+    host: Uri.tryParse(account.baseUrl ?? '')?.host ?? '',
+    type: kind.name,
+    id: id,
   );
-  if (synced != null) {
-    nav.openTicket(synced.id);
-    return const Ok(null);
-  }
-  final host = Uri.tryParse(account.baseUrl ?? '')?.host ?? '';
-  if (host.isEmpty) {
-    return const Err(NotFoundFailure('No ZenTao host for this account'));
-  }
-  final res = await ref
-      .read(zenTaoTicketServiceProvider)
-      .fetchZenTaoTicket(host: host, type: kind.name, id: id);
-  switch (res) {
-    case Ok(:final value):
-      if (ref.context.mounted) nav.openTicket(value);
-      return const Ok(null);
-    case Err(:final failure):
-      return Err(failure);
-  }
 }
