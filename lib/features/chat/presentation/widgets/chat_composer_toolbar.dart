@@ -11,9 +11,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_emoji_picker.dart';
+import 'chat_send_code_button.dart';
 
 /// The composer's tool row (above the input): send image, attach file,
-/// mention someone, emoji and the Markdown toggle.
+/// mention someone, emoji, send code and the Markdown toggle.
 class ChatComposerTools extends StatelessWidget {
   const ChatComposerTools({
     super.key,
@@ -21,11 +22,17 @@ class ChatComposerTools extends StatelessWidget {
     required this.onAttach,
     required this.onMention,
     required this.thread,
+    required this.draftKey,
+    this.threadRootId,
     required this.text,
     required this.focus,
   });
 
   final ChatThreadKey thread;
+
+  /// Whose reply draft (or thread root) a code snippet answers.
+  final ChatComposerKey draftKey;
+  final int? threadRootId;
 
   /// The input and its focus, for inserting emoji at the cursor.
   final TextEditingController text;
@@ -58,6 +65,7 @@ class ChatComposerTools extends StatelessWidget {
             onPressed: onMention,
           ),
           ChatEmojiButton(thread: thread, text: text, focus: focus),
+          ChatSendCodeButton(draftKey: draftKey, threadRootId: threadRootId),
           const _MarkdownToggle(),
         ],
       ),

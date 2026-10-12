@@ -3,10 +3,9 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 
 import '../platform/open_external.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
-import '../theme/fonts.dart';
 import '../util/markdown_normalize.dart';
+import 'code_block.dart';
 import 'hover_surface.dart';
 import 'inline_image.dart';
 
@@ -112,24 +111,9 @@ class MarkdownText extends StatelessWidget {
           ),
         );
       },
-      codeBuilder: (context, name, code, closed) => Container(
-        width: double.infinity,
-        margin: EdgeInsets.symmetric(vertical: context.spacing.sm),
-        padding: EdgeInsets.all(context.spacing.lg),
-        decoration: BoxDecoration(
-          color: c.surfaceSubtle,
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          border: Border.all(color: c.border),
-        ),
-        child: SelectableText(
-          code,
-          style: TextStyle(
-            fontSize: fontSize - 1,
-            fontFamily: kMonoFont,
-            color: c.textPrimary,
-            height: 1.45,
-          ),
-        ),
+      codeBuilder: (context, name, code, closed) => Padding(
+        padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+        child: CodeBlock(code, fontSize: fontSize - 1),
       ),
     );
   }

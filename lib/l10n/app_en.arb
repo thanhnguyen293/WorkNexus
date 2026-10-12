@@ -956,6 +956,20 @@
   },
   "chatImage": "Image",
   "chatFile": "File",
+  "chatCode": "Code",
+  "chatSendCode": "Send code",
+  "chatCodeName": "Code name",
+  "chatCodeLanguage": "Language",
+  "chatCodeSearchLanguages": "Search languages…",
+  "chatCodeNoLanguages": "No matching languages",
+  "chatCodeHint": "Enter the code to send, up to {max} characters",
+  "@chatCodeHint": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "chatUnsupportedMessage": "Unsupported message ({type})",
   "@chatUnsupportedMessage": {
     "placeholders": {

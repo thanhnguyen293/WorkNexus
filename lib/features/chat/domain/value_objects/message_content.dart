@@ -70,6 +70,15 @@ sealed class MessageContent with _$MessageContent {
   const factory MessageContent.link({required String url, String? title}) =
       LinkContent;
 
+  /// A code snippet (the official client's "send code"): [code] verbatim,
+  /// in [language] (`text` when none was picked), with an optional
+  /// file [name].
+  const factory MessageContent.code(
+    String code, {
+    String? language,
+    String? name,
+  }) = CodeContent;
+
   /// Anything v1 does not render (emoticons, cards, conference invites, …).
   const factory MessageContent.unsupported(String contentType) =
       UnsupportedContent;

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/markdown_normalize.dart';
+import '../../../../core/widgets/code_block.dart';
 import '../../../../core/widgets/markdown_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
@@ -74,6 +75,20 @@ class MessageBody extends StatelessWidget {
         accountId: accountId,
         text: title == null || title == url ? url : '$title\n$url',
         markdown: false,
+      ),
+      CodeContent(:final code, :final name) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (name != null) ...[
+            Text(
+              name,
+              style: context.typography.bodySm.copyWith(color: ink.meta),
+            ),
+            SizedBox(height: context.spacing.xs),
+          ],
+          CodeBlock(code, fontSize: ink.fontSize - 1),
+        ],
       ),
       UnsupportedContent(:final contentType) => Text(
         l.chatUnsupportedMessage(contentType),

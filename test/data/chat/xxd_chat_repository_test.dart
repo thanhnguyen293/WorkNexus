@@ -537,6 +537,39 @@ void main() {
     ]);
   });
 
+  test('sendCode sends the official client\'s code content', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+
+    final result = await repo.sendCode(
+      _acc,
+      'g1',
+      code: 'x := 1',
+      language: 'go',
+      name: 'main.go',
+    );
+    final sent = await eventually(
+      repo.watchMessages(_acc, 'g1'),
+      (l) => l.any((m) => m.isMine && m.serverId != null),
+    );
+
+    expect(result.isOk, isTrue);
+    expect(
+      sent.lastWhere((m) => m.isMine).content,
+      const MessageContent.code('x := 1', language: 'go', name: 'main.go'),
+    );
+    final req = server.requests.lastWhere((r) => r['method'] == 'messagesend');
+    expect((req['params']! as List).first, [
+      allOf(
+        containsPair('contentType', 'code'),
+        containsPair(
+          'content',
+          '{"lang":"go","code":"x := 1","name":"main.go"}',
+        ),
+      ),
+    ]);
+  });
+
   test('sending offline fails; retry after connecting delivers it', () async {
     final offline = await repo.sendText(_acc, 'g1', 'later');
     expect(offline.failureOrNull, isA<NetworkFailure>());

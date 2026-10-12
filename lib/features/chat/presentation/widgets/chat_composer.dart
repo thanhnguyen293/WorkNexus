@@ -252,6 +252,8 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
             onAttach: _pick,
             onMention: _startMention,
             thread: widget.thread,
+            draftKey: _draftKey,
+            threadRootId: widget.threadRootId,
             text: _text,
             focus: _focus,
           ),
