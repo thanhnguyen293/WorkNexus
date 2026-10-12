@@ -1,6 +1,6 @@
 name: Build & Release
 
-# Automatically bump version, build macOS & Windows, and publish a new GitHub Release
+# Automatically bump version, build macOS, Windows & Linux, and publish a new GitHub Release
 # whenever new code is merged into main.
 # Can also be triggered manually from Actions tab with an optional version override.
 on:
@@ -220,10 +220,75 @@ jobs:
           path: worknexus-windows.zip
           if-no-files-found: error
 
+  # ───────────────────────────── Linux ─────────────────────────────
+  build-linux:
+    name: Build Linux (${{ needs.version.outputs.tag }})
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Flutter's GTK toolchain, plus the native libraries the plugins link:
+      # libsecret (flutter_secure_storage), ayatana-appindicator (tray_manager).
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libsecret-1-dev libayatana-appindicator3-dev
+
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Stamp version in pubspec.yaml inside runner
+      - name: Stamp version
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
+          rm -f pubspec.yaml.bak
+
+      # Owner/repo come from the repository this workflow runs in, so upstream
+      # and forks each build an app that updates from their own releases.
+      - name: Point the build at this repository
+        shell: bash
+        run: |
+          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+          rm -f .env.bak
+
+      - name: Build Linux (release)
+        run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
+
+      # Tarball (not zip) keeps the executable bit on the binary; the bundle
+      # (binary + lib/ + data/) must stay together.
+      - name: Package bundle
+        run: tar -czf worknexus-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worknexus-linux
+          path: worknexus-linux-x64.tar.gz
+          if-no-files-found: error
+
   # ───────────────────── Publish GitHub Release ─────────────────────
   release:
     name: Publish Release ${{ needs.version.outputs.tag }}
-    needs: [version, build-macos, build-windows]
+    needs: [version, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -237,14 +302,14 @@ jobs:
       # The in-app updater refuses a download whose hash is not listed here.
       - name: Write checksums
         working-directory: dist
-        run: sha256sum *.zip > SHA256SUMS.txt
+        run: sha256sum *.zip *.tar.gz > SHA256SUMS.txt
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ needs.version.outputs.tag }}" \
-            dist/*.zip dist/SHA256SUMS.txt \
+            dist/*.zip dist/*.tar.gz dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "${{ needs.version.outputs.tag }}" \

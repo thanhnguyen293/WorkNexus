@@ -13,6 +13,7 @@ import '../../data/local/repositories/local_comment_repository.dart';
 import '../../data/local/repositories/local_ticket_repository.dart';
 import '../../data/local/repositories/local_workspace_repository.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
+import '../../features/app_update/data/datasources/linux_update_installer.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
 import '../../features/app_update/data/datasources/windows_update_installer.dart';
 import '../../features/app_update/data/repositories/github_update_repository.dart';
@@ -132,6 +133,8 @@ abstract class ServiceModule {
         ? const WindowsUpdateInstaller()
         : Platform.isMacOS
         ? const MacosUpdateInstaller()
+        : Platform.isLinux
+        ? const LinuxUpdateInstaller()
         : null,
     stagingRoot: () async => Directory(
       '${(await getTemporaryDirectory()).path}/${AppConfig.databaseName}-update',

@@ -13,7 +13,7 @@ import '../../domain/repositories/update_repository.dart';
 import '../datasources/github_release_datasource.dart';
 import '../datasources/update_installer.dart';
 
-/// Updates from the repository's GitHub Releases: the zip CI attaches for
+/// Updates from the repository's GitHub Releases: the archive CI attaches for
 /// this platform, checked against the release's checksum file.
 class GitHubUpdateRepository implements UpdateRepository {
   GitHubUpdateRepository({
@@ -28,8 +28,8 @@ class GitHubUpdateRepository implements UpdateRepository {
 
   final GitHubReleaseDatasource _releases;
 
-  /// Null on a platform with no in-app install (Linux): updates then only
-  /// point at the release page.
+  /// Null on a platform with no in-app install: updates then only point at
+  /// the release page.
   final UpdateInstaller? _installer;
   final Future<Directory> Function() _stagingRoot;
   final void Function() _quit;
