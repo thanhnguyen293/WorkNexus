@@ -5,7 +5,8 @@ import '../../../../core/platform/credential_store.dart';
 import '../datasources/chat_local_datasource.dart';
 import '../datasources/xxd/xxd_server_info.dart';
 
-/// Builds xxd login credentials for a WorkNexus ZenTao account: the handle,
+/// Builds xxd login credentials for a WorkNexus ZenTao account: the account
+/// name (from the stored ZenTao profile, else the typed handle),
 /// the password from the OS keychain, the chat server address (overridable,
 /// else derived from the ZenTao URL) and the pinned certificate.
 class ChatCredentialsResolver {
@@ -32,10 +33,14 @@ class ChatCredentialsResolver {
       if (password == null || password.isEmpty) {
         return const Err(AuthFailure('No saved ZenTao password'));
       }
+      // The REST login matches the account case-insensitively, xxd does
+      // not: a handle typed as `abc` for account `Abc` syncs fine but is
+      // refused by chat. Sign in with the name ZenTao itself reports.
+      final name = await _local.zenTaoAccountName(accountId) ?? account.handle;
       return Ok(
         XxdCredentials(
           server: server,
-          account: account.handle,
+          account: name,
           password: password,
           pinnedFingerprint: chat?.pinnedFingerprint,
         ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/database.dart';
@@ -20,6 +22,19 @@ class ChatLocalDatasource {
   Future<AccountRow?> account(String accountId) => (_db.select(
     _db.accounts,
   )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+
+  /// The account name ZenTao reports for [accountId] (`GET /user`), as
+  /// stored by the profile refresh; null when no profile is stored yet.
+  Future<String?> zenTaoAccountName(String accountId) async {
+    final row = await (_db.select(
+      _db.zenTaoProfiles,
+    )..where((p) => p.accountId.equals(accountId))).getSingleOrNull();
+    if (row == null) return null;
+    final stored = jsonDecode(row.profileJson);
+    final profile = stored is Map ? stored['profile'] : null;
+    final name = profile is Map ? profile['account'] : null;
+    return name is String && name.trim().isNotEmpty ? name.trim() : null;
+  }
 
   Future<ChatAccountRow?> chatAccount(String accountId) => (_db.select(
     _db.chatAccounts,
