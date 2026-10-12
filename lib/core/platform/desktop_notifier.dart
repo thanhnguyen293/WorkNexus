@@ -87,7 +87,13 @@ class DesktopNotifier {
     final mac = await _macOS();
     if (mac == null) return false;
     try {
-      return await mac.requestPermissions(alert: true, sound: true) ?? false;
+      // The badge too: macOS hides the Dock's unread count without it.
+      return await mac.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
     } on Exception catch (e, st) {
       appTalker.handle(e, st, 'Notifications: requestPermissions failed');
       return false;
