@@ -743,6 +743,21 @@ void main() {
     );
   });
 
+  test('signs in with the account name from the ZenTao profile', () async {
+    await db
+        .into(db.zenTaoProfiles)
+        .insert(
+          ZenTaoProfilesCompanion.insert(
+            accountId: _acc,
+            profileJson: '{"profile":{"id":40,"account":"Demo"}}',
+          ),
+        );
+
+    await repo.connect(_acc);
+
+    expect(opened.single.account, 'Demo', reason: 'typed handle is "demo"');
+  });
+
   test('without a saved password chat is signed out', () async {
     store.values.clear();
 
