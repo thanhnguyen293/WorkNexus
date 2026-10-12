@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_popup_card.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
@@ -75,30 +78,35 @@ class ChatEmojiPanel extends ConsumerWidget {
       ),
       _ => const AppStateView.loading(compact: true),
     };
-    return SizedBox(
-      width: s.xl6 * _kEmojiColumns + s.md * 2,
-      height: s.xl6 * (_kVisibleRows + 2),
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            TabBar(
-              labelStyle: context.typography.bodySmStrong,
-              unselectedLabelStyle: context.typography.bodySm,
-              tabs: [
-                Tab(text: l.chatStickersTab),
-                Tab(text: l.chatEmoji),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  stickerTab,
-                  _EmojiGrid(onPick: onInsert),
+    // The tabs are as tall as the app's other tab rows, not Material's 46.
+    final tabHeight = context.sizes.controlMd + s.md;
+    return AppPopupCard(
+      child: SizedBox(
+        width: s.xl6 * _kEmojiColumns + s.md * 2,
+        height: s.xl6 * (_kVisibleRows + 2),
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              TabBar(
+                labelStyle: context.typography.bodySmStrong,
+                unselectedLabelStyle: context.typography.bodySm,
+                dividerColor: context.colors.border,
+                tabs: [
+                  Tab(height: tabHeight, text: l.chatStickersTab),
+                  Tab(height: tabHeight, text: l.chatEmoji),
                 ],
               ),
-            ),
-          ],
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    stickerTab,
+                    _EmojiGrid(onPick: onInsert),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

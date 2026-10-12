@@ -41,7 +41,6 @@ void main() {
     packs: [for (var i = 0; i < sets; i++) _set(i == 0 ? '' : 'set$i')],
     selected: selected,
     onSelect: (_) {},
-    onAdd: () {},
     onImport: () {},
     onRemove: (_) {},
   );

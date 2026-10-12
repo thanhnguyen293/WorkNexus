@@ -252,11 +252,14 @@ abstract class ServiceModule {
   ) => TranslateChatMessage(repository, service);
 
   @lazySingleton
-  StickerRepository get stickerRepository => LocalStickerRepository(
-    bundle: rootBundle,
-    directory: () async =>
-        Directory('${(await getApplicationSupportDirectory()).path}/stickers'),
-  );
+  StickerRepository stickerRepository(StickerConverter converter) =>
+      LocalStickerRepository(
+        bundle: rootBundle,
+        directory: () async => Directory(
+          '${(await getApplicationSupportDirectory()).path}/stickers',
+        ),
+        converter: converter,
+      );
 
   @lazySingleton
   StickerPackSource get stickerPackSource => TelegramStickerSource();

@@ -3,7 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/features/chat/data/datasources/webp_sticker_converter.dart';
 import 'package:work_nexus/features/chat/data/repositories/local_sticker_repository.dart';
 
 void main() {
@@ -125,5 +127,20 @@ void main() {
     expect((await repo.lastPack()).valueOrNull, 'tg:Peepo');
     final all = (await repo.stickers()).valueOrNull ?? const [];
     expect(all.where((s) => s.custom), isEmpty);
+  });
+
+  test('a sticker the user adds is fitted to 128px WebP', () async {
+    final fitting = LocalStickerRepository(
+      bundle: rootBundle,
+      directory: () async => dir,
+      converter: const WebpStickerConverter(),
+    );
+    final png = img.encodePng(img.Image(width: 300, height: 150));
+
+    final added = (await fitting.add(png, name: 'wide.png')).valueOrNull!;
+
+    expect(added.name, 'wide.webp');
+    final kept = img.decodeWebP(File(added.location).readAsBytesSync())!;
+    expect((kept.width, kept.height), (128, 64));
   });
 }
