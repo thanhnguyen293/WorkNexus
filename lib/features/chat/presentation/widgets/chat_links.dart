@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/navigation/open_zentao_ticket.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../providers/chat_providers.dart';
@@ -25,13 +26,11 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
     await openExternally(url);
     return;
   }
-  final fetched = await ref
-      .read(zenTaoTicketServiceProvider)
-      .fetchZenTaoTicket(host: link.host, type: link.type, id: link.id);
-  switch (fetched) {
-    case Ok(:final value):
-      nav.openTicket(value);
-    case Err():
-      await openExternally(url);
-  }
+  final opened = await openZenTaoTicket(
+    ref,
+    host: link.host,
+    type: link.type,
+    id: link.id,
+  );
+  if (opened is Err) await openExternally(url);
 }
