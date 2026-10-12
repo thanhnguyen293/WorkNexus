@@ -283,7 +283,9 @@ jobs:
         run: |
           status=0
           for f in build/linux/x64/release/bundle/WorkNexus build/linux/x64/release/bundle/lib/*.so*; do
-            too_new=$(objdump -T "$f" | grep -oE 'GLIBC_2\.(3[6-9]|[4-9][0-9])|GLIBCXX_3\.4\.(3[1-9]|[4-9][0-9])' | sort -u | tr '\n' ' ')
+            # grep exits 1 on a clean binary; under `bash -e -o pipefail` that
+            # would abort the loop, so only grep's no-match is tolerated.
+            too_new=$(objdump -T "$f" | { grep -oE 'GLIBC_2\.(3[6-9]|[4-9][0-9])|GLIBCXX_3\.4\.(3[1-9]|[4-9][0-9])' || true; } | sort -u | tr '\n' ' ')
             if [ -n "$too_new" ]; then echo "$f needs $too_new"; status=1; fi
           done
           exit $status
