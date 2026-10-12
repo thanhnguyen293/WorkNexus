@@ -57,6 +57,17 @@ class DesktopWindowService {
     if (!isDesktop) return;
     if (await windowManager.isMinimized()) await windowManager.restore();
     await windowManager.show();
+    if (isWindows) {
+      // Windows keeps a background process from taking the foreground
+      // (SetForegroundWindow just flashes the taskbar button), so a window
+      // hidden in the tray stayed behind after a toast click. Going topmost
+      // for a moment lifts it above the others; then it is a normal window
+      // again.
+      await windowManager.setAlwaysOnTop(true);
+      await windowManager.focus();
+      await windowManager.setAlwaysOnTop(false);
+      return;
+    }
     await windowManager.focus();
   }
 
