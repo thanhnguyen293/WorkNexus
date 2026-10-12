@@ -224,7 +224,10 @@ jobs:
   build-linux:
     name: Build Linux (${{ needs.version.outputs.tag }})
     needs: version
-    runs-on: ubuntu-latest
+    # Pinned to the oldest supported distro: binaries only run on a glibc /
+    # libstdc++ at least as new as the build host's, so building on
+    # ubuntu-latest (24.04, glibc 2.39) breaks the app on Ubuntu 22.04.
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -272,6 +275,18 @@ jobs:
 
       - name: Build Linux (release)
         run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
+
+      # Fails the release if any bundled binary needs a newer glibc (> 2.35) or
+      # libstdc++ (> GLIBCXX_3.4.30) than Ubuntu 22.04 ships.
+      - name: Check Ubuntu 22.04 compatibility
+        shell: bash
+        run: |
+          status=0
+          for f in build/linux/x64/release/bundle/WorkNexus build/linux/x64/release/bundle/lib/*.so*; do
+            too_new=$(objdump -T "$f" | grep -oE 'GLIBC_2\.(3[6-9]|[4-9][0-9])|GLIBCXX_3\.4\.(3[1-9]|[4-9][0-9])' | sort -u | tr '\n' ' ')
+            if [ -n "$too_new" ]; then echo "$f needs $too_new"; status=1; fi
+          done
+          exit $status
 
       # Tarball (not zip) keeps the executable bit on the binary; the bundle
       # (binary + lib/ + data/) must stay together.
