@@ -20,7 +20,7 @@ sealed class TicketEditorRoute {
 
 /// A new bug in product [productId] (`'0'`: the one ZenTao has current). It
 /// starts as a copy of bug [copyOf], or filed against execution
-/// [executionId] and task [taskId], when given.
+/// [executionId] and task [taskId], when given — or as kept draft [draftId].
 class NewBugRoute extends TicketEditorRoute {
   const NewBugRoute({
     required super.accountId,
@@ -28,12 +28,14 @@ class NewBugRoute extends TicketEditorRoute {
     this.copyOf,
     this.executionId,
     this.taskId,
+    this.draftId,
   });
 
   final String productId;
   final String? copyOf;
   final String? executionId;
   final String? taskId;
+  final String? draftId;
 
   @override
   List<Object> get _key => [
@@ -41,23 +43,27 @@ class NewBugRoute extends TicketEditorRoute {
     copyOf ?? '',
     executionId ?? '',
     taskId ?? '',
+    draftId ?? '',
   ];
 }
 
 /// A new task in execution [executionId] (`'0'`: the one ZenTao has
-/// current); a subtask of task [parentId] when given.
+/// current); a subtask of task [parentId] when given — or kept draft
+/// [draftId].
 class NewTaskRoute extends TicketEditorRoute {
   const NewTaskRoute({
     required super.accountId,
     this.executionId = '0',
     this.parentId,
+    this.draftId,
   });
 
   final String executionId;
   final String? parentId;
+  final String? draftId;
 
   @override
-  List<Object> get _key => [executionId, parentId ?? ''];
+  List<Object> get _key => [executionId, parentId ?? '', draftId ?? ''];
 }
 
 /// Bug [bugId] (its ZenTao id), as edited.
