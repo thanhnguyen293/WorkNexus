@@ -128,7 +128,9 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
                 ),
               )
             else
-              ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
+              ChatReadOnlyBar(
+                adminsOnly: chat?.committers.trim() == r'$ADMINS',
+              ),
           ],
         ),
       ),
