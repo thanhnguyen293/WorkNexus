@@ -34,6 +34,7 @@ class ChatAvatar extends StatelessWidget {
     this.presence,
     this.label,
     this.background,
+    this.icon,
     this.verified,
   });
 
@@ -52,6 +53,9 @@ class ChatAvatar extends StatelessWidget {
 
   /// Fill behind the initials/label (a group's text avatar colour).
   final Color? background;
+
+  /// A glyph drawn instead of the initials, on the accent (My Cloud).
+  final IconData? icon;
   final String? imageUrl;
   final ChatAvatarSize size;
   final ChatAvatarShape shape;
@@ -74,6 +78,7 @@ class ChatAvatar extends StatelessWidget {
       diameter: diameter,
       label: label,
       background: background,
+      icon: icon,
     );
     final url = imageUrl;
     final picture = SizedBox.square(
@@ -176,16 +181,26 @@ class _Initials extends StatelessWidget {
     required this.diameter,
     this.label,
     this.background,
+    this.icon,
   });
 
   final String name;
   final double diameter;
   final String? label;
   final Color? background;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    if (icon case final icon?) {
+      return ColoredBox(
+        color: background ?? c.accent,
+        child: Center(
+          child: Icon(icon, size: diameter * 0.5, color: c.onAccent),
+        ),
+      );
+    }
     final big = diameter > context.spacing.xl5;
     final custom = label != null && label!.trim().isNotEmpty;
     // A hue of its own per name (stable across launches), so an avatar is

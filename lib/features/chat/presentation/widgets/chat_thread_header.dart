@@ -42,14 +42,18 @@ class ChatThreadHeader extends ConsumerWidget {
     final chat = this.chat;
     final title = chat == null ? '' : chatTitle(context, chat, users);
     final oneToOne = chat?.type == ChatType.one2one;
-    final peer = oneToOne ? users[chat?.peerUserId] : null;
+    final myCloud = chat?.isMyCloud ?? false;
+    // My Cloud's "peer" is you: no presence or badge, a hint instead.
+    final withPeer = oneToOne && !myCloud;
+    final peer = withPeer ? users[chat?.peerUserId] : null;
     final members = oneToOne
         ? null
         // `value`, not `asData`: keeps the last count while it refreshes.
         : ref.watch(chatMemberCountProvider(thread)).value;
     final avatar = chat == null ? null : chatAvatarStyle(chat, users);
-    final presence = oneToOne ? chatPresenceOf(users, chat?.peerUserId) : null;
+    final presence = withPeer ? chatPresenceOf(users, chat?.peerUserId) : null;
     final subtitle = switch (members) {
+      _ when myCloud => l.chatMyCloudHint,
       Ok(:final value) => l.chatMembers(value),
       _ when presence != null => chatPresenceLabel(context, presence),
       _ => peer?.account,
@@ -81,8 +85,9 @@ class ChatThreadHeader extends ConsumerWidget {
                     imageUrl: avatar?.imageUrl,
                     label: avatar?.label,
                     background: avatar?.background,
+                    icon: avatar?.icon,
                     presence: presence,
-                    verified: oneToOne
+                    verified: withPeer
                         ? chatVerifiedBadge(context, users, chat?.peerUserId)
                         : null,
                     size: ChatAvatarSize.large,
@@ -118,7 +123,9 @@ class ChatThreadHeader extends ConsumerWidget {
                                 )
                               else
                                 Icon(
-                                  oneToOne
+                                  myCloud
+                                      ? LucideIcons.lock300
+                                      : oneToOne
                                       ? LucideIcons.atSign300
                                       : LucideIcons.user300,
                                   size: context.sizes.iconSm,

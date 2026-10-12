@@ -49,4 +49,25 @@ void main() {
     );
     expect(chat.unreadCount, 0);
   });
+
+  group('My Cloud', () {
+    ChatConversationRow direct(String gid) =>
+        _chat.copyWith(gid: gid, type: 'one2one', name: '');
+
+    test('the one-to-one chat with yourself is My Cloud', () {
+      final chat = conversationFromRow(direct('40&40'), selfUserId: 40);
+      expect(chat.isMyCloud, isTrue);
+      expect(chat.peerUserId, 40);
+    });
+
+    test('a chat with someone else is not', () {
+      final chat = conversationFromRow(direct('31&40'), selfUserId: 40);
+      expect(chat.isMyCloud, isFalse);
+      expect(chat.peerUserId, 31);
+    });
+
+    test('nothing is My Cloud before your user id is known', () {
+      expect(conversationFromRow(direct('40&40')).isMyCloud, isFalse);
+    });
+  });
 }

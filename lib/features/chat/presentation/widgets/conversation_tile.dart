@@ -35,7 +35,7 @@ class ConversationTile extends StatelessWidget {
   final VoidCallback onTap;
 
   /// See `chatAvatarStyle`.
-  final ({String? imageUrl, String? label, Color? background}) avatar;
+  final ChatAvatarStyle avatar;
 
   /// The other person's presence (one-to-one chats).
   final ChatPresence? presence;
@@ -56,6 +56,7 @@ class ConversationTile extends StatelessWidget {
       imageUrl: avatar.imageUrl,
       label: avatar.label,
       background: avatar.background,
+      icon: avatar.icon,
       presence: presence,
       verified: verified,
     );
