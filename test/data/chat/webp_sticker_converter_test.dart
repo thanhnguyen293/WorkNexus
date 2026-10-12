@@ -132,10 +132,10 @@ void main() {
     final small = img.Image(width: 100, height: 100, numChannels: 4);
 
     final scaled = await tester.runAsync(
-      () => const WebpStickerConverter().stillToWebp(img.encodePng(wide)),
+      () => const WebpStickerConverter().imageToWebp(img.encodePng(wide)),
     );
     final kept = await tester.runAsync(
-      () => const WebpStickerConverter().stillToWebp(img.encodePng(small)),
+      () => const WebpStickerConverter().imageToWebp(img.encodePng(small)),
     );
 
     final out = img.decodeWebP(scaled!.valueOrNull!)!;

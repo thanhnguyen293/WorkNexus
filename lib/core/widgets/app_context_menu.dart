@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'app_popup_card.dart';
 
 /// One row of an [showAppContextMenu].
 class AppMenuEntry {
@@ -173,23 +174,10 @@ class AppMenuPanel extends StatelessWidget {
     final c = context.colors;
     final s = context.spacing;
     return IntrinsicWidth(
-      child: Container(
+      child: ConstrainedBox(
         constraints: BoxConstraints(minWidth: s.xl6 * 5),
-        padding: EdgeInsets.all(s.xs),
-        decoration: BoxDecoration(
-          color: c.card,
-          borderRadius: BorderRadius.circular(context.radii.lg),
-          border: Border.all(color: c.border),
-          boxShadow: [
-            BoxShadow(
-              color: c.scrim.withValues(alpha: 0.18),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Material(
-          type: MaterialType.transparency,
+        child: AppPopupCard(
+          padding: EdgeInsets.all(s.xs),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,

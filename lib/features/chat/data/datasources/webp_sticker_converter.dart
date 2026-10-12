@@ -52,7 +52,7 @@ class WebpStickerConverter implements StickerConverter {
   }
 
   @override
-  Future<Result<Uint8List>> stillToWebp(Uint8List image) async {
+  Future<Result<Uint8List>> imageToWebp(Uint8List image) async {
     try {
       final size = this.size;
       return Ok(await Isolate.run(() => _fitStill(image, size)));
@@ -82,7 +82,8 @@ class WebpStickerConverter implements StickerConverter {
 }
 
 /// [bytes] scaled down so its longest side is at most [size] (a smaller
-/// image is not blown up), as lossless WebP: a still has crisp edges to keep.
+/// image is not blown up), every frame of an animation alike, as lossless
+/// WebP: a sticker has crisp edges to keep.
 Uint8List _fitStill(Uint8List bytes, int size) {
   final image = img.decodeImage(bytes);
   if (image == null) throw const FormatException('Not an image');
@@ -99,7 +100,7 @@ Uint8List _fitStill(Uint8List bytes, int size) {
           height: size,
           interpolation: img.Interpolation.average,
         );
-  return img.WebPEncoder().encode(fitted, singleFrame: true);
+  return img.WebPEncoder().encode(fitted);
 }
 
 Uint8List _encode(List<Uint8List> frames, int size, int frameMs) {

@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_motion.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -13,7 +14,8 @@ export 'chat_sticker_set_buttons.dart'
 
 /// The row under the sticker grid: one button per set (the user's own
 /// first, then any set still being imported, with its progress), then
-/// importing a Telegram set and "+" to add stickers of the user's own.
+/// importing a Telegram set. (Images are added from the first tile of the
+/// user's own set.)
 ///
 /// When the sets do not fit, arrows at either end scroll them a page at a
 /// time; the selected set is scrolled into view when the bar opens.
@@ -23,7 +25,6 @@ class ChatStickerPackBar extends StatefulWidget {
     required this.packs,
     required this.selected,
     required this.onSelect,
-    required this.onAdd,
     required this.onImport,
     required this.onRemove,
     this.importing = const [],
@@ -33,7 +34,6 @@ class ChatStickerPackBar extends StatefulWidget {
   final List<ChatStickerImporting> importing;
   final String selected;
   final ValueChanged<String> onSelect;
-  final VoidCallback onAdd;
   final VoidCallback onImport;
 
   /// Removes an imported set (after asking).
@@ -75,7 +75,7 @@ class _ChatStickerPackBarState extends State<ChatStickerPackBar> {
     // Sets being imported sit after the first button, shifting the rest.
     final slot = index == 0 ? 0 : index + widget.importing.length;
     final s = context.spacing;
-    final width = s.xl6 + s.xs;
+    final width = context.sizes.controlMd + s.xs;
     final position = _scroll.position;
     final target =
         (s.md + slot * width - (position.viewportDimension - width) / 2).clamp(
@@ -139,7 +139,7 @@ class _ChatStickerPackBarState extends State<ChatStickerPackBar> {
       ],
     ];
     return SizedBox(
-      height: s.xl6 + s.md * 2,
+      height: context.sizes.controlMd + s.md * 2,
       child: Row(
         children: [
           if (overflows)
@@ -163,7 +163,7 @@ class _ChatStickerPackBarState extends State<ChatStickerPackBar> {
               child: ListView(
                 controller: _scroll,
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.all(s.md),
+                padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.md),
                 children: buttons,
               ),
             ),
@@ -179,11 +179,6 @@ class _ChatStickerPackBarState extends State<ChatStickerPackBar> {
             icon: LucideIcons.packagePlus300,
             tooltip: l.stickerImportTitle,
             onPressed: widget.onImport,
-          ),
-          AppIconButton(
-            icon: LucideIcons.plus300,
-            tooltip: l.chatAddSticker,
-            onPressed: widget.onAdd,
           ),
           SizedBox(width: s.xs),
         ],

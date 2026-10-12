@@ -158,7 +158,7 @@ class ImportStickerPack {
         return Err(failure);
     }
     // An image that cannot be scaled is still worth keeping as it came.
-    final fitted = (await _converter.stillToWebp(bytes)).valueOrNull;
+    final fitted = (await _converter.imageToWebp(bytes)).valueOrNull;
     return Ok((bytes: fitted ?? bytes, still: still));
   }
 }

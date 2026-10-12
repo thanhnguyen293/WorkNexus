@@ -47,11 +47,6 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
     widget.onPick(sticker);
   }
 
-  Future<void> _add() async {
-    _select('');
-    await addStickersFromImages(context, ref);
-  }
-
   /// The rest of the import runs in the background (see
   /// [StickerImportListener] for its outcome).
   Future<void> _import() async {
@@ -138,7 +133,6 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
               if (!job.finished)
                 (title: job.title, done: job.done, total: job.total),
           ],
-          onAdd: _add,
           onImport: _import,
           onRemove: _remove,
         ),

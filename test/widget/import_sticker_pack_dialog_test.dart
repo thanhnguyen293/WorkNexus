@@ -47,7 +47,7 @@ void main() {
     when(
       () => source.file(any(), token: any(named: 'token')),
     ).thenAnswer((_) async => Ok(Uint8List.fromList([1])));
-    when(() => converter.stillToWebp(any())).thenAnswer(
+    when(() => converter.imageToWebp(any())).thenAnswer(
       (call) async => Ok(call.positionalArguments.single as Uint8List),
     );
     when(
@@ -73,10 +73,7 @@ void main() {
       );
 
   /// Opens the dialog from a button; [result] gets what it resolves to.
-  Future<List<String?>> pump(
-    WidgetTester tester,
-    _Tokens tokens,
-  ) async {
+  Future<List<String?>> pump(WidgetTester tester, _Tokens tokens) async {
     final results = <String?>[];
     await tester.pumpWidget(
       ProviderScope(
@@ -112,33 +109,34 @@ void main() {
     return results;
   }
 
-  testWidgets('the first import asks for the token, then goes on in the background', (
-    tester,
-  ) async {
-    serveSet(token: 'T1');
-    final tokens = _Tokens();
-    final results = await pump(tester, tokens);
+  testWidgets(
+    'the first import asks for the token, then goes on in the background',
+    (tester) async {
+      serveSet(token: 'T1');
+      final tokens = _Tokens();
+      final results = await pump(tester, tokens);
 
-    expect(find.text('Telegram bot token'), findsOneWidget);
-    await tester.enterText(
-      find.byType(TextField).first,
-      'https://t.me/addstickers/Cats',
-    );
-    await tester.enterText(find.byType(TextField).last, 'T1');
-    await tester.tap(find.text('Add set'));
-    await tester.pumpAndSettle();
+      expect(find.text('Telegram bot token'), findsOneWidget);
+      await tester.enterText(
+        find.byType(TextField).first,
+        'https://t.me/addstickers/Cats',
+      );
+      await tester.enterText(find.byType(TextField).last, 'T1');
+      await tester.tap(find.text('Add set'));
+      await tester.pumpAndSettle();
 
-    // The dialog closes once the set is listed; the rest runs on.
-    expect(results.single, 'Cats!');
-    expect(tokens.token, 'T1');
-    verify(
-      () => stickers.addPack(
-        'tg:Cats',
-        title: 'Cats!',
-        stickers: any(named: 'stickers'),
-      ),
-    ).called(1);
-  });
+      // The dialog closes once the set is listed; the rest runs on.
+      expect(results.single, 'Cats!');
+      expect(tokens.token, 'T1');
+      verify(
+        () => stickers.addPack(
+          'tg:Cats',
+          title: 'Cats!',
+          stickers: any(named: 'stickers'),
+        ),
+      ).called(1);
+    },
+  );
 
   testWidgets('a saved token is used without asking', (tester) async {
     serveSet(token: 'SAVED');

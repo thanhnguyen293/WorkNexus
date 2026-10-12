@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -73,13 +74,14 @@ class ChatStickerSetButton extends StatelessWidget {
                 ? (d) => _menu(context, d.globalPosition)
                 : null,
             child: SizedBox.square(
-              dimension: s.xl6,
+              dimension: context.sizes.controlMd,
               child: Padding(
-                padding: EdgeInsets.all(s.xs),
+                padding: EdgeInsets.all(s.xxs),
                 child: switch (pack.cover) {
                   final cover? => ChatStickerImage(sticker: cover),
                   null => Icon(
                     LucideIcons.star300,
+                    size: context.sizes.iconLg,
                     color: context.colors.textSecondary,
                   ),
                 },
@@ -109,9 +111,9 @@ class ChatStickerImportingMark extends StatelessWidget {
           context,
         ).stickerImportRunning(job.title, job.done, job.total),
         child: SizedBox.square(
-          dimension: s.xl6,
+          dimension: context.sizes.controlMd,
           child: Padding(
-            padding: EdgeInsets.all(s.lg),
+            padding: EdgeInsets.all(s.sm),
             child: CircularProgressIndicator(
               strokeWidth: context.spacing.xxs,
               value: job.total == 0 ? null : job.done / job.total,

@@ -56,7 +56,7 @@ void main() {
       await gate.future;
       return Ok(Uint8List.fromList([1]));
     });
-    when(() => converter.stillToWebp(any())).thenAnswer(
+    when(() => converter.imageToWebp(any())).thenAnswer(
       (call) async => Ok(call.positionalArguments.single as Uint8List),
     );
     when(

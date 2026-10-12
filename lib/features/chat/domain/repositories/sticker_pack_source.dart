@@ -21,8 +21,9 @@ abstract interface class StickerConverter {
   /// An animated (`.tgs`) sticker as an animated WebP.
   Future<Result<Uint8List>> animatedToWebp(Uint8List tgs);
 
-  /// A still image (WebP, PNG…) fitted into the sticker size, as WebP.
-  Future<Result<Uint8List>> stillToWebp(Uint8List image);
+  /// An image (WebP, PNG, GIF…) fitted into the sticker size, as WebP; an
+  /// animated one stays animated.
+  Future<Result<Uint8List>> imageToWebp(Uint8List image);
 }
 
 /// The Telegram bot token sets are fetched with, kept on this device.
