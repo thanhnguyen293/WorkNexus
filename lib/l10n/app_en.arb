@@ -770,6 +770,59 @@
   "chatStickersTab": "Stickers",
   "chatMyStickers": "My stickers",
   "chatAddSticker": "Add sticker from an image",
+  "stickerImportTitle": "Add a Telegram sticker set",
+  "stickerImportLink": "Sticker set link",
+  "stickerImportLinkHint": "https://t.me/addstickers/…",
+  "stickerImportBadLink": "Paste a link like https://t.me/addstickers/Name",
+  "stickerImportToken": "Telegram bot token",
+  "stickerImportTokenHelp": "Create a bot with @BotFather to get one. It is kept only on this device.",
+  "stickerImportTokenSaved": "Using the saved bot token",
+  "stickerImportChangeToken": "Change",
+  "stickerImportAction": "Add set",
+  "stickerImportProgress": "Fetching stickers {done}/{total}…",
+  "@stickerImportProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "stickerImportBadToken": "Telegram refused this bot token.",
+  "stickerImportNoSet": "No sticker set has this link.",
+  "stickerImportNetwork": "Telegram could not be reached.",
+  "stickerImportFailed": "The sticker set could not be added.",
+  "stickerImportDone": "Added “{title}” · {count} stickers",
+  "@stickerImportDone": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stickerImportStills": "{count} animated stickers were kept as still images",
+  "@stickerImportStills": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stickerPackRemove": "Remove sticker set",
+  "stickerPackRemoveTitle": "Remove “{title}”?",
+  "@stickerPackRemoveTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "stickerPackRemoveMessage": "Its stickers will be removed from this device.",
   "chatRemoveSticker": "Remove sticker",
   "chatNoMyStickers": "Add images here, or use “Save as sticker” on an image in a chat.",
   "chatNewChat": "New chat",

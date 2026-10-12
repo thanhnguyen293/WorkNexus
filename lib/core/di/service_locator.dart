@@ -26,9 +26,12 @@ import '../../features/board/domain/repositories/saved_filter_repository.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_http_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_local_datasource.dart';
+import '../../features/chat/data/datasources/telegram_sticker_source.dart';
+import '../../features/chat/data/datasources/webp_sticker_converter.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/cached_link_preview_repository.dart';
+import '../../features/chat/data/repositories/keychain_telegram_token_store.dart';
 import '../../features/chat/data/repositories/local_message_translation_repository.dart';
 import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
@@ -36,6 +39,7 @@ import '../../features/chat/data/repositories/xxd_chat_repository.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/repositories/link_preview_repository.dart';
 import '../../features/chat/domain/repositories/message_translation_repository.dart';
+import '../../features/chat/domain/repositories/sticker_pack_source.dart';
 import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/chat/domain/repositories/wallpaper_repository.dart';
 import '../../features/chat/domain/usecases/translate_chat_message.dart';
@@ -253,6 +257,16 @@ abstract class ServiceModule {
     directory: () async =>
         Directory('${(await getApplicationSupportDirectory()).path}/stickers'),
   );
+
+  @lazySingleton
+  StickerPackSource get stickerPackSource => TelegramStickerSource();
+
+  @lazySingleton
+  StickerConverter get stickerConverter => const WebpStickerConverter();
+
+  @lazySingleton
+  TelegramTokenStore telegramTokenStore(CredentialStore credentials) =>
+      KeychainTelegramTokenStore(credentials);
 
   @lazySingleton
   WallpaperRepository get wallpaperRepository => LocalWallpaperRepository(

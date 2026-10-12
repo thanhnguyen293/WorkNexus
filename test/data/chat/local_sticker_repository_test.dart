@@ -64,4 +64,56 @@ void main() {
     };
     expect(await repo.remove(bundled), isA<Err<void>>());
   });
+
+  test(
+    'an imported set is kept as one set, listed after the bundled',
+    () async {
+      final png = Uint8List.fromList([137, 80, 78, 71]);
+      final added = await repo.addPack(
+        'tg:Peepo',
+        title: 'Peepo Pepe',
+        stickers: [
+          (name: '001.webp', bytes: png),
+          (name: '002.webp', bytes: png),
+        ],
+      );
+      expect(added, isA<Ok<void>>());
+
+      final all = switch (await repo.stickers()) {
+        Ok(:final value) => value,
+        Err() => fail('could not list'),
+      };
+      final set = all.where((s) => s.pack == 'tg:Peepo').toList();
+      expect(set.map((s) => s.name), ['001.webp', '002.webp']);
+      expect(set.every((s) => s.custom && s.packTitle == 'Peepo Pepe'), isTrue);
+      // Not mixed into the user's own stickers.
+      expect(all.where((s) => s.custom && s.pack.isEmpty), isEmpty);
+      expect(await repo.bytes(set.first), isA<Ok<Uint8List>>());
+    },
+  );
+
+  test('importing a set again replaces it; removing it deletes it', () async {
+    final png = Uint8List.fromList([137, 80, 78, 71]);
+    await repo.addPack(
+      'tg:Peepo',
+      title: 'Old',
+      stickers: [
+        (name: '001.webp', bytes: png),
+        (name: '002.webp', bytes: png),
+      ],
+    );
+    await repo.addPack(
+      'tg:Peepo',
+      title: 'New',
+      stickers: [(name: '001.webp', bytes: png)],
+    );
+    var all = (await repo.stickers()).valueOrNull ?? const [];
+    final kept = all.where((s) => s.pack == 'tg:Peepo').toList();
+    expect(kept, hasLength(1));
+    expect(kept.single.packTitle, 'New');
+
+    await repo.removePack('tg:Peepo');
+    all = (await repo.stickers()).valueOrNull ?? const [];
+    expect(all.where((s) => s.pack == 'tg:Peepo'), isEmpty);
+  });
 }
