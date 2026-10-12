@@ -116,4 +116,14 @@ void main() {
     all = (await repo.stickers()).valueOrNull ?? const [];
     expect(all.where((s) => s.pack == 'tg:Peepo'), isEmpty);
   });
+
+  test('the last set picked from is remembered, and is no sticker', () async {
+    expect((await repo.lastPack()).valueOrNull, isNull);
+
+    await repo.rememberPack('tg:Peepo');
+
+    expect((await repo.lastPack()).valueOrNull, 'tg:Peepo');
+    final all = (await repo.stickers()).valueOrNull ?? const [];
+    expect(all.where((s) => s.custom), isEmpty);
+  });
 }

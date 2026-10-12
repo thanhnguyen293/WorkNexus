@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,27 @@ final stickerRepositoryProvider = Provider<StickerRepository>(
 final chatStickersProvider =
     FutureProvider.autoDispose<Result<List<ChatSticker>>>(
       (ref) => ref.watch(stickerRepositoryProvider).stickers(),
+    );
+
+/// The set the sticker panel opens on: the one last picked from. Kept for
+/// the app's lifetime and on disk.
+class LastStickerPackController extends AsyncNotifier<String?> {
+  @override
+  Future<String?> build() async =>
+      (await ref.read(stickerRepositoryProvider).lastPack()).valueOrNull;
+
+  /// Remembers [pack]; a failed write only means the panel opens elsewhere
+  /// next launch, so it is not reported.
+  void remember(String pack) {
+    if (state.value == pack) return;
+    state = AsyncData(pack);
+    unawaited(ref.read(stickerRepositoryProvider).rememberPack(pack));
+  }
+}
+
+final lastStickerPackProvider =
+    AsyncNotifierProvider<LastStickerPackController, String?>(
+      LastStickerPackController.new,
     );
 
 final stickerPackSourceProvider = Provider<StickerPackSource>(
@@ -79,11 +101,13 @@ class TelegramStickerImporter {
   Future<Result<ImportedStickerPack>> import(
     String link, {
     required String token,
+    void Function(String title, int total)? onListed,
     void Function(int done, int total)? onProgress,
   }) async {
     final result = await _importPack(
       link,
       token: token,
+      onListed: onListed,
       onProgress: onProgress,
     );
     if (result is Ok) {

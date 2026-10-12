@@ -6,16 +6,18 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
+import '../providers/sticker_import_jobs.dart';
 import '../providers/sticker_providers.dart';
 import 'chat_snack.dart';
 import 'chat_sticker_grid.dart';
 import 'chat_sticker_pack_bar.dart';
 import 'import_sticker_pack_dialog.dart';
+import 'sticker_import_listener.dart';
 
 /// The sticker tab: one set's grid at a time, picked from the pack bar
 /// below — the user's own, imported Telegram sets, then the bundled ones.
-/// Opens on the user's own stickers, or the first other set while they have
-/// none.
+/// Opens on the set last picked from; before any (or once it is gone), on
+/// the user's own stickers, or the first other set while they have none.
 class ChatStickerPanel extends ConsumerStatefulWidget {
   const ChatStickerPanel({
     super.key,
@@ -35,23 +37,28 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
   /// The set shown; '' is the user's own. Null until the user picks one.
   String? _pack;
 
+  void _select(String pack) {
+    setState(() => _pack = pack);
+    ref.read(lastStickerPackProvider.notifier).remember(pack);
+  }
+
+  void _pick(ChatSticker sticker) {
+    ref.read(lastStickerPackProvider.notifier).remember(sticker.pack);
+    widget.onPick(sticker);
+  }
+
   Future<void> _add() async {
-    setState(() => _pack = '');
+    _select('');
     await addStickersFromImages(context, ref);
   }
 
+  /// The rest of the import runs in the background (see
+  /// [StickerImportListener] for its outcome).
   Future<void> _import() async {
     final l = AppL10n.of(context);
-    final imported = await ImportStickerPackDialog.show(context);
-    if (imported == null || !mounted) return;
-    setState(() => _pack = imported.pack);
-    final done = l.stickerImportDone(imported.title, imported.added);
-    showChatSnack(
-      context,
-      imported.stills == 0
-          ? done
-          : '$done · ${l.stickerImportStills(imported.stills)}',
-    );
+    final title = await ImportStickerPackDialog.show(context);
+    if (title == null || !mounted) return;
+    showChatSnack(context, l.stickerImportStarted(title));
   }
 
   Future<void> _remove(ChatStickerPackCover pack) async {
@@ -91,8 +98,14 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
       }
     }
     final sets = {...imported, ...bundled};
+    final last = ref.watch(lastStickerPackProvider).value;
     final pack =
-        _pack ?? (mine.isEmpty && sets.isNotEmpty ? sets.keys.first : '');
+        _pack ??
+        (last != null && (last.isEmpty || sets.containsKey(last))
+            ? last
+            : mine.isEmpty && sets.isNotEmpty
+            ? sets.keys.first
+            : '');
     final shown = pack.isEmpty ? mine : sets[pack] ?? const <ChatSticker>[];
     return Column(
       children: [
@@ -101,7 +114,7 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
             key: ValueKey(pack),
             stickers: shown,
             editable: pack.isEmpty,
-            onPick: widget.onPick,
+            onPick: _pick,
           ),
         ),
         Divider(height: 1, thickness: 1, color: context.colors.border),
@@ -119,7 +132,12 @@ class _ChatStickerPanelState extends ConsumerState<ChatStickerPanel> {
               (pack: key, title: null, cover: value.first, removable: false),
           ],
           selected: pack,
-          onSelect: (p) => setState(() => _pack = p),
+          onSelect: _select,
+          importing: [
+            for (final job in ref.watch(stickerImportsProvider))
+              if (!job.finished)
+                (title: job.title, done: job.done, total: job.total),
+          ],
           onAdd: _add,
           onImport: _import,
           onRemove: _remove,

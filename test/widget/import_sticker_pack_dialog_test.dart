@@ -11,7 +11,6 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/remote_sticker_set.dart';
 import 'package:work_nexus/features/chat/domain/repositories/sticker_pack_source.dart';
 import 'package:work_nexus/features/chat/domain/repositories/sticker_repository.dart';
-import 'package:work_nexus/features/chat/domain/usecases/import_sticker_pack.dart';
 import 'package:work_nexus/features/chat/presentation/providers/sticker_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/import_sticker_pack_dialog.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -74,11 +73,11 @@ void main() {
       );
 
   /// Opens the dialog from a button; [result] gets what it resolves to.
-  Future<List<ImportedStickerPack?>> pump(
+  Future<List<String?>> pump(
     WidgetTester tester,
     _Tokens tokens,
   ) async {
-    final results = <ImportedStickerPack?>[];
+    final results = <String?>[];
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -113,7 +112,7 @@ void main() {
     return results;
   }
 
-  testWidgets('the first import asks for the token and keeps it', (
+  testWidgets('the first import asks for the token, then goes on in the background', (
     tester,
   ) async {
     serveSet(token: 'T1');
@@ -129,9 +128,16 @@ void main() {
     await tester.tap(find.text('Add set'));
     await tester.pumpAndSettle();
 
-    expect(results.single?.title, 'Cats!');
-    expect(results.single?.added, 1);
+    // The dialog closes once the set is listed; the rest runs on.
+    expect(results.single, 'Cats!');
     expect(tokens.token, 'T1');
+    verify(
+      () => stickers.addPack(
+        'tg:Cats',
+        title: 'Cats!',
+        stickers: any(named: 'stickers'),
+      ),
+    ).called(1);
   });
 
   testWidgets('a saved token is used without asking', (tester) async {
@@ -144,7 +150,7 @@ void main() {
     await tester.tap(find.text('Add set'));
     await tester.pumpAndSettle();
 
-    expect(results.single?.pack, 'tg:Cats');
+    expect(results.single, 'Cats!');
   });
 
   testWidgets('a bad link is caught before Telegram is asked', (tester) async {

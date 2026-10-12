@@ -225,7 +225,40 @@ class LocalStickerRepository implements StickerRepository {
     }
   }
 
+  @override
+  Future<Result<String?>> lastPack() async {
+    try {
+      final file = await _lastPackFile();
+      return Ok(file.existsSync() ? await file.readAsString() : null);
+    } on Exception catch (e) {
+      return Err(
+        StorageFailure('Could not read the last sticker set', cause: e),
+      );
+    }
+  }
+
+  @override
+  Future<Result<void>> rememberPack(String pack) async {
+    try {
+      final file = await _lastPackFile();
+      await file.parent.create(recursive: true);
+      await file.writeAsString(pack, flush: true);
+      return const Ok(null);
+    } on Exception catch (e) {
+      return Err(
+        StorageFailure('Could not keep the last sticker set', cause: e),
+      );
+    }
+  }
+
+  Future<File> _lastPackFile() async => File(
+    '${(await _directory()).path}${Platform.pathSeparator}$_lastPackName',
+  );
+
   static const _packMeta = 'pack.json';
+
+  /// Holds the id of the set last picked from; not an image, so never listed.
+  static const _lastPackName = 'last_pack';
 
   /// The last part of [entity]'s path (a folder's own name).
   static String _nameOf(FileSystemEntity entity) => entity.path

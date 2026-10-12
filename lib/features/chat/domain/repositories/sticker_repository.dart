@@ -32,4 +32,10 @@ abstract class StickerRepository {
 
   /// Removes an imported set.
   Future<Result<void>> removePack(String pack);
+
+  /// The set the user last picked from (null before any), so the panel can
+  /// open on it.
+  Future<Result<String?>> lastPack();
+
+  Future<Result<void>> rememberPack(String pack);
 }
