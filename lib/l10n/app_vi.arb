@@ -1034,6 +1034,7 @@
   "editorLinkRemove": "Bỏ liên kết",
   "editorLinkInvalid": "Nhập liên kết đầy đủ, vd. https://example.com",
   "chatWithPerson": "Nhắn tin với {name}",
+  "dropFilesFailed": "Không đọc được file vừa thả",
   "dropFilesToSend": "Thả file để gửi",
   "dropFilesToInsert": "Thả ảnh để chèn, file khác để đính kèm",
   "stateLoadFailedTitle": "Không tải được nội dung",

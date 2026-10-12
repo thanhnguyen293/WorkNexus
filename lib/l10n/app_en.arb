@@ -1429,6 +1429,7 @@
       }
     }
   },
+  "dropFilesFailed": "Couldn't read the dropped files",
   "dropFilesToSend": "Drop files to send",
   "dropFilesToInsert": "Drop images to insert, other files to attach",
   "stateLoadFailedTitle": "Couldn't load this",
