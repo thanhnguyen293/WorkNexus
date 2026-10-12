@@ -19,12 +19,12 @@ Future<Result<void>> openDashboardItem(
   if (!kind.isTicket) {
     return const Err(NotFoundFailure('Todos have no detail view'));
   }
-  final opener = ref.read(openTicketIdProvider.notifier);
+  final nav = ref.read(appNavProvider.notifier);
   final synced = ref.read(
     ticketByIdProvider(zenTaoTicketId(account.id, kind.name, id)),
   );
   if (synced != null) {
-    opener.open(synced.id);
+    nav.openTicket(synced.id);
     return const Ok(null);
   }
   final host = Uri.tryParse(account.baseUrl ?? '')?.host ?? '';
@@ -36,7 +36,7 @@ Future<Result<void>> openDashboardItem(
       .fetchZenTaoTicket(host: host, type: kind.name, id: id);
   switch (res) {
     case Ok(:final value):
-      if (ref.context.mounted) opener.open(value);
+      if (ref.context.mounted) nav.openTicket(value);
       return const Ok(null);
     case Err(:final failure):
       return Err(failure);

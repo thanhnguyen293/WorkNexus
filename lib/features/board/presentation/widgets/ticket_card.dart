@@ -60,7 +60,7 @@ class TicketCard extends ConsumerWidget {
       child: HoverSurface(
         onTap: pending
             ? null
-            : () => ref.read(openTicketIdProvider.notifier).open(ticket.id),
+            : () => ref.read(appNavProvider.notifier).openTicket(ticket.id),
         color: bg,
         borderRadius: BorderRadius.circular(context.radii.card),
         border: border,

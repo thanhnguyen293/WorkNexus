@@ -55,8 +55,7 @@ class OpenCodeNotLinkedDialog extends ConsumerWidget {
           icon: LucideIcons.settings300,
           onPressed: () {
             Navigator.of(context).pop();
-            ref.read(openTicketIdProvider.notifier).close();
-            ref.read(settingsOpenProvider.notifier).state = true;
+            ref.read(appNavProvider.notifier).openSettings();
           },
           child: Text(l.openCodeOpenSettings),
         ),

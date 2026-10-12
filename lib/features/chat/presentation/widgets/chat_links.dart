@@ -12,12 +12,12 @@ import '../providers/chat_providers.dart';
 /// synced it; anything else (or a ticket that cannot be loaded) opens in the
 /// browser.
 Future<void> openChatLink(WidgetRef ref, String url) async {
-  final opener = ref.read(openTicketIdProvider.notifier);
+  final nav = ref.read(appNavProvider.notifier);
   final ticket = ref
       .read(chatControllerProvider)
       .linkedTicket(url, ref.read(ticketsProvider).value ?? const []);
   if (ticket != null) {
-    opener.open(ticket.id);
+    nav.openTicket(ticket.id);
     return;
   }
   final link = FindLinkedTicket.parse(url);
@@ -30,7 +30,7 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
       .fetchZenTaoTicket(host: link.host, type: link.type, id: link.id);
   switch (fetched) {
     case Ok(:final value):
-      opener.open(value);
+      nav.openTicket(value);
     case Err():
       await openExternally(url);
   }

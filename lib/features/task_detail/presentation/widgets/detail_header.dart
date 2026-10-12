@@ -22,6 +22,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 import '../ticket_actions.dart';
 import 'bug_status_strip.dart';
+import 'detail_back_button.dart';
 import 'detail_header_copy_link_button.dart';
 import 'parent_task_link.dart';
 
@@ -57,6 +58,7 @@ class DetailHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
+              const DetailBackButton(),
               WorkspaceBadge(
                 wsColor,
                 ws?.shortCode ?? '?',
@@ -77,8 +79,9 @@ class DetailHeader extends ConsumerWidget {
                   icon: LucideIcons.pencil300,
                   tooltip: l.edit,
                   onPressed: () {
-                    // The editor takes the screen; the detail reopens on save.
-                    openTicketEditor(ref, route);
+                    // The editor takes the screen; the detail returns when it
+                    // closes.
+                    ref.read(appNavProvider.notifier).openEditor(route);
                   },
                 ),
                 SizedBox(width: context.spacing.md),

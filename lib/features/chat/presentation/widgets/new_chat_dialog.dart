@@ -84,7 +84,7 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
     if (!mounted) return;
     switch (result) {
       case Ok(:final value):
-        showChatView(ref);
+        ref.read(appNavProvider.notifier).show(MainView.chat);
         ref.read(pickedChatAccountProvider.notifier).state = id;
         ref.read(selectedChatGidProvider(id).notifier).state = value;
         Navigator.of(context).pop();

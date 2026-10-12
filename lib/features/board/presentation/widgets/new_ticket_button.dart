@@ -39,7 +39,7 @@ class NewTicketButton extends ConsumerWidget {
     return AppButton.filled(
       size: AppButtonSize.small,
       icon: LucideIcons.plus500,
-      onPressed: () => openTicketEditor(ref, route),
+      onPressed: () => ref.read(appNavProvider.notifier).openEditor(route),
       child: Text(label),
     );
   }

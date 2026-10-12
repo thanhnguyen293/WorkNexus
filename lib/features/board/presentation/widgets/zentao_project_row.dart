@@ -112,7 +112,7 @@ class ZenTaoProjectRow extends ConsumerWidget {
   /// Leaves any open settings view and hands the filter to this board's memory —
   /// a first visit opens unfiltered.
   void _select(WidgetRef ref) {
-    showBoardView(ref);
+    ref.read(appNavProvider.notifier).show(MainView.board);
     ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).clear();

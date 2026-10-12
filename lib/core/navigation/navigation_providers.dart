@@ -2,71 +2,60 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../di/providers.dart';
+import 'app_nav_controller.dart';
+import 'app_nav_state.dart';
 import 'ticket_editor_route.dart';
 
-/// App-shell view state shared across features: which ticket's detail overlay is
-/// open, and whether the settings view replaces the board. Lives in the shared
-/// kernel so features coordinate through it (rule 10.2) instead of importing one
-/// another's presentation layer.
+export 'app_nav_controller.dart';
+export 'app_nav_state.dart';
 
-/// The currently open ticket in the detail slide-over (null = closed).
-class OpenTicketController extends Notifier<String?> {
-  @override
-  String? build() => null;
-  void open(String id) => state = id;
-  void close() => state = null;
-}
-
-final openTicketIdProvider = NotifierProvider<OpenTicketController, String?>(
-  OpenTicketController.new,
+/// App-shell navigation state, shared across features so they coordinate
+/// through it (rule 10.2) instead of importing one another's presentation
+/// layer. [appNavProvider] owns it; the providers below are read-only slices
+/// so a widget rebuilds only for the part it shows.
+final appNavProvider = NotifierProvider<AppNavController, AppNavState>(
+  AppNavController.new,
 );
 
-/// Whether the Settings / Integrations view is showing (replaces the board).
-final settingsOpenProvider = StateProvider<bool>((ref) => false);
+/// The ticket in the detail slide-over (null = closed).
+final openTicketIdProvider = Provider<String?>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.openTicketId)),
+);
 
-/// The app's main destinations, picked from the left rail.
-enum MainView { dashboard, chat, board }
+/// Whether the detail slide-over has an earlier ticket to go back to.
+final ticketCanGoBackProvider = Provider<bool>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.canGoBack)),
+);
 
-/// Which main view fills the window (settings still wins when open). The app
-/// opens on chat.
-final mainViewProvider = StateProvider<MainView>((ref) => MainView.chat);
+/// Whether the Settings / Integrations view was opened (replaces the board).
+final settingsOpenProvider = Provider<bool>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.settingsOpen)),
+);
+
+/// Which main view fills the window (settings still wins when open).
+final mainViewProvider = Provider<MainView>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.view)),
+);
 
 /// Whether the ZenTao chat view is the main view.
 final chatOpenProvider = Provider<bool>(
   (ref) => ref.watch(mainViewProvider) == MainView.chat,
 );
 
-/// Whether the Quick Settings panel is docked open at the window's right.
-final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
+/// The open bug / task editor, which replaces the board and sidebar; null when
+/// none is open.
+final ticketEditorProvider = Provider<TicketEditorRoute?>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.editor)),
+);
 
 /// Whether the notifications panel is open beside the rail (over the current
 /// view, which stays as it is).
-final notificationsPanelOpenProvider = StateProvider<bool>((ref) => false);
+final notificationsPanelOpenProvider = Provider<bool>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.notificationsOpen)),
+);
 
-/// Closes settings, the notifications panel and any open bug / task editor
-/// (which would otherwise keep covering the main area) and shows [view].
-void showMainView(WidgetRef ref, MainView view) {
-  ref.read(ticketEditorProvider.notifier).close();
-  ref.read(settingsOpenProvider.notifier).state = false;
-  ref.read(notificationsPanelOpenProvider.notifier).state = false;
-  ref.read(mainViewProvider.notifier).state = view;
-}
-
-/// Opens the bug / task editor on [route]. It takes the whole main area, so
-/// whatever would sit over or beside it (settings, which would hide it, the
-/// notifications panel and the ticket detail) is closed first.
-void openTicketEditor(WidgetRef ref, TicketEditorRoute route) {
-  ref.read(settingsOpenProvider.notifier).state = false;
-  ref.read(notificationsPanelOpenProvider.notifier).state = false;
-  ref.read(openTicketIdProvider.notifier).close();
-  ref.read(ticketEditorProvider.notifier).open(route);
-}
-
-/// Shows the board. Call from anything that selects a board (sidebar rows).
-void showBoardView(WidgetRef ref) => showMainView(ref, MainView.board);
-
-/// Shows the chat view.
-void showChatView(WidgetRef ref) => showMainView(ref, MainView.chat);
+/// Whether the Quick Settings panel is docked open at the window's right.
+final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
 
 /// First-run onboarding state: when there is no workspace or no connected
 /// provider account yet, the app should open Integrations instead of an empty
@@ -92,6 +81,14 @@ final integrationsVisibleProvider = Provider<bool>(
       ref.watch(settingsOpenProvider) ||
       ref.watch(needsInitialIntegrationsProvider),
 );
+
+/// The main view the rail marks as current: none while settings or the bug /
+/// task editor covers it.
+final selectedMainViewProvider = Provider<MainView?>((ref) {
+  if (ref.watch(integrationsVisibleProvider)) return null;
+  if (ref.watch(ticketEditorProvider) != null) return null;
+  return ref.watch(mainViewProvider);
+});
 
 /// Hidden developer log panel, opened from the title-bar settings trigger.
 final talkerDebugOpenProvider = StateProvider<bool>((ref) => false);

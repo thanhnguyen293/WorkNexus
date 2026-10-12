@@ -20,10 +20,8 @@ class DashboardRailButton extends ConsumerWidget {
     return AppRailButton(
       icon: LucideIcons.layoutDashboard300,
       label: AppL10n.of(context).dashboard,
-      selected:
-          ref.watch(mainViewProvider) == MainView.dashboard &&
-          !ref.watch(integrationsVisibleProvider),
-      onTap: () => showMainView(ref, MainView.dashboard),
+      selected: ref.watch(selectedMainViewProvider) == MainView.dashboard,
+      onTap: () => ref.read(appNavProvider.notifier).show(MainView.dashboard),
     );
   }
 }

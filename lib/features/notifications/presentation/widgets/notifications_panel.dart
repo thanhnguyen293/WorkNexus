@@ -33,8 +33,7 @@ class NotificationsPanel extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     final c = context.colors;
-    void close() =>
-        ref.read(notificationsPanelOpenProvider.notifier).state = false;
+    void close() => ref.read(appNavProvider.notifier).closeNotifications();
     return Padding(
       padding: EdgeInsets.only(left: leftInset),
       child: Stack(
