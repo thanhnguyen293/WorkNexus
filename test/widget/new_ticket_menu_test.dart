@@ -144,8 +144,8 @@ void main() {
 
     await tester.tap(find.byType(AppRailButton));
     await tester.pumpAndSettle();
-    expect(find.text('Draft: Elsewhere'), findsNothing);
-    await tester.tap(find.text('Draft: Wire up push'));
+    expect(find.textContaining('Draft: Elsewhere'), findsNothing);
+    await tester.tap(find.textContaining('Draft: Wire up push'));
     await tester.pumpAndSettle();
 
     expect(

@@ -9,6 +9,7 @@ import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/task_editor_controller.dart';
 import 'confirm_discard_draft.dart';
+import 'draft_picker_button.dart';
 import 'editor_columns.dart';
 import 'editor_header.dart';
 import 'editor_shortcuts.dart';
@@ -52,6 +53,12 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
     // The draft keeps what was typed last.
     pushRichText();
     ref.read(appNavProvider.notifier).closeEditor();
+  }
+
+  /// Switches to another kept draft; this one keeps what was typed last.
+  void _openDraft(TicketEditorRoute route) {
+    pushRichText();
+    ref.read(appNavProvider.notifier).openEditor(route);
   }
 
   Future<void> _discardDraft() async {
@@ -102,6 +109,16 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
             saving: state?.saving ?? false,
             error: state?.failure?.message,
             draftSaved: state?.draftSavedAt != null,
+            draftPicker: switch (route) {
+              NewTaskRoute(:final accountId, :final draftId) =>
+                DraftPickerButton(
+                  isBug: false,
+                  accountId: accountId,
+                  currentDraftId: state?.draftId ?? draftId,
+                  onPick: _openDraft,
+                ),
+              _ => null,
+            },
             onDiscardDraft: state?.draftSavedAt == null ? null : _discardDraft,
           ),
           Expanded(
