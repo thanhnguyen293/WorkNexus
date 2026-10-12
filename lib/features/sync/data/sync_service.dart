@@ -16,6 +16,7 @@ import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/repo_change.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
+import '../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
@@ -473,7 +474,7 @@ class SyncService
     // Only the type and id matter to the detail request; the rest is filled
     // from the reply.
     final stub = Ticket(
-      id: '${account.id}:$id',
+      id: zenTaoTicketId(account.id, type, id),
       accountId: account.id,
       projectId: '${account.id}:$type',
       providerType: ProviderType.zentao,
