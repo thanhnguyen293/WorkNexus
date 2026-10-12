@@ -110,6 +110,12 @@ class XxdChatRepository implements ChatRepository {
 
   final _statuses = <String, StatusChannel>{};
 
+  /// Sign-ins under way, so callers racing in (the auto-connect provider
+  /// rebuilds several times at launch) share one instead of each opening a
+  /// socket: the overwritten one stayed online untracked, and xxd then
+  /// refused every later login for the account.
+  final _connecting = <String, Future<Result<void>>>{};
+
   // ---- connection --------------------------------------------------------------
 
   @override
@@ -117,7 +123,10 @@ class XxdChatRepository implements ChatRepository {
       _status(accountId).watch();
 
   @override
-  Future<Result<void>> connect(String accountId) async {
+  Future<Result<void>> connect(String accountId) => _connecting[accountId] ??=
+      _connectOnce(accountId).whenComplete(() => _connecting.remove(accountId));
+
+  Future<Result<void>> _connectOnce(String accountId) async {
     final existing = _sessions[accountId];
     if (existing != null && existing.isActive) return const Ok(null);
     await _closeSession(accountId);
