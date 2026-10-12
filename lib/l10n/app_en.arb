@@ -516,6 +516,7 @@
   "tasks": "Tasks",
   "bugTag": "Bug",
   "taskTag": "Task",
+  "storyTag": "Story",
   "pinned": "Pinned",
   "pinTask": "Pin task",
   "unpinTask": "Unpin task",
@@ -1136,6 +1137,28 @@
   "notificationsDeleteRead": "Delete read notifications",
   "notificationsDeleteReadConfirm": "Delete every read notification? This also removes them on ZenTao.",
   "notificationsMarkRead": "Mark as read",
+  "notificationEvent": "{actor} {action} {object}",
+  "@notificationEvent": {
+    "placeholders": {
+      "actor": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      },
+      "object": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationAction": "{action, select, created{created} opened{opened} changed{changed} edited{edited} assigned{assigned} closed{closed} deleted{deleted} commented{commented on} activated{activated} resolved{resolved} reviewed{reviewed} confirmed{confirmed} started{started} restarted{restarted} finished{finished} paused{paused} canceled{cancelled} other{updated}}",
+  "@notificationAction": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "notificationsMarkUnread": "Mark as unread",
   "notificationsDelete": "Delete",
   "notificationsEmpty": "No notifications",
