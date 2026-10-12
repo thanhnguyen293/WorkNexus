@@ -728,6 +728,21 @@ void main() {
     expect(await repo.watchStatus(_acc).first, isA<ChatOnline>());
   });
 
+  test('connects racing in share one sign-in', () async {
+    final results = await Future.wait([
+      repo.connect(_acc),
+      repo.connect(_acc),
+      repo.connect(_acc),
+    ]);
+
+    expect(results.every((r) => r.isOk), isTrue);
+    expect(opened, hasLength(1));
+    expect(
+      await repo.watchStatus(_acc).first,
+      const ChatConnectionStatus.online(selfUserId: 40),
+    );
+  });
+
   test('without a saved password chat is signed out', () async {
     store.values.clear();
 
