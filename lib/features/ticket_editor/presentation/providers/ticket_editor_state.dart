@@ -20,6 +20,11 @@ abstract class BugEditorState with _$BugEditorState {
 
     /// Why the last save failed.
     Failure? failure,
+
+    /// The kept draft of a new bug (null when editing one), and when
+    /// it was last kept (null until something was written).
+    String? draftId,
+    DateTime? draftSavedAt,
   }) = _BugEditorState;
 }
 
@@ -33,6 +38,11 @@ abstract class TaskEditorState with _$TaskEditorState {
     @Default(false) bool saving,
     @Default(<DraftField>{}) Set<DraftField> missing,
     Failure? failure,
+
+    /// The kept draft of a new task (null when editing one), and when
+    /// it was last kept (null until something was written).
+    String? draftId,
+    DateTime? draftSavedAt,
   }) = _TaskEditorState;
 }
 

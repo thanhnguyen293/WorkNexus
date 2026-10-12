@@ -60,6 +60,9 @@ import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
 import '../../features/sync/data/zentao_ticket_editor_service.dart';
 import '../../features/sync/data/zentao_workflow_actions.dart';
+import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
+import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
+import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
 import '../../features/translation/data/api_translation_service.dart';
 import '../../features/translation/data/datasources/openai_model_catalog_datasource.dart';
 import '../../features/translation/data/datasources/opencode_auth_file.dart';
@@ -353,6 +356,10 @@ abstract class ServiceModule {
   RefreshNotifications refreshNotifications(
     NotificationRepository repository,
   ) => RefreshNotifications(repository);
+
+  @lazySingleton
+  TicketDraftRepository ticketDraftRepository(AppDatabase db) =>
+      LocalTicketDraftRepository(TicketDraftLocalDatasource(db));
 
   @lazySingleton
   RefreshDashboard refreshDashboard(DashboardRepository repository) =>

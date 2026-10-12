@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -10,8 +11,8 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The editor's bar: back, what is being edited, why the last save failed,
-/// and Save.
+/// The editor's bar: back, what is being edited (and whether its draft is
+/// kept), why the last save failed, then the actions at the right edge.
 class EditorHeader extends StatelessWidget {
   const EditorHeader({
     super.key,
@@ -21,6 +22,8 @@ class EditorHeader extends StatelessWidget {
     this.onSave,
     this.saving = false,
     this.error,
+    this.draftSaved = false,
+    this.onDiscardDraft,
   });
 
   final String title;
@@ -33,6 +36,12 @@ class EditorHeader extends StatelessWidget {
   final VoidCallback? onSave;
   final bool saving;
   final String? error;
+
+  /// A new ticket's draft is kept on this device.
+  final bool draftSaved;
+
+  /// Deletes the kept draft; null hides the action.
+  final VoidCallback? onDiscardDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -56,29 +65,52 @@ class EditorHeader extends StatelessWidget {
           SizedBox(width: s.md),
           ZenTaoKindIcon(kind),
           SizedBox(width: s.md),
-          Flexible(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.typography.titleSm.copyWith(color: c.textPrimary),
-            ),
-          ),
-          SizedBox(width: s.xl),
+          // Takes the free width, so the actions sit at the bar's right edge.
           Expanded(
-            child: message == null
-                ? const SizedBox.shrink()
-                : Tooltip(
-                    message: message,
-                    child: Text(
-                      l.ticketEditorSaveFailed(message),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.typography.bodySm.copyWith(color: c.error),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.titleSm.copyWith(
+                      color: c.textPrimary,
                     ),
                   ),
+                ),
+                if (draftSaved) ...[
+                  SizedBox(width: s.lg),
+                  const _DraftSavedNote(),
+                ],
+              ],
+            ),
           ),
+          if (message != null) ...[
+            SizedBox(width: s.xl),
+            Flexible(
+              child: Tooltip(
+                message: message,
+                child: Text(
+                  l.ticketEditorSaveFailed(message),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: context.typography.bodySm.copyWith(color: c.error),
+                ),
+              ),
+            ),
+          ],
           SizedBox(width: s.xl),
+          if (onDiscardDraft case final discard?) ...[
+            AppButton.textNeutral(
+              size: AppButtonSize.small,
+              icon: LucideIcons.trash2300,
+              onPressed: discard,
+              child: Text(l.ticketDraftDiscard),
+            ),
+            SizedBox(width: s.md),
+          ],
           AppButton.outlinedNeutral(
             size: AppButtonSize.small,
             onPressed: onClose,
@@ -91,6 +123,35 @@ class EditorHeader extends StatelessWidget {
             onPressed: onSave,
             isLoading: saving,
             child: Text(l.save),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Draft saved", explaining what is kept on hover.
+class _DraftSavedNote extends StatelessWidget {
+  const _DraftSavedNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l = AppL10n.of(context);
+    return Tooltip(
+      message: l.ticketDraftSavedHint,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            LucideIcons.cloudCheck300,
+            size: context.sizes.iconSm,
+            color: c.textTertiary,
+          ),
+          SizedBox(width: context.spacing.xs),
+          Text(
+            l.ticketDraftSaved,
+            style: context.typography.caption.copyWith(color: c.textTertiary),
           ),
         ],
       ),

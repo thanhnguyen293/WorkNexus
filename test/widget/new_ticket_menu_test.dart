@@ -5,13 +5,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/shell/new_ticket_menu.dart';
 import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
+import 'package:work_nexus/core/domain/entities/zentao_ticket_form.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_rail_button.dart';
+import 'package:work_nexus/features/ticket_editor/domain/entities/saved_ticket_draft.dart';
+import 'package:work_nexus/features/ticket_editor/presentation/providers/ticket_draft_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+
+import '../support/fake_ticket_draft_repository.dart';
 
 const _zentao = Account(
   id: 'zt',
@@ -30,10 +35,14 @@ const _gitlab = Account(
 void main() {
   Future<ProviderContainer> pump(
     WidgetTester tester,
-    List<Account> accounts,
-  ) async {
+    List<Account> accounts, {
+    List<SavedTicketDraft> drafts = const [],
+  }) async {
     final container = ProviderContainer(
       overrides: [
+        ticketDraftRepositoryProvider.overrideWithValue(
+          FakeTicketDraftRepository(drafts),
+        ),
         lookupsProvider.overrideWithValue((
           accounts: {for (final a in accounts) a.id: a},
           workspaces: const {},
@@ -106,5 +115,42 @@ void main() {
 
     expect(find.text('New bug'), findsOneWidget);
     expect(find.text('New task'), findsOneWidget);
+  });
+
+  testWidgets('a kept draft is listed and reopens where it was left', (
+    tester,
+  ) async {
+    final container = await pump(
+      tester,
+      const [_zentao],
+      drafts: [
+        SavedTicketDraft.task(
+          id: 'd1',
+          accountId: 'zt',
+          uid: 'u1',
+          updatedAt: DateTime(2026, 10, 12),
+          draft: const TaskDraft(execution: '9', name: 'Wire up push'),
+        ),
+        // Another account's draft is not offered.
+        SavedTicketDraft.bug(
+          id: 'd2',
+          accountId: 'gone',
+          uid: 'u2',
+          updatedAt: DateTime(2026, 10, 11),
+          draft: const BugDraft(product: '1', title: 'Elsewhere'),
+        ),
+      ],
+    );
+
+    await tester.tap(find.byType(AppRailButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Draft: Elsewhere'), findsNothing);
+    await tester.tap(find.text('Draft: Wire up push'));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(ticketEditorProvider),
+      const NewTaskRoute(accountId: 'zt', executionId: '9', draftId: 'd1'),
+    );
   });
 }

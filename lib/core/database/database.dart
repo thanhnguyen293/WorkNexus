@@ -439,6 +439,21 @@ class ChatSavedFiles extends Table {
   Set<Column> get primaryKey => {accountId, fileId};
 }
 
+/// New ZenTao bugs and tasks still being written (the editor keeps them as
+/// they are typed), as JSON of the draft; kind is `bug` or `task`.
+@DataClassName('TicketDraftRow')
+class TicketDrafts extends Table {
+  TextColumn get id => text()();
+  TextColumn get accountId => text()();
+  TextColumn get kind => text()();
+  TextColumn get uid => text()();
+  TextColumn get json => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -461,6 +476,7 @@ class ChatSavedFiles extends Table {
     SourceListSnapshots,
     ChatLinkPreviews,
     ChatSavedFiles,
+    TicketDrafts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -474,7 +490,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 44;
+  int get schemaVersion => 45;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -713,6 +729,11 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       if (from < 44) await _typeZenTaoTicketIds();
+      if (from < 45) {
+        if (!await _hasTable('ticket_drafts')) {
+          await m.createTable(ticketDrafts);
+        }
+      }
     },
   );
 

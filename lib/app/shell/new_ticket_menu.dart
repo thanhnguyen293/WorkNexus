@@ -13,6 +13,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_context_menu.dart';
 import '../../core/widgets/app_rail_button.dart';
 import '../../features/board/presentation/board_providers.dart';
+import '../../features/ticket_editor/domain/entities/saved_ticket_draft.dart';
+import '../../features/ticket_editor/presentation/providers/ticket_draft_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// A new ZenTao bug or task the "+" menu offers, in [account].
@@ -68,7 +70,8 @@ bool get _isMac => defaultTargetPlatform == TargetPlatform.macOS;
 
 /// The "+" rail button (the rail's accent-filled primary action, with a
 /// divider under it): a menu of the new bugs and tasks
-/// [newTicketChoicesProvider] offers; hidden without a ZenTao account.
+/// [newTicketChoicesProvider] offers, then the kept drafts to pick up again;
+/// hidden without a ZenTao account.
 class NewTicketRailButton extends ConsumerWidget {
   const NewTicketRailButton({super.key});
 
@@ -77,7 +80,14 @@ class NewTicketRailButton extends ConsumerWidget {
     final l = AppL10n.of(context);
     final choices = ref.watch(newTicketChoicesProvider);
     if (choices.isEmpty) return const SizedBox.shrink();
-    final severalAccounts = choices.map((c) => c.account.id).toSet().length > 1;
+    final accountIds = choices.map((c) => c.account.id).toSet();
+    final severalAccounts = accountIds.length > 1;
+    final drafts = [
+      for (final d
+          in ref.watch(ticketDraftsProvider).value ??
+              const <SavedTicketDraft>[])
+        if (accountIds.contains(d.accountId)) d,
+    ];
     final s = context.spacing;
     final menu = ref.watch(newTicketMenuProvider);
     final anchor = MenuAnchor(
@@ -109,10 +119,27 @@ class NewTicketRailButton extends ConsumerWidget {
                     ? l.newBug
                     : l.newTask,
               ),
+            for (final (i, draft) in drafts.indexed)
+              AppMenuEntry(
+                icon: draft is SavedBugDraft
+                    ? LucideIcons.bug300
+                    : LucideIcons.checkSquare300,
+                label: l.ticketDraftEntry(
+                  draft.title.isEmpty
+                      ? l.ticketDraftUntitled
+                      : _short(draft.title),
+                ),
+                dividerBefore: i == 0,
+              ),
           ],
           onSelected: (i) {
             menu.close();
-            _openEditor(ref, choices[i].route);
+            _openEditor(
+              ref,
+              i < choices.length
+                  ? choices[i].route
+                  : _draftRoute(drafts[i - choices.length]),
+            );
           },
         ),
       ],
@@ -157,6 +184,29 @@ class NewTicketShortcut extends ConsumerWidget {
     );
   }
 }
+
+/// The editor route that picks [draft] up again.
+TicketEditorRoute _draftRoute(SavedTicketDraft draft) => switch (draft) {
+  SavedBugDraft(:final accountId, :final id, draft: final bug) => NewBugRoute(
+    accountId: accountId,
+    productId: bug.product,
+    draftId: id,
+  ),
+  SavedTaskDraft(:final accountId, :final id, draft: final task) =>
+    NewTaskRoute(
+      accountId: accountId,
+      executionId: task.execution,
+      draftId: id,
+    ),
+};
+
+/// Longest draft title the menu shows whole, so a long one does not stretch
+/// the menu across the window.
+const _draftTitleLength = 40;
+
+String _short(String title) => title.length <= _draftTitleLength
+    ? title
+    : '${title.substring(0, _draftTitleLength).trimRight()}…';
 
 /// Opens the editor on [route] over whatever is showing.
 void _openEditor(WidgetRef ref, TicketEditorRoute route) =>

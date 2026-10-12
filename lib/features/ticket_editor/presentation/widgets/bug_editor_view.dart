@@ -10,9 +10,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/bug_editor_controller.dart';
 import 'bug_main_fields.dart';
 import 'bug_side_fields.dart';
+import 'confirm_discard_draft.dart';
 import 'editor_columns.dart';
 import 'editor_header.dart';
 import 'editor_shortcuts.dart';
+import 'rich_text_draft_sync.dart';
 
 /// Adds or edits a bug, full screen; saving opens the saved bug.
 class BugEditorView extends ConsumerStatefulWidget {
@@ -24,22 +26,46 @@ class BugEditorView extends ConsumerStatefulWidget {
   ConsumerState<BugEditorView> createState() => _BugEditorViewState();
 }
 
-class _BugEditorViewState extends ConsumerState<BugEditorView> {
+class _BugEditorViewState extends ConsumerState<BugEditorView>
+    with RichTextDraftSync {
   /// The steps' rich text, made once the bug has loaded.
   HtmlEditingController? _steps;
 
   @override
   void dispose() {
+    stopRichTextSync();
     _steps?.dispose();
     super.dispose();
   }
 
-  void _close() => ref.read(appNavProvider.notifier).closeEditor();
+  HtmlEditingController _startSteps(String html) {
+    final text = HtmlEditingController(html: html);
+    syncRichText(text, (html) {
+      final provider = bugEditorProvider(widget.route);
+      if (ref.read(provider).asData?.value.draft.steps == html) return;
+      ref.read(provider.notifier).edit((d) => d.copyWith(steps: html));
+    });
+    return text;
+  }
+
+  void _close() {
+    // The draft keeps what was typed last.
+    pushRichText();
+    ref.read(appNavProvider.notifier).closeEditor();
+  }
+
+  Future<void> _discardDraft() async {
+    if (!await confirmDiscardDraft(context) || !mounted) return;
+    final controller = ref.read(bugEditorProvider(widget.route).notifier);
+    // Not deleted: the editor stays open, the header saying why.
+    if (!await controller.discardDraft() || !mounted) return;
+    stopRichTextSync();
+    ref.read(appNavProvider.notifier).closeEditor();
+  }
 
   Future<void> _save() async {
     final controller = ref.read(bugEditorProvider(widget.route).notifier);
-    final steps = _steps;
-    if (steps != null) controller.edit((d) => d.copyWith(steps: steps.html));
+    pushRichText();
     final messenger = ScaffoldMessenger.of(context);
     final saved = AppL10n.of(context).formSaved;
     final ticketId = await controller.save();
@@ -60,7 +86,7 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
     final async = ref.watch(bugEditorProvider(route));
     final state = async.asData?.value;
     if (state != null) {
-      _steps ??= HtmlEditingController(html: state.draft.steps);
+      _steps ??= _startSteps(state.draft.steps);
     }
     final steps = _steps;
     final save = state == null || state.saving ? null : _save;
@@ -77,6 +103,8 @@ class _BugEditorViewState extends ConsumerState<BugEditorView> {
             onSave: state == null ? null : _save,
             saving: state?.saving ?? false,
             error: state?.failure?.message,
+            draftSaved: state?.draftSavedAt != null,
+            onDiscardDraft: state?.draftSavedAt == null ? null : _discardDraft,
           ),
           Expanded(
             child: switch (async) {
