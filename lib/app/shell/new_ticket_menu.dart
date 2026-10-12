@@ -9,14 +9,10 @@ import '../../core/domain/entities/account.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/navigation/ticket_editor_route.dart';
-import '../../core/settings/app_settings.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_context_menu.dart';
 import '../../core/widgets/app_rail_button.dart';
 import '../../features/board/presentation/board_providers.dart';
-import '../../features/ticket_editor/domain/entities/saved_ticket_draft.dart';
-import '../../features/ticket_editor/presentation/providers/ticket_draft_providers.dart';
-import '../../features/ticket_editor/presentation/util/ticket_draft_labels.dart';
 import '../../l10n/app_localizations.dart';
 
 /// A new ZenTao bug or task the "+" menu offers, in [account].
@@ -72,8 +68,7 @@ bool get _isMac => defaultTargetPlatform == TargetPlatform.macOS;
 
 /// The "+" rail button (the rail's accent-filled primary action, with a
 /// divider under it): a menu of the new bugs and tasks
-/// [newTicketChoicesProvider] offers, then the kept drafts to pick up again;
-/// hidden without a ZenTao account.
+/// [newTicketChoicesProvider] offers; hidden without a ZenTao account.
 class NewTicketRailButton extends ConsumerWidget {
   const NewTicketRailButton({super.key});
 
@@ -82,17 +77,7 @@ class NewTicketRailButton extends ConsumerWidget {
     final l = AppL10n.of(context);
     final choices = ref.watch(newTicketChoicesProvider);
     if (choices.isEmpty) return const SizedBox.shrink();
-    final accountIds = choices.map((c) => c.account.id).toSet();
-    final severalAccounts = accountIds.length > 1;
-    final dateFormat = ref.watch(
-      appSettingsProvider.select((s) => s.dateFormat),
-    );
-    final drafts = [
-      for (final d
-          in ref.watch(ticketDraftsProvider).value ??
-              const <SavedTicketDraft>[])
-        if (accountIds.contains(d.accountId)) d,
-    ];
+    final severalAccounts = choices.map((c) => c.account.id).toSet().length > 1;
     final s = context.spacing;
     final menu = ref.watch(newTicketMenuProvider);
     final anchor = MenuAnchor(
@@ -117,25 +102,10 @@ class NewTicketRailButton extends ConsumerWidget {
                     ? l.newBug
                     : l.newTask,
               ),
-            for (final (i, draft) in drafts.indexed)
-              AppMenuEntry(
-                icon: draft is SavedBugDraft
-                    ? LucideIcons.bug300
-                    : LucideIcons.checkSquare300,
-                label: l.ticketDraftEntry(
-                  draftLabel(context, draft, dateFormat: dateFormat),
-                ),
-                dividerBefore: i == 0,
-              ),
           ],
           onSelected: (i) {
             menu.close();
-            _openEditor(
-              ref,
-              i < choices.length
-                  ? choices[i].route
-                  : draftRoute(drafts[i - choices.length]),
-            );
+            _openEditor(ref, choices[i].route);
           },
         ),
       ],

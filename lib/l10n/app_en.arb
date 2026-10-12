@@ -1440,14 +1440,6 @@
   "ticketDraftDiscard": "Discard draft",
   "ticketDraftDiscardTitle": "Discard this draft?",
   "ticketDraftDiscardMessage": "What you wrote will be deleted.",
-  "ticketDraftEntry": "Draft: {title}",
-  "@ticketDraftEntry": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "ticketDraftUntitled": "Untitled",
   "ticketDraftLabel": "{title} · {when}",
   "@ticketDraftLabel": {
