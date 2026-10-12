@@ -84,7 +84,7 @@ void main() {
       return _json({'id': 1});
     });
     final client = _client(fake);
-    await client.api.entity('bugs', '1');
+    await client.entity('bugs', '1');
     final getReq = fake.requests.firstWhere((r) => r.path.contains('bugs/1'));
     expect(getReq.headers['Token'], 'tok123');
   });
@@ -207,6 +207,37 @@ void main() {
       expect(detailCalls, hasLength(1));
     },
   );
+
+  test('getTicket reads the classic page when v1 answers empty', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/bugs/4302')) {
+        return ResponseBody.fromString(
+          '',
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        );
+      }
+      if (opts.uri.path.endsWith('/bug-view-4302.json')) {
+        return _json({
+          'status': 'success',
+          'data': jsonEncode({
+            'bug': {'id': 4302, 'title': 'Login loops', 'status': 'active'},
+          }),
+        });
+      }
+      return _json(const {});
+    });
+
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final res = await adapter.getTicket(_bugTicket());
+
+    final t = (res as Ok<Ticket>).value;
+    expect(t.externalKey, '4302');
+    expect(t.title, 'Login loops');
+  });
 
   test('getTicket fetches v1 detail and keeps its HTML steps', () async {
     final fake = _FakeAdapter((opts) {

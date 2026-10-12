@@ -31,13 +31,4 @@ abstract class ZenTaoApi {
   /// Users the current account may assign to.
   @GET('/users')
   Future<ZenTaoUsersResponse> users(@Query('limit') int limit);
-
-  /// Full detail for one entity, e.g. `GET /bugs/4302`.
-  ///
-  /// The write actions (assign / resolve / activate / confirm) are NOT here:
-  /// this ZenTao build has no `/bugs/{id}/<action>` REST endpoints (they 404),
-  /// so they go through the classic `index.php` channel in [ZenTaoAdapter] via
-  /// `ZenTaoClient.classicActionPost`.
-  @GET('/{type}/{id}')
-  Future<ZenTaoEntity> entity(@Path('type') String type, @Path('id') String id);
 }
