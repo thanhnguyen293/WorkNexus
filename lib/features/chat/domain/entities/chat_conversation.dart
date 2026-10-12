@@ -19,6 +19,10 @@ abstract class ChatConversation with _$ChatConversation {
     DateTime? lastActiveAt,
     ChatMessage? lastMessage,
     int? peerUserId,
+
+    /// The one-to-one chat with yourself ("My Cloud"): notes, links and files
+    /// you send to keep, synced to your other devices by the server.
+    @Default(false) bool isMyCloud,
     @Default(false) bool hidden,
     @Default(false) bool archived,
 

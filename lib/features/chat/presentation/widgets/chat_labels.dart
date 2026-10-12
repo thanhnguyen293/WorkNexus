@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -63,6 +64,7 @@ String chatTitle(
   ChatConversation chat,
   Map<int, ChatUser> users,
 ) {
+  if (chat.isMyCloud) return AppL10n.of(context).chatMyCloud;
   final resolved = const ResolveChatTitle()(chat, users);
   if (resolved != null) return resolved;
   final peer = chat.peerUserId;
@@ -216,17 +218,34 @@ String _stripMarkdown(String text) => text
     )
     .replaceAll(RegExp(r'(\*\*|__|\*|~~|`)'), '');
 
-/// How a chat's avatar is drawn: a picture, or a text on a colour (groups
-/// that set one); null fields fall back to the title's initials.
-({String? imageUrl, String? label, Color? background}) chatAvatarStyle(
+/// How a chat's avatar is drawn: a picture, a text on a colour (groups
+/// that set one) or a glyph (My Cloud); null fields fall back to the title's
+/// initials.
+typedef ChatAvatarStyle = ({
+  String? imageUrl,
+  String? label,
+  Color? background,
+  IconData? icon,
+});
+
+ChatAvatarStyle chatAvatarStyle(
   ChatConversation chat,
   Map<int, ChatUser> users,
 ) {
+  if (chat.isMyCloud) {
+    return (
+      imageUrl: null,
+      label: null,
+      background: null,
+      icon: LucideIcons.cloud300,
+    );
+  }
   if (chat.type == ChatType.one2one) {
     return (
       imageUrl: chatAvatarUrl(users, chat.peerUserId),
       label: null,
       background: null,
+      icon: null,
     );
   }
   return switch (ChatGroupAvatar.fromJson(chat.avatarJson)) {
@@ -234,13 +253,15 @@ String _stripMarkdown(String text) => text
       imageUrl: url,
       label: null,
       background: null,
+      icon: null,
     ),
     ChatTextAvatar(:final text, :final color) => (
       imageUrl: null,
       label: text,
       background: chatHexColor(color),
+      icon: null,
     ),
-    null => (imageUrl: null, label: null, background: null),
+    null => (imageUrl: null, label: null, background: null, icon: null),
   };
 }
 

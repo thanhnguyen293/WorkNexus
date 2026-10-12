@@ -208,6 +208,7 @@ ChatConversation conversationFromRow(
       selfUserId != null &&
       lastMessage.senderId == selfUserId;
   final unread = mineLast ? 0 : row.lastMessageIndex - row.lastReadIndex;
+  final peer = type == ChatType.one2one ? peerOf(row.gid, selfUserId) : null;
   return ChatConversation(
     accountId: row.accountId,
     gid: row.gid,
@@ -218,7 +219,8 @@ ChatConversation conversationFromRow(
     lastMessage: lastMessage == null
         ? null
         : messageFromRow(lastMessage, selfUserId: selfUserId, parse: parse),
-    peerUserId: type == ChatType.one2one ? peerOf(row.gid, selfUserId) : null,
+    peerUserId: peer,
+    isMyCloud: peer != null && peer == selfUserId,
     hidden: row.hidden,
     archived: row.archived,
     starred: row.starred,

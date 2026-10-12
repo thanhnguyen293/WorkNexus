@@ -50,7 +50,9 @@ class ChatInfoPanel extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final oneToOne = chat.type == ChatType.one2one;
-    final peer = oneToOne ? users[chat.peerUserId] : null;
+    // My Cloud's "peer" is you: your own contact details are left out.
+    final withPeer = oneToOne && !chat.isMyCloud;
+    final peer = withPeer ? users[chat.peerUserId] : null;
     final title = chatTitle(context, chat, users);
     final owner = users.values
         .where((u) => u.account == chat.ownerAccount)
@@ -63,6 +65,7 @@ class ChatInfoPanel extends ConsumerWidget {
         ? null
         : ref.watch(chatMemberCountProvider(thread)).value;
     final subtitle = switch (members) {
+      _ when chat.isMyCloud => l.chatMyCloudHint,
       Ok(:final value) => l.chatMembers(value),
       _ when peer?.status != null => chatPresenceLabel(
         context,
@@ -141,10 +144,11 @@ class ChatInfoPanel extends ConsumerWidget {
               imageUrl: avatar.imageUrl,
               label: avatar.label,
               background: avatar.background,
-              presence: oneToOne
+              icon: avatar.icon,
+              presence: withPeer
                   ? chatPresenceOf(users, chat.peerUserId)
                   : null,
-              verified: oneToOne
+              verified: withPeer
                   ? chatVerifiedBadge(context, users, chat.peerUserId)
                   : null,
               diameter: s.xl6 * 2,

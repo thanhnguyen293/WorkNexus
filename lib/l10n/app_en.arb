@@ -658,6 +658,8 @@
   "chatOffline": "Offline",
   "chatChangeGroupAvatar": "Change group picture",
   "chatMyProfile": "Your profile",
+  "chatMyCloud": "My Cloud",
+  "chatMyCloudHint": "Notes, links and files you keep for yourself",
   "chatViewFullProfile": "View profile",
   "profileBasicInfo": "Basic Info",
   "profileContactInfo": "Contact Info",

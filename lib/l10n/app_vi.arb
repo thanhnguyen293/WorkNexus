@@ -623,6 +623,8 @@
   "chatOffline": "Ngoại tuyến",
   "chatChangeGroupAvatar": "Đổi ảnh nhóm",
   "chatMyProfile": "Hồ sơ của bạn",
+  "chatMyCloud": "Cloud của tôi",
+  "chatMyCloudHint": "Lưu ghi chú, link và file cho riêng bạn",
   "chatViewFullProfile": "Xem hồ sơ",
   "profileBasicInfo": "Thông tin cơ bản",
   "profileContactInfo": "Thông tin liên hệ",

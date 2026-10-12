@@ -18,6 +18,7 @@ import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
 import 'chat_list_tabs.dart';
+import 'chat_panels.dart';
 import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
 import 'chat_side_panel_frame.dart';
@@ -105,6 +106,7 @@ class ConversationListPane extends ConsumerWidget {
                   SizedBox(width: context.spacing.md),
                   Expanded(child: ChatSearchField(hint: l.chatSearch)),
                   SizedBox(width: context.spacing.xs),
+                  _MyCloudButton(accountId: accountId),
                   AppIconButton(
                     icon: LucideIcons.squarePen300,
                     tooltip: l.chatNewChat,
@@ -184,10 +186,10 @@ class ConversationListPane extends ConsumerWidget {
                         chat: e.chat,
                         title: e.title,
                         avatar: chatAvatarStyle(e.chat, users),
-                        presence: e.chat.type == ChatType.one2one
+                        presence: _withPeer(e.chat)
                             ? chatPresenceOf(users, e.chat.peerUserId)
                             : null,
-                        verified: e.chat.type == ChatType.one2one
+                        verified: _withPeer(e.chat)
                             ? chatVerifiedBadge(
                                 context,
                                 users,
@@ -214,6 +216,34 @@ class ConversationListPane extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A one-to-one chat with someone else: their presence and badge show.
+bool _withPeer(ChatConversation chat) =>
+    chat.type == ChatType.one2one && !chat.isMyCloud;
+
+/// Opens My Cloud, the chat with yourself (created on first use).
+class _MyCloudButton extends ConsumerWidget {
+  const _MyCloudButton({required this.accountId});
+
+  final String accountId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final self = ref.watch(chatSelfUserIdProvider(accountId)).value;
+    return AppIconButton(
+      icon: LucideIcons.cloud300,
+      tooltip: AppL10n.of(context).chatMyCloud,
+      onPressed: self == null
+          ? null
+          : () => openDirectChatWith(
+              context,
+              ref,
+              accountId: accountId,
+              userId: self,
+            ),
     );
   }
 }
