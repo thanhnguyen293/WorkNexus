@@ -25,6 +25,7 @@ class SidebarView extends ConsumerWidget {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              key: const PageStorageKey('workspace-tree'),
               padding: EdgeInsets.fromLTRB(
                 context.spacing.md,
                 context.spacing.xl,

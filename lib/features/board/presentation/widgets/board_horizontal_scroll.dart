@@ -30,6 +30,9 @@ class _BoardHorizontalScrollState extends State<BoardHorizontalScroll> {
     child: ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
       child: SingleChildScrollView(
+        // Brings the scroll back when the board is reopened (switching main
+        // views rebuilds it).
+        key: const PageStorageKey('board-columns'),
         controller: _controller,
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.all(context.spacing.xl2),

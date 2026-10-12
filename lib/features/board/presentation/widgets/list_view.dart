@@ -32,8 +32,11 @@ class TaskListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rows = ref.watch(listRowsProvider);
+    // Page-storage keys bring the scroll back when the board is reopened
+    // (switching main views rebuilds it).
     return Scrollbar(
       child: SingleChildScrollView(
+        key: const PageStorageKey('board-list-x'),
         scrollDirection: Axis.horizontal,
         child: SizedBox(
           width: _minTableWidth,
@@ -42,6 +45,7 @@ class TaskListView extends ConsumerWidget {
               const _HeaderRow(),
               Expanded(
                 child: ListView.builder(
+                  key: const PageStorageKey('board-list-y'),
                   itemCount: rows.length,
                   itemBuilder: (context, i) => _Row(rows[i]),
                 ),
