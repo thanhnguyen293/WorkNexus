@@ -12,21 +12,22 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/usecases/import_sticker_pack.dart';
 import '../../domain/usecases/parse_sticker_pack_link.dart';
+import '../providers/sticker_import_jobs.dart';
 import '../providers/sticker_providers.dart';
 
-/// Imports a Telegram sticker set from its link, asking for the bot token
-/// the first time (it is kept for next time). Resolves to what was imported,
-/// or null when closed.
+/// Starts importing a Telegram sticker set from its link, asking for the bot
+/// token the first time (it is kept for next time). It waits only until
+/// Telegram has listed the set — so a bad link or token is said here — and
+/// leaves the import to go on in the background. Resolves to the set's
+/// title, or null when closed.
 class ImportStickerPackDialog extends ConsumerStatefulWidget {
   const ImportStickerPackDialog({super.key});
 
-  static Future<ImportedStickerPack?> show(BuildContext context) =>
-      showDialog<ImportedStickerPack>(
-        context: context,
-        builder: (_) => const ImportStickerPackDialog(),
-      );
+  static Future<String?> show(BuildContext context) => showDialog<String>(
+    context: context,
+    builder: (_) => const ImportStickerPackDialog(),
+  );
 
   @override
   ConsumerState<ImportStickerPackDialog> createState() =>
@@ -42,7 +43,6 @@ class _ImportStickerPackDialogState
   String? _savedToken;
   bool _editToken = false;
   bool _busy = false;
-  ({int done, int total})? _progress;
   String? _linkError;
   String? _tokenError;
   String? _error;
@@ -80,19 +80,10 @@ class _ImportStickerPackDialogState
       _error = null;
     });
     if (badLink || noToken) return;
-    setState(() {
-      _busy = true;
-      _progress = null;
-    });
+    setState(() => _busy = true);
     final result = await ref
-        .read(telegramStickerImporterProvider)
-        .import(
-          _link.text,
-          token: token,
-          onProgress: (done, total) {
-            if (mounted) setState(() => _progress = (done: done, total: total));
-          },
-        );
+        .read(stickerImportsProvider.notifier)
+        .start(_link.text, token: token);
     if (!mounted) return;
     switch (result) {
       case Ok(:final value):
@@ -120,7 +111,6 @@ class _ImportStickerPackDialogState
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final progress = _progress;
     final error = _error;
     return AppDialogFrame(
       title: l.stickerImportTitle,
@@ -200,20 +190,14 @@ class _ImportStickerPackDialogState
               ),
             if (_busy) ...[
               SizedBox(height: s.xl),
-              LinearProgressIndicator(
-                value: progress == null || progress.total == 0
-                    ? null
-                    : progress.done / progress.total,
-              ),
-              if (progress != null) ...[
-                SizedBox(height: s.sm),
-                Text(
-                  l.stickerImportProgress(progress.done, progress.total),
-                  style: context.typography.caption.copyWith(
-                    color: c.textSecondary,
-                  ),
+              const LinearProgressIndicator(),
+              SizedBox(height: s.sm),
+              Text(
+                l.stickerImportChecking,
+                style: context.typography.caption.copyWith(
+                  color: c.textSecondary,
                 ),
-              ],
+              ),
             ],
             if (error != null) ...[
               SizedBox(height: s.lg),

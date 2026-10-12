@@ -190,5 +190,39 @@ void main() {
       expect(res.valueOrNull?.added, 1);
       expect(kept.single.bytes.single, 7);
     });
+
+    test('stickers are fetched in parallel but kept in order', () async {
+      set([
+        for (var i = 0; i < 6; i++)
+          RemoteSticker(fileId: '$i', kind: RemoteStickerKind.still),
+      ]);
+      var running = 0;
+      var most = 0;
+      when(() => source.file(any(), token: 't')).thenAnswer((call) async {
+        final id = int.parse(call.positionalArguments.single as String);
+        most = ++running > most ? running : most;
+        // Later stickers answer sooner.
+        await Future<void>.delayed(Duration(milliseconds: 30 - id * 5));
+        running--;
+        return Ok(Uint8List.fromList([id]));
+      });
+      String? listedTitle;
+      int? listedTotal;
+
+      final res = await import(
+        'Cats',
+        token: 't',
+        onListed: (title, total) {
+          listedTitle = title;
+          listedTotal = total;
+        },
+      );
+
+      expect(res.valueOrNull?.added, 6);
+      expect((listedTitle, listedTotal), ('Cats!', 6));
+      expect(most, 4);
+      expect(kept.map((f) => f.name).first, '001.webp');
+      expect(kept.map((f) => f.bytes.single), [100, 101, 102, 103, 104, 105]);
+    });
   });
 }
