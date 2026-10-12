@@ -15,10 +15,12 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_notification.dart';
 import '../util/notification_actions.dart';
 
-/// One notification: the linked object's kind and title (bold while unread),
-/// who did what, and its reference and time, on a card. Unread cards take
-/// a faint accent tint, an accent border and a dot; read/unread and delete appear on hover so the list
-/// stays calm. Tapping opens the object.
+/// One notification, read top-down by what matters: who did what (the
+/// line to scan, bold while unread), then the ticket it was done to (its
+/// number and title, quieter), with the time at the top right. Unread cards
+/// take a faint accent tint, an accent border and a dot; read/unread and
+/// delete replace the time on hover so the list stays calm. Tapping opens
+/// the object.
 class NotificationCard extends ConsumerStatefulWidget {
   const NotificationCard({super.key, required this.notification});
 
@@ -70,49 +72,33 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          hasTitle ? title : n.summary,
+                          n.summary.isEmpty && hasTitle ? title : n.summary,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: (unread ? t.bodyStrong : t.body).copyWith(
-                            color: unread ? c.textPrimary : c.textSecondary,
+                          style: t.cardTitle.copyWith(
+                            fontWeight: unread
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: c.textPrimary,
                           ),
                         ),
-                        if (hasTitle) ...[
-                          SizedBox(height: s.xxs),
-                          Text(
-                            n.summary,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: t.bodySm.copyWith(color: c.textSecondary),
-                          ),
+                        if (hasTitle || n.objectId != null) ...[
+                          SizedBox(height: s.xs),
+                          _TicketLine(notification: n),
                         ],
-                        SizedBox(height: s.xs),
-                        _Meta(notification: n),
                       ],
                     ),
                   ),
                   SizedBox(width: s.sm),
                   SizedBox(
-                    // Room for the two hover actions, so revealing them
-                    // never reflows the text.
+                    // Room for the two hover actions, so swapping them in for
+                    // the time never reflows the text.
                     width: context.sizes.controlSm * 2,
                     child: Align(
                       alignment: Alignment.topRight,
                       child: _hover
                           ? _Actions(notification: n)
-                          : unread
-                          ? Padding(
-                              padding: EdgeInsets.all(s.sm),
-                              child: Container(
-                                width: s.md,
-                                height: s.md,
-                                decoration: BoxDecoration(
-                                  color: c.accent,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            )
-                          : null,
+                          : _TimeAndDot(notification: n),
                     ),
                   ),
                 ],
@@ -125,9 +111,40 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
   }
 }
 
-/// "Bug #6492 · 14:05" — the object's reference and the time.
-class _Meta extends StatelessWidget {
-  const _Meta({required this.notification});
+/// "#6492 Feed: video autoplay…" — the ticket the event was about, its
+/// number set off in mono; the kind is the icon's to show.
+class _TicketLine extends StatelessWidget {
+  const _TicketLine({required this.notification});
+
+  final ZenTaoNotification notification;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final t = context.typography;
+    final n = notification;
+    final title = n.objectTitle;
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (n.objectId case final id?)
+            TextSpan(
+              text: '#$id  ',
+              style: t.monoSm.copyWith(color: c.textTertiary),
+            ),
+          if (title != null && title.isNotEmpty) TextSpan(text: title),
+        ],
+      ),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: t.paragraphSm.copyWith(color: c.textSecondary),
+    );
+  }
+}
+
+/// The time at the card's top right, and under it the unread dot.
+class _TimeAndDot extends StatelessWidget {
+  const _TimeAndDot({required this.notification});
 
   final ZenTaoNotification notification;
 
@@ -135,35 +152,31 @@ class _Meta extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    final t = context.typography;
-    final n = notification;
-    final at = n.createdAt?.toLocal();
-    final type = n.objectType;
-    final ref = switch ((type, n.objectId)) {
-      (final type?, final id?) =>
-        '${type[0].toUpperCase()}${type.substring(1)} #$id',
-      (null, final id?) => '#$id',
-      _ => null,
-    };
-    return Row(
-      children: [
-        if (ref != null) ...[
-          Text(ref, style: t.monoSm.copyWith(color: c.textTertiary)),
+    final at = notification.createdAt?.toLocal();
+    return Padding(
+      padding: EdgeInsets.only(top: s.xxs, right: s.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
           if (at != null)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: s.sm),
-              child: Text(
-                '·',
-                style: t.caption.copyWith(color: c.textTertiary),
+            Text(
+              DateFormat('HH:mm').format(at),
+              style: context.typography.meta.copyWith(color: c.textTertiary),
+            ),
+          if (!notification.read) ...[
+            SizedBox(height: s.sm),
+            Container(
+              width: s.md,
+              height: s.md,
+              decoration: BoxDecoration(
+                color: c.accent,
+                shape: BoxShape.circle,
               ),
             ),
+          ],
         ],
-        if (at != null)
-          Text(
-            DateFormat('HH:mm').format(at),
-            style: t.caption.copyWith(color: c.textTertiary),
-          ),
-      ],
+      ),
     );
   }
 }
