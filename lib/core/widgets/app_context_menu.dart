@@ -143,6 +143,16 @@ class _MenuLayout extends SingleChildLayoutDelegate {
       anchor != old.anchor || margin != old.margin;
 }
 
+/// The style for a `MenuAnchor` whose menu is an [AppMenuPanel]: the panel
+/// draws the card, so Material's own surface stays bare.
+const appMenuAnchorStyle = MenuStyle(
+  backgroundColor: WidgetStatePropertyAll(Colors.transparent),
+  surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+  shadowColor: WidgetStatePropertyAll(Colors.transparent),
+  elevation: WidgetStatePropertyAll(0),
+  padding: WidgetStatePropertyAll(EdgeInsets.zero),
+);
+
 /// The app's menu card: [entries] as compact rows on a raised panel. Shown
 /// by [showAppContextMenu], and usable as a [MenuAnchor]'s only child for a
 /// menu anchored to a button.

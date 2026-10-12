@@ -11,6 +11,7 @@ import '../providers/bug_editor_controller.dart';
 import 'bug_main_fields.dart';
 import 'bug_side_fields.dart';
 import 'confirm_discard_draft.dart';
+import 'draft_picker_button.dart';
 import 'editor_columns.dart';
 import 'editor_header.dart';
 import 'editor_shortcuts.dart';
@@ -52,6 +53,12 @@ class _BugEditorViewState extends ConsumerState<BugEditorView>
     // The draft keeps what was typed last.
     pushRichText();
     ref.read(appNavProvider.notifier).closeEditor();
+  }
+
+  /// Switches to another kept draft; this one keeps what was typed last.
+  void _openDraft(TicketEditorRoute route) {
+    pushRichText();
+    ref.read(appNavProvider.notifier).openEditor(route);
   }
 
   Future<void> _discardDraft() async {
@@ -104,6 +111,16 @@ class _BugEditorViewState extends ConsumerState<BugEditorView>
             saving: state?.saving ?? false,
             error: state?.failure?.message,
             draftSaved: state?.draftSavedAt != null,
+            draftPicker: switch (route) {
+              NewBugRoute(:final accountId, :final draftId) =>
+                DraftPickerButton(
+                  isBug: true,
+                  accountId: accountId,
+                  currentDraftId: state?.draftId ?? draftId,
+                  onPick: _openDraft,
+                ),
+              _ => null,
+            },
             onDiscardDraft: state?.draftSavedAt == null ? null : _discardDraft,
           ),
           Expanded(

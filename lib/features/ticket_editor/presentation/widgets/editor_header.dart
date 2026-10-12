@@ -23,6 +23,7 @@ class EditorHeader extends StatelessWidget {
     this.saving = false,
     this.error,
     this.draftSaved = false,
+    this.draftPicker,
     this.onDiscardDraft,
   });
 
@@ -39,6 +40,9 @@ class EditorHeader extends StatelessWidget {
 
   /// A new ticket's draft is kept on this device.
   final bool draftSaved;
+
+  /// Picks another kept draft, beside the title; null for none.
+  final Widget? draftPicker;
 
   /// Deletes the kept draft; null hides the action.
   final VoidCallback? onDiscardDraft;
@@ -82,6 +86,10 @@ class EditorHeader extends StatelessWidget {
                 if (draftSaved) ...[
                   SizedBox(width: s.lg),
                   const _DraftSavedNote(),
+                ],
+                if (draftPicker case final picker?) ...[
+                  SizedBox(width: s.lg),
+                  picker,
                 ],
               ],
             ),
