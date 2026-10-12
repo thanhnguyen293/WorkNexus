@@ -53,6 +53,14 @@ dependencies:
   # (video_player_avfoundation) is a standard method-channel plugin — not a
   # native-assets/FFI build hook — so it does not affect build_runner.
   video_player: 2.9.2
+  # Telegram sticker import: renders an animated (.tgs) sticker's Lottie frames
+  # so they can become an animated WebP. Pure Dart (no native-assets hook);
+  # 3.3.x is the newest that still accepts the SDK floor above.
+  lottie: 3.3.3
+  # Encodes imported stickers as (animated) WebP in pure Dart — 4.12 is the
+  # first release that writes WebP, so no ffmpeg / libwebp is needed. Already a
+  # transitive dependency; pinned here for that encoder.
+  image: 4.12.0
 
   # State management & DI. injectable = annotation-driven registration on top of
   # get_it (codegen via injectable_generator below); resolves on this SDK with

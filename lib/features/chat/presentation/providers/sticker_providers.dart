@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_sticker.dart';
+import '../../domain/repositories/sticker_pack_source.dart';
 import '../../domain/repositories/sticker_repository.dart';
+import '../../domain/usecases/import_sticker_pack.dart';
 import '../../domain/usecases/save_image_as_sticker.dart';
 import '../../domain/usecases/send_sticker.dart';
 import '../../domain/value_objects/message_content.dart';
@@ -21,6 +23,18 @@ final chatStickersProvider =
       (ref) => ref.watch(stickerRepositoryProvider).stickers(),
     );
 
+final stickerPackSourceProvider = Provider<StickerPackSource>(
+  (ref) => getIt<StickerPackSource>(),
+);
+
+final stickerConverterProvider = Provider<StickerConverter>(
+  (ref) => getIt<StickerConverter>(),
+);
+
+final telegramTokenStoreProvider = Provider<TelegramTokenStore>(
+  (ref) => getIt<TelegramTokenStore>(),
+);
+
 final stickerControllerProvider = Provider<StickerController>((ref) {
   final chats = ref.watch(chatRepositoryProvider);
   final stickers = ref.watch(stickerRepositoryProvider);
@@ -32,7 +46,56 @@ final stickerControllerProvider = Provider<StickerController>((ref) {
   );
 });
 
-/// Sending stickers, and keeping the user's own stickers.
+/// Importing Telegram sets; built only when the import dialog asks for it.
+final telegramStickerImporterProvider = Provider<TelegramStickerImporter>(
+  (ref) => TelegramStickerImporter(
+    ImportStickerPack(
+      ref.watch(stickerPackSourceProvider),
+      ref.watch(stickerConverterProvider),
+      ref.watch(stickerRepositoryProvider),
+    ),
+    ref.watch(telegramTokenStoreProvider),
+    onImported: () => ref.invalidate(chatStickersProvider),
+  ),
+);
+
+/// Imports Telegram sticker sets, keeping the bot token that worked.
+class TelegramStickerImporter {
+  TelegramStickerImporter(
+    this._importPack,
+    this._tokens, {
+    required void Function() onImported,
+  }) : _onImported = onImported;
+
+  final ImportStickerPack _importPack;
+  final TelegramTokenStore _tokens;
+  final void Function() _onImported;
+
+  /// The bot token kept from a previous import, if any.
+  Future<String?> savedToken() => _tokens.read();
+
+  /// Imports the set at [link] with [token], which is kept for next time once
+  /// it has worked.
+  Future<Result<ImportedStickerPack>> import(
+    String link, {
+    required String token,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final result = await _importPack(
+      link,
+      token: token,
+      onProgress: onProgress,
+    );
+    if (result is Ok) {
+      await _tokens.write(token);
+      _onImported();
+    }
+    return result;
+  }
+}
+
+/// Sending stickers, keeping the user's own stickers and removing imported
+/// sets.
 class StickerController {
   StickerController(
     this._stickers, {
@@ -47,6 +110,9 @@ class StickerController {
   final SendSticker _sendSticker;
   final SaveImageAsSticker _saveImage;
   final void Function() _onChanged;
+
+  Future<Result<void>> removePack(String pack) =>
+      _changed(_stickers.removePack(pack));
 
   Future<Result<void>> send(ChatThreadKey chat, ChatSticker sticker) =>
       _sendSticker(
