@@ -14,6 +14,7 @@ import '../../../../core/widgets/zentao_kind_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_notification.dart';
 import '../util/notification_actions.dart';
+import '../util/notification_event_text.dart';
 
 /// One notification, read top-down by what matters: who did what (the
 /// line to scan, bold while unread), then the ticket it was done to (its
@@ -72,7 +73,9 @@ class _NotificationCardState extends ConsumerState<NotificationCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          n.summary.isEmpty && hasTitle ? title : n.summary,
+                          n.summary.isEmpty && hasTitle
+                              ? title
+                              : notificationEventText(AppL10n.of(context), n),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: t.cardTitle.copyWith(
