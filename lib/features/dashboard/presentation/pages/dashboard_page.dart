@@ -41,11 +41,14 @@ class DashboardPage extends ConsumerWidget {
     final workKind = ref.watch(dashboardWorkKindProvider);
     final padding = EdgeInsets.fromLTRB(s.xl5, s.xl4, s.xl5, s.xl5);
     if (workKind != null) {
+      // Tasks and bugs side by side: wider than the overview's frame.
       return _Layout(
+        maxWidth: _Frame.wideContentWidth,
         header: DashboardWorkHeader(account: account, kind: workKind),
         body: Padding(
           padding: padding,
           child: _Frame(
+            maxWidth: _Frame.wideContentWidth,
             child: DashboardWorkView(account: account, kind: workKind),
           ),
         ),
@@ -92,10 +95,17 @@ class DashboardPage extends ConsumerWidget {
 /// The page's chrome: [header] on a surface bar set off from the content
 /// by a hairline, like the chat header, over the scrolling [body].
 class _Layout extends StatelessWidget {
-  const _Layout({required this.header, required this.body});
+  const _Layout({
+    required this.header,
+    required this.body,
+    this.maxWidth = _Frame.contentWidth,
+  });
 
   final Widget header;
   final Widget body;
+
+  /// How wide the header's content may grow, matching [body]'s frame.
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +123,7 @@ class _Layout extends StatelessWidget {
             ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(s.xl5, s.xl, s.xl5, s.xl),
-              child: _Frame(child: header),
+              child: _Frame(maxWidth: maxWidth, child: header),
             ),
           ),
           Expanded(child: body),
@@ -126,17 +136,19 @@ class _Layout extends StatelessWidget {
 /// Top-centers [child] and stops it growing past a readable width, so the
 /// dashboard does not sprawl on wide windows.
 class _Frame extends StatelessWidget {
-  const _Frame({required this.child});
+  const _Frame({required this.child, this.maxWidth = contentWidth});
 
-  static const double _maxContentWidth = 1200;
+  static const double contentWidth = 1200;
+  static const double wideContentWidth = 1600;
 
   final Widget child;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.topCenter,
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+      constraints: BoxConstraints(maxWidth: maxWidth),
       child: SizedBox(width: double.infinity, child: child),
     ),
   );
