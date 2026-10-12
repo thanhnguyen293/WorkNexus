@@ -16,12 +16,10 @@ import 'widgets/workspace_picker.dart';
 /// The token is stored in the OS keychain, never in the DB. Works with both
 /// gitlab.com and self-hosted instances (any base URL).
 class GitLabConnectionDialog extends ConsumerStatefulWidget {
-  const GitLabConnectionDialog({super.key});
+  const GitLabConnectionDialog({super.key, this.onProviderChanged});
 
-  static Future<void> show(BuildContext context) => showDialog(
-    context: context,
-    builder: (_) => const GitLabConnectionDialog(),
-  );
+  /// Shows the provider picker, switching to another provider's form.
+  final ValueChanged<ProviderType>? onProviderChanged;
 
   @override
   ConsumerState<GitLabConnectionDialog> createState() =>
@@ -101,6 +99,7 @@ class _GitLabConnectionDialogState
       busy: state.busy,
       error: state.error,
       onConnect: connect,
+      onProviderChanged: widget.onProviderChanged,
     );
   }
 
