@@ -12,10 +12,10 @@ import 'widgets/workspace_picker.dart';
 /// Modal form for connecting a ZenTao account. The user types their own
 /// credentials; the password is stored in the OS keychain, never in the DB.
 class AddConnectionDialog extends ConsumerStatefulWidget {
-  const AddConnectionDialog({super.key});
+  const AddConnectionDialog({super.key, this.onProviderChanged});
 
-  static Future<void> show(BuildContext context) =>
-      showDialog(context: context, builder: (_) => const AddConnectionDialog());
+  /// Shows the provider picker, switching to another provider's form.
+  final ValueChanged<ProviderType>? onProviderChanged;
 
   @override
   ConsumerState<AddConnectionDialog> createState() =>
@@ -101,6 +101,7 @@ class _AddConnectionDialogState extends ConsumerState<AddConnectionDialog> {
       busy: state.busy,
       error: state.error,
       onConnect: connect,
+      onProviderChanged: widget.onProviderChanged,
     );
   }
 

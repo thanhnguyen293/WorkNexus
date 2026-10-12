@@ -13,10 +13,12 @@ import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'connection_provider_picker.dart';
 import 'workspace_picker.dart';
 
-/// The chrome the ZenTao / GitLab / GitHub connect dialogs share: the provider
-/// badge and blurb, the provider's own [fields], the workspace picker (with a
+/// The chrome the ZenTao / GitLab / GitHub connect dialogs share: the
+/// provider picker (when [onProviderChanged] is given), the provider badge and
+/// blurb, the provider's own [fields], the workspace picker (with a
 /// name field for a new one), the last error, and Cancel / Connect & sync.
 class ConnectionDialogFrame extends StatelessWidget {
   const ConnectionDialogFrame({
@@ -34,6 +36,7 @@ class ConnectionDialogFrame extends StatelessWidget {
     required this.busy,
     required this.error,
     required this.onConnect,
+    this.onProviderChanged,
   });
 
   final ProviderType provider;
@@ -53,6 +56,9 @@ class ConnectionDialogFrame extends StatelessWidget {
 
   /// Null while the form can't be submitted yet.
   final VoidCallback? onConnect;
+
+  /// Switches to another provider's form; null hides the picker.
+  final ValueChanged<ProviderType>? onProviderChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +89,10 @@ class ConnectionDialogFrame extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (onProviderChanged case final onChanged?) ...[
+              ConnectionProviderPicker(value: provider, onChanged: onChanged),
+              SizedBox(height: s.xl2),
+            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

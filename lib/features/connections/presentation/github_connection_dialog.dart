@@ -16,12 +16,10 @@ import 'widgets/workspace_picker.dart';
 /// The token is stored in the OS keychain, never in the DB. Works with both
 /// github.com and GitHub Enterprise Server (any base URL).
 class GitHubConnectionDialog extends ConsumerStatefulWidget {
-  const GitHubConnectionDialog({super.key});
+  const GitHubConnectionDialog({super.key, this.onProviderChanged});
 
-  static Future<void> show(BuildContext context) => showDialog(
-    context: context,
-    builder: (_) => const GitHubConnectionDialog(),
-  );
+  /// Shows the provider picker, switching to another provider's form.
+  final ValueChanged<ProviderType>? onProviderChanged;
 
   @override
   ConsumerState<GitHubConnectionDialog> createState() =>
@@ -101,6 +99,7 @@ class _GitHubConnectionDialogState
       busy: state.busy,
       error: state.error,
       onConnect: connect,
+      onProviderChanged: widget.onProviderChanged,
     );
   }
 
