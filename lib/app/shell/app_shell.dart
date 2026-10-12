@@ -15,6 +15,7 @@ import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
 import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
+import '../../features/chat/presentation/widgets/sticker_import_listener.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/local_cache_card.dart';
 import '../../features/connections/presentation/widgets/local_cache_quick_settings.dart';
@@ -46,78 +47,83 @@ class AppShell extends ConsumerWidget {
     final editor = integrationsVisible ? null : ref.watch(ticketEditorProvider);
 
     return ChatNotificationListener(
-      child: Scaffold(
-        backgroundColor: c.background,
-        body: NewTicketShortcut(
-          child: Column(
-            children: [
-              TitleBar(assignedCount: assigned),
-              Expanded(
-                child: Stack(
-                  children: [
-                    const ZenTaoProfileStartup(),
-                    Row(
-                      children: [
-                        const AppNavRail(),
-                        // The workspace tree belongs to the board only.
-                        if (!integrationsVisible &&
-                            editor == null &&
-                            view == MainView.board)
-                          const ResizableSidebar(),
-                        Expanded(
-                          child: integrationsVisible
-                              ? SettingsPage(
-                                  footer: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const TranslationSettingsCard(),
-                                      SizedBox(height: context.spacing.xl4),
-                                      const UpdateSettingsCard(),
-                                      SizedBox(height: context.spacing.xl4),
-                                      const LocalCacheCard(),
-                                    ],
-                                  ),
-                                )
-                              : editor != null
-                              ? TicketEditorPage(route: editor)
-                              : switch (view) {
-                                  MainView.dashboard => const DashboardPage(),
-                                  MainView.chat => ChatPage(
-                                    onViewProfile: (dialogContext, accountId) {
-                                      for (final account in ref.read(
-                                        chatAccountsProvider,
-                                      )) {
-                                        if (account.id == accountId) {
-                                          ZenTaoProfileDialog.show(
-                                            dialogContext,
-                                            account,
-                                          );
-                                          break;
-                                        }
-                                      }
-                                    },
-                                  ),
-                                  MainView.board => const BoardPage(),
-                                },
-                        ),
-                      ],
-                    ),
-                    NotificationsPanel(leftInset: AppNavRail.widthOf(context)),
-                    const DetailOverlay(),
-                    const QuickSettingsSidePanel(
-                      generalSections: [LocalCacheQuickSettings()],
-                      chatSections: [
-                        ChatAppearanceSettings(),
-                        ChatAutoDownloadSettings(),
-                        ChatNotificationSettings(),
-                      ],
-                    ),
-                    const TalkerDebugOverlay(),
-                  ],
+      child: StickerImportListener(
+        child: Scaffold(
+          backgroundColor: c.background,
+          body: NewTicketShortcut(
+            child: Column(
+              children: [
+                TitleBar(assignedCount: assigned),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      const ZenTaoProfileStartup(),
+                      Row(
+                        children: [
+                          const AppNavRail(),
+                          // The workspace tree belongs to the board only.
+                          if (!integrationsVisible &&
+                              editor == null &&
+                              view == MainView.board)
+                            const ResizableSidebar(),
+                          Expanded(
+                            child: integrationsVisible
+                                ? SettingsPage(
+                                    footer: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const TranslationSettingsCard(),
+                                        SizedBox(height: context.spacing.xl4),
+                                        const UpdateSettingsCard(),
+                                        SizedBox(height: context.spacing.xl4),
+                                        const LocalCacheCard(),
+                                      ],
+                                    ),
+                                  )
+                                : editor != null
+                                ? TicketEditorPage(route: editor)
+                                : switch (view) {
+                                    MainView.dashboard => const DashboardPage(),
+                                    MainView.chat => ChatPage(
+                                      onViewProfile:
+                                          (dialogContext, accountId) {
+                                            for (final account in ref.read(
+                                              chatAccountsProvider,
+                                            )) {
+                                              if (account.id == accountId) {
+                                                ZenTaoProfileDialog.show(
+                                                  dialogContext,
+                                                  account,
+                                                );
+                                                break;
+                                              }
+                                            }
+                                          },
+                                    ),
+                                    MainView.board => const BoardPage(),
+                                  },
+                          ),
+                        ],
+                      ),
+                      NotificationsPanel(
+                        leftInset: AppNavRail.widthOf(context),
+                      ),
+                      const DetailOverlay(),
+                      const QuickSettingsSidePanel(
+                        generalSections: [LocalCacheQuickSettings()],
+                        chatSections: [
+                          ChatAppearanceSettings(),
+                          ChatAutoDownloadSettings(),
+                          ChatNotificationSettings(),
+                        ],
+                      ),
+                      const TalkerDebugOverlay(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

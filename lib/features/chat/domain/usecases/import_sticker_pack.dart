@@ -26,18 +26,32 @@ typedef ImportedStickerPack = ({
 /// here can decode — as their still thumbnail. An animation that cannot be
 /// converted falls back to its thumbnail too.
 class ImportStickerPack {
-  const ImportStickerPack(this._source, this._converter, this._stickers);
+  const ImportStickerPack(
+    this._source,
+    this._converter,
+    this._stickers, {
+    this.parallel = 4,
+  });
 
   final StickerPackSource _source;
   final StickerConverter _converter;
   final StickerRepository _stickers;
 
+  /// How many stickers are fetched and converted at once: downloads wait on
+  /// the network and WebP encoding runs in its own isolate, so a few at a
+  /// time use the time one at a time would leave idle.
+  final int parallel;
+
   /// The pack id an imported set is kept under.
   static String packIdOf(String setName) => 'tg:$setName';
 
+  /// [onListed] is told the set's title and size once Telegram has listed
+  /// it — the link and token are good from there on; [onProgress] after each
+  /// sticker.
   Future<Result<ImportedStickerPack>> call(
     String link, {
     required String token,
+    void Function(String title, int total)? onListed,
     void Function(int done, int total)? onProgress,
   }) async {
     final name = const ParseStickerPackLink()(link);
@@ -51,13 +65,31 @@ class ImportStickerPack {
       case Err(:final failure):
         return Err(failure);
     }
+    final total = set.stickers.length;
+    onListed?.call(set.title, total);
+    // Results by position, so the set keeps Telegram's order however the
+    // parallel work finishes.
+    final results = List<Result<({Uint8List bytes, bool still})>?>.filled(
+      total,
+      null,
+    );
+    var next = 0;
+    var done = 0;
+    Future<void> worker() async {
+      while (next < total) {
+        final i = next++;
+        results[i] = await _webp(set.stickers[i], token);
+        onProgress?.call(++done, total);
+      }
+    }
+
+    await Future.wait([for (var w = 0; w < parallel; w++) worker()]);
     final files = <StickerFile>[];
     var stills = 0;
     var failed = 0;
     Failure? lastFailure;
-    final total = set.stickers.length;
-    for (final (i, sticker) in set.stickers.indexed) {
-      switch (await _webp(sticker, token)) {
+    for (final (i, result) in results.indexed) {
+      switch (result) {
         case Ok(value: (:final bytes, :final still)):
           final number = '${i + 1}'.padLeft(3, '0');
           files.add((name: '$number.webp', bytes: bytes));
@@ -65,8 +97,9 @@ class ImportStickerPack {
         case Err(:final failure):
           failed++;
           lastFailure = failure;
+        case null:
+          failed++;
       }
-      onProgress?.call(i + 1, total);
     }
     if (files.isEmpty) {
       return Err(lastFailure ?? const NotFoundFailure('The set is empty'));

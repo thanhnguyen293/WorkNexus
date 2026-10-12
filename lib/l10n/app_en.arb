@@ -770,6 +770,8 @@
   "chatStickersTab": "Stickers",
   "chatMyStickers": "My stickers",
   "chatAddSticker": "Add sticker from an image",
+  "chatStickerSetsBack": "Previous sets",
+  "chatStickerSetsForward": "Next sets",
   "stickerImportTitle": "Add a Telegram sticker set",
   "stickerImportLink": "Sticker set link",
   "stickerImportLinkHint": "https://t.me/addstickers/…",
@@ -779,14 +781,34 @@
   "stickerImportTokenSaved": "Using the saved bot token",
   "stickerImportChangeToken": "Change",
   "stickerImportAction": "Add set",
-  "stickerImportProgress": "Fetching stickers {done}/{total}…",
-  "@stickerImportProgress": {
+  "stickerImportChecking": "Checking the link…",
+  "stickerImportStarted": "Adding “{title}” in the background…",
+  "@stickerImportStarted": {
     "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "stickerImportRunning": "Adding “{title}” · {done}/{total}",
+  "@stickerImportRunning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
       "done": {
         "type": "int"
       },
       "total": {
         "type": "int"
+      }
+    }
+  },
+  "stickerImportFailedNamed": "“{title}” could not be added.",
+  "@stickerImportFailedNamed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
       }
     }
   },
