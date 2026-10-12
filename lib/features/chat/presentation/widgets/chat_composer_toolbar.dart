@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_emoji_picker.dart';
@@ -64,7 +65,7 @@ class ChatComposerTools extends StatelessWidget {
   }
 }
 
-/// Right of the input: a thumbs-up sends a like (👍) while the input is empty; once there
+/// Right of the input: 👍 sends a like while the input is empty; once there
 /// is text it becomes the send button.
 class ChatComposerSendButton extends StatelessWidget {
   const ChatComposerSendButton({
@@ -102,10 +103,20 @@ class ChatComposerSendButton extends StatelessWidget {
                 ),
                 icon: Icon(LucideIcons.send500, size: context.sizes.iconLg),
               )
-            : ChatComposerToolButton(
-                icon: LucideIcons.thumbsUp300,
+            // The emoji itself, as it is what gets sent.
+            : IconButton(
                 tooltip: l.chatSendLike,
                 onPressed: onLike,
+                padding: EdgeInsets.zero,
+                constraints: box,
+                mouseCursor: WidgetStateMouseCursor.clickable,
+                icon: Text(
+                  '👍',
+                  style: context.typography.titleLg.copyWith(
+                    fontSize: context.spacing.xl5,
+                    height: 1,
+                  ),
+                ),
               );
       },
     );
