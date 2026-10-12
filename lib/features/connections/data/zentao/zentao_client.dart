@@ -9,6 +9,7 @@ import '../../../../core/debug/app_talker.dart';
 import '../../../../core/network/api_paging.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
+import 'zentao_language_interceptor.dart';
 import 'zentao_models.dart';
 
 /// HTTP transport for ZenTao, handling both API generations:
@@ -46,6 +47,9 @@ class ZenTaoClient {
       );
     }
     _api = ZenTaoApi(_dio, baseUrl: _v1);
+    _dio.interceptors.add(
+      ZenTaoLanguageInterceptor(host: () => Uri.parse(_baseUrl).host),
+    );
     _dio.interceptors.add(buildTalkerDioLogger());
     _dio.interceptors.add(
       ZenTaoAuthInterceptor(
