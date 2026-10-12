@@ -1435,6 +1435,20 @@
     }
   },
   "ticketEditorBack": "Back",
+  "ticketDraftSaved": "Draft saved",
+  "ticketDraftSavedHint": "Kept on this device. Files added to it are not kept.",
+  "ticketDraftDiscard": "Discard draft",
+  "ticketDraftDiscardTitle": "Discard this draft?",
+  "ticketDraftDiscardMessage": "What you wrote will be deleted.",
+  "ticketDraftEntry": "Draft: {title}",
+  "@ticketDraftEntry": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketDraftUntitled": "Untitled",
   "ticketEditorSaveFailed": "Couldn't save: {message}",
   "@ticketEditorSaveFailed": {
     "placeholders": {

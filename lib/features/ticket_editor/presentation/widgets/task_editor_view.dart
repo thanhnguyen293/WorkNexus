@@ -8,9 +8,11 @@ import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/task_editor_controller.dart';
+import 'confirm_discard_draft.dart';
 import 'editor_columns.dart';
 import 'editor_header.dart';
 import 'editor_shortcuts.dart';
+import 'rich_text_draft_sync.dart';
 import 'task_main_fields.dart';
 import 'task_side_fields.dart';
 
@@ -24,22 +26,46 @@ class TaskEditorView extends ConsumerStatefulWidget {
   ConsumerState<TaskEditorView> createState() => _TaskEditorViewState();
 }
 
-class _TaskEditorViewState extends ConsumerState<TaskEditorView> {
+class _TaskEditorViewState extends ConsumerState<TaskEditorView>
+    with RichTextDraftSync {
   /// The description's rich text, made once the task has loaded.
   HtmlEditingController? _desc;
 
   @override
   void dispose() {
+    stopRichTextSync();
     _desc?.dispose();
     super.dispose();
   }
 
-  void _close() => ref.read(appNavProvider.notifier).closeEditor();
+  HtmlEditingController _startDesc(String html) {
+    final text = HtmlEditingController(html: html);
+    syncRichText(text, (html) {
+      final provider = taskEditorProvider(widget.route);
+      if (ref.read(provider).asData?.value.draft.desc == html) return;
+      ref.read(provider.notifier).edit((d) => d.copyWith(desc: html));
+    });
+    return text;
+  }
+
+  void _close() {
+    // The draft keeps what was typed last.
+    pushRichText();
+    ref.read(appNavProvider.notifier).closeEditor();
+  }
+
+  Future<void> _discardDraft() async {
+    if (!await confirmDiscardDraft(context) || !mounted) return;
+    final controller = ref.read(taskEditorProvider(widget.route).notifier);
+    // Not deleted: the editor stays open, the header saying why.
+    if (!await controller.discardDraft() || !mounted) return;
+    stopRichTextSync();
+    ref.read(appNavProvider.notifier).closeEditor();
+  }
 
   Future<void> _save() async {
     final controller = ref.read(taskEditorProvider(widget.route).notifier);
-    final desc = _desc;
-    if (desc != null) controller.edit((d) => d.copyWith(desc: desc.html));
+    pushRichText();
     final messenger = ScaffoldMessenger.of(context);
     final saved = AppL10n.of(context).formSaved;
     final ticketId = await controller.save();
@@ -59,7 +85,7 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView> {
     };
     final async = ref.watch(taskEditorProvider(route));
     final state = async.asData?.value;
-    if (state != null) _desc ??= HtmlEditingController(html: state.draft.desc);
+    if (state != null) _desc ??= _startDesc(state.draft.desc);
     final desc = _desc;
     final save = state == null || state.saving ? null : _save;
     return EditorShortcuts(
@@ -75,6 +101,8 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView> {
             onSave: state == null ? null : _save,
             saving: state?.saving ?? false,
             error: state?.failure?.message,
+            draftSaved: state?.draftSavedAt != null,
+            onDiscardDraft: state?.draftSavedAt == null ? null : _discardDraft,
           ),
           Expanded(
             child: switch (async) {
