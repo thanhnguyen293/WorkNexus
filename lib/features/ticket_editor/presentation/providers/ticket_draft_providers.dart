@@ -29,18 +29,19 @@ class DraftAutosave {
 
   Timer? _timer;
 
-  /// Builds what to keep, read when the draft is written so it holds the
-  /// latest change; null when there is nothing worth keeping.
-  SavedTicketDraft? Function()? _pending;
+  /// The latest change, waiting to be kept. A value, not a callback that
+  /// reads the editor: the last one is kept while the editor's provider is
+  /// disposed, when its state can no longer be read.
+  SavedTicketDraft? _pending;
   void Function(Result<DateTime> kept)? _onKept;
 
-  /// Keeps what [build] gives once [delay] passes without another change;
-  /// [onKept] is told when it was kept, or why it could not be.
+  /// Keeps [draft] once [delay] passes without another change; [onKept] is
+  /// told when it was kept, or why it could not be.
   void schedule(
-    SavedTicketDraft? Function() build, {
+    SavedTicketDraft draft, {
     void Function(Result<DateTime> kept)? onKept,
   }) {
-    _pending = build;
+    _pending = draft;
     _onKept = onKept;
     _timer?.cancel();
     _timer = Timer(delay, () => unawaited(flush()));
@@ -50,10 +51,9 @@ class DraftAutosave {
   Future<void> flush() async {
     _timer?.cancel();
     _timer = null;
-    final build = _pending;
+    final draft = _pending;
     final onKept = _onKept;
     _pending = null;
-    final draft = build?.call();
     if (draft == null) return;
     final res = await _repository.save(draft);
     onKept?.call(switch (res) {
