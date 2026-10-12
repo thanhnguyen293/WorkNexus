@@ -8,21 +8,37 @@ import '../providers/chat_providers.dart';
 
 /// Keeps the unread count of followed chats on the app's icon (Dock,
 /// taskbar, launcher). Wraps the app shell so it runs whichever view is open.
-class ChatAppBadge extends ConsumerWidget {
+class ChatAppBadge extends ConsumerStatefulWidget {
   const ChatAppBadge({super.key, required this.child});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(chatBadgeUnreadProvider, (_, count) {
-      final c = context.colors;
-      unawaited(
-        ref
-            .read(appIconBadgeProvider)
-            .show(count, color: c.error, textColor: c.onAccent),
-      );
+  ConsumerState<ChatAppBadge> createState() => _ChatAppBadgeState();
+}
+
+class _ChatAppBadgeState extends ConsumerState<ChatAppBadge> {
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual(chatBadgeUnreadProvider, (_, count) => _show(count));
+    // The count already there (chats loaded before this appeared) too, or
+    // the icon only shows it once it next changes. After this frame: the
+    // colours come from the theme.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _show(ref.read(chatBadgeUnreadProvider));
     });
-    return child;
   }
+
+  void _show(int count) {
+    final c = context.colors;
+    unawaited(
+      ref
+          .read(appIconBadgeProvider)
+          .show(count, color: c.error, textColor: c.onAccent),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
