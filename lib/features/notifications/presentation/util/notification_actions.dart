@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/open_external.dart';
@@ -39,9 +40,10 @@ Future<void> openNotification(
   final url = n.url;
   if (type != null && id != null && _ticketTypes.contains(type)) {
     final opener = ref.read(openTicketIdProvider.notifier);
-    final synced = ref.read(ticketByIdProvider('${n.accountId}:$id'));
-    // Bugs, tasks and stories share id numbers: only the same kind matches.
-    if (synced != null && synced.externalType?.toLowerCase() == type) {
+    final synced = ref.read(
+      ticketByIdProvider(zenTaoTicketId(n.accountId, type, id)),
+    );
+    if (synced != null) {
       opener.open(synced.id);
       return;
     }

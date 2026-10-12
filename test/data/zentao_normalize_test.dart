@@ -92,7 +92,7 @@ void main() {
       baseUrl: 'https://zentao.example.com/',
     );
 
-    expect(t.id, 'ztB:1092');
+    expect(t.id, 'ztB:bug:1092');
     expect(t.providerType, ProviderType.zentao);
     expect(t.externalType, 'Bug');
     expect(t.status, UnifiedStatus.todo); // active + confirmed=1

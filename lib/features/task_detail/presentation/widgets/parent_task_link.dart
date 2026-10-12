@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -36,7 +37,8 @@ class ParentTaskLink extends ConsumerStatefulWidget {
 class _ParentTaskLinkState extends ConsumerState<ParentTaskLink> {
   bool _opening = false;
 
-  String get _id => '${widget.ticket.accountId}:${widget.parentId}';
+  String get _id =>
+      zenTaoTicketId(widget.ticket.accountId, 'task', widget.parentId);
 
   Future<void> _open() async {
     final l = AppL10n.of(context);

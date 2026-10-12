@@ -3,6 +3,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/util/content_hash.dart';
 import '../../../../core/util/html_entities.dart';
 import '../../../../core/util/zentao_labels.dart';
@@ -202,7 +203,7 @@ Ticket normalizeZenTao(
   final projectId = '$accountId:${scopeName.isEmpty ? type.label : scopeName}';
 
   return Ticket(
-    id: '$accountId:$id',
+    id: zenTaoTicketId(accountId, type.name, id),
     accountId: accountId,
     projectId: projectId,
     providerType: ProviderType.zentao,

@@ -5,6 +5,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/semantic.dart';
@@ -67,7 +68,11 @@ class OriginalTab extends ConsumerWidget {
         '#$parentId',
         ?(parentName ??
             ref
-                .watch(ticketByIdProvider('${ticket.accountId}:$parentId'))
+                .watch(
+                  ticketByIdProvider(
+                    zenTaoTicketId(ticket.accountId, 'task', parentId),
+                  ),
+                )
                 ?.title),
       ].join(' · '),
       _ => null,

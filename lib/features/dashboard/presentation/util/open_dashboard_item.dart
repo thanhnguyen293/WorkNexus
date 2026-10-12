@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/account.dart';
+import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
@@ -19,10 +20,10 @@ Future<Result<void>> openDashboardItem(
     return const Err(NotFoundFailure('Todos have no detail view'));
   }
   final opener = ref.read(openTicketIdProvider.notifier);
-  final synced = ref.read(ticketByIdProvider('${account.id}:$id'));
-  // Bugs, tasks and stories share id numbers: only a synced ticket of the
-  // same kind is the one.
-  if (synced != null && synced.externalType?.toLowerCase() == kind.name) {
+  final synced = ref.read(
+    ticketByIdProvider(zenTaoTicketId(account.id, kind.name, id)),
+  );
+  if (synced != null) {
     opener.open(synced.id);
     return const Ok(null);
   }
