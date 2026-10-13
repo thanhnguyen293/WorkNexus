@@ -69,6 +69,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     double? consumed,
     double? left,
     DateTime? realStarted,
+    // Who created the task (login handle): ZenTao hands a finished task back
+    // to them, so its finish form offers them first.
+    String? openedByHandle,
   }) = ZenTaoTaskEntity;
 
   /// Structured metadata for a GitLab issue or merge request. MR-only fields

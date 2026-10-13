@@ -6,9 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/editor_chip.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'editor_chip.dart';
 import 'option_multi_select_dialog.dart';
 
 /// A pick of any number of [options], shown as removable chips; tapping the

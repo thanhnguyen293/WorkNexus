@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/domain/value_objects/zentao_task_action_input.dart';
 import 'zentao_action_result.dart';
@@ -85,9 +87,20 @@ class ZenTaoWorkflow {
     ZenTaoTaskAction action,
     ZenTaoTaskActionInput input,
   ) async {
-    final resp = await _client.classicActionPost(
+    final fields = {'uid': _client.formUid(), ..._taskForm(task, action, input)};
+    final files = action.asksFiles ? input.files : const <DraftFile>[];
+    final resp = await _client.classicPost(
       'task-${action.name}-${task.externalKey}',
-      _taskForm(task, action, input),
+      files.isEmpty
+          ? fields
+          : FormData.fromMap({
+              ...fields,
+              'files[]': [
+                for (final f in files)
+                  MultipartFile.fromBytes(f.bytes, filename: f.name),
+              ],
+              'labels[]': [for (final f in files) f.name],
+            }),
     );
     ensureZenTaoActionOk(resp, action.name);
   }
@@ -105,6 +118,7 @@ class ZenTaoWorkflow {
       _ => (0.0, null),
     };
     final now = _now();
+    final began = input.began ?? started ?? now;
     final comment = _text(input.comment);
     final chosen = _text(input.assignee);
     return switch (action) {
@@ -112,7 +126,7 @@ class ZenTaoWorkflow {
         // ZenTao takes the new total logged, not this session's hours.
         'consumed': zentaoHours(logged + input.spent),
         'left': zentaoHours(input.left),
-        'realStarted': zentaoDateTime(started ?? now),
+        'realStarted': zentaoDateTime(began),
         // ZenTao 20+ clears the assignee when the field is missing.
         'assignedTo': chosen ?? _text(task.assignee) ?? _client.account,
         'comment': ?comment,
@@ -121,10 +135,10 @@ class ZenTaoWorkflow {
         'currentConsumed': zentaoHours(input.spent),
         // 18.x reads the new total; 20+ adds currentConsumed itself.
         'consumed': zentaoHours(logged + input.spent),
-        'realStarted': zentaoDateTime(started ?? now),
+        'realStarted': zentaoDateTime(began),
         // ZenTao refuses a finish dated before the start.
         'finishedDate': zentaoDateTime(
-          started != null && started.isAfter(now) ? started : now,
+          input.ended ?? (began.isAfter(now) ? began : now),
         ),
         // Left out, ZenTao hands a finished task back to its creator.
         'assignedTo': ?chosen,

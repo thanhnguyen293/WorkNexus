@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
+import 'package:work_nexus/core/domain/entities/zentao_ticket_form.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -133,6 +134,45 @@ void main() {
     // Left out, ZenTao hands the task back to its creator.
     expect(sent.containsKey('assignedTo'), isFalse);
     expect(sent.containsKey('left'), isFalse);
+  });
+
+  test('starting sends the begin picked in the form', () async {
+    final (workflow, fake) = _workflow();
+    await workflow.runTaskAction(
+      _task(),
+      ZenTaoTaskAction.start,
+      ZenTaoTaskActionInput(left: 4, began: DateTime(2026, 10, 9, 8, 15)),
+    );
+
+    expect(_sent(fake, 'task-start-12')['realStarted'], '2026-10-09 08:15:00');
+  });
+
+  test('finishing sends the picked begin and end, with its files', () async {
+    final (workflow, fake) = _workflow();
+    await workflow.runTaskAction(
+      _task(),
+      ZenTaoTaskAction.finish,
+      ZenTaoTaskActionInput(
+        spent: 1,
+        assignee: 'evan',
+        began: DateTime(2026, 10, 13, 17, 48),
+        ended: DateTime(2026, 10, 13, 18, 49),
+        files: [
+          DraftFile(name: 'log.txt', bytes: Uint8List.fromList([1])),
+        ],
+      ),
+    );
+
+    final form =
+        fake.requests.lastWhere((r) => r.path.contains('task-finish-12')).data
+            as FormData;
+    final fields = Map.fromEntries(form.fields);
+    expect(fields['realStarted'], '2026-10-13 17:48:00');
+    expect(fields['finishedDate'], '2026-10-13 18:49:00');
+    expect(fields['assignedTo'], 'evan');
+    expect(fields['labels[]'], 'log.txt');
+    expect(form.files.single.key, 'files[]');
+    expect(form.files.single.value.filename, 'log.txt');
   });
 
   test('reopening sends the hours left and gives the task to me', () async {

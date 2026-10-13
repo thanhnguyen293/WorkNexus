@@ -2,11 +2,11 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/domain/entities/provider_entity.dart';
-import '../../../../core/domain/entities/zentao_ticket_form.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations.dart';
+import '../domain/entities/provider_entity.dart';
+import '../domain/entities/zentao_ticket_form.dart';
+import '../theme/app_spacing.dart';
+import 'app_button.dart';
 import 'editor_chip.dart';
 
 /// The files on the bug or task — those already there ([files], removable) and
