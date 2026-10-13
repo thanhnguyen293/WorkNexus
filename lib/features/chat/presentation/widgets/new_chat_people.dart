@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
@@ -16,6 +14,7 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_pick_tick.dart';
 import 'chat_role_tabs.dart';
 
 /// The people picker of the new-chat dialog: picked people as pills, a
@@ -171,7 +170,6 @@ class _PersonRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    final tick = s.xl4;
     return Material(
       color: picked ? c.selectionFill : Colors.transparent,
       borderRadius: BorderRadius.circular(context.radii.md),
@@ -219,26 +217,7 @@ class _PersonRow extends StatelessWidget {
                   ],
                 ),
               ),
-              AnimatedContainer(
-                duration: AppMotion.fast,
-                width: tick,
-                height: tick,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: picked ? c.accent : Colors.transparent,
-                  border: Border.all(
-                    color: picked ? c.accent : c.borderStrong,
-                    width: 1.5,
-                  ),
-                ),
-                child: picked
-                    ? Icon(
-                        LucideIcons.check300,
-                        size: context.sizes.iconSm,
-                        color: c.onAccent,
-                      )
-                    : null,
-              ),
+              ChatPickTick(picked: picked),
             ],
           ),
         ),

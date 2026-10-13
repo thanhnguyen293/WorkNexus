@@ -1206,5 +1206,9 @@
   "codeBlockCollapse": "Thu gọn",
   "codeBlockCopy": "Sao chép mã",
   "codeBlockCopied": "Đã sao chép",
-  "mrOpenProject": "Mở repo trên trình duyệt"
+  "mrOpenProject": "Mở repo trên trình duyệt",
+  "chatForward": "Chuyển tiếp",
+  "chatForwardTitle": "Chuyển tiếp tới…",
+  "chatForwardTo": "{count, plural, =1{Chuyển tiếp} other{Chuyển tiếp tới {count} cuộc trò chuyện}}",
+  "chatForwarded": "{count, plural, =1{Đã chuyển tiếp} other{Đã chuyển tiếp tới {count} cuộc trò chuyện}}"
 }

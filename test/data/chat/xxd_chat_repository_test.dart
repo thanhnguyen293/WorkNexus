@@ -570,6 +570,33 @@ void main() {
     ]);
   });
 
+  test('forwarding sends the same content to the other chat', () async {
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    await repo.sendCode(_acc, 'g1', code: 'x := 1', language: 'go');
+    final source = (await eventually(
+      repo.watchMessages(_acc, 'g1'),
+      (l) => l.any((m) => m.isMine && m.serverId != null),
+    )).lastWhere((m) => m.isMine);
+
+    final result = await repo.forwardMessage(_acc, source.gid, '31&40');
+    final forwarded = await eventually(
+      repo.watchMessages(_acc, '31&40'),
+      (l) => l.any((m) => m.isMine && m.serverId != null),
+    );
+
+    expect(result.isOk, isTrue);
+    expect(forwarded.lastWhere((m) => m.isMine).content, source.content);
+    final req = server.requests.lastWhere((r) => r['method'] == 'messagesend');
+    expect((req['params']! as List).first, [
+      allOf(
+        containsPair('cgid', '31&40'),
+        containsPair('contentType', 'code'),
+        isNot(containsPair('gid', source.gid)),
+      ),
+    ]);
+  });
+
   test('sending offline fails; retry after connecting delivers it', () async {
     final offline = await repo.sendText(_acc, 'g1', 'later');
     expect(offline.failureOrNull, isA<NetworkFailure>());

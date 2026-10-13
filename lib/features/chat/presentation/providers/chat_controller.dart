@@ -12,6 +12,7 @@ import '../../domain/usecases/create_group_chat.dart';
 import '../../domain/usecases/encode_mentions.dart';
 import '../../domain/usecases/fetch_chat_messages.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
+import '../../domain/usecases/forward_chat_message.dart';
 import '../../domain/usecases/load_chat_attachment.dart';
 import '../../domain/usecases/load_messages_around.dart';
 import '../../domain/usecases/load_newer_messages.dart';
@@ -51,6 +52,7 @@ class ChatController {
       _fetch = FetchChatMessages(repository),
       _sendFile = SendChatFile(repository),
       _retract = RetractMessage(repository),
+      _forward = ForwardChatMessage(repository),
       _open = OpenChatAttachment(repository),
       _thumbnail = LoadVideoThumbnail(repository),
       _pin = PinChatMessage(repository),
@@ -71,6 +73,7 @@ class ChatController {
   final FetchChatMessages _fetch;
   final SendChatFile _sendFile;
   final RetractMessage _retract;
+  final ForwardChatMessage _forward;
   final OpenChatAttachment _open;
   final LoadVideoThumbnail _thumbnail;
   final PinChatMessage _pin;
@@ -312,6 +315,14 @@ class ChatController {
   bool canRetract(ChatMessage message) => _retract.canRetract(message);
 
   Future<Result<void>> retract(ChatMessage message) => _retract(message);
+
+  bool canForward(ChatMessage message) => _forward.canForward(message);
+
+  /// Forwards [message] to each of [toChatGids] (see [ForwardChatMessage]).
+  Future<Result<void>> forward(
+    ChatMessage message, {
+    required List<String> toChatGids,
+  }) => _forward(message, toChatGids: toChatGids);
 
   /// The thread [messageId] belongs to (its root and every reply).
   ReplyThread thread(int messageId, List<ChatMessage> replies) =>
