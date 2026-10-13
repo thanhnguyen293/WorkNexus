@@ -16,6 +16,11 @@ class DesktopWindowService {
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   static bool get isWindows => Platform.isWindows;
 
+  /// Whether the app draws its own minimize / maximize / close buttons. The
+  /// hidden title bar takes the native ones away everywhere but macOS, which
+  /// keeps its traffic lights.
+  static bool get drawsCaptionButtons => Platform.isWindows || Platform.isLinux;
+
   /// Hides the native title bar and shows a centered window. Safe no-op off desktop.
   Future<void> initialize() async {
     if (!isDesktop) return;

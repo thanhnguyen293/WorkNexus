@@ -12,7 +12,8 @@ import '../../core/widgets/quick_settings_button.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The custom 34px window title bar: draggable, hosts the app title and
-/// Quick Settings. macOS traffic lights and Windows caption buttons stay clear.
+/// Quick Settings. macOS traffic lights stay clear; on Windows and Linux it
+/// draws the caption buttons itself.
 class TitleBar extends ConsumerWidget {
   const TitleBar({super.key, this.assignedCount});
 
@@ -20,9 +21,9 @@ class TitleBar extends ConsumerWidget {
 
   static const _height = 34.0;
 
-  /// Windows' minimize / maximize / close buttons are 46px wide each.
-  static const _windowsCaptionButtonWidth = 46.0;
-  static const _windowsCaptionButtonsWidth = _windowsCaptionButtonWidth * 3;
+  /// The minimize / maximize / close buttons are 46px wide each.
+  static const _captionButtonWidth = 46.0;
+  static const _captionButtonsWidth = _captionButtonWidth * 3;
 
   /// Room macOS keeps for its traffic-light buttons.
   static const _macTrafficLightsWidth = 60.0;
@@ -31,7 +32,7 @@ class TitleBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final l10n = AppL10n.of(context);
-    final isWindows = DesktopWindowService.isWindows;
+    final drawsCaption = DesktopWindowService.drawsCaptionButtons;
     final title = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -57,8 +58,8 @@ class TitleBar extends ConsumerWidget {
         children: [
           if (DesktopWindowService.isDesktop)
             SizedBox(
-              width: isWindows
-                  ? _windowsCaptionButtonsWidth +
+              width: drawsCaption
+                  ? _captionButtonsWidth +
                         context.spacing.lg * 2 +
                         context.spacing.xl5 +
                         context.spacing.xs
@@ -73,10 +74,10 @@ class TitleBar extends ConsumerWidget {
           // Debug builds only (renders nothing in release).
           const DebugCelebrateButton(),
           const QuickSettingsButton(),
-          if (isWindows) ...[
+          if (drawsCaption) ...[
             SizedBox(width: context.spacing.lg),
             SizedBox(
-              width: _windowsCaptionButtonsWidth,
+              width: _captionButtonsWidth,
               child: WindowCaption(
                 backgroundColor: c.titleBar,
                 brightness: Theme.of(context).brightness,
