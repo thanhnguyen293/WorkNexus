@@ -1,6 +1,6 @@
 {
   "@@locale": "vi",
-  "appTitle": "Bảng công việc hợp nhất",
+  "appTitle": "Task Board",
   "updateAvailable": "Đã có phiên bản WorkNexus {version} mới.",
   "@updateAvailable": {
     "placeholders": {
