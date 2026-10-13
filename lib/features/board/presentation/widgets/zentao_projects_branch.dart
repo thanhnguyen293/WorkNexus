@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 import 'sidebar_tree_rows.dart';
@@ -83,6 +84,9 @@ class _ProjectsGroup extends ConsumerWidget {
           onTap: () => ref
               .read(zentaoProjectsExpandedProvider.notifier)
               .toggle(accountId),
+          count: ref.watch(
+            assignedCountsProvider.select((c) => c.zentaoBugs(accountId)),
+          ),
         ),
         if (expanded)
           SidebarTreeBranch(

@@ -1,5 +1,5 @@
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/unified_status.dart';
+import '../../../../core/util/ticket_open.dart';
 import '../value_objects/dashboard_item_kind.dart';
 
 /// The stored tickets of one kind assigned to the account's own user — the
@@ -11,15 +11,8 @@ import '../value_objects/dashboard_item_kind.dart';
 class FilterMyWork {
   const FilterMyWork();
 
-  /// ZenTao statuses after which the assignee has nothing left to do. A
-  /// `done` task only awaits closing and a `resolved` bug only awaits
-  /// verification, but both unify to "review", so the raw status decides.
-  static const _finished = {'done', 'closed', 'cancel', 'resolved'};
-
   /// Whether [t] still needs work from its assignee.
-  static bool isOpen(Ticket t) =>
-      t.status != UnifiedStatus.done &&
-      !_finished.contains(t.providerStatus.trim().toLowerCase());
+  static bool isOpen(Ticket t) => isOpenForAssignee(t);
 
   List<Ticket> call(
     Iterable<Ticket> tickets, {

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'sidebar_tree_rows.dart';
@@ -93,7 +94,8 @@ class SidebarSyncIndicator extends StatelessWidget {
 }
 
 /// Non-tappable label marking a per-account "Pinned" area at the top of a
-/// source node (ZenTao / GitLab / GitHub).
+/// source node (ZenTao / GitLab / GitHub). It carries no count: each pinned
+/// row shows its own.
 class SidebarPinnedHeader extends StatelessWidget {
   const SidebarPinnedHeader({super.key});
 
@@ -118,6 +120,23 @@ class SidebarPinnedHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A sources-tree node's count of open tickets assigned to me; nothing at
+/// zero, so only nodes with work stand out.
+class SidebarCountBadge extends StatelessWidget {
+  const SidebarCountBadge(this.count, {super.key});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    if (count <= 0) return const SizedBox.shrink();
+    return Tooltip(
+      message: AppL10n.of(context).assignedToMe,
+      child: AppCountBadge(count),
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_rail_button.dart';
 import '../../features/app_update/presentation/widgets/update_rail_button.dart';
+import '../../features/board/presentation/widgets/board_rail_button.dart';
 import '../../features/chat/presentation/widgets/chat_rail_button.dart';
 import '../../features/dashboard/presentation/widgets/dashboard_rail_button.dart';
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
@@ -31,7 +32,6 @@ class AppNavRail extends ConsumerWidget {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final integrations = ref.watch(integrationsVisibleProvider);
-    final view = ref.watch(selectedMainViewProvider);
     return Container(
       width: widthOf(context),
       decoration: BoxDecoration(
@@ -45,12 +45,7 @@ class AppNavRail extends ConsumerWidget {
           const NewTicketRailButton(),
           // Places you work in, by how often you go there.
           const DashboardRailButton(),
-          AppRailButton(
-            icon: LucideIcons.squareKanban300,
-            label: l.board,
-            selected: view == MainView.board,
-            onTap: () => ref.read(appNavProvider.notifier).show(MainView.board),
-          ),
+          const BoardRailButton(),
           const ChatRailButton(),
           const Spacer(),
           // Global utilities: panels, the updater and settings.

@@ -17,6 +17,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/data/sync_service.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 
@@ -41,6 +42,11 @@ class ZenTaoExecutionRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      assignedCountsProvider.select(
+        (c) => c.zentaoExecution(execution.accountId, execution.id),
+      ),
+    );
     final c = context.colors;
     final l = AppL10n.of(context);
     final selected = ref.watch(selectedZenTaoExecutionProvider);
@@ -94,6 +100,10 @@ class ZenTaoExecutionRow extends ConsumerWidget {
               ],
               if (showKindTag) ...[
                 MiniTag(l.taskTag, c.info),
+                SizedBox(width: context.spacing.xs),
+              ],
+              if (count > 0) ...[
+                SidebarCountBadge(count),
                 SizedBox(width: context.spacing.xs),
               ],
               SidebarPinButton(
