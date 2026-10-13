@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -20,7 +19,6 @@ import 'chat_info_dialog.dart';
 import 'chat_labels.dart';
 import 'chat_mute_toggle.dart';
 import 'chat_side_panel_frame.dart';
-import 'chat_typing_debug_button.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
 /// one-to-one chats, the other person's account). Clicking them shows the
@@ -153,8 +151,6 @@ class ChatThreadHeader extends ConsumerWidget {
               ),
             ),
           ),
-          if (chat case final chat? when kDebugMode)
-            ChatTypingDebugButton(thread: thread, chat: chat, users: users),
           if (chat case final chat?) ChatMuteToggle(chat: chat),
         ],
       ),

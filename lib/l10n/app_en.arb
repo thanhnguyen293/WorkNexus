@@ -1017,10 +1017,9 @@
     }
   },
   "chatKicked": "Signed out because this account signed in somewhere else.",
-  "chatUntrusted": "The chat server certificate needs your confirmation.",
   "chatReviewCertificate": "Review certificate",
-  "chatTrustTitle": "Trust the chat server certificate?",
-  "chatTrustBody": "{host} uses a self-signed certificate. Compare the fingerprint with your administrator before trusting it.",
+  "chatTrustTitle": "Confirm the chat server",
+  "chatTrustBody": "{host} secures chat with its own (self-signed) certificate, not one your system already trusts, so WorkNexus checks with you once before connecting.",
   "@chatTrustBody": {
     "placeholders": {
       "host": {
@@ -1031,6 +1030,25 @@
   "chatTrustFingerprint": "SHA-256 fingerprint",
   "chatTrustIssuer": "Issued by",
   "chatTrustAction": "Trust and connect",
+  "chatTrustWhy": "Why am I asked?",
+  "chatTrustWhyOnce": "Only once. WorkNexus remembers this exact certificate and connects on its own after that.",
+  "chatTrustWhyChange": "If it ever changes unexpectedly, you are asked again instead of being connected silently. A changed certificate can mean someone is intercepting the connection.",
+  "chatTrustWhyCheck": "Not sure? Ask your ZenTao administrator to confirm the fingerprint below.",
+  "chatTrustDetails": "Certificate",
+  "chatTrustServer": "Server",
+  "chatTrustSubject": "Issued to",
+  "chatTrustCopyFingerprint": "Copy fingerprint",
+  "chatTrustFingerprintCopied": "Fingerprint copied",
+  "chatTrustLater": "Not now",
+  "chatTrustGateTitle": "Confirm the chat server to start chatting",
+  "chatTrustGateBody": "{host} uses its own certificate. Confirm it once and chat connects; until then, chat stays off.",
+  "@chatTrustGateBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
   "chatComposerHint": "Message — Enter to send, Shift+Enter for a new line",
   "chatSending": "Sending…",
   "chatSendFailed": "Not sent · Retry",
@@ -1889,6 +1907,5 @@
         "type": "int"
       }
     }
-  },
-  "chatDebugSimulateTyping": "Simulate someone typing (debug)"
+  }
 }

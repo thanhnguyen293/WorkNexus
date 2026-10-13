@@ -25,6 +25,7 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_trust_preview.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
@@ -32,6 +33,7 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.da
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
@@ -431,6 +433,8 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(1400, 900),
     String search = '',
+    bool previewTrust = false,
+    bool typingDebugButton = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -439,6 +443,10 @@ void main() {
       ProviderScope(
         overrides: [
           chatSearchProvider.overrideWith((ref) => search),
+          if (previewTrust)
+            chatTrustPreviewProvider.overrideWith(
+              (ref) => kChatTrustPreviewRequest,
+            ),
           chatRepositoryProvider.overrideWithValue(repo),
           chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
           chatAccountsProvider.overrideWithValue(const [
@@ -458,7 +466,15 @@ void main() {
             surface: SurfaceStyle.outline,
             density: AppDensity.comfortable,
           ),
-          home: const Scaffold(body: ChatPage()),
+          home: Scaffold(
+            body: Column(
+              children: [
+                // It lives in the title bar, outside the chat view.
+                if (typingDebugButton) const ChatTypingDebugButton(),
+                const Expanded(child: ChatPage()),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -766,10 +782,12 @@ void main() {
   });
 
   testWidgets('the debug button pretends someone is typing', (tester) async {
-    await pumpChat(tester);
+    await pumpChat(tester, typingDebugButton: true);
+    const tip = 'Debug: simulate someone typing in this chat';
+    expect(find.byTooltip(tip), findsNothing, reason: 'no chat open yet');
     await openTeamChat(tester);
 
-    await tester.tap(find.byTooltip('Simulate someone typing (debug)'));
+    await tester.tap(find.byTooltip(tip));
     await tester.pump();
     await tester.pump(AppMotion.slow);
     expect(find.byTooltip('Dyno is typing…'), findsOneWidget);
@@ -800,25 +818,63 @@ void main() {
     expect(repo.calls, contains('retry m3'));
   });
 
-  testWidgets('an untrusted certificate can be reviewed and trusted', (
-    tester,
-  ) async {
-    repo.status = const ChatConnectionStatus.needsTrust(
-      host: 'zentao.example',
-      fingerprint: 'AE:C6:E8',
-      subject: 'CN=cnezsoft',
-      issuer: 'CN=cnezsoft',
+  group('an untrusted chat server certificate', () {
+    setUp(
+      () => repo.status = const ChatConnectionStatus.needsTrust(
+        host: 'zentao.example',
+        fingerprint: 'AE:C6:E8',
+        subject: '/C=CN/CN=cnezsoft',
+        issuer: '/C=CN/CN=cnezsoft',
+      ),
     );
-    await pumpChat(tester);
 
-    await tester.tap(find.text('Review certificate'));
-    await tester.pumpAndSettle();
-    expect(find.text('AE:C6:E8'), findsOneWidget);
+    testWidgets('opening chat asks at once, and trusting connects', (
+      tester,
+    ) async {
+      await pumpChat(tester);
+
+      expect(find.text('Confirm the chat server'), findsOneWidget);
+      expect(find.text('Why am I asked?'), findsOneWidget);
+      expect(find.text('AE:C6:E8'), findsOneWidget);
+      expect(find.text('cnezsoft'), findsNWidgets(2), reason: 'to and by');
+
+      await tester.tap(find.text('Trust and connect'));
+      await tester.pumpAndSettle();
+      expect(repo.calls, contains('trust AE:C6:E8'));
+      expect(find.text('AE:C6:E8'), findsNothing, reason: 'dialog closed');
+    });
+
+    testWidgets('chat stays gated until it is trusted, with a way back', (
+      tester,
+    ) async {
+      await pumpChat(tester);
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+
+      // No empty list and thread behind it: chat cannot connect yet.
+      expect(find.text('VN Mobile Team'), findsNothing);
+      expect(
+        find.text('Confirm the chat server to start chatting'),
+        findsOneWidget,
+      );
+      expect(find.text('Confirm the chat server'), findsNothing);
+
+      await tester.tap(find.text('Review certificate'));
+      await tester.pumpAndSettle();
+      expect(find.text('Confirm the chat server'), findsOneWidget);
+    });
+  });
+
+  testWidgets('the debug preview shows the check but never pins its '
+      'made-up certificate', (tester) async {
+    await pumpChat(tester, previewTrust: true);
+    expect(find.text('Confirm the chat server'), findsOneWidget);
 
     await tester.tap(find.text('Trust and connect'));
     await tester.pumpAndSettle();
-    expect(repo.calls, contains('trust AE:C6:E8'));
-    expect(find.text('AE:C6:E8'), findsNothing, reason: 'dialog closed');
+    expect(repo.calls.where((c) => c.startsWith('trust')), isEmpty);
+    // The preview is over: the real (online) chat is back.
+    expect(find.text('VN Mobile Team'), findsOneWidget);
   });
 
   testWidgets('being kicked explains why and offers to reconnect', (
