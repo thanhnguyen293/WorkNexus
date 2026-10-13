@@ -9,7 +9,7 @@ import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/can_send_to_chat.dart';
 import '../../domain/usecases/connect_chat.dart';
 import '../../domain/usecases/create_group_chat.dart';
-import '../../domain/usecases/encode_mentions.dart';
+
 import '../../domain/usecases/fetch_chat_messages.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/usecases/forward_chat_message.dart';
@@ -194,19 +194,18 @@ class ChatController {
   Future<Result<void>> trust(String accountId, String fingerprint) =>
       _trust(accountId: accountId, fingerprint: fingerprint);
 
-  /// Sends [text]; the `@Name` mentions in [mentions] (name → user id) are
-  /// encoded as xxd mention markup first.
+  /// Sends [text], mentions already written as mention markup (see
+  /// `BuildMessageText`).
   Future<Result<void>> send(
     String accountId,
     String chatGid,
     String text, {
     int? replyToId,
     bool markdown = false,
-    Map<String, int> mentions = const {},
   }) => _send(
     accountId: accountId,
     chatGid: chatGid,
-    text: const EncodeMentions()(text, mentions),
+    text: text,
     replyToId: replyToId,
     markdown: markdown,
   );

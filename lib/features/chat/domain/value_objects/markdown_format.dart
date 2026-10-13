@@ -13,6 +13,3 @@ enum MarkdownFormat {
   outdent,
   clear,
 }
-
-/// Text being edited and its selection ([start] == [end] is a caret).
-typedef MarkdownEdit = ({String text, int start, int end});

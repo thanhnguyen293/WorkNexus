@@ -11,6 +11,7 @@ import 'package:work_nexus/features/chat/data/repositories/local_sticker_reposit
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/sticker_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_controller.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_emoji_picker.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_emoji_side_panel.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -21,12 +22,12 @@ const _thread = (accountId: 'acc', chatGid: 'g1');
 
 void main() {
   late Directory mine;
-  late TextEditingController text;
+  late ChatComposerController text;
   late FocusNode focus;
 
   setUp(() {
     mine = Directory.systemTemp.createTempSync('stickers');
-    text = TextEditingController();
+    text = ChatComposerController();
     focus = FocusNode();
   });
 
@@ -118,7 +119,7 @@ void main() {
       await tester.tap(find.text('😀'));
       await tester.tap(find.text('😀'));
       await tester.pumpAndSettle();
-      expect(text.text, '😀😀');
+      expect(text.plainText, '😀😀');
       expect(find.byType(ChatEmojiSidePanel), findsOneWidget);
 
       // Expanded, the button shows and hides the panel.

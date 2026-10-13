@@ -6,21 +6,23 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/markdown_format.dart';
+import 'chat_composer_controller.dart';
 
-/// Under the input while Markdown is on: formatting for the selection,
-/// undo/redo and a taller input. Its buttons never take focus, so the
-/// input keeps its selection while they are clicked.
+/// Under the input while Markdown is on: formatting for the selection (lit
+/// while the selection has it), undo/redo and a taller input. Its buttons
+/// never take focus, so the input keeps its selection while they are
+/// clicked.
 class ChatMarkdownToolbar extends StatelessWidget {
   const ChatMarkdownToolbar({
     super.key,
+    required this.controller,
     required this.onFormat,
-    required this.undo,
     required this.expanded,
     required this.onToggleExpanded,
   });
 
+  final ChatComposerController controller;
   final ValueChanged<MarkdownFormat> onFormat;
-  final UndoHistoryController undo;
   final bool expanded;
   final VoidCallback onToggleExpanded;
 
@@ -66,46 +68,49 @@ class ChatMarkdownToolbar extends StatelessWidget {
         MarkdownFormat.outdent,
       ),
     ];
+    final quill = controller.quill;
     return ExcludeFocus(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final (icon, tooltip, format) in formats)
+        child: ListenableBuilder(
+          listenable: quill,
+          builder: (context, _) => Row(
+            children: [
+              for (final (icon, tooltip, format) in formats)
+                AppIconButton(
+                  icon: icon,
+                  tooltip: tooltip,
+                  selected: controller.isOn(format),
+                  onPressed: () => onFormat(format),
+                ),
               AppIconButton(
-                icon: icon,
-                tooltip: tooltip,
-                onPressed: () => onFormat(format),
+                icon: LucideIcons.undo2300,
+                tooltip: l.chatUndo,
+                onPressed: quill.hasUndo ? quill.undo : null,
               ),
-            ValueListenableBuilder(
-              valueListenable: undo,
-              builder: (context, history, _) => Row(
-                children: [
-                  AppIconButton(
-                    icon: LucideIcons.undo2300,
-                    tooltip: l.chatUndo,
-                    onPressed: history.canUndo ? undo.undo : null,
-                  ),
-                  AppIconButton(
-                    icon: LucideIcons.redo2300,
-                    tooltip: l.chatRedo,
-                    onPressed: history.canRedo ? undo.redo : null,
-                  ),
-                ],
+              AppIconButton(
+                icon: LucideIcons.redo2300,
+                tooltip: l.chatRedo,
+                onPressed: quill.hasRedo ? quill.redo : null,
               ),
-            ),
-            SizedBox(
-              height: s.xl4,
-              child: VerticalDivider(width: s.lg, color: context.colors.border),
-            ),
-            AppIconButton(
-              icon: expanded
-                  ? LucideIcons.minimize2300
-                  : LucideIcons.maximize2300,
-              tooltip: expanded ? l.chatComposerCollapse : l.chatComposerExpand,
-              onPressed: onToggleExpanded,
-            ),
-          ],
+              SizedBox(
+                height: s.xl4,
+                child: VerticalDivider(
+                  width: s.lg,
+                  color: context.colors.border,
+                ),
+              ),
+              AppIconButton(
+                icon: expanded
+                    ? LucideIcons.minimize2300
+                    : LucideIcons.maximize2300,
+                tooltip: expanded
+                    ? l.chatComposerCollapse
+                    : l.chatComposerExpand,
+                onPressed: onToggleExpanded,
+              ),
+            ],
+          ),
         ),
       ),
     );

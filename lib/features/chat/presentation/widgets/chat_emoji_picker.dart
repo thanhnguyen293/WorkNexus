@@ -6,6 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
+import 'chat_composer_controller.dart';
 import 'chat_composer_toolbar.dart';
 import 'chat_emoji_panel.dart';
 import 'chat_layout.dart';
@@ -28,7 +29,7 @@ class ChatEmojiButton extends ConsumerStatefulWidget {
   });
 
   final ChatThreadKey thread;
-  final TextEditingController text;
+  final ChatComposerController text;
   final FocusNode focus;
   final bool dockable;
 
@@ -39,16 +40,7 @@ class ChatEmojiButton extends ConsumerStatefulWidget {
 class _ChatEmojiButtonState extends ConsumerState<ChatEmojiButton> {
   final _menu = MenuController();
 
-  void _insert(String emoji) {
-    final value = widget.text.value;
-    final selection = value.selection;
-    final start = selection.isValid ? selection.start : value.text.length;
-    final end = selection.isValid ? selection.end : value.text.length;
-    widget.text.value = TextEditingValue(
-      text: value.text.replaceRange(start, end, emoji),
-      selection: TextSelection.collapsed(offset: start + emoji.length),
-    );
-  }
+  void _insert(String emoji) => widget.text.insertText(emoji);
 
   /// Shows or hides the expanded panel beside the chat.
   void _toggleDocked() => toggleChatSidePanel(
