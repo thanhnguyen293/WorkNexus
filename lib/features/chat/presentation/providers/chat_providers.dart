@@ -20,6 +20,7 @@ import '../../domain/repositories/chat_repository.dart';
 import '../../domain/repositories/link_preview_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/count_badge_unread.dart';
+import '../../domain/usecases/count_tab_unread.dart';
 import '../../domain/usecases/load_link_preview.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_list_tab.dart';
@@ -164,6 +165,19 @@ final selectedChatGidProvider = StateProvider.family<String?, String>(
 final chatListTabProvider = StateProvider<ChatListTab>(
   (ref) => ChatListTab.all,
 );
+
+/// Unread messages under a tab of the chat list, for the account it shows.
+final chatTabUnreadProvider = Provider.autoDispose.family<int, ChatListTab>((
+  ref,
+  tab,
+) {
+  final accountId = ref.watch(selectedChatAccountIdProvider);
+  if (accountId == null) return 0;
+  final chats =
+      ref.watch(chatConversationsProvider(accountId)).asData?.value ??
+      const <ChatConversation>[];
+  return const CountTabUnread()(chats, tab);
+});
 
 /// The chat list filter text.
 final chatSearchProvider = StateProvider<String>((ref) => '');
