@@ -489,14 +489,22 @@ class ZenTaoAdapter implements ProviderAdapter {
       // Classic web action `{type}-assignTo-{id}` (no REST v1 endpoint on this
       // build); mirrors the web client's assign request.
       final type = _typeOf(ticket);
+      final task = ticket.providerEntity;
       // A task's assign form also carries its hours left, which ZenTao 20+
       // resets to 0 when the field is missing.
-      final left = switch (ticket.providerEntity) {
+      final left = switch (task) {
         ZenTaoTaskEntity(:final left?) => zentaoHours(left),
         _ => null,
       };
+      // `task::assignTo` takes the execution BEFORE the task id; with the id
+      // alone ZenTao reads it as the execution and answers task 0's HTML page.
+      // The execution only picks the form's member list, so `0` is fine.
+      final target = type == ZenTaoType.task
+          ? '${task is ZenTaoTaskEntity ? task.execution ?? '0' : '0'}'
+                '-${ticket.externalKey}'
+          : ticket.externalKey;
       final resp = await _client.classicActionPost(
-        '${type.pathSegment}-assignTo-${ticket.externalKey}',
+        '${type.pathSegment}-assignTo-$target',
         {
           'assignedTo': assignee,
           'left': ?left,
