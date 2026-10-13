@@ -17,28 +17,33 @@ import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/app_button.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/action_dialog_scaffold.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/zentao_ticket_actions.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 class _MockWorkflow extends Mock implements ZenTaoWorkflowService {}
 
-Ticket _ticket(String type, String raw, {TicketProviderEntity? entity}) =>
-    Ticket(
-      id: 'zt:12',
-      accountId: 'zt',
-      projectId: 'zt:P',
-      providerType: ProviderType.zentao,
-      externalKey: '12',
-      externalType: type,
-      title: 't',
-      body: '',
-      priority: Priority.medium,
-      status: UnifiedStatus.inprogress,
-      providerStatus: raw,
-      sourceHash: 'h',
-      providerEntity: entity,
-    );
+Ticket _ticket(
+  String type,
+  String raw, {
+  TicketProviderEntity? entity,
+  UnifiedStatus status = UnifiedStatus.inprogress,
+}) => Ticket(
+  id: 'zt:12',
+  accountId: 'zt',
+  projectId: 'zt:P',
+  providerType: ProviderType.zentao,
+  externalKey: '12',
+  externalType: type,
+  title: 't',
+  body: '',
+  priority: Priority.medium,
+  status: status,
+  providerStatus: raw,
+  sourceHash: 'h',
+  providerEntity: entity,
+);
 
 void main() {
   late _MockWorkflow workflow;
@@ -81,17 +86,36 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> openMore(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('a task in progress offers what ZenTao allows', (tester) async {
     await pump(
       tester,
       _ticket('Task', 'doing', entity: const TicketProviderEntity.zentaoTask()),
     );
 
-    for (final label in ['Assign', 'Pause', 'Finish', 'Cancel task']) {
+    // Finishing moves it on, so it is the main button; the rest wait in "⋯".
+    expect(find.widgetWithText(AppButton, 'Finish'), findsOneWidget);
+    expect(find.text('Assign'), findsOneWidget);
+    expect(find.text('Pause'), findsNothing);
+
+    await openMore(tester);
+    for (final label in ['Pause', 'Cancel task']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('Start'), findsNothing);
     expect(find.text('Close'), findsNothing);
+  });
+
+  testWidgets('an unconfirmed bug is confirmed first', (tester) async {
+    await pump(tester, _ticket('Bug', 'active', status: UnifiedStatus.inbox));
+
+    expect(find.widgetWithText(AppButton, 'Confirm'), findsOneWidget);
+    await openMore(tester);
+    expect(find.text('Resolve'), findsOneWidget);
   });
 
   testWidgets('a closed bug can only be reopened', (tester) async {
@@ -158,6 +182,7 @@ void main() {
         entity: const TicketProviderEntity.zentaoTask(execution: '31'),
       ),
     );
+    await openMore(tester);
     expect(find.text('Report bug'), findsOneWidget);
 
     await tester.tap(find.text('Add subtask'));
@@ -182,6 +207,7 @@ void main() {
       ),
     );
 
+    await openMore(tester);
     await tester.tap(find.text('Copy'));
     await tester.pumpAndSettle();
 

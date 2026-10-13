@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_field_rows.dart';
+import 'detail_region_card.dart';
 import 'section_label.dart';
 
 /// Dedicated metadata card for a GitLab issue / merge request. MR-only rows
@@ -85,7 +84,7 @@ String humanizeMergeState(String? raw) {
   return words.isEmpty ? '' : '${words[0].toUpperCase()}${words.substring(1)}';
 }
 
-/// The bordered metadata card shared by the detail sidebars — a labeled
+/// The metadata card shared by the detail sidebars — a labeled
 /// section over a hairline key/value table, with empty rows filtered out.
 class DetailMetaCard extends StatelessWidget {
   const DetailMetaCard({super.key, required this.title, required this.rows});
@@ -95,15 +94,9 @@ class DetailMetaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final filled = rows.where((r) => r.$2.trim().isNotEmpty).toList();
     if (filled.isEmpty) return const SizedBox.shrink();
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        border: Border.all(color: c.border),
-      ),
+    return DetailRegionCard(
       padding: EdgeInsets.fromLTRB(
         context.spacing.lg,
         context.spacing.lg,

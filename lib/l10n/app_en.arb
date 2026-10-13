@@ -277,6 +277,22 @@
       }
     }
   },
+  "taskHoursLeft": "{hours} h left",
+  "@taskHoursLeft": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "taskEstimateHours": "Estimate {hours} h",
+  "@taskEstimateHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "zentaoHoursInvalid": "Enter hours as a number, 0 or more",
   "zentaoHoursLeftRequired": "Enter the hours left (more than 0)",
   "zentaoHoursSpentRequired": "Enter the hours worked — none are logged yet",

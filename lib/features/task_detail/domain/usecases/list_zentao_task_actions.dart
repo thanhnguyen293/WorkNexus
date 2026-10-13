@@ -18,6 +18,17 @@ class ListZenTaoTaskActions
     ZenTaoTaskAction.cancel,
   };
 
+  /// The actions that move a task forward, most pressing first: a task
+  /// waiting is started, one in progress finished, a done one closed. Pause
+  /// and cancel step aside, so they are never the main button.
+  static const _forward = [
+    ZenTaoTaskAction.start,
+    ZenTaoTaskAction.restart,
+    ZenTaoTaskAction.finish,
+    ZenTaoTaskAction.close,
+    ZenTaoTaskAction.activate,
+  ];
+
   @override
   ZenTaoActionMenu<ZenTaoTaskAction> call(Ticket ticket) {
     final raw = ticket.providerStatus.trim().toLowerCase();
@@ -39,10 +50,12 @@ class ListZenTaoTaskActions
       };
     }
 
+    final actions = ZenTaoTaskAction.values.where(offers).toList();
     return (
       canAssign:
           !isParent && raw.isNotEmpty && raw != 'closed' && raw != 'cancel',
-      actions: ZenTaoTaskAction.values.where(offers).toList(),
+      actions: actions,
+      primary: _forward.where(actions.contains).firstOrNull,
     );
   }
 }

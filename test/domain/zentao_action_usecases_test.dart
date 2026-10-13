@@ -62,6 +62,17 @@ void main() {
       expect(menu.canAssign, isFalse);
       expect(menu.actions, [ZenTaoBugAction.activate]);
     });
+
+    test('the main button is the next step of the bug', () {
+      ZenTaoBugAction? primary(String raw, UnifiedStatus status) =>
+          list(_ticket('Bug', raw, status: status)).primary;
+
+      expect(primary('active', UnifiedStatus.inbox), ZenTaoBugAction.confirm);
+      expect(primary('active', UnifiedStatus.todo), ZenTaoBugAction.resolve);
+      expect(primary('resolved', UnifiedStatus.review), ZenTaoBugAction.close);
+      expect(primary('closed', UnifiedStatus.done), ZenTaoBugAction.activate);
+      expect(primary('', UnifiedStatus.todo), isNull);
+    });
   });
 
   group('ListZenTaoTaskActions', () {
@@ -100,6 +111,26 @@ void main() {
         ZenTaoTaskAction.close,
       ]);
       expect(actions('closed'), [ZenTaoTaskAction.activate]);
+    });
+
+    test('the main button moves the task forward', () {
+      ZenTaoTaskAction? primary(String raw, {bool isParent = false}) => list(
+        _ticket(
+          'Task',
+          raw,
+          entity: TicketProviderEntity.zentaoTask(isParent: isParent),
+        ),
+      ).primary;
+
+      expect(primary('wait'), ZenTaoTaskAction.start);
+      expect(primary('doing'), ZenTaoTaskAction.finish);
+      expect(primary('pause'), ZenTaoTaskAction.restart);
+      expect(primary('done'), ZenTaoTaskAction.close);
+      expect(primary('cancel'), ZenTaoTaskAction.close);
+      expect(primary('closed'), ZenTaoTaskAction.activate);
+      // A parent task in progress can only be cancelled — never the main
+      // button.
+      expect(primary('doing', isParent: true), isNull);
     });
 
     test('a closed or cancelled task is not reassigned', () {
