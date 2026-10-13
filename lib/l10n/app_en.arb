@@ -1528,6 +1528,9 @@
   "datePickToday": "Today",
   "datePickTomorrow": "Tomorrow",
   "datePickNextWeek": "In a week",
+  "datePickNow": "Now",
+  "dateTime": "Time",
+  "dateTimeHint": "HH:mm",
   "imageResizeHint": "Drag to resize · double-click to fit",
   "fieldTaskType": "Task type",
   "editorTextColor": "Text colour",
@@ -1691,7 +1694,7 @@
     }
   },
   "ticketEditorRemoveItem": "Remove",
-  "ticketEditorClearDate": "Clear date",
+  "dateClear": "Clear date",
   "notificationsUnreadTab": "Unread",
   "dashboardWorkEmptyAll": "Nothing assigned to you",
   "boardBugColNew": "New / Unconfirmed",
