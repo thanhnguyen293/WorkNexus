@@ -4,7 +4,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -706,7 +705,7 @@ void main() {
     await openTeamChat(tester);
     final composer = find.byType(ChatComposerField).last;
     await tester.tap(
-      find.descendant(of: composer, matching: find.byType(QuillEditor)),
+      find.descendant(of: composer, matching: find.byType(TextField)),
     );
     tester
         .widget<ChatComposerField>(composer)
@@ -729,7 +728,7 @@ void main() {
     await openTeamChat(tester);
     final composer = find.byType(ChatComposerField).last;
     await tester.tap(
-      find.descendant(of: composer, matching: find.byType(QuillEditor)),
+      find.descendant(of: composer, matching: find.byType(TextField)),
     );
     tester.widget<ChatComposerField>(composer).controller.insertText('hel');
     await tester.pump();
