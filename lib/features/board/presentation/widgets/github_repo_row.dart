@@ -12,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 
@@ -32,6 +33,9 @@ class GitHubRepoRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      assignedCountsProvider.select((c) => c.project(repo.accountId, repo.id)),
+    );
     final c = context.colors;
     final l = AppL10n.of(context);
     final selected = ref.watch(selectedGitHubRepoProvider);
@@ -77,6 +81,10 @@ class GitHubRepoRow extends ConsumerWidget {
                 ),
               ),
               SizedBox(width: context.spacing.xs),
+              if (count > 0) ...[
+                SidebarCountBadge(count),
+                SizedBox(width: context.spacing.xs),
+              ],
               SidebarPinButton(
                 pinned: pinned,
                 tooltip: pinned ? l.unpinRepository : l.pinRepository,

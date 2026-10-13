@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'sidebar_primitives.dart';
 
 /// The one label style for the sources tree's group rows (Pinned, Bugs,
 /// Tasks, Projects, Repositories), so every group reads at the same level.
@@ -17,7 +18,8 @@ TextStyle sidebarGroupLabelStyle(BuildContext context) => context
     .copyWith(fontWeight: FontWeight.w600, color: context.colors.textSecondary);
 
 /// A collapsible group row in the sources tree: a chevron, an optional
-/// [icon], the [label] and an optional trailing [count]. [labelStyle]
+/// [icon], the [label] and an optional trailing [count] (assigned to me,
+/// see [SidebarCountBadge]). [labelStyle]
 /// overrides the group style for rows that are items themselves (a project
 /// holding executions).
 class SidebarGroupToggle extends StatelessWidget {
@@ -73,13 +75,7 @@ class SidebarGroupToggle extends StatelessWidget {
                 style: labelStyle ?? sidebarGroupLabelStyle(context),
               ),
             ),
-            if (count != null)
-              Text(
-                '$count',
-                style: context.typography.monoXs.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
+            if (count != null) SidebarCountBadge(count),
           ],
         ),
       ),

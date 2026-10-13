@@ -13,7 +13,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
+import 'sidebar_primitives.dart';
 
 /// Sidebar row opening the account-wide "my merge/pull requests" board — every
 /// MR/PR (assigned to me or requesting my review) across all of the account's
@@ -46,6 +48,9 @@ class ProviderMineRow extends ConsumerWidget {
             ? ref.watch(gitlabMineSliceProvider).isLoading
             : ref.watch(githubMineSliceProvider).isLoading);
     final label = _isGitLab ? l.gitlabMergeRequests : l.githubPullRequests;
+    final count = ref.watch(
+      assignedCountsProvider.select((c) => c.mine(account.id)),
+    );
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
@@ -78,6 +83,7 @@ class ProviderMineRow extends ConsumerWidget {
                   ),
                 ),
               ),
+              SidebarCountBadge(count),
             ],
           ),
         ),

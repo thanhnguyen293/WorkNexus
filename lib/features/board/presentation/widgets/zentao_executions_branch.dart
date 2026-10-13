@@ -9,6 +9,7 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 import 'sidebar_tree_rows.dart';
@@ -44,6 +45,9 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
           onTap: () => ref
               .read(zentaoExecutionsExpandedProvider.notifier)
               .toggle(account.id),
+          count: ref.watch(
+            assignedCountsProvider.select((c) => c.zentaoTasks(account.id)),
+          ),
         ),
         if (expanded)
           SidebarTreeBranch(
@@ -115,6 +119,11 @@ class _ProjectNode extends ConsumerWidget {
               .read(zentaoExecutionProjectsExpandedProvider.notifier)
               .toggle(key),
           icon: LucideIcons.folder300,
+          count: ref.watch(
+            assignedCountsProvider.select(
+              (c) => c.zentaoProject(accountId, project.id),
+            ),
+          ),
           labelStyle: context.typography.mono.copyWith(
             fontWeight: FontWeight.w500,
             color: context.colors.textPrimary,

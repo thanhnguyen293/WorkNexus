@@ -12,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
 
@@ -37,6 +38,11 @@ class ZenTaoProjectRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      assignedCountsProvider.select(
+        (c) => c.zentaoProduct(product.accountId, product.id),
+      ),
+    );
     final c = context.colors;
     final l = AppL10n.of(context);
     final selected = ref.watch(selectedZenTaoProductProvider);
@@ -91,6 +97,10 @@ class ZenTaoProjectRow extends ConsumerWidget {
               if (loading) ...[
                 const SidebarSyncIndicator(),
                 SizedBox(width: context.spacing.xxs),
+              ],
+              if (count > 0) ...[
+                SidebarCountBadge(count),
+                SizedBox(width: context.spacing.xs),
               ],
               SidebarPinButton(
                 pinned: pinned,

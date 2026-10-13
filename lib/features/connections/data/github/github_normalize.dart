@@ -149,6 +149,10 @@ Ticket normalizeGitHubIssue(
       author: e.user?.display,
       comments: e.comments,
       assignees: [for (final a in e.assignees) a.display],
+      assigneeLogins: [
+        for (final a in e.assignees)
+          if (a.login case final login? when login.isNotEmpty) login,
+      ],
     ),
     sourceHash: contentHash(title, body),
   );
@@ -206,6 +210,10 @@ Ticket normalizeGitHubPullFromIssue(
       merged: merged,
       comments: e.comments,
       assignees: [for (final a in e.assignees) a.display],
+      assigneeLogins: [
+        for (final a in e.assignees)
+          if (a.login case final login? when login.isNotEmpty) login,
+      ],
     ),
     sourceHash: contentHash(title, body),
   );
@@ -266,6 +274,10 @@ Ticket normalizeGitHubPull(
       changedFiles: e.changedFiles,
       reviewers: [for (final r in e.requestedReviewers) r.display],
       assignees: [for (final a in e.assignees) a.display],
+      assigneeLogins: [
+        for (final a in e.assignees)
+          if (a.login case final login? when login.isNotEmpty) login,
+      ],
     ),
     sourceHash: contentHash(title, body),
   );

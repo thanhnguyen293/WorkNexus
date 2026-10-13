@@ -356,6 +356,8 @@ void main() {
       '31',
     );
     expect(task({'execution': 0}).execution, isNull);
+    expect(task({'project': '7'}).project, '7');
+    expect(task({'project': 0}).project, isNull);
 
     expect(task({'realStarted': '0000-00-00 00:00:00'}).realStarted, isNull);
   });

@@ -158,6 +158,9 @@ void main() {
         });
         expect(json['milestoneId'], 12);
         expect(json['milestoneTitle'], 'Release 1.0');
+        // Display names for showing, usernames for matching the account.
+        expect(json['assignees'], ['Thanh']);
+        expect(json['assigneeLogins'], ['thanh']);
         expect(json['humanTimeEstimate'], '2h');
         expect(json['humanTotalTimeSpent'], '1h');
       },

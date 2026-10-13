@@ -119,6 +119,10 @@ Ticket normalizeGitLabIssue(GitLabIssue e, {required String accountId}) {
       labelTextColors: e.labelTextColorMap,
       upvotes: e.upvotes,
       assignees: [for (final a in e.assignees) a.display],
+      assigneeLogins: [
+        for (final a in e.assignees)
+          if (a.username case final login? when login.isNotEmpty) login,
+      ],
     ),
     sourceHash: contentHash(title, body),
   );
@@ -203,6 +207,10 @@ Ticket normalizeGitLabMergeRequest(
       userCanApprove: e.approvals?.userCanApprove,
       reviewers: [for (final r in e.reviewers) r.display],
       assignees: [for (final a in e.assignees) a.display],
+      assigneeLogins: [
+        for (final a in e.assignees)
+          if (a.username case final login? when login.isNotEmpty) login,
+      ],
       userAvatarUrls: avatarUrls,
     ),
     sourceHash: contentHash(title, body),

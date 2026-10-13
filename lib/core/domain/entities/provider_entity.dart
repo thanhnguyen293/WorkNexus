@@ -57,8 +57,10 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     String? parentId,
     String? parentName,
     @Default(<TicketSubtask>[]) List<TicketSubtask> subtasks,
-    // The execution (sprint) the task is in, where its subtasks and bugs go.
+    // The execution (sprint) the task is in, where its subtasks and bugs go,
+    // and the project that holds that execution.
     String? execution,
+    String? project,
     // A parent task's status follows its subtasks, so ZenTao offers it fewer
     // actions (no start, finish or reopen).
     @Default(false) bool isParent,
@@ -108,6 +110,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     bool? userCanApprove,
     @Default(<String>[]) List<String> reviewers,
     @Default(<String>[]) List<String> assignees,
+    // The assignees' usernames: [assignees] are display names, and an
+    // account knows its user by username.
+    @Default(<String>[]) List<String> assigneeLogins,
     @Default(<String, String>{}) Map<String, String> userAvatarUrls,
     // Provider label colors (label name → `#RRGGBB`) so chips match GitLab's
     // configured palette; empty when the fetch didn't request label details.
@@ -134,6 +139,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     int? changedFiles,
     @Default(<String>[]) List<String> reviewers,
     @Default(<String>[]) List<String> assignees,
+    // The assignees' logins: [assignees] are display names, and an account
+    // knows its user by login.
+    @Default(<String>[]) List<String> assigneeLogins,
   }) = GitHubItemEntity;
 
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>
