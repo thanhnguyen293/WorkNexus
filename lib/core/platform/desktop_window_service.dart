@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../config/app_config.dart';
+import 'window_placement_recorder.dart';
+import 'window_placement_store.dart';
 
 /// Thin seam over `window_manager` so the rest of the app never imports it
 /// directly (mobile/web builds can provide a no-op implementation).
@@ -21,15 +23,21 @@ class DesktopWindowService {
   /// keeps its traffic lights.
   static bool get drawsCaptionButtons => Platform.isWindows || Platform.isLinux;
 
-  /// Hides the native title bar and shows a centered window. Safe no-op off desktop.
+  /// Hides the native title bar and shows the window: maximized when it was
+  /// maximized last time, otherwise centered at its default size. Safe no-op
+  /// off desktop.
   Future<void> initialize() async {
     if (!isDesktop) return;
     await windowManager.ensureInitialized();
+    const store = WindowPlacementStore();
+    final maximized = await store.readMaximized();
     final options = windowOptionsFor(isWindows: Platform.isWindows);
     await windowManager.waitUntilReadyToShow(options, () async {
+      if (maximized) await windowManager.maximize();
       await windowManager.show();
       await windowManager.focus();
     });
+    windowManager.addListener(WindowPlacementRecorder(store));
   }
 
   /// Room to leave on the left of anything drawn at the very top of the
