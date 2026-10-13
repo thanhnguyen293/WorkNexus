@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/usecases/apply_markdown_format.dart';
 import '../../domain/value_objects/markdown_format.dart';
+import 'chat_composer_controller.dart';
 import 'chat_composer_input.dart';
 import 'chat_composer_toolbar.dart';
 import 'chat_markdown_toolbar.dart';
@@ -21,21 +21,21 @@ class ChatComposerField extends StatefulWidget {
     super.key,
     required this.controller,
     required this.focus,
-    required this.undo,
     required this.autofocus,
     required this.markdown,
     required this.onSend,
     required this.onLike,
+    this.onKey,
     this.hint,
   });
 
-  final TextEditingController controller;
+  final ChatComposerController controller;
   final FocusNode focus;
-  final UndoHistoryController undo;
   final bool autofocus;
   final bool markdown;
   final VoidCallback onSend;
   final VoidCallback onLike;
+  final ChatComposerKeyHandler? onKey;
   final String? hint;
 
   @override
@@ -45,22 +45,9 @@ class ChatComposerField extends StatefulWidget {
 class _ChatComposerFieldState extends State<ChatComposerField> {
   bool _expanded = false;
 
-  /// Applies a Markdown toolbar format to the selection (the caret, or the
-  /// end of the text when there is none).
+  /// Applies a toolbar format to the selection and goes back to typing.
   void _format(MarkdownFormat format) {
-    final value = widget.controller.value;
-    final selection = value.selection.isValid
-        ? value.selection
-        : TextSelection.collapsed(offset: value.text.length);
-    final edit = const ApplyMarkdownFormat()((
-      text: value.text,
-      start: selection.start,
-      end: selection.end,
-    ), format);
-    widget.controller.value = TextEditingValue(
-      text: edit.text,
-      selection: TextSelection(baseOffset: edit.start, extentOffset: edit.end),
-    );
+    widget.controller.apply(format);
     widget.focus.requestFocus();
   }
 
@@ -82,8 +69,9 @@ class _ChatComposerFieldState extends State<ChatComposerField> {
               child: ChatComposerInput(
                 controller: widget.controller,
                 focus: widget.focus,
-                undo: widget.undo,
                 autofocus: widget.autofocus,
+                markdown: false,
+                onKey: widget.onKey,
                 hint: widget.hint,
               ),
             ),
@@ -106,8 +94,9 @@ class _ChatComposerFieldState extends State<ChatComposerField> {
           ChatComposerInput(
             controller: widget.controller,
             focus: widget.focus,
-            undo: widget.undo,
             autofocus: widget.autofocus,
+            markdown: true,
+            onKey: widget.onKey,
             hint: AppL10n.of(context).chatMarkdownHint(shortcut),
             minLines: lines,
             maxLines: _expanded ? _kExpandedLines : null,
@@ -116,8 +105,8 @@ class _ChatComposerFieldState extends State<ChatComposerField> {
             children: [
               Expanded(
                 child: ChatMarkdownToolbar(
+                  controller: widget.controller,
                   onFormat: _format,
-                  undo: widget.undo,
                   expanded: _expanded,
                   onToggleExpanded: () =>
                       setState(() => _expanded = !_expanded),

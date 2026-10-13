@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'chat_composer_controller.dart';
+
 /// Someone (or everyone) that can be mentioned.
 typedef MentionCandidate = ({int? userId, String name, String? account});
 
 /// Composer state for @mentions: the `@query` typed right before the
-/// cursor, the highlighted suggestion, and the names inserted so far (sent
-/// as mention markup).
+/// cursor and the highlighted suggestion.
 class MentionAutocomplete extends ChangeNotifier {
   static final _query = RegExp(r'(?:^|\s)@([^\s@]{0,30})$');
 
@@ -17,9 +18,6 @@ class MentionAutocomplete extends ChangeNotifier {
 
   /// The suggestions on screen (set by the list), for keyboard selection.
   List<MentionCandidate> visible = const [];
-
-  /// Inserted display name → user id.
-  final mentions = <String, int>{};
 
   String? get query => _active?.query;
   int get highlight => _highlight;
@@ -63,27 +61,22 @@ class MentionAutocomplete extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Replaces the typed `@query` with `@Name ` and remembers the mention.
-  void insert(TextEditingController text, MentionCandidate candidate) {
+  /// Replaces the typed `@query` with a mention of [candidate].
+  void insert(ChatComposerController text, MentionCandidate candidate) {
     final active = _active;
     if (active == null) return;
-    final value = text.value;
-    final end = value.selection.baseOffset;
-    final inserted = '@${candidate.name} ';
-    text.value = TextEditingValue(
-      text: value.text.replaceRange(active.start, end, inserted),
-      selection: TextSelection.collapsed(
-        offset: active.start + inserted.length,
-      ),
+    text.insertMention(
+      active.start,
+      text.quill.selection.baseOffset,
+      id: candidate.userId,
+      name: candidate.name,
     );
-    if (candidate.userId case final id?) mentions[candidate.name] = id;
     _active = null;
     notifyListeners();
   }
 
-  /// After sending: forget the mentions of the sent text.
+  /// After sending: no query is pending.
   void reset() {
-    mentions.clear();
     _active = null;
     _dismissedAt = null;
   }

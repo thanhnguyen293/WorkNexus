@@ -10,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
+import 'chat_composer_controller.dart';
 import 'chat_emoji_picker.dart';
 import 'chat_send_code_button.dart';
 
@@ -35,7 +36,7 @@ class ChatComposerTools extends StatelessWidget {
   final int? threadRootId;
 
   /// The input and its focus, for inserting emoji at the cursor.
-  final TextEditingController text;
+  final ChatComposerController text;
   final FocusNode focus;
   final VoidCallback onPickImage;
   final VoidCallback onAttach;
@@ -88,7 +89,7 @@ class ChatComposerSendButton extends StatelessWidget {
     required this.onLike,
   });
 
-  final TextEditingController text;
+  final ChatComposerController text;
   final VoidCallback onSend;
   final VoidCallback onLike;
 
@@ -96,10 +97,10 @@ class ChatComposerSendButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    return ValueListenableBuilder(
-      valueListenable: text,
-      builder: (context, value, _) {
-        final ready = value.text.trim().isNotEmpty;
+    return ListenableBuilder(
+      listenable: text,
+      builder: (context, _) {
+        final ready = !text.isBlank;
         final box = BoxConstraints.tightFor(
           width: context.sizes.controlLg,
           height: context.sizes.controlLg,

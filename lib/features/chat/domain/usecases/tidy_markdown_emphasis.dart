@@ -1,7 +1,7 @@
 /// Moves whitespace at the end of emphasis out of its markers:
 /// `**word **` → `**word** `. Markdown does not count emphasis that ends in
-/// a space, but the composer shows it styled while the next word is being
-/// typed — so what was shown is what the recipient sees.
+/// a space; the composer writes its own formatting tidily (see
+/// `BuildMessageText`), this catches Markdown typed by hand.
 class TidyMarkdownEmphasis {
   const TidyMarkdownEmphasis();
 

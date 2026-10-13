@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_controller.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/mention_autocomplete.dart';
 
 void main() {
@@ -15,14 +16,14 @@ void main() {
     expect(m.query, isNull);
   });
 
-  test('insert replaces the query and remembers the mention', () {
+  test('insert replaces the query with a mention', () {
     final m = MentionAutocomplete();
-    final text = TextEditingController.fromValue(typed('ping @dy'));
+    final text = ChatComposerController()..insertText('ping @dy');
     m.update(text.value);
     m.insert(text, (userId: 41, name: 'Dyno', account: 'dyno'));
-    expect(text.text, 'ping @Dyno ');
-    expect(m.mentions, {'Dyno': 41});
+    expect(text.messageText, 'ping [@Dyno](@#41) ');
     expect(m.query, isNull);
+    text.dispose();
   });
 
   test('Esc hides the list until another @ is typed', () {

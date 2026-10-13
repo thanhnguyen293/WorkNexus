@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -21,6 +22,7 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
@@ -675,9 +677,15 @@ void main() {
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {
     await pumpChat(tester);
     await openTeamChat(tester);
-    final composer = find.byType(TextField).last;
-
-    await tester.enterText(composer, 'first line');
+    final composer = find.byType(ChatComposerField).last;
+    await tester.tap(
+      find.descendant(of: composer, matching: find.byType(QuillEditor)),
+    );
+    tester
+        .widget<ChatComposerField>(composer)
+        .controller
+        .insertText('first line');
+    await tester.pump();
     await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);

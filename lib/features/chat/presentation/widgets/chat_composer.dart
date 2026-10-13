@@ -10,10 +10,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/usecases/is_single_emoji.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
+import 'chat_composer_controller.dart';
 import 'chat_composer_field.dart';
 import 'chat_composer_toolbar.dart';
 import 'chat_file_send.dart';
-import 'chat_markdown_controller.dart';
 import 'chat_mention_overlay.dart';
 import 'chat_snack.dart';
 import 'mention_autocomplete.dart';
@@ -40,15 +40,15 @@ class ChatComposer extends ConsumerStatefulWidget {
 }
 
 class _ChatComposerState extends ConsumerState<ChatComposer> {
-  final _text = ChatMarkdownController();
-  late final _focus = FocusNode(onKeyEvent: _onKey);
+  late final _text = ChatComposerController(
+    markdown: ref.read(appSettingsProvider).chatSendMarkdown,
+  );
+  final _focus = FocusNode();
   final _mentions = MentionAutocomplete();
-  final _undo = UndoHistoryController();
 
   @override
   void initState() {
     super.initState();
-    _text.markdown = ref.read(appSettingsProvider).chatSendMarkdown;
     _text.addListener(() => _mentions.update(_text.value));
   }
 
@@ -67,19 +67,23 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   void dispose() {
     _text.dispose();
     _focus.dispose();
-    _undo.dispose();
     _mentions.dispose();
     super.dispose();
   }
 
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+  /// Keys the composer takes before the editor; null leaves one to it.
+  KeyEventResult? _onKey(KeyEvent event) {
+    if (event is KeyUpEvent) return null;
     final keys = HardwareKeyboard.instance;
     final key = event.logicalKey;
-    if (_mentionKey(key)) return KeyEventResult.handled;
-    if ((key == LogicalKeyboardKey.enter ||
+    final enter =
+        (key == LogicalKeyboardKey.enter ||
             key == LogicalKeyboardKey.numpadEnter) &&
-        !keys.isShiftPressed) {
+        !keys.isShiftPressed;
+    // Holding Enter must not type line breaks after the send.
+    if (event is KeyRepeatEvent) return enter ? KeyEventResult.handled : null;
+    if (_mentionKey(key)) return KeyEventResult.handled;
+    if (enter) {
       _send();
       return KeyEventResult.handled;
     }
@@ -104,7 +108,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       _paste();
       return KeyEventResult.handled;
     }
-    return KeyEventResult.ignored;
+    return null;
   }
 
   Future<void> _paste() async {
@@ -115,14 +119,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     }
     final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
     if (text == null || text.isEmpty || !mounted) return;
-    final value = _text.value;
-    final selection = value.selection.isValid
-        ? value.selection
-        : TextSelection.collapsed(offset: value.text.length);
-    _text.value = value.copyWith(
-      text: value.text.replaceRange(selection.start, selection.end, text),
-      selection: TextSelection.collapsed(offset: selection.start + text.length),
-    );
+    _text.insertText(text);
   }
 
   Future<void> _pick({bool imagesOnly = false}) async {
@@ -147,14 +144,12 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   void _startMention() {
     final value = _text.value;
     final at = value.selection.isValid
-        ? value.selection.baseOffset
+        ? value.selection.start
         : value.text.length;
     final before = value.text.substring(0, at);
-    final insert = before.isEmpty || before.endsWith(' ') ? '@' : ' @';
-    _text.value = TextEditingValue(
-      text: value.text.replaceRange(at, at, insert),
-      selection: TextSelection.collapsed(offset: at + insert.length),
-    );
+    final spaced =
+        before.isEmpty || before.endsWith(' ') || before.endsWith('\n');
+    _text.insertText(spaced ? '@' : ' @');
     _focus.requestFocus();
   }
 
@@ -182,7 +177,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   /// text bubble. A large emoji can't answer a message, so while replying
   /// (or in a thread) it goes as text with the reply instead.
   Future<void> _sendLargeEmoji(String emoji) async {
-    if (_replyToId != null) return _deliver(emoji, const {});
+    if (_replyToId != null) return _deliver(emoji);
     final t = widget.thread;
     final result = await ref
         .read(chatControllerProvider)
@@ -194,19 +189,19 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   /// Sends the input; a lone emoji goes large.
   Future<void> _send() async {
-    final text = _text.text;
-    if (text.trim().isEmpty) return;
-    final mentions = Map.of(_mentions.mentions);
+    if (_text.isBlank) return;
+    final text = _text.messageText;
+    final plain = _text.hasMentions ? null : _text.plainText;
     _text.clear();
     _mentions.reset();
-    if (mentions.isEmpty && const IsSingleEmoji()(text)) {
-      return _sendLargeEmoji(text.trim());
+    if (plain != null && const IsSingleEmoji()(plain)) {
+      return _sendLargeEmoji(plain.trim());
     }
-    await _deliver(text, mentions);
+    await _deliver(text);
   }
 
   /// Sends [text] as a message, answering the reply draft (or thread root).
-  Future<void> _deliver(String text, Map<String, int> mentions) async {
+  Future<void> _deliver(String text) async {
     final replyToId = _replyToId;
     _cancelReply();
     final t = widget.thread;
@@ -218,7 +213,6 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
           text,
           replyToId: replyToId,
           markdown: ref.read(appSettingsProvider).chatSendMarkdown,
-          mentions: mentions,
         );
     if (result case Err(:final failure)) {
       if (mounted) showChatFailure(context, failure);
@@ -281,7 +275,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
             child: ChatComposerField(
               controller: _text,
               focus: _focus,
-              undo: _undo,
+              onKey: _onKey,
               autofocus: widget.threadRootId == null,
               markdown: ref.watch(
                 appSettingsProvider.select((s) => s.chatSendMarkdown),
