@@ -1,3 +1,6 @@
+// Quill marks its clipboard toolbar buttons experimental (hidden here).
+// ignore_for_file: experimental_member_use
+
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
