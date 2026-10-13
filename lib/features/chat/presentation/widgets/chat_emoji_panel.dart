@@ -3,10 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
@@ -17,6 +14,7 @@ import '../../domain/entities/chat_sticker.dart';
 import '../../domain/value_objects/emoji_shortnames.dart';
 import '../providers/chat_providers.dart';
 import '../providers/sticker_providers.dart';
+import 'chat_panel_tab_bar.dart';
 import 'chat_snack.dart';
 import 'chat_sticker_panel.dart';
 
@@ -121,8 +119,6 @@ class ChatEmojiTabs extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final s = context.spacing;
-    final c = context.colors;
     final stickerTab = switch (ref.watch(chatStickersProvider)) {
       AsyncData(value: Ok(:final value)) => ChatStickerPanel(
         stickers: value,
@@ -134,42 +130,14 @@ class ChatEmojiTabs extends ConsumerWidget {
       ),
       _ => const AppStateView.loading(compact: true),
     };
-    // The tabs are as tall as the app's other tab rows, not Material's 46.
-    final rowHeight = tabRowHeight;
-    final tabHeight = rowHeight == null
-        ? context.sizes.controlMd + s.md
-        : rowHeight - context.borders.hairline;
-    final action = this.action;
     return DefaultTabController(
       length: 2,
       child: Column(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border(bottom: context.hairlineSide),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TabBar(
-                    labelStyle: context.typography.bodySmStrong,
-                    unselectedLabelStyle: context.typography.bodySm,
-                    dividerColor: Colors.transparent,
-                    tabs: [
-                      Tab(height: tabHeight, text: l.chatStickersTab),
-                      Tab(height: tabHeight, text: l.chatEmoji),
-                    ],
-                  ),
-                ),
-                if (action != null) ...[
-                  VerticalDivider(width: 1, color: c.border),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: s.xs),
-                    child: action,
-                  ),
-                ],
-              ],
-            ),
+          ChatPanelTabBar(
+            labels: [l.chatStickersTab, l.chatEmoji],
+            height: tabRowHeight,
+            action: action,
           ),
           Expanded(
             child: TabBarView(
