@@ -26,10 +26,18 @@ class DesktopWindowService {
   /// Hides the native title bar and shows the window: maximized when it was
   /// maximized last time, otherwise centered at its default size. Safe no-op
   /// off desktop.
+  ///
+  /// A window already on screen is left where it is: on a hot restart the
+  /// native window outlives the Dart side, and sizing a maximized window to
+  /// the default would shrink the app inside its still-maximized frame.
   Future<void> initialize() async {
     if (!isDesktop) return;
     await windowManager.ensureInitialized();
     const store = WindowPlacementStore();
+    if (await windowManager.isVisible()) {
+      windowManager.addListener(WindowPlacementRecorder(store));
+      return;
+    }
     final maximized = await store.readMaximized();
     final options = windowOptionsFor(isWindows: Platform.isWindows);
     await windowManager.waitUntilReadyToShow(options, () async {
