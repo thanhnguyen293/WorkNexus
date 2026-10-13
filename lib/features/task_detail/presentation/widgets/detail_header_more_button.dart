@@ -10,9 +10,10 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
+import 'detail_header_title.dart';
 
 /// The header's "⋯" menu: the panel actions used now and then (refresh, copy
-/// link), kept out of the header row so the title has less to compete with.
+/// title / link), kept out of the header row so the title has less to compete with.
 class DetailHeaderMoreButton extends ConsumerWidget {
   const DetailHeaderMoreButton({super.key, required this.ticket});
 
@@ -41,6 +42,7 @@ class DetailHeaderMoreButton extends ConsumerWidget {
       at: at,
       entries: [
         AppMenuEntry(icon: LucideIcons.refreshCw300, label: l.refresh),
+        AppMenuEntry(icon: LucideIcons.copy300, label: l.copyTitle),
         if (url.isNotEmpty)
           AppMenuEntry(icon: LucideIcons.link300, label: l.copyLink),
       ],
@@ -50,6 +52,11 @@ class DetailHeaderMoreButton extends ConsumerWidget {
       case 0:
         ref.invalidate(ticketDetailSyncProvider(ticket.id));
       case 1:
+        await Clipboard.setData(
+          ClipboardData(text: ticketTitleWithRef(ticket)),
+        );
+        if (context.mounted) showAppSnack(context, l.titleCopied);
+      case 2:
         await Clipboard.setData(ClipboardData(text: url));
         if (context.mounted) showAppSnack(context, l.linkCopied);
     }

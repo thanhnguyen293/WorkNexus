@@ -67,3 +67,8 @@ String ticketRef(ProviderType prov, String key, String? type) => switch (prov) {
   ProviderType.zentao => '${type ?? ''} #$key',
   _ => '#$key',
 };
+
+/// A ticket's bare reference, written before its title (`#6534`); a Jira key
+/// already reads as one.
+String ticketShortRef(ProviderType prov, String key) =>
+    prov == ProviderType.jira ? key : '#$key';
