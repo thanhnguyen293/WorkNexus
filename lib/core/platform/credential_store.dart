@@ -22,7 +22,7 @@ class CredentialStore {
     : _storage =
           storage ??
           const FlutterSecureStorage(
-            mOptions: MacOsOptions(useDataProtectionKeyChain: false),
+            mOptions: MacOsOptions(usesDataProtectionKeychain: false),
           );
 
   final FlutterSecureStorage _storage;

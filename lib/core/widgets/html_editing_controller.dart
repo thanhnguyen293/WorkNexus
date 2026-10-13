@@ -1,3 +1,7 @@
+// Quill marks its clipboard options experimental; pasting images and rich
+// text depends on them.
+// ignore_for_file: experimental_member_use
+
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
