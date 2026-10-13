@@ -34,8 +34,9 @@ Categories=Office;
 StartupWMClass=$app_id
 EOF
 
-# Runtime libraries the plugins link (see the build dependencies in CI):
-# GTK, libsecret (flutter_secure_storage), ayatana-appindicator (tray_manager).
+# Runtime libraries the plugins link (see the build dependencies in CI); the
+# tray's ayatana-appindicator is bundled (bundle_libs.sh), so not listed:
+# GTK, libsecret (flutter_secure_storage).
 cat > "$root/DEBIAN/control" <<EOF
 Package: worknexus
 Version: $version
@@ -43,7 +44,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: WorkNexus
-Depends: libgtk-3-0, libsecret-1-0, libayatana-appindicator3-1
+Depends: libgtk-3-0, libsecret-1-0
 Installed-Size: $(du -sk "$root/opt" | cut -f1)
 Description: WorkNexus desktop app
 EOF

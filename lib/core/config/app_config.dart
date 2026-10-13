@@ -89,6 +89,13 @@ abstract final class AppConfig {
     defaultValue: 'WorkNexus-linux-x64.tar.gz',
   );
 
+  /// Release asset holding the Linux build as one AppImage file, which an app
+  /// started from an AppImage updates from instead of the tarball.
+  static const updateAssetAppImage = String.fromEnvironment(
+    'UPDATE_ASSET_APPIMAGE',
+    defaultValue: 'WorkNexus-linux-x64.AppImage',
+  );
+
   /// Release asset listing `sha256  filename` lines the updater verifies
   /// a download against.
   static const updateChecksumsAsset = String.fromEnvironment(

@@ -47,4 +47,26 @@ void main() {
 
     expect(entry().readAsStringSync(), contains('Exec="/new/WorkNexus"'));
   });
+
+  test('from an AppImage, runs the image and copies its icon out', () async {
+    final mount = '${apps.path}/mount';
+    await File('$mount/data/app_icon.png').create(recursive: true);
+    await File('$mount/data/app_icon.png').writeAsString('png');
+    final share = '${apps.path}/share';
+
+    await LinuxDesktopEntry(
+      executable: '$mount/WorkNexus',
+      applicationsDir: '$share/applications',
+      appImage: '/home/me/Apps/WorkNexus.AppImage',
+    ).ensureInstalled();
+
+    final icon =
+        '$share/icons/hicolor/256x256/apps/com.worknexus.workNexus.png';
+    final lines = File(
+      '$share/applications/com.worknexus.workNexus.desktop',
+    ).readAsLinesSync();
+    expect(lines, contains('Exec="/home/me/Apps/WorkNexus.AppImage"'));
+    expect(lines, contains('Icon=${icon.replaceAll(r'\', r'\\')}'));
+    expect(File(icon).readAsStringSync(), 'png');
+  });
 }

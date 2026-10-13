@@ -13,6 +13,7 @@ import '../../data/local/repositories/local_activity_repository.dart';
 import '../../data/local/repositories/local_comment_repository.dart';
 import '../../data/local/repositories/local_ticket_repository.dart';
 import '../../data/local/repositories/local_workspace_repository.dart';
+import '../../features/app_update/data/datasources/appimage_update_installer.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
 import '../../features/app_update/data/datasources/linux_update_installer.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
@@ -99,6 +100,7 @@ import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
 import '../platform/app_icon_badge.dart';
+import '../platform/app_image.dart';
 import '../platform/credential_store.dart';
 import '../platform/desktop_notifier.dart';
 import 'service_locator.config.dart';
@@ -148,7 +150,10 @@ abstract class ServiceModule {
         : Platform.isMacOS
         ? const MacosUpdateInstaller()
         : Platform.isLinux
-        ? const LinuxUpdateInstaller()
+        ? switch (runningAppImage()) {
+            final appImage? => AppImageUpdateInstaller(appImage),
+            null => const LinuxUpdateInstaller(),
+          }
         : null,
     stagingRoot: () async => Directory(
       '${(await getTemporaryDirectory()).path}/${AppConfig.databaseName}-update',
