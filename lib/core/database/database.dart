@@ -142,6 +142,10 @@ class Settings extends Table {
   BoolColumn get chatNotifyWhileViewing =>
       boolean().withDefault(const Constant(true))();
 
+  /// Whether chat peers are told while the user is typing to them.
+  BoolColumn get chatSendTypingStatus =>
+      boolean().withDefault(const Constant(true))();
+
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
       integer().withDefault(const Constant(2048))();
@@ -494,7 +498,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 46;
+  int get schemaVersion => 47;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -743,6 +747,11 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(chatMessages, chatMessages.broadcast);
         }
         await _markStoredBroadcasts();
+      }
+      if (from < 47) {
+        if (!await _hasColumn('settings', 'chat_send_typing_status')) {
+          await m.addColumn(settings, settings.chatSendTypingStatus);
+        }
       }
     },
   );

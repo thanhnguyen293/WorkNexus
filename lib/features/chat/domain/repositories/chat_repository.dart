@@ -7,6 +7,7 @@ import '../entities/chat_message.dart';
 import '../entities/chat_user.dart';
 import '../value_objects/chat_connection_status.dart';
 import '../value_objects/chat_presence.dart';
+import '../value_objects/chat_typing_signal.dart';
 import '../value_objects/message_content.dart';
 
 /// ZenTao chat for a connected ZenTao account ([accountId] is the WorkNexus
@@ -238,6 +239,17 @@ abstract class ChatRepository {
   /// Sets the signed-in user's own picture from [image] (any common image
   /// format; cut to its centred square), then reloads users so it shows.
   Future<Result<void>> setMyAvatar(String accountId, Uint8List image);
+
+  /// Peers starting and stopping typing in the account's chats, live.
+  Stream<ChatTypingSignal> watchTyping(String accountId);
+
+  /// Tells the members of [chatGid] whether the user is [typing] in it.
+  /// Best effort: nothing waits for the server, and offline it is a no-op.
+  Future<Result<void>> sendTyping(
+    String accountId,
+    String chatGid, {
+    required bool typing,
+  });
 
   /// Sets the signed-in user's own presence, shown to everyone. Kept across
   /// reconnects for the rest of the app session.

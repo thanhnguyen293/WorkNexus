@@ -9,6 +9,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'conversation_preview_line.dart';
 
 /// One row of the chat list: avatar, title, last message, time and unread.
 class ConversationTile extends StatelessWidget {
@@ -22,6 +23,7 @@ class ConversationTile extends StatelessWidget {
     this.presence,
     this.verified,
     this.lastSender,
+    this.typing,
     this.compact = false,
   });
 
@@ -46,10 +48,12 @@ class ConversationTile extends StatelessWidget {
   /// Who sent the last message, shown before its preview (groups).
   final String? lastSender;
 
+  /// Who is typing, shown in place of the last message while set.
+  final String? typing;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final last = chat.lastMessage;
     final unread = chat.unreadCount > 0;
     final avatarWidget = ChatAvatar(
       name: title,
@@ -133,37 +137,10 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              if (lastSender case final sender?)
-                                TextSpan(
-                                  text: '$sender: ',
-                                  // Set apart by color only, a step above the
-                                  // preview: bolder or full-ink text here
-                                  // outweighs the chat title above it.
-                                  style: context.typography.bodySm.copyWith(
-                                    color: unread
-                                        ? c.textPrimary
-                                        : Color.lerp(
-                                            c.textSecondary,
-                                            c.textPrimary,
-                                            0.4,
-                                          ),
-                                  ),
-                                ),
-                              TextSpan(
-                                text: last == null
-                                    ? ''
-                                    : chatPreview(context, last),
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.typography.bodySm.copyWith(
-                            color: unread ? c.textPrimary : c.textSecondary,
-                          ),
+                        child: ConversationPreviewLine(
+                          chat: chat,
+                          lastSender: lastSender,
+                          typing: typing,
                         ),
                       ),
                       if (chat.muted) ...[

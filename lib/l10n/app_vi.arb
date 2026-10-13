@@ -1224,5 +1224,13 @@
   "chatForward": "Chuyển tiếp",
   "chatForwardTitle": "Chuyển tiếp tới…",
   "chatForwardTo": "{count, plural, =1{Chuyển tiếp} other{Chuyển tiếp tới {count} cuộc trò chuyện}}",
-  "chatForwarded": "{count, plural, =1{Đã chuyển tiếp} other{Đã chuyển tiếp tới {count} cuộc trò chuyện}}"
+  "chatForwarded": "{count, plural, =1{Đã chuyển tiếp} other{Đã chuyển tiếp tới {count} cuộc trò chuyện}}",
+  "chatPrivacy": "Quyền riêng tư",
+  "chatSendTypingStatus": "Cho biết khi tôi đang nhập",
+  "chatSendTypingStatusHint": "Người trong chat 1-1 và nhóm thấy khi bạn đang nhập tin nhắn.",
+  "chatTyping": "đang nhập…",
+  "chatTypingOne": "{name} đang nhập…",
+  "chatTypingTwo": "{first} và {second} đang nhập…",
+  "chatTypingMany": "{name} và {count} người khác đang nhập…",
+  "chatDebugSimulateTyping": "Giả lập có người đang nhập (debug)"
 }

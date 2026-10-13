@@ -46,6 +46,29 @@ void main() {
       expect(text, startsWith('srv["userloginRequest"'));
     });
 
+    test('chattyping packs its named fields, not params', () {
+      final text = codecWith().encodeToText(
+        const XxdRequest(
+          'chattyping',
+          fields: {
+            'cgid': '31&40',
+            'users': [31],
+            'typing': true,
+          },
+          userId: 40,
+        ),
+      );
+      final packed = jsonDecode(text) as List<Object?>;
+      expect(packed.first, 'chattypingRequest');
+      expect(ApiSchemeCodec(scheme).decode(packed), {
+        'rid': '',
+        'cgid': '31&40',
+        'users': [31],
+        'typing': true,
+        'userID': 40,
+      });
+    });
+
     test('encrypted frames decrypt back to the packed text', () {
       final codec = codecWith();
       const request = XxdRequest('ping', userId: 40);

@@ -29,6 +29,7 @@ import '../../domain/usecases/send_chat_file.dart';
 import '../../domain/usecases/send_code_message.dart';
 import '../../domain/usecases/send_sticker.dart';
 import '../../domain/usecases/send_text_message.dart';
+import '../../domain/usecases/send_typing_status.dart';
 import '../../domain/usecases/should_notify_chat_message.dart';
 import '../../domain/usecases/trust_chat_certificate.dart';
 import '../../domain/value_objects/chat_presence.dart';
@@ -56,7 +57,8 @@ class ChatController {
       _open = OpenChatAttachment(repository),
       _thumbnail = LoadVideoThumbnail(repository),
       _pin = PinChatMessage(repository),
-      _direct = OpenDirectChat(repository);
+      _direct = OpenDirectChat(repository),
+      _typing = SendTypingStatus(repository);
 
   static const pageSize = 50;
 
@@ -78,6 +80,7 @@ class ChatController {
   final LoadVideoThumbnail _thumbnail;
   final PinChatMessage _pin;
   final OpenDirectChat _direct;
+  final SendTypingStatus _typing;
   final _threads = const BuildReplyThread();
   final _shouldNotify = const ShouldNotifyChatMessage();
   final _canSend = const CanSendToChat();
@@ -209,6 +212,13 @@ class ChatController {
     replyToId: replyToId,
     markdown: markdown,
   );
+
+  /// Tells [chat]'s members whether the user is typing (see
+  /// [SendTypingStatus]).
+  Future<Result<void>> sendTyping(
+    ChatConversation chat, {
+    required bool typing,
+  }) => _typing(chat: chat, typing: typing);
 
   /// Sends a code snippet (see [SendCodeMessage]).
   Future<Result<void>> sendCode(

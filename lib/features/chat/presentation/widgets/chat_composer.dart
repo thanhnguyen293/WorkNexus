@@ -9,6 +9,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/usecases/is_single_emoji.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_typing_providers.dart';
+import '../providers/chat_typing_sender.dart';
 import 'chat_attachments.dart';
 import 'chat_composer_controller.dart';
 import 'chat_composer_field.dart';
@@ -45,11 +47,16 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   );
   final _focus = FocusNode();
   final _mentions = MentionAutocomplete();
+  late final ChatTypingSender _typing;
 
   @override
   void initState() {
     super.initState();
-    _text.addListener(() => _mentions.update(_text.value));
+    _typing = chatTypingSenderFor(ref, widget.thread);
+    _text.addListener(() {
+      _mentions.update(_text.value);
+      _typing.changed(_text.value.text);
+    });
   }
 
   ChatComposerKey get _draftKey =>
@@ -65,6 +72,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   @override
   void dispose() {
+    _typing.stop();
     _text.dispose();
     _focus.dispose();
     _mentions.dispose();

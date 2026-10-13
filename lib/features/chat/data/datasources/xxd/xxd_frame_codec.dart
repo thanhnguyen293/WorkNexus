@@ -21,7 +21,7 @@ final class XxdProtocolException implements Exception {
 ///
 /// Wire rules (from the 9.1.2 client):
 /// - request JSON = `{version, device, lang, method (lower-case), params?, rid?,
-///   userID?, module?}`;
+///   userID?, module?}` plus the request's named `fields`;
 /// - with a scheme it is packed as `<apiName>Request` (fallback `requestPack`),
 ///   and the `userlogin` packet is prefixed with the server name;
 /// - with AES the frame is binary ciphertext, otherwise a text frame;
@@ -62,6 +62,7 @@ final class XxdFrameCodec {
       if (request.userId != null) 'userID': request.userId,
       if (request.module != null && request.module != 'im')
         'module': request.module,
+      ...?request.fields,
     };
     final scheme = this.scheme;
     if (scheme == null) return jsonEncode(data);
