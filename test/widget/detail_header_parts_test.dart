@@ -10,9 +10,11 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/badges.dart';
 import 'package:work_nexus/core/widgets/tinted_pill.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/bug_detail_sections.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/detail_field_rows.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/detail_people.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/detail_status_line.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/task_effort_bar.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/ticket_status_pill.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 Ticket _ticket({String? assignee, TicketProviderEntity? entity}) => Ticket(
@@ -73,26 +75,45 @@ void main() {
     });
   });
 
-  testWidgets('the status, priority and severity tags share one height', (
+  testWidgets('the bug sidebar marks severity and priority with chips', (
     tester,
   ) async {
+    const bug = ZenTaoBugEntity(
+      severity: 2,
+      productName: 'Portal',
+      activatedCount: 2,
+    );
     await pump(
       tester,
-      DetailStatusLine(
-        ticket: _ticket(
-          entity: const ZenTaoBugEntity(confirmed: 1, activatedCount: 2),
-        ).copyWith(priority: Priority.high, severity: 2),
+      ZenTaoBugSections(
+        bug,
+        ticket: _ticket(entity: bug).copyWith(priority: Priority.high),
       ),
     );
-    final heights = {
-      for (final finder in [
-        find.byType(TintedPill).first,
-        find.byType(PriorityTag),
-        find.byType(SeverityTag),
-      ])
-        tester.getSize(finder).height,
-    };
-    expect(heights, hasLength(1), reason: '$heights');
+    expect(
+      find.descendant(
+        of: find.byType(DetailFieldRows),
+        matching: find.byType(SeverityTag),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(DetailFieldRows),
+        matching: find.byType(PriorityTag),
+      ),
+      findsOneWidget,
+    );
+    // The status and triage facts the header used to carry.
+    expect(
+      find.descendant(
+        of: find.byType(DetailFieldRows),
+        matching: find.byType(TicketStatusPill),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Not confirmed'), findsOneWidget);
+    expect(find.text('Reopened ×2'), findsOneWidget);
   });
 
   group('TaskEffortBar', () {

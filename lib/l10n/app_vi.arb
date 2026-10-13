@@ -525,6 +525,9 @@
       }
     }
   },
+  "fieldConfirmation": "Xác nhận",
+  "bugUnconfirmed": "Chưa xác nhận",
+  "fieldReopened": "Mở lại",
   "openedBy": "Người mở",
   "assignedTo": "Được giao cho",
   "lastEdited": "Sửa lần cuối",
