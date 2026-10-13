@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../config/app_config.dart';
@@ -11,10 +12,17 @@ import '../debug/app_talker.dart';
 /// the rest of the app never imports the plugin. [taps] emits the payload of
 /// a notification the user clicked.
 class DesktopNotifier {
-  DesktopNotifier({FlutterLocalNotificationsPlugin? plugin})
-    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+  DesktopNotifier({
+    FlutterLocalNotificationsPlugin? plugin,
+    BaseCacheManager? imageCache,
+  }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
+       _cache = imageCache ?? DefaultCacheManager();
 
   final FlutterLocalNotificationsPlugin _plugin;
+
+  /// cached_network_image's default cache, so a picture the chat already
+  /// showed is not downloaded again.
+  final BaseCacheManager _cache;
   final _taps = StreamController<String>.broadcast();
   Future<bool>? _ready;
 
@@ -141,7 +149,7 @@ class DesktopNotifier {
         title: title,
         body: body,
         payload: payload,
-        notificationDetails: _details(imageUrl),
+        notificationDetails: await _details(imageUrl),
       );
       appTalker.info('Notifications: shown "$title"');
     } on Exception catch (e, st) {
@@ -150,20 +158,32 @@ class DesktopNotifier {
     }
   }
 
-  /// The sender's picture in place of the app logo on a Windows toast. The
-  /// toast fetches the https URL itself; other platforms have no equivalent.
-  NotificationDetails? _details(String? imageUrl) {
+  /// The sender's picture in place of the app logo on a Windows toast; other
+  /// platforms have no equivalent. A toast from an unpackaged (non-MSIX) app
+  /// only loads local files, never https, so the picture is read from the
+  /// image cache the chat UI fills (downloading it when it is not there yet).
+  /// Without it the toast shows the app icon instead.
+  Future<NotificationDetails?> _details(String? imageUrl) async {
     final uri = imageUrl == null ? null : Uri.tryParse(imageUrl);
     if (uri == null ||
-        !uri.hasScheme ||
+        !(uri.isScheme('https') || uri.isScheme('http')) ||
         defaultTargetPlatform != TargetPlatform.windows) {
+      return null;
+    }
+    final File file;
+    try {
+      file = await _cache
+          .getSingleFile(imageUrl!)
+          .timeout(const Duration(seconds: 5));
+    } on Object catch (e, st) {
+      appTalker.handle(e, st, 'Notifications: avatar download failed');
       return null;
     }
     return NotificationDetails(
       windows: WindowsNotificationDetails(
         images: [
           WindowsImage(
-            uri,
+            Uri.file(file.absolute.path, windows: true),
             altText: '',
             placement: WindowsImagePlacement.appLogoOverride,
             crop: WindowsImageCrop.circle,
@@ -174,11 +194,22 @@ class DesktopNotifier {
   }
 
   /// The bundled app icon, shown beside the app name on a Windows toast; null
-  /// when the build has no such file (the toast then shows no icon).
+  /// when the build has no such file (the toast then shows no icon). Windows
+  /// reads it from the registry as a plain path, so it is written with
+  /// backslashes only — a mixed `\…/…` path is not shown.
   static String? _windowsIconPath() {
     if (kIsWeb || !Platform.isWindows) return null;
     final dir = File(Platform.resolvedExecutable).parent.path;
-    final icon = File('$dir/data/flutter_assets/assets/tray/app_icon.png');
-    return icon.existsSync() ? icon.path : null;
+    final icon = File(
+      [
+        dir,
+        'data',
+        'flutter_assets',
+        'assets',
+        'tray',
+        'app_icon_256.png',
+      ].join(r'\'),
+    );
+    return icon.existsSync() ? icon.absolute.path : null;
   }
 }
