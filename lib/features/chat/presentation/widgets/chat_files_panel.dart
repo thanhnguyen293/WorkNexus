@@ -10,6 +10,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_layout.dart';
+import 'chat_panel_tab_bar.dart';
 import 'chat_panels.dart';
 import 'chat_shared_files.dart';
 import 'chat_side_panel_frame.dart';
@@ -24,7 +25,6 @@ class ChatFilesPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final c = context.colors;
     final infoRoom = ChatLayoutScope.of(context).infoRoom;
     final attachments = ref.watch(chatAttachmentsProvider(thread));
     final all = attachments.value;
@@ -42,14 +42,12 @@ class ChatFilesPanel extends ConsumerWidget {
         length: 2,
         child: Column(
           children: [
-            TabBar(
-              labelColor: c.accent,
-              unselectedLabelColor: c.textSecondary,
-              indicatorColor: c.accent,
-              tabs: [
-                Tab(text: '${l.chatMedia} (${media.length})'),
-                Tab(text: '${l.chatFiles} (${files.length})'),
+            ChatPanelTabBar(
+              labels: [
+                '${l.chatMedia} (${media.length})',
+                '${l.chatFiles} (${files.length})',
               ],
+              height: kChatSubHeaderHeight,
             ),
             Expanded(
               child: TabBarView(
@@ -86,7 +84,8 @@ class ChatFilesPanel extends ConsumerWidget {
       title: l.chatFilesAndMedia,
       onBack: () => backToChatInfo(ref, thread, infoRoom: infoRoom),
       onClose: infoRoom ? null : () => closeChatSidePanel(ref, thread),
-      child: body,
+      // On the header's colour, not the window's, so it reads as a panel.
+      child: ColoredBox(color: context.colors.surface, child: body),
     );
   }
 }
