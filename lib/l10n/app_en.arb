@@ -716,6 +716,14 @@
   "chatUnpin": "Unpin",
   "chatSendMessage": "Message",
   "chatUserProfile": "Profile",
+  "chatUserProfileOf": "{name}'s profile",
+  "@chatUserProfileOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatDownload": "Download",
   "chatZoomIn": "Zoom in",
   "chatZoomOut": "Zoom out",
