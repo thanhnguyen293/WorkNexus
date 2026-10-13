@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/zentao_ticket_form.dart';
 import 'package:work_nexus/core/theme/app_colors.dart';
@@ -19,11 +20,13 @@ void main() {
   );
   final colors = theme.extension<AppColors>()!;
 
-  Widget app(Widget child) => MaterialApp(
-    theme: theme,
-    localizationsDelegates: AppL10n.localizationsDelegates,
-    supportedLocales: AppL10n.supportedLocales,
-    home: Scaffold(body: Center(child: child)),
+  Widget app(Widget child) => ProviderScope(
+    child: MaterialApp(
+      theme: theme,
+      localizationsDelegates: AppL10n.localizationsDelegates,
+      supportedLocales: AppL10n.supportedLocales,
+      home: Scaffold(body: Center(child: child)),
+    ),
   );
 
   testWidgets('a picked today stays readable on the accent fill', (

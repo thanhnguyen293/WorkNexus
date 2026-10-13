@@ -18,19 +18,25 @@ String formatWhen(
   final diff = (now ?? DateTime.now()).difference(t);
   if (diff.inMinutes < 1) return l.justNow;
   if (diff.inMinutes < 60) return l.minutesAgo(diff.inMinutes);
-  return switch (format) {
-    DateDisplayFormat.iso => DateFormat('yyyy-MM-dd HH:mm').format(t),
-    DateDisplayFormat.dmy => DateFormat('dd/MM/yyyy HH:mm').format(t),
-    DateDisplayFormat.long => _long(context, t),
-  };
+  return formatDate(context, t, format: format, withTime: true);
 }
 
-/// Locale-aware long date + 24h time, e.g. `May 26, 2026 10:28` (en) /
-/// `26 thg 5, 2026 10:28` (vi). Uses the current locale's month names (loaded by
-/// `flutter_localizations` for the app's supported locales).
-String _long(BuildContext context, DateTime t) {
-  final locale = Localizations.localeOf(context).toString();
-  final date = DateFormat.yMMMd(locale).format(t);
-  final time = DateFormat('HH:mm').format(t);
-  return '$date $time';
+/// A concrete date in the app-wide [format] (see [DateDisplayFormat]), with
+/// [withTime] followed by the 24h time `HH:mm`.
+String formatDate(
+  BuildContext context,
+  DateTime t, {
+  DateDisplayFormat format = DateDisplayFormat.iso,
+  bool withTime = false,
+}) {
+  final date = switch (format) {
+    DateDisplayFormat.iso => DateFormat('yyyy-MM-dd').format(t),
+    DateDisplayFormat.dmy => DateFormat('dd/MM/yyyy').format(t),
+    // Locale-aware: `May 26, 2026` (en) / `26 thg 5, 2026` (vi), with the
+    // month names `flutter_localizations` loads for the app's locales.
+    DateDisplayFormat.long => DateFormat.yMMMd(
+      Localizations.localeOf(context).toString(),
+    ).format(t),
+  };
+  return withTime ? '$date ${DateFormat('HH:mm').format(t)}' : date;
 }
