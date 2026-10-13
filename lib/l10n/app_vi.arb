@@ -665,6 +665,7 @@
   "chatUnpin": "Bỏ ghim",
   "chatSendMessage": "Nhắn tin",
   "chatUserProfile": "Thông tin người dùng",
+  "chatUserProfileOf": "Thông tin của {name}",
   "chatDownload": "Tải xuống",
   "chatZoomIn": "Phóng to",
   "chatZoomOut": "Thu nhỏ",

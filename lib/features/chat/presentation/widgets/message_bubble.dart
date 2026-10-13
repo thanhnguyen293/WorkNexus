@@ -84,6 +84,8 @@ class MessageBubble extends ConsumerWidget {
     final nameText = ChatProfileTap(
       accountId: chat.accountId,
       userId: message.senderId,
+      name: name,
+      showName: false,
       child: Text(
         name,
         style: context.typography.captionStrong.copyWith(
@@ -202,7 +204,9 @@ class MessageBubble extends ConsumerWidget {
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
-        if (showName && style.name == ChatNamePlacement.aboveBubble)
+        // Media has no bubble to hold the name, so it goes above it in every
+        // style.
+        if (showName && (style.name == ChatNamePlacement.aboveBubble || media))
           Padding(
             padding: EdgeInsets.only(left: s.xs, right: s.xs, bottom: s.xs),
             child: nameText,
@@ -262,6 +266,7 @@ class MessageBubble extends ConsumerWidget {
           ? ChatProfileTap(
               accountId: chat.accountId,
               userId: message.senderId,
+              name: name,
               child: ChatAvatar(
                 name: name,
                 imageUrl: chatAvatarUrl(users, message.senderId),
