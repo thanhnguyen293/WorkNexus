@@ -7,7 +7,8 @@ import '../../domain/value_objects/chat_list_tab.dart';
 import '../providers/chat_providers.dart';
 import 'chat_tab_chip.dart';
 
-/// Filter chips above the chat list: all, direct, groups, bots.
+/// Filter chips above the chat list: all, direct, groups, bots — each with
+/// the unread count of the chats it shows.
 class ChatListTabs extends ConsumerWidget {
   const ChatListTabs({super.key});
 
@@ -30,6 +31,7 @@ class ChatListTabs extends ConsumerWidget {
             ChatTabChip(
               label: labels[tab] ?? '',
               selected: tab == current,
+              unread: ref.watch(chatTabUnreadProvider(tab)),
               onTap: () => ref.read(chatListTabProvider.notifier).state = tab,
             ),
             SizedBox(width: context.spacing.sm),
