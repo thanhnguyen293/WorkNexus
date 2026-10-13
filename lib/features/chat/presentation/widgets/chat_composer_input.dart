@@ -14,18 +14,15 @@ import 'chat_mention_embed.dart';
 /// Handles a key before the editor does; null lets the editor have it.
 typedef ChatComposerKeyHandler = KeyEventResult? Function(KeyEvent event);
 
-/// The composer's borderless, growing message field.
-///
-/// With [markdown] on, Markdown typed by hand turns into formatting as it is
-/// typed (`**bold**`, `- ` lists, `# ` headings…). Off, the editor's
-/// formatting shortcuts do nothing, so the text stays plain.
+/// The composer's borderless, growing rich-text field (Markdown on):
+/// Markdown typed by hand turns into formatting as it is typed (`**bold**`,
+/// `- ` lists, `# ` headings…).
 class ChatComposerInput extends StatefulWidget {
   const ChatComposerInput({
     super.key,
     required this.controller,
     required this.focus,
     required this.autofocus,
-    required this.markdown,
     this.onKey,
     this.hint,
     this.minLines = 1,
@@ -35,7 +32,6 @@ class ChatComposerInput extends StatefulWidget {
   final ChatComposerController controller;
   final FocusNode focus;
   final bool autofocus;
-  final bool markdown;
   final ChatComposerKeyHandler? onKey;
 
   /// Rows shown empty, and at most before it scrolls (default 10).
@@ -67,18 +63,12 @@ class _ChatComposerInputState extends State<ChatComposerInput> {
     if (key == LogicalKeyboardKey.keyF || key == LogicalKeyboardKey.keyG) {
       return KeyEventResult.handled;
     }
-    if (!widget.markdown &&
-        (_formatKeys.contains(key) ||
-            keys.isShiftPressed && _shiftFormatKeys.contains(key))) {
-      return KeyEventResult.handled;
-    }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final line = chatEditorBodyStyle(context).fontSize! * kChatEditorLineHeight;
-    final markdown = widget.markdown;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
       child: QuillEditor(
@@ -93,39 +83,10 @@ class _ChatComposerInputState extends State<ChatComposerInput> {
           customStyles: chatEditorStyles(context),
           embedBuilders: const [ChatMentionEmbedBuilder()],
           onKeyPressed: _key,
-          characterShortcutEvents: markdown
-              ? standardCharactersShortcutEvents
-              : const [],
-          spaceShortcutEvents: markdown ? standardSpaceShorcutEvents : const [],
+          characterShortcutEvents: standardCharactersShortcutEvents,
+          spaceShortcutEvents: standardSpaceShorcutEvents,
         ),
       ),
     );
   }
 }
-
-/// Ctrl/⌘ + these format the selection in the editor (bold, underline,
-/// italic, code, link, indent, headings).
-final _formatKeys = {
-  LogicalKeyboardKey.keyB,
-  LogicalKeyboardKey.keyU,
-  LogicalKeyboardKey.keyI,
-  LogicalKeyboardKey.backquote,
-  LogicalKeyboardKey.tilde,
-  LogicalKeyboardKey.keyK,
-  LogicalKeyboardKey.keyM,
-  LogicalKeyboardKey.digit0,
-  LogicalKeyboardKey.digit1,
-  LogicalKeyboardKey.digit2,
-  LogicalKeyboardKey.digit3,
-  LogicalKeyboardKey.digit4,
-  LogicalKeyboardKey.digit5,
-  LogicalKeyboardKey.digit6,
-};
-
-/// …and Ctrl/⌘ + Shift + these (strikethrough, lists, checklist).
-final _shiftFormatKeys = {
-  LogicalKeyboardKey.keyS,
-  LogicalKeyboardKey.keyL,
-  LogicalKeyboardKey.keyO,
-  LogicalKeyboardKey.keyC,
-};

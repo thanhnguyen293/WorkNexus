@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/markdown_format.dart';
 import 'chat_composer_controller.dart';
 import 'chat_composer_input.dart';
+import 'chat_composer_plain_input.dart';
 import 'chat_composer_toolbar.dart';
 import 'chat_markdown_toolbar.dart';
 
@@ -13,9 +14,9 @@ import 'chat_markdown_toolbar.dart';
 const int _kMarkdownLines = 3;
 const int _kExpandedLines = 14;
 
-/// The input with its send button. Plain: one growing line, send at its
-/// right. Markdown: a taller input over the formatting toolbar, send at
-/// the toolbar's right.
+/// The input with its send button. Plain: one growing line of a plain text
+/// field, send at its right. Markdown: a taller rich-text input over the
+/// formatting toolbar, send at the toolbar's right.
 class ChatComposerField extends StatefulWidget {
   const ChatComposerField({
     super.key,
@@ -66,11 +67,10 @@ class _ChatComposerFieldState extends State<ChatComposerField> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: ChatComposerInput(
-                controller: widget.controller,
+              child: ChatComposerPlainInput(
+                controller: widget.controller.plain,
                 focus: widget.focus,
                 autofocus: widget.autofocus,
-                markdown: false,
                 onKey: widget.onKey,
                 hint: widget.hint,
               ),
@@ -95,7 +95,6 @@ class _ChatComposerFieldState extends State<ChatComposerField> {
             controller: widget.controller,
             focus: widget.focus,
             autofocus: widget.autofocus,
-            markdown: true,
             onKey: widget.onKey,
             hint: AppL10n.of(context).chatMarkdownHint(shortcut),
             minLines: lines,

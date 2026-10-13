@@ -45,14 +45,40 @@ void main() {
     expect(c.hasMentions, isFalse);
   });
 
-  test('turning Markdown off strips the formatting', () {
-    c.insertText('hi');
+  test('turning Markdown off keeps the text and mentions, not formatting', () {
+    c.insertText('hi @d');
+    c.insertMention(3, 5, id: 41, name: 'Dyno');
     select(0, 2);
     c.apply(MarkdownFormat.italic);
     c.markdown = false;
+    expect(c.plainText, 'hi @Dyno ');
+    expect(c.messageText, 'hi [@Dyno](@#41) ');
     expect(c.quill.document.toDelta().toJson(), [
-      {'insert': 'hi\n'},
+      {'insert': '\n'},
     ]);
+  });
+
+  test('turning Markdown on carries plain text and mentions across', () {
+    c.markdown = false;
+    c.insertText('hi @d');
+    c.insertMention(3, 5, id: 41, name: 'Dyno');
+    c.markdown = true;
+    expect(c.plain.text, isEmpty);
+    expect(c.plainText, 'hi ￼ ');
+    expect(c.quill.selection, const TextSelection.collapsed(offset: 5));
+    expect(c.messageText, 'hi [@Dyno](@#41) ');
+  });
+
+  test('plain mode: a mention reads as placeholders, not an @query', () {
+    c.markdown = false;
+    c.insertText('@d');
+    c.insertMention(0, 2, id: 41, name: 'Dyno');
+    expect(c.value.text, '￼￼￼￼￼ ');
+    expect(c.hasMentions, isTrue);
+    expect(c.messageText, '[@Dyno](@#41) ');
+    c.clear();
+    expect(c.isBlank, isTrue);
+    expect(c.hasMentions, isFalse);
   });
 
   test('clear empties text and formatting', () {

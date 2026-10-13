@@ -85,13 +85,40 @@ void main() {
     expect(find.byIcon(LucideIcons.minimize2300), findsOneWidget);
   });
 
-  testWidgets('a mention shows as @Name in the accent', (tester) async {
+  testWidgets('plain mode types in a TextField, markdown in Quill', (
+    tester,
+  ) async {
     await pump(tester, markdown: false);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byType(QuillEditor), findsNothing);
+
+    await pump(tester, markdown: true);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(QuillEditor), findsOneWidget);
+  });
+
+  testWidgets('a mention shows as @Name in the accent', (tester) async {
+    await pump(tester, markdown: true);
     text.insertText('@d');
     text.insertMention(0, 2, id: 41, name: 'Dyno');
     await tester.pump();
     final mention = tester.widget<Text>(find.text('@Dyno'));
     final context = tester.element(find.text('@Dyno'));
+    expect(mention.style?.color, context.colors.accent);
+  });
+
+  testWidgets('plain mode draws a mention in the accent', (tester) async {
+    await pump(tester, markdown: false);
+    text.insertText('@d');
+    text.insertMention(0, 2, id: 41, name: 'Dyno');
+    await tester.pump();
+    final context = tester.element(find.byType(TextField));
+    final span = text.plain.buildTextSpan(
+      context: context,
+      withComposing: false,
+    );
+    final mention = span.children!.first as TextSpan;
+    expect(mention.text, '@Dyno');
     expect(mention.style?.color, context.colors.accent);
   });
 }

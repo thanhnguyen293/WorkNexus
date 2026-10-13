@@ -67,7 +67,7 @@ class MentionAutocomplete extends ChangeNotifier {
     if (active == null) return;
     text.insertMention(
       active.start,
-      text.quill.selection.baseOffset,
+      text.selection.baseOffset,
       id: candidate.userId,
       name: candidate.name,
     );
