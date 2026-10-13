@@ -350,24 +350,68 @@ void main() {
     expect((req.data as Map)['openedBuild'], 'trunk');
   });
 
-  test('confirmBug POSTs to the classic bug-confirmBug action', () async {
-    final fake = _FakeAdapter((opts) {
-      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-      return _json({'result': 'success'});
-    });
-    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-    final res = await adapter.confirmBug(_bugTicket());
+  test(
+    'confirmBug on 18.x POSTs to bug-confirmBug (no bug-confirm form)',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        return _json({'result': 'success'});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      final res = await adapter.confirmBug(_bugTicket());
 
-    expect(res, isA<Ok<bool>>());
-    // This ZenTao build has no REST bug-action endpoints, so confirm uses the
-    // classic index.php action and keeps the bug on the acting user (client
-    // account) so a confirmed bug stays on their board.
-    final req = fake.requests.firstWhere(
-      (r) => r.path.contains('bug-confirmBug-4302'),
-    );
-    expect(req.method, 'POST');
-    expect((req.data as Map)['assignedTo'], 'me');
-  });
+      expect(res, isA<Ok<bool>>());
+      // No REST bug-action endpoints, so confirm uses the classic action and
+      // keeps the bug on the acting user (client account) so a confirmed bug
+      // stays on their board.
+      final req = fake.requests.singleWhere(
+        (r) => r.method == 'POST' && r.path.contains('bug-confirm'),
+      );
+      expect(req.path, contains('bug-confirmBug-4302'));
+      expect((req.data as Map)['assignedTo'], 'me');
+    },
+  );
+
+  test(
+    'confirmBug on 20+ POSTs to bug-confirm with the bug\'s own fields',
+    () async {
+      // 20+ renamed the action and writes a field left out of the POST with its
+      // default, so the bug's priority, type, deadline and CC list go along.
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.method == 'GET' &&
+            opts.uri.path.contains('bug-confirm-4302')) {
+          return _json({
+            'bug': {
+              'id': 4302,
+              'pri': 1,
+              'status': 'active',
+              'type': 'codeerror',
+              'deadline': '2026-10-20',
+              'mailto': 'an,binh',
+            },
+          });
+        }
+        return _json({'result': 'success'});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      final res = await adapter.confirmBug(_bugTicket(), comment: 'ok');
+
+      expect(res, isA<Ok<bool>>());
+      final req = fake.requests.singleWhere(
+        (r) => r.method == 'POST' && r.path.contains('bug-confirm'),
+      );
+      expect(req.path, contains('bug-confirm-4302'));
+      final form = req.data as Map;
+      expect(form['assignedTo'], 'me');
+      expect(form['pri'], '1');
+    expect(form['status'], 'active');
+      expect(form['type'], 'codeerror');
+      expect(form['deadline'], '2026-10-20');
+      expect(form['mailto[]'], ['an', 'binh']);
+      expect(form['comment'], 'ok');
+    },
+  );
 
   test('confirmBug fails loudly when ZenTao returns HTML, not JSON', () async {
     // A POST ZenTao did not process comes back as the action page's HTML (or a
@@ -401,8 +445,8 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       await adapter.confirmBug(_bugTicket());
 
-      final req = fake.requests.firstWhere(
-        (r) => r.path.contains('bug-confirmBug-4302'),
+      final req = fake.requests.singleWhere(
+        (r) => r.method == 'POST' && r.path.contains('bug-confirm'),
       );
       final headers = req.headers.map(
         (k, v) => MapEntry(k.toLowerCase(), '$v'),
