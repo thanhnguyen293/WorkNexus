@@ -12,6 +12,7 @@ import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
+import 'chat_notice.dart';
 import 'chat_panels.dart';
 import 'chat_separator.dart';
 import 'chat_style.dart';
@@ -45,9 +46,12 @@ List<Object> chatListItems(List<ChatMessage> messages, Duration? markerGap) {
 }
 
 /// Consecutive messages from one sender within a few minutes form a run:
-/// one name, one avatar, one timestamp, tighter spacing.
+/// one name, one avatar, one timestamp, tighter spacing. A server notice
+/// stands apart, so the sender's next message still shows who sent it.
 bool _sameRun(Object? other, ChatMessage message) =>
     other is ChatMessage &&
+    !other.isNotice &&
+    !message.isNotice &&
     other.senderId == message.senderId &&
     other.sentAt.difference(message.sentAt).abs() <= const Duration(minutes: 5);
 
@@ -92,6 +96,21 @@ class MessageListItem extends ConsumerWidget {
       );
     }
     final message = item as ChatMessage;
+    if (message.isNotice) {
+      return KeyedSubtree(
+        key: anchor,
+        child: _Highlight(
+          thread: thread,
+          serverId: message.serverId,
+          gapAbove: style.groupGap,
+          gapBelow: style.groupGap,
+          child: Padding(
+            padding: side,
+            child: ChatNotice(style: style, message: message),
+          ),
+        ),
+      );
+    }
     final older = index + 1 < items.length ? items[index + 1] : null;
     final newer = index > 0 ? items[index - 1] : null;
     final t = thread;

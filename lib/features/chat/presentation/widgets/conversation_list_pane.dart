@@ -257,7 +257,7 @@ String? _lastSender(
 ) {
   final last = chat.lastMessage;
   if (chat.type == ChatType.one2one || last == null) return null;
-  if (last.content is NotificationContent) return null;
+  if (last.content is NotificationContent || last.isNotice) return null;
   return last.isMine
       ? AppL10n.of(context).chatYou
       : chatUserName(context, users, last.senderId);

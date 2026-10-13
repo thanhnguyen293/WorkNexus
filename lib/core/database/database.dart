@@ -304,6 +304,10 @@ class ChatMessages extends Table {
   /// nothing came between.
   BoolColumn get detached => boolean().withDefault(const Constant(false))();
 
+  /// A notice the server posted about the chat itself (xxd message `type`
+  /// `broadcast`): members invited, the chat renamed, …
+  BoolColumn get broadcast => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {accountId, gid};
 }
@@ -490,7 +494,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 45;
+  int get schemaVersion => 46;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -734,6 +738,12 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(ticketDrafts);
         }
       }
+      if (from < 46) {
+        if (!await _hasColumn('chat_messages', 'broadcast')) {
+          await m.addColumn(chatMessages, chatMessages.broadcast);
+        }
+        await _markStoredBroadcasts();
+      }
     },
   );
 
@@ -779,6 +789,16 @@ class AppDatabase extends _$AppDatabase {
     ).get();
     return rows.isNotEmpty;
   }
+
+  /// Messages stored before the `broadcast` flag existed lost the server's
+  /// `type`; flag the ones that read like its group notices (a Chinese
+  /// server's "@A 邀请 @B 加入了讨论组。", "@A 创建了讨论组 …") so cached
+  /// history shows them as notices too. New messages carry the real type.
+  Future<void> _markStoredBroadcasts() => customStatement(
+    'UPDATE chat_messages SET broadcast = 1 '
+    "WHERE content_type = 'text' AND content LIKE '[@%' "
+    "AND content LIKE '%讨论组%'",
+  );
 
   /// Marks, per chat, the stored messages past the first break in their
   /// indexes (walking back from the newest) as detached: history stored

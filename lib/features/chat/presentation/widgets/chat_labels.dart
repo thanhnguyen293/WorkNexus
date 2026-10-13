@@ -203,6 +203,14 @@ String chatFileBadge(String name) {
   return ext.length > 4 ? ext.substring(0, 4) : ext;
 }
 
+/// The text of a server notice with its mentions kept: the server writes it
+/// as Markdown (a chat name links to the chat, `_` comes escaped).
+String chatNoticeText(TextContent content) => content.markdown
+    ? _stripMarkdown(
+        content.text,
+      ).replaceAllMapped(RegExp(r'\\([\\`*_{}\[\]()#+\-.!])'), (m) => m[1]!)
+    : content.text;
+
 /// Markdown reduced to its words for one-line previews: code fences, list
 /// and heading markers, emphasis and plain link syntax are dropped (mention
 /// links are kept for [chatMentionPattern]).
