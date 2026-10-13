@@ -22,12 +22,17 @@ class ReplyQuote extends ConsumerStatefulWidget {
     required this.replyToId,
     required this.users,
     required this.onTap,
+    this.senderColor,
   });
 
   final ChatThreadKey chat;
   final int replyToId;
   final Map<int, ChatUser> users;
   final VoidCallback onTap;
+
+  /// When set, the quote takes the quoted sender's colour for its bar, tint
+  /// and name (Telegram) instead of the bubble's quote ink.
+  final Color Function(int senderId)? senderColor;
 
   @override
   ConsumerState<ReplyQuote> createState() => _ReplyQuoteState();
@@ -52,6 +57,13 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
       );
     }
     final message = original.asData?.value;
+    final accent = switch ((message, widget.senderColor)) {
+      (final m?, final colorOf?) => colorOf(m.senderId),
+      _ => null,
+    };
+    final bar = accent ?? ink.quoteBar;
+    final fill = accent?.withValues(alpha: 0.12) ?? ink.quoteFill;
+    final label = context.typography.caption.copyWith(fontSize: ink.labelSize);
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.md),
       child: HoverSurface(
@@ -62,25 +74,26 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
           context.spacing.lg,
           context.spacing.sm,
         ),
-        color: ink.quoteFill,
+        color: fill,
         hoverColor: ink.hoverFill,
         borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border(left: BorderSide(color: ink.quoteBar, width: 3)),
+        border: Border(left: BorderSide(color: bar, width: 3)),
         child: message == null
             ? Text(
                 l.chatReplyMissing,
-                style: context.typography.caption.copyWith(
-                  color: c.textTertiary,
-                ),
+                style: label.copyWith(color: c.textTertiary),
               )
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     chatUserName(context, widget.users, message.senderId),
-                    style: context.typography.captionStrong.copyWith(
+                    style: label.copyWith(
+                      fontWeight: ink.labelSize == null
+                          ? FontWeight.w500
+                          : FontWeight.w600,
                       color: readableOn(
-                        ink.quoteBar,
+                        bar,
                         ink.quoteSurface,
                         towards: ink.text,
                       ),
@@ -92,7 +105,7 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
                         : chatPreview(context, message),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.typography.caption.copyWith(color: ink.text),
+                    style: label.copyWith(color: ink.text),
                   ),
                 ],
               ),

@@ -19,15 +19,18 @@ import 'chat_user_profile_dialog.dart';
 import 'message_actions.dart';
 import 'message_body.dart';
 import 'message_bubble_box.dart';
+import 'message_bubble_content.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
-import 'message_link_previews.dart';
-import 'message_translation_view.dart';
 import 'reply_quote.dart';
 import 'thread_chip.dart';
 
 /// Widest an image or video is shown inline.
 const double _kMaxMediaWidth = 360;
+
+/// How much wider than the style's bubble cap a code / Markdown message may
+/// grow, so code lines and tables wrap less.
+const double _kWideBubbleFactor = 1.5;
 
 /// One message, drawn the way the user's chat style draws it: bubble colours
 /// and shape, tail, avatar size/shape/position, where the name, time and
@@ -85,6 +88,8 @@ class MessageBubble extends ConsumerWidget {
         name,
         style: context.typography.captionStrong.copyWith(
           color: style.nameColor(message.senderId),
+          fontSize: style.labelSize,
+          fontWeight: style.labelSize == null ? null : FontWeight.w600,
         ),
       ),
     );
@@ -94,17 +99,14 @@ class MessageBubble extends ConsumerWidget {
       ChatTimePlacement.insideEnd => true,
       ChatTimePlacement.separators => false,
     };
+    final repliesInMeta = style.threadInMeta && message.serverId != null;
     final footer = showFooter
-        ? Align(
-            alignment: style.time == ChatTimePlacement.insideEnd
-                ? AlignmentDirectional.centerEnd
-                : AlignmentDirectional.centerStart,
-            widthFactor: 1,
-            child: MessageFooter(
-              accountId: chat.accountId,
-              message: message,
-              tick: style.ticks && mine ? style.palette.outgoingTicks : null,
-            ),
+        ? MessageFooter(
+            accountId: chat.accountId,
+            message: message,
+            tick: style.ticks && mine ? style.palette.outgoingTicks : null,
+            replies: repliesInMeta ? thread?.count : null,
+            onOpenReplies: () => onOpenThread(message.serverId!),
           )
         : null;
     final quote = _hasQuote
@@ -113,9 +115,11 @@ class MessageBubble extends ConsumerWidget {
             replyToId: message.replyToId!,
             users: users,
             onTap: () => jumpToChatMessage(ref, chat, message.replyToId!),
+            senderColor: style.quoteInSenderColor && !mine
+                ? style.nameColor
+                : null,
           )
         : null;
-    final body = MessageBody(accountId: chat.accountId, message: message);
     final media = _isMedia && quote == null;
 
     // The tail belongs to the bubble that touches the avatar side.
@@ -146,7 +150,14 @@ class MessageBubble extends ConsumerWidget {
             crossAxisAlignment: mine
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
-            children: [body, ?footer],
+            children: [
+              MessageBody(accountId: chat.accountId, message: message),
+              if (footer != null)
+                Padding(
+                  padding: EdgeInsets.only(top: s.xs),
+                  child: footer,
+                ),
+            ],
           ),
         ),
       );
@@ -164,26 +175,23 @@ class MessageBubble extends ConsumerWidget {
         padding: style.padding,
         mine: mine,
         tail: tailed ? style.tail : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (showName && style.name == ChatNamePlacement.insideBubble)
-              Padding(
-                padding: EdgeInsets.only(bottom: s.xxs),
-                child: nameText,
-              ),
-            if (style.quote == ChatQuotePlacement.inside) ?quote,
-            body,
-            MessageTranslationView(accountId: chat.accountId, gid: message.gid),
-            // Compact previews of the links, under the text.
-            MessageLinkPreviews(message: message),
-            ?footer,
-          ],
+        child: MessageBubbleContent(
+          accountId: chat.accountId,
+          message: message,
+          timeAtEnd: style.time == ChatTimePlacement.insideEnd,
+          name: showName && style.name == ChatNamePlacement.insideBubble
+              ? nameText
+              : null,
+          quote: style.quote == ChatQuotePlacement.inside ? quote : null,
+          footer: footer,
         ),
       );
       bubble = ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: style.maxWidth),
+        constraints: BoxConstraints(
+          maxWidth: chatShowsWide(message)
+              ? style.maxWidth * _kWideBubbleFactor
+              : style.maxWidth,
+        ),
         // A tailed box makes its own room for the tail.
         child: tailed ? box : Padding(padding: gutter, child: box),
       );
@@ -228,7 +236,8 @@ class MessageBubble extends ConsumerWidget {
               child: quote,
             ),
           ),
-        if (thread case final summary? when message.serverId != null)
+        if (thread case final summary?
+            when message.serverId != null && !style.threadInMeta)
           Padding(
             padding: EdgeInsets.only(top: s.sm),
             child: ThreadChip(
