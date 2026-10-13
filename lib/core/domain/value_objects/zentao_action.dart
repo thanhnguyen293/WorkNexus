@@ -2,12 +2,7 @@
 /// form asks for.
 enum ZenTaoTaskAction {
   start(asksSpent: true, asksLeft: true, asksAssignee: true, asksBegin: true),
-  restart(
-    asksSpent: true,
-    asksLeft: true,
-    asksAssignee: true,
-    asksBegin: true,
-  ),
+  restart(asksSpent: true, asksLeft: true, asksAssignee: true, asksBegin: true),
   pause(),
   finish(
     asksSpent: true,
