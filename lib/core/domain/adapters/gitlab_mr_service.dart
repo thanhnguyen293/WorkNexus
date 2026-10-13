@@ -10,9 +10,21 @@ abstract interface class GitLabMrService {
 
   Future<Result<void>> closeGitLabItem(Ticket ticket);
 
+  Future<Result<void>> reopenGitLabItem(Ticket ticket);
+
   Future<Result<void>> approveGitLabMr(Ticket ticket);
 
-  Future<Result<void>> mergeGitLabMr(Ticket ticket);
+  Future<Result<void>> unapproveGitLabMr(Ticket ticket);
+
+  /// Merges [ticket]; a null option keeps the MR's own setting.
+  Future<Result<void>> mergeGitLabMr(
+    Ticket ticket, {
+    bool? squash,
+    bool? removeSourceBranch,
+  });
+
+  /// Marks [ticket] as a draft, or as ready for review when [draft] is false.
+  Future<Result<void>> setGitLabMrDraft(Ticket ticket, {required bool draft});
 
   Future<Result<void>> rebaseGitLabMr(Ticket ticket);
 

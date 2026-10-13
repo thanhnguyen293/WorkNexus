@@ -11,19 +11,23 @@ import 'detail_header_copy_link_button.dart';
 /// Panel-level (non-state-changing) actions in a two-pane detail header: refresh,
 /// copy link, open in browser, edit (on the provider's web page), and close the
 /// panel — all rendered with [AppIconButton] so they match the standard panel
-/// header. State transitions (merge / rebase / approve / close)
-/// live in the gated merge panel + composer, so they aren't duplicated here.
+/// header — plus an optional item-specific [menu].
 class DetailPanelHeaderActions extends StatelessWidget {
   const DetailPanelHeaderActions({
     super.key,
     required this.ticket,
     required this.onSync,
     required this.onClosePanel,
+    this.menu,
   });
 
   final Ticket ticket;
   final VoidCallback onSync;
   final VoidCallback onClosePanel;
+
+  /// An item-specific "more" menu (e.g. the MR's state actions), placed just
+  /// before the close-panel button.
+  final Widget? menu;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +61,7 @@ class DetailPanelHeaderActions extends StatelessWidget {
             tooltip: l.edit,
             onPressed: () => openExternally('$url/edit'),
           ),
+        ?menu,
         AppIconButton(
           outlined: true,
           icon: LucideIcons.x300,

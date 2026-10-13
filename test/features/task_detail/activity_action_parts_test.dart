@@ -22,6 +22,16 @@ void main() {
     ]);
   });
 
+  test('highlights @mentions inside a phrase', () {
+    expect(activityActionParts('requested review from @Thanh'), [
+      ('requested review from ', ActivityPartKind.plain),
+      ('@Thanh', ActivityPartKind.user),
+    ]);
+    expect(activityActionParts('mentioned in commit a78f2b73'), [
+      ('mentioned in commit a78f2b73', ActivityPartKind.plain),
+    ]);
+  });
+
   test('reads the event kind from the leading verb', () {
     expect(activityKindOf('created'), ActivityKind.created);
     expect(activityKindOf('assigned to Thanh'), ActivityKind.assigned);
@@ -29,6 +39,11 @@ void main() {
       activityKindOf('resolved · resolution: Fixed'),
       ActivityKind.resolved,
     );
+    expect(
+      activityKindOf('approved this merge request'),
+      ActivityKind.resolved,
+    );
+    expect(activityKindOf('merged'), ActivityKind.merged);
     expect(activityKindOf('activated'), ActivityKind.reopened);
     expect(activityKindOf('confirmed the bug'), ActivityKind.confirmed);
     expect(activityKindOf('closed (done)'), ActivityKind.closed);

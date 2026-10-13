@@ -19,7 +19,25 @@ List<(String, ActivityPartKind)> activityActionParts(String action) {
       (field.group(2)!, ActivityPartKind.value),
     ];
   }
-  return [(action, ActivityPartKind.plain)];
+  return _mentionParts(action);
+}
+
+/// Splits `@handle` mentions out of a phrase (GitLab's "requested review from
+/// @Thanh"), so they read as people too.
+List<(String, ActivityPartKind)> _mentionParts(String action) {
+  final parts = <(String, ActivityPartKind)>[];
+  var start = 0;
+  for (final m in RegExp(r'@[\w.-]*\w').allMatches(action)) {
+    if (m.start > start) {
+      parts.add((action.substring(start, m.start), ActivityPartKind.plain));
+    }
+    parts.add((m.group(0)!, ActivityPartKind.user));
+    start = m.end;
+  }
+  if (start < action.length) {
+    parts.add((action.substring(start), ActivityPartKind.plain));
+  }
+  return parts;
 }
 
 /// What an activity event did, read from its phrase's leading verb — picks the
@@ -29,6 +47,7 @@ enum ActivityKind {
   assigned,
   edited,
   resolved,
+  merged,
   reopened,
   confirmed,
   closed,
@@ -41,7 +60,8 @@ ActivityKind activityKindOf(String action) {
     'created' || 'opened' => ActivityKind.created,
     'assigned' || 'unassigned' => ActivityKind.assigned,
     'edited' || 'updated' || 'changed' => ActivityKind.edited,
-    'resolved' || 'merged' => ActivityKind.resolved,
+    'resolved' || 'approved' => ActivityKind.resolved,
+    'merged' => ActivityKind.merged,
     'activated' || 'reopened' => ActivityKind.reopened,
     'confirmed' => ActivityKind.confirmed,
     'closed' => ActivityKind.closed,

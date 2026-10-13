@@ -842,6 +842,7 @@ class SyncService
   }
 
   /// Reopens a GitLab issue or MR, then refreshes its cached detail/status.
+  @override
   Future<Result<void>> reopenGitLabItem(Ticket ticket) {
     final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
     final optimistic = ticket.copyWith(
@@ -857,7 +858,11 @@ class SyncService
 
   /// Merges a GitLab merge request, then refreshes its cached detail/status.
   @override
-  Future<Result<void>> mergeGitLabMr(Ticket ticket) {
+  Future<Result<void>> mergeGitLabMr(
+    Ticket ticket, {
+    bool? squash,
+    bool? removeSourceBranch,
+  }) {
     final optimistic = ticket.copyWith(
       status: UnifiedStatus.done,
       providerStatus: 'merged',
@@ -865,7 +870,11 @@ class SyncService
     return _gitlabAction(
       ticket,
       optimistic,
-      (a) => a.mergeMergeRequest(ticket),
+      (a) => a.mergeMergeRequest(
+        ticket,
+        squash: squash,
+        removeSourceBranch: removeSourceBranch,
+      ),
     );
   }
 
@@ -873,6 +882,26 @@ class SyncService
   @override
   Future<Result<void>> approveGitLabMr(Ticket ticket) =>
       _gitlabAction(ticket, ticket, (a) => a.approveMergeRequest(ticket));
+
+  /// Withdraws the user's approval, then refreshes its cached detail.
+  @override
+  Future<Result<void>> unapproveGitLabMr(Ticket ticket) =>
+      _gitlabAction(ticket, ticket, (a) => a.unapproveMergeRequest(ticket));
+
+  /// Marks a GitLab MR draft / ready, then refreshes its cached detail (the
+  /// new title included). The board column follows the draft flag.
+  @override
+  Future<Result<void>> setGitLabMrDraft(Ticket ticket, {required bool draft}) {
+    final optimistic = ticket.copyWith(
+      status: draft ? UnifiedStatus.inprogress : UnifiedStatus.review,
+      providerStatus: draft ? 'draft' : 'opened',
+    );
+    return _gitlabAction(
+      ticket,
+      optimistic,
+      (a) => a.setMergeRequestDraft(ticket, draft: draft),
+    );
+  }
 
   /// Rebases a GitLab MR onto its target, then refreshes its cached detail. No
   /// status change — only the merge status flips, which the refresh picks up.

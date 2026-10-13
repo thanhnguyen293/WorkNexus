@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/labels.dart';
@@ -75,7 +76,7 @@ class GitLabMrSidebar extends StatelessWidget {
                 ),
         ),
         DetailSidebarSection(
-          title: l.reviewers,
+          title: l.reviewersTitle(entity.reviewers.length),
           action: l.edit,
           editorTitle: l.reviewers,
           editorBuilder: reviewersEditorBuilder,
@@ -85,6 +86,7 @@ class GitLabMrSidebar extends StatelessWidget {
                   entity.reviewers,
                   avatarUrls: avatarUrls,
                   avatarLoader: avatarLoader,
+                  approved: entity.approvedBy.toSet(),
                 ),
         ),
         DetailSidebarSection(
@@ -123,7 +125,7 @@ class GitLabMrSidebar extends StatelessWidget {
               '${participants.length == 1 ? l.participant : l.participants}',
           child: participants.isEmpty
               ? _MutedText(l.none)
-              : _NameList(
+              : _AvatarRow(
                   participants,
                   avatarUrls: avatarUrls,
                   avatarLoader: avatarLoader,
@@ -139,11 +141,15 @@ class _NameList extends StatelessWidget {
     this.names, {
     required this.avatarUrls,
     required this.avatarLoader,
+    this.approved = const {},
   });
 
   final List<String> names;
   final Map<String, String> avatarUrls;
   final AvatarLoader avatarLoader;
+
+  /// Names marked with an approval check.
+  final Set<String> approved;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +160,48 @@ class _NameList extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(bottom: context.spacing.xs),
             child: ProviderUserAvatar(
+              name: name,
+              avatarUrl: avatarUrls[name],
+              imageLoader: avatarLoader,
+              trailing: approved.contains(name)
+                  ? Tooltip(
+                      message: AppL10n.of(context).reviewerApproved,
+                      child: Icon(
+                        LucideIcons.checkCircle300,
+                        size: context.sizes.iconMd,
+                        color: context.colors.success,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Participants as GitLab lists them: a row of avatars, named on hover.
+class _AvatarRow extends StatelessWidget {
+  const _AvatarRow(
+    this.names, {
+    required this.avatarUrls,
+    required this.avatarLoader,
+  });
+
+  final List<String> names;
+  final Map<String, String> avatarUrls;
+  final AvatarLoader avatarLoader;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: context.spacing.sm,
+      runSpacing: context.spacing.sm,
+      children: [
+        for (final name in names)
+          Tooltip(
+            message: name,
+            child: ProviderAvatarImage(
               name: name,
               avatarUrl: avatarUrls[name],
               imageLoader: avatarLoader,

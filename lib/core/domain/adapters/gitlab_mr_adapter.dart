@@ -13,9 +13,22 @@ abstract interface class GitLabMrAdapter implements ProviderAdapter {
 
   Future<Result<bool>> reopenMergeRequest(Ticket ticket);
 
-  Future<Result<bool>> mergeMergeRequest(Ticket ticket);
+  /// Merges [ticket]; a null option keeps the MR's own setting.
+  Future<Result<bool>> mergeMergeRequest(
+    Ticket ticket, {
+    bool? squash,
+    bool? removeSourceBranch,
+  });
 
   Future<Result<bool>> approveMergeRequest(Ticket ticket);
+
+  Future<Result<bool>> unapproveMergeRequest(Ticket ticket);
+
+  /// Marks [ticket] as a draft, or as ready when [draft] is false.
+  Future<Result<bool>> setMergeRequestDraft(
+    Ticket ticket, {
+    required bool draft,
+  });
 
   Future<Result<bool>> rebaseMergeRequest(Ticket ticket);
 

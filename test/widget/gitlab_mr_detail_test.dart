@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_commands.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_overview.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_sidebar.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/user_picker_editor.dart';
@@ -27,6 +29,77 @@ final _avatarBytes = base64Decode(
 Widget _emptyEditor(BuildContext context, VoidCallback close) {
   return const SizedBox.shrink();
 }
+
+/// Records each MR command; while [pending] is set, commands stay running
+/// until it completes.
+class _FakeCommands {
+  final calls = <String>[];
+  Completer<void>? pending;
+
+  Future<void> _record(String name) {
+    calls.add(name);
+    return pending?.future ?? Future.value();
+  }
+
+  GitLabMrCommands get commands => GitLabMrCommands(
+    approve: () => _record('approve'),
+    unapprove: () => _record('unapprove'),
+    merge: ({required squash, required removeSourceBranch}) =>
+        _record('merge squash=$squash remove=$removeSourceBranch'),
+    rebase: () => _record('rebase'),
+    close: () => _record('close'),
+    reopen: () => _record('reopen'),
+    setDraft: (draft) => _record('draft=$draft'),
+  );
+}
+
+Widget _overview(Ticket ticket, GitLabMrCommands commands) => ProviderScope(
+  child: MaterialApp(
+    localizationsDelegates: AppL10n.localizationsDelegates,
+    supportedLocales: AppL10n.supportedLocales,
+    theme: buildAppTheme(
+      variant: AppThemeVariant.light,
+      surface: SurfaceStyle.outline,
+      density: AppDensity.comfortable,
+    ),
+    home: Scaffold(
+      body: GitLabMrOverview(
+        ticket: ticket,
+        entity: ticket.providerEntity! as GitLabItemEntity,
+        isSyncing: false,
+        onClose: () {},
+        onSync: () {},
+        onComment: (_) async => true,
+        commands: commands,
+        commitsLoader: () async => const Ok(<RepoCommit>[]),
+        changesLoader: () async => const Ok(<RepoFileChange>[]),
+        assigneeEditorBuilder: _emptyEditor,
+        reviewersEditorBuilder: _emptyEditor,
+        labelsEditorBuilder: _emptyEditor,
+        milestoneEditorBuilder: _emptyEditor,
+        timeTrackingEditorBuilder: _emptyEditor,
+        avatarLoader: (_) async => _avatarBytes,
+      ),
+    ),
+  ),
+);
+
+Ticket _mr(String status, TicketProviderEntity entity) => Ticket(
+  id: 'gitlab:mr:42',
+  accountId: 'gitlab',
+  projectId: 'project',
+  providerType: ProviderType.gitlab,
+  externalKey: '42',
+  externalType: 'MergeRequest',
+  title: 'chore(proto): regenerate protobuf files',
+  body: 'Automated regeneration of Dart protobuf source files.',
+  priority: Priority.medium,
+  status: UnifiedStatus.review,
+  providerStatus: status,
+  sourceHash: 'hash',
+  url: 'https://gitlab.example.com/group/project/-/merge_requests/42',
+  providerEntity: entity,
+);
 
 void main() {
   testWidgets('GitLab MR overview renders the MR-specific layout', (
@@ -89,10 +162,7 @@ void main() {
               onClose: () {},
               onSync: () {},
               onComment: (_) async => true,
-              onCloseMergeRequest: () {},
-              onApprove: () {},
-              onMerge: () {},
-              onRebase: () {},
+              commands: _FakeCommands().commands,
               commitsLoader: () async => const Ok(<RepoCommit>[]),
               changesLoader: () async => const Ok(<RepoFileChange>[]),
               assigneeEditorBuilder: _emptyEditor,
@@ -111,7 +181,7 @@ void main() {
     expect(find.text('develop_socialfi'), findsOneWidget);
     expect(find.text('new_tbchat_develop'), findsOneWidget);
     expect(find.text('Assignee'), findsOneWidget);
-    expect(find.text('Reviewers'), findsOneWidget);
+    expect(find.text('Reviewer'), findsOneWidget);
     expect(find.text('Labels'), findsOneWidget);
     expect(find.text('Release 1.0'), findsOneWidget);
     expect(find.text('Estimate 2h · Spent 1h'), findsOneWidget);
@@ -149,8 +219,7 @@ void main() {
   testWidgets('GitLab MR header exposes link and state actions', (
     tester,
   ) async {
-    var closeCalls = 0;
-    var approveCalls = 0;
+    final fake = _FakeCommands();
     const ticket = Ticket(
       id: 'gitlab:mr:42',
       accountId: 'gitlab',
@@ -194,10 +263,7 @@ void main() {
               onClose: () {},
               onSync: () {},
               onComment: (_) async => true,
-              onCloseMergeRequest: () => closeCalls++,
-              onApprove: () => approveCalls++,
-              onMerge: () {},
-              onRebase: () {},
+              commands: fake.commands,
               commitsLoader: () async => const Ok(<RepoCommit>[]),
               changesLoader: () async => const Ok(<RepoFileChange>[]),
               assigneeEditorBuilder: _emptyEditor,
@@ -227,8 +293,146 @@ void main() {
     await tester.tap(find.text('Close'));
     await tester.pump();
 
-    expect(approveCalls, 1);
-    expect(closeCalls, 1);
+    expect(fake.calls, ['approve', 'close']);
+  });
+
+  testWidgets('Rebase spins until the rebase has finished', (tester) async {
+    final fake = _FakeCommands()..pending = Completer<void>();
+    await tester.pumpWidget(
+      _overview(
+        _mr(
+          'opened',
+          const TicketProviderEntity.gitlabItem(mergeStatus: 'need_rebase'),
+        ),
+        fake.commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Rebase'));
+    await tester.pump();
+    expect(fake.calls, ['rebase']);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    // A second press while it runs does nothing.
+    await tester.tap(
+      find.byType(CircularProgressIndicator),
+      warnIfMissed: false,
+    );
+    expect(fake.calls, ['rebase']);
+
+    fake.pending!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('a draft MR is blocked until marked ready', (tester) async {
+    final fake = _FakeCommands();
+    await tester.pumpWidget(
+      _overview(
+        _mr('draft', const TicketProviderEntity.gitlabItem(draft: true)),
+        fake.commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('is a draft'), findsOneWidget);
+    expect(find.text('Merge'), findsNothing);
+    await tester.tap(find.text('Mark as ready'));
+    await tester.pump();
+    expect(fake.calls, ['draft=false']);
+  });
+
+  testWidgets('merging sends the chosen options', (tester) async {
+    final fake = _FakeCommands();
+    await tester.pumpWidget(
+      _overview(
+        _mr(
+          'opened',
+          const TicketProviderEntity.gitlabItem(
+            mergeStatus: 'mergeable',
+            removeSourceBranch: true,
+          ),
+        ),
+        fake.commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Squash commits'));
+    await tester.pump();
+    await tester.tap(find.text('Merge'));
+    await tester.pump();
+    expect(fake.calls, ['merge squash=true remove=true']);
+  });
+
+  testWidgets('a merged MR says who merged and who approved', (tester) async {
+    await tester.pumpWidget(
+      _overview(
+        _mr(
+          'merged',
+          const TicketProviderEntity.gitlabItem(
+            targetBranch: 'new_develop_socialfi',
+            mergedBy: 'Thanh',
+            mergeCommitSha: 'a78f2b73deadbeef',
+            squashCommitSha: 'a78f2b73deadbeef',
+            removeSourceBranch: true,
+            approvedBy: ['Thanh'],
+            userHasApproved: true,
+            reviewers: ['Thanh'],
+          ),
+        ),
+        _FakeCommands().commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Approved by you'), findsOneWidget);
+    expect(find.text('Approve'), findsNothing);
+    expect(find.textContaining('Merged by Thanh'), findsOneWidget);
+    expect(find.textContaining('a78f2b73'), findsOneWidget);
+    expect(find.text('Commits were squashed.'), findsOneWidget);
+    expect(find.text('Deleted the source branch.'), findsOneWidget);
+    expect(find.text('Revert'), findsOneWidget);
+    expect(find.byTooltip('Approved'), findsOneWidget);
+  });
+
+  testWidgets('the header menu marks an open MR as draft', (tester) async {
+    final fake = _FakeCommands();
+    await tester.pumpWidget(
+      _overview(
+        _mr(
+          'opened',
+          const TicketProviderEntity.gitlabItem(projectPath: 'group/web'),
+        ),
+        fake.commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('More'));
+    await tester.pumpAndSettle();
+    expect(find.text('Close merge request'), findsOneWidget);
+    expect(find.text('Copy reference'), findsOneWidget);
+    await tester.tap(find.text('Mark as draft'));
+    await tester.pumpAndSettle();
+    expect(fake.calls, ['draft=true']);
+  });
+
+  testWidgets('a closed MR offers Reopen', (tester) async {
+    final fake = _FakeCommands();
+    await tester.pumpWidget(
+      _overview(
+        _mr('closed', const TicketProviderEntity.gitlabItem(closedBy: 'Kan')),
+        fake.commands,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Closed by Kan'), findsOneWidget);
+    await tester.tap(find.text('Reopen merge request'));
+    await tester.pump();
+    expect(fake.calls, ['reopen']);
   });
 
   testWidgets(
@@ -350,10 +554,7 @@ void main() {
               onClose: () {},
               onSync: () {},
               onComment: (_) async => true,
-              onCloseMergeRequest: () {},
-              onApprove: () {},
-              onMerge: () {},
-              onRebase: () {},
+              commands: _FakeCommands().commands,
               commitsLoader: () async {
                 commitCalls++;
                 return const Ok(<RepoCommit>[]);
