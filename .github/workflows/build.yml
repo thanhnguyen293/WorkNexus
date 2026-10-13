@@ -234,12 +234,13 @@ jobs:
 
       # Flutter's GTK toolchain, plus the native libraries the plugins link:
       # libsecret (flutter_secure_storage), ayatana-appindicator (tray_manager).
+      # patchelf repoints the bundled tray libraries at the bundle (see below).
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
-            libsecret-1-dev libayatana-appindicator3-dev
+            libsecret-1-dev libayatana-appindicator3-dev patchelf
 
       - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
@@ -275,6 +276,31 @@ jobs:
 
       - name: Build Linux (release)
         run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
+
+      # tray_manager links libayatana-appindicator3, which distros such as Arch
+      # don't install by default, so the app died in the loader before Dart
+      # ran. Ship it and its ayatana/dbusmenu leaf libraries in bundle/lib,
+      # the way linuxdeploy/auditwheel do. Each one needs its own $ORIGIN
+      # RUNPATH: the executable's $ORIGIN/lib only covers its direct
+      # dependencies, not a plugin's. GTK/glib/glibc always come from the system.
+      - name: Bundle tray indicator libraries
+        shell: bash
+        run: |
+          # Absolute, so the bundle check below matches ldd's expanded $ORIGIN.
+          lib=$(realpath build/linux/x64/release/bundle/lib)
+          plugin=$lib/libtray_manager_plugin.so
+          deps=$(ldd "$plugin" | awk '$1 ~ /ayatana|dbusmenu/ && $3 ~ /^\// {print $3}')
+          [ -n "$deps" ] || { echo "no ayatana/dbusmenu libraries found for $plugin"; exit 1; }
+          for src in $deps; do
+            cp -L "$src" "$lib/"
+            patchelf --set-rpath '$ORIGIN' "$lib/$(basename "$src")"
+          done
+          patchelf --set-rpath '$ORIGIN' "$plugin"
+          # Every tray library must now resolve inside the bundle, not /usr.
+          ldd "$plugin" | grep -E 'ayatana|dbusmenu'
+          if ldd "$plugin" | grep -E 'ayatana|dbusmenu' | grep -v "=> $lib/"; then
+            echo "tray libraries above still resolve outside the bundle"; exit 1
+          fi
 
       # Fails the release if any bundled binary needs a newer glibc (> 2.35) or
       # libstdc++ (> GLIBCXX_3.4.30) than Ubuntu 22.04 ships.
