@@ -7,10 +7,14 @@ import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/build_reply_thread.dart';
 import '../providers/chat_providers.dart';
 import 'chat_style.dart';
+import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
 import 'message_jump.dart';
 import 'message_list_item.dart';
 import 'steady_extent_child_delegate.dart';
+
+/// The typing row's key; no message gid looks like it.
+const String _kTypingKey = '#typing';
 
 /// Laying out far past the viewport steadies the estimated list length.
 const double _kCacheExtent = 2000;
@@ -28,6 +32,7 @@ class MessageListView extends StatelessWidget {
     required this.users,
     required this.summaries,
     required this.showSenders,
+    required this.typingActive,
     required this.extent,
     required this.jump,
     required this.header,
@@ -43,6 +48,9 @@ class MessageListView extends StatelessWidget {
   final Map<int, ChatUser> users;
   final Map<int, ThreadSummary> summaries;
   final bool showSenders;
+
+  /// The reader is at the newest messages: the typing row may open.
+  final bool typingActive;
   final ListExtentEstimate extent;
   final MessageJump jump;
   final Widget header;
@@ -55,7 +63,10 @@ class MessageListView extends StatelessWidget {
     // Lets a message keep its row (and state) when newer ones push it up.
     final rows = {
       for (final (i, item) in items.indexed)
-        if (item is ChatMessage) item.gid: i,
+        if (item is ChatMessage)
+          item.gid: i
+        else if (item is ChatTypingItem)
+          _kTypingKey: i,
     };
     return Listener(
       onPointerDown: (e) {
@@ -77,6 +88,15 @@ class MessageListView extends StatelessWidget {
             childrenDelegate: SteadyExtentChildDelegate(
               (context, i) => i == items.length
                   ? header
+                  : items[i] is ChatTypingItem
+                  ? ChatTypingBubble(
+                      key: const ValueKey(_kTypingKey),
+                      thread: thread,
+                      style: style,
+                      users: users,
+                      showSenders: showSenders,
+                      active: typingActive,
+                    )
                   : MessageListItem(
                       key: switch (items[i]) {
                         final ChatMessage m => ValueKey(m.gid),

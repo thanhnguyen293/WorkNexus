@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -10,6 +12,7 @@ import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/theme/app_motion.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_cache_usage.dart';
@@ -19,14 +22,17 @@ import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
@@ -65,6 +71,26 @@ class _FakeChatRepository implements ChatRepository {
 
   @override
   Stream<ChatMessage> watchIncoming() => const Stream.empty();
+
+  // Sync: the controller is made outside the test's fake-async zone, so an
+  // async one would deliver on a microtask `pump` never runs.
+  final typingSignals = StreamController<ChatTypingSignal>.broadcast(
+    sync: true,
+  );
+
+  @override
+  Stream<ChatTypingSignal> watchTyping(String accountId) =>
+      typingSignals.stream;
+
+  @override
+  Future<Result<void>> sendTyping(
+    String accountId,
+    String chatGid, {
+    required bool typing,
+  }) async {
+    calls.add('typing $chatGid $typing');
+    return const Ok(null);
+  }
 
   @override
   Future<Result<void>> setGroupAvatar(
@@ -415,6 +441,7 @@ void main() {
         overrides: [
           chatSearchProvider.overrideWith((ref) => search),
           chatRepositoryProvider.overrideWithValue(repo),
+          chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
           chatAccountsProvider.overrideWithValue(const [
             Account(
               id: 'acc',
@@ -695,6 +722,62 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(repo.calls, contains('send g1 first line'));
+  });
+
+  testWidgets('typing is announced, and sending ends it', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    final composer = find.byType(ChatComposerField).last;
+    await tester.tap(
+      find.descendant(of: composer, matching: find.byType(QuillEditor)),
+    );
+    tester.widget<ChatComposerField>(composer).controller.insertText('hel');
+    await tester.pump();
+    expect(repo.calls, contains('typing g1 true'));
+    expect(repo.calls, isNot(contains('typing g1 false')));
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('typing g1 false'));
+  });
+
+  testWidgets('shows who is typing until it lapses', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    repo.typingSignals
+      ..add(const ChatTypingSignal(chatGid: 'g1', userId: 31, typing: true))
+      ..add(const ChatTypingSignal(chatGid: '31&40', userId: 31, typing: true));
+    // Let the bubble open: until then its row has no height.
+    await tester.pump();
+    await tester.pump(AppMotion.slow);
+    // A bubble of dots under the newest message, named on hover; the
+    // group's row names them, the one-to-one row just says "typing…".
+    expect(find.byType(ChatTypingBubble), findsOneWidget);
+    expect(find.byTooltip('Dyno is typing…'), findsOneWidget);
+    expect(find.text('Dyno is typing…'), findsOneWidget);
+    expect(find.text('typing…'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 6));
+    // Let the bubble close and the row fade back.
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Dyno is typing…'), findsNothing);
+    expect(find.text('Dyno is typing…'), findsNothing);
+    expect(find.text('typing…'), findsNothing);
+  });
+
+  testWidgets('the debug button pretends someone is typing', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+
+    await tester.tap(find.byTooltip('Simulate someone typing (debug)'));
+    await tester.pump();
+    await tester.pump(AppMotion.slow);
+    expect(find.byTooltip('Dyno is typing…'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Dyno is typing…'), findsNothing);
   });
 
   testWidgets('the like button sends a large emoji, not text', (tester) async {

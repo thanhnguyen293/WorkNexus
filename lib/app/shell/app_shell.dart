@@ -16,6 +16,7 @@ import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
 import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
+import '../../features/chat/presentation/widgets/chat_privacy_settings.dart';
 import '../../features/chat/presentation/widgets/sticker_import_listener.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/local_cache_card.dart';
@@ -119,6 +120,7 @@ class AppShell extends ConsumerWidget {
                             ChatAppearanceSettings(),
                             ChatAutoDownloadSettings(),
                             ChatNotificationSettings(),
+                            ChatPrivacySettings(),
                           ],
                         ),
                         const TalkerDebugOverlay(),

@@ -15,6 +15,7 @@ import '../../domain/entities/chat_user.dart';
 import '../../domain/value_objects/chat_list_tab.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_typing_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
 import 'chat_list_tabs.dart';
@@ -23,6 +24,7 @@ import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_text_scale.dart';
+import 'chat_typing_label.dart';
 import 'conversation_menu.dart';
 import 'conversation_tile.dart';
 import 'new_chat_dialog.dart';
@@ -56,6 +58,7 @@ class ConversationListPane extends ConsumerWidget {
         ? ''
         : ref.watch(chatSearchProvider).trim().toLowerCase();
     final selected = ref.watch(selectedChatGidProvider(accountId));
+    final typing = ref.watch(chatTypingProvider(accountId));
     final tab = compact ? ChatListTab.all : ref.watch(chatListTabProvider);
 
     final visible =
@@ -197,6 +200,12 @@ class ConversationListPane extends ConsumerWidget {
                               )
                             : null,
                         lastSender: _lastSender(context, e.chat, users),
+                        typing: _typingLabel(
+                          context,
+                          e.chat,
+                          users,
+                          typing.typingIn(e.chat.gid),
+                        ),
                         selected: e.chat.gid == selected,
                         compact: compact,
                         onTap: () =>
@@ -261,6 +270,20 @@ String? _lastSender(
   return last.isMine
       ? AppL10n.of(context).chatYou
       : chatUserName(context, users, last.senderId);
+}
+
+/// Who is typing in [chat], for its row: just "typing…" in a one-to-one
+/// chat (it can only be the other person), names in a group.
+String? _typingLabel(
+  BuildContext context,
+  ChatConversation chat,
+  Map<int, ChatUser> users,
+  List<int> typing,
+) {
+  if (typing.isEmpty) return null;
+  return chat.type == ChatType.one2one
+      ? AppL10n.of(context).chatTyping
+      : chatTypingLabel(context, users, typing);
 }
 
 class _SectionDivider extends StatelessWidget {

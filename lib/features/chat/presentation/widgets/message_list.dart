@@ -12,6 +12,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_style.dart';
+import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
 import 'message_jump.dart';
 import 'message_list_header.dart';
@@ -238,7 +239,11 @@ class _MessageListState extends ConsumerState<MessageList>
     }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
     final style = ChatStyle.watch(ref, context);
-    final items = _items = chatListItems(messages, style.separatorGap);
+    // A jump window is older history: nobody types into it.
+    final items = _items = [
+      if (!inWindow) const ChatTypingItem(),
+      ...chatListItems(messages, style.separatorGap),
+    ];
     final list = MessageListView(
       thread: t,
       scroll: _scroll,
@@ -247,6 +252,7 @@ class _MessageListState extends ConsumerState<MessageList>
       users: users,
       summaries: summaries,
       showSenders: widget.showSenders,
+      typingActive: !_away,
       extent: _extent,
       jump: _jump,
       header: MessageListHeader(

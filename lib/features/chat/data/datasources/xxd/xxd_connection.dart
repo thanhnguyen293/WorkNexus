@@ -93,15 +93,7 @@ class XxdConnection {
     final rid = request.rid ?? _uuid.v4();
     final reply = _expect(rid, request.apiName);
     final watch = Stopwatch()..start();
-    final sent = _send(
-      XxdRequest(
-        request.method,
-        params: request.params,
-        rid: rid,
-        userId: request.userId ?? session.userId,
-        module: request.module,
-      ),
-    );
+    final sent = _send(_addressed(request, session, rid: rid));
     if (sent case Err(:final failure)) {
       _pending.remove(rid);
       _log.failed(request.apiName, watch.elapsed, failure);
@@ -121,6 +113,29 @@ class XxdConnection {
       _ => result,
     };
   }
+
+  /// Sends [request] without waiting for a reply, for messages the server
+  /// does not answer (`chattyping`).
+  Result<void> notify(XxdRequest request) {
+    final session = _session;
+    if (_state is! XxdOnline || session == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    return _send(_addressed(request, session, rid: request.rid));
+  }
+
+  XxdRequest _addressed(
+    XxdRequest request,
+    XxdSession session, {
+    required String? rid,
+  }) => XxdRequest(
+    request.method,
+    params: request.params,
+    fields: request.fields,
+    rid: rid,
+    userId: request.userId ?? session.userId,
+    module: request.module,
+  );
 
   /// Ends the session without reconnecting.
   Future<void> stop() async {

@@ -4,6 +4,7 @@ final class XxdRequest {
   const XxdRequest(
     this.method, {
     this.params,
+    this.fields,
     this.rid,
     this.userId,
     this.module,
@@ -11,6 +12,10 @@ final class XxdRequest {
 
   final String method;
   final List<Object?>? params;
+
+  /// Top-level packet fields beside the envelope, for the few methods whose
+  /// scheme has named fields instead of `params` (`chattyping`).
+  final Map<String, Object?>? fields;
   final String? rid;
   final int? userId;
 

@@ -416,6 +416,81 @@ void main() {
     );
   });
 
+  group('typing', () {
+    test('a one-to-one chat addresses its peer', () async {
+      await repo.connect(_acc);
+
+      final r = await repo.sendTyping(_acc, '31&40', typing: true);
+
+      expect(r, isA<Ok<void>>());
+      final req = server.requests.lastWhere((r) => r['method'] == 'chattyping');
+      expect(req['cgid'], '31&40');
+      expect(req['users'], [31]);
+      expect(req['typing'], true);
+      expect(req.containsKey('params'), isFalse);
+    });
+
+    test('a group addresses its other members, fetched once', () async {
+      final asked = server.onRequest;
+      server.onRequest = (req) => req['method'] == 'chatgetmembers'
+          ? {
+              'method': 'chatgetmembers',
+              'rid': req['rid'],
+              'result': 'success',
+              'data': {
+                'gid': 'g1',
+                'members': [31, 40, 52],
+              },
+            }
+          : asked?.call(req);
+      await repo.connect(_acc);
+
+      await repo.sendTyping(_acc, 'g1', typing: true);
+      await repo.sendTyping(_acc, 'g1', typing: false);
+
+      final sent = server.requests.where((r) => r['method'] == 'chattyping');
+      expect(
+        [for (final r in sent) r['users']],
+        [
+          [31, 52],
+          [31, 52],
+        ],
+      );
+      expect([for (final r in sent) r['typing']], [true, false]);
+      expect(
+        server.requests.where((r) => r['method'] == 'chatgetmembers'),
+        hasLength(1),
+      );
+    });
+
+    test('offline it sends nothing', () async {
+      final r = await repo.sendTyping(_acc, '31&40', typing: true);
+
+      expect(r, isA<Ok<void>>());
+      expect(
+        server.requests.where((r) => r['method'] == 'chattyping'),
+        isEmpty,
+      );
+    });
+
+    test('pushes come out as signals and are not stored', () async {
+      await repo.connect(_acc);
+      await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+      final signal = repo.watchTyping(_acc).first;
+
+      server.current.push({
+        'method': 'chattyping',
+        'result': 'success',
+        'data': {'cgid': '31&40', 'typing': true, 'user': 31},
+      });
+
+      final s = await signal.timeout(const Duration(seconds: 3));
+      expect(s.chatGid, '31&40');
+      expect(s.userId, 31);
+      expect(s.typing, isTrue);
+    });
+  });
+
   test('setting my presence sends userupdate; pushes update others', () async {
     await repo.connect(_acc);
     await eventually(

@@ -1847,5 +1847,40 @@
         "type": "int"
       }
     }
-  }
+  },
+  "chatPrivacy": "Privacy",
+  "chatSendTypingStatus": "Show when I'm typing",
+  "chatSendTypingStatusHint": "People in one-to-one and group chats see when you are typing a message.",
+  "chatTyping": "typing…",
+  "chatTypingOne": "{name} is typing…",
+  "@chatTypingOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatTypingTwo": "{first} and {second} are typing…",
+  "@chatTypingTwo": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "chatTypingMany": "{name} and {count} others are typing…",
+  "@chatTypingMany": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatDebugSimulateTyping": "Simulate someone typing (debug)"
 }

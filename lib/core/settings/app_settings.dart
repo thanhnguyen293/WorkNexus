@@ -72,6 +72,7 @@ class AppSettings {
     this.chatSendMarkdown = false,
     this.chatNotifications = true,
     this.chatNotifyWhileViewing = true,
+    this.chatSendTypingStatus = true,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
@@ -151,6 +152,9 @@ class AppSettings {
   /// Notify even for the chat already open in the focused window.
   final bool chatNotifyWhileViewing;
 
+  /// Tell chat peers while the user is typing to them.
+  final bool chatSendTypingStatus;
+
   /// Most disk space downloaded chat attachments may use, in MB.
   final int chatCacheLimitMb;
 
@@ -187,6 +191,7 @@ class AppSettings {
     bool? chatSendMarkdown,
     bool? chatNotifications,
     bool? chatNotifyWhileViewing,
+    bool? chatSendTypingStatus,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
@@ -218,6 +223,7 @@ class AppSettings {
       chatNotifications: chatNotifications ?? this.chatNotifications,
       chatNotifyWhileViewing:
           chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
+      chatSendTypingStatus: chatSendTypingStatus ?? this.chatSendTypingStatus,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
           chatAutoDownloadVideos ?? this.chatAutoDownloadVideos,
@@ -309,6 +315,8 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatNotifications: on));
   void setChatNotifyWhileViewing(bool on) =>
       _set(state.copyWith(chatNotifyWhileViewing: on));
+  void setChatSendTypingStatus(bool on) =>
+      _set(state.copyWith(chatSendTypingStatus: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));
   void setChatAutoDownloadVideos(bool on) =>

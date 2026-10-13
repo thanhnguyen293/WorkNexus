@@ -18,6 +18,7 @@ import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_typing_signal.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_local_datasource.dart';
@@ -38,6 +39,7 @@ import 'chat_packet_ingestor.dart';
 import 'chat_saved_copies.dart';
 import 'chat_sender.dart';
 import 'chat_session.dart';
+import 'chat_typing_channel.dart';
 
 /// Opens an [XxdConnection] for the given credentials (injected for tests).
 typedef XxdConnectionFactory = XxdConnection Function(XxdCredentials);
@@ -103,6 +105,7 @@ class XxdChatRepository implements ChatRepository {
     now: _now,
   );
   final _sessions = <String, ChatSession>{};
+  late final _typing = ChatTypingChannel(members);
 
   /// Presence picked by the user. Sign-in always says `online`, so a
   /// reconnect re-applies anything else.
@@ -152,7 +155,10 @@ class XxdChatRepository implements ChatRepository {
     final session = ChatSession(connection);
     _sessions[accountId] = session;
     session.listen(
-      onPacket: (p) => session.enqueue(() => _ingest(accountId, session, p)),
+      onPacket: (p) {
+        if (_typing.handle(accountId, p)) return;
+        session.enqueue(() => _ingest(accountId, session, p));
+      },
       onState: (s) => _onState(accountId, session, s),
       onError: _onError,
     );
@@ -240,6 +246,7 @@ class XxdChatRepository implements ChatRepository {
   }
 
   Future<void> _closeSession(String accountId) async {
+    _typing.forget(accountId);
     final session = _sessions.remove(accountId);
     await session?.close();
   }
@@ -969,6 +976,17 @@ class XxdChatRepository implements ChatRepository {
         return Err(failure);
     }
   }
+
+  @override
+  Stream<ChatTypingSignal> watchTyping(String accountId) =>
+      _typing.watch(accountId);
+
+  @override
+  Future<Result<void>> sendTyping(
+    String accountId,
+    String chatGid, {
+    required bool typing,
+  }) => _typing.send(_sessions[accountId], accountId, chatGid, typing: typing);
 
   @override
   Future<Result<List<int>>> members(String accountId, String chatGid) async {
