@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
+import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/navigation/person_chip.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -9,38 +11,43 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The people involved in a ZenTao bug — reporter, current owner, last editor —
-/// as avatar + name fields, lifted out of the flat details table. With chat
-/// wired in, each one shows their chat photo and "verified" check and opens
-/// a chat with them on tap.
-class BugPeopleRow extends ConsumerWidget {
-  const BugPeopleRow({super.key, required this.bug, required this.accountId});
+/// Who holds the ticket now and, for a ZenTao bug, who reported it — in the
+/// detail header beside the actions, since "whose is it" is the first thing
+/// asked of a ticket. A ZenTao person shows their chat photo and opens a chat
+/// on tap when chat is wired in; anyone else gets an initials avatar.
+class DetailPeople extends ConsumerWidget {
+  const DetailPeople({super.key, required this.ticket});
 
-  final ZenTaoBugEntity bug;
-
-  /// The ZenTao account the bug was read through (whose chat to use).
-  final String accountId;
+  final Ticket ticket;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final fields = <(String, String)>[
-      if ((bug.openedBy ?? '').isNotEmpty) (l.openedBy, bug.openedBy!),
-      if ((bug.assignedTo ?? '').isNotEmpty) (l.assignedTo, bug.assignedTo!),
-      if ((bug.lastEditedBy ?? '').isNotEmpty)
-        (l.lastEdited, bug.lastEditedBy!),
-    ];
-    if (fields.isEmpty) return const SizedBox.shrink();
+    final bug = switch (ticket.providerEntity) {
+      final ZenTaoBugEntity b => b,
+      _ => null,
+    };
+    final assignee = (bug?.assignedTo ?? ticket.assignee ?? '').trim();
+    final reporter = (bug?.openedBy ?? '').trim();
+    final chip = ticket.providerType == ProviderType.zentao
+        ? ref.watch(personChipBuilderProvider)
+        : null;
     return Wrap(
       spacing: context.spacing.xl2,
       runSpacing: context.spacing.lg,
       children: [
-        for (final f in fields)
+        _PersonField(
+          label: l.assignedTo,
+          name: assignee,
+          accountId: ticket.accountId,
+          chip: chip,
+        ),
+        if (reporter.isNotEmpty)
           _PersonField(
-            label: f.$1,
-            name: f.$2,
-            accountId: accountId,
-            chip: ref.watch(personChipBuilderProvider),
+            label: l.openedBy,
+            name: reporter,
+            accountId: ticket.accountId,
+            chip: chip,
           ),
       ],
     );
@@ -71,27 +78,33 @@ class _PersonField extends StatelessWidget {
           style: context.typography.caption.copyWith(color: c.textTertiary),
         ),
         SizedBox(height: context.spacing.xs),
-        switch (chip) {
-          final build? => build(
-            context,
-            accountId: accountId,
-            name: name,
-            avatarSize: _avatarSize(context),
-          ),
-          null => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _Avatar(name),
-              SizedBox(width: context.spacing.sm),
-              Text(
-                name,
-                style: context.typography.secondary.copyWith(
-                  color: c.textPrimary,
+        if (name.isEmpty)
+          Text(
+            AppL10n.of(context).unassigned,
+            style: context.typography.secondary.copyWith(color: c.textTertiary),
+          )
+        else
+          switch (chip) {
+            final build? => build(
+              context,
+              accountId: accountId,
+              name: name,
+              avatarSize: _avatarSize(context),
+            ),
+            null => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _Avatar(name),
+                SizedBox(width: context.spacing.sm),
+                Text(
+                  name,
+                  style: context.typography.secondary.copyWith(
+                    color: c.textPrimary,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        },
+              ],
+            ),
+          },
       ],
     );
   }

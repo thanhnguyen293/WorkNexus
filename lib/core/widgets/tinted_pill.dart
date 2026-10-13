@@ -31,6 +31,7 @@ class TintedPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final style = large ? context.typography.badgeXl : context.typography.badge;
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: large ? context.spacing.md : context.spacing.sm,
@@ -49,15 +50,12 @@ class TintedPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: large ? 14 : 12, color: color),
+            // A large pill's icon matches its text line, so a pill with an
+            // icon stands as tall as the text-only tags beside it.
+            Icon(icon, size: large ? style.fontSize : 12, color: color),
             SizedBox(width: context.spacing.xs),
           ],
-          Text(
-            label,
-            style:
-                (large ? context.typography.badgeXl : context.typography.badge)
-                    .copyWith(color: color),
-          ),
+          Text(label, style: style.copyWith(color: color)),
         ],
       ),
     );

@@ -5,13 +5,15 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/zentao_labels.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The at-a-glance chip row for a ZenTao bug, in the detail header: raw status, confirmation, reopen
-/// count — signals that were buried in the flat details table.
+/// The at-a-glance status of a ZenTao bug, in the detail header: its raw
+/// status as the one coloured pill, then confirmation and reopen count as
+/// quieter inline signals, so the status is what reads first.
 class BugStatusStrip extends StatelessWidget {
   const BugStatusStrip({super.key, required this.ticket, required this.bug});
 
@@ -38,24 +40,23 @@ class BugStatusStrip extends StatelessWidget {
       // Whether an open bug was confirmed matters for triage; once it is
       // resolved or closed the flag is history.
       if (active && bug.confirmed == 1)
-        TintedPill(
+        _Signal(
           color: c.success,
           icon: LucideIcons.badgeCheck300,
           label: l.confirmed,
-          large: true,
         ),
       if ((bug.activatedCount ?? 0) > 0)
-        TintedPill(
+        _Signal(
           color: c.warning,
           icon: LucideIcons.rotateCcw300,
           label: l.reopenedTimes(bug.activatedCount ?? 0),
-          large: true,
         ),
     ];
     if (chips.isEmpty) return const SizedBox.shrink();
     return Wrap(
-      spacing: context.spacing.sm,
+      spacing: context.spacing.lg,
       runSpacing: context.spacing.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: chips,
     );
   }
@@ -69,4 +70,26 @@ class BugStatusStrip extends StatelessWidget {
 
   String _capitalize(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+/// A secondary status signal: an icon and text in [color], with no fill, so
+/// it sits beside the status pill without competing with it.
+class _Signal extends StatelessWidget {
+  const _Signal({required this.color, required this.icon, required this.label});
+
+  final Color color;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: context.typography.secondary.fontSize, color: color),
+        SizedBox(width: context.spacing.xs),
+        Text(label, style: context.typography.secondary.copyWith(color: color)),
+      ],
+    );
+  }
 }

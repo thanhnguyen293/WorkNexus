@@ -249,6 +249,22 @@
       }
     }
   },
+  "taskHoursLeft": "Còn {hours} giờ",
+  "@taskHoursLeft": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "taskEstimateHours": "Ước tính {hours} giờ",
+  "@taskEstimateHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "zentaoHoursInvalid": "Nhập số giờ là một số từ 0 trở lên",
   "zentaoHoursLeftRequired": "Nhập số giờ còn lại (lớn hơn 0)",
   "zentaoHoursSpentRequired": "Nhập số giờ đã làm — task chưa ghi giờ nào",

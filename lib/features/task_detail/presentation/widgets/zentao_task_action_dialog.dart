@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
@@ -15,6 +14,7 @@ import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/check_zentao_task_input.dart';
+import '../util/hours_text.dart';
 import 'action_dialog_scaffold.dart';
 import 'zentao_action_looks.dart';
 
@@ -42,7 +42,7 @@ class _ZenTaoTaskActionDialogState
   // again; a finished task has none left, to be filled in on reopening.
   late final _left = TextEditingController(
     text: switch (_task?.left) {
-      final left? when left > 0 => _hoursText(left),
+      final left? when left > 0 => hoursText(left),
       _ => '',
     },
   );
@@ -115,7 +115,7 @@ class _ZenTaoTaskActionDialogState
           if (asksHours) ...[
             if (_logged > 0) ...[
               Text(
-                l.zentaoHoursLogged(_hoursText(_logged)),
+                l.zentaoHoursLogged(hoursText(_logged)),
                 style: context.typography.bodySm.copyWith(
                   color: c.textSecondary,
                 ),
@@ -219,5 +219,3 @@ double _hours(String text) {
   final value = text.trim().replaceAll(',', '.');
   return value.isEmpty ? 0 : double.tryParse(value) ?? double.nan;
 }
-
-String _hoursText(double hours) => NumberFormat('0.##').format(hours);

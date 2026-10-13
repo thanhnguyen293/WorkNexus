@@ -30,11 +30,11 @@ class AppTypography extends ThemeExtension<AppTypography> {
       const TextStyle(fontSize: 22, fontWeight: FontWeight.w600);
   TextStyle get titleLg =>
       const TextStyle(fontSize: 19, fontWeight: FontWeight.w600);
-  TextStyle get detailTitle => const TextStyle(
-    fontSize: 16.5,
-    fontWeight: FontWeight.w600,
-    height: 1.35,
-  );
+
+  /// The open ticket's title: the largest text on the detail panel, so it is
+  /// what the eye lands on first.
+  TextStyle get detailTitle =>
+      const TextStyle(fontSize: 19, fontWeight: FontWeight.w600, height: 1.3);
   TextStyle get title =>
       const TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
   TextStyle get titleSm =>
@@ -56,6 +56,10 @@ class AppTypography extends ThemeExtension<AppTypography> {
   TextStyle get secondaryStrong =>
       const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500);
   TextStyle get paragraph => const TextStyle(fontSize: 12.5, height: 1.5);
+
+  /// Long-form reading text, such as a ticket's description: a step above the
+  /// UI text around it so the content reads before the chrome.
+  TextStyle get prose => const TextStyle(fontSize: 14, height: 1.6);
   TextStyle get paragraphSm => const TextStyle(fontSize: 12, height: 1.5);
   TextStyle get bodySm => const TextStyle(fontSize: 12);
   TextStyle get bodySmStrong =>

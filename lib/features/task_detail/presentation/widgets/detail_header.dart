@@ -1,33 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
-import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/navigation/ticket_editor_route.dart';
-import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/semantic.dart';
-import '../../../../core/util/priority_labels.dart';
-import '../../../../core/widgets/app_icon_button.dart';
-import '../../../../core/widgets/badges.dart';
-import '../../../../core/widgets/tinted_pill.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../detail_providers.dart';
 import '../ticket_actions.dart';
-import 'bug_status_strip.dart';
-import 'detail_back_button.dart';
-import 'detail_header_copy_link_button.dart';
+import 'detail_header_top_bar.dart';
+import 'detail_people.dart';
+import 'detail_status_line.dart';
 import 'parent_task_link.dart';
 
-/// The detail panel header: workspace + provider identity, title, actions.
-class DetailHeader extends ConsumerWidget {
+/// The detail panel header, read top-down in order of what matters: where
+/// the ticket lives (quiet), its title (the largest text), its status, then
+/// who holds it beside what to do next.
+class DetailHeader extends StatelessWidget {
   const DetailHeader({
     super.key,
     required this.ticket,
@@ -39,148 +27,59 @@ class DetailHeader extends ConsumerWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    final lookups = ref.watch(lookupsProvider);
-    final account = lookups.accounts[ticket.accountId];
-    final ws = account == null ? null : lookups.workspaces[account.workspaceId];
-    final l = AppL10n.of(context);
+  Widget build(BuildContext context) {
+    final s = context.spacing;
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        context.spacing.xl3,
-        context.spacing.xl2,
-        context.spacing.xl3,
-        context.spacing.xl,
-      ),
+      padding: EdgeInsets.fromLTRB(s.xl3, s.xl, s.xl3, s.xl2),
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const DetailBackButton(),
-              WorkspaceBadge(
-                wsColor,
-                ws?.shortCode ?? '?',
-                big: true,
-                iconKey: ws?.iconKey,
-              ),
-              SizedBox(width: context.spacing.md),
-              Text(
-                ws?.isPersonal == true ? l.personal : (ws?.name ?? ''),
-                style: context.typography.bodySm.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: wsColor,
-                ),
-              ),
-              const Spacer(),
-              if (_editRoute(ticket) case final route?) ...[
-                AppIconButton(
-                  outlined: true,
-                  icon: LucideIcons.pencil300,
-                  tooltip: l.edit,
-                  onPressed: () {
-                    // The editor takes the screen; the detail returns when it
-                    // closes.
-                    ref.read(appNavProvider.notifier).openEditor(route);
-                  },
-                ),
-                SizedBox(width: context.spacing.md),
-              ],
-              AppIconButton(
-                outlined: true,
-                icon: LucideIcons.refreshCw300,
-                tooltip: l.refresh,
-                onPressed: () =>
-                    ref.invalidate(ticketDetailSyncProvider(ticket.id)),
-              ),
-              SizedBox(width: context.spacing.md),
-              if (ticket.url != null && ticket.url!.isNotEmpty) ...[
-                DetailHeaderCopyLinkButton(url: ticket.url!),
-                SizedBox(width: context.spacing.md),
-                AppIconButton(
-                  outlined: true,
-                  icon: LucideIcons.squareArrowOutUpRight300,
-                  tooltip: l.openInBrowser,
-                  onPressed: () => openExternally(ticket.url!),
-                ),
-                SizedBox(width: context.spacing.md),
-              ],
-              AppIconButton(
-                outlined: true,
-                icon: LucideIcons.x300,
-                tooltip: l.close,
-                onPressed: onClose,
-              ),
-            ],
+          DetailHeaderTopBar(
+            ticket: ticket,
+            wsColor: wsColor,
+            onClose: onClose,
           ),
-          SizedBox(height: context.spacing.lg),
-          // Identity, priority and — for a ZenTao bug — its status chips on
-          // one wrapping line, so the state reads alongside the ticket id.
-          Wrap(
-            spacing: context.spacing.sm,
-            runSpacing: context.spacing.sm,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                ticketRef(
-                  ticket.providerType,
-                  ticket.externalKey,
-                  ticket.externalType,
-                ),
-                style: context.typography.monoStrong.copyWith(
-                  color: c.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (hasExplicitPriority(ticket))
-                PriorityTag(ticket.providerType, ticket.priority, large: true),
-              if (ticket.severity != null)
-                SeverityTag(ticket.severity, large: true),
-              if (ticket.providerEntity case final ZenTaoBugEntity bug)
-                BugStatusStrip(ticket: ticket, bug: bug),
-            ],
-          ),
+          SizedBox(height: s.xl),
           // A subtask names its parent right above its own title.
           if (ticket.providerEntity case ZenTaoTaskEntity(
             :final parentId?,
             :final parentName,
           )) ...[
-            SizedBox(height: context.spacing.md),
             ParentTaskLink(
               ticket: ticket,
               parentId: parentId,
               parentName: parentName,
             ),
+            SizedBox(height: s.md),
           ],
-          SizedBox(height: context.spacing.md),
           Text(
             ticket.title,
             style: context.typography.detailTitle.copyWith(
-              color: c.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
-          TicketActionsBar(ticket: ticket),
+          SizedBox(height: s.lg),
+          DetailStatusLine(ticket: ticket),
+          SizedBox(height: s.xl2),
+          // People on the left, actions on the right; they stack when the
+          // panel is too narrow for both.
+          // Full width, so space-between has room to push them apart.
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              spacing: s.xl2,
+              runSpacing: s.lg,
+              children: [
+                DetailPeople(ticket: ticket),
+                TicketActionsBar(ticket: ticket),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
-}
-
-/// The editor for a ZenTao bug or task; null for anything else.
-TicketEditorRoute? _editRoute(Ticket ticket) {
-  if (ticket.providerType != ProviderType.zentao) return null;
-  return switch (ticket.externalType?.toLowerCase()) {
-    'bug' => EditBugRoute(
-      accountId: ticket.accountId,
-      bugId: ticket.externalKey,
-      ticketId: ticket.id,
-    ),
-    'task' => EditTaskRoute(
-      accountId: ticket.accountId,
-      taskId: ticket.externalKey,
-      ticketId: ticket.id,
-    ),
-    _ => null,
-  };
 }

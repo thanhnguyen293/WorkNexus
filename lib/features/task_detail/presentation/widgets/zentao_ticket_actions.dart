@@ -8,6 +8,9 @@ import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_context_menu.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/list_zentao_bug_actions.dart';
 import '../../domain/usecases/list_zentao_create_actions.dart';
@@ -21,10 +24,11 @@ import 'zentao_action_looks.dart';
 import 'zentao_bug_action_dialog.dart';
 import 'zentao_task_action_dialog.dart';
 
-/// ZenTao's own toolbar for a bug or task: Assign plus the status actions its
-/// current state allows, each through a dialog asking what ZenTao's form for
-/// it does — then what can be started from it (a copy, a subtask, a bug) in
-/// the bug / task editor. A story offers Assign only.
+/// ZenTao's own toolbar for a bug or task: Assign, a "⋯" menu, and the one
+/// status action that moves the ticket on as the filled main button (see
+/// `ZenTaoActionMenu.primary`). The other status actions ZenTao allows, and
+/// what can be started from the ticket (a copy, a subtask, a bug), wait in
+/// the menu. A story offers Assign only.
 class ZenTaoActions extends ConsumerWidget {
   const ZenTaoActions({super.key, required this.ticket});
   final Ticket ticket;
@@ -37,52 +41,100 @@ class ZenTaoActions extends ConsumerWidget {
     final task = kind == 'task' ? const ListZenTaoTaskActions()(ticket) : null;
     final canAssign = bug?.canAssign ?? task?.canAssign ?? true;
 
-    return Padding(
-      padding: EdgeInsets.only(top: context.spacing.xl),
-      child: Wrap(
-        spacing: context.spacing.md,
-        runSpacing: context.spacing.md,
-        children: [
-          if (canAssign)
-            DetailActionButton(
-              icon: LucideIcons.userPlus300,
-              label: l.assign,
-              onTap: () => _open(context, AssignDialog(ticket: ticket)),
-            ),
-          for (final action in bug?.actions ?? const <ZenTaoBugAction>[])
-            DetailActionButton(
-              icon: zenTaoBugActionLook(l, action).icon,
-              label: zenTaoBugActionLook(l, action).label,
-              onTap: () => _open(
-                context,
-                action == ZenTaoBugAction.resolve
-                    ? ResolveDialog(ticket: ticket)
-                    : ZenTaoBugActionDialog(ticket: ticket, action: action),
-              ),
-            ),
-          for (final action in task?.actions ?? const <ZenTaoTaskAction>[])
-            DetailActionButton(
-              icon: zenTaoTaskActionLook(l, action).icon,
-              label: zenTaoTaskActionLook(l, action).label,
-              onTap: () => _open(
-                context,
-                ZenTaoTaskActionDialog(ticket: ticket, action: action),
-              ),
-            ),
-          for (final action in const ListZenTaoCreateActions()(ticket))
-            DetailActionButton(
-              icon: zenTaoCreateActionLook(l, action).icon,
-              label: zenTaoCreateActionLook(l, action).label,
-              onTap: () {
-                // The editor takes the screen; the new one opens on save.
-                ref
-                    .read(appNavProvider.notifier)
-                    .openEditor(_editorRoute(action, ticket));
-              },
-            ),
-        ],
+    _ZenTaoItem bugItem(ZenTaoBugAction action) => (
+      look: zenTaoBugActionLook(l, action),
+      run: () => _open(
+        context,
+        action == ZenTaoBugAction.resolve
+            ? ResolveDialog(ticket: ticket)
+            : ZenTaoBugActionDialog(ticket: ticket, action: action),
       ),
     );
+    _ZenTaoItem taskItem(ZenTaoTaskAction action) => (
+      look: zenTaoTaskActionLook(l, action),
+      run: () => _open(
+        context,
+        ZenTaoTaskActionDialog(ticket: ticket, action: action),
+      ),
+    );
+
+    final primary = switch ((bug?.primary, task?.primary)) {
+      (final b?, _) => bugItem(b),
+      (_, final t?) => taskItem(t),
+      _ => null,
+    };
+    final more = <_ZenTaoItem>[
+      for (final a in bug?.actions ?? const <ZenTaoBugAction>[])
+        if (a != bug?.primary) bugItem(a),
+      for (final a in task?.actions ?? const <ZenTaoTaskAction>[])
+        if (a != task?.primary) taskItem(a),
+      for (final action in const ListZenTaoCreateActions()(ticket))
+        (
+          look: zenTaoCreateActionLook(l, action),
+          // The editor takes the screen; the new one opens on save.
+          run: () => ref
+              .read(appNavProvider.notifier)
+              .openEditor(_editorRoute(action, ticket)),
+        ),
+    ];
+
+    return Wrap(
+      spacing: context.spacing.md,
+      runSpacing: context.spacing.md,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (canAssign)
+          DetailActionButton(
+            icon: LucideIcons.userPlus300,
+            label: l.assign,
+            onTap: () => _open(context, AssignDialog(ticket: ticket)),
+          ),
+        if (more.isNotEmpty) _MoreActionsButton(items: more),
+        if (primary != null)
+          AppButton.filled(
+            size: AppButtonSize.small,
+            icon: primary.look.icon,
+            onPressed: primary.run,
+            child: Text(primary.look.label),
+          ),
+      ],
+    );
+  }
+}
+
+/// One ZenTao action: how it shows and what it does.
+typedef _ZenTaoItem = ({ZenTaoActionLook look, VoidCallback run});
+
+/// The "⋯" button holding the actions that are not the main one.
+class _MoreActionsButton extends StatelessWidget {
+  const _MoreActionsButton({required this.items});
+
+  final List<_ZenTaoItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppIconButton(
+      outlined: true,
+      icon: LucideIcons.ellipsis300,
+      tooltip: AppL10n.of(context).more,
+      onPressed: () => _show(context),
+    );
+  }
+
+  Future<void> _show(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final at =
+        box?.localToGlobal(Offset(0, box.size.height + context.spacing.xs)) ??
+        Offset.zero;
+    final picked = await showAppContextMenu(
+      context,
+      at: at,
+      entries: [
+        for (final item in items)
+          AppMenuEntry(icon: item.look.icon, label: item.look.label),
+      ],
+    );
+    if (picked != null && context.mounted) items[picked].run();
   }
 }
 

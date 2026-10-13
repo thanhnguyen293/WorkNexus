@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/detail_region_card.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/detail_scroll_body.dart';
 
 void main() {
@@ -47,6 +48,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('content and activity each sit in a region card', (tester) async {
+    await pump(tester, DetailLayout.twoPane);
+
+    for (final text in ['content-body', 'activity-thread']) {
+      expect(
+        find.ancestor(
+          of: find.text(text),
+          matching: find.byType(DetailRegionCard),
+        ),
+        findsOneWidget,
+        reason: text,
+      );
+    }
+    expect(
+      find.ancestor(
+        of: find.text('sidebar-meta'),
+        matching: find.byType(DetailRegionCard),
+      ),
+      findsNothing,
+    );
+  });
+
   testWidgets('document stacks the sidebar below a width-capped column', (
     tester,
   ) async {
@@ -55,9 +78,16 @@ void main() {
     final content = tester.getRect(find.text('content-body'));
     final sidebar = tester.getRect(find.text('sidebar-meta'));
 
-    // Sidebar drops below the content in the single reading column.
+    // Sidebar drops below the content in the single reading column, lined
+    // up with the content's region card (the sidebar brings its own cards).
     expect(sidebar.top, greaterThan(content.top));
-    expect(sidebar.left, closeTo(content.left, 1));
+    final contentCard = tester.getRect(
+      find.ancestor(
+        of: find.text('content-body'),
+        matching: find.byType(DetailRegionCard),
+      ),
+    );
+    expect(sidebar.left, closeTo(contentCard.left, 1));
     // Metadata precedes the activity thread rather than trailing the composer.
     final activity = tester.getRect(find.text('activity-thread'));
     expect(activity.top, greaterThan(sidebar.top));
