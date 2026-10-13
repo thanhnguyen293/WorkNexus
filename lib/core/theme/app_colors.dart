@@ -13,6 +13,20 @@ const Color kVerifiedLead = Color(0xFF1D9BF0);
 const Color kVerifiedManager = Color(0xFF8B5CF6);
 const Color kVerifiedExecutive = Color(0xFFF5B400);
 
+/// Categorical chart slots (blue, orange, aqua), stepped per brightness and
+/// checked for colour-blind separation on the theme's surfaces. Kept apart
+/// from the status inks, which mean something (done, warning, …).
+const (Color, Color, Color) kChartLight = (
+  Color(0xFF2A78D6),
+  Color(0xFFEB6834),
+  Color(0xFF1BAF7A),
+);
+const (Color, Color, Color) kChartDark = (
+  Color(0xFF3987E5),
+  Color(0xFFD95926),
+  Color(0xFF199E70),
+);
+
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -43,6 +57,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onScrim,
     required this.onColorInk,
     required this.workspaceFallback,
+    required this.chart1,
+    required this.chart2,
+    required this.chart3,
     this.verifiedLead = kVerifiedLead,
     this.verifiedManager = kVerifiedManager,
     this.verifiedExecutive = kVerifiedExecutive,
@@ -81,6 +98,9 @@ class AppColors extends ThemeExtension<AppColors> {
     onScrim: p.onScrim,
     onColorInk: p.onColorInk,
     workspaceFallback: p.workspaceFallback,
+    chart1: (p.brightness == Brightness.dark ? kChartDark : kChartLight).$1,
+    chart2: (p.brightness == Brightness.dark ? kChartDark : kChartLight).$2,
+    chart3: (p.brightness == Brightness.dark ? kChartDark : kChartLight).$3,
   );
 
   // ---- Surfaces ----
@@ -124,6 +144,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color onColorInk; // near-black text/icon on a saturated colored fill
   final Color
   workspaceFallback; // neutral fallback when a workspace has no color
+
+  // ---- Charts ----
+  /// Categorical series, in this fixed order (never cycled): a fourth kind
+  /// folds into a neutral "other".
+  final Color chart1;
+  final Color chart2;
+  final Color chart3;
 
   /// The "verified" check beside a leading member's avatar, by seniority:
   /// project/product leads, department managers, senior management. The same
@@ -173,6 +200,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onScrim,
     Color? onColorInk,
     Color? workspaceFallback,
+    Color? chart1,
+    Color? chart2,
+    Color? chart3,
     Color? verifiedLead,
     Color? verifiedManager,
     Color? verifiedExecutive,
@@ -205,6 +235,9 @@ class AppColors extends ThemeExtension<AppColors> {
       onScrim: onScrim ?? this.onScrim,
       onColorInk: onColorInk ?? this.onColorInk,
       workspaceFallback: workspaceFallback ?? this.workspaceFallback,
+      chart1: chart1 ?? this.chart1,
+      chart2: chart2 ?? this.chart2,
+      chart3: chart3 ?? this.chart3,
       verifiedLead: verifiedLead ?? this.verifiedLead,
       verifiedManager: verifiedManager ?? this.verifiedManager,
       verifiedExecutive: verifiedExecutive ?? this.verifiedExecutive,
@@ -243,6 +276,9 @@ class AppColors extends ThemeExtension<AppColors> {
       onScrim: c(onScrim, other.onScrim),
       onColorInk: c(onColorInk, other.onColorInk),
       workspaceFallback: c(workspaceFallback, other.workspaceFallback),
+      chart1: c(chart1, other.chart1),
+      chart2: c(chart2, other.chart2),
+      chart3: c(chart3, other.chart3),
       verifiedLead: c(verifiedLead, other.verifiedLead),
       verifiedManager: c(verifiedManager, other.verifiedManager),
       verifiedExecutive: c(verifiedExecutive, other.verifiedExecutive),

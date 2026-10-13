@@ -21,9 +21,9 @@ List<ChatStorageKind> chatStorageKinds(
   final c = context.colors;
   final l = AppL10n.of(context);
   return [
-    (label: l.chatStoragePhotos, bytes: imageBytes, color: c.accent),
-    (label: l.chatStorageVideos, bytes: videoBytes, color: c.info),
-    (label: l.chatStorageFiles, bytes: fileBytes, color: c.notice),
+    (label: l.chatStoragePhotos, bytes: imageBytes, color: c.chart1),
+    (label: l.chatStorageVideos, bytes: videoBytes, color: c.chart2),
+    (label: l.chatStorageFiles, bytes: fileBytes, color: c.chart3),
   ];
 }
 
@@ -62,6 +62,9 @@ class ChatStorageBar extends StatelessWidget {
       child: SizedBox(
         height: height ?? context.spacing.md,
         child: Row(
+          // A childless ColoredBox sizes to its smallest constraint: centred,
+          // the segments would be 0 high and the bar invisible.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final (i, p) in parts.indexed)
               if (flexes[i] > 0)
