@@ -47,6 +47,9 @@ dependencies:
   flutter_quill_delta_from_html: 1.5.3
   vsc_quill_delta_to_html: 1.0.5
   cached_network_image: 3.4.1
+  # The cache cached_network_image fills; Windows toasts read a sender's
+  # picture from it as a local file (they cannot fetch https themselves).
+  flutter_cache_manager: 3.4.1
   image_picker: 1.2.1
   two_dimensional_scrollables: 0.5.3
   # In-app attachment preview (repro videos). The macOS backend
