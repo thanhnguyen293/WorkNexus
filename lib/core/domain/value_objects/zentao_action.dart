@@ -1,10 +1,21 @@
 /// A status action on a ZenTao task, in toolbar order, and what its ZenTao
 /// form asks for.
 enum ZenTaoTaskAction {
-  start(asksSpent: true, asksLeft: true, asksAssignee: true),
-  restart(asksSpent: true, asksLeft: true, asksAssignee: true),
+  start(asksSpent: true, asksLeft: true, asksAssignee: true, asksBegin: true),
+  restart(
+    asksSpent: true,
+    asksLeft: true,
+    asksAssignee: true,
+    asksBegin: true,
+  ),
   pause(),
-  finish(asksSpent: true, asksAssignee: true),
+  finish(
+    asksSpent: true,
+    asksAssignee: true,
+    asksBegin: true,
+    asksEnd: true,
+    asksFiles: true,
+  ),
   activate(asksLeft: true, asksAssignee: true),
   close(),
   cancel();
@@ -13,6 +24,9 @@ enum ZenTaoTaskAction {
     this.asksSpent = false,
     this.asksLeft = false,
     this.asksAssignee = false,
+    this.asksBegin = false,
+    this.asksEnd = false,
+    this.asksFiles = false,
   });
 
   /// Takes the hours worked this time (added to what is already logged).
@@ -23,4 +37,13 @@ enum ZenTaoTaskAction {
 
   /// Takes who the task goes to next.
   final bool asksAssignee;
+
+  /// Takes when work on the task really began.
+  final bool asksBegin;
+
+  /// Takes when work on the task really ended.
+  final bool asksEnd;
+
+  /// Takes files to attach.
+  final bool asksFiles;
 }

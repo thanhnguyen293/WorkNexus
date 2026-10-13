@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/domain/value_objects/zentao_task_action_input.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../core/widgets/app_snack.dart';
+import '../../../../core/widgets/attachments_input.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/check_zentao_task_input.dart';
 import '../util/hours_text.dart';
 import 'action_dialog_scaffold.dart';
+import 'task_action_date_field.dart';
+import 'task_hours_field.dart';
 import 'zentao_action_looks.dart';
 
 /// Runs a status action on a ZenTao task, asking what ZenTao's own form for it
-/// does: the hours worked and left, who it goes to next, and a note.
+/// does: the hours worked and left, who it goes to next, when work really
+/// began and ended, files and a note.
 class ZenTaoTaskActionDialog extends ConsumerStatefulWidget {
   const ZenTaoTaskActionDialog({
     super.key,
@@ -47,7 +50,19 @@ class _ZenTaoTaskActionDialogState
     },
   );
   final _note = TextEditingController();
-  String? _assignee;
+  // Preset as ZenTao's forms are: starting keeps the task with its holder,
+  // finishing hands it back to its creator.
+  late String? _assignee = switch (widget.action) {
+    ZenTaoTaskAction.finish => _task?.openedByHandle,
+    ZenTaoTaskAction.start ||
+    ZenTaoTaskAction.restart => widget.ticket.assignee,
+    _ => null,
+  };
+  // One "now" for both, so the default end is never before the begin.
+  final _opened = DateTime.now();
+  late DateTime _began = _task?.realStarted ?? _opened;
+  late DateTime _ended = _began.isAfter(_opened) ? _began : _opened;
+  List<DraftFile> _files = const [];
   bool _busy = false;
 
   ZenTaoTaskEntity? get _task => switch (widget.ticket.providerEntity) {
@@ -58,9 +73,12 @@ class _ZenTaoTaskActionDialogState
   double get _logged => _task?.consumed ?? 0;
 
   ZenTaoTaskActionInput get _input => ZenTaoTaskActionInput(
-    spent: _hours(_spent.text),
-    left: _hours(_left.text),
+    spent: parseHours(_spent.text),
+    left: parseHours(_left.text),
     assignee: _assignee,
+    began: widget.action.asksBegin ? _began : null,
+    ended: widget.action.asksEnd ? _ended : null,
+    files: _files,
     comment: _note.text,
   );
 
@@ -92,15 +110,17 @@ class _ZenTaoTaskActionDialogState
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
-    final c = context.colors;
+    final s = context.spacing;
     final action = widget.action;
     final look = zenTaoTaskActionLook(l, action);
+    final input = _input;
     final problem = const CheckZenTaoTaskInput()((
       action: action,
-      input: _input,
+      input: input,
       logged: _logged,
     ));
     final asksHours = action.asksSpent || action.asksLeft;
+    void changed() => setState(() {});
     return ActionScaffold(
       title: l.zentaoActionTitle(look.label, widget.ticket.externalKey),
       submitLabel: look.label,
@@ -113,54 +133,42 @@ class _ZenTaoTaskActionDialogState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (asksHours) ...[
-            if (_logged > 0) ...[
-              Text(
-                l.zentaoHoursLogged(hoursText(_logged)),
-                style: context.typography.bodySm.copyWith(
-                  color: c.textSecondary,
-                ),
+            if (action.asksSpent)
+              // ZenTao's "already cost / total cost": the total follows the
+              // hours typed for this time.
+              _Hint(
+                [
+                  if (_logged > 0) l.zentaoHoursLogged(hoursText(_logged)),
+                  if (input.spent > 0 && !input.spent.isNaN)
+                    l.zentaoHoursTotal(hoursText(_logged + input.spent)),
+                ].join(' · '),
               ),
-              SizedBox(height: context.spacing.lg),
-            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (action.asksSpent)
                   Expanded(
-                    child: _HoursField(
+                    child: TaskHoursField(
                       label: l.zentaoHoursSpent,
                       controller: _spent,
-                      onChanged: () => setState(() {}),
+                      onChanged: changed,
                     ),
                   ),
-                if (action.asksSpent && action.asksLeft)
-                  SizedBox(width: context.spacing.lg),
+                if (action.asksSpent && action.asksLeft) SizedBox(width: s.lg),
                 if (action.asksLeft)
                   Expanded(
-                    child: _HoursField(
+                    child: TaskHoursField(
                       label: l.zentaoHoursLeft,
                       controller: _left,
-                      onChanged: () => setState(() {}),
+                      onChanged: changed,
                     ),
                   ),
               ],
             ),
-            if (problem != null) ...[
-              SizedBox(height: context.spacing.md),
-              Text(
-                switch (problem) {
-                  ZenTaoTaskInputProblem.invalidHours => l.zentaoHoursInvalid,
-                  ZenTaoTaskInputProblem.leftRequired =>
-                    l.zentaoHoursLeftRequired,
-                  ZenTaoTaskInputProblem.spentRequired =>
-                    l.zentaoHoursSpentRequired,
-                },
-                style: context.typography.bodySm.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
-            ],
-            SizedBox(height: context.spacing.xl2),
+            if (problem != null &&
+                problem != ZenTaoTaskInputProblem.endBeforeBegin)
+              _Problem(problem),
+            SizedBox(height: s.xl2),
           ],
           if (action.asksAssignee) ...[
             FieldLabel(l.zentaoAssignToOptional),
@@ -169,7 +177,46 @@ class _ZenTaoTaskActionDialogState
               value: _assignee,
               onChanged: (v) => setState(() => _assignee = v),
             ),
-            SizedBox(height: context.spacing.xl2),
+            SizedBox(height: s.xl2),
+          ],
+          if (action.asksBegin || action.asksEnd) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (action.asksBegin)
+                  Expanded(
+                    child: TaskActionDateField(
+                      label: l.zentaoActualBegin,
+                      value: _began,
+                      // Finishing keeps a begin already recorded, as ZenTao.
+                      enabled: !action.asksEnd || _task?.realStarted == null,
+                      onChanged: (v) => setState(() => _began = v),
+                    ),
+                  ),
+                if (action.asksBegin && action.asksEnd) SizedBox(width: s.lg),
+                if (action.asksEnd)
+                  Expanded(
+                    child: TaskActionDateField(
+                      label: l.zentaoActualEnd,
+                      value: _ended,
+                      onChanged: (v) => setState(() => _ended = v),
+                    ),
+                  ),
+              ],
+            ),
+            if (problem == ZenTaoTaskInputProblem.endBeforeBegin)
+              const _Problem(ZenTaoTaskInputProblem.endBeforeBegin),
+            SizedBox(height: s.xl2),
+          ],
+          if (action.asksFiles) ...[
+            FieldLabel(l.zentaoFiles),
+            AttachmentsInput(
+              files: const [],
+              newFiles: _files,
+              onFilesChanged: (_) {},
+              onNewFilesChanged: (v) => setState(() => _files = v),
+            ),
+            SizedBox(height: s.xl2),
           ],
           FieldLabel(l.zentaoNote),
           NoteField(_note),
@@ -179,43 +226,49 @@ class _ZenTaoTaskActionDialogState
   }
 }
 
-/// A labelled field for a number of hours.
-class _HoursField extends StatelessWidget {
-  const _HoursField({
-    required this.label,
-    required this.controller,
-    required this.onChanged,
-  });
+/// Quiet context above the hours fields; nothing when [text] is empty.
+class _Hint extends StatelessWidget {
+  const _Hint(this.text);
 
-  final String label;
-  final TextEditingController controller;
-  final VoidCallback onChanged;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FieldLabel(label),
-        TextField(
-          controller: controller,
-          onChanged: (_) => onChanged(),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),
-          ],
-          style: context.typography.body.copyWith(
-            color: context.colors.textPrimary,
-          ),
-          decoration: appInputDecoration(context),
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.spacing.lg),
+      child: Text(
+        text,
+        style: context.typography.bodySm.copyWith(
+          color: context.colors.textSecondary,
         ),
-      ],
+      ),
     );
   }
 }
 
-/// Hours typed in a field: 0 when empty, NaN (refused) when not a number.
-double _hours(String text) {
-  final value = text.trim().replaceAll(',', '.');
-  return value.isEmpty ? 0 : double.tryParse(value) ?? double.nan;
+/// Why the input would be refused, under the fields it is about.
+class _Problem extends StatelessWidget {
+  const _Problem(this.problem);
+
+  final ZenTaoTaskInputProblem problem;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return Padding(
+      padding: EdgeInsets.only(top: context.spacing.md),
+      child: Text(
+        switch (problem) {
+          ZenTaoTaskInputProblem.invalidHours => l.zentaoHoursInvalid,
+          ZenTaoTaskInputProblem.leftRequired => l.zentaoHoursLeftRequired,
+          ZenTaoTaskInputProblem.spentRequired => l.zentaoHoursSpentRequired,
+          ZenTaoTaskInputProblem.endBeforeBegin => l.zentaoEndBeforeBegin,
+        },
+        style: context.typography.bodySm.copyWith(
+          color: context.colors.textTertiary,
+        ),
+      ),
+    );
+  }
 }

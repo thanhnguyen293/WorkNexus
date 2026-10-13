@@ -360,6 +360,13 @@ void main() {
     expect(task({'project': 0}).project, isNull);
 
     expect(task({'realStarted': '0000-00-00 00:00:00'}).realStarted, isNull);
+    // Its finish form hands it back to whoever created it.
+    expect(
+      task({
+        'openedBy': {'account': 'evan', 'realname': 'Evan'},
+      }).openedByHandle,
+      'evan',
+    );
   });
 
   test('a parent task lists its subtasks', () {

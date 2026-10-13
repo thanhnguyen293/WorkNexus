@@ -171,6 +171,78 @@ void main() {
     expect(find.text('Finish #12: done'), findsOneWidget);
   });
 
+  testWidgets('finishing asks what the ZenTao finish form does', (
+    tester,
+  ) async {
+    final began = DateTime(2026, 10, 13, 17, 48);
+    final task = _ticket(
+      'Task',
+      'doing',
+      entity: TicketProviderEntity.zentaoTask(
+        consumed: 16,
+        realStarted: began,
+        openedByHandle: 'evan',
+      ),
+    );
+    await pump(tester, task);
+
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+    // Field labels are shown in capitals.
+    for (final label in ['ACTUAL BEGIN', 'ACTUAL END', 'FILES', 'NOTE']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+    // A begin already recorded is shown, not changed.
+    expect(find.text('2026-10-13 17:48'), findsOneWidget);
+
+    await tester.enterText(
+      find
+          .descendant(
+            of: find.byType(ActionScaffold),
+            matching: find.byType(TextField),
+          )
+          .first,
+      '2',
+    );
+    await tester.pump();
+    expect(find.text('16 h logged so far · 18 h in total'), findsOneWidget);
+
+    await tester.tap(find.text('Finish').last);
+    await tester.pumpAndSettle();
+
+    final input =
+        verify(
+              () => workflow.runTaskAction(
+                task,
+                ZenTaoTaskAction.finish,
+                captureAny(),
+              ),
+            ).captured.single
+            as ZenTaoTaskActionInput;
+    // As in ZenTao, a finished task goes back to its creator by default.
+    expect(input.assignee, 'evan');
+    expect(input.began, began);
+    expect(input.ended, isNotNull);
+  });
+
+  testWidgets('starting asks when work really began', (tester) async {
+    await pump(
+      tester,
+      _ticket(
+        'Task',
+        'wait',
+        status: UnifiedStatus.todo,
+        entity: const TicketProviderEntity.zentaoTask(),
+      ),
+    );
+
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(find.text('ACTUAL BEGIN'), findsOneWidget);
+    expect(find.text('ACTUAL END'), findsNothing);
+    expect(find.text('FILES'), findsNothing);
+  });
+
   testWidgets('a task starts a subtask of itself in the editor', (
     tester,
   ) async {

@@ -205,6 +205,24 @@ void main() {
       );
     });
 
+    test('a finish cannot be dated before the begin', () {
+      ZenTaoTaskInputProblem? finish(DateTime ended) => check((
+        action: ZenTaoTaskAction.finish,
+        input: ZenTaoTaskActionInput(
+          spent: 1,
+          began: DateTime(2026, 10, 13, 17, 48),
+          ended: ended,
+        ),
+        logged: 0,
+      ));
+      expect(
+        finish(DateTime(2026, 10, 13, 17)),
+        ZenTaoTaskInputProblem.endBeforeBegin,
+      );
+      expect(finish(DateTime(2026, 10, 13, 17, 48)), isNull);
+      expect(finish(DateTime(2026, 10, 13, 18, 49)), isNull);
+    });
+
     test('pause, close and cancel ask for no hours', () {
       for (final action in [
         ZenTaoTaskAction.pause,

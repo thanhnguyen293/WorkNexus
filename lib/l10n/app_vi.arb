@@ -241,6 +241,18 @@
   "zentaoBuild": "Build",
   "zentaoHoursSpent": "Số giờ làm lần này",
   "zentaoHoursLeft": "Số giờ còn lại",
+  "zentaoActualBegin": "Bắt đầu thực tế",
+  "zentaoActualEnd": "Kết thúc thực tế",
+  "zentaoFiles": "Tệp đính kèm",
+  "zentaoEndBeforeBegin": "Thời gian kết thúc không được trước thời gian bắt đầu",
+  "zentaoHoursTotal": "Tổng {hours} giờ",
+  "@zentaoHoursTotal": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "zentaoHoursLogged": "Đã ghi {hours} giờ",
   "@zentaoHoursLogged": {
     "placeholders": {

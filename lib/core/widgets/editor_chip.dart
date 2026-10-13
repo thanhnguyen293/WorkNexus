@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_icon_button.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radii.dart';
+import '../theme/app_sizes.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import 'app_icon_button.dart';
 
 /// A small removable chip — an attached file, a picked build or user — in
 /// the app's quiet chip style instead of Material's outlined one.

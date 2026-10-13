@@ -269,6 +269,18 @@
   "zentaoBuild": "Build",
   "zentaoHoursSpent": "Hours worked this time",
   "zentaoHoursLeft": "Hours left",
+  "zentaoActualBegin": "Actual begin",
+  "zentaoActualEnd": "Actual end",
+  "zentaoFiles": "Files",
+  "zentaoEndBeforeBegin": "The end can't be before the begin",
+  "zentaoHoursTotal": "{hours} h in total",
+  "@zentaoHoursTotal": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "zentaoHoursLogged": "{hours} h logged so far",
   "@zentaoHoursLogged": {
     "placeholders": {

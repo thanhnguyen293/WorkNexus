@@ -246,6 +246,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       consumed: e.consumed,
       left: e.left,
       realStarted: parseZenTaoDate(e.realStarted),
+      openedByHandle: accountHandle(e.openedBy),
       subtasks: [
         for (final child in e.children)
           if (child.idString.isNotEmpty)

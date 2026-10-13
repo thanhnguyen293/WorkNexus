@@ -13,6 +13,9 @@ enum ZenTaoTaskInputProblem {
 
   /// Finishing a task with nothing logged needs the hours worked.
   spentRequired,
+
+  /// ZenTao refuses a finish dated before the task began.
+  endBeforeBegin,
 }
 
 /// What [action] is to send, and the hours already [logged] on the task.
@@ -42,6 +45,13 @@ class CheckZenTaoTaskInput
     }
     if (action == ZenTaoTaskAction.finish && input.spent <= 0 && logged <= 0) {
       return ZenTaoTaskInputProblem.spentRequired;
+    }
+    final (began, ended) = (input.began, input.ended);
+    if (action.asksEnd &&
+        began != null &&
+        ended != null &&
+        ended.isBefore(began)) {
+      return ZenTaoTaskInputProblem.endBeforeBegin;
     }
     return null;
   }
