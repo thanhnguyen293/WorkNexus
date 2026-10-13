@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -137,7 +138,12 @@ abstract class ServiceModule {
     GitHubReleaseDatasource releaseDatasource,
   ) => GitHubUpdateRepository(
     releases: releaseDatasource,
-    installer: Platform.isWindows
+    // Only a release build replaces itself: a debug / profile build runs from
+    // build/, which an update would overwrite with the release. Without an
+    // installer an update is still reported, as a manual download.
+    installer: !kReleaseMode
+        ? null
+        : Platform.isWindows
         ? const WindowsUpdateInstaller()
         : Platform.isMacOS
         ? const MacosUpdateInstaller()
