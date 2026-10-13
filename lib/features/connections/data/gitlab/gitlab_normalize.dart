@@ -138,7 +138,15 @@ Ticket normalizeGitLabMergeRequest(
   final body = e.description ?? '';
   final state = e.state ?? 'opened';
   final avatarUrls = <String, String>{};
-  for (final user in [e.author, ...e.assignees, ...e.reviewers]) {
+  final approvers = e.approvals?.approvedBy ?? const <GitLabUser>[];
+  for (final user in [
+    e.author,
+    ...e.assignees,
+    ...e.reviewers,
+    e.mergedBy,
+    e.closedBy,
+    ...approvers,
+  ]) {
     final name = user?.display ?? '';
     final avatarUrl = user?.avatarUrl ?? '';
     if (name.isNotEmpty && avatarUrl.isNotEmpty) avatarUrls[name] = avatarUrl;
@@ -179,6 +187,20 @@ Ticket normalizeGitLabMergeRequest(
       milestoneTitle: e.milestone?.title,
       humanTimeEstimate: e.timeStats?.humanTimeEstimate,
       humanTotalTimeSpent: e.timeStats?.humanTotalTimeSpent,
+      mergedBy: e.mergedBy?.display,
+      mergedAt: parseGitLabDate(e.mergedAt),
+      closedBy: e.closedBy?.display,
+      closedAt: parseGitLabDate(e.closedAt),
+      mergeCommitSha: e.mergeCommitSha,
+      squashCommitSha: e.squashCommitSha,
+      squash: e.squash,
+      removeSourceBranch:
+          e.shouldRemoveSourceBranch ?? e.forceRemoveSourceBranch,
+      approvedBy: [for (final a in approvers) a.display],
+      approvalsRequired: e.approvals?.approvalsRequired,
+      approvalsLeft: e.approvals?.approvalsLeft,
+      userHasApproved: e.approvals?.userHasApproved,
+      userCanApprove: e.approvals?.userCanApprove,
       reviewers: [for (final r in e.reviewers) r.display],
       assignees: [for (final a in e.assignees) a.display],
       userAvatarUrls: avatarUrls,

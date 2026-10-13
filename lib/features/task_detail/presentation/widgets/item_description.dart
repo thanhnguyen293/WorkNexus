@@ -26,6 +26,14 @@ class ItemDescription extends StatelessWidget {
       );
     }
     // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
-    return SelectionArea(child: MarkdownText(ticket.body));
+    // Set at the prose size with hover-only link underlines, as the GitLab /
+    // GitHub web pages render a description.
+    return SelectionArea(
+      child: MarkdownText(
+        ticket.body,
+        fontSize: context.typography.prose.fontSize ?? 14,
+        underlineLinksOnHover: true,
+      ),
+    );
   }
 }

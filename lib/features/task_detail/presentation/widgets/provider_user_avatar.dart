@@ -14,11 +14,15 @@ class ProviderUserAvatar extends StatelessWidget {
     required this.name,
     required this.avatarUrl,
     required this.imageLoader,
+    this.trailing,
   });
 
   final String name;
   final String? avatarUrl;
   final AvatarLoader imageLoader;
+
+  /// A status mark at the row's end (e.g. a reviewer's approval).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +44,7 @@ class ProviderUserAvatar extends StatelessWidget {
             ),
           ),
         ),
+        ?trailing,
       ],
     );
   }

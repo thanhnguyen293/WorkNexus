@@ -10,6 +10,7 @@ import '../../../../core/domain/value_objects/repo_change.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import 'gitlab_client.dart';
+import 'gitlab_draft_title.dart';
 import 'gitlab_models.dart';
 import 'gitlab_normalize.dart';
 
@@ -21,11 +22,22 @@ import 'gitlab_normalize.dart';
 /// close/reopen) lives on this concrete class as extra public methods, called
 /// through GitLab-specific `SyncService` paths — not through the interface.
 class GitLabAdapter implements GitLabMrAdapter {
-  GitLabAdapter({required this.accountId, required GitLabClient client})
-    : _client = client;
+  GitLabAdapter({
+    required this.accountId,
+    required GitLabClient client,
+    Duration rebasePollInterval = const Duration(seconds: 1),
+  }) : _client = client,
+       _rebasePollInterval = rebasePollInterval;
 
   final String accountId;
   final GitLabClient _client;
+
+  /// How often [rebaseMergeRequest] checks on GitLab's background rebase.
+  final Duration _rebasePollInterval;
+
+  /// Polls before giving up waiting on a rebase (about a minute by default);
+  /// the refresh that follows still shows whatever state it reached.
+  static const _rebasePollLimit = 60;
 
   @override
   ProviderType get providerType => ProviderType.gitlab;
@@ -91,8 +103,12 @@ class GitLabAdapter implements GitLabMrAdapter {
         return normalizeGitLabIssue(issue, accountId: accountId);
       }
       final mr = await _client.mergeRequest(ref, ticket.externalKey);
+      final (behind, approvals) = await (
+        _withCommitsBehind(ref, mr),
+        _approvals(ref, mr),
+      ).wait;
       return normalizeGitLabMergeRequest(
-        await _withCommitsBehind(ref, mr),
+        behind.copyWith(approvals: approvals),
         accountId: accountId,
       );
     });
@@ -353,8 +369,46 @@ class GitLabAdapter implements GitLabMrAdapter {
 
   /// Merge a merge request.
   @override
-  Future<Result<bool>> mergeMergeRequest(Ticket ticket) => _guard(() async {
-    await _client.mergeMergeRequest(_projectRef(ticket), ticket.externalKey);
+  Future<Result<bool>> mergeMergeRequest(
+    Ticket ticket, {
+    bool? squash,
+    bool? removeSourceBranch,
+  }) => _guard(() async {
+    await _client.mergeMergeRequest(
+      _projectRef(ticket),
+      ticket.externalKey,
+      squash: squash,
+      shouldRemoveSourceBranch: removeSourceBranch,
+    );
+    return true;
+  });
+
+  /// Withdraw the authenticated user's approval.
+  @override
+  Future<Result<bool>> unapproveMergeRequest(Ticket ticket) => _guard(() async {
+    await _client.unapproveMergeRequest(
+      _projectRef(ticket),
+      ticket.externalKey,
+    );
+    return true;
+  });
+
+  /// Toggle draft by rewriting the title prefix (see `gitlab_draft_title`).
+  /// Reads the live title first so a stale cached one never overwrites an edit
+  /// made on the web.
+  @override
+  Future<Result<bool>> setMergeRequestDraft(
+    Ticket ticket, {
+    required bool draft,
+  }) => _guard(() async {
+    final ref = _projectRef(ticket);
+    final mr = await _client.mergeRequest(ref, ticket.externalKey);
+    final title = mr.title ?? ticket.title;
+    await _client.updateMergeRequest(
+      ref,
+      ticket.externalKey,
+      title: draft ? draftTitle(title) : readyTitle(title),
+    );
     return true;
   });
 
@@ -367,11 +421,36 @@ class GitLabAdapter implements GitLabMrAdapter {
 
   /// Rebase a merge request onto its target branch (resolves a `need_rebase`
   /// detailed merge status).
+  ///
+  /// GitLab answers 202 and rebases in the background, so this waits for
+  /// `rebase_in_progress` to clear: the caller's refresh then sees the result,
+  /// and a spinner on the Rebase button spans the real work. A failed rebase
+  /// (e.g. conflicts) comes back as its `merge_error`.
   @override
-  Future<Result<bool>> rebaseMergeRequest(Ticket ticket) => _guard(() async {
-    await _client.rebaseMergeRequest(_projectRef(ticket), ticket.externalKey);
-    return true;
-  });
+  Future<Result<bool>> rebaseMergeRequest(Ticket ticket) async {
+    final res = await _guard(() async {
+      final ref = _projectRef(ticket);
+      final iid = ticket.externalKey;
+      await _client.rebaseMergeRequest(ref, iid);
+      for (var i = 0; i < _rebasePollLimit; i++) {
+        await Future<void>.delayed(_rebasePollInterval);
+        final mr = await _client.mergeRequest(
+          ref,
+          iid,
+          includeRebaseInProgress: true,
+        );
+        if (mr.rebaseInProgress != true) return mr.mergeError;
+      }
+      return null;
+    });
+    return switch (res) {
+      Ok(value: final error?) when error.isNotEmpty => Err(
+        ValidationFailure(error),
+      ),
+      Ok() => const Ok(true),
+      Err(:final failure) => Err(failure),
+    };
+  }
 
   /// Set the MR reviewers (replaces the current set). Resolves the selected
   /// logins to member ids via the project member list.
@@ -605,6 +684,19 @@ class GitLabAdapter implements GitLabMrAdapter {
       return mr.copyWith(commitsBehind: count);
     } on DioException {
       return mr;
+    }
+  }
+
+  /// The MR's approval state, or null where the endpoint is unavailable (an
+  /// older or restricted instance) — the detail still loads without it.
+  Future<GitLabMrApprovals?> _approvals(
+    String projectRef,
+    GitLabMergeRequest mr,
+  ) async {
+    try {
+      return await _client.mergeRequestApprovals(projectRef, '${mr.iid}');
+    } on DioException {
+      return null;
     }
   }
 

@@ -163,6 +163,33 @@ void main() {
       },
     );
 
+    test('carries who merged it and the merge options', () {
+      final mr = GitLabMergeRequest.fromJson({
+        'id': 2002,
+        'iid': 8,
+        'project_id': 7,
+        'state': 'merged',
+        'merged_by': {'id': 3, 'username': 'kan', 'name': 'Kan'},
+        'merged_at': '2026-10-01T11:30:00Z',
+        'merge_commit_sha': 'a78f2b73deadbeef',
+        'squash_commit_sha': 'c0ffee12',
+        'squash': true,
+        'force_remove_source_branch': true,
+      });
+
+      final json = normalizeGitLabMergeRequest(
+        mr,
+        accountId: _acct,
+      ).providerEntity!.toJson();
+
+      expect(json['mergedBy'], 'Kan');
+      expect(json['mergedAt'], isNotNull);
+      expect(json['mergeCommitSha'], 'a78f2b73deadbeef');
+      expect(json['squashCommitSha'], 'c0ffee12');
+      expect(json['squash'], true);
+      expect(json['removeSourceBranch'], true);
+    });
+
     test('draft MR → inprogress, raw status "draft"', () {
       final t = normalizeGitLabMergeRequest(_mr(draft: true), accountId: _acct);
       expect(t.status, UnifiedStatus.inprogress);

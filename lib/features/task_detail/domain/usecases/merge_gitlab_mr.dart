@@ -7,5 +7,14 @@ class MergeGitLabMr {
 
   final GitLabMrService _service;
 
-  Future<Result<void>> call(Ticket ticket) => _service.mergeGitLabMr(ticket);
+  /// Merges [ticket]; a null option keeps the MR's own setting.
+  Future<Result<void>> call(
+    Ticket ticket, {
+    bool? squash,
+    bool? removeSourceBranch,
+  }) => _service.mergeGitLabMr(
+    ticket,
+    squash: squash,
+    removeSourceBranch: removeSourceBranch,
+  );
 }

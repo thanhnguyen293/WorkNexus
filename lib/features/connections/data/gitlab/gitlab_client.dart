@@ -241,10 +241,17 @@ class GitLabClient {
     return GitLabIssue.fromJson(_asMap(res.data));
   }
 
-  Future<GitLabMergeRequest> mergeRequest(String projectId, String iid) async {
+  Future<GitLabMergeRequest> mergeRequest(
+    String projectId,
+    String iid, {
+    bool includeRebaseInProgress = false,
+  }) async {
     final res = await _dio.get<dynamic>(
       '/projects/$projectId/merge_requests/$iid',
-      queryParameters: {'with_labels_details': 'true'},
+      queryParameters: {
+        'with_labels_details': 'true',
+        if (includeRebaseInProgress) 'include_rebase_in_progress': 'true',
+      },
     );
     return GitLabMergeRequest.fromJson(_asMap(res.data));
   }
@@ -323,9 +330,11 @@ class GitLabClient {
     List<String>? labels,
     int? milestoneId,
     String? stateEvent,
+    String? title,
   }) => _dio.put<dynamic>(
     '/projects/$projectId/merge_requests/$iid',
     data: {
+      'title': ?title,
       'assignee_ids': ?assigneeIds,
       'reviewer_ids': ?reviewerIds,
       'labels': ?labels?.join(','),
@@ -362,12 +371,38 @@ class GitLabClient {
         '/projects/$projectId/merge_requests/$iid/reset_spent_time',
       );
 
-  Future<void> mergeMergeRequest(String projectId, String iid) =>
-      _dio.put<dynamic>('/projects/$projectId/merge_requests/$iid/merge');
+  /// Merge a merge request; null options keep the MR's own settings.
+  Future<void> mergeMergeRequest(
+    String projectId,
+    String iid, {
+    bool? squash,
+    bool? shouldRemoveSourceBranch,
+  }) => _dio.put<dynamic>(
+    '/projects/$projectId/merge_requests/$iid/merge',
+    data: {
+      'squash': ?squash,
+      'should_remove_source_branch': ?shouldRemoveSourceBranch,
+    },
+  );
 
   /// Approve a merge request as the authenticated user.
   Future<void> approveMergeRequest(String projectId, String iid) =>
       _dio.post<dynamic>('/projects/$projectId/merge_requests/$iid/approve');
+
+  /// Withdraw the authenticated user's approval.
+  Future<void> unapproveMergeRequest(String projectId, String iid) =>
+      _dio.post<dynamic>('/projects/$projectId/merge_requests/$iid/unapprove');
+
+  /// Who approved the merge request, and what approvals are still needed.
+  Future<GitLabMrApprovals> mergeRequestApprovals(
+    String projectId,
+    String iid,
+  ) async {
+    final res = await _dio.get<dynamic>(
+      '/projects/$projectId/merge_requests/$iid/approvals',
+    );
+    return GitLabMrApprovals.fromJson(_asMap(res.data));
+  }
 
   /// Rebase a merge request onto its target branch. Resolves a `need_rebase`
   /// detailed merge status. PUT /projects/:id/merge_requests/:iid/rebase.

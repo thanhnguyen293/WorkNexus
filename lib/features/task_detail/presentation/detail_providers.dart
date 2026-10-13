@@ -18,6 +18,9 @@ import '../domain/usecases/post_github_comment.dart';
 import '../domain/usecases/post_gitlab_mr_comment.dart';
 import '../domain/usecases/rebase_gitlab_mr.dart';
 import '../domain/usecases/reopen_github_item.dart';
+import '../domain/usecases/reopen_gitlab_mr.dart';
+import '../domain/usecases/set_gitlab_mr_draft.dart';
+import '../domain/usecases/unapprove_gitlab_mr.dart';
 import '../domain/usecases/update_github_pr_branch.dart';
 
 enum DetailTab { original, translation }
@@ -36,6 +39,18 @@ final closeGitLabMrProvider = Provider<CloseGitLabMr>(
 
 final approveGitLabMrProvider = Provider<ApproveGitLabMr>(
   (ref) => ApproveGitLabMr(ref.watch(gitLabMrServiceProvider)),
+);
+
+final unapproveGitLabMrProvider = Provider<UnapproveGitLabMr>(
+  (ref) => UnapproveGitLabMr(ref.watch(gitLabMrServiceProvider)),
+);
+
+final reopenGitLabMrProvider = Provider<ReopenGitLabMr>(
+  (ref) => ReopenGitLabMr(ref.watch(gitLabMrServiceProvider)),
+);
+
+final setGitLabMrDraftProvider = Provider<SetGitLabMrDraft>(
+  (ref) => SetGitLabMrDraft(ref.watch(gitLabMrServiceProvider)),
 );
 
 final mergeGitLabMrProvider = Provider<MergeGitLabMr>(

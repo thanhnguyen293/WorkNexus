@@ -92,6 +92,7 @@ class TimelineEventIcon extends StatelessWidget {
       ActivityKind.assigned => (LucideIcons.user300, c.textSecondary),
       ActivityKind.edited => (LucideIcons.pencil300, c.textSecondary),
       ActivityKind.resolved => (LucideIcons.check300, c.success),
+      ActivityKind.merged => (LucideIcons.gitMerge300, c.info),
       ActivityKind.reopened => (LucideIcons.rotateCcw300, c.warning),
       ActivityKind.confirmed => (LucideIcons.badgeCheck300, c.accent),
       ActivityKind.closed => (LucideIcons.x300, c.textSecondary),

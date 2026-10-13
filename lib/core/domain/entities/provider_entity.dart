@@ -90,6 +90,22 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     String? milestoneTitle,
     String? humanTimeEstimate,
     String? humanTotalTimeSpent,
+    // Who closed it out and how (merged / closed MRs).
+    String? mergedBy,
+    DateTime? mergedAt,
+    String? closedBy,
+    DateTime? closedAt,
+    String? mergeCommitSha,
+    String? squashCommitSha,
+    // The MR's merge options: squash commits, delete the source branch.
+    bool? squash,
+    bool? removeSourceBranch,
+    // Approvals; null counts / flags when the instance didn't report them.
+    @Default(<String>[]) List<String> approvedBy,
+    int? approvalsRequired,
+    int? approvalsLeft,
+    bool? userHasApproved,
+    bool? userCanApprove,
     @Default(<String>[]) List<String> reviewers,
     @Default(<String>[]) List<String> assignees,
     @Default(<String, String>{}) Map<String, String> userAvatarUrls,

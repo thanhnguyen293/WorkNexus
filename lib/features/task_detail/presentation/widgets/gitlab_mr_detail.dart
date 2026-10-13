@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/post_gitlab_mr_comment.dart';
 import '../detail_providers.dart';
+import 'gitlab_mr_commands.dart';
 import 'gitlab_mr_overview.dart';
 import 'labels_editor.dart';
 import 'milestone_editor.dart';
@@ -36,8 +37,12 @@ class GitLabMrDetail extends ConsumerWidget {
     final postComment = ref.watch(postGitLabMrCommentProvider);
     final closeMergeRequest = ref.watch(closeGitLabMrProvider);
     final approve = ref.watch(approveGitLabMrProvider);
+    final unapprove = ref.watch(unapproveGitLabMrProvider);
     final merge = ref.watch(mergeGitLabMrProvider);
     final rebase = ref.watch(rebaseGitLabMrProvider);
+    final reopen = ref.watch(reopenGitLabMrProvider);
+    final setDraft = ref.watch(setGitLabMrDraftProvider);
+    final key = ticket.externalKey;
     final comments =
         ref.watch(commentsProvider(ticket.id)).asData?.value ?? const <Never>[];
     final activity =
@@ -51,20 +56,25 @@ class GitLabMrDetail extends ConsumerWidget {
       onClose: onClose,
       onSync: () => ref.invalidate(ticketDetailSyncProvider(ticket.id)),
       onComment: (body) => _postComment(context, postComment, ticket, body),
-      onCloseMergeRequest: () => _run(
-        context,
-        closeMergeRequest(ticket),
-        l.gitlabMrClosed(ticket.externalKey),
+      commands: GitLabMrCommands(
+        approve: () => _run(context, approve(ticket), l.gitlabMrApproved(key)),
+        unapprove: () =>
+            _run(context, unapprove(ticket), l.gitlabMrUnapproved(key)),
+        merge: ({required squash, required removeSourceBranch}) => _run(
+          context,
+          merge(ticket, squash: squash, removeSourceBranch: removeSourceBranch),
+          l.gitlabMrMerged(key),
+        ),
+        rebase: () => _run(context, rebase(ticket), l.gitlabMrRebased(key)),
+        close: () =>
+            _run(context, closeMergeRequest(ticket), l.gitlabMrClosed(key)),
+        reopen: () => _run(context, reopen(ticket), l.gitlabMrReopened(key)),
+        setDraft: (draft) => _run(
+          context,
+          setDraft(ticket, draft: draft),
+          draft ? l.gitlabMrMarkedDraft(key) : l.gitlabMrMarkedReady(key),
+        ),
       ),
-      onApprove: () => _run(
-        context,
-        approve(ticket),
-        l.gitlabMrApproved(ticket.externalKey),
-      ),
-      onMerge: () =>
-          _run(context, merge(ticket), l.gitlabMrMerged(ticket.externalKey)),
-      onRebase: () =>
-          _run(context, rebase(ticket), l.gitlabMrRebased(ticket.externalKey)),
       commitsLoader: () => sync.listMergeRequestCommits(ticket),
       changesLoader: () => sync.listMergeRequestChanges(ticket),
       assigneeEditorBuilder: (_, close) => UserPickerEditor(

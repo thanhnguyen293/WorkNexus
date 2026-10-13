@@ -90,14 +90,132 @@ void main() {
   );
 
   test('mergeMergeRequest calls the merge endpoint', () async {
-    when(() => client.mergeMergeRequest(any(), any())).thenAnswer((_) async {});
+    when(
+      () => client.mergeMergeRequest(
+        any(),
+        any(),
+        squash: any(named: 'squash'),
+        shouldRemoveSourceBranch: any(named: 'shouldRemoveSourceBranch'),
+      ),
+    ).thenAnswer((_) async {});
 
     final res = await adapter.mergeMergeRequest(
       _ticket(externalType: 'MergeRequest'),
+      squash: true,
+      removeSourceBranch: false,
     );
 
     expect(res, isA<Ok<bool>>());
-    verify(() => client.mergeMergeRequest(ref, '42')).called(1);
+    verify(
+      () => client.mergeMergeRequest(
+        ref,
+        '42',
+        squash: true,
+        shouldRemoveSourceBranch: false,
+      ),
+    ).called(1);
+  });
+
+  group('setMergeRequestDraft', () {
+    void stubTitle(String title) {
+      when(() => client.mergeRequest(ref, '42')).thenAnswer(
+        (_) async =>
+            GitLabMergeRequest(id: 9, iid: 42, projectId: 3, title: title),
+      );
+      when(
+        () => client.updateMergeRequest(ref, '42', title: any(named: 'title')),
+      ).thenAnswer((_) async {});
+    }
+
+    test('marking ready strips the draft prefix from the live title', () async {
+      stubTitle('Draft: Fix login');
+
+      final res = await adapter.setMergeRequestDraft(
+        _ticket(externalType: 'MergeRequest'),
+        draft: false,
+      );
+
+      expect(res, isA<Ok<bool>>());
+      verify(
+        () => client.updateMergeRequest(ref, '42', title: 'Fix login'),
+      ).called(1);
+    });
+
+    test('marking draft adds the prefix once', () async {
+      stubTitle('Fix login');
+
+      await adapter.setMergeRequestDraft(
+        _ticket(externalType: 'MergeRequest'),
+        draft: true,
+      );
+
+      verify(
+        () => client.updateMergeRequest(ref, '42', title: 'Draft: Fix login'),
+      ).called(1);
+    });
+  });
+
+  group('rebaseMergeRequest', () {
+    late GitLabAdapter fast;
+
+    setUp(() {
+      fast = GitLabAdapter(
+        accountId: 'gl-a',
+        client: client,
+        rebasePollInterval: Duration.zero,
+      );
+      when(() => client.rebaseMergeRequest(ref, '42')).thenAnswer((_) async {});
+    });
+
+    void stubPolls(List<GitLabMergeRequest> states) {
+      when(
+        () => client.mergeRequest(ref, '42', includeRebaseInProgress: true),
+      ).thenAnswer((_) async => states.removeAt(0));
+    }
+
+    test('waits for the background rebase to finish', () async {
+      stubPolls([
+        const GitLabMergeRequest(
+          id: 9,
+          iid: 42,
+          projectId: 3,
+          rebaseInProgress: true,
+        ),
+        const GitLabMergeRequest(
+          id: 9,
+          iid: 42,
+          projectId: 3,
+          rebaseInProgress: false,
+        ),
+      ]);
+
+      final res = await fast.rebaseMergeRequest(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      expect(res, isA<Ok<bool>>());
+      verify(
+        () => client.mergeRequest(ref, '42', includeRebaseInProgress: true),
+      ).called(2);
+    });
+
+    test('reports a failed rebase from its merge error', () async {
+      stubPolls([
+        const GitLabMergeRequest(
+          id: 9,
+          iid: 42,
+          projectId: 3,
+          rebaseInProgress: false,
+          mergeError: 'Rebase failed: conflicts',
+        ),
+      ]);
+
+      final res = await fast.rebaseMergeRequest(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      expect(res.failureOrNull?.message, 'Rebase failed: conflicts');
+    });
   });
 
   test('listProjectMembers maps, dedupes, and sorts members', () async {
@@ -228,6 +346,55 @@ void main() {
         ),
       );
     }
+
+    void stubApprovals(Future<GitLabMrApprovals> Function() answer) {
+      when(
+        () => client.mergeRequestApprovals(ref, '42'),
+      ).thenAnswer((_) => answer());
+    }
+
+    setUp(() => stubApprovals(() async => const GitLabMrApprovals()));
+
+    DioException forbidden() => DioException(
+      requestOptions: RequestOptions(),
+      response: Response(requestOptions: RequestOptions(), statusCode: 403),
+    );
+
+    test('carries who approved into the cached detail', () async {
+      stubMr('merged');
+      stubApprovals(
+        () async => GitLabMrApprovals.fromJson({
+          'approved_by': [
+            {
+              'user': {'id': 2, 'username': 'thanh', 'name': 'Thanh'},
+            },
+          ],
+          'approvals_left': 0,
+          'user_has_approved': true,
+          'user_can_approve': false,
+        }),
+      );
+
+      final res = await adapter.getTicket(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      final entity = (res as Ok<Ticket>).value.providerEntity!.toJson();
+      expect(entity['approvedBy'], ['Thanh']);
+      expect(entity['userHasApproved'], true);
+      expect(entity['approvalsLeft'], 0);
+    });
+
+    test('still loads when approvals are unavailable', () async {
+      stubMr('merged');
+      stubApprovals(() => Future.error(forbidden()));
+
+      final res = await adapter.getTicket(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      expect(res, isA<Ok<Ticket>>());
+    });
 
     void stubCompare(Future<int?> Function() answer) {
       when(

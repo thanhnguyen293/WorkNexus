@@ -26,6 +26,8 @@ class TwoPaneTabbedDetail extends StatefulWidget {
     required this.sidebar,
     required this.commits,
     required this.changes,
+    this.overviewCount,
+    this.changesCount,
   });
 
   final Widget header;
@@ -38,6 +40,10 @@ class TwoPaneTabbedDetail extends StatefulWidget {
   final Widget sidebar;
   final Widget commits;
   final Widget changes;
+
+  /// Tab counts, where known: the conversation size and the changed files.
+  final int? overviewCount;
+  final int? changesCount;
 
   @override
   State<TwoPaneTabbedDetail> createState() => _TwoPaneTabbedDetailState();
@@ -87,6 +93,10 @@ class _TwoPaneTabbedDetailState extends State<TwoPaneTabbedDetail> {
               _DetailPaneTab.overview: l.overview,
               _DetailPaneTab.commits: l.commits,
               _DetailPaneTab.changes: l.changedFiles,
+            },
+            counts: {
+              _DetailPaneTab.overview: ?widget.overviewCount,
+              _DetailPaneTab.changes: ?widget.changesCount,
             },
             current: _tab,
             onSelect: _select,

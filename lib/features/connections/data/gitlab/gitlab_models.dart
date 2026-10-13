@@ -170,6 +170,18 @@ class GitLabMergeRequest {
     this.upvotes,
     this.createdAt,
     this.updatedAt,
+    this.mergedBy,
+    this.mergedAt,
+    this.closedBy,
+    this.closedAt,
+    this.mergeCommitSha,
+    this.squashCommitSha,
+    this.squash,
+    this.forceRemoveSourceBranch,
+    this.shouldRemoveSourceBranch,
+    this.approvals,
+    this.rebaseInProgress,
+    this.mergeError,
   });
 
   final int id;
@@ -200,6 +212,30 @@ class GitLabMergeRequest {
   final int? upvotes;
   final String? createdAt;
   final String? updatedAt;
+  final GitLabUser? mergedBy;
+  final String? mergedAt;
+  final GitLabUser? closedBy;
+  final String? closedAt;
+  final String? mergeCommitSha;
+  final String? squashCommitSha;
+
+  /// Whether the MR is set to squash on merge.
+  final bool? squash;
+
+  /// The author's "delete source branch" choice (`force_…`) and the effective
+  /// one the merge will apply (`should_…`, null until merged).
+  final bool? forceRemoveSourceBranch;
+  final bool? shouldRemoveSourceBranch;
+
+  /// Approval state, fetched separately (`…/approvals`) on the detail open.
+  @JsonKey(includeFromJson: false)
+  final GitLabMrApprovals? approvals;
+
+  /// Set only when fetched with `include_rebase_in_progress=true`.
+  final bool? rebaseInProgress;
+
+  /// Why the last merge / rebase attempt failed, if it did.
+  final String? mergeError;
 
   factory GitLabMergeRequest.fromJson(Map<String, dynamic> json) =>
       _$GitLabMergeRequestFromJson(json);
@@ -214,7 +250,10 @@ class GitLabMergeRequest {
       if (l.textColor != null && l.textColor!.isNotEmpty) l.name: l.textColor!,
   };
 
-  GitLabMergeRequest copyWith({int? commitsBehind}) => GitLabMergeRequest(
+  GitLabMergeRequest copyWith({
+    int? commitsBehind,
+    GitLabMrApprovals? approvals,
+  }) => GitLabMergeRequest(
     id: id,
     iid: iid,
     projectId: projectId,
@@ -238,8 +277,53 @@ class GitLabMergeRequest {
     upvotes: upvotes,
     createdAt: createdAt,
     updatedAt: updatedAt,
+    mergedBy: mergedBy,
+    mergedAt: mergedAt,
+    closedBy: closedBy,
+    closedAt: closedAt,
+    mergeCommitSha: mergeCommitSha,
+    squashCommitSha: squashCommitSha,
+    squash: squash,
+    forceRemoveSourceBranch: forceRemoveSourceBranch,
+    shouldRemoveSourceBranch: shouldRemoveSourceBranch,
+    approvals: approvals ?? this.approvals,
+    rebaseInProgress: rebaseInProgress,
+    mergeError: mergeError,
   );
 }
+
+/// `GET /projects/:id/merge_requests/:iid/approvals` — who approved, how many
+/// approvals are still needed, and what the authenticated user may do.
+@JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
+class GitLabMrApprovals {
+  const GitLabMrApprovals({
+    this.approvedBy = const [],
+    this.approvalsRequired,
+    this.approvalsLeft,
+    this.userHasApproved = false,
+    this.userCanApprove = false,
+  });
+
+  @JsonKey(fromJson: _approversFromJson)
+  final List<GitLabUser> approvedBy;
+  final int? approvalsRequired;
+  final int? approvalsLeft;
+  @JsonKey(defaultValue: false)
+  final bool userHasApproved;
+  @JsonKey(defaultValue: false)
+  final bool userCanApprove;
+
+  factory GitLabMrApprovals.fromJson(Map<String, dynamic> json) =>
+      _$GitLabMrApprovalsFromJson(json);
+}
+
+/// `approved_by` wraps each user: `[{ "user": { … } }]`.
+List<GitLabUser> _approversFromJson(Object? json) => [
+  if (json is List)
+    for (final entry in json)
+      if (entry is Map && entry['user'] is Map)
+        GitLabUser.fromJson(Map<String, dynamic>.from(entry['user'] as Map)),
+];
 
 @JsonSerializable(createToJson: false, fieldRename: FieldRename.snake)
 class GitLabMilestone {

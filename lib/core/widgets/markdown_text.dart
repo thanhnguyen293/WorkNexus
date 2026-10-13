@@ -3,7 +3,9 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 
 import '../platform/open_external.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../util/markdown_normalize.dart';
 import 'code_block.dart';
 import 'hover_surface.dart';
@@ -34,6 +36,7 @@ class MarkdownText extends StatelessWidget {
     this.linkColor,
     this.onLinkTap,
     this.isPlainLink,
+    this.underlineLinksOnHover = false,
   });
 
   final String data;
@@ -61,6 +64,10 @@ class MarkdownText extends StatelessWidget {
   /// mentions).
   final bool Function(String url)? isPlainLink;
 
+  /// Draws every link without an underline until hovered, as GitLab / GitHub
+  /// do in a description.
+  final bool underlineLinksOnHover;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -74,46 +81,98 @@ class MarkdownText extends StatelessWidget {
       return Text('—', style: base.copyWith(color: c.textTertiary));
     }
     final onLink = onLinkTap ?? openLinkExternally;
-    return GptMarkdown(
-      text,
-      style: base,
-      onLinkTap: (url, _) => onLink(url),
-      // Keyed by URL so that when a body refresh (e.g. the detail sync landing
-      // in drift) changes an image's URL, the old element's state — and the
-      // failed/stale future memoized inside it — is discarded and the new URL
-      // is actually fetched.
-      imageBuilder: imageLoader == null
-          ? null
-          : (context, url, width, height) => InlineImage(
-              key: ValueKey(url),
-              url: url,
-              loader: imageLoader!,
-              fallbackUrl: imageFallbackUrl,
-              onOpenImage: onOpenImage,
-              width: width,
+    // Headings scale from the body size (the package default is the Material
+    // headline ramp, which dwarfs 13–14px body text). Ratios follow GitLab's
+    // rendered markdown.
+    TextStyle heading(double scale) => base.copyWith(
+      fontSize: fontSize * scale,
+      fontWeight: FontWeight.w600,
+      height: 1.3,
+    );
+    return GptMarkdownTheme(
+      gptThemeData: GptMarkdownThemeData(
+        brightness: Theme.of(context).brightness,
+        h1: heading(1.6),
+        h2: heading(1.4),
+        h3: heading(1.2),
+        h4: heading(1.1),
+        h5: heading(1),
+        h6: heading(1),
+        hrLineColor: c.border,
+      ),
+      child: GptMarkdown(
+        text,
+        style: base,
+        onLinkTap: (url, _) => onLink(url),
+        // Keyed by URL so that when a body refresh (e.g. the detail sync landing
+        // in drift) changes an image's URL, the old element's state — and the
+        // failed/stale future memoized inside it — is discarded and the new URL
+        // is actually fetched.
+        imageBuilder: imageLoader == null
+            ? null
+            : (context, url, width, height) => InlineImage(
+                key: ValueKey(url),
+                url: url,
+                loader: imageLoader!,
+                fallbackUrl: imageFallbackUrl,
+                onOpenImage: onOpenImage,
+                width: width,
+              ),
+        // gpt_markdown wraps a custom link in a bare GestureDetector, so the
+        // hand cursor (and, for plain links, the hover underline) is ours to add.
+        linkBuilder: (context, label, url, style) {
+          final plain = isPlainLink?.call(url) ?? false;
+          return HoverRegion(
+            cursor: SystemMouseCursors.click,
+            builder: (context, hovered, _) => Text(
+              label.toPlainText(),
+              style: style.copyWith(
+                color: linkColor ?? c.accent,
+                fontWeight: plain ? FontWeight.w600 : null,
+                decoration: (plain || underlineLinksOnHover) && !hovered
+                    ? TextDecoration.none
+                    : TextDecoration.underline,
+                decorationColor: linkColor ?? c.accent,
+              ),
             ),
-      // gpt_markdown wraps a custom link in a bare GestureDetector, so the
-      // hand cursor (and, for plain links, the hover underline) is ours to add.
-      linkBuilder: (context, label, url, style) {
-        final plain = isPlainLink?.call(url) ?? false;
-        return HoverRegion(
-          cursor: SystemMouseCursors.click,
-          builder: (context, hovered, _) => Text(
-            label.toPlainText(),
-            style: style.copyWith(
-              color: linkColor ?? c.accent,
-              fontWeight: plain ? FontWeight.w600 : null,
-              decoration: plain && !hovered
-                  ? TextDecoration.none
-                  : TextDecoration.underline,
-              decorationColor: linkColor ?? c.accent,
-            ),
-          ),
-        );
-      },
-      codeBuilder: (context, name, code, closed) => Padding(
-        padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-        child: CodeBlock(code, fontSize: fontSize - 1),
+          );
+        },
+        codeBuilder: (context, name, code, closed) => Padding(
+          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
+          child: CodeBlock(code, fontSize: fontSize - 1),
+        ),
+        highlightBuilder: (context, code, style) => _InlineCode(code, style),
+      ),
+    );
+  }
+}
+
+/// Inline `code`: monospace on a faint tint of the text colour, so it reads on
+/// any surface (a light panel, a dark one, an accent chat bubble).
+class _InlineCode extends StatelessWidget {
+  const _InlineCode(this.code, this.style);
+
+  final String code;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final ink = style.color ?? c.textPrimary;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
+      decoration: BoxDecoration(
+        color: c.mixT(ink, 0.08),
+        borderRadius: BorderRadius.circular(context.radii.xs),
+      ),
+      child: Text(
+        code,
+        style: style.copyWith(
+          fontFamily: context.typography.mono.fontFamily,
+          // Mono glyphs run wide; a step down keeps them level with the prose.
+          fontSize: (style.fontSize ?? 13) * 0.9,
+          color: ink,
+        ),
       ),
     );
   }

@@ -9,8 +9,8 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 /// A merge request / pull request state chip (Open / Draft / Merged /
-/// Closed), colour-coded from the provider's raw [status] and worded the
-/// way [provider] (GitLab or GitHub) words it.
+/// Closed), colour-coded from the provider's raw [status], with that state's
+/// git glyph, and worded the way [provider] (GitLab or GitHub) words it.
 class MergeRequestStatePill extends StatelessWidget {
   const MergeRequestStatePill({
     super.key,
@@ -25,7 +25,12 @@ class MergeRequestStatePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final (color, label) = mergeRequestState(context, status, provider);
-    final gitlab = provider == ProviderType.gitlab;
+    final icon = switch (status.toLowerCase()) {
+      'merged' => LucideIcons.gitMerge300,
+      'closed' => LucideIcons.gitPullRequestClosed300,
+      'draft' => LucideIcons.gitPullRequestDraft300,
+      _ => LucideIcons.gitPullRequest300,
+    };
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.sm,
@@ -33,16 +38,12 @@ class MergeRequestStatePill extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: c.mixT(color, 0.16),
-        borderRadius: BorderRadius.circular(context.radii.md),
+        borderRadius: BorderRadius.circular(context.radii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            gitlab ? LucideIcons.network300 : LucideIcons.gitMerge300,
-            size: context.spacing.xl2,
-            color: color,
-          ),
+          Icon(icon, size: context.spacing.xl2, color: color),
           SizedBox(width: context.spacing.xs),
           Text(
             label,

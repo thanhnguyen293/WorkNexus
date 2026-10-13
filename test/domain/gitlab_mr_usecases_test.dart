@@ -11,6 +11,9 @@ import 'package:work_nexus/features/task_detail/domain/usecases/close_gitlab_mr.
 import 'package:work_nexus/features/task_detail/domain/usecases/merge_gitlab_mr.dart';
 import 'package:work_nexus/features/task_detail/domain/usecases/post_gitlab_mr_comment.dart';
 import 'package:work_nexus/features/task_detail/domain/usecases/rebase_gitlab_mr.dart';
+import 'package:work_nexus/features/task_detail/domain/usecases/reopen_gitlab_mr.dart';
+import 'package:work_nexus/features/task_detail/domain/usecases/set_gitlab_mr_draft.dart';
+import 'package:work_nexus/features/task_detail/domain/usecases/unapprove_gitlab_mr.dart';
 
 class _MockGitLabMrService extends Mock implements GitLabMrService {}
 
@@ -87,5 +90,63 @@ void main() {
 
     expect(result, isA<Ok<void>>());
     verify(() => service.rebaseGitLabMr(_ticket)).called(1);
+  });
+
+  test('MergeGitLabMr passes the merge options through', () async {
+    when(
+      () => service.mergeGitLabMr(
+        _ticket,
+        squash: true,
+        removeSourceBranch: true,
+      ),
+    ).thenAnswer((_) async => const Ok(null));
+
+    final result = await MergeGitLabMr(service)(
+      _ticket,
+      squash: true,
+      removeSourceBranch: true,
+    );
+
+    expect(result, isA<Ok<void>>());
+    verify(
+      () => service.mergeGitLabMr(
+        _ticket,
+        squash: true,
+        removeSourceBranch: true,
+      ),
+    ).called(1);
+  });
+
+  test('UnapproveGitLabMr delegates one revoke command', () async {
+    when(
+      () => service.unapproveGitLabMr(_ticket),
+    ).thenAnswer((_) async => const Ok(null));
+
+    final result = await UnapproveGitLabMr(service)(_ticket);
+
+    expect(result, isA<Ok<void>>());
+    verify(() => service.unapproveGitLabMr(_ticket)).called(1);
+  });
+
+  test('ReopenGitLabMr delegates one reopen command', () async {
+    when(
+      () => service.reopenGitLabItem(_ticket),
+    ).thenAnswer((_) async => const Ok(null));
+
+    final result = await ReopenGitLabMr(service)(_ticket);
+
+    expect(result, isA<Ok<void>>());
+    verify(() => service.reopenGitLabItem(_ticket)).called(1);
+  });
+
+  test('SetGitLabMrDraft delegates the draft flag', () async {
+    when(
+      () => service.setGitLabMrDraft(_ticket, draft: false),
+    ).thenAnswer((_) async => const Ok(null));
+
+    final result = await SetGitLabMrDraft(service)(_ticket, draft: false);
+
+    expect(result, isA<Ok<void>>());
+    verify(() => service.setGitLabMrDraft(_ticket, draft: false)).called(1);
   });
 }

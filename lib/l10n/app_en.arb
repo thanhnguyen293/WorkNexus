@@ -297,6 +297,40 @@
   "zentaoHoursLeftRequired": "Enter the hours left (more than 0)",
   "zentaoHoursSpentRequired": "Enter the hours worked — none are logged yet",
   "gitlabMerge": "Merge",
+  "approvedByLabel": "Approved by",
+  "approvedByYou": "Approved by you",
+  "approvalOptional": "Approval is optional",
+  "approvalsLeft": "Requires {count} more {count, plural, =1{approval} other{approvals}}",
+  "@approvalsLeft": {"placeholders": {"count": {"type": "int"}}},
+  "revokeApproval": "Revoke approval",
+  "reviewerApproved": "Approved",
+  "mergeBlockedDraft": "Merge blocked: this merge request is a draft.",
+  "markAsReady": "Mark as ready",
+  "markAsDraft": "Mark as draft",
+  "closeMergeRequest": "Close merge request",
+  "reopenMergeRequest": "Reopen merge request",
+  "copyReference": "Copy reference",
+  "referenceCopied": "Reference copied",
+  "deleteSourceBranch": "Delete source branch",
+  "squashCommits": "Squash commits",
+  "mrMergedBy": "Merged by {name} {when}",
+  "@mrMergedBy": {"placeholders": {"name": {"type": "String"}, "when": {"type": "String"}}},
+  "mrClosedBy": "Closed by {name} {when}",
+  "@mrClosedBy": {"placeholders": {"name": {"type": "String"}, "when": {"type": "String"}}},
+  "mrChangesMergedInto": "Changes merged into {target} with {sha}.",
+  "@mrChangesMergedInto": {"placeholders": {"target": {"type": "String"}, "sha": {"type": "String"}}},
+  "mrCommitsSquashed": "Commits were squashed.",
+  "mrSourceBranchDeleted": "Deleted the source branch.",
+  "mrRevert": "Revert",
+  "mrCherryPick": "Cherry-pick",
+  "gitlabMrUnapproved": "Revoked approval on !{key}",
+  "@gitlabMrUnapproved": {"placeholders": {"key": {"type": "String"}}},
+  "gitlabMrMarkedReady": "Marked !{key} as ready",
+  "@gitlabMrMarkedReady": {"placeholders": {"key": {"type": "String"}}},
+  "gitlabMrMarkedDraft": "Marked !{key} as draft",
+  "@gitlabMrMarkedDraft": {"placeholders": {"key": {"type": "String"}}},
+  "gitlabMrReopened": "Reopened merge request !{key}",
+  "@gitlabMrReopened": {"placeholders": {"key": {"type": "String"}}},
   "gitlabReopen": "Reopen",
   "gitlabMrClosed": "Closed merge request !{key}",
   "@gitlabMrClosed": {
@@ -338,6 +372,17 @@
       }
     }
   },
+  "mrRequestedToMergeInto": "{author} requested to merge {source} into {target}",
+  "@mrRequestedToMergeInto": {
+    "placeholders": {
+      "author": {"type": "String"},
+      "source": {"type": "String"},
+      "target": {"type": "String"}
+    }
+  },
+  "copyBranchName": "Copy branch name",
+  "reviewersTitle": "{count, plural, =1{Reviewer} other{Reviewers}}",
+  "@reviewersTitle": {"placeholders": {"count": {"type": "int"}}},
   "sourceBranch": "Source branch",
   "targetBranch": "Target branch",
   "noDescription": "No description provided.",
@@ -1758,5 +1803,16 @@
       }
     }
   },
-  "chatStorageClearTitle": "Delete downloaded files?"
+  "chatStorageClearTitle": "Delete downloaded files?",
+  "codeBlockShowAll": "Show all {count} lines",
+  "@codeBlockShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeBlockCollapse": "Collapse",
+  "codeBlockCopy": "Copy code",
+  "codeBlockCopied": "Copied"
 }
