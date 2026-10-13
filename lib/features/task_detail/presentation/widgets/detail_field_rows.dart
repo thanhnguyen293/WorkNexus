@@ -36,9 +36,13 @@ class DetailFieldRows extends StatelessWidget {
     required this.rows,
     this.labelWidth = 120,
     this.alignEnd = false,
+    this.valueWidgets = const {},
   });
 
   final List<(String, String)> rows;
+
+  /// Values drawn as a widget (a chip) instead of text, keyed by row label.
+  final Map<String, Widget> valueWidgets;
   final double labelWidth;
 
   /// Right-aligns the value column (metadata-sidebar style) instead of the
@@ -69,13 +73,21 @@ class DetailFieldRows extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: Text(
-                    row.$2,
-                    textAlign: alignEnd ? TextAlign.right : TextAlign.start,
-                    style: context.typography.secondary.copyWith(
-                      color: c.textPrimary,
+                  child: switch (valueWidgets[row.$1]) {
+                    final widget? => Align(
+                      alignment: alignEnd
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: widget,
                     ),
-                  ),
+                    null => Text(
+                      row.$2,
+                      textAlign: alignEnd ? TextAlign.right : TextAlign.start,
+                      style: context.typography.secondary.copyWith(
+                        color: c.textPrimary,
+                      ),
+                    ),
+                  },
                 ),
               ],
             ),

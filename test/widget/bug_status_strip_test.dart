@@ -61,7 +61,7 @@ void main() {
     expect(find.text('Confirmed'), findsNothing);
   });
 
-  testWidgets('an open bug shows whether it was confirmed', (tester) async {
+  testWidgets('an open bug shows only its status', (tester) async {
     await pump(
       tester,
       status: 'active',
@@ -69,7 +69,8 @@ void main() {
       bug: const ZenTaoBugEntity(confirmed: 1, activatedCount: 2),
     );
     expect(find.text('Active'), findsOneWidget);
-    expect(find.text('Confirmed'), findsOneWidget);
-    expect(find.text('Reopened ×2'), findsOneWidget);
+    // Confirmation and reopen count moved to the sidebar.
+    expect(find.text('Confirmed'), findsNothing);
+    expect(find.text('Reopened ×2'), findsNothing);
   });
 }

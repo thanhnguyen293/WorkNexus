@@ -9,12 +9,12 @@ import '../../../../core/theme/app_typography.dart';
 import '../ticket_actions.dart';
 import 'detail_header_top_bar.dart';
 import 'detail_people.dart';
-import 'detail_status_line.dart';
 import 'parent_task_link.dart';
 
 /// The detail panel header, read top-down in order of what matters: where
-/// the ticket lives (quiet), its title (the largest text), its status, then
-/// who holds it beside what to do next.
+/// the ticket lives (quiet), its title (the largest text), then who holds it
+/// beside what to do next. Status and the other facts sit in the sidebar,
+/// as in ZenTao.
 class DetailHeader extends StatelessWidget {
   const DetailHeader({
     super.key,
@@ -59,8 +59,6 @@ class DetailHeader extends StatelessWidget {
               color: context.colors.textPrimary,
             ),
           ),
-          SizedBox(height: s.lg),
-          DetailStatusLine(ticket: ticket),
           SizedBox(height: s.xl2),
           // People on the left, actions on the right; they stack when the
           // panel is too narrow for both.
