@@ -294,26 +294,34 @@ void main() {
     expect((req.data as Map)['comment'], 'please');
   });
 
-  test('assigning a task keeps its hours left', () async {
-    final fake = _FakeAdapter((opts) {
-      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-      return _json({'result': 'success'});
-    });
-    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-    final task = _bugTicket().copyWith(
-      externalKey: '12',
-      externalType: 'Task',
-      providerEntity: const TicketProviderEntity.zentaoTask(left: 2.5),
-    );
-    final res = await adapter.assignTicket(task, assignee: 'thanh');
+  test(
+    'assigning a task names its execution and keeps its hours left',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        return _json({'result': 'success'});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      final task = _bugTicket().copyWith(
+        externalKey: '12',
+        externalType: 'Task',
+        providerEntity: const TicketProviderEntity.zentaoTask(
+          execution: '7',
+          left: 2.5,
+        ),
+      );
+      final res = await adapter.assignTicket(task, assignee: 'thanh');
 
-    expect(res, isA<Ok<bool>>());
-    final req = fake.requests.firstWhere(
-      (r) => r.path.contains('task-assignTo-12'),
-    );
-    // ZenTao 20+ resets the hours left to 0 when the field is missing.
-    expect((req.data as Map)['left'], '2.5');
-  });
+      expect(res, isA<Ok<bool>>());
+      // `task::assignTo($executionID, $taskID)`: the id alone is read as the
+      // execution, and ZenTao answers HTML for task 0.
+      final req = fake.requests.firstWhere(
+        (r) => r.path.contains('task-assignTo-7-12'),
+      );
+      // ZenTao 20+ resets the hours left to 0 when the field is missing.
+      expect((req.data as Map)['left'], '2.5');
+    },
+  );
 
   test('resolveBug POSTs resolution + default build to bug-resolve', () async {
     final fake = _FakeAdapter((opts) {
@@ -405,7 +413,7 @@ void main() {
       final form = req.data as Map;
       expect(form['assignedTo'], 'me');
       expect(form['pri'], '1');
-    expect(form['status'], 'active');
+      expect(form['status'], 'active');
       expect(form['type'], 'codeerror');
       expect(form['deadline'], '2026-10-20');
       expect(form['mailto[]'], ['an', 'binh']);
