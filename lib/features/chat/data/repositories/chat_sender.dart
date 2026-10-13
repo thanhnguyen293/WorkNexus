@@ -97,6 +97,24 @@ class ChatSender {
     replyToId: replyToId,
   );
 
+  /// Sends message [messageGid]'s content as a new message in [toChatGid]:
+  /// its wire content as is, so an attachment points at the file already
+  /// stored on the server. Not as a reply, which belongs to the source chat.
+  Future<Result<void>> forward(
+    String accountId,
+    String messageGid,
+    String toChatGid,
+  ) async {
+    final row = await _local.message(accountId, messageGid);
+    if (row == null) return const Err(NotFoundFailure('No such message'));
+    return _sendInline(
+      accountId,
+      toChatGid,
+      contentType: row.contentType,
+      content: row.content,
+    );
+  }
+
   /// Queues a message whose content needs no upload, then sends it.
   Future<Result<void>> _sendInline(
     String accountId,

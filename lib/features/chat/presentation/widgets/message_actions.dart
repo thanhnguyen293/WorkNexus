@@ -12,10 +12,11 @@ import '../providers/chat_providers.dart';
 import '../providers/message_translation_controller.dart';
 import 'chat_labels.dart';
 import 'chat_snack.dart';
+import 'forward_message_dialog.dart';
 import 'message_hover_actions.dart';
 import 'save_sticker_action.dart';
 
-/// The hover actions a message offers: reply, open its thread, copy text, save an image as a
+/// The hover actions a message offers: reply, open its thread, forward, copy text, save an image as a
 /// sticker, pin/unpin (where allowed) and — for your own recent messages — retract. Called from a
 /// bubble's build, so it watches what the pin action depends on.
 List<MessageAction> messageActions(
@@ -74,6 +75,13 @@ List<MessageAction> messageActions(
         tooltip: l.chatOpenThread,
         destructive: false,
         onTap: () => onOpenThread(serverId),
+      ),
+    if (controller.canForward(message))
+      (
+        icon: LucideIcons.forward300,
+        tooltip: l.chatForward,
+        destructive: false,
+        onTap: () => ForwardMessageDialog.show(context, message),
       ),
     if (copyText != null)
       (

@@ -370,6 +370,10 @@ class _FakeChatRepository implements ChatRepository {
   Future<Result<void>> retract(String a, String g) async => const Ok(null);
 
   @override
+  Future<Result<void>> forwardMessage(String a, String g, String to) async =>
+      const Ok(null);
+
+  @override
   Stream<double> watchUploadProgress(String g) => const Stream.empty();
 
   @override

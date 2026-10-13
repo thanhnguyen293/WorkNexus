@@ -304,6 +304,15 @@ abstract class ChatRepository {
   /// Re-sends a message that failed.
   Future<Result<void>> retrySend(String accountId, String messageGid);
 
+  /// Sends a copy of message [messageGid] to chat [toChatGid] of the same
+  /// account — its content as is (an attachment's stored file is reused, not
+  /// uploaded again), shown as pending meanwhile.
+  Future<Result<void>> forwardMessage(
+    String accountId,
+    String messageGid,
+    String toChatGid,
+  );
+
   /// Stops sending file message [messageGid] while its file uploads (or
   /// after the upload failed) and removes it; the server never saw it.
   Future<Result<void>> cancelUpload(String accountId, String messageGid);

@@ -1815,5 +1815,23 @@
   "codeBlockCollapse": "Collapse",
   "codeBlockCopy": "Copy code",
   "codeBlockCopied": "Copied",
-  "mrOpenProject": "Open the project in the browser"
+  "mrOpenProject": "Open the project in the browser",
+  "chatForward": "Forward",
+  "chatForwardTitle": "Forward to…",
+  "chatForwardTo": "{count, plural, =1{Forward} other{Forward to {count} chats}}",
+  "@chatForwardTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatForwarded": "{count, plural, =1{Forwarded} other{Forwarded to {count} chats}}",
+  "@chatForwarded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1014,6 +1014,13 @@ class XxdChatRepository implements ChatRepository {
       _sender.retrySend(accountId, messageGid);
 
   @override
+  Future<Result<void>> forwardMessage(
+    String accountId,
+    String messageGid,
+    String toChatGid,
+  ) => _sender.forward(accountId, messageGid, toChatGid);
+
+  @override
   Future<Result<void>> cancelUpload(String accountId, String messageGid) =>
       _sender.cancelUpload(accountId, messageGid);
 }
