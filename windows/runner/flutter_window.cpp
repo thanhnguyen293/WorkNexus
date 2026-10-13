@@ -85,8 +85,11 @@ bool FlutterWindow::OnCreate() {
   SetUpBadgeChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // Dart shows the window itself, maximized when it was left maximized; Show()
+  // (SW_SHOWNORMAL) on the first frame would then shrink it back to its normal
+  // size. It only steps in if Dart has not shown the window.
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+    if (!::IsWindowVisible(GetHandle())) this->Show();
   });
 
   // Flutter can complete the first frame before the "show window" callback is

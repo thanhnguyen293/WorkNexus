@@ -110,10 +110,13 @@ class DesktopWindowService {
     if (isDesktop) windowManager.removeListener(listener);
   }
 
+  /// Hides the window, then ends the process. Not `windowManager.destroy()`:
+  /// on Windows that only stops the message loop, and the window stayed on
+  /// screen, frozen, until the engine had shut down.
   Future<void> quit() async {
     if (!isDesktop) return;
-    await windowManager.setPreventClose(false);
-    await windowManager.destroy();
+    await windowManager.hide();
+    exit(0);
   }
 
   static WindowOptions windowOptionsFor({required bool isWindows}) {
