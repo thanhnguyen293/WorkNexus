@@ -1,5 +1,6 @@
 import Cocoa
 import FlutterMacOS
+import window_manager
 
 class MainFlutterWindow: NSWindow {
   override func awakeFromNib() {
@@ -25,5 +26,15 @@ class MainFlutterWindow: NSWindow {
     }
 
     super.awakeFromNib()
+  }
+
+  // Keeps the window hidden until Dart has applied the window options (the
+  // hidden title bar, the saved placement) and shows it. Without this macOS
+  // puts the nib's titled window on screen at launch, and
+  // DesktopWindowService.initialize() takes a visible window for a hot
+  // restart and leaves the native title bar on.
+  override public func order(_ place: NSWindow.OrderingMode, relativeTo otherWin: Int) {
+    super.order(place, relativeTo: otherWin)
+    hiddenWindowAtLaunch()
   }
 }
