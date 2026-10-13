@@ -18,6 +18,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../util/template_runs.dart';
 import 'detail_back_button.dart';
 import 'detail_panel_header_actions.dart';
+import 'gitlab_mr_breadcrumb.dart';
 import 'gitlab_mr_commands.dart';
 import 'gitlab_mr_more_button.dart';
 
@@ -56,6 +57,14 @@ class GitLabMrHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (entity.projectPath case final path? when path.isNotEmpty) ...[
+            GitLabMrBreadcrumb(
+              projectPath: path,
+              reference: ticket.externalKey,
+              mrUrl: ticket.url,
+            ),
+            SizedBox(height: context.spacing.sm),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

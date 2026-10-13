@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/navigation/navigation_providers.dart';
@@ -92,7 +94,14 @@ class TicketCard extends ConsumerWidget {
                               ),
                             ),
                             SizedBox(width: context.spacing.sm),
-                            const Spacer(),
+                            Expanded(
+                              child: switch (ticket.providerEntity) {
+                                GitLabItemEntity(:final projectPath?)
+                                    when projectPath.isNotEmpty =>
+                                  _ProjectPath(projectPath),
+                                _ => const SizedBox.shrink(),
+                              },
+                            ),
 
                             if (ticket.severity != null)
                               SeverityTag(ticket.severity!),
@@ -144,6 +153,41 @@ class TicketCard extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The GitLab repository an issue / MR belongs to, beside its reference, so
+/// cards from several projects in one view can be told apart.
+class _ProjectPath extends StatelessWidget {
+  const _ProjectPath(this.path);
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final label = path.split('/').map((s) => s.trim()).join('/');
+    return Tooltip(
+      message: label,
+      child: Row(
+        children: [
+          Icon(
+            LucideIcons.folderGit2300,
+            size: context.spacing.xl,
+            color: c.textTertiary,
+          ),
+          SizedBox(width: context.spacing.xs),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.caption.copyWith(color: c.textTertiary),
+            ),
+          ),
+        ],
       ),
     );
   }

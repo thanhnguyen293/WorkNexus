@@ -1205,5 +1205,6 @@
   "codeBlockShowAll": "Hiện đủ {count} dòng",
   "codeBlockCollapse": "Thu gọn",
   "codeBlockCopy": "Sao chép mã",
-  "codeBlockCopied": "Đã sao chép"
+  "codeBlockCopied": "Đã sao chép",
+  "mrOpenProject": "Mở repo trên trình duyệt"
 }

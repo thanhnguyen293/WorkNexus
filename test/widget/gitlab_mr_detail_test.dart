@@ -278,6 +278,11 @@ void main() {
       ),
     );
 
+    // The repository it belongs to, above the title.
+    expect(find.text('Administrator / tbchat_socialfi'), findsOneWidget);
+    expect(find.text('!42'), findsOneWidget);
+    expect(find.byTooltip('Open the project in the browser'), findsOneWidget);
+
     // Link actions are icon buttons with tooltips (no fake "Code" dropdown).
     expect(find.byTooltip('Copy link'), findsOneWidget);
     expect(find.byTooltip('Open in browser'), findsOneWidget);
