@@ -46,79 +46,76 @@ class _GitHubActionsState extends ConsumerState<GitHubActions> {
     // (merge base into head) is GitHub's fix — it has no true rebase via the API.
     final needsUpdate = isPr && active && mergeableState == 'behind';
 
-    return Padding(
-      padding: EdgeInsets.only(top: context.spacing.xl),
-      child: Wrap(
-        spacing: context.spacing.md,
-        runSpacing: context.spacing.md,
-        children: [
+    return Wrap(
+      spacing: context.spacing.md,
+      runSpacing: context.spacing.md,
+      children: [
+        DetailActionButton(
+          icon: LucideIcons.userPlus300,
+          label: l.assign,
+          onTap: _busy
+              ? null
+              : () => showDialog<void>(
+                  context: context,
+                  builder: (_) => AssignDialog(ticket: ticket),
+                ),
+        ),
+        if (isPr && active)
           DetailActionButton(
-            icon: LucideIcons.userPlus300,
-            label: l.assign,
+            icon: LucideIcons.squarePen300,
+            label: l.reviewers,
             onTap: _busy
                 ? null
                 : () => showDialog<void>(
                     context: context,
-                    builder: (_) => AssignDialog(ticket: ticket),
+                    builder: (_) => ReviewersDialog(ticket: ticket),
                   ),
           ),
-          if (isPr && active)
-            DetailActionButton(
-              icon: LucideIcons.squarePen300,
-              label: l.reviewers,
-              onTap: _busy
-                  ? null
-                  : () => showDialog<void>(
-                      context: context,
-                      builder: (_) => ReviewersDialog(ticket: ticket),
-                    ),
-            ),
-          if (needsUpdate)
-            DetailActionButton(
-              icon: LucideIcons.refreshCw300,
-              label: l.updateBranch,
-              onTap: _busy
-                  ? null
-                  : () => _run(
-                      () => getIt<SyncService>().updateGitHubPrBranch(ticket),
-                      l.taskDetailBranchUpdated('#${ticket.externalKey}'),
-                    ),
-            ),
-          if (isPr && active)
-            DetailActionButton(
-              icon: LucideIcons.gitMerge300,
-              label: l.githubMerge,
-              onTap: _busy
-                  ? null
-                  : () => _run(
-                      () => getIt<SyncService>().mergeGitHubPr(ticket),
-                      l.taskDetailMerged('#${ticket.externalKey}'),
-                    ),
-            ),
-          if (active)
-            DetailActionButton(
-              icon: LucideIcons.checkCircle300,
-              label: l.close,
-              onTap: _busy
-                  ? null
-                  : () => _run(
-                      () => getIt<SyncService>().closeGitHubItem(ticket),
-                      l.taskDetailClosed('#${ticket.externalKey}'),
-                    ),
-            ),
-          if (isClosed)
-            DetailActionButton(
-              icon: LucideIcons.rotateCw300,
-              label: l.githubReopen,
-              onTap: _busy
-                  ? null
-                  : () => _run(
-                      () => getIt<SyncService>().reopenGitHubItem(ticket),
-                      l.taskDetailReopened('#${ticket.externalKey}'),
-                    ),
-            ),
-        ],
-      ),
+        if (needsUpdate)
+          DetailActionButton(
+            icon: LucideIcons.refreshCw300,
+            label: l.updateBranch,
+            onTap: _busy
+                ? null
+                : () => _run(
+                    () => getIt<SyncService>().updateGitHubPrBranch(ticket),
+                    l.taskDetailBranchUpdated('#${ticket.externalKey}'),
+                  ),
+          ),
+        if (isPr && active)
+          DetailActionButton(
+            icon: LucideIcons.gitMerge300,
+            label: l.githubMerge,
+            onTap: _busy
+                ? null
+                : () => _run(
+                    () => getIt<SyncService>().mergeGitHubPr(ticket),
+                    l.taskDetailMerged('#${ticket.externalKey}'),
+                  ),
+          ),
+        if (active)
+          DetailActionButton(
+            icon: LucideIcons.checkCircle300,
+            label: l.close,
+            onTap: _busy
+                ? null
+                : () => _run(
+                    () => getIt<SyncService>().closeGitHubItem(ticket),
+                    l.taskDetailClosed('#${ticket.externalKey}'),
+                  ),
+          ),
+        if (isClosed)
+          DetailActionButton(
+            icon: LucideIcons.rotateCw300,
+            label: l.githubReopen,
+            onTap: _busy
+                ? null
+                : () => _run(
+                    () => getIt<SyncService>().reopenGitHubItem(ticket),
+                    l.taskDetailReopened('#${ticket.externalKey}'),
+                  ),
+          ),
+      ],
     );
   }
 

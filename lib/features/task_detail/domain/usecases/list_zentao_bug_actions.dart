@@ -23,9 +23,13 @@ class ListZenTaoBugActions
       ZenTaoBugAction.close => raw == 'resolved',
       ZenTaoBugAction.activate => raw == 'resolved' || raw == 'closed',
     };
+    final actions = ZenTaoBugAction.values.where(offers).toList();
     return (
       canAssign: raw.isNotEmpty && raw != 'closed',
-      actions: ZenTaoBugAction.values.where(offers).toList(),
+      actions: actions,
+      // The toolbar order is the bug's own flow: confirm, then resolve, then
+      // close; reopening is all a closed bug has left.
+      primary: actions.firstOrNull,
     );
   }
 }

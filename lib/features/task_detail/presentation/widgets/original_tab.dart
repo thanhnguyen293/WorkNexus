@@ -8,6 +8,7 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
 import '../../../../core/util/body_format.dart';
 import '../../../../core/util/labels.dart';
@@ -20,12 +21,13 @@ import '../../../sync/data/sync_service.dart';
 import '../util/image_fallback.dart';
 import 'bug_attachments.dart';
 import 'bug_detail_sections.dart';
-import 'bug_people_row.dart';
 import 'comments_section.dart';
 import 'detail_scroll_body.dart';
+import 'detail_section_title.dart';
 import 'provider_detail_sections.dart';
 import 'section_label.dart';
 import 'subtask_list.dart';
+import 'task_effort_bar.dart';
 
 /// The "Original" tab — the ticket's source description plus typed metadata.
 ///
@@ -58,10 +60,11 @@ class OriginalTab extends ConsumerWidget {
       final GitHubItemEntity e => e,
       _ => null,
     };
-    final subtasks = switch (ticket.providerEntity) {
-      ZenTaoTaskEntity(:final subtasks) => subtasks,
-      _ => const <TicketSubtask>[],
+    final task = switch (ticket.providerEntity) {
+      final ZenTaoTaskEntity t => t,
+      _ => null,
     };
+    final subtasks = task?.subtasks ?? const <TicketSubtask>[];
     // A subtask's parent: its name as ZenTao gave it, else as synced here.
     final parent = switch (ticket.providerEntity) {
       ZenTaoTaskEntity(:final parentId?, :final parentName) => [
@@ -103,21 +106,24 @@ class OriginalTab extends ConsumerWidget {
       ),
     ];
 
-    // The description, people and attachments — the narrative of the bug.
+    // A task's progress, then the description and attachments — the
+    // narrative, set a step larger than the chrome so it reads first.
+    final prose = context.typography.prose;
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (bug != null) ...[
-          BugPeopleRow(bug: bug, accountId: ticket.accountId),
+        if (task != null) ...[
+          TaskEffortBar(task: task),
           SizedBox(height: context.spacing.xl3),
         ],
-        SectionLabel(l.description),
-        SizedBox(height: context.spacing.md),
+        DetailSectionTitle(l.description),
         // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
         SelectionArea(
           child: RichBodyText(
             ticket.body,
             html: html,
+            fontSize: prose.fontSize ?? 14,
+            height: prose.height ?? 1.6,
             imageLoader: (url) =>
                 getIt<SyncService>().fetchTicketImage(ticket, url),
             imageFallbackUrl: imageFallback.resolveUrl,
@@ -148,8 +154,7 @@ class OriginalTab extends ConsumerWidget {
     final activity = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionLabel('${l.comments} & ${l.activity}'),
-        SizedBox(height: context.spacing.md),
+        DetailSectionTitle('${l.comments} & ${l.activity}'),
         CommentsSection(ticket: ticket, imageFallback: imageFallback),
       ],
     );

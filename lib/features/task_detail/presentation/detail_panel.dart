@@ -189,17 +189,31 @@ class _DetailPanel extends ConsumerWidget {
         children: [
           DetailHeader(ticket: ticket, wsColor: wsColor, onClose: onClose),
           DetailTabBar(current: tab),
-          SizedBox(
-            height: context.borders.thick,
-            child: detailLoading
-                ? LinearProgressIndicator(
-                    minHeight: context.borders.thick,
-                    backgroundColor: Colors.transparent,
-                  )
-                : null,
-          ),
           Expanded(
-            child: DetailTabBody(ticket: ticket, tab: tab, layout: layout),
+            // The refresh bar overlays the body's top edge rather than
+            // reserving a strip, which would show as a band of the panel's
+            // colour above the body's tinted ground.
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DetailTabBody(
+                    ticket: ticket,
+                    tab: tab,
+                    layout: layout,
+                  ),
+                ),
+                if (detailLoading)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      minHeight: context.borders.thick,
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+              ],
+            ),
           ),
           if (tab == DetailTab.translation)
             TranslationFooter(ticketId: ticketId),

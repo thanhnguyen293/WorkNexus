@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -12,11 +13,13 @@ import '../../../../core/util/zentao_labels.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_field_rows.dart';
+import 'detail_region_card.dart';
 import 'section_label.dart';
 
-/// The ZenTao bug's typed metadata, shown as a bordered card split into two
-/// groups: what the bug *is* (classification) and how it *moved* (lifecycle).
+/// The ZenTao bug's typed metadata as two region cards: what the bug *is*
+/// (classification) and how it *moved* (lifecycle).
 /// Empty classification fields collapse behind a "Show N empty fields" toggle;
+/// the lifecycle dates are looked up now and then, so they start folded, and
 /// empty lifecycle rows are always hidden.
 class ZenTaoBugSections extends ConsumerStatefulWidget {
   const ZenTaoBugSections(this.bug, {super.key});
@@ -29,10 +32,10 @@ class ZenTaoBugSections extends ConsumerStatefulWidget {
 
 class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
   bool _showEmpty = false;
+  bool _showLifecycle = false;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final l = AppL10n.of(context);
     final bug = widget.bug;
     final dateFormat = ref.watch(
@@ -79,40 +82,58 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
       ),
     ]);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.lg),
-        border: Border.all(color: c.border),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        context.spacing.lg,
-        context.spacing.lg,
-        context.spacing.lg,
-        context.spacing.md,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionLabel(l.classification),
-          SizedBox(height: context.spacing.xs),
-          DetailFieldRows(rows: filled, labelWidth: 100, alignEnd: true),
-          if (_showEmpty && empty.isNotEmpty)
-            DetailFieldRows(rows: empty, labelWidth: 100, alignEnd: true),
-          if (empty.isNotEmpty)
-            _EmptyFieldsToggle(
-              count: empty.length,
-              expanded: _showEmpty,
-              onTap: () => setState(() => _showEmpty = !_showEmpty),
+    // Two regions, like ZenTao's Basic Info and Bug Life: what the bug is,
+    // then how it moved.
+    final inset = EdgeInsets.fromLTRB(
+      context.spacing.lg,
+      context.spacing.lg,
+      context.spacing.lg,
+      context.spacing.md,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DetailRegionCard(
+          padding: inset,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionLabel(l.classification),
+              SizedBox(height: context.spacing.xs),
+              DetailFieldRows(rows: filled, labelWidth: 100, alignEnd: true),
+              if (_showEmpty && empty.isNotEmpty)
+                DetailFieldRows(rows: empty, labelWidth: 100, alignEnd: true),
+              if (empty.isNotEmpty)
+                _EmptyFieldsToggle(
+                  count: empty.length,
+                  expanded: _showEmpty,
+                  onTap: () => setState(() => _showEmpty = !_showEmpty),
+                ),
+            ],
+          ),
+        ),
+        if (lifecycle.isNotEmpty) ...[
+          SizedBox(height: context.spacing.xl),
+          DetailRegionCard(
+            padding: inset,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _LifecycleToggle(
+                  expanded: _showLifecycle,
+                  onTap: () => setState(() => _showLifecycle = !_showLifecycle),
+                ),
+                if (_showLifecycle)
+                  DetailFieldRows(
+                    rows: lifecycle,
+                    labelWidth: 100,
+                    alignEnd: true,
+                  ),
+              ],
             ),
-          if (lifecycle.isNotEmpty) ...[
-            SizedBox(height: context.spacing.lg),
-            SectionLabel(l.lifecycle),
-            SizedBox(height: context.spacing.xs),
-            DetailFieldRows(rows: lifecycle, labelWidth: 100, alignEnd: true),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 
@@ -176,6 +197,34 @@ class _EmptyFieldsToggle extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The "Lifecycle" heading as a fold toggle, a chevron showing which way it
+/// goes.
+class _LifecycleToggle extends StatelessWidget {
+  const _LifecycleToggle({required this.expanded, required this.onTap});
+
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverSurface(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(context.radii.sm),
+      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
+      child: Row(
+        children: [
+          Expanded(child: SectionLabel(AppL10n.of(context).lifecycle)),
+          Icon(
+            expanded ? LucideIcons.chevronUp300 : LucideIcons.chevronDown300,
+            size: context.typography.secondary.fontSize,
+            color: context.colors.textTertiary,
+          ),
+        ],
       ),
     );
   }
