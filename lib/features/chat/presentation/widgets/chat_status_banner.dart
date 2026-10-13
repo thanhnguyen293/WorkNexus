@@ -9,7 +9,6 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../providers/chat_providers.dart';
-import 'chat_trust_dialog.dart';
 
 /// A strip above the chat explaining why it is not live, with the action that
 /// fixes it. Hidden while online.
@@ -37,19 +36,8 @@ class ChatStatusBanner extends ConsumerWidget {
         null,
       ),
       ChatOffline() => (l.chatConnectionOffline, c.textSecondary, connect),
-      ChatNeedsTrust() => (
-        l.chatUntrusted,
-        c.warning,
-        AppButton.outlinedNeutral(
-          size: AppButtonSize.small,
-          onPressed: () => ChatTrustDialog.show(
-            context,
-            accountId: accountId,
-            request: status,
-          ),
-          child: Text(l.chatReviewCertificate),
-        ),
-      ),
+      // The chat view itself is the prompt then (see ChatTrustGate).
+      ChatNeedsTrust() => (null, null, null),
       ChatSignedOut(:final kicked, :final message) => (
         kicked ? l.chatKicked : l.chatSignedOut(message),
         c.error,

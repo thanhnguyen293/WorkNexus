@@ -13,9 +13,13 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_trust_preview.dart';
+import 'chat_certificate_card.dart';
+import 'chat_trust_reasons.dart';
 
-/// Trust-on-first-use: shows the self-signed certificate of the chat server
-/// and pins its fingerprint when the user accepts.
+/// Trust-on-first-use: explains why the chat server's self-signed
+/// certificate needs confirming, shows it, and pins its fingerprint when the
+/// user accepts. Chat cannot connect until then.
 class ChatTrustDialog extends ConsumerStatefulWidget {
   const ChatTrustDialog({
     super.key,
@@ -44,6 +48,14 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
   String? _error;
 
   Future<void> _trust() async {
+    // The debug preview's certificate is made up: pinning it would replace
+    // the account's real one, so trusting it only ends the preview.
+    final preview = ref.read(chatTrustPreviewProvider.notifier);
+    if (preview.state == widget.request) {
+      preview.state = null;
+      Navigator.of(context).pop();
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -69,19 +81,16 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final error = _error;
-    final mono = context.typography.mono.copyWith(color: c.textPrimary);
-    final label = context.typography.captionStrong.copyWith(
-      color: c.textSecondary,
-    );
     return AppDialogFrame(
       title: l.chatTrustTitle,
+      leadingIcon: LucideIcons.shieldQuestion300,
       maxWidth: context.sizes.dialogMd,
       actions: [
         const Spacer(),
         AppButton.textNeutral(
           size: AppButtonSize.small,
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
+          child: Text(l.chatTrustLater),
         ),
         AppButton.filled(
           size: AppButtonSize.small,
@@ -104,13 +113,9 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
               ),
             ),
             SizedBox(height: s.xl3),
-            Text(l.chatTrustFingerprint, style: label),
-            SizedBox(height: s.xs),
-            SelectableText(widget.request.fingerprint, style: mono),
-            SizedBox(height: s.xl),
-            Text(l.chatTrustIssuer, style: label),
-            SizedBox(height: s.xs),
-            SelectableText(widget.request.issuer, style: mono),
+            const ChatTrustReasons(),
+            SizedBox(height: s.xl3),
+            ChatCertificateCard(request: widget.request),
             if (error != null) ...[
               SizedBox(height: s.xl),
               AppInlineNote(text: error, isError: true),

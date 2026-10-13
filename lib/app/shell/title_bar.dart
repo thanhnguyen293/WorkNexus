@@ -9,6 +9,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quick_settings_button.dart';
+import '../../features/chat/presentation/widgets/chat_trust_debug_button.dart';
+import '../../features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The custom 34px window title bar: draggable, hosts the app title and
@@ -73,6 +75,8 @@ class TitleBar extends ConsumerWidget {
           SizedBox(width: context.spacing.lg),
           // Debug builds only (renders nothing in release).
           const DebugCelebrateButton(),
+          const ChatTypingDebugButton(),
+          const ChatTrustDebugButton(),
           const QuickSettingsButton(),
           if (drawsCaption) ...[
             SizedBox(width: context.spacing.lg),
