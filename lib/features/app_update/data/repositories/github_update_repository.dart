@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -46,11 +47,13 @@ class GitHubUpdateRepository implements UpdateRepository {
       if (release == null) return const Ok(null);
 
       final assetName = _installer?.assetName;
-      final downloadUrl = assetName == null ? null : release.assets[assetName];
-      final sumsUrl = release.assets[AppConfig.updateChecksumsAsset];
+      final downloadUrl = assetName == null
+          ? null
+          : assetUrl(release.assets, assetName);
+      final sumsUrl = assetUrl(release.assets, AppConfig.updateChecksumsAsset);
       final sha256 = assetName == null || downloadUrl == null || sumsUrl == null
           ? null
-          : _checksumFor(assetName, await _releases.readText(sumsUrl));
+          : checksumFor(assetName, await _releases.readText(sumsUrl));
 
       return Ok((
         currentVersion: packageInfo.version,
@@ -151,13 +154,28 @@ class GitHubUpdateRepository implements UpdateRepository {
     return const Ok(null);
   }
 
+  /// The download URL of the asset called [name]. GitHub treats asset names
+  /// case-insensitively (two names differing only in case cannot coexist on a
+  /// release), so they are matched the same way here.
+  @visibleForTesting
+  static String? assetUrl(Map<String, String> assets, String name) {
+    final wanted = name.toLowerCase();
+    for (final MapEntry(:key, :value) in assets.entries) {
+      if (key.toLowerCase() == wanted) return value;
+    }
+    return null;
+  }
+
   /// The hash on the `<sha256>  <name>` line for [asset], as `sha256sum`
-  /// writes it; null when the file does not list it.
-  static String? _checksumFor(String asset, String sums) {
+  /// writes it; null when the file does not list it. Names match
+  /// case-insensitively, as release asset names do.
+  @visibleForTesting
+  static String? checksumFor(String asset, String sums) {
+    final wanted = asset.toLowerCase();
     for (final line in sums.split('\n')) {
       final parts = line.trim().split(RegExp(r'\s+'));
       if (parts.length != 2) continue;
-      if (parts[1].replaceFirst('*', '') == asset) {
+      if (parts[1].replaceFirst('*', '').toLowerCase() == wanted) {
         return parts[0].toLowerCase();
       }
     }

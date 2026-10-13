@@ -21,7 +21,7 @@ Thanks to everyone whose code has been merged into `main`. 🏆
 |:-:|---|---|
 | <a href="https://github.com/thanhnguyen293"><img src="https://github.com/thanhnguyen293.png" width="64" alt="thanhnguyen293"/></a> | **[Thanh Nguyen](https://github.com/thanhnguyen293)** | 🥇 Creator & maintainer — architecture, providers, board, task detail |
 | <a href="https://github.com/phungbuuquang"><img src="https://github.com/phungbuuquang.png" width="64" alt="phungbuuquang"/></a> | **[Michael (phungbuuquang)](https://github.com/phungbuuquang)** | 🥈 Desktop tray menus, window & profile polish (Windows/macOS) |
-| <img src="https://github.com/identicons/dyno.png" width="64" alt="Dyno"/> | **Dyno** | 🥉 In-app updater, API-key translation, env-driven build config |
+| <a href="https://github.com/dyno-nexsoft"><img src="https://github.com/dyno-nexsoft.png" width="64" alt="dyno-nexsoft"/></a> | **[Dyno (dyno-nexsoft)](https://github.com/dyno-nexsoft)** | 🥉 In-app updater, API-key translation, env-driven build config, release CI & installers |
 
 <a href="https://github.com/thanhnguyen293/WorkNexus/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=thanhnguyen293/WorkNexus" alt="Contributors"/>

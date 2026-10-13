@@ -65,22 +65,28 @@ abstract final class AppConfig {
     defaultValue: 'worknexus',
   );
 
+  // Release assets are named `WorkNexus-<os>-<arch>.<ext>`. Builds before
+  // that naming looked for worknexus-windows.zip, work_nexus-macos.zip and
+  // worknexus-linux-x64.tar.gz, so CI also publishes each archive under its
+  // old name (and checksums it) until those builds have updated. The updater
+  // matches names case-insensitively, as GitHub does.
+
   /// Release asset holding the Windows build (zip of the Release folder).
   static const updateAssetWindows = String.fromEnvironment(
     'UPDATE_ASSET_WINDOWS',
-    defaultValue: 'worknexus-windows.zip',
+    defaultValue: 'WorkNexus-windows-x64.zip',
   );
 
   /// Release asset holding the macOS build (zipped `.app`).
   static const updateAssetMacos = String.fromEnvironment(
     'UPDATE_ASSET_MACOS',
-    defaultValue: 'work_nexus-macos.zip',
+    defaultValue: 'WorkNexus-macos-universal.zip',
   );
 
   /// Release asset holding the Linux build (tarball of the bundle folder).
   static const updateAssetLinux = String.fromEnvironment(
     'UPDATE_ASSET_LINUX',
-    defaultValue: 'worknexus-linux-x64.tar.gz',
+    defaultValue: 'WorkNexus-linux-x64.tar.gz',
   );
 
   /// Release asset listing `sha256  filename` lines the updater verifies

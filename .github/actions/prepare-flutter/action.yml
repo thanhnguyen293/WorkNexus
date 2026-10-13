@@ -1,0 +1,60 @@
+name: Prepare Flutter build
+description: >
+  Installs the pinned Flutter toolchain and dependencies, runs code generation,
+  and stamps the release version and repository into the build inputs.
+  Call after actions/checkout.
+
+inputs:
+  flutter-version:
+    description: Exact Flutter version to install.
+    required: true
+  version:
+    description: Release version written into pubspec.yaml.
+    required: true
+  build-number:
+    description: Build number appended to the version.
+    required: true
+  desktop:
+    description: Desktop platform to enable (macos, windows or linux).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Flutter ${{ inputs.flutter-version }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+
+    - name: Enable ${{ inputs.desktop }} desktop
+      if: inputs.desktop != ''
+      shell: bash
+      run: flutter config --enable-${{ inputs.desktop }}-desktop
+
+    - name: Install dependencies
+      shell: bash
+      run: flutter pub get
+
+    # Codegen (freezed / drift / injectable / retrofit / json) — required
+    # because *.g.dart / *.freezed.dart / *.config.dart are gitignored.
+    - name: Run code generation
+      shell: bash
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Stamp version
+      shell: bash
+      run: |
+        sed -i.bak -e "s|^version:.*|version: ${{ inputs.version }}+${{ inputs.build-number }}|" pubspec.yaml
+        rm -f pubspec.yaml.bak
+
+    # Owner/repo come from the repository this workflow runs in, so upstream
+    # and forks each build an app that updates from their own releases.
+    - name: Point the build at this repository
+      shell: bash
+      run: |
+        sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
+        sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
+        rm -f .env.bak
