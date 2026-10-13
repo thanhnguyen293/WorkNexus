@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Unified Task Board",
+  "appTitle": "Task Board",
   "updateAvailable": "WorkNexus {version} is available.",
   "@updateAvailable": {
     "placeholders": {

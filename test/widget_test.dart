@@ -31,7 +31,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // Title bar shows the app name.
-    expect(find.text('Unified Task Board'), findsOneWidget);
+    expect(find.text('Task Board'), findsOneWidget);
     // The launch state is the welcome screen — no source is selected yet.
     expect(find.text('Welcome to WorkNexus'), findsOneWidget);
     // No board is opened by default: no columns and no seeded tickets render.
