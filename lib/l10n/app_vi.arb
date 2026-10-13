@@ -613,6 +613,8 @@
   "openImageInBrowser": "Mở ảnh trong trình duyệt",
   "copyLink": "Sao chép liên kết",
   "linkCopied": "Đã sao chép!",
+  "copyTitle": "Sao chép tiêu đề",
+  "titleCopied": "Đã sao chép tiêu đề",
   "refresh": "Làm mới",
   "openInBrowser": "Mở trong trình duyệt",
   "more": "Thêm",

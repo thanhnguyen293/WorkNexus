@@ -664,6 +664,8 @@
   "openImageInBrowser": "Open image in browser",
   "copyLink": "Copy link",
   "linkCopied": "Copied!",
+  "copyTitle": "Copy title",
+  "titleCopied": "Title copied",
   "refresh": "Refresh",
   "openInBrowser": "Open in browser",
   "more": "More",

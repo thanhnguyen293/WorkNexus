@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../ticket_actions.dart';
+import 'detail_header_title.dart';
 import 'detail_header_top_bar.dart';
 import 'detail_people.dart';
 import 'parent_task_link.dart';
@@ -53,12 +52,7 @@ class DetailHeader extends StatelessWidget {
             ),
             SizedBox(height: s.md),
           ],
-          Text(
-            ticket.title,
-            style: context.typography.detailTitle.copyWith(
-              color: context.colors.textPrimary,
-            ),
-          ),
+          DetailHeaderTitle(ticket: ticket),
           SizedBox(height: s.xl2),
           // People on the left, actions on the right; they stack when the
           // panel is too narrow for both.
