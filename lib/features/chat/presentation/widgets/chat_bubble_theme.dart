@@ -15,6 +15,8 @@ class ChatBubbleInk {
     required this.tileFill,
     Color? quoteSurface,
     this.fontSize = 13,
+    this.labelSize,
+    this.metaSize,
   }) : quoteSurface = quoteSurface ?? quoteFill;
 
   /// The app theme's ink, for content outside any styled bubble.
@@ -57,6 +59,11 @@ class ChatBubbleInk {
 
   /// Message text size of the active chat style.
   final double fontSize;
+
+  /// Sender name / reply quote size, and time size; null keeps the caption
+  /// ramp (see `ChatStyle.labelSize`, `ChatStyle.metaSize`).
+  final double? labelSize;
+  final double? metaSize;
 }
 
 /// Provides [ChatBubbleInk] to a bubble's content.

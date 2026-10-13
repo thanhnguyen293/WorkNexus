@@ -18,6 +18,24 @@ import 'chat_user_profile_dialog.dart';
 import 'mention_text.dart';
 import 'notification_body.dart';
 
+/// Whether a message renders as code or formatted Markdown — content that
+/// reads better given more width than a chat line (code, tables, lists).
+bool chatShowsWide(ChatMessage message) =>
+    !message.deleted &&
+    switch (message.content) {
+      CodeContent() => true,
+      TextContent(:final text, :final markdown) => _rendersMarkdown(
+        text,
+        markdown: markdown || chatLooksLikeMarkdown(text),
+      ),
+      _ => false,
+    };
+
+// Many clients send everything as Markdown (`text`); a message without any of
+// its syntax skips the far costlier renderer.
+bool _rendersMarkdown(String text, {required bool markdown}) =>
+    markdown && hasMarkdownSyntax(text);
+
 /// The content of a message, by content type.
 class MessageBody extends StatelessWidget {
   const MessageBody({
@@ -87,7 +105,7 @@ class MessageBody extends StatelessWidget {
             ),
             SizedBox(height: context.spacing.xs),
           ],
-          CodeBlock(code, fontSize: ink.fontSize - 1),
+          CodeBlock(code, fontSize: ink.fontSize - 1, collapsedLines: 10),
         ],
       ),
       UnsupportedContent(:final contentType) => Text(
@@ -122,9 +140,7 @@ class ChatTextBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Many clients send everything as Markdown (`text`); a message
-        // without any of its syntax skips the far costlier renderer.
-        if (markdown && hasMarkdownSyntax(text))
+        if (_rendersMarkdown(text, markdown: markdown))
           MarkdownText(
             text,
             fontSize: ink.fontSize,

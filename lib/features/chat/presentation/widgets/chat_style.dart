@@ -58,6 +58,10 @@ class ChatStyle {
     required this.groupGap,
     required this.fontSize,
     required this.ticks,
+    this.labelSize,
+    this.metaSize,
+    this.threadInMeta = false,
+    this.quoteInSenderColor = false,
   });
 
   /// The style the user picked, rebuilt when it or its colours change.
@@ -118,6 +122,10 @@ class ChatStyle {
     groupGap: groupGap,
     fontSize: fontSize,
     ticks: ticks,
+    labelSize: labelSize,
+    metaSize: metaSize,
+    threadInMeta: threadInMeta,
+    quoteInSenderColor: quoteInSenderColor,
   );
 
   final ChatStylePalette palette;
@@ -154,6 +162,21 @@ class ChatStyle {
 
   /// Show a sent tick after the time of own messages.
   final bool ticks;
+
+  /// Size of the sender name and reply quote inside a bubble; null keeps the
+  /// caption ramp. Telegram sets them at the message size.
+  final double? labelSize;
+
+  /// Size of the time; null keeps the caption ramp.
+  final double? metaSize;
+
+  /// A thread root shows its reply count beside the time (Telegram) instead
+  /// of a chip of repliers under the bubble.
+  final bool threadInMeta;
+
+  /// A reply quote in an incoming bubble takes the quoted sender's name
+  /// colour for its bar, tint and name (Telegram).
+  final bool quoteInSenderColor;
 
   /// Colour for a sender's name.
   Color nameColor(int senderId) {
@@ -198,6 +221,8 @@ class ChatStyle {
       ),
       tileFill: text.withValues(alpha: strong ? 0.16 : 0.06),
       fontSize: fontSize,
+      labelSize: labelSize,
+      metaSize: metaSize,
     );
   }
 
