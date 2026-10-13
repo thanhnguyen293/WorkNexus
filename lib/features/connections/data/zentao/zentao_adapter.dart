@@ -576,22 +576,15 @@ class ZenTaoAdapter implements ProviderAdapter {
     String? comment,
   }) async {
     return _guard(() async {
-      // This ZenTao build exposes no REST v1 bug-action endpoints (they 404),
-      // so confirm goes through the classic web action `bug-confirmBug-<id>` —
-      // the same channel the board's bug browsing uses. It sets confirmed = 1
-      // and (re)assigns the bug; keep it on the acting user by default so it
-      // stays on their board.
+      // No REST v1 bug actions on these builds (they 404): confirm goes
+      // through the classic web action. Keep the bug on the acting user by
+      // default so it stays on their board.
       final target = (assignee != null && assignee.trim().isNotEmpty)
           ? assignee.trim()
           : _client.account;
-      final resp = await _client.classicActionPost(
-        'bug-confirmBug-${ticket.externalKey}',
-        {
-          if (target.isNotEmpty) 'assignedTo': target,
-          if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
-        },
-      );
-      ensureZenTaoActionOk(resp, 'confirm');
+      await ZenTaoWorkflow(
+        _client,
+      ).confirmBug(ticket.externalKey, assignee: target, comment: comment);
       return true;
     });
   }

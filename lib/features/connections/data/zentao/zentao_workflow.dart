@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/domain/value_objects/zentao_task_action_input.dart';
 import 'zentao_action_result.dart';
 import 'zentao_client.dart';
+import 'zentao_form_parsing.dart';
 
 /// Hours as ZenTao's forms take them: `2`, `2.5`.
 String zentaoHours(double hours) {
@@ -35,6 +36,47 @@ class ZenTaoWorkflow {
       'comment': ?_text(comment),
     });
     ensureZenTaoActionOk(resp, 'close');
+  }
+
+  /// Confirms bug [bugId] (ZenTao sets `confirmed = 1`), assigning it to
+  /// [assignee].
+  ///
+  /// ZenTao 20+ names the action `bug-confirm`, 18.x `bug-confirmBug`; the
+  /// form page tells which one this server has. 20+ also writes every form
+  /// field left out of the POST with its default (priority 3, empty status,
+  /// type, deadline and CC list — an empty status is refused), so the bug's
+  /// own values go along, as ZenTao's form sends them.
+  Future<void> confirmBug(
+    String bugId, {
+    required String assignee,
+    String? comment,
+  }) async {
+    Future<Map<Object?, Object?>?> form(String action) async =>
+        switch (classicPayload((await _client.classicGet(action)).data)) {
+          {'bug': final Map<Object?, Object?> bug} => bug,
+          _ => null,
+        };
+    var action = 'bug-confirm-$bugId';
+    var bug = await form(action);
+    if (bug == null) {
+      action = 'bug-confirmBug-$bugId';
+      bug = await form(action) ?? const <Object?, Object?>{};
+    }
+    final deadline = zentaoDate(bug['deadline']);
+    final type = zentaoText(bug['type']).trim();
+    final status = zentaoText(bug['status']).trim();
+    final resp = await _client.classicPost(action, <String, Object>{
+      'uid': _client.formUid(),
+      'assignedTo': assignee,
+      'pri': '${zentaoIntOr(bug['pri'], 3)}',
+      // Only an active bug can be confirmed.
+      'status': status.isEmpty ? 'active' : status,
+      if (type.isNotEmpty) 'type': type,
+      if (deadline.isNotEmpty) 'deadline': deadline,
+      'mailto[]': zentaoCsv(bug['mailto']),
+      'comment': ?_text(comment),
+    });
+    ensureZenTaoActionOk(resp, 'confirm');
   }
 
   /// Runs [action] on [task] with [input].
