@@ -553,6 +553,9 @@
       }
     }
   },
+  "fieldConfirmation": "Confirmation",
+  "bugUnconfirmed": "Not confirmed",
+  "fieldReopened": "Reopened",
   "openedBy": "Opened by",
   "assignedTo": "Assigned to",
   "lastEdited": "Last edited",

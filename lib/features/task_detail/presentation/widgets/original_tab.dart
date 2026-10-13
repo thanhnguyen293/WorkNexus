@@ -28,6 +28,7 @@ import 'provider_detail_sections.dart';
 import 'section_label.dart';
 import 'subtask_list.dart';
 import 'task_effort_bar.dart';
+import 'ticket_status_pill.dart';
 
 /// The "Original" tab — the ticket's source description plus typed metadata.
 ///
@@ -116,7 +117,8 @@ class OriginalTab extends ConsumerWidget {
           TaskEffortBar(task: task),
           SizedBox(height: context.spacing.xl3),
         ],
-        DetailSectionTitle(l.description),
+        // A ZenTao bug's body is its repro steps, titled as ZenTao does.
+        DetailSectionTitle(bug != null ? l.fieldSteps : l.description),
         // Selectable, so parts of it can be copied (drag, ⌘C, right-click).
         SelectionArea(
           child: RichBodyText(
@@ -165,13 +167,17 @@ class OriginalTab extends ConsumerWidget {
     // fall back to the generic key/value table.
     final Widget sidebar;
     if (bug != null) {
-      sidebar = ZenTaoBugSections(bug);
+      sidebar = ZenTaoBugSections(bug, ticket: ticket);
     } else if (gitlab != null) {
       sidebar = GitLabDetailSections(ticket: ticket, entity: gitlab);
     } else if (github != null) {
       sidebar = GitHubDetailSections(ticket: ticket, entity: github);
     } else {
-      sidebar = DetailMetaCard(title: l.details, rows: meta);
+      sidebar = DetailMetaCard(
+        title: l.details,
+        rows: meta,
+        valueWidgets: {l.status: TicketStatusPill(ticket: ticket)},
+      );
     }
 
     return DetailScrollBody(
