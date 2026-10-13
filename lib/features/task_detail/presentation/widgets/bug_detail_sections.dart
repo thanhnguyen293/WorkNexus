@@ -3,18 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
+import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/semantic.dart';
+import '../../../../core/util/priority_labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/util/zentao_labels.dart';
+import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/hover_surface.dart';
+import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_field_rows.dart';
 import 'detail_region_card.dart';
 import 'section_label.dart';
+import 'ticket_status_pill.dart';
 
 /// The ZenTao bug's typed metadata as two region cards: what the bug *is*
 /// (classification) and how it *moved* (lifecycle).
@@ -22,9 +28,12 @@ import 'section_label.dart';
 /// the lifecycle dates are looked up now and then, so they start folded, and
 /// empty lifecycle rows are always hidden.
 class ZenTaoBugSections extends ConsumerStatefulWidget {
-  const ZenTaoBugSections(this.bug, {super.key});
+  const ZenTaoBugSections(this.bug, {super.key, required this.ticket});
 
   final ZenTaoBugEntity bug;
+
+  /// The bug's ticket, for its priority (kept on the ticket, not the entity).
+  final Ticket ticket;
 
   @override
   ConsumerState<ZenTaoBugSections> createState() => _ZenTaoBugSectionsState();
@@ -42,16 +51,35 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
       appSettingsProvider.select((s) => s.dateFormat),
     );
 
+    final active =
+        widget.ticket.providerStatus.trim().toLowerCase() == 'active';
+    final reopened = bug.activatedCount ?? 0;
+
     // Design order: filled rows surface first, the five id-only fields (Module,
     // Branch, Plan, Story, Task) fall to the empty group when unset (ZenTao
     // reports them as "0").
     final classification = <(String, String)>[
+      (l.status, widget.ticket.providerStatus),
       (l.fieldProduct, _joined([bug.productName, bug.product])),
       (l.fieldExecution, _joined([bug.executionName, bug.execution])),
       (l.fieldModule, bug.module ?? ''),
       (l.fieldBranch, bug.branch ?? ''),
       (l.fieldType, zentaoBugTypeLabel(bug.bugType) ?? ''),
       (l.fieldSeverity, _severity(bug.severity)),
+      (
+        l.priority,
+        hasExplicitPriority(widget.ticket)
+            ? priorityLabel(widget.ticket.providerType, widget.ticket.priority)
+            : '',
+      ),
+      // The triage facts ZenTao keeps in Basic Info. Whether an open bug was
+      // confirmed matters for triage; once it is resolved the flag is history.
+      if (active)
+        (
+          l.fieldConfirmation,
+          bug.confirmed == 1 ? l.confirmed : l.bugUnconfirmed,
+        ),
+      if (reopened > 0) (l.fieldReopened, '$reopened'),
       (l.fieldPlan, _joined([bug.planName, bug.plan])),
       (l.fieldStory, _joined([bug.storyTitle, bug.story])),
       (l.task, _joined([bug.taskName, bug.task])),
@@ -100,7 +128,28 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
             children: [
               SectionLabel(l.classification),
               SizedBox(height: context.spacing.xs),
-              DetailFieldRows(rows: filled, labelWidth: 100, alignEnd: true),
+              DetailFieldRows(
+                rows: filled,
+                labelWidth: 100,
+                alignEnd: true,
+                // Severity and priority as the same chips as the header, the
+                // way ZenTao marks them with an icon rather than words.
+                valueWidgets: {
+                  l.status: TicketStatusPill(ticket: widget.ticket),
+                  l.fieldSeverity: SeverityTag(bug.severity),
+                  l.priority: PriorityTag(
+                    widget.ticket.providerType,
+                    widget.ticket.priority,
+                  ),
+                  // A bug that keeps coming back is worth noticing.
+                  l.fieldReopened: Text(
+                    l.reopenedTimes(reopened),
+                    style: context.typography.secondary.copyWith(
+                      color: context.colors.warning,
+                    ),
+                  ),
+                },
+              ),
               if (_showEmpty && empty.isNotEmpty)
                 DetailFieldRows(rows: empty, labelWidth: 100, alignEnd: true),
               if (empty.isNotEmpty)

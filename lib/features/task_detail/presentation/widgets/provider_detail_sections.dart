@@ -5,11 +5,13 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/util/labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'detail_field_rows.dart';
 import 'detail_region_card.dart';
 import 'section_label.dart';
+import 'ticket_status_pill.dart';
 
 /// Dedicated metadata card for a GitLab issue / merge request. MR-only rows
 /// (branches, merge status, reviewers) are omitted for issues and when empty.
@@ -32,6 +34,7 @@ class GitLabDetailSections extends ConsumerWidget {
     final isMr = (ticket.externalType ?? '').toLowerCase() == 'mergerequest';
 
     final rows = <(String, String)>[
+      (l.status, statusLabel(l, ticket.status)),
       (l.author, entity.author ?? ''),
       (l.assignee, entity.assignees.join(', ')),
       if (isMr) (l.reviewers, entity.reviewers.join(', ')),
@@ -40,7 +43,11 @@ class GitLabDetailSections extends ConsumerWidget {
       if (isMr) (l.mergeStatus, humanizeMergeState(entity.mergeStatus)),
       (l.updated, formatWhen(context, ticket.updatedAt, format: dateFormat)),
     ];
-    return DetailMetaCard(title: l.details, rows: rows);
+    return DetailMetaCard(
+      title: l.details,
+      rows: rows,
+      valueWidgets: {l.status: TicketStatusPill(ticket: ticket)},
+    );
   }
 }
 
@@ -65,6 +72,7 @@ class GitHubDetailSections extends ConsumerWidget {
     final isPr = (ticket.externalType ?? '').toLowerCase() == 'pullrequest';
 
     final rows = <(String, String)>[
+      (l.status, statusLabel(l, ticket.status)),
       (l.author, entity.author ?? ''),
       (l.assignee, entity.assignees.join(', ')),
       if (isPr) (l.reviewers, entity.reviewers.join(', ')),
@@ -73,7 +81,11 @@ class GitHubDetailSections extends ConsumerWidget {
       if (isPr) (l.mergeStatus, humanizeMergeState(entity.mergeableState)),
       (l.updated, formatWhen(context, ticket.updatedAt, format: dateFormat)),
     ];
-    return DetailMetaCard(title: l.details, rows: rows);
+    return DetailMetaCard(
+      title: l.details,
+      rows: rows,
+      valueWidgets: {l.status: TicketStatusPill(ticket: ticket)},
+    );
   }
 }
 
@@ -87,10 +99,18 @@ String humanizeMergeState(String? raw) {
 /// The metadata card shared by the detail sidebars — a labeled
 /// section over a hairline key/value table, with empty rows filtered out.
 class DetailMetaCard extends StatelessWidget {
-  const DetailMetaCard({super.key, required this.title, required this.rows});
+  const DetailMetaCard({
+    super.key,
+    required this.title,
+    required this.rows,
+    this.valueWidgets = const {},
+  });
 
   final String title;
   final List<(String, String)> rows;
+
+  /// Values drawn as a widget instead of text (see [DetailFieldRows]).
+  final Map<String, Widget> valueWidgets;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +128,12 @@ class DetailMetaCard extends StatelessWidget {
         children: [
           SectionLabel(title),
           SizedBox(height: context.spacing.xs),
-          DetailFieldRows(rows: filled, labelWidth: 100, alignEnd: true),
+          DetailFieldRows(
+            rows: filled,
+            labelWidth: 100,
+            alignEnd: true,
+            valueWidgets: valueWidgets,
+          ),
         ],
       ),
     );
