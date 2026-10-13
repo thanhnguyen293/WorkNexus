@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_emoji_panel.dart';
@@ -27,14 +28,20 @@ class ChatEmojiSidePanel extends ConsumerWidget {
         ref.read(chatEmojiDockedProvider.notifier).state = false;
         ref.read(chatSidePanelProvider(thread).notifier).state = null;
       },
-      child: ChatEmojiTabs(
-        thread: thread,
-        onInsert: (emoji) {
-          ref.read(chatEmojiInsertProvider(thread).notifier)
-            ..state = null
-            ..state = emoji;
-        },
-        onSent: () {},
+      // On the header's colour, not the window's, so it reads as a panel;
+      // its tabs as tall as the pinned-message bar beside it.
+      child: ColoredBox(
+        color: context.colors.surface,
+        child: ChatEmojiTabs(
+          thread: thread,
+          tabRowHeight: kChatSubHeaderHeight,
+          onInsert: (emoji) {
+            ref.read(chatEmojiInsertProvider(thread).notifier)
+              ..state = null
+              ..state = emoji;
+          },
+          onSent: () {},
+        ),
       ),
     );
   }

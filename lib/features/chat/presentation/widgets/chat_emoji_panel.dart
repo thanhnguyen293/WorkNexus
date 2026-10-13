@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -80,7 +81,8 @@ class ChatEmojiPanel extends StatelessWidget {
 /// Two tabs: stickers (every set, switched from the bar at the bottom) and
 /// emoji to type — an emoji sent on its own shows large. Fills its box; the
 /// popup and the expanded panel each give it one. [action] sits at the end
-/// of the tab row.
+/// of the tab row; [tabRowHeight], when given, is the tab row's height with
+/// its bottom border.
 class ChatEmojiTabs extends ConsumerWidget {
   const ChatEmojiTabs({
     super.key,
@@ -88,6 +90,7 @@ class ChatEmojiTabs extends ConsumerWidget {
     required this.onInsert,
     required this.onSent,
     this.action,
+    this.tabRowHeight,
   });
 
   final ChatThreadKey thread;
@@ -96,6 +99,7 @@ class ChatEmojiTabs extends ConsumerWidget {
   /// Called as a sticker is sent.
   final VoidCallback onSent;
   final Widget? action;
+  final double? tabRowHeight;
 
   /// Sends after [onSent] (which may close the popup); a failure is reported
   /// from the navigator's context, captured first, as the panel's own context
@@ -131,7 +135,10 @@ class ChatEmojiTabs extends ConsumerWidget {
       _ => const AppStateView.loading(compact: true),
     };
     // The tabs are as tall as the app's other tab rows, not Material's 46.
-    final tabHeight = context.sizes.controlMd + s.md;
+    final rowHeight = tabRowHeight;
+    final tabHeight = rowHeight == null
+        ? context.sizes.controlMd + s.md
+        : rowHeight - context.borders.hairline;
     final action = this.action;
     return DefaultTabController(
       length: 2,
@@ -139,7 +146,7 @@ class ChatEmojiTabs extends ConsumerWidget {
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: c.border)),
+              border: Border(bottom: context.hairlineSide),
             ),
             child: Row(
               children: [
