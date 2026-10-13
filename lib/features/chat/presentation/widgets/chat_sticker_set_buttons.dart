@@ -24,7 +24,7 @@ typedef ChatStickerPackCover = ({
 typedef ChatStickerImporting = ({String title, int done, int total});
 
 /// One set's button on the pack bar: its cover sticker (a star for the
-/// user's own); a right-click on an imported set offers to remove it.
+/// user's own), underlined when [selected]; a right-click on an imported set offers to remove it.
 class ChatStickerSetButton extends StatelessWidget {
   const ChatStickerSetButton({
     super.key,
@@ -63,31 +63,57 @@ class ChatStickerSetButton extends StatelessWidget {
       padding: EdgeInsets.only(right: s.xs),
       child: Tooltip(
         message: pack.pack.isEmpty ? l.chatMyStickers : pack.title ?? pack.pack,
-        child: Material(
-          color: selected ? context.colors.selectionFill : Colors.transparent,
-          borderRadius: radius,
-          child: InkWell(
-            mouseCursor: WidgetStateMouseCursor.clickable,
-            borderRadius: radius,
-            onTap: onTap,
-            onSecondaryTapUp: pack.removable
-                ? (d) => _menu(context, d.globalPosition)
-                : null,
-            child: SizedBox.square(
-              dimension: context.sizes.controlMd,
-              child: Padding(
-                padding: EdgeInsets.all(s.xxs),
-                child: switch (pack.cover) {
-                  final cover? => ChatStickerImage(sticker: cover),
-                  null => Icon(
-                    LucideIcons.star300,
-                    size: context.sizes.iconLg,
-                    color: context.colors.textSecondary,
+        // The selected set is underlined too: the tint alone is faint behind
+        // a colourful cover. The line sits in the bar's padding, below the
+        // button, so the covers stay lined up.
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Material(
+              color: selected
+                  ? context.colors.selectionFill
+                  : Colors.transparent,
+              borderRadius: radius,
+              child: InkWell(
+                mouseCursor: WidgetStateMouseCursor.clickable,
+                borderRadius: radius,
+                onTap: onTap,
+                onSecondaryTapUp: pack.removable
+                    ? (d) => _menu(context, d.globalPosition)
+                    : null,
+                child: SizedBox.square(
+                  dimension: context.sizes.controlMd,
+                  child: Padding(
+                    padding: EdgeInsets.all(s.xxs),
+                    child: switch (pack.cover) {
+                      final cover? => ChatStickerImage(sticker: cover),
+                      null => Icon(
+                        LucideIcons.star300,
+                        size: context.sizes.iconLg,
+                        color: context.colors.textSecondary,
+                      ),
+                    },
                   ),
-                },
+                ),
               ),
             ),
-          ),
+            if (selected)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: -s.xs,
+                child: Center(
+                  child: Container(
+                    width: s.xl5,
+                    height: s.xxs,
+                    decoration: BoxDecoration(
+                      color: context.colors.accent,
+                      borderRadius: BorderRadius.circular(context.radii.dot),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
