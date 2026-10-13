@@ -16,6 +16,7 @@ class ForwardChatMessage {
   /// or something this app cannot read.
   bool canForward(ChatMessage message) =>
       !message.deleted &&
+      !message.isNotice &&
       message.serverId != null &&
       message.sendState == SendState.sent &&
       switch (message.content) {

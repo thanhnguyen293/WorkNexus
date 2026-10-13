@@ -14,6 +14,7 @@ ChatMessage _message({
   int? serverId = 9,
   SendState state = SendState.sent,
   bool deleted = false,
+  bool isNotice = false,
 }) => ChatMessage(
   accountId: 'a',
   gid: 'm1',
@@ -25,6 +26,7 @@ ChatMessage _message({
   isMine: false,
   sendState: state,
   deleted: deleted,
+  isNotice: isNotice,
 );
 
 void main() {
@@ -61,6 +63,7 @@ void main() {
     expect(forward.canForward(_message(serverId: null)), isFalse);
     expect(forward.canForward(_message(state: SendState.failed)), isFalse);
     expect(forward.canForward(_message(deleted: true)), isFalse);
+    expect(forward.canForward(_message(isNotice: true)), isFalse);
     expect(
       forward.canForward(
         _message(content: const MessageContent.unsupported('vote')),

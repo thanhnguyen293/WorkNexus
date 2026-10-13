@@ -104,6 +104,11 @@ ChatMessagesCompanion messageFromXxd(String accountId, Map<String, Object?> m) {
     sendState: Value(SendState.sent.name),
     deleted: Value(m['deleted'] == true),
     replyToId: Value(replyToOf(m['data'])),
+    // Left alone when absent, so a partial copy (a chat's
+    // `lastMessageInfo`) never clears a stored notice's flag.
+    broadcast: m.containsKey('type')
+        ? Value(m['type'] == 'broadcast')
+        : const Value.absent(),
   );
 }
 
@@ -251,6 +256,7 @@ ChatMessage messageFromRow(
   index: row.messageIndex,
   replyToId: row.replyToId,
   deleted: row.deleted,
+  isNotice: row.broadcast,
 );
 
 ChatUser userFromRow(ChatUserRow row) => ChatUser(

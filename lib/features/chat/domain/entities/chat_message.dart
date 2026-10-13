@@ -28,5 +28,10 @@ abstract class ChatMessage with _$ChatMessage {
     /// Server id of the message this one replies to.
     int? replyToId,
     @Default(false) bool deleted,
+
+    /// A notice the server posted about the chat (someone invited members,
+    /// created or renamed it), shown centered in the list, not as a message
+    /// from [senderId].
+    @Default(false) bool isNotice,
   }) = _ChatMessage;
 }
