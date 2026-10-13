@@ -580,21 +580,32 @@ class GitLabAdapter implements GitLabMrAdapter {
         : _client.mrNotes(ref, ticket.externalKey);
   }
 
+  /// Best effort: the behind-count only hints at a needed rebase, so it never
+  /// fails the MR itself. A merged/closed MR needs no rebase and often has its
+  /// source branch deleted (compare then answers 404 "Ref Not Found").
   Future<GitLabMergeRequest> _withCommitsBehind(
     String projectRef,
     GitLabMergeRequest mr,
   ) async {
     final source = mr.sourceBranch;
     final target = mr.targetBranch;
-    if (source == null || source.isEmpty || target == null || target.isEmpty) {
+    if (mr.state != 'opened' ||
+        source == null ||
+        source.isEmpty ||
+        target == null ||
+        target.isEmpty) {
       return mr;
     }
-    final count = await _client.commitsBehindTarget(
-      projectRef,
-      sourceBranch: source,
-      targetBranch: target,
-    );
-    return mr.copyWith(commitsBehind: count);
+    try {
+      final count = await _client.commitsBehindTarget(
+        projectRef,
+        sourceBranch: source,
+        targetBranch: target,
+      );
+      return mr.copyWith(commitsBehind: count);
+    } on DioException {
+      return mr;
+    }
   }
 
   GitLabKind _kindOf(Ticket t) =>

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
@@ -212,5 +213,69 @@ void main() {
     expect(tickets, hasLength(1));
     expect(tickets.first.externalType, 'MergeRequest');
     expect(tickets.first.externalKey, '7');
+  });
+
+  group('getTicket on a merge request', () {
+    void stubMr(String state) {
+      when(() => client.mergeRequest(ref, '42')).thenAnswer(
+        (_) async => GitLabMergeRequest(
+          id: 9,
+          iid: 42,
+          projectId: 3,
+          state: state,
+          sourceBranch: 'feature',
+          targetBranch: 'develop',
+        ),
+      );
+    }
+
+    void stubCompare(Future<int?> Function() answer) {
+      when(
+        () => client.commitsBehindTarget(
+          any(),
+          sourceBranch: any(named: 'sourceBranch'),
+          targetBranch: any(named: 'targetBranch'),
+        ),
+      ).thenAnswer((_) => answer());
+    }
+
+    test('still loads when compare fails (source branch deleted)', () async {
+      stubMr('opened');
+      stubCompare(
+        () => Future.error(
+          DioException(
+            requestOptions: RequestOptions(),
+            response: Response(
+              requestOptions: RequestOptions(),
+              statusCode: 404,
+            ),
+          ),
+        ),
+      );
+
+      final res = await adapter.getTicket(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      expect(res, isA<Ok<Ticket>>());
+    });
+
+    test('skips compare for a merged MR', () async {
+      stubMr('merged');
+      stubCompare(() async => 3);
+
+      final res = await adapter.getTicket(
+        _ticket(externalType: 'MergeRequest'),
+      );
+
+      expect(res, isA<Ok<Ticket>>());
+      verifyNever(
+        () => client.commitsBehindTarget(
+          any(),
+          sourceBranch: any(named: 'sourceBranch'),
+          targetBranch: any(named: 'targetBranch'),
+        ),
+      );
+    });
   });
 }
