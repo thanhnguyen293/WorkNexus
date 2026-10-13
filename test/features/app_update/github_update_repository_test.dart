@@ -145,4 +145,32 @@ void main() {
     expect(result.failureOrNull, isA<StorageFailure>());
     expect(quit, isFalse);
   });
+
+  group('release assets', () {
+    const sums =
+        'aa11  WorkNexus-windows-x64.zip\n'
+        'bb22  worknexus-linux-x64.tar.gz\n';
+
+    test('are found whatever the case of their name', () {
+      final assets = {'worknexus-linux-x64.tar.gz': 'https://x/linux'};
+
+      expect(
+        GitHubUpdateRepository.assetUrl(assets, 'WorkNexus-linux-x64.tar.gz'),
+        'https://x/linux',
+      );
+      expect(GitHubUpdateRepository.assetUrl(assets, 'other.zip'), isNull);
+    });
+
+    test('have their checksum line matched whatever the case', () {
+      expect(
+        GitHubUpdateRepository.checksumFor('WorkNexus-linux-x64.tar.gz', sums),
+        'bb22',
+      );
+      expect(
+        GitHubUpdateRepository.checksumFor('workNexus-windows-x64.zip', sums),
+        'aa11',
+      );
+      expect(GitHubUpdateRepository.checksumFor('missing.zip', sums), isNull);
+    });
+  });
 }

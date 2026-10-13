@@ -40,7 +40,7 @@ jobs:
       build_number: ${{ steps.bump.outputs.build_number }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history needed to inspect previous tags
 
@@ -99,213 +99,57 @@ jobs:
           echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "build_number=$BUILD_NUM" >> "$GITHUB_OUTPUT"
 
-  # ───────────────────────────── macOS ─────────────────────────────
-  build-macos:
-    name: Build macOS (${{ needs.version.outputs.tag }})
+  # ───────────────────────────── Desktop ─────────────────────────────
+  build-desktop:
+    name: Build ${{ matrix.name }} (${{ needs.version.outputs.tag }})
     needs: version
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: macos, name: macOS, os: macos-latest, artifact: macos, file: WorkNexus-macos-universal.zip, installer: WorkNexus-macos-universal.dmg }
+          - { platform: windows, name: Windows, os: windows-latest, artifact: windows, file: WorkNexus-windows-x64.zip, installer: WorkNexus-windows-x64-setup.exe }
+          # Pinned to the oldest supported distro: binaries only run on a glibc /
+          # libstdc++ at least as new as the build host's, so ubuntu-latest
+          # (24.04, glibc 2.39) would break the app on Ubuntu 22.04.
+          - { platform: linux, name: Linux, os: ubuntu-22.04, artifact: linux, file: WorkNexus-linux-x64.tar.gz, installer: WorkNexus-linux-x64.deb }
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Enable macOS desktop
-        run: flutter config --enable-macos-desktop
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      # Codegen (freezed / drift / injectable / retrofit / json) — required
-      # because *.g.dart / *.freezed.dart / *.config.dart are gitignored.
-      - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # Stamp version in pubspec.yaml inside runner
-      - name: Stamp version
-        shell: bash
-        run: |
-          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
-          rm -f pubspec.yaml.bak
-
-      # Owner/repo come from the repository this workflow runs in, so upstream
-      # and forks each build an app that updates from their own releases.
-      - name: Point the build at this repository
-        shell: bash
-        run: |
-          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
-          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
-          rm -f .env.bak
-
-      - name: Build macOS (release, ad-hoc signed)
-        run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
-
-      # Zip the .app while preserving the bundle (use ditto, not plain zip).
-      - name: Package .app
-        run: |
-          APP="build/macos/Build/Products/Release/WorkNexus.app"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" work_nexus-macos.zip
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: worknexus-macos
-          path: work_nexus-macos.zip
-          if-no-files-found: error
-
-  # ──────────────────────────── Windows ────────────────────────────
-  build-windows:
-    name: Build Windows (${{ needs.version.outputs.tag }})
-    needs: version
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Enable Windows desktop
-        run: flutter config --enable-windows-desktop
-
-      # The repo has no windows/ folder yet -> generate the runner in place.
-      # --project-name work_nexus because the "WorkNexus" folder (uppercase) is
-      # not a valid Dart package name. This only adds windows/, never touches lib/.
-      - name: Generate Windows runner
-        run: flutter create --platforms=windows --project-name work_nexus .
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # Stamp version in pubspec.yaml inside runner
-      - name: Stamp version
-        shell: bash
-        run: |
-          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
-          rm -f pubspec.yaml.bak
-
-      # Owner/repo come from the repository this workflow runs in, so upstream
-      # and forks each build an app that updates from their own releases.
-      - name: Point the build at this repository
-        shell: bash
-        run: |
-          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
-          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
-          rm -f .env.bak
-
-      - name: Build Windows (release)
-        run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
-
-      # Zip the whole Release folder (exe + DLLs + data/ must stay together).
-      - name: Package build output
-        shell: pwsh
-        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath worknexus-windows.zip
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: worknexus-windows
-          path: worknexus-windows.zip
-          if-no-files-found: error
-
-  # ───────────────────────────── Linux ─────────────────────────────
-  build-linux:
-    name: Build Linux (${{ needs.version.outputs.tag }})
-    needs: version
-    # Pinned to the oldest supported distro: binaries only run on a glibc /
-    # libstdc++ at least as new as the build host's, so building on
-    # ubuntu-latest (24.04, glibc 2.39) breaks the app on Ubuntu 22.04.
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Flutter's GTK toolchain, plus the native libraries the plugins link:
       # libsecret (flutter_secure_storage), ayatana-appindicator (tray_manager).
-      # patchelf repoints the bundled tray libraries at the bundle (see below).
       - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
-            libsecret-1-dev libayatana-appindicator3-dev patchelf
+            libsecret-1-dev libayatana-appindicator3-dev
 
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
+      - name: Prepare Flutter
+        uses: ./.github/actions/prepare-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
+          version: ${{ needs.version.outputs.version }}
+          build-number: ${{ needs.version.outputs.build_number }}
+          desktop: ${{ matrix.platform }}
 
-      - name: Enable Linux desktop
-        run: flutter config --enable-linux-desktop
+      # --project-name work_nexus because the "WorkNexus" folder (uppercase) is
+      # not a valid Dart package name. This only touches windows/, never lib/.
+      - name: Generate Windows runner
+        if: matrix.platform == 'windows'
+        run: flutter create --platforms=windows --project-name work_nexus .
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # Stamp version in pubspec.yaml inside runner
-      - name: Stamp version
+      - name: Build ${{ matrix.name }} (release)
         shell: bash
-        run: |
-          sed -i.bak -e "s|^version:.*|version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build_number }}|" pubspec.yaml
-          rm -f pubspec.yaml.bak
-
-      # Owner/repo come from the repository this workflow runs in, so upstream
-      # and forks each build an app that updates from their own releases.
-      - name: Point the build at this repository
-        shell: bash
-        run: |
-          sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
-          sed -i.bak -e "s|^GITHUB_REPO=.*|GITHUB_REPO=${{ github.event.repository.name }}|" .env
-          rm -f .env.bak
-
-      - name: Build Linux (release)
-        run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
-
-      # tray_manager links libayatana-appindicator3, which distros such as Arch
-      # don't install by default, so the app died in the loader before Dart
-      # ran. Ship it and its ayatana/dbusmenu leaf libraries in bundle/lib,
-      # the way linuxdeploy/auditwheel do. Each one needs its own $ORIGIN
-      # RUNPATH: the executable's $ORIGIN/lib only covers its direct
-      # dependencies, not a plugin's. GTK/glib/glibc always come from the system.
-      - name: Bundle tray indicator libraries
-        shell: bash
-        run: |
-          # Absolute, so the bundle check below matches ldd's expanded $ORIGIN.
-          lib=$(realpath build/linux/x64/release/bundle/lib)
-          plugin=$lib/libtray_manager_plugin.so
-          deps=$(ldd "$plugin" | awk '$1 ~ /ayatana|dbusmenu/ && $3 ~ /^\// {print $3}')
-          [ -n "$deps" ] || { echo "no ayatana/dbusmenu libraries found for $plugin"; exit 1; }
-          for src in $deps; do
-            cp -L "$src" "$lib/"
-            patchelf --set-rpath '$ORIGIN' "$lib/$(basename "$src")"
-          done
-          patchelf --set-rpath '$ORIGIN' "$plugin"
-          # Every tray library must now resolve inside the bundle, not /usr.
-          ldd "$plugin" | grep -E 'ayatana|dbusmenu'
-          if ldd "$plugin" | grep -E 'ayatana|dbusmenu' | grep -v "=> $lib/"; then
-            echo "tray libraries above still resolve outside the bundle"; exit 1
-          fi
+        run: flutter build ${{ matrix.platform }} --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
 
       # Fails the release if any bundled binary needs a newer glibc (> 2.35) or
       # libstdc++ (> GLIBCXX_3.4.30) than Ubuntu 22.04 ships.
       - name: Check Ubuntu 22.04 compatibility
-        shell: bash
+        if: matrix.platform == 'linux'
         run: |
           status=0
           for f in build/linux/x64/release/bundle/WorkNexus build/linux/x64/release/bundle/lib/*.so*; do
@@ -316,43 +160,88 @@ jobs:
           done
           exit $status
 
-      # Tarball (not zip) keeps the executable bit on the binary; the bundle
-      # (binary + lib/ + data/) must stay together.
-      - name: Package bundle
-        run: tar -czf worknexus-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      # ditto (not zip) preserves the .app bundle.
+      - name: Package (macOS)
+        if: matrix.platform == 'macos'
+        run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/WorkNexus.app ${{ matrix.file }}
 
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+      # The whole Release folder (exe + DLLs + data/) must stay together.
+      - name: Package (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath ${{ matrix.file }}
+
+      # Tarball (not zip) keeps the executable bit on the binary.
+      - name: Package (Linux)
+        if: matrix.platform == 'linux'
+        run: tar -czf ${{ matrix.file }} -C build/linux/x64/release/bundle .
+
+      # Installers sit beside the archives above: the in-app updater keeps
+      # downloading the archive, these are for a first install.
+      - name: Build installer (macOS .dmg)
+        if: matrix.platform == 'macos'
+        run: bash packaging/macos/build_dmg.sh build/macos/Build/Products/Release/WorkNexus.app ${{ matrix.installer }}
+
+      # Inno Setup ships on the windows-latest image.
+      - name: Build installer (Windows setup.exe)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe' }
+          & $iscc /DAppVersion=${{ needs.version.outputs.version }} "/DSourceDir=$PWD/build/windows/x64/runner/Release" "/DOutputDir=$PWD" "/DOutputName=$([IO.Path]::GetFileNameWithoutExtension('${{ matrix.installer }}'))" packaging/windows/installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build installer (Linux .deb)
+        if: matrix.platform == 'linux'
+        run: bash packaging/linux/build_deb.sh ${{ needs.version.outputs.version }} build/linux/x64/release/bundle ${{ matrix.installer }}
+
+      - name: Upload ${{ matrix.name }} artifact
+        uses: actions/upload-artifact@v7
         with:
-          name: worknexus-linux
-          path: worknexus-linux-x64.tar.gz
+          name: ${{ matrix.artifact }}
+          path: |
+            ${{ matrix.file }}
+            ${{ matrix.installer }}
           if-no-files-found: error
 
   # ───────────────────── Publish GitHub Release ─────────────────────
   release:
     name: Publish Release ${{ needs.version.outputs.tag }}
-    needs: [version, build-macos, build-windows, build-linux]
+    needs: [version, build-desktop]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
 
+      # Builds from before the WorkNexus-<os>-<arch> naming still look for these
+      # names; keep publishing them until those builds have updated. Asset names
+      # are case-insensitive on GitHub, so the Linux archive cannot carry both
+      # spellings: it goes out under the old one, which the new updater also
+      # matches (it compares names case-insensitively).
+      - name: Add legacy archive names
+        working-directory: dist
+        run: |
+          cp WorkNexus-windows-x64.zip worknexus-windows.zip
+          cp WorkNexus-macos-universal.zip work_nexus-macos.zip
+          mv WorkNexus-linux-x64.tar.gz worknexus-linux-x64.tar.gz
+
       # The in-app updater refuses a download whose hash is not listed here.
       - name: Write checksums
         working-directory: dist
-        run: sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+        run: sha256sum *.zip *.tar.gz *.dmg *.exe *.deb > SHA256SUMS.txt
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ needs.version.outputs.tag }}" \
-            dist/*.zip dist/*.tar.gz dist/SHA256SUMS.txt \
+            dist/*.zip dist/*.tar.gz dist/*.dmg dist/*.exe dist/*.deb dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "${{ needs.version.outputs.tag }}" \
