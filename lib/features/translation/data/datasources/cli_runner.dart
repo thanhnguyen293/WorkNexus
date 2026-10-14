@@ -85,4 +85,47 @@ class CliRunner {
       runInShell: needsShell,
     );
   }
+
+  /// Stops [process] and everything it started. `Process.kill` ends only the
+  /// process itself: the `cmd.exe` that [start] runs a `.cmd` shim in on
+  /// Windows, or the shell script around a binary elsewhere, while the real
+  /// CLI behind it carries on — calling its model and using quota — with no
+  /// one waiting for the answer.
+  Future<void> killTree(Process process) async {
+    try {
+      if (Platform.isWindows) {
+        final res = await Process.run('taskkill', [
+          '/PID',
+          '${process.pid}',
+          '/T',
+          '/F',
+        ]);
+        if (res.exitCode == 0) return;
+      } else {
+        // Children are listed before the parent goes: once it is gone they
+        // belong to init and can no longer be found through it.
+        final descendants = await _descendants(process.pid);
+        for (final pid in descendants.reversed) {
+          Process.killPid(pid);
+        }
+      }
+    } on Exception catch (_) {
+      // Best effort: the process itself is still stopped below.
+    }
+    process.kill();
+  }
+
+  /// The pids below [pid], each parent before its children.
+  Future<List<int>> _descendants(int pid) async {
+    final res = await Process.run('pgrep', ['-P', '$pid']);
+    final found = <int>[];
+    for (final line in res.stdout.toString().split('\n')) {
+      final child = int.tryParse(line.trim());
+      if (child == null) continue;
+      found
+        ..add(child)
+        ..addAll(await _descendants(child));
+    }
+    return found;
+  }
 }
