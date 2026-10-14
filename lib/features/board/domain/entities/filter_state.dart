@@ -27,6 +27,12 @@ abstract class FilterState with _$FilterState {
     @Default(<String>{}) Set<String> reviewers,
     @Default(<String>{}) Set<String> bugTypes,
     @Default(<String>{}) Set<String> resolutions,
+    // ZenTao boards: the board column (status) a ticket sits in, who resolved
+    // or opened a bug (names), and whether it was confirmed (`'1'` / `'0'`).
+    @Default(<String>{}) Set<String> zentaoStatuses,
+    @Default(<String>{}) Set<String> resolvers,
+    @Default(<String>{}) Set<String> reporters,
+    @Default(<String>{}) Set<String> confirmations,
     @Default('') String search,
   }) = _FilterState;
 
@@ -41,6 +47,10 @@ abstract class FilterState with _$FilterState {
       reviewers.isNotEmpty ||
       bugTypes.isNotEmpty ||
       resolutions.isNotEmpty ||
+      zentaoStatuses.isNotEmpty ||
+      resolvers.isNotEmpty ||
+      reporters.isNotEmpty ||
+      confirmations.isNotEmpty ||
       search.trim().isNotEmpty;
 
   /// Whether this filter can hide any of a board's tickets: a workspace or a
@@ -60,5 +70,9 @@ abstract class FilterState with _$FilterState {
       assignees.length +
       reviewers.length +
       bugTypes.length +
-      resolutions.length;
+      resolutions.length +
+      zentaoStatuses.length +
+      resolvers.length +
+      reporters.length +
+      confirmations.length;
 }

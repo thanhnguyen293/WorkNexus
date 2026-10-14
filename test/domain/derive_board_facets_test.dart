@@ -13,6 +13,11 @@ Ticket _bug({
   Priority priority = Priority.medium,
   String? bugType,
   String? resolution,
+  String providerStatus = 'active',
+  UnifiedStatus status = UnifiedStatus.todo,
+  String? resolvedBy,
+  String? openedBy,
+  int? confirmed,
 }) {
   return Ticket(
     id: id,
@@ -24,16 +29,25 @@ Ticket _bug({
     title: 't',
     body: '',
     priority: priority,
-    status: UnifiedStatus.todo,
-    providerStatus: 'active',
+    status: status,
+    providerStatus: providerStatus,
     sourceHash: 'h',
     assignee: assignee,
     severity: severity,
-    providerEntity: (bugType == null && resolution == null)
+    labels: [if (resolution != null) 'resolution:$resolution'],
+    providerEntity:
+        (bugType == null &&
+            resolution == null &&
+            resolvedBy == null &&
+            openedBy == null &&
+            confirmed == null)
         ? null
         : TicketProviderEntity.zentaoBug(
             bugType: bugType,
             resolution: resolution,
+            resolvedBy: resolvedBy,
+            openedBy: openedBy,
+            confirmed: confirmed,
           ),
   );
 }
@@ -206,6 +220,57 @@ void main() {
     ]);
     expect(groupOf(f, BoardFacetKind.assignee).options.first.value, 'Thanh');
     expect(groupOf(f, BoardFacetKind.reviewer).options.first.value, 'Terry');
+  });
+
+  test('bug scope adds status, resolver, reporter and confirmation', () {
+    final f = derive(
+      BoardFacetsInput(
+        scope: BoardFacetScope.bug,
+        tickets: [
+          _bug(id: '1', openedBy: 'Ryan', confirmed: 1),
+          _bug(
+            id: '2',
+            providerStatus: 'resolved',
+            resolution: 'fixed',
+            resolvedBy: 'Thanh',
+            openedBy: 'Cat',
+            confirmed: 1,
+          ),
+          _bug(
+            id: '3',
+            providerStatus: 'closed',
+            resolvedBy: 'Luci',
+            openedBy: 'Ryan',
+            confirmed: 0,
+          ),
+        ],
+      ),
+    );
+    expect(
+      f.groups.map((g) => g.kind),
+      containsAllInOrder([
+        BoardFacetKind.status,
+        BoardFacetKind.resolvedBy,
+        BoardFacetKind.openedBy,
+        BoardFacetKind.confirmed,
+      ]),
+    );
+    // Statuses follow the board's column order, not their counts.
+    expect(groupOf(f, BoardFacetKind.status).options.map((o) => o.value), [
+      'confirmedToFix',
+      'resolvedVerify',
+      'closed',
+    ]);
+    // An unresolved bug has no resolver to count.
+    expect(
+      groupOf(f, BoardFacetKind.resolvedBy).options.map((o) => o.value),
+      unorderedEquals(['Thanh', 'Luci']),
+    );
+    expect(groupOf(f, BoardFacetKind.openedBy).options.first.value, 'Ryan');
+    expect(
+      groupOf(f, BoardFacetKind.confirmed).options.map((o) => o.value),
+      unorderedEquals(['1', '0']),
+    );
   });
 
   test('none scope yields no groups', () {

@@ -53,6 +53,15 @@ class FilterController extends Notifier<FilterState> {
   void toggleResolution(String r) =>
       state = state.copyWith(resolutions: _toggle(state.resolutions, r));
 
+  void toggleZenTaoStatus(String s) =>
+      state = state.copyWith(zentaoStatuses: _toggle(state.zentaoStatuses, s));
+  void toggleResolver(String r) =>
+      state = state.copyWith(resolvers: _toggle(state.resolvers, r));
+  void toggleReporter(String r) =>
+      state = state.copyWith(reporters: _toggle(state.reporters, r));
+  void toggleConfirmation(String c) =>
+      state = state.copyWith(confirmations: _toggle(state.confirmations, c));
+
   void clearAll() => state = _cleared(state);
 
   /// Switches the board filter to the board identified by [key] (see
@@ -94,6 +103,10 @@ class FilterController extends Notifier<FilterState> {
     reviewers: {},
     bugTypes: {},
     resolutions: {},
+    zentaoStatuses: {},
+    resolvers: {},
+    reporters: {},
+    confirmations: {},
     search: '',
   );
 

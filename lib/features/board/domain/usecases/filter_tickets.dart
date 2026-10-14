@@ -4,6 +4,7 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/filter_state.dart';
 import '../value_objects/saved_view.dart';
+import 'zentao_status_of.dart';
 
 /// Everything needed to filter/group tickets, kept as plain data so the logic is
 /// pure and unit-testable with no Flutter/IO.
@@ -99,6 +100,28 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           return false;
         }
         if (f.resolutions.isNotEmpty && !f.resolutions.contains(resolution)) {
+          return false;
+        }
+      }
+      if (f.zentaoStatuses.isNotEmpty &&
+          !f.zentaoStatuses.contains(zentaoStatusOf(t))) {
+        return false;
+      }
+      if (f.resolvers.isNotEmpty ||
+          f.reporters.isNotEmpty ||
+          f.confirmations.isNotEmpty) {
+        final entity = t.providerEntity;
+        if (entity is! ZenTaoBugEntity) return false;
+        if (f.resolvers.isNotEmpty &&
+            !f.resolvers.contains(entity.resolvedBy ?? '')) {
+          return false;
+        }
+        if (f.reporters.isNotEmpty &&
+            !f.reporters.contains(entity.openedBy ?? '')) {
+          return false;
+        }
+        if (f.confirmations.isNotEmpty &&
+            !f.confirmations.contains('${entity.confirmed ?? 0}')) {
           return false;
         }
       }
