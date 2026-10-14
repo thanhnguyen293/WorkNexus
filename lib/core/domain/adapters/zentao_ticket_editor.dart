@@ -28,6 +28,13 @@ abstract interface class ZenTaoTicketEditor {
     String executionId = '0',
   });
 
+  /// Product [productId]'s bug modules (id → path), without the form's other
+  /// lists — for naming a bug's module.
+  Future<Result<List<FormOption>>> bugModules(
+    String accountId,
+    String productId,
+  );
+
   /// Saves [draft] (a new bug when its id is null), with [form] as loaded;
   /// returns the bug's WorkNexus ticket id. [uid] ties in the images uploaded
   /// into the steps.

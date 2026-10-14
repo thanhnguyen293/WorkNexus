@@ -59,6 +59,10 @@ void main() {
       project: 'flutter/flutter',
       number: '12',
     ));
+    expect(
+      parse('https://github.acme.com/team/app/issues/7')?.kind,
+      LinkedItemKind.issue,
+    );
   });
 
   test('same: GitLab tells issues from MRs, GitHub shares numbers', () {
@@ -91,6 +95,9 @@ void main() {
     expect(parse('https://github.com/flutter/flutter/commits/main'), isNull);
     expect(parse('https://xddlabs.com/root/tbchat/-/milestones/9'), isNull);
     expect(parse('https://zentao.example/task-view-1.html'), isNull);
+    // Other forges' (and GitLab's old) issue paths keep their web preview.
+    expect(parse('https://bitbucket.org/acme/app/issues/12'), isNull);
+    expect(parse('https://xddlabs.com/root/tbchat/issues/3'), isNull);
     expect(parse('not a link'), isNull);
   });
 }

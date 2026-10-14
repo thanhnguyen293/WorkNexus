@@ -15,12 +15,12 @@ final bugModuleNamesProvider = FutureProvider.autoDispose
       final (accountId, productId) = key;
       final res = await ref
           .read(zenTaoTicketEditorProvider)
-          .bugOptions(accountId, productId: productId);
+          .bugModules(accountId, productId);
       switch (res) {
         case Ok(:final value):
           ref.keepAlive();
           return {
-            for (final module in value.modules)
+            for (final module in value)
               module.value: module.label.replaceFirst(RegExp('^/'), ''),
           };
         case Err(:final failure):

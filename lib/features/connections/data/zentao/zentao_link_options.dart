@@ -43,8 +43,8 @@ extension _LinkOptions on ZenTaoTicketForms {
   /// Execution [executionId]'s task names by id, subtasks included. The ajax
   /// list labels a finished task `id:finisher:name`, and a finisher outside
   /// the form's people cannot be told from a colon in the name, so the plain
-  /// names come from REST. Empty when REST cannot answer: labels then fall
-  /// back to what the ajax list says.
+  /// names come from the execution's task view. Empty when it cannot answer:
+  /// labels then fall back to what the ajax list says.
   Future<Map<String, String>> _taskNames(String executionId) async {
     final names = <String, String>{};
     void add(ZenTaoEntity task) {
@@ -55,18 +55,31 @@ extension _LinkOptions on ZenTaoTicketForms {
       task.children.forEach(add);
     }
 
-    try {
-      for (var page = 1; page <= 20; page++) {
-        final res = await _client.executionTasks(
+    Future<ZenTaoExecutionTasksResponse> page(int page) =>
+        _client.classicExecutionTasks(
           executionId,
-          page: page,
-          limit: kDefaultApiPageLimit,
+          browseType: 'all',
+          recPerPage: kDefaultApiPageLimit,
+          pageID: page,
         );
+
+    try {
+      final first = await page(1);
+      first.tasks.forEach(add);
+      // The first page says how many there are, so the rest load at once
+      // (the form waits on them), up to 20 pages.
+      const limit = kDefaultApiPageLimit;
+      final pages = ((first.total + limit - 1) ~/ limit).clamp(1, 20);
+      final rest = await Future.wait([
+        for (var p = 2; p <= pages; p++) page(p),
+      ]);
+      for (final res in rest) {
         res.tasks.forEach(add);
-        if (res.tasks.length < kDefaultApiPageLimit) break;
       }
     } on DioException {
       // Keep what was read; the rest fall back to the ajax labels.
+    } on FormatException {
+      // Not JSON (a sign-in page): likewise.
     }
     return names;
   }

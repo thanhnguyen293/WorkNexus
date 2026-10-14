@@ -28,6 +28,9 @@ class ChatWallpaperPreview extends Notifier<String?> {
 
   void show(String wallpaper) => state = wallpaper;
   void clear() => state = null;
+
+  /// Whether [wallpaper] is still the one being tried out.
+  bool shows(String wallpaper) => state == wallpaper;
 }
 
 /// The wallpaper on screen: the one being tried out, else the saved one.

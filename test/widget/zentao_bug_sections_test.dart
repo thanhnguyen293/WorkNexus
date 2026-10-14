@@ -43,8 +43,8 @@ void main() {
   setUp(() {
     editor = _MockEditor();
     when(
-      () => editor.bugOptions(any(), productId: any(named: 'productId')),
-    ).thenAnswer((_) async => const Ok(BugFormOptions()));
+      () => editor.bugModules(any(), any()),
+    ).thenAnswer((_) async => const Ok(<FormOption>[]));
   });
 
   Future<void> pump(
@@ -123,12 +123,9 @@ void main() {
     const bug = ZenTaoBugEntity(product: '4', module: '361');
 
     testWidgets('shows the module path once the names load', (tester) async {
-      when(() => editor.bugOptions('zt', productId: '4')).thenAnswer(
-        (_) async => const Ok(
-          BugFormOptions(
-            modules: [FormOption(value: '361', label: '/Livestream/Share')],
-          ),
-        ),
+      when(() => editor.bugModules('zt', '4')).thenAnswer(
+        (_) async =>
+            const Ok([FormOption(value: '361', label: '/Livestream/Share')]),
       );
       await pump(tester, bug);
       expect(find.text('Livestream/Share'), findsOneWidget);
@@ -139,7 +136,7 @@ void main() {
       tester,
     ) async {
       when(
-        () => editor.bugOptions('zt', productId: '4'),
+        () => editor.bugModules('zt', '4'),
       ).thenAnswer((_) async => const Err(NetworkFailure('offline')));
       await pump(tester, bug);
       expect(find.text('361'), findsOneWidget);

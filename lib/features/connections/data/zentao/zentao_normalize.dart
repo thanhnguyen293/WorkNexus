@@ -7,6 +7,7 @@ import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/util/content_hash.dart';
 import '../../../../core/util/html_entities.dart';
 import '../../../../core/util/zentao_labels.dart';
+import 'zentao_form_parsing.dart';
 import 'zentao_models.dart';
 
 /// ZenTao object kinds we import.
@@ -376,7 +377,7 @@ String? _executionId(Object? value) {
 
 /// A date-only field (`2026-10-13`); null for ZenTao's `0000-00-00` "none".
 String? _day(Object? value) =>
-    parseZenTaoDate(value) == null ? null : _text(value)?.substring(0, 10);
+    parseZenTaoDate(value) == null ? null : zentaoDate(value);
 
 String? _text(Object? value) {
   if (value == null) return null;

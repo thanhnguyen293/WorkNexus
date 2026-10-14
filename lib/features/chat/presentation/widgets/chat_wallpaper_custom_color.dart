@@ -55,17 +55,34 @@ class _ChatWallpaperCustomColorState
     super.initState();
     _settings = ref.read(appSettingsProvider.notifier);
     _preview = ref.read(chatWallpaperPreviewProvider.notifier);
+    // Another choice made meanwhile (a preset, the plain background, the
+    // pattern switch, an image) wins over a colour still waiting to be saved.
+    ref.listenManual(appSettingsProvider.select((s) => s.chatWallpaper), (
+      _,
+      saved,
+    ) {
+      if (_pending != null && saved != _pending) _drop();
+    });
   }
 
   @override
   void dispose() {
     _save?.cancel();
     final pending = _pending;
-    // Changing providers while the tree is torn down is not allowed; do it
-    // right after.
-    if (pending != null) Future(() => _commit(pending));
+    // Saved unless another choice cleared the preview (re-picking the colour
+    // already saved changes no setting). Changing providers while the tree is
+    // torn down is not allowed; do it right after.
+    if (pending != null && _preview.shows(pending)) {
+      Future(() => _commit(pending));
+    }
     _hex.dispose();
     super.dispose();
+  }
+
+  void _drop() {
+    _save?.cancel();
+    _pending = null;
+    _preview.clear();
   }
 
   void _commit(String wallpaper) {
