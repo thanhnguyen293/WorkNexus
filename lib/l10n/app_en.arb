@@ -678,6 +678,8 @@
   "fieldColor": "Colour",
   "addFiles": "Add files",
   "selectNone": "None",
+  "taskNeedsExecution": "Pick an execution first",
+  "searchExecutions": "Search executions…",
   "searchOptions": "Search…",
   "selectSome": "{count} selected",
   "@selectSome": {

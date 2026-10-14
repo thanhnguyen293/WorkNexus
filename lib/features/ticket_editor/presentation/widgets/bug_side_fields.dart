@@ -8,6 +8,7 @@ import '../../domain/usecases/validate_ticket_draft.dart';
 import '../../domain/value_objects/zentao_choices.dart';
 import '../providers/bug_editor_controller.dart';
 import '../providers/ticket_editor_state.dart';
+import 'bug_task_select.dart';
 import 'editor_date_input.dart';
 import 'editor_field.dart';
 import 'editor_inputs.dart';
@@ -199,11 +200,12 @@ class BugSideFields extends ConsumerWidget {
             ),
             EditorField(
               label: l.fieldTask,
-              child: OptionSelect(
-                options: options.tasks,
-                value: draft.task,
-                noneValue: '0',
-                onChanged: (v) => controller.edit((d) => d.copyWith(task: v)),
+              child: BugTaskSelect(
+                options: options,
+                execution: draft.execution,
+                task: draft.task,
+                onExecution: (v) => controller.changeScope(execution: v),
+                onTask: (v) => controller.edit((d) => d.copyWith(task: v)),
               ),
             ),
             EditorField(
