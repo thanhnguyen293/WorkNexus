@@ -15,6 +15,7 @@ import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/badges.dart';
 import 'package:work_nexus/features/chat/presentation/providers/merge_request_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/merge_request_card.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -182,6 +183,13 @@ void main() {
     );
     expect(find.textContaining('kan', findRichText: true), findsOneWidget);
     expect(find.textContaining('files', findRichText: true), findsNothing);
+    // The provider's mark leads the card, as on a ZenTao ticket card.
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is ProviderBadge && w.provider == ProviderType.gitlab,
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byType(MergeRequestCard));
     expect(container.read(openTicketIdProvider), 'gl:issue:7');
