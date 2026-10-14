@@ -7,9 +7,33 @@
 #include <optional>
 #include <vector>
 
+#include "activation.h"
 #include "flutter/generated_plugin_registrant.h"
 
 namespace {
+
+// Shows and focuses |window|, as a second launch asks (see activation.h).
+// ShowWindow, called from this process, tells the window it is shown
+// (WM_SHOWWINDOW, which Flutter follows to leave its hidden state — SetWindowPos
+// does not send it), restores a minimized window to the state it had, and
+// leaves a maximized one maximized.
+void ActivateWindow(HWND window) {
+  if (IsIconic(window)) {
+    ShowWindow(window, SW_RESTORE);
+  } else if (!IsWindowVisible(window)) {
+    ShowWindow(window, SW_SHOW);
+  }
+  if (!SetForegroundWindow(window)) {
+    // Windows may still keep a background process from the foreground; flash
+    // the taskbar button so the user is told.
+    FLASHWINFO flash{};
+    flash.cbSize = sizeof(flash);
+    flash.hwnd = window;
+    flash.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+    flash.uCount = 3;
+    FlashWindowEx(&flash);
+  }
+}
 
 // An icon from |size|×|size| straight RGBA pixels, or null when they do not
 // add up to that size.
@@ -169,6 +193,14 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       RegisterWindowMessage(L"TaskbarButtonCreated");
   if (message == taskbar_button_created && badge_icon_) {
     ApplyBadge();
+  }
+
+  // A second launch asks this instance to show itself.
+  static const UINT activate_window =
+      RegisterWindowMessage(kActivateMessageName);
+  if (message == activate_window) {
+    ActivateWindow(hwnd);
+    return 0;
   }
 
   // Give Flutter, including plugins, an opportunity to handle window messages.
