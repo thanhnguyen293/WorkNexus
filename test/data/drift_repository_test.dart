@@ -240,6 +240,7 @@ void main() {
       locale: Locale('vi'),
       fontFamily: 'Georgia',
       boardLayout: BoardLayout.table,
+      tableColumnWidths: {'zentao-bug.status': 200},
     );
     await db.saveSettings(appSettingsToCompanion(chosen));
     // Saving again updates the single row rather than inserting a second.
@@ -254,6 +255,7 @@ void main() {
     expect(reloaded.locale.languageCode, 'vi');
     expect(reloaded.fontFamily, 'Georgia');
     expect(reloaded.boardLayout, BoardLayout.table);
+    expect(reloaded.tableColumnWidths, {'zentao-bug.status': 200.0});
   });
 
   test('activity attachments round-trip through the DB', () async {

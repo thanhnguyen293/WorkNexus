@@ -12,6 +12,7 @@ import '../board_providers.dart';
 import '../zentao_table_providers.dart';
 import 'ticket_table.dart';
 import 'ticket_table_cells.dart';
+import 'ticket_table_column.dart';
 import 'zentao_bug_column_footer.dart';
 import 'zentao_bug_column_parts.dart';
 
@@ -35,6 +36,7 @@ class ZenTaoBugTableView extends ConsumerWidget {
     final table = ref.watch(zentaoBugTableProvider);
     final pending = table.pending;
     return TicketTable(
+      id: 'zentao-bug',
       rows: table.rows,
       sort: ref.watch(zentaoBugTableSortProvider),
       onSort: ref.read(zentaoBugTableSortProvider.notifier).sortBy,
@@ -48,47 +50,55 @@ class ZenTaoBugTableView extends ConsumerWidget {
             ),
       columns: [
         TicketTableColumn(
+          id: 'id',
           label: l.tableColumnId,
           sortField: TicketSortField.id,
           width: _wId,
           cell: TableIdCell.new,
         ),
         TicketTableColumn(
+          id: 'title',
           label: l.tableColumnTitle,
           sortField: TicketSortField.title,
           cell: TableTitleCell.new,
         ),
         TicketTableColumn(
+          id: 'severity',
           label: l.severity,
           sortField: TicketSortField.severity,
           width: _wSeverity,
           cell: TableSeverityCell.new,
         ),
         TicketTableColumn(
+          id: 'priority',
           label: l.priority,
           sortField: TicketSortField.priority,
           width: _wPriority,
           cell: TablePriorityCell.new,
         ),
         TicketTableColumn(
+          id: 'status',
           label: l.status,
           sortField: TicketSortField.status,
           width: _wStatus,
           cell: (t) => _StatusCell(t),
         ),
         TicketTableColumn(
+          id: 'assignee',
           label: l.assignedTo,
           sortField: TicketSortField.assignee,
           width: _wAssignee,
           cell: TableAssigneeCell.new,
         ),
         TicketTableColumn(
+          id: 'resolution',
           label: l.resolution,
           sortField: TicketSortField.resolution,
           width: _wResolution,
           cell: (t) => TableTextCell(_resolution(t)),
         ),
         TicketTableColumn(
+          id: 'updated',
           label: l.updated,
           sortField: TicketSortField.updated,
           width: _wUpdated,

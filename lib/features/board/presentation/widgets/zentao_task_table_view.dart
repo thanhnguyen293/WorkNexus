@@ -11,6 +11,7 @@ import '../board_providers.dart';
 import '../zentao_table_providers.dart';
 import 'ticket_table.dart';
 import 'ticket_table_cells.dart';
+import 'ticket_table_column.dart';
 import 'zentao_task_column_parts.dart';
 
 // Column widths; the title takes what is left.
@@ -32,6 +33,7 @@ class ZenTaoTaskTableView extends ConsumerWidget {
     final table = ref.watch(zentaoTaskTableProvider);
     final pending = table.pending;
     return TicketTable(
+      id: 'zentao-task',
       rows: table.rows,
       sort: ref.watch(zentaoTaskTableSortProvider),
       onSort: ref.read(zentaoTaskTableSortProvider.notifier).sortBy,
@@ -45,35 +47,41 @@ class ZenTaoTaskTableView extends ConsumerWidget {
             ),
       columns: [
         TicketTableColumn(
+          id: 'id',
           label: l.tableColumnId,
           sortField: TicketSortField.id,
           width: _wId,
           cell: TableIdCell.new,
         ),
         TicketTableColumn(
+          id: 'title',
           label: l.tableColumnTitle,
           sortField: TicketSortField.title,
           cell: TableTitleCell.new,
         ),
         TicketTableColumn(
+          id: 'priority',
           label: l.priority,
           sortField: TicketSortField.priority,
           width: _wPriority,
           cell: TablePriorityCell.new,
         ),
         TicketTableColumn(
+          id: 'status',
           label: l.status,
           sortField: TicketSortField.status,
           width: _wStatus,
           cell: (t) => _StatusCell(t),
         ),
         TicketTableColumn(
+          id: 'assignee',
           label: l.assignedTo,
           sortField: TicketSortField.assignee,
           width: _wAssignee,
           cell: TableAssigneeCell.new,
         ),
         TicketTableColumn(
+          id: 'estimate',
           label: l.estimate,
           sortField: TicketSortField.estimate,
           width: _wHours,
@@ -81,6 +89,7 @@ class ZenTaoTaskTableView extends ConsumerWidget {
           cell: (t) => _HoursCell(t, (task) => task.estimate),
         ),
         TicketTableColumn(
+          id: 'left',
           label: l.tableColumnLeft,
           sortField: TicketSortField.left,
           width: _wHours,
@@ -88,6 +97,7 @@ class ZenTaoTaskTableView extends ConsumerWidget {
           cell: (t) => _HoursCell(t, (task) => task.left),
         ),
         TicketTableColumn(
+          id: 'updated',
           label: l.updated,
           sortField: TicketSortField.updated,
           width: _wUpdated,

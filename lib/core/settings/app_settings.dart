@@ -75,6 +75,7 @@ class AppSettings {
     this.pinnedProjects = const <String>{},
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
+    this.tableColumnWidths = const <String, double>{},
     this.chatAppearance = ChatAppearance.worknexus,
     this.chatPrimaryBubbles = false,
     this.chatWallpaper = kChatWallpaperPattern,
@@ -131,6 +132,10 @@ class AppSettings {
   /// Width (logical px) of the left sidebar, adjustable by dragging its right
   /// edge. Persisted so the chosen width survives restarts.
   final double sidebarWidth;
+
+  /// Widths (logical px) the ticket tables' columns were dragged to, keyed
+  /// `"<table>.<column>"`; a column missing here keeps its default width.
+  final Map<String, double> tableColumnWidths;
 
   /// The user-chosen app primary/accent color (ARGB int), or `null` to use the
   /// active theme variant's built-in accent.
@@ -199,6 +204,7 @@ class AppSettings {
     Set<String>? pinnedProjects,
     List<PinnedExecution>? pinnedExecutions,
     double? sidebarWidth,
+    Map<String, double>? tableColumnWidths,
     ChatAppearance? chatAppearance,
     bool? chatPrimaryBubbles,
     String? chatWallpaper,
@@ -231,6 +237,7 @@ class AppSettings {
       pinnedProjects: pinnedProjects ?? this.pinnedProjects,
       pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
+      tableColumnWidths: tableColumnWidths ?? this.tableColumnWidths,
       chatAppearance: chatAppearance ?? this.chatAppearance,
       chatPrimaryBubbles: chatPrimaryBubbles ?? this.chatPrimaryBubbles,
       chatWallpaper: chatWallpaper ?? this.chatWallpaper,
@@ -353,6 +360,14 @@ class AppSettingsController extends Notifier<AppSettings> {
   /// range before calling.
   void setSidebarWidth(double width) =>
       _set(state.copyWith(sidebarWidth: width));
+
+  /// Sets a ticket table column's width under its `"<table>.<column>"` [key];
+  /// `null` restores the column's default width.
+  void setTableColumnWidth(String key, double? width) {
+    final next = Map<String, double>.of(state.tableColumnWidths);
+    width == null ? next.remove(key) : next[key] = width;
+    _set(state.copyWith(tableColumnWidths: next));
+  }
 
   /// Pins/unpins a ZenTao project by its `"accountId:productId"` [key].
   void togglePinnedProject(String key) {
