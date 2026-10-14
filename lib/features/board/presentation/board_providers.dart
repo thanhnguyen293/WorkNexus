@@ -18,6 +18,7 @@ import '../domain/usecases/build_zentao_bug_board.dart';
 import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
+import '../domain/usecases/is_assigned_to_me.dart';
 import '../domain/usecases/scope_paged_view_tickets.dart';
 import '../domain/usecases/scope_provider_tickets.dart';
 import '../domain/value_objects/github_item_kind.dart';
@@ -174,6 +175,12 @@ final zentaoBugTabProvider =
     NotifierProvider<ZenTaoBugTabController, ZenTaoBugBrowseType>(
       ZenTaoBugTabController.new,
     );
+
+/// Whether the bug board is on the Assigned-to-me tab, whose one server view
+/// feeds every column (see [ZenTaoBugStream.of]).
+final zentaoBugMineProvider = Provider<bool>(
+  (ref) => ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.assignedToMe,
+);
 
 class ZenTaoExecutionSelection {
   const ZenTaoExecutionSelection({
@@ -519,6 +526,21 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
       ),
     );
   } else if (product != null) {
+    final mine = ref.watch(zentaoBugMineProvider);
+    final streams = ref.watch(zentaoBugStreamsProvider);
+    final account = ref.watch(
+      lookupsProvider.select((l) => l.accounts[product.accountId]),
+    );
+    // Until Assigned to me's view loads, its cached bugs are those assigned
+    // to the user locally; once it loads, the server's list decides.
+    if (mine &&
+        account != null &&
+        !(streams[ZenTaoBugStream.assignedToMe]?.started ?? false)) {
+      tickets = [
+        for (final t in tickets)
+          if (const IsAssignedToMe()(t, account)) t,
+      ];
+    }
     tickets = const ScopePagedViewTickets<ZenTaoBugStream>()(
       PagedViewScopeQuery(
         tickets: const ScopeProviderTickets()(
@@ -529,8 +551,8 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
           membershipLabel: zentaoProductLabel(product.productId),
           slice: null,
         ),
-        views: ref.watch(zentaoBugStreamsProvider),
-        viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t)),
+        views: streams,
+        viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t), mine: mine),
       ),
     );
   }

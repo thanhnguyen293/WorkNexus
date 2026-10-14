@@ -12,12 +12,15 @@ import '../domain/value_objects/zentao_bug_stream.dart';
 import 'board_providers.dart';
 
 /// The views loaded as soon as a product's bug board opens. [ZenTaoBugStream.all]
-/// only feeds the Closed column, so it waits until that column is shown.
-const _openingStreams = [
-  ZenTaoBugStream.unconfirmed,
-  ZenTaoBugStream.unresolved,
-  ZenTaoBugStream.toClose,
-];
+/// only feeds the Closed column, so it waits until that column is shown; on
+/// the Assigned-to-me tab ([mine]) one view feeds every column.
+List<ZenTaoBugStream> _openingStreams({required bool mine}) => mine
+    ? const [ZenTaoBugStream.assignedToMe]
+    : const [
+        ZenTaoBugStream.unconfirmed,
+        ZenTaoBugStream.unresolved,
+        ZenTaoBugStream.toClose,
+      ];
 
 /// The selected product's bug views, each paged on its own as its columns
 /// scroll to the end (see [PagedViewsController]).
@@ -26,11 +29,13 @@ class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
   Map<ZenTaoBugStream, PagedViewState> build() {
     // A new order starts every view over from its first page.
     ref.watch(zentaoBugFetchSortProvider);
+    // So does moving to or from Assigned to me, which loads other views.
+    final mine = ref.watch(zentaoBugMineProvider);
     return open(
       views: ZenTaoBugStream.values,
       opening: ref.watch(selectedZenTaoProductProvider) == null
           ? const []
-          : _openingStreams,
+          : _openingStreams(mine: mine),
     );
   }
 
@@ -69,7 +74,10 @@ final zentaoBugStreamsProvider =
 final zentaoBugColumnStreamProvider = Provider.autoDispose
     .family<PagedViewState, ZenTaoBugColumn>(
       (ref, column) =>
-          ref.watch(zentaoBugStreamsProvider)[ZenTaoBugStream.of(column)] ??
+          ref.watch(zentaoBugStreamsProvider)[ZenTaoBugStream.of(
+            column,
+            mine: ref.watch(zentaoBugMineProvider),
+          )] ??
           const PagedViewState(),
     );
 
@@ -83,7 +91,10 @@ final zentaoBugSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
     return const AsyncData(<String>{});
   }
   final streams = ref.watch(zentaoBugStreamsProvider);
-  final opening = [for (final s in _openingStreams) ?streams[s]];
+  final opening = [
+    for (final s in _openingStreams(mine: ref.watch(zentaoBugMineProvider)))
+      ?streams[s],
+  ];
   if (opening.every((s) => s.failure != null)) {
     final failure = opening.first.failure;
     if (failure != null) return AsyncError(failure, StackTrace.current);
@@ -100,9 +111,15 @@ final zentaoBugSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
 /// failed one shows its Retry.
 final zentaoBugHasMoreProvider = Provider.autoDispose<bool>((ref) {
   final streams = ref.watch(zentaoBugStreamsProvider);
+  final mine = ref.watch(zentaoBugMineProvider);
   final closedShown =
       ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all;
-  return streams.entries.any(
-    (e) => (closedShown || e.key != ZenTaoBugStream.all) && e.value.hasMore,
-  );
+  // Only the views the columns on screen draw on: one not loaded yet counts
+  // as having more.
+  final shown = {
+    for (final column in ZenTaoBugColumn.values)
+      if (closedShown || column != ZenTaoBugColumn.closed)
+        ZenTaoBugStream.of(column, mine: mine),
+  };
+  return shown.any((view) => streams[view]?.hasMore ?? false);
 });

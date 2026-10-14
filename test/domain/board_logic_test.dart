@@ -476,6 +476,12 @@ void main() {
       expect(board.total, 0);
     });
 
+    test('on Assigned to me every column draws on its one view', () {
+      for (final c in ZenTaoBugColumn.values) {
+        expect(ZenTaoBugStream.of(c, mine: true).code, 'assigntome');
+      }
+    });
+
     test('each column draws on the server view that holds its bugs', () {
       expect(
         {for (final c in ZenTaoBugColumn.values) c: ZenTaoBugStream.of(c).code},
