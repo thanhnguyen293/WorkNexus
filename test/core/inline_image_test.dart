@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,11 @@ import 'package:work_nexus/l10n/app_localizations.dart';
 final _png = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 );
+
+/// `pasteboard` sends an image over its channel on macOS only: on Windows it
+/// writes a temp file and sends its path, and on Linux it does nothing. These
+/// tests read the channel, so they run where it is used.
+final _skipChannelCopy = !Platform.isMacOS;
 
 void main() {
   Future<void> pump(WidgetTester tester, {bool zoomable = true}) async {
@@ -69,26 +75,30 @@ void main() {
     expect(find.byType(ImageViewerDialog), findsNothing);
   });
 
-  testWidgets('a right-click copies the image and says so', (tester) async {
-    final calls = <MethodCall>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('pasteboard'),
-      (call) async {
-        calls.add(call);
-        return null;
-      },
-    );
-    await pump(tester);
+  testWidgets(
+    'a right-click copies the image and says so',
+    skip: _skipChannelCopy,
+    (tester) async {
+      final calls = <MethodCall>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('pasteboard'),
+        (call) async {
+          calls.add(call);
+          return null;
+        },
+      );
+      await pump(tester);
 
-    await tester.tap(find.byType(InlineImage), buttons: kSecondaryButton);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy image'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(InlineImage), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy image'));
+      await tester.pumpAndSettle();
 
-    expect(calls.single.method, 'writeImage');
-    expect(find.text('Copied'), findsOneWidget);
-    expect(find.byType(ImageViewerDialog), findsNothing);
-  });
+      expect(calls.single.method, 'writeImage');
+      expect(find.text('Copied'), findsOneWidget);
+      expect(find.byType(ImageViewerDialog), findsNothing);
+    },
+  );
 
   testWidgets('an image being edited has no right-click menu', (tester) async {
     await pump(tester, zoomable: false);

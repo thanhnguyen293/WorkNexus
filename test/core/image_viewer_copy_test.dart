@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,11 @@ import 'package:work_nexus/l10n/app_localizations.dart';
 final _png = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 );
+
+/// `pasteboard` sends an image over its channel on macOS only: on Windows it
+/// writes a temp file and sends its path, and on Linux it does nothing. These
+/// tests read the channel, so they run where it is used.
+final _skipChannelCopy = !Platform.isMacOS;
 
 void main() {
   late List<MethodCall> calls;
@@ -48,35 +54,39 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the copy button puts the image on the clipboard', (
-    tester,
-  ) async {
-    await pump(tester);
+  testWidgets(
+    'the copy button puts the image on the clipboard',
+    skip: _skipChannelCopy,
+    (tester) async {
+      await pump(tester);
 
-    await tester.tap(find.byIcon(LucideIcons.copy300));
-    await tester.pump();
+      await tester.tap(find.byIcon(LucideIcons.copy300));
+      await tester.pump();
 
-    expect(calls.single.method, 'writeImage');
-    expect(calls.single.arguments, _png);
-    // A check confirms the copy for a moment, then the button comes back.
-    expect(find.byIcon(LucideIcons.check300), findsOneWidget);
-    await tester.pump(const Duration(seconds: 2));
-    expect(find.byIcon(LucideIcons.copy300), findsOneWidget);
-  });
+      expect(calls.single.method, 'writeImage');
+      expect(calls.single.arguments, _png);
+      // A check confirms the copy for a moment, then the button comes back.
+      expect(find.byIcon(LucideIcons.check300), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.byIcon(LucideIcons.copy300), findsOneWidget);
+    },
+  );
 
-  testWidgets('a right-click on the image copies it from its menu', (
-    tester,
-  ) async {
-    await pump(tester);
+  testWidgets(
+    'a right-click on the image copies it from its menu',
+    skip: _skipChannelCopy,
+    (tester) async {
+      await pump(tester);
 
-    await tester.tap(find.byType(Image), buttons: kSecondaryButton);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy image'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(Image), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy image'));
+      await tester.pumpAndSettle();
 
-    expect(calls.single.method, 'writeImage');
-    // The bar confirms it, as for its own button.
-    expect(find.byIcon(LucideIcons.check300), findsOneWidget);
-    await tester.pump(const Duration(seconds: 2));
-  });
+      expect(calls.single.method, 'writeImage');
+      // The bar confirms it, as for its own button.
+      expect(find.byIcon(LucideIcons.check300), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+    },
+  );
 }
