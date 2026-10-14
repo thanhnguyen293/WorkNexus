@@ -56,6 +56,8 @@
   "project": "Dự án",
   "parentTask": "Task cha",
   "subtasks": "Task con",
+  "relatedBugs": "Bug liên quan",
+  "relatedBugsLoadFailed": "Không tải được bug liên quan từ ZenTao.",
   "insertImage": "Chèn ảnh",
   "imageUploadFailed": "Không tải ảnh lên được",
   "newBug": "Thêm bug",

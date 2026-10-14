@@ -34,6 +34,7 @@ import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 import '../../connections/data/zentao/zentao_adapter.dart';
 import '../../connections/data/zentao/zentao_client.dart';
+import '../../task_detail/domain/repositories/zentao_task_bugs.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
 import 'source_list_cache.dart';
@@ -60,7 +61,8 @@ class SyncService
         GitLabMrService,
         GitHubPrService,
         ZenTaoTicketService,
-        ZenTaoViewPages {
+        ZenTaoViewPages,
+        ZenTaoTaskBugs {
   SyncService(
     this._db,
     this._credentials, {
@@ -177,6 +179,33 @@ class SyncService
     );
     if (res case Ok(:final value)) await _upsert(account, value.tickets);
     return res;
+  }
+
+  /// Stores execution [executionId]'s bugs (local-first: the task detail reads
+  /// a task's related bugs from the DB).
+  @override
+  Future<Result<void>> syncExecutionBugs({
+    required String accountId,
+    required String executionId,
+  }) async {
+    final accountRow = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
+    if (accountRow == null) {
+      return const Err(AuthFailure('ZenTao account not found'));
+    }
+    final adapter = await _adapterFor(accountId);
+    if (adapter is! ZenTaoAdapter) {
+      return const Err(AuthFailure('No signed-in ZenTao account'));
+    }
+    final res = await adapter.listExecutionBugs(executionId);
+    switch (res) {
+      case Err(:final failure):
+        return Err(failure);
+      case Ok(:final value):
+        await _upsert(accountFromRow(accountRow), value);
+        return const Ok(null);
+    }
   }
 
   Future<Result<List<ProviderProject>>> listProjects(String accountId) async {
