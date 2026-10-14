@@ -58,6 +58,11 @@ class OpenCodeTranslationService implements TranslationService {
   /// In-flight CLI processes by ticket id, so [cancel] can kill one.
   final Map<String, Process> _running = <String, Process>{};
 
+  /// Processes that were killed (a timeout or [cancel]), which their run then
+  /// stops waiting on the pipes of. Tracked here, not inferred from
+  /// [_running]: a new run of the same key may have taken its entry by then.
+  final Set<Process> _killed = <Process>{};
+
   static const _templateVersion = 'oc-v2';
 
   @override
@@ -66,7 +71,10 @@ class OpenCodeTranslationService implements TranslationService {
 
   @override
   Future<void> cancel(String ticketId) async {
-    _running.remove(ticketId)?.kill();
+    final process = _running.remove(ticketId);
+    if (process == null) return;
+    _killed.add(process);
+    await _runner.killTree(process);
   }
 
   @override
@@ -129,8 +137,6 @@ class OpenCodeTranslationService implements TranslationService {
       );
     } catch (e) {
       return Err(AgentFailure('OpenCode translation failed: $e', cause: e));
-    } finally {
-      _running.remove(ticketId);
     }
   }
 
@@ -173,14 +179,13 @@ class OpenCodeTranslationService implements TranslationService {
       return Ok(TextTranslation(out, model: chosenModel));
     } catch (e) {
       return Err(AgentFailure('OpenCode translation failed: $e', cause: e));
-    } finally {
-      _running.remove(key);
     }
   }
 
   /// Spawns the CLI and collects its output under [timeout]. `Process.run` has
-  /// no deadline, so we drive the process ourselves and kill it when the timer
-  /// fires — otherwise a stalled CLI hangs the caller forever.
+  /// no deadline, so we drive the process ourselves and kill it — with whatever
+  /// it started — when the timer fires; otherwise a stalled CLI hangs the
+  /// caller forever.
   Future<_CliRun> _run({
     required String ticketId,
     required String path,
@@ -197,23 +202,34 @@ class OpenCodeTranslationService implements TranslationService {
     var timedOut = false;
     final deadline = Timer(timeout, () {
       timedOut = true;
-      process.kill(); // SIGTERM
+      _killed.add(process);
+      unawaited(_runner.killTree(process));
     });
-    final exitCode = await process.exitCode;
-    deadline.cancel();
-    // A killed CLI can leave a child of its own holding its output pipes (a
-    // shell shim's real binary: `sh -c 'sleep 30'` forks under dash, and
-    // killing the `sh` does not stop the `sleep`). The pipes then stay open as
-    // long as that child lives, so a killed run takes what has arrived and stops
-    // waiting. [cancel] drops the entry first, which is how it is told apart.
-    final killed = timedOut || !identical(_running[ticketId], process);
-    final grace = killed ? _killedOutputGrace : null;
-    return _CliRun(
-      exitCode: exitCode,
-      stdout: await stdout.text(within: grace),
-      stderr: await stderr.text(within: grace),
-      timedOut: timedOut,
-    );
+    try {
+      final exitCode = await process.exitCode;
+      deadline.cancel();
+      // Whatever it started is stopped with it, but a child that outlives it
+      // (or a platform that cannot find it) can still hold the output pipes
+      // open for as long as it lives. A killed run takes what has arrived and
+      // stops waiting, both pipes at once; a run that ended by itself waits for
+      // them to close.
+      final grace = _killed.contains(process) ? _killedOutputGrace : null;
+      final output = await Future.wait([
+        stdout.text(within: grace),
+        stderr.text(within: grace),
+      ]);
+      return _CliRun(
+        exitCode: exitCode,
+        stdout: output[0],
+        stderr: output[1],
+        timedOut: timedOut,
+      );
+    } finally {
+      deadline.cancel();
+      _killed.remove(process);
+      // A newer run of the same key may have taken the entry: leave it.
+      if (identical(_running[ticketId], process)) _running.remove(ticketId);
+    }
   }
 
   /// The CLI reports provider/auth problems on stderr; surface that verbatim so
