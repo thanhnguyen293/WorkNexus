@@ -28,11 +28,24 @@ Object? _json(Object? value) {
   }
 }
 
+/// The payload of a classic ajax reply: like [classicPayload], but a JSON list
+/// (20+'s picker items) passes through too. Null when the body is not JSON
+/// (18.x answers these with an HTML `<select>`).
+Object? classicData(Object? body) {
+  final data = _json(body);
+  if (data is Map && data['data'] != null && data['status'] != null) {
+    return _json(data['data']);
+  }
+  return data;
+}
+
 /// A ZenTao `{id: name}` map as options, in its order. PHP sends a map whose
 /// keys happen to be 0…n-1 as a JSON list, so lists are read by index. The
 /// "none" entries (`''`, `'0'`, a blank name) are left out: forms offer their
 /// own "none".
 List<FormOption> zentaoOptions(Object? raw) {
+  // 20+ may send a list as picker items rather than as a PHP list.
+  if (raw is List && raw.firstOrNull is Map) return zentaoPickerOptions(raw);
   final entries = switch (raw) {
     final Map<Object?, Object?> map => map.entries.map(
       (e) => (e.key.toString(), e.value),
@@ -55,7 +68,20 @@ List<FormOption> zentaoPickerOptions(Object? raw) => [
       if (item is Map)
         if ('${item['value'] ?? ''}' case final value
             when value.isNotEmpty && value != '0')
-          FormOption(value: value, label: _label(item['text']) ?? value),
+          FormOption(
+            value: value,
+            // Pickers name the item `text`. A story with a grade (20+'s
+            // `addGradeLabel`) sends `text` as `{html}` with a grade badge, and
+            // its plain title as `hint` / `keys`.
+            label: switch (_label(
+              item['text'] is Map
+                  ? item['hint'] ?? item['keys']
+                  : item['text'] ?? item['label'] ?? item['title'],
+            )) {
+              final label? when label.isNotEmpty => label,
+              _ => value,
+            },
+          ),
 ];
 
 String? _label(Object? value) => switch (value) {
@@ -63,6 +89,36 @@ String? _label(Object? value) => switch (value) {
   final Map<Object?, Object?> map => _label(map['name'] ?? map['title']),
   _ => decodeHtmlEntities(value.toString()).trim(),
 };
+
+/// A story / task label as ZenTao's pickers write it — `[C] 11983:Finisher:Name`
+/// (a subtask, its id, who finished it, its name) — as `[C] #11983 Name`.
+/// The finisher is dropped only when it is one of [people] (real names), since
+/// a name may itself hold a colon. A label without the id prefix is kept.
+String zentaoLinkLabel(String label, {Set<String> people = const {}}) {
+  final match = RegExp(r'^(\[[^\]]*\] )?(\d+):(.*)$').firstMatch(label);
+  if (match == null) return label;
+  var name = match.group(3) ?? '';
+  final colon = name.indexOf(':');
+  if (colon > 0 && people.contains(name.substring(0, colon))) {
+    name = name.substring(colon + 1);
+  }
+  return '${match.group(1) ?? ''}#${match.group(2)} ${name.trim()}';
+}
+
+/// Task [task] from ZenTao's ajax list labelled with its plain [name] (from
+/// REST) — `[C] #11983 mobile` — keeping the list's subtask mark. Without a
+/// name it falls back to [zentaoLinkLabel].
+String zentaoTaskLabel(
+  FormOption task,
+  String? name, {
+  Set<String> people = const {},
+}) {
+  if (name == null || name.isEmpty) {
+    return zentaoLinkLabel(task.label, people: people);
+  }
+  final mark = RegExp(r'^\[[^\]]*\] ').firstMatch(task.label)?.group(0) ?? '';
+  return '$mark#${task.value} $name';
+}
 
 /// A field ZenTao stores as comma-separated text (builds, OS, mailto…).
 List<String> zentaoCsv(Object? raw) => switch (raw) {
