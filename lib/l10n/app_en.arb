@@ -644,6 +644,22 @@
   "assignedTo": "Assigned to",
   "lastEdited": "Last edited",
   "classification": "Classification",
+  "taskEffort": "Effort",
+  "fieldProgress": "Progress",
+  "fieldFromBug": "From bug",
+  "fieldLogged": "Logged",
+  "fieldActualStart": "Actual start",
+  "fieldOpenedBy": "Opened by",
+  "fieldFinishedBy": "Finished by",
+  "fieldFinished": "Finished",
+  "hoursValue": "{hours} h",
+  "@hoursValue": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "lifecycle": "Lifecycle",
   "showEmptyFields": "Show {count} empty fields",
   "@showEmptyFields": {

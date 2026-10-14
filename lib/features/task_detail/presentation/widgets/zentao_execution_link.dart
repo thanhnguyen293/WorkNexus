@@ -7,10 +7,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'detail_field_link.dart';
 
-/// The execution a bug belongs to, as a link that opens that execution's task
+/// The execution a ticket belongs to, as a link that opens that execution's task
 /// board (closing the detail panel), the way the sidebar does.
-class BugExecutionLink extends ConsumerWidget {
-  const BugExecutionLink({super.key, required this.execution});
+class ZenTaoExecutionLink extends ConsumerWidget {
+  const ZenTaoExecutionLink({super.key, required this.execution});
 
   final ProviderExecution execution;
 

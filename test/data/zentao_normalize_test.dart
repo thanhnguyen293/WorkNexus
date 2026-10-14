@@ -307,6 +307,42 @@ void main() {
     });
   });
 
+  test('a task keeps what its view shows: kind, scope, source and dates', () {
+    final t = normalizeZenTao(
+      ZenTaoEntity.fromJson({
+        'id': 12897,
+        'name': 'Notification layer',
+        'status': 'doing',
+        'type': 'test',
+        'execution': 31,
+        'executionName': 'VN_Socialfi',
+        'story': 0,
+        'fromBug': 3218,
+        'estStarted': '0000-00-00',
+        'deadline': '2026-10-20',
+        'realStarted': '2026-10-13 17:48:55',
+        'openedBy': {'account': 'kan', 'realname': 'KanDang'},
+        'finishedBy': '',
+      }),
+      type: ZenTaoType.task,
+      accountId: 'ztB',
+      baseUrl: 'https://z',
+    );
+
+    final task = t.providerEntity as ZenTaoTaskEntity;
+    expect(task.taskType, 'test');
+    expect(task.execution, '31');
+    expect(task.executionName, 'VN_Socialfi');
+    // ZenTao's "none": no story, no planned start, nobody finished it yet.
+    expect(task.story, isNull);
+    expect(task.estStarted, isNull);
+    expect(task.finishedBy, isNull);
+    expect(task.fromBug, '3218');
+    expect(task.deadline, '2026-10-20');
+    expect(task.realStarted, DateTime(2026, 10, 13, 17, 48, 55));
+    expect(task.openedBy, 'KanDang');
+  });
+
   test('a subtask keeps its parent task', () {
     final t = normalizeZenTao(
       ZenTaoEntity.fromJson({

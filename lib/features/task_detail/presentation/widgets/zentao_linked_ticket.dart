@@ -8,11 +8,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../util/open_zentao_task.dart';
 import 'detail_field_link.dart';
 
-/// A story or task a bug is linked to, as an accent link in the classification
-/// table: tapping it opens that ticket in the detail panel — fetched from
-/// ZenTao first when it has not been synced.
-class BugLinkedTicket extends ConsumerStatefulWidget {
-  const BugLinkedTicket({
+/// A ZenTao story, task or bug a ticket links to, as an accent link in its
+/// sidebar table: tapping it opens that ticket in the detail panel — fetched
+/// from ZenTao first when it has not been synced.
+class ZenTaoLinkedTicket extends ConsumerStatefulWidget {
+  const ZenTaoLinkedTicket({
     super.key,
     required this.ticket,
     required this.type,
@@ -20,19 +20,19 @@ class BugLinkedTicket extends ConsumerStatefulWidget {
     required this.label,
   });
 
-  /// The bug.
+  /// The ticket the link is on.
   final Ticket ticket;
 
-  /// The ZenTao type of the linked ticket (`story`, `task`).
+  /// The ZenTao type of the linked ticket (`story`, `task`, `bug`).
   final String type;
   final String id;
   final String label;
 
   @override
-  ConsumerState<BugLinkedTicket> createState() => _BugLinkedTicketState();
+  ConsumerState<ZenTaoLinkedTicket> createState() => _ZenTaoLinkedTicketState();
 }
 
-class _BugLinkedTicketState extends ConsumerState<BugLinkedTicket> {
+class _ZenTaoLinkedTicketState extends ConsumerState<ZenTaoLinkedTicket> {
   bool _opening = false;
 
   Future<void> _open() async {

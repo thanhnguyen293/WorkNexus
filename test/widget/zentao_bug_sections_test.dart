@@ -17,7 +17,7 @@ import 'package:work_nexus/core/navigation/open_zentao_execution.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/task_detail/presentation/widgets/bug_detail_sections.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/bug_linked_ticket.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/zentao_linked_ticket.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 class _MockEditor extends Mock implements ZenTaoTicketEditor {}
@@ -154,7 +154,7 @@ void main() {
     );
     expect(
       find.descendant(
-        of: find.byType(BugLinkedTicket),
+        of: find.byType(ZenTaoLinkedTicket),
         matching: find.text('TaskName · #11548'),
       ),
       findsOneWidget,

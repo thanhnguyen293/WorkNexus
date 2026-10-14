@@ -376,6 +376,10 @@ class ZenTaoEntity {
     this.consumed,
     this.left,
     this.realStarted,
+    this.estStarted,
+    this.fromBug,
+    this.finishedBy,
+    this.finishedDate,
     this.taskName,
     this.planName,
     this.product,
@@ -453,6 +457,13 @@ class ZenTaoEntity {
 
   /// When work on a task really started (`0000-00-00 …` until it is).
   final Object? realStarted;
+
+  /// A task's planned start, its source bug (a task made from a bug), and who
+  /// finished it when.
+  final Object? estStarted;
+  final Object? fromBug;
+  final Object? finishedBy;
+  final Object? finishedDate;
   final Object? taskName;
   final Object? planName;
   final Object? product;

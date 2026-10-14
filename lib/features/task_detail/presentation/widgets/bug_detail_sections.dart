@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
@@ -15,22 +13,20 @@ import '../../../../core/util/priority_labels.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/util/zentao_labels.dart';
 import '../../../../core/widgets/badges.dart';
-import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'bug_execution_link.dart';
-import 'bug_linked_ticket.dart';
+import 'zentao_execution_link.dart';
+import 'zentao_linked_ticket.dart';
 import 'bug_module_name.dart';
 import 'detail_field_rows.dart';
-import 'detail_region_card.dart';
+import 'detail_fields_card.dart';
 import 'empty_fields_toggle.dart';
-import 'section_label.dart';
+import 'lifecycle_card.dart';
 import 'ticket_status_pill.dart';
 
 /// The ZenTao bug's typed metadata as two region cards: what the bug *is*
 /// (classification) and how it *moved* (lifecycle).
 /// Empty classification fields collapse behind a "Show N empty fields" toggle;
-/// the lifecycle dates are looked up now and then, so they start folded, and
 /// empty lifecycle rows are always hidden.
 class ZenTaoBugSections extends ConsumerStatefulWidget {
   const ZenTaoBugSections(this.bug, {super.key, required this.ticket});
@@ -46,7 +42,6 @@ class ZenTaoBugSections extends ConsumerStatefulWidget {
 
 class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
   bool _showEmpty = false;
-  bool _showLifecycle = false;
 
   @override
   Widget build(BuildContext context) {
@@ -119,109 +114,81 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
 
     // Two regions, like ZenTao's Basic Info and Bug Life: what the bug is,
     // then how it moved.
-    final inset = EdgeInsets.fromLTRB(
-      context.spacing.lg,
-      context.spacing.lg,
-      context.spacing.lg,
-      context.spacing.md,
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DetailRegionCard(
-          padding: inset,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionLabel(l.classification),
-              SizedBox(height: context.spacing.xs),
-              DetailFieldRows(
-                rows: filled,
-                labelWidth: 100,
-                alignEnd: true,
-                // Severity and priority as the same chips as the header, the
-                // way ZenTao marks them with an icon rather than words.
-                valueWidgets: {
-                  l.status: TicketStatusPill(ticket: widget.ticket),
-                  l.fieldSeverity: SeverityTag(bug.severity),
-                  l.priority: PriorityTag(
-                    widget.ticket.providerType,
-                    widget.ticket.priority,
-                  ),
-                  // A bug that keeps coming back is worth noticing.
-                  l.fieldReopened: Text(
-                    l.reopenedTimes(reopened),
-                    style: context.typography.secondary.copyWith(
-                      color: context.colors.warning,
-                    ),
-                  ),
-                  // The bug only knows its module's id; the name is looked up.
-                  if ((_linkId(bug.module), _linkId(bug.product)) case (
-                    final module?,
-                    final product?,
-                  ))
-                    l.fieldModule: BugModuleName(
-                      accountId: widget.ticket.accountId,
-                      productId: product,
-                      moduleId: module,
-                    ),
-                  if (_linkId(bug.execution) case final id?)
-                    l.fieldExecution: BugExecutionLink(
-                      execution: ProviderExecution(
-                        id: id,
-                        name: _nameOr(bug.executionName, id),
-                        projectId: _linkId(bug.project) ?? '0',
-                        accountId: widget.ticket.accountId,
-                      ),
-                    ),
-                  // Story and task open in the panel, like a parent task.
-                  if (_linkId(bug.story) case final id?)
-                    l.fieldStory: BugLinkedTicket(
-                      ticket: widget.ticket,
-                      type: 'story',
-                      id: id,
-                      label: _joined([bug.storyTitle, '#$id']),
-                    ),
-                  if (_linkId(bug.task) case final id?)
-                    l.task: BugLinkedTicket(
-                      ticket: widget.ticket,
-                      type: 'task',
-                      id: id,
-                      label: _joined([bug.taskName, '#$id']),
-                    ),
-                },
+        DetailFieldsCard(
+          title: l.classification,
+          rows: filled,
+          // Severity and priority as the same chips as the header, the way
+          // ZenTao marks them with an icon rather than words.
+          valueWidgets: {
+            l.status: TicketStatusPill(ticket: widget.ticket),
+            l.fieldSeverity: SeverityTag(bug.severity),
+            l.priority: PriorityTag(
+              widget.ticket.providerType,
+              widget.ticket.priority,
+            ),
+            // A bug that keeps coming back is worth noticing.
+            l.fieldReopened: Text(
+              l.reopenedTimes(reopened),
+              style: context.typography.secondary.copyWith(
+                color: context.colors.warning,
               ),
-              if (_showEmpty && empty.isNotEmpty)
-                DetailFieldRows(rows: empty, labelWidth: 100, alignEnd: true),
-              if (empty.isNotEmpty)
-                EmptyFieldsToggle(
-                  count: empty.length,
-                  expanded: _showEmpty,
-                  onTap: () => setState(() => _showEmpty = !_showEmpty),
+            ),
+            // The bug only knows its module's id; the name is looked up.
+            if ((_linkId(bug.module), _linkId(bug.product)) case (
+              final module?,
+              final product?,
+            ))
+              l.fieldModule: BugModuleName(
+                accountId: widget.ticket.accountId,
+                productId: product,
+                moduleId: module,
+              ),
+            if (_linkId(bug.execution) case final id?)
+              l.fieldExecution: ZenTaoExecutionLink(
+                execution: ProviderExecution(
+                  id: id,
+                  name: _nameOr(bug.executionName, id),
+                  projectId: _linkId(bug.project) ?? '0',
+                  accountId: widget.ticket.accountId,
                 ),
-            ],
-          ),
+              ),
+            // Story and task open in the panel, like a parent task.
+            if (_linkId(bug.story) case final id?)
+              l.fieldStory: ZenTaoLinkedTicket(
+                ticket: widget.ticket,
+                type: 'story',
+                id: id,
+                label: _joined([bug.storyTitle, '#$id']),
+              ),
+            if (_linkId(bug.task) case final id?)
+              l.task: ZenTaoLinkedTicket(
+                ticket: widget.ticket,
+                type: 'task',
+                id: id,
+                label: _joined([bug.taskName, '#$id']),
+              ),
+          },
+          children: [
+            if (_showEmpty && empty.isNotEmpty)
+              DetailFieldRows(
+                rows: empty,
+                labelWidth: kSidebarLabelWidth,
+                alignEnd: true,
+              ),
+            if (empty.isNotEmpty)
+              EmptyFieldsToggle(
+                count: empty.length,
+                expanded: _showEmpty,
+                onTap: () => setState(() => _showEmpty = !_showEmpty),
+              ),
+          ],
         ),
         if (lifecycle.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl),
-          DetailRegionCard(
-            padding: inset,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _LifecycleToggle(
-                  expanded: _showLifecycle,
-                  onTap: () => setState(() => _showLifecycle = !_showLifecycle),
-                ),
-                if (_showLifecycle)
-                  DetailFieldRows(
-                    rows: lifecycle,
-                    labelWidth: 100,
-                    alignEnd: true,
-                  ),
-              ],
-            ),
-          ),
+          LifecycleCard(rows: lifecycle),
         ],
       ],
     );
@@ -257,32 +224,4 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
       .map((v) => v.trim())
       .where((v) => v.isNotEmpty && v != '0')
       .join(' · ');
-}
-
-/// The "Lifecycle" heading as a fold toggle, a chevron showing which way it
-/// goes.
-class _LifecycleToggle extends StatelessWidget {
-  const _LifecycleToggle({required this.expanded, required this.onTap});
-
-  final bool expanded;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return HoverSurface(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      padding: EdgeInsets.symmetric(vertical: context.spacing.xs),
-      child: Row(
-        children: [
-          Expanded(child: SectionLabel(AppL10n.of(context).lifecycle)),
-          Icon(
-            expanded ? LucideIcons.chevronUp300 : LucideIcons.chevronDown300,
-            size: context.typography.secondary.fontSize,
-            color: context.colors.textTertiary,
-          ),
-        ],
-      ),
-    );
-  }
 }
