@@ -1,0 +1,63 @@
+name: Test
+
+# Runs the test suite on every pull request into main, and on pushes to main so
+# a broken main shows up. build.yml only publishes releases; nothing else checks
+# a change before it is merged.
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  workflow_dispatch:
+
+# A new push to a pull request supersedes the run still going for it.
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Pin the repo's exact toolchain (Flutter 3.44.8), as build.yml does.
+  FLUTTER_VERSION: "3.44.8"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # sqlite3's build hook compiles its native library for the tests.
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config
+
+      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # Also generates the localizations (`flutter: generate: true`).
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Codegen (freezed / drift / injectable / retrofit / json): the
+      # *.g.dart / *.freezed.dart / *.config.dart files are gitignored.
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests
+        run: flutter test --reporter expanded
