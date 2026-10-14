@@ -489,6 +489,24 @@ void main() {
       expect(s.userId, 31);
       expect(s.typing, isTrue);
     });
+
+    test('a push whose typing flag is a string still comes out', () async {
+      await repo.connect(_acc);
+      await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+      final signals = repo.watchTyping(_acc).take(2).toList();
+
+      for (final flag in ['true', 'false']) {
+        server.current.push({
+          'module': 'im',
+          'method': 'chattyping',
+          'result': 'success',
+          'data': {'cgid': '31&40', 'typing': flag, 'user': 31},
+        });
+      }
+
+      final got = await signals.timeout(const Duration(seconds: 3));
+      expect([for (final s in got) s.typing], [true, false]);
+    });
   });
 
   test('setting my presence sends userupdate; pushes update others', () async {

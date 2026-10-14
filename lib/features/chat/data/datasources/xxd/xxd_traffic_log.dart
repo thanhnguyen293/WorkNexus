@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../../../../../core/debug/app_talker.dart';
@@ -50,7 +52,15 @@ class XxdTrafficLog {
   void push(XxdResponse packet) {
     if (packet.apiName == 'ping') return;
     _out.logCustom(
-      XxdLog('⇠ ${packet.apiName}', key: 'ws-push', level: LogLevel.verbose),
+      XxdLog(
+        // Typing pushes are tiny and their shape is what decides whether a
+        // typing bubble shows, so the debug panel carries the decoded body.
+        packet.apiName == 'chattyping'
+            ? '⇠ chattyping ${jsonEncode(packet.raw)}'
+            : '⇠ ${packet.apiName}',
+        key: 'ws-push',
+        level: LogLevel.verbose,
+      ),
     );
   }
 
