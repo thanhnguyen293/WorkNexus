@@ -192,8 +192,8 @@ class OpenCodeTranslationService implements TranslationService {
     // Nothing is piped in; leaving stdin open makes CLIs that read piped input
     // block until EOF.
     unawaited(process.stdin.close().catchError((_) {}));
-    final stdoutDone = process.stdout.transform(utf8.decoder).join();
-    final stderrDone = process.stderr.transform(utf8.decoder).join();
+    final stdout = _Capture(process.stdout);
+    final stderr = _Capture(process.stderr);
     var timedOut = false;
     final deadline = Timer(timeout, () {
       timedOut = true;
@@ -201,10 +201,17 @@ class OpenCodeTranslationService implements TranslationService {
     });
     final exitCode = await process.exitCode;
     deadline.cancel();
+    // A killed CLI can leave a child of its own holding its output pipes (a
+    // shell shim's real binary: `sh -c 'sleep 30'` forks under dash, and
+    // killing the `sh` does not stop the `sleep`). The pipes then stay open as
+    // long as that child lives, so a killed run takes what has arrived and stops
+    // waiting. [cancel] drops the entry first, which is how it is told apart.
+    final killed = timedOut || !identical(_running[ticketId], process);
+    final grace = killed ? _killedOutputGrace : null;
     return _CliRun(
       exitCode: exitCode,
-      stdout: await stdoutDone,
-      stderr: await stderrDone,
+      stdout: await stdout.text(within: grace),
+      stderr: await stderr.text(within: grace),
       timedOut: timedOut,
     );
   }
@@ -272,3 +279,46 @@ class _CliRun {
 
 /// Shared hashing so the service and cache agree on the content hash.
 String contentHash2(String title, String body) => contentHash(title, body);
+
+/// How long a killed CLI's output pipes get to close before the run stops
+/// waiting for them.
+const _killedOutputGrace = Duration(seconds: 1);
+
+/// Reads a CLI's output pipe as text as it arrives, so a run can stop waiting
+/// for the pipe to close and still keep what has been read.
+class _Capture {
+  _Capture(Stream<List<int>> pipe) {
+    _reading = pipe
+        .transform(utf8.decoder)
+        .listen(
+          _text.write,
+          onError: (Object e, StackTrace s) {
+            if (_error == null) {
+              _error = e;
+              _stack = s;
+            }
+          },
+          onDone: _closed.complete,
+        );
+  }
+
+  final _text = StringBuffer();
+  final _closed = Completer<void>();
+  late final StreamSubscription<String> _reading;
+  Object? _error;
+  StackTrace? _stack;
+
+  /// What the pipe carried. Waits for it to close, or, given [within], at most
+  /// that long, after which it stops reading. A decoding error is rethrown.
+  Future<String> text({Duration? within}) async {
+    if (within == null) {
+      await _closed.future;
+    } else {
+      await _closed.future.timeout(within, onTimeout: () {});
+    }
+    await _reading.cancel();
+    final error = _error;
+    if (error != null) Error.throwWithStackTrace(error, _stack!);
+    return _text.toString();
+  }
+}
