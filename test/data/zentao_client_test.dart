@@ -43,7 +43,7 @@ class _FakeAdapter implements HttpClientAdapter {
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<Uint8List>? requestStream,
-    Future? cancelFuture,
+    Future<void>? cancelFuture,
   ) async {
     requests.add(options);
     return handler(options);
@@ -123,7 +123,7 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
+      expect(res, isA<Ok<dynamic>>());
       final tickets = (res as Ok).value.tickets;
       expect(tickets.length, 1);
       final t = tickets.single;
@@ -166,7 +166,7 @@ void main() {
       final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
       final res = await adapter.listAssignedTickets();
 
-      expect(res, isA<Ok>());
+      expect(res, isA<Ok<dynamic>>());
       final tickets = (res as Ok).value.tickets;
       expect(tickets.map((t) => t.externalKey).toSet(), {'1871', '3259'});
     },
@@ -260,7 +260,7 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.getTicket(_bugTicket());
 
-    expect(res, isA<Ok>());
+    expect(res, isA<Ok<dynamic>>());
     final t = (res as Ok).value as Ticket;
     expect(t.title, 'Login loops');
     expect(t.status, UnifiedStatus.review); // resolved → review
@@ -483,7 +483,7 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listUsers();
 
-    expect(res, isA<Ok>());
+    expect(res, isA<Ok<dynamic>>());
     final users = (res as Ok).value;
     expect(users.map((u) => u.displayName).toList(), ['Amy', 'Zoe']); // sorted
     expect(users.first.account, 'amy');
@@ -506,7 +506,7 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listProducts();
 
-    expect(res, isA<Ok>());
+    expect(res, isA<Ok<dynamic>>());
     final products = (res as Ok).value;
     expect(products.map((p) => p.id).toList(), ['8', '9']);
     expect(products.map((p) => p.name).toList(), ['VN_Socialfi', 'VN_IM_Chat']);
@@ -730,7 +730,7 @@ void main() {
     final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
     final res = await adapter.listComments(_bugTicket());
 
-    expect(res, isA<Ok>());
+    expect(res, isA<Ok<dynamic>>());
     final comments = (res as Ok).value;
     // Only the `commented` action becomes a comment (the empty 'opened' drops).
     expect(comments.length, 1);

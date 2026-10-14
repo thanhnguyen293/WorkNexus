@@ -87,7 +87,10 @@ class ZenTaoWorkflow {
     ZenTaoTaskAction action,
     ZenTaoTaskActionInput input,
   ) async {
-    final fields = {'uid': _client.formUid(), ..._taskForm(task, action, input)};
+    final fields = {
+      'uid': _client.formUid(),
+      ..._taskForm(task, action, input),
+    };
     final files = action.asksFiles ? input.files : const <DraftFile>[];
     final resp = await _client.classicPost(
       'task-${action.name}-${task.externalKey}',

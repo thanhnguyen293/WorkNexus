@@ -49,9 +49,7 @@ void main() {
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: Offset.zero);
-    await mouse.moveTo(
-      tester.getCenter(find.byIcon(Icons.verified_rounded)),
-    );
+    await mouse.moveTo(tester.getCenter(find.byIcon(Icons.verified_rounded)));
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
     expect(find.text('Role badges'), findsOneWidget);
