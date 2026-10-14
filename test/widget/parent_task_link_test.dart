@@ -8,6 +8,7 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
+import 'package:work_nexus/core/domain/value_objects/zentao_ticket_id.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
@@ -20,7 +21,7 @@ import 'package:work_nexus/l10n/app_localizations.dart';
 class _MockService extends Mock implements ZenTaoTicketService {}
 
 Ticket _task(String id, String title) => Ticket(
-  id: 'zt:$id',
+  id: zenTaoTicketId('zt', 'task', id),
   accountId: 'zt',
   projectId: 'zt:task',
   providerType: ProviderType.zentao,
@@ -89,7 +90,7 @@ void main() {
     await tester.tap(find.text('#12160'));
     await tester.pump();
 
-    expect(container.read(openTicketIdProvider), 'zt:12160');
+    expect(container.read(openTicketIdProvider), 'zt:task:12160');
     verifyNever(
       () => service.fetchZenTaoTicket(
         host: any(named: 'host'),
@@ -108,13 +109,13 @@ void main() {
         type: 'task',
         id: '12160',
       ),
-    ).thenAnswer((_) async => const Ok('zt:12160'));
+    ).thenAnswer((_) async => const Ok('zt:task:12160'));
     final container = await pump(tester, const []);
 
     await tester.tap(find.text('#12160'));
     await tester.pumpAndSettle();
 
-    expect(container.read(openTicketIdProvider), 'zt:12160');
+    expect(container.read(openTicketIdProvider), 'zt:task:12160');
   });
 
   testWidgets('a parent lists its subtasks and opens one on tap', (
@@ -142,6 +143,6 @@ void main() {
     await tester.tap(find.text('mobile'));
     await tester.pump();
 
-    expect(container.read(openTicketIdProvider), 'zt:12167');
+    expect(container.read(openTicketIdProvider), 'zt:task:12167');
   });
 }
