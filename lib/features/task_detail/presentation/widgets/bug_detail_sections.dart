@@ -21,7 +21,6 @@ import 'bug_module_name.dart';
 import 'detail_field_rows.dart';
 import 'detail_fields_card.dart';
 import 'empty_fields_toggle.dart';
-import 'lifecycle_card.dart';
 import 'ticket_status_pill.dart';
 
 /// The ZenTao bug's typed metadata as two region cards: what the bug *is*
@@ -188,7 +187,7 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
         ),
         if (lifecycle.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl),
-          LifecycleCard(rows: lifecycle),
+          DetailFieldsCard(title: l.lifecycle, rows: lifecycle),
         ],
       ],
     );
