@@ -30,7 +30,7 @@ Ticket _ticket(ZenTaoTaskEntity task) => Ticket(
 );
 
 /// A ZenTao task's sidebar reads like a bug's: classification, effort, then
-/// a folded lifecycle.
+/// the lifecycle.
 void main() {
   Future<void> pump(
     WidgetTester tester,
@@ -129,12 +129,10 @@ void main() {
     expect(opened.single.projectId, '7');
   });
 
-  testWidgets('the lifecycle starts folded', (tester) async {
+  testWidgets('the lifecycle shows open', (tester) async {
     await pump(tester, task);
 
-    expect(find.text('KanDang'), findsNothing);
-    await tester.tap(find.text('LIFECYCLE'));
-    await tester.pumpAndSettle();
+    expect(find.text('LIFECYCLE'), findsOneWidget);
     expect(find.text('KanDang'), findsOneWidget);
   });
 }

@@ -18,14 +18,13 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/summarize_task_effort.dart';
 import 'detail_fields_card.dart';
-import 'lifecycle_card.dart';
 import 'ticket_status_pill.dart';
 import 'zentao_execution_link.dart';
 import 'zentao_linked_ticket.dart';
 
 /// A ZenTao task's metadata as region cards, like a bug's and ZenTao's own
 /// task view: what the task is and where it sits (classification), its hours
-/// and dates (effort), and how it moved (lifecycle, folded). Empty rows are
+/// and dates (effort), and how it moved (lifecycle). Empty rows are
 /// left out.
 class ZenTaoTaskSections extends ConsumerWidget {
   const ZenTaoTaskSections(this.task, {super.key, required this.ticket});
@@ -154,7 +153,7 @@ class ZenTaoTaskSections extends ConsumerWidget {
         ],
         if (lifecycle.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl),
-          LifecycleCard(rows: lifecycle),
+          DetailFieldsCard(title: l.lifecycle, rows: lifecycle),
         ],
       ],
     );
