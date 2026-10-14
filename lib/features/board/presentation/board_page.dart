@@ -129,6 +129,9 @@ class BoardPage extends ConsumerWidget {
     return ColoredBox(
       color: c.background,
       child: Column(
+        // Full width for the body: a sideways-scrolling board shrinks to its
+        // columns under a loose width, and would then sit centred.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ChromeBar(tabs: boardTabs),
           Expanded(child: body),
