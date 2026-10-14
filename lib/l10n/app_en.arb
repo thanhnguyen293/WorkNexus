@@ -95,6 +95,7 @@
   "bugTabAssignedByMe": "Assigned by me",
   "bugTabLoadFailed": "Couldn't load bugs",
   "filters": "Filters",
+  "filtersClearAll": "Clear all",
   "hide": "Hide",
   "clear": "Clear",
   "results": "results",
@@ -585,6 +586,32 @@
   "executionsUnavailable": "Can't load executions",
   "noExecutions": "No executions",
   "executionOpenFailed": "Couldn't open execution",
+  "taskColumnLoadFailed": "Couldn't load tasks",
+  "pagedLoadMore": "Load more",
+  "boardLayoutBoard": "Board",
+  "boardLayoutTable": "Table",
+  "tableColumnId": "ID",
+  "tableColumnTitle": "Title",
+  "tableColumnLeft": "Left",
+  "tableHours": "{hours} h",
+  "@tableHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "pagedScanned": "{scanned} of {total} checked",
+  "@pagedScanned": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "bugs": "Bugs",
   "tasks": "Tasks",
   "bugTag": "Bug",

@@ -163,6 +163,16 @@ String? accountHandle(Object? value) {
   return null;
 }
 
+/// ZenTao files a closed task or bug under this pseudo-account: nobody.
+const kZenTaoClosedAccount = 'closed';
+
+/// Who a ticket is assigned to ([accountHandle]); a closed ticket's `closed`
+/// pseudo-account is no one, so it shows — and filters — as unassigned.
+String? assigneeHandle(Object? value) {
+  final handle = accountHandle(value);
+  return handle == kZenTaoClosedAccount ? null : handle;
+}
+
 /// Normalizes a typed ZenTao [ZenTaoEntity] into a unified [Ticket].
 Ticket normalizeZenTao(
   ZenTaoEntity e, {
@@ -219,7 +229,7 @@ Ticket normalizeZenTao(
     // bare account string but DETAIL gives {account, realname}, so realname would
     // differ between the card (list) and the detail panel and break the default
     // "my tickets" filter, which matches against the account handle.
-    assignee: accountHandle(e.assignedTo),
+    assignee: assigneeHandle(e.assignedTo),
     url: '$normalizedBase/${type.pathSegment}-view-$id.html',
     severity: type == ZenTaoType.bug ? e.severity : null,
     createdAt: parseZenTaoDate(e.openedDate),
@@ -258,7 +268,9 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
                 child.status?.toString() ?? '',
               ),
               priority: child.pri,
-              assignee: accountName(child.assignedTo),
+              assignee: assigneeHandle(child.assignedTo) == null
+                  ? null
+                  : accountName(child.assignedTo),
             ),
       ],
     );

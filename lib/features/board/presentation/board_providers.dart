@@ -14,29 +14,35 @@ import '../domain/usecases/build_github_issue_board.dart';
 import '../domain/usecases/build_github_pr_board.dart';
 import '../domain/usecases/build_gitlab_issue_board.dart';
 import '../domain/usecases/build_gitlab_mr_board.dart';
-import '../domain/usecases/build_list.dart';
 import '../domain/usecases/build_zentao_bug_board.dart';
 import '../domain/usecases/build_zentao_task_board.dart';
 import '../domain/usecases/derive_board_facets.dart';
 import '../domain/usecases/filter_tickets.dart';
+import '../domain/usecases/scope_paged_view_tickets.dart';
 import '../domain/usecases/scope_provider_tickets.dart';
 import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
+import '../domain/value_objects/zentao_bug_stream.dart';
+import '../domain/value_objects/zentao_task_column.dart';
 import 'filter_providers.dart';
 import 'zentao_bug_streams.dart';
+import 'zentao_task_streams.dart';
 
 // The filter controller and the board-loading pulse live in their own files to
 // keep this one from growing further; re-exported so the many widgets that
 // already import `board_providers.dart` keep a single import for board state.
 export 'board_loading_provider.dart';
 export 'filter_providers.dart';
+export 'paged_views_controller.dart';
 export 'zentao_bug_streams.dart';
+export 'zentao_table_sort.dart';
+export 'zentao_task_streams.dart';
 
 /// [home] is the launch state: no source is selected yet, so the main area
 /// shows the welcome screen instead of a board. The user opens a real view by
 /// picking a source from the sidebar.
-enum ViewMode { home, board, zentaoBugs, zentaoTasks, gitlab, github, list }
+enum ViewMode { home, board, zentaoBugs, zentaoTasks, gitlab, github }
 
 class ZenTaoProductSelection {
   const ZenTaoProductSelection({
@@ -70,8 +76,6 @@ final boardKeyProvider = Provider<String>((ref) {
       return 'home';
     case ViewMode.board:
       return 'board';
-    case ViewMode.list:
-      return 'list';
     case ViewMode.zentaoBugs:
       final product = ref.watch(selectedZenTaoProductProvider);
       return product == null
@@ -134,7 +138,13 @@ class SelectedZenTaoProduct extends Notifier<ZenTaoProductSelection?> {
   @override
   ZenTaoProductSelection? build() => null;
 
+  /// Opens [product]'s bug board; the one already open stays as it is, so its
+  /// loaded pages are kept (the toolbar's Refresh starts it over).
   void select(ProviderProduct product) {
+    if (state?.accountId == product.accountId &&
+        state?.productId == product.id) {
+      return;
+    }
     state = ZenTaoProductSelection(
       accountId: product.accountId,
       productId: product.id,
@@ -179,25 +189,17 @@ class ZenTaoExecutionSelection {
   final String executionName;
 }
 
-class ZenTaoExecutionSyncing extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  void start(ProviderExecution execution) =>
-      state = '${execution.accountId}:${execution.id}';
-  void finish() => state = null;
-}
-
-final zentaoExecutionSyncingProvider =
-    NotifierProvider<ZenTaoExecutionSyncing, String?>(
-      ZenTaoExecutionSyncing.new,
-    );
-
 class SelectedZenTaoExecution extends Notifier<ZenTaoExecutionSelection?> {
   @override
   ZenTaoExecutionSelection? build() => null;
 
+  /// Opens [execution]'s task board; the one already open stays as it is, so
+  /// its loaded pages are kept (the toolbar's Refresh starts it over).
   void select(ProviderExecution execution) {
+    if (state?.accountId == execution.accountId &&
+        state?.executionId == execution.id) {
+      return;
+    }
     state = ZenTaoExecutionSelection(
       accountId: execution.accountId,
       projectId: execution.projectId,
@@ -497,28 +499,39 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   }
   final product = ref.watch(selectedZenTaoProductProvider);
   final execution = ref.watch(selectedZenTaoExecutionProvider);
+  // The paged ZenTao boards, local-first: the cached tickets tagged with the
+  // execution's / product's label, narrowed view by view to what each view has
+  // loaded — a view not loaded yet (loading, failed, offline) keeps its cached
+  // tickets.
   if (execution != null) {
-    final executionLabel = zentaoExecutionLabel(execution.executionId);
-    tickets = tickets
-        .where(
-          (ticket) =>
-              ticket.accountId == execution.accountId &&
-              (ticket.externalType ?? '').toLowerCase() == 'task' &&
-              ticket.labels.contains(executionLabel),
-        )
-        .toList();
+    tickets = const ScopePagedViewTickets<ZenTaoTaskColumn>()(
+      PagedViewScopeQuery(
+        tickets: const ScopeProviderTickets()(
+          tickets: tickets,
+          accountId: execution.accountId,
+          providerType: ProviderType.zentao,
+          externalType: 'task',
+          membershipLabel: zentaoExecutionLabel(execution.executionId),
+          slice: null,
+        ),
+        views: ref.watch(zentaoTaskStreamsProvider),
+        viewOf: zentaoTaskColumnFor,
+      ),
+    );
   } else if (product != null) {
-    // The bugs the board's views have loaded (ids), or null while their first
-    // pages are loading / have failed — offline-first: fall back to the cached
-    // bugs tagged with this product's label, then reconcile once they arrive.
-    final slice = ref.watch(zentaoBugSliceProvider).asData?.value;
-    tickets = const ScopeProviderTickets()(
-      tickets: tickets,
-      accountId: product.accountId,
-      providerType: ProviderType.zentao,
-      externalType: 'bug',
-      membershipLabel: zentaoProductLabel(product.productId),
-      slice: slice,
+    tickets = const ScopePagedViewTickets<ZenTaoBugStream>()(
+      PagedViewScopeQuery(
+        tickets: const ScopeProviderTickets()(
+          tickets: tickets,
+          accountId: product.accountId,
+          providerType: ProviderType.zentao,
+          externalType: 'bug',
+          membershipLabel: zentaoProductLabel(product.productId),
+          slice: null,
+        ),
+        views: ref.watch(zentaoBugStreamsProvider),
+        viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t)),
+      ),
     );
   }
   return tickets;
@@ -579,7 +592,6 @@ final filterHasGroupsProvider = Provider<bool>((ref) {
     case ViewMode.home:
     case ViewMode.board:
     case ViewMode.github:
-    case ViewMode.list:
       final mineBoard =
           (ref.watch(selectedGitLabProjectProvider)?.mine ?? false) ||
           (ref.watch(selectedGitHubRepoProvider)?.mine ?? false);
@@ -598,10 +610,7 @@ final boardFacetsProvider = Provider<BoardFacets>((ref) {
       ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
           ? BoardFacetScope.gitlabMergeRequest
           : BoardFacetScope.none,
-    ViewMode.home ||
-    ViewMode.board ||
-    ViewMode.github ||
-    ViewMode.list => BoardFacetScope.none,
+    ViewMode.home || ViewMode.board || ViewMode.github => BoardFacetScope.none,
   };
   if (scope == BoardFacetScope.none) return BoardFacets.empty;
   return const DeriveBoardFacets()(
@@ -766,10 +775,6 @@ final githubPrBoardProvider = Provider<GitHubPrBoardModel>(
 
 final githubIssueBoardProvider = Provider<GitHubIssueBoardModel>(
   (ref) => const BuildGitHubIssueBoard()(ref.watch(_boardQueryProvider)),
-);
-
-final listRowsProvider = Provider<List<Ticket>>(
-  (ref) => const BuildList()(ref.watch(_boardQueryProvider)),
 );
 
 final resultCountProvider = Provider<int>((ref) {

@@ -7,8 +7,10 @@ import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/repo_change.dart';
+import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/util/cancel_signal.dart';
 import 'gitlab_client.dart';
 import 'gitlab_draft_title.dart';
 import 'gitlab_models.dart';
@@ -199,12 +201,14 @@ class GitLabAdapter implements GitLabMrAdapter {
   }) async => const Ok(TicketPage(tickets: <Ticket>[]));
 
   @override
-  Future<Result<BugPage>> listProductBugsPage(
+  Future<Result<ViewPage>> listProductBugsPage(
     String productId, {
     required String browseType,
     required int page,
     required int limit,
-  }) async => const Ok(BugPage(tickets: <Ticket>[], total: 0, hasMore: false));
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
+  }) async => const Ok(ViewPage(tickets: <Ticket>[], total: 0, hasMore: false));
 
   @override
   Future<Result<List<ProviderProject>>> listProjects() async {
@@ -223,8 +227,14 @@ class GitLabAdapter implements GitLabMrAdapter {
   ) async => const Ok(<ProviderExecution>[]);
 
   @override
-  Future<Result<TicketPage>> listExecutionTasks(String executionId) async =>
-      const Ok(TicketPage(tickets: <Ticket>[]));
+  Future<Result<ViewPage>> listExecutionTasksPage(
+    String executionId, {
+    required String browseType,
+    required int page,
+    required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
+  }) async => const Ok(ViewPage(tickets: <Ticket>[], total: 0, hasMore: false));
 
   @override
   Future<Result<bool>> assignTicket(

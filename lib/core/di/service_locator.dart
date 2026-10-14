@@ -25,6 +25,7 @@ import '../../features/app_update/domain/usecases/download_update.dart';
 import '../../features/app_update/domain/usecases/install_update.dart';
 import '../../features/board/data/repositories/local_saved_filter_repository.dart';
 import '../../features/board/domain/repositories/saved_filter_repository.dart';
+import '../../features/board/domain/repositories/zentao_view_pages.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_http_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_local_datasource.dart';
@@ -355,6 +356,9 @@ abstract class ServiceModule {
   @lazySingleton
   ZenTaoTicketService zenTaoTicketService(SyncService syncService) =>
       syncService;
+
+  @lazySingleton
+  ZenTaoViewPages zenTaoViewPages(SyncService syncService) => syncService;
 
   @lazySingleton
   ZenTaoTicketEditor zenTaoTicketEditor(SyncService syncService) =>

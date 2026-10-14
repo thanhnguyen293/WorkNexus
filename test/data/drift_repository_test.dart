@@ -214,6 +214,7 @@ void main() {
       companyTint: true,
       locale: Locale('vi'),
       fontFamily: 'Georgia',
+      boardLayout: BoardLayout.table,
     );
     await db.saveSettings(appSettingsToCompanion(chosen));
     // Saving again updates the single row rather than inserting a second.
@@ -227,6 +228,7 @@ void main() {
     expect(reloaded.companyTint, isTrue);
     expect(reloaded.locale.languageCode, 'vi');
     expect(reloaded.fontFamily, 'Georgia');
+    expect(reloaded.boardLayout, BoardLayout.table);
   });
 
   test('activity attachments round-trip through the DB', () async {

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/pinned_execution.dart';
@@ -13,10 +11,8 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
 import 'sidebar_primitives.dart';
@@ -50,18 +46,17 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final selected = ref.watch(selectedZenTaoExecutionProvider);
-    final syncing = ref.watch(zentaoExecutionSyncingProvider);
-    final key = '${execution.accountId}:${execution.id}';
     final active =
         selected?.accountId == execution.accountId &&
         selected?.executionId == execution.id;
-    final loading = syncing == key;
+    // While this execution is the open board and its first pages are loading.
+    final loading = active && ref.watch(zentaoTaskSliceProvider).isLoading;
 
     return Opacity(
       opacity: loading ? 0.48 : 1,
       child: InkWell(
         mouseCursor: WidgetStateMouseCursor.clickable,
-        onTap: loading ? null : () => _select(context, ref),
+        onTap: loading ? null : () => _select(ref),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(
           height: context.sizes.controlSm,
@@ -127,27 +122,20 @@ class ZenTaoExecutionRow extends ConsumerWidget {
     );
   }
 
-  Future<void> _select(BuildContext context, WidgetRef ref) async {
-    // Switch to this execution's task board immediately, then stream its tasks
-    // into the DB, which the board reads reactively. Selecting a task board and
-    // a bug board are mutually exclusive, so clear the product selection first.
-    final failedMessage = AppL10n.of(context).executionOpenFailed;
+  void _select(WidgetRef ref) {
+    // Switch to this execution's task board; selecting it makes each column
+    // load the first page of its status view into the DB, which the board
+    // reads reactively. Selecting a task board and a bug board are mutually
+    // exclusive, so clear the product selection first.
     ref.read(appNavProvider.notifier).show(MainView.board);
     ref.read(selectedGitLabProjectProvider.notifier).clear();
     ref.read(selectedGitHubRepoProvider.notifier).clear();
     ref.read(selectedZenTaoProductProvider.notifier).clear();
     ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
     ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
-    ref.read(zentaoExecutionSyncingProvider.notifier).start(execution);
     // Restore this board's own filter; a first visit opens unfiltered.
     ref
         .read(filterStateProvider.notifier)
         .openBoard(ref.read(boardKeyProvider));
-    final res = await getIt<SyncService>().syncExecutionTasks(execution);
-    ref.read(zentaoExecutionSyncingProvider.notifier).finish();
-    if (res case Err()) {
-      if (!context.mounted) return;
-      showAppSnack(context, failedMessage, isError: true);
-    }
   }
 }

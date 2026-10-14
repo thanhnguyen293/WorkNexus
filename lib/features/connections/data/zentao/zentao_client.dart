@@ -7,6 +7,7 @@ import 'package:dio/io.dart';
 
 import '../../../../core/debug/app_talker.dart';
 import '../../../../core/network/api_paging.dart';
+import '../../../../core/util/cancel_signal.dart';
 import 'zentao_api.dart';
 import 'zentao_auth_interceptor.dart';
 import 'zentao_language_interceptor.dart';
@@ -289,7 +290,7 @@ class ZenTaoClient {
   /// Bugs for a product via the **classic** `bug-browse-…json` action, which —
   /// unlike REST v1 — honors ZenTao's [browseType] tab views (`all` / `unclosed`
   /// / `openedbyme` / `assigntome` / `resolvedbyme` / `assignedbyme`). URL:
-  /// `{base}/bug-browse-{productID}-0-{browseType}-0-id_desc-0-{recPerPage}-{pageID}.json`.
+  /// `{base}/bug-browse-{productID}-0-{browseType}-0-{orderBy}-0-{recPerPage}-{pageID}.json`.
   /// The response is the classic `{status, data}` envelope (data is sometimes a
   /// JSON string) whose payload carries `bugs` (a list or an id-keyed map) and a
   /// `pager` with `recTotal`. Parsed leniently; the exact shape is validated live
@@ -299,13 +300,16 @@ class ZenTaoClient {
     required String browseType,
     int recPerPage = kDefaultApiPageLimit,
     int pageID = 1,
+    String orderBy = 'id_desc',
+    CancelSignal? cancel,
   }) async {
     final token = await _ensureToken();
     final path =
-        'bug-browse-$productId-0-$browseType-0-id_desc-0-$recPerPage-$pageID';
+        'bug-browse-$productId-0-$browseType-0-$orderBy-0-$recPerPage-$pageID';
     final res = await _dio.get<dynamic>(
       '$baseUrl/$path.json',
       queryParameters: {'zentaosid': token},
+      cancelToken: _cancelToken(cancel),
     );
     Object? data = res.data;
     if (data is String) {
@@ -454,18 +458,46 @@ class ZenTaoClient {
     return ZenTaoExecutionsResponse.fromJson(_responseMap(res.data));
   }
 
-  /// Tasks of an execution (`GET /executions/{id}/tasks`), used to sync all
-  /// tasks regardless of assignee.
-  Future<ZenTaoExecutionTasksResponse> executionTasks(
+  /// One page of an execution's tasks, whoever they are assigned to, via the
+  /// **classic** `execution-task-…json` action — unlike REST v1
+  /// `GET /executions/{id}/tasks`, it honors a status view [browseType]
+  /// (`wait` / `doing` / `pause` / `done` / `closed` / `cancel` / `all` / …).
+  /// URL: `{base}/execution-task-{executionID}-{browseType}-0-{orderBy}-0-{recPerPage}-{pageID}.json`.
+  /// The payload carries `tasks` (a list or an id-keyed map; a parent task
+  /// nests its subtasks under `children`) and a `pager` with `recTotal`.
+  Future<ZenTaoExecutionTasksResponse> classicExecutionTasks(
     String executionId, {
-    required int page,
-    required int limit,
+    required String browseType,
+    required int recPerPage,
+    required int pageID,
+    String orderBy = 'id_desc',
+    CancelSignal? cancel,
   }) async {
+    final token = await _ensureToken();
+    final path =
+        'execution-task-$executionId-$browseType-0-$orderBy-0-$recPerPage-$pageID';
     final res = await _dio.get<dynamic>(
-      '$_v1/executions/$executionId/tasks',
-      queryParameters: {'page': page, 'limit': limit},
+      '$baseUrl/$path.json',
+      queryParameters: {'zentaosid': token},
+      cancelToken: _cancelToken(cancel),
     );
-    return ZenTaoExecutionTasksResponse.fromJson(_responseMap(res.data));
+    final payload = _classicView(res);
+    if (payload == null) {
+      throw DioException(
+        requestOptions: res.requestOptions,
+        response: res,
+        message: 'ZenTao task view reply had no task list',
+      );
+    }
+    return ZenTaoExecutionTasksResponse.fromClassicView(payload);
+  }
+
+  /// A dio token cancelled once [signal] fires, or null without a signal.
+  CancelToken? _cancelToken(CancelSignal? signal) {
+    if (signal == null) return null;
+    final token = CancelToken();
+    signal.whenCancelled.then((_) => token.cancel());
+    return token;
   }
 
   Map<String, dynamic> _responseMap(Object? data) {

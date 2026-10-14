@@ -43,6 +43,12 @@ abstract class FilterState with _$FilterState {
       resolutions.isNotEmpty ||
       search.trim().isNotEmpty;
 
+  /// Whether this filter can hide any of a board's tickets: a workspace or a
+  /// non-"all" saved view, on top of [hasActiveFilters]. A paged board then
+  /// scans further pages for matches instead of trusting a page to fill it.
+  bool get narrowsTickets =>
+      hasActiveFilters || workspaceId != 'all' || savedView != SavedView.all;
+
   /// Number of chip-style filters active (excludes free-text search).
   int get activeTokenCount =>
       providers.length +

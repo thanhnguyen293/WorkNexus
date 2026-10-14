@@ -57,7 +57,14 @@ preview, and machine translation without jumping between several browser tabs.
   - GitLab project boards plus an account-wide **My merge requests** board.
   - GitHub repository boards plus an account-wide **My pull requests** board.
 - Pinned projects/repos/executions stay at the top of each provider tree.
-- Kanban and List views over the same normalized `Ticket` data.
+- ZenTao task and bug boards show as **Kanban** or as a **Table** (ordered
+  status by status, sortable by column the way ZenTao sorts); the choice is
+  remembered across restarts.
+- Large ZenTao boards page per column: each status column loads 50 tickets
+  of its own server-side view at a time as it scrolls, so a column with
+  thousands of done/closed tasks never holds up the board. Under a filter, a
+  column stops loading by itself once pages stop turning up matches and
+  offers **Load more**.
 - Provider-native columns:
   - ZenTao bugs: new/unconfirmed, confirmed/to-fix, resolved/verify,
     postponed, non-fix, closed.
@@ -67,8 +74,9 @@ preview, and machine translation without jumping between several browser tabs.
   - GitLab/GitHub MRs/PRs: draft, review, merged, closed.
 - Context-aware filters with data-derived facets for workspace, provider,
   account, assignee, status, priority, labels, and search.
-- Server-side slices with offline fallback: when a selected tab/project/repo
-  cannot refresh, cached tickets still render from the local database.
+- Server-side slices with offline fallback: when a selected tab/project/repo —
+  or a single paged column — cannot refresh, cached tickets still render from
+  the local database.
 
 ### Multi-provider connections
 
@@ -174,7 +182,7 @@ lib/
 ├── data/local/          # Shared drift-backed repositories and mappers
 ├── features/
 │   ├── agents/          # Dry-run/live CLI agent adapters and session streams
-│   ├── board/           # Unified source tree, board/list views, board use cases
+│   ├── board/           # Unified source tree, kanban/table views, paging, board use cases
 │   ├── connections/     # Provider setup and provider-specific adapters
 │   ├── sync/            # Provider -> drift sync, actions, secure media cache
 │   ├── task_detail/     # Slide-over detail, comments, actions, MR/PR views

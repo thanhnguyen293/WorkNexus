@@ -18,10 +18,16 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../board_providers.dart';
 import '../board_refresh.dart';
+import 'board_layout_toggle.dart';
+import 'filter_popover_anchor.dart';
 import 'new_ticket_button.dart';
 
 /// Whether the advanced-filter popover is open.
 final advFilterOpenProvider = StateProvider<bool>((ref) => false);
+
+/// The tap region shared by the Filters button and its popover: a click
+/// anywhere else closes the popover, while the button keeps toggling it.
+const kFilterPopoverTapGroup = #filterPopover;
 
 /// The top toolbar: search, filters button (hidden when nothing to filter),
 /// active tokens, refresh.
@@ -37,6 +43,11 @@ class ChromeBar extends ConsumerWidget {
     final c = context.colors;
     final filter = ref.watch(filterStateProvider);
     final hasFilters = ref.watch(filterHasGroupsProvider);
+    // Only the ZenTao boards have a table layout.
+    final layoutToggle = switch (ref.watch(viewModeProvider)) {
+      ViewMode.zentaoTasks || ViewMode.zentaoBugs => true,
+      _ => false,
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -69,14 +80,17 @@ class ChromeBar extends ConsumerWidget {
                   child: search,
                 ),
               if (hasFilters)
-                _FiltersButton(
-                  count: filter.activeTokenCount,
-                  compact: narrow,
-                  onTap: () => ref
-                      .read(advFilterOpenProvider.notifier)
-                      .update((v) => !v),
+                FilterPopoverAnchor(
+                  child: _FiltersButton(
+                    count: filter.activeTokenCount,
+                    compact: narrow,
+                    onTap: () => ref
+                        .read(advFilterOpenProvider.notifier)
+                        .update((v) => !v),
+                  ),
                 ),
               const Spacer(),
+              if (layoutToggle) const BoardLayoutToggle(),
               const NewTicketButton(),
               const _RefreshButton(),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/board/domain/repositories/zentao_view_pages.dart';
 import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
@@ -124,4 +125,10 @@ final zenTaoTicketEditorProvider = Provider<ZenTaoTicketEditor>(
 /// ZenTao's status actions on bugs and tasks (confirm, close, start, finish…).
 final zenTaoWorkflowServiceProvider = Provider<ZenTaoWorkflowService>(
   (ref) => getIt<ZenTaoWorkflowService>(),
+);
+
+/// Pages of ZenTao's bug and task views, written to the local database as
+/// they arrive (the paged ZenTao boards).
+final zentaoViewPagesProvider = Provider<ZenTaoViewPages>(
+  (ref) => getIt<ZenTaoViewPages>(),
 );
