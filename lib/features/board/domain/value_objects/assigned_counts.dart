@@ -2,9 +2,6 @@
 /// node of the sources tree. A parent is the sum of the children it shows, so
 /// each ticket is counted once on its way up: a pinned product, execution or
 /// project counts toward "Pinned", not toward its group.
-///
-/// The "mine" row of GitLab and GitHub ([mine]) is a view across projects,
-/// not a branch, so it is not part of its account's sum.
 class AssignedCounts {
   const AssignedCounts([this._counts = const {}]);
 
@@ -31,9 +28,8 @@ class AssignedCounts {
   int zentaoExecution(String accountId, String executionId) =>
       _of(zentaoExecutionKey(accountId, executionId));
 
-  /// GitLab / GitHub: merge or pull requests ([mine]), the "Projects" /
-  /// "Repositories" group ([projects]) and one project or repository.
-  int mine(String accountId) => _of(mineKey(accountId));
+  /// GitLab / GitHub: the "Projects" / "Repositories" group ([projects]) and
+  /// one project or repository.
   int projects(String accountId) => _of(projectsKey(accountId));
   int project(String accountId, String projectId) =>
       _of(projectKey(accountId, projectId));
@@ -47,7 +43,6 @@ class AssignedCounts {
   static String zentaoTasksKey(String a) => 'tasks:$a';
   static String zentaoProjectKey(String a, String id) => 'zproject:$a:$id';
   static String zentaoExecutionKey(String a, String id) => 'execution:$a:$id';
-  static String mineKey(String a) => 'mine:$a';
   static String projectsKey(String a) => 'projects:$a';
   static String projectKey(String a, String id) => 'project:$a:$id';
 }

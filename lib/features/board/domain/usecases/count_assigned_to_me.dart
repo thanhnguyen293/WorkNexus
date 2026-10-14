@@ -4,8 +4,6 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/util/ticket_open.dart';
 import '../value_objects/assigned_counts.dart';
-import '../value_objects/github_item_kind.dart';
-import '../value_objects/gitlab_item_kind.dart';
 
 /// Counts the open tickets assigned to each account's own user for every node
 /// of the sources tree (see [AssignedCounts]).
@@ -67,15 +65,8 @@ class CountAssignedToMe {
           a,
           projectId?.toString(),
           pinnedProjects,
-          mine: t.externalType == GitLabItemKind.mergeRequest.externalType,
         ),
-        GitHubItemEntity(:final repo) => _project(
-          add,
-          a,
-          repo,
-          pinnedProjects,
-          mine: t.externalType == GitHubItemKind.pullRequest.externalType,
-        ),
+        GitHubItemEntity(:final repo) => _project(add, a, repo, pinnedProjects),
         _ => false,
       };
       if (!counted) continue;
@@ -106,16 +97,14 @@ class CountAssignedToMe {
     return true;
   }
 
-  /// A GitLab / GitHub item: on its project, under "Pinned" or the projects
-  /// group, and on the merge / pull request row when it is one ([mine]).
+  /// A GitLab / GitHub item: on its project, and under "Pinned" or the
+  /// projects group.
   static bool _project(
     void Function(String key) add,
     String accountId,
     String? projectId,
-    Set<String> pinnedProjects, {
-    required bool mine,
-  }) {
-    if (mine) add(AssignedCounts.mineKey(accountId));
+    Set<String> pinnedProjects,
+  ) {
     return _leaf(
       add,
       accountId,
