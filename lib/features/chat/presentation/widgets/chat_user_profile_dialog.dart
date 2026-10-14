@@ -10,17 +10,19 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_avatar.dart';
+import 'chat_avatar_crop_dialog.dart';
+import 'chat_avatar_upload_status.dart';
 import 'chat_detail_row.dart';
 import 'chat_editable_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
-import 'chat_snack.dart';
 
 export 'chat_profile_tap.dart';
 
@@ -70,24 +72,35 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
     if (mounted) navigator.pop();
   }
 
-  bool _uploading = false;
+  ChatAvatarUpload? _upload;
+  bool get _uploading => _upload is ChatAvatarUploading;
 
-  /// Picks a picture and makes it the user's avatar right here.
+  /// Picks a picture, lets the user crop it and makes it their avatar.
   Future<void> _changePicture() async {
     final files = await pickChatAttachments(imagesOnly: true);
     if (files.isEmpty || !mounted) return;
-    setState(() => _uploading = true);
+    final image = files.first.bytes;
+    final crop = await ChatAvatarCropDialog.show(context, image);
+    if (crop == null || !mounted) return;
+    final l = AppL10n.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _upload = const ChatAvatarUploading());
     final result = await ref
         .read(chatControllerProvider)
-        .setMyAvatar(widget.accountId, files.first.bytes);
-    if (!mounted) return;
-    setState(() => _uploading = false);
-    switch (result) {
-      case Ok():
-        showChatSnack(context, AppL10n.of(context).chatMyAvatarUpdated);
-      case Err(:final failure):
-        showChatFailure(context, failure);
+        .setMyAvatar(widget.accountId, image, crop: crop);
+    final upload = switch (result) {
+      Ok() => const ChatAvatarUploaded(),
+      Err(:final failure) => ChatAvatarUploadFailed(failure.message),
+    };
+    if (mounted) {
+      setState(() => _upload = upload);
+      return;
     }
+    // Closed mid-upload: the outcome still gets told.
+    showAppSnackOn(messenger, switch (upload) {
+      ChatAvatarUploadFailed(:final reason) => l.chatMyAvatarFailed(reason),
+      _ => l.chatMyAvatarUpdated,
+    }, isError: upload is ChatAvatarUploadFailed);
   }
 
   void _viewProfile() {
@@ -129,6 +142,10 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
                 ),
               ),
             ),
+            if (_upload case final upload?) ...[
+              SizedBox(height: s.md),
+              ChatAvatarUploadStatus(upload: upload),
+            ],
             SizedBox(height: s.xl),
             SelectableText(
               name,

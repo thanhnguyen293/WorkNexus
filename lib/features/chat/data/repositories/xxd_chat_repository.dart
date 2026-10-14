@@ -16,6 +16,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
+import '../../domain/value_objects/chat_avatar_crop.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/chat_typing_signal.dart';
@@ -812,11 +813,33 @@ class XxdChatRepository implements ChatRepository {
   );
 
   @override
-  Future<Result<void>> setMyAvatar(String accountId, Uint8List image) async {
-    final result = await _avatars.setMyAvatar(_sessions[accountId], image);
+  Future<Result<void>> setMyAvatar(
+    String accountId,
+    Uint8List image, {
+    ChatAvatarCrop? crop,
+  }) async {
+    final result = await _avatars.setMyAvatar(
+      _sessions[accountId],
+      image,
+      crop: crop,
+    );
     if (result case Err()) return result;
     // The new picture lives at a new URL, carried by the user list.
-    return refreshUsers(accountId);
+    final refreshed = await refreshUsers(accountId);
+    if (refreshed case Err()) return refreshed;
+    // ZenTao web sets the picture behind xxd's back, so nobody else hears of
+    // it. A `userupdate` (same status) is pushed to every online user, whose
+    // clients then reload this user — picture included.
+    final session = _sessions[accountId];
+    if (session == null) return const Ok(null);
+    final announced = await session.connection.request(
+      _userChange(session, _presences[accountId] ?? ChatPresence.online),
+    );
+    // The picture is set either way; peers just see it on their next reload.
+    if (announced case Err(:final failure)) {
+      _onError(failure, StackTrace.current);
+    }
+    return const Ok(null);
   }
 
   @override

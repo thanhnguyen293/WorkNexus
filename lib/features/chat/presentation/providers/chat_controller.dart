@@ -32,6 +32,7 @@ import '../../domain/usecases/send_text_message.dart';
 import '../../domain/usecases/send_typing_status.dart';
 import '../../domain/usecases/should_notify_chat_message.dart';
 import '../../domain/usecases/trust_chat_certificate.dart';
+import '../../domain/value_objects/chat_avatar_crop.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/message_content.dart';
 
@@ -155,8 +156,11 @@ class ChatController {
   );
 
   /// Sets the user's own picture (pass-through; CLAUDE.md 2.4).
-  Future<Result<void>> setMyAvatar(String accountId, Uint8List image) =>
-      _repository.setMyAvatar(accountId, image);
+  Future<Result<void>> setMyAvatar(
+    String accountId,
+    Uint8List image, {
+    ChatAvatarCrop? crop,
+  }) => _repository.setMyAvatar(accountId, image, crop: crop);
 
   /// Loads every user of the server (pass-through; CLAUDE.md 2.4).
   Future<Result<void>> refreshUsers(String accountId) =>

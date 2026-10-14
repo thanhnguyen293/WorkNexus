@@ -785,6 +785,19 @@
   "chatAvatarTextHint": "Tối đa 4 ký tự",
   "chatChangeMyAvatarHint": "Chọn ảnh từ máy của bạn",
   "chatMyAvatarUpdated": "Đã đổi ảnh đại diện",
+  "chatMyAvatarUploading": "Đang tải ảnh lên…",
+  "chatMyAvatarFailed": "Không đổi được ảnh đại diện: {reason}",
+  "@chatMyAvatarFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCropAvatarTitle": "Cắt ảnh đại diện",
+  "chatCropAvatarHint": "Kéo khung để di chuyển; kéo góc để đổi kích thước",
+  "chatCropAvatarApply": "Dùng ảnh này",
+  "chatCropAvatarUnreadable": "Không mở được ảnh này",
   "chatSendLike": "Gửi like",
   "chatMention": "Nhắc đến ai đó",
   "chatEmoji": "Biểu tượng cảm xúc",

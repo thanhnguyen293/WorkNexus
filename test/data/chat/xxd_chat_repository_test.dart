@@ -540,6 +540,55 @@ void main() {
     );
   });
 
+  test(
+    'a pushed picture change is stored; one without it reloads the user',
+    () async {
+      await repo.connect(_acc);
+      await eventually(
+        repo.watchUsers(_acc),
+        (u) => u.any((x) => x.userId == 40),
+      );
+
+      server.current.push({
+        'method': 'userupdate',
+        'result': 'success',
+        'data': {
+          'id': 40,
+          'status': 'online',
+          'avatar': 'https://zt.test/a.png',
+        },
+      });
+      await eventually(
+        repo.watchUsers(_acc),
+        (u) => u.any(
+          (x) => x.userId == 40 && x.avatarUrl == 'https://zt.test/a.png',
+        ),
+      );
+
+      server.requests.clear();
+      server.current.push({
+        'method': 'userupdate',
+        'result': 'success',
+        'data': {'id': 40, 'status': 'away'},
+      });
+      await eventually(
+        repo.watchUsers(_acc),
+        (u) => u.any((x) => x.userId == 40 && x.status == 'away'),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(
+        server.requests
+            .where((r) => r['method'] == 'usergetlist')
+            .map((r) => r['params']),
+        [
+          [
+            [40],
+          ],
+        ],
+      );
+    },
+  );
+
   test('role names come from sysgetdepts, asked once', () async {
     server.onRequest = (req) => req['method'] == 'sysgetdepts'
         ? {

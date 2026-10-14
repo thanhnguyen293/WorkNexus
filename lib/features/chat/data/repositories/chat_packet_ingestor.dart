@@ -84,16 +84,28 @@ class ChatPacketIngestor {
             userFromXxd(accountId, Map<String, Object?>.from(data)),
           ]);
         }
-      // Someone (this account included) changed their status; `userchange`
-      // on servers before 7.x.
+      // Someone (this account included) changed their status or picture;
+      // `userchange` on servers before 7.x.
       case 'userupdate' || 'userchange':
-        if (data is Map && data['id'] is num && data['status'] is String) {
+        if (data is! Map || data['id'] is! num) break;
+        final userId = (data['id']! as num).toInt();
+        if (data['status'] is String) {
           await _local.setUserStatus(
             accountId,
-            (data['id']! as num).toInt(),
+            userId,
             data['status']! as String,
           );
         }
+        // A picture change is announced this way too (ZenTao web sets it
+        // behind xxd's back). A reply without the picture gets the user
+        // reloaded, so the new one shows without a reconnect.
+        final avatar = data['avatar'];
+        if (avatar is! String) return IngestFollowUp(userIds: {userId});
+        await _local.setUserAvatar(
+          accountId,
+          userId,
+          avatar.isEmpty ? null : avatar,
+        );
       case 'userlogout':
         if (data is Map && data['id'] is num) {
           await _local.setUserStatus(
