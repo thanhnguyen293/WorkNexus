@@ -5,7 +5,6 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -27,6 +26,7 @@ import 'detail_section_title.dart';
 import 'provider_detail_sections.dart';
 import 'section_label.dart';
 import 'subtask_list.dart';
+import 'task_detail_sections.dart';
 import 'task_effort_bar.dart';
 import 'ticket_status_pill.dart';
 
@@ -66,26 +66,10 @@ class OriginalTab extends ConsumerWidget {
       _ => null,
     };
     final subtasks = task?.subtasks ?? const <TicketSubtask>[];
-    // A subtask's parent: its name as ZenTao gave it, else as synced here.
-    final parent = switch (ticket.providerEntity) {
-      ZenTaoTaskEntity(:final parentId?, :final parentName) => [
-        '#$parentId',
-        ?(parentName ??
-            ref
-                .watch(
-                  ticketByIdProvider(
-                    zenTaoTicketId(ticket.accountId, 'task', parentId),
-                  ),
-                )
-                ?.title),
-      ].join(' · '),
-      _ => null,
-    };
     final labels = visibleUserLabels(ticket.labels);
     final labelColors = labelColorsOf(ticket);
     final meta = <(String, String)>[
       (l.project, lookups.projects[ticket.projectId]?.name ?? ''),
-      if (parent != null) (l.parentTask, parent),
       (l.account, account?.handle ?? ''),
       (l.workspace, ws?.isPersonal == true ? l.personal : (ws?.name ?? '')),
       (l.status, statusLabel(l, ticket.status)),
@@ -168,6 +152,8 @@ class OriginalTab extends ConsumerWidget {
     final Widget sidebar;
     if (bug != null) {
       sidebar = ZenTaoBugSections(bug, ticket: ticket);
+    } else if (task != null) {
+      sidebar = ZenTaoTaskSections(task, ticket: ticket);
     } else if (gitlab != null) {
       sidebar = GitLabDetailSections(ticket: ticket, entity: gitlab);
     } else if (github != null) {

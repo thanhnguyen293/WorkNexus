@@ -257,6 +257,20 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       left: e.left,
       realStarted: parseZenTaoDate(e.realStarted),
       openedByHandle: accountHandle(e.openedBy),
+      taskType: _text(e.type),
+      executionName: _text(e.executionName),
+      story: _executionId(e.story),
+      storyTitle: _text(e.storyTitle),
+      fromBug: _executionId(e.fromBug),
+      estStarted: _day(e.estStarted),
+      deadline: _day(e.deadline),
+      openedBy: accountName(e.openedBy),
+      openedDate: parseZenTaoDate(e.openedDate),
+      finishedBy: accountName(e.finishedBy),
+      finishedDate: parseZenTaoDate(e.finishedDate),
+      closedBy: accountName(e.closedBy),
+      closedDate: parseZenTaoDate(e.closedDate),
+      lastEditedDate: parseZenTaoDate(e.lastEditedDate),
       subtasks: [
         for (final child in e.children)
           if (child.idString.isNotEmpty)
@@ -359,6 +373,10 @@ String? _executionId(Object? value) {
   final id = _text(value);
   return id == '0' ? null : id;
 }
+
+/// A date-only field (`2026-10-13`); null for ZenTao's `0000-00-00` "none".
+String? _day(Object? value) =>
+    parseZenTaoDate(value) == null ? null : _text(value)?.substring(0, 10);
 
 String? _text(Object? value) {
   if (value == null) return null;

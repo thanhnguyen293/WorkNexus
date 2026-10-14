@@ -39,6 +39,26 @@ String? zentaoBugTypeLabel(String? type) {
   return code[0].toUpperCase() + code.substring(1);
 }
 
+const _taskTypes = <String, String>{
+  'design': 'Design',
+  'devel': 'Development',
+  'request': 'Feature request',
+  'test': 'Testing',
+  'study': 'Research',
+  'discuss': 'Discussion',
+  'ui': 'UI',
+  'affair': 'Transaction',
+  'misc': 'Misc',
+};
+
+/// ZenTao task `type` code (e.g. `devel`) → readable label; unknown codes are
+/// returned capitalized.
+String? zentaoTaskTypeLabel(String? type) {
+  final code = type?.trim().toLowerCase();
+  if (code == null || code.isEmpty) return null;
+  return _taskTypes[code] ?? code[0].toUpperCase() + code.substring(1);
+}
+
 const _resolutions = <String, String>{
   'bydesign': 'By design',
   'duplicate': 'Duplicate',
