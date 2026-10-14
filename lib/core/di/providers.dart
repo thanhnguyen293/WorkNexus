@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/board/domain/repositories/zentao_view_pages.dart';
+import '../../features/task_detail/domain/repositories/zentao_task_bugs.dart';
 import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
 import '../domain/adapters/opencode_cli.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
@@ -131,4 +132,9 @@ final zenTaoWorkflowServiceProvider = Provider<ZenTaoWorkflowService>(
 /// they arrive (the paged ZenTao boards).
 final zentaoViewPagesProvider = Provider<ZenTaoViewPages>(
   (ref) => getIt<ZenTaoViewPages>(),
+);
+
+/// Brings a ZenTao task's related bugs into the local database.
+final zentaoTaskBugsProvider = Provider<ZenTaoTaskBugs>(
+  (ref) => getIt<ZenTaoTaskBugs>(),
 );

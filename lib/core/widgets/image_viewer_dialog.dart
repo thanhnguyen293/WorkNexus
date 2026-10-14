@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../platform/image_clipboard.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'app_icon_button.dart';
+import 'image_context_menu.dart';
 import 'inline_image.dart';
 
 /// An image from a description or comment, enlarged over the app: zoom with
 /// the wheel or a pinch, drag to pan, double-click to zoom in or back to fit.
-/// Esc, the close button or a click beside the image closes it.
+/// The bar's copy button or a right-click on the image copies it. Esc, the
+/// close button or a click beside the image closes it.
 class ImageViewerDialog extends StatefulWidget {
   const ImageViewerDialog({
     super.key,
@@ -57,10 +62,25 @@ class _ImageViewerDialogState extends State<ImageViewerDialog> {
   final _transform = TransformationController();
   Offset? _doubleTapAt;
 
+  /// Just copied: the bar's copy button shows a check for a moment.
+  bool _copied = false;
+  Timer? _copiedTimer;
+
   @override
   void dispose() {
     _transform.dispose();
+    _copiedTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _copy() async {
+    await copyImageToClipboard(widget.bytes);
+    if (!mounted) return;
+    setState(() => _copied = true);
+    _copiedTimer?.cancel();
+    _copiedTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _copied = false);
+    });
   }
 
   void _close() => Navigator.of(context).pop();
@@ -112,6 +132,14 @@ class _ImageViewerDialogState extends State<ImageViewerDialog> {
                     padding: EdgeInsets.all(s.xl6),
                     child: GestureDetector(
                       onTap: () {},
+                      onSecondaryTapUp: (d) => showImageContextMenu(
+                        context,
+                        at: d.globalPosition,
+                        onCopy: _copy,
+                        onOpenExternally: url != null && open != null
+                            ? () => open(url)
+                            : null,
+                      ),
                       child: Image.memory(widget.bytes, fit: BoxFit.contain),
                     ),
                   ),
@@ -131,6 +159,12 @@ class _ImageViewerDialogState extends State<ImageViewerDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  AppIconButton(
+                    icon: _copied ? LucideIcons.check300 : LucideIcons.copy300,
+                    color: _copied ? c.success : null,
+                    tooltip: _copied ? l.imageCopied : l.copyImage,
+                    onPressed: _copy,
+                  ),
                   if (url != null && open != null)
                     AppIconButton(
                       icon: LucideIcons.squareArrowOutUpRight300,

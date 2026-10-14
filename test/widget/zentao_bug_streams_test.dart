@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/di/service_locator.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
@@ -210,5 +214,106 @@ void main() {
     expect(container.read(zentaoBugHasMoreProvider), isFalse);
     container.read(zentaoBugTabProvider.notifier).set(ZenTaoBugBrowseType.all);
     expect(container.read(zentaoBugHasMoreProvider), isTrue);
+  });
+
+  test('Assigned to me loads one view that feeds every column', () async {
+    serve('assigntome', total: 2);
+    final container = open();
+    container.listen(zentaoBugHasMoreProvider, (_, _) {});
+    container
+        .read(zentaoBugTabProvider.notifier)
+        .set(ZenTaoBugBrowseType.assignedToMe);
+    await pumpEventQueue();
+
+    final streams = container.read(zentaoBugStreamsProvider);
+    expect(streams[ZenTaoBugStream.assignedToMe]?.page, 1);
+    // The per-column views stay unloaded.
+    for (final view in [
+      ZenTaoBugStream.unconfirmed,
+      ZenTaoBugStream.unresolved,
+      ZenTaoBugStream.toClose,
+      ZenTaoBugStream.all,
+    ]) {
+      expect(streams[view]?.started, isFalse, reason: view.name);
+    }
+    for (final column in ZenTaoBugColumn.values) {
+      expect(
+        container.read(zentaoBugColumnStreamProvider(column)).page,
+        1,
+        reason: column.name,
+      );
+    }
+    expect(container.read(zentaoBugSliceProvider).value, hasLength(1));
+    // Only its own view counts toward loading more.
+    expect(container.read(zentaoBugHasMoreProvider), isTrue);
+    await container
+        .read(zentaoBugStreamsProvider.notifier)
+        .loadMore(ZenTaoBugStream.assignedToMe);
+    expect(container.read(zentaoBugHasMoreProvider), isFalse);
+  });
+
+  test('leaving Assigned to me loads the column views again', () async {
+    serve('assigntome');
+    for (final v in ['unconfirmed', 'unresolved', 'toclosed']) {
+      serve(v);
+    }
+    final container = open();
+    final tab = container.read(zentaoBugTabProvider.notifier);
+    tab.set(ZenTaoBugBrowseType.assignedToMe);
+    await pumpEventQueue();
+
+    tab.set(ZenTaoBugBrowseType.unclosed);
+    await pumpEventQueue();
+
+    final streams = container.read(zentaoBugStreamsProvider);
+    expect(streams[ZenTaoBugStream.unresolved]?.page, 1);
+    expect(streams[ZenTaoBugStream.assignedToMe]?.started, isFalse);
+  });
+
+  test('until Assigned to me loads, the board keeps the cached bugs '
+      'assigned to the user', () async {
+    when(
+      () => sync.syncProductBugsPage(
+        accountId: any(named: 'accountId'),
+        productId: any(named: 'productId'),
+        browseType: 'assigntome',
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer((_) => Completer<Result<ViewPage>>().future);
+    Ticket cached(int id, String assignee) => _bug(
+      id,
+    ).copyWith(assignee: assignee, labels: const ['zentao-product:4']);
+    final container = ProviderContainer(
+      overrides: [
+        ticketsProvider.overrideWith(
+          (ref) => Stream.value([cached(1, 'me'), cached(2, 'bob')]),
+        ),
+        accountsProvider.overrideWith(
+          (ref) => Stream.value(const [
+            Account(
+              id: 'zentao',
+              workspaceId: 'w',
+              providerType: ProviderType.zentao,
+              handle: 'me',
+            ),
+          ]),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(selectedZenTaoProductProvider.notifier).select(_product);
+    container
+        .read(zentaoBugTabProvider.notifier)
+        .set(ZenTaoBugBrowseType.assignedToMe);
+    container.listen(zentaoBugBoardProvider, (_, _) {});
+    await pumpEventQueue();
+
+    final shown = [
+      for (final c in container.read(zentaoBugBoardProvider).columns)
+        ...c.tickets.map((t) => t.id),
+    ];
+    expect(shown, ['zentao:bug:1']);
   });
 }

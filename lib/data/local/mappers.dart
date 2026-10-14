@@ -224,6 +224,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
   pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
   sidebarWidth: r.sidebarWidth,
+  tableColumnWidths: decodeColumnWidths(r.tableColumnWidthsJson),
   chatAppearance: _enumByName(
     ChatAppearance.values,
     r.chatAppearance,
@@ -261,6 +262,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
   pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
   sidebarWidth: Value(s.sidebarWidth),
+  tableColumnWidthsJson: Value(jsonEncode(s.tableColumnWidths)),
   chatAppearance: Value(s.chatAppearance.name),
   chatPrimaryBubbles: Value(s.chatPrimaryBubbles),
   chatWallpaper: Value(s.chatWallpaper),
@@ -288,6 +290,20 @@ List<PinnedExecution> decodePinnedExecutions(String json) {
     ];
   } on FormatException {
     return const <PinnedExecution>[];
+  }
+}
+
+/// Decodes the persisted table column widths; tolerates malformed rows.
+Map<String, double> decodeColumnWidths(String json) {
+  try {
+    final decoded = jsonDecode(json);
+    if (decoded is! Map) return const <String, double>{};
+    return {
+      for (final MapEntry(:key, :value) in decoded.entries)
+        if (key is String && value is num) key: value.toDouble(),
+    };
+  } on FormatException {
+    return const <String, double>{};
   }
 }
 

@@ -843,4 +843,113 @@ void main() {
       expect((last as Ok<ViewPage>).value.hasMore, isFalse);
     },
   );
+
+  group('listTaskBugs', () {
+    /// Serves the execution bug view: [pages] of bugs, given by their task
+    /// ids, out of [total].
+    (_FakeAdapter, ZenTaoAdapter) serve(
+      List<List<int>> pages, {
+      required int total,
+    }) {
+      var id = 100;
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.contains('execution-bug-')) {
+          final match = RegExp(r'-(\d+)\.json$').firstMatch(opts.uri.path);
+          final page = int.parse(match?.group(1) ?? '1');
+          return _json({
+            'status': 'success',
+            'data': jsonEncode({
+              'bugs': [
+                for (final task in pages[page - 1])
+                  {
+                    'id': id++,
+                    'title': 'Bug',
+                    'status': 'active',
+                    'task': task,
+                  },
+              ],
+              'pager': {'recTotal': total},
+            }),
+          });
+        }
+        return _json(const {});
+      });
+      return (fake, ZenTaoAdapter(accountId: 'zt', client: _client(fake)));
+    }
+
+    Iterable<String> bugPaths(_FakeAdapter fake) => fake.requests
+        .map((r) => Uri.decodeFull(r.uri.path))
+        .where((p) => p.contains('execution-bug'));
+
+    Future<TaskBugsRead> read(
+      ZenTaoAdapter adapter, {
+      required int taskId,
+      required int limit,
+      int maxPages = 5,
+    }) async {
+      final res = await adapter.listTaskBugs(
+        '31',
+        taskId: taskId,
+        limit: limit,
+        maxPages: maxPages,
+      );
+      return (res as Ok<TaskBugsRead>).value;
+    }
+
+    test('sorted by task, it stops at the first lower task', () async {
+      final (fake, adapter) = serve([
+        [12000, 11548, 11548],
+        [11548, 11000, 0],
+        [0, 0, 0],
+      ], total: 9);
+
+      final got = await read(adapter, taskId: 11548, limit: 3);
+
+      expect(bugPaths(fake), [
+        contains('execution-bug-31-0-all-task_desc,id_desc-0-all-0-0-3-1.json'),
+        contains('execution-bug-31-0-all-task_desc,id_desc-0-all-0-0-3-2.json'),
+      ]);
+      expect(
+        got.bugs.map((b) => (b.providerEntity as ZenTaoBugEntity?)?.task),
+        ['12000', '11548', '11548', '11548', '11000', '0'],
+      );
+      expect(got.complete, isFalse);
+      expect(got.above, 0);
+    });
+
+    test('a list read to its end covers every task', () async {
+      final (_, adapter) = serve([
+        [9, 8],
+      ], total: 2);
+
+      expect((await read(adapter, taskId: 5, limit: 3)).complete, isTrue);
+    });
+
+    test('unsorted, it reads on to the end', () async {
+      final (fake, adapter) = serve([
+        [5, 9, 1],
+        [7, 2, 3],
+        [4],
+      ], total: 7);
+
+      final got = await read(adapter, taskId: 8, limit: 3);
+
+      expect(bugPaths(fake), hasLength(3));
+      expect(got.bugs, hasLength(7));
+      expect(got.complete, isTrue);
+    });
+
+    test('unsorted past its last page, it covers no range', () async {
+      final (_, adapter) = serve([
+        [5, 9],
+        [7, 2],
+      ], total: 10);
+
+      final got = await read(adapter, taskId: 8, limit: 2, maxPages: 2);
+
+      expect(got.complete, isFalse);
+      expect(got.above, isNull);
+    });
+  });
 }
