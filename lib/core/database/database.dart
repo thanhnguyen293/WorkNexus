@@ -179,6 +179,11 @@ class Settings extends Table {
   /// edge. Persisted so the chosen width survives restarts.
   RealColumn get sidebarWidth => real().withDefault(const Constant(290.0))();
 
+  /// JSON object of the ticket tables' dragged column widths, keyed
+  /// `"<table>.<column>"`.
+  TextColumn get tableColumnWidthsJson =>
+      text().withDefault(const Constant('{}'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -501,7 +506,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 48;
+  int get schemaVersion => 49;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -769,6 +774,11 @@ class AppDatabase extends _$AppDatabase {
           if (!await _hasColumn('settings', name)) {
             await m.addColumn(settings, column);
           }
+        }
+      }
+      if (from < 49) {
+        if (!await _hasColumn('settings', 'table_column_widths_json')) {
+          await m.addColumn(settings, settings.tableColumnWidthsJson);
         }
       }
     },
