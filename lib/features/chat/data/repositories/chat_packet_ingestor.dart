@@ -183,24 +183,29 @@ class ChatPacketIngestor {
     ];
     if (valid.isEmpty) return const IngestFollowUp();
     final rows = [for (final m in valid) messageFromXxd(accountId, m)];
-    await _local.upsertMessages(rows, link: link);
-
-    final unknownChats = <String>{};
+    // Per chat, so a 50-message page is one batch, one read and one write
+    // per chat inside one transaction — not a hundred round trips, each
+    // re-running every open watch.
+    final byChat = <String, List<RecordedMessage>>{};
     for (final row in rows) {
-      final cgid = row.cgid.value;
-      if (await _local.conversation(accountId, cgid) == null) {
-        unknownChats.add(cgid);
-        continue;
-      }
-      await _local.recordMessage(
-        accountId,
-        cgid,
+      byChat.putIfAbsent(row.cgid.value, () => []).add((
         serverId: row.serverId.value,
         index: row.messageIndex.value,
         sentAt: row.sentAt.value,
         fromSelf: row.senderId.value == selfUserId,
-      );
+      ));
     }
+    final unknownChats = <String>{};
+    await _local.transaction(() async {
+      await _local.upsertMessages(rows, link: link);
+      for (final MapEntry(key: cgid, value: messages) in byChat.entries) {
+        if (await _local.conversation(accountId, cgid) == null) {
+          unknownChats.add(cgid);
+          continue;
+        }
+        await _local.recordMessages(accountId, cgid, messages);
+      }
+    });
     return IngestFollowUp(
       chatGids: unknownChats,
       userIds: await _unknownUsers(accountId, {

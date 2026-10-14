@@ -9,7 +9,6 @@ import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/adapters/zentao_ticket_service.dart';
 import '../../../core/domain/entities/account.dart';
-import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/priority.dart';
@@ -39,21 +38,7 @@ import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
 import 'source_list_cache.dart';
 import 'task_bugs_coverage.dart';
-
-/// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
-/// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
-/// [existingLabels]. The detail endpoint omits those synthetic labels, so
-/// without this a detail refresh would silently drop the ticket from its board.
-List<String> mergeDetailLabels(
-  List<String> detailLabels,
-  List<String> existingLabels,
-) {
-  final preserved = existingLabels.where(
-    (l) =>
-        kSyntheticLabelPrefixes.any(l.startsWith) && !detailLabels.contains(l),
-  );
-  return [...detailLabels, ...preserved];
-}
+import 'ticket_store.dart';
 
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
@@ -69,12 +54,14 @@ class SyncService
     this._credentials, {
     AttachmentFileCache? attachmentCache,
   }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
-       _listCache = SourceListCache(_db);
+       _listCache = SourceListCache(_db),
+       _store = TicketStore(_db);
 
   final AppDatabase _db;
   final CredentialStore _credentials;
   final AttachmentFileCache _attachmentCache;
   final SourceListCache _listCache;
+  final TicketStore _store;
 
   /// Returns the number of tickets synced, or a [Failure].
   Future<Result<int>> syncAccount(Account account) async {
@@ -568,35 +555,20 @@ class SyncService
         ticket.providerEntity,
       ),
     );
-    await _db
-        .into(_db.tickets)
-        .insertOnConflictUpdate(ticketToCompanion(merged));
+    // The store writes only what differs from the stored rows (a refresh that
+    // brings nothing new must not re-run every watch over these tables) and
+    // compares against the rows, not [ticket], so the server's answer still
+    // replaces an optimistic guess that [ticket] predates.
+    await _store.writeIfChanged(merged);
 
     final comments = await adapter.listComments(ticket);
     final activity = await adapter.listActivity(ticket);
     await _db.transaction(() async {
       if (comments case Ok(:final value)) {
-        // Replace provider comments (keep the user's internal notes) so stale
-        // rows from a previous sync don't linger.
-        await (_db.delete(_db.comments)..where(
-              (c) => c.ticketId.equals(ticket.id) & c.origin.equals('provider'),
-            ))
-            .go();
-        for (final c in value) {
-          await _db
-              .into(_db.comments)
-              .insertOnConflictUpdate(commentToCompanion(c));
-        }
+        await _store.replaceProviderComments(ticket.id, value);
       }
       if (activity case Ok(:final value)) {
-        await (_db.delete(
-          _db.activities,
-        )..where((a) => a.ticketId.equals(ticket.id))).go();
-        for (final e in value) {
-          await _db
-              .into(_db.activities)
-              .insertOnConflictUpdate(activityToCompanion(e));
-        }
+        await _store.replaceActivity(ticket.id, value);
       }
     });
     return const Ok(null);
@@ -1321,64 +1293,6 @@ class SyncService
     return client;
   }
 
-  Future<void> _upsert(Account account, List<Ticket> tickets) async {
-    final merged = await _carryMembershipLabels(tickets);
-    await _db.batch((b) {
-      b.insert(
-        _db.accounts,
-        accountToCompanion(account),
-        onConflict: DoUpdate((_) => accountToCompanion(account)),
-      );
-      final projects = <String, Project>{};
-      for (final t in merged) {
-        projects.putIfAbsent(
-          t.projectId,
-          () => Project(
-            id: t.projectId,
-            accountId: account.id,
-            name: t.projectId.split(':').skip(1).join(':'),
-          ),
-        );
-      }
-      for (final p in projects.values) {
-        b.insert(
-          _db.projects,
-          projectToCompanion(p),
-          onConflict: DoUpdate((_) => projectToCompanion(p)),
-        );
-      }
-      for (final t in merged) {
-        b.insert(
-          _db.tickets,
-          ticketToCompanion(t),
-          onConflict: DoUpdate((_) => ticketToCompanion(t)),
-        );
-      }
-    });
-  }
-
-  /// Carries forward the synthetic board-membership labels
-  /// ([kSyntheticLabelPrefixes]) already stored for these tickets. Each list
-  /// sync only stamps its own marker (a project board vs. the account-wide
-  /// "mine" board), and `_upsert`'s row overwrite would otherwise drop the
-  /// others — leaving an item missing from a board it belongs to when the board
-  /// renders from the DB offline. Real provider labels still come fresh from the
-  /// server. Stale markers reconcile online via each board's slice.
-  Future<List<Ticket>> _carryMembershipLabels(List<Ticket> tickets) async {
-    if (tickets.isEmpty) return tickets;
-    final ids = [for (final t in tickets) t.id];
-    final rows = await (_db.select(
-      _db.tickets,
-    )..where((r) => r.id.isIn(ids))).get();
-    final priorLabels = {
-      for (final r in rows) r.id: decodeLabels(r.labelsJson),
-    };
-    return [
-      for (final t in tickets)
-        if (priorLabels[t.id] case final prior?)
-          t.copyWith(labels: mergeDetailLabels(t.labels, prior))
-        else
-          t,
-    ];
-  }
+  Future<void> _upsert(Account account, List<Ticket> tickets) =>
+      _store.writeSynced(account, tickets);
 }

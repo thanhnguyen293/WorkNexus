@@ -8,6 +8,14 @@ import 'chat_timeline_datasource.dart';
 
 export 'chat_timeline_datasource.dart' show MessageLink;
 
+/// What [ChatLocalDatasource.recordMessages] needs of an arrived message.
+typedef RecordedMessage = ({
+  int? serverId,
+  int? index,
+  DateTime sentAt,
+  bool fromSelf,
+});
+
 /// Drift access for chat (CLAUDE.md 3.4: SQL stays in `datasources/`).
 class ChatLocalDatasource {
   ChatLocalDatasource(this._db);
@@ -63,32 +71,51 @@ class ChatLocalDatasource {
             ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
           .getSingleOrNull();
 
-  /// Moves the conversation's "last message" forward to a newly arrived
-  /// message; a message the account sent itself also marks the chat read.
-  Future<void> recordMessage(
+  /// Runs [action] in one database transaction, so watchers see a page of
+  /// writes land at once rather than re-querying after each row.
+  Future<T> transaction<T>(Future<T> Function() action) =>
+      _db.transaction(action);
+
+  /// Moves the conversation's "last message" forward over newly arrived
+  /// [messages] (oldest first); one the account sent itself also marks the
+  /// chat read up to there. One read and at most one write per chat, and
+  /// nothing is written when the chat already stands where the messages
+  /// leave it — a re-fetched page must not re-emit the chat list.
+  Future<void> recordMessages(
     String accountId,
-    String cgid, {
-    required int? serverId,
-    required int? index,
-    required DateTime sentAt,
-    required bool fromSelf,
-  }) async {
+    String cgid,
+    List<RecordedMessage> messages,
+  ) async {
     final row = await conversation(accountId, cgid);
     if (row == null) return;
-    final newer = serverId != null && serverId > (row.lastMessageId ?? 0);
-    final newIndex = index != null && index > row.lastMessageIndex
-        ? index
-        : row.lastMessageIndex;
+    var lastId = row.lastMessageId;
+    var lastIndex = row.lastMessageIndex;
+    var lastRead = row.lastReadIndex;
+    var lastActive = row.lastActiveAt;
+    for (final m in messages) {
+      final serverId = m.serverId;
+      if (serverId != null && serverId > (lastId ?? 0)) {
+        lastId = serverId;
+        lastActive = m.sentAt;
+      }
+      final index = m.index;
+      if (index != null && index > lastIndex) lastIndex = index;
+      if (m.fromSelf && index != null) lastRead = lastIndex;
+    }
+    if (lastId == row.lastMessageId &&
+        lastIndex == row.lastMessageIndex &&
+        lastRead == row.lastReadIndex &&
+        lastActive == row.lastActiveAt) {
+      return;
+    }
     await (_db.update(
       _db.chatConversations,
     )..where((c) => c.accountId.equals(accountId) & c.gid.equals(cgid))).write(
       ChatConversationsCompanion(
-        lastMessageId: newer ? Value(serverId) : const Value.absent(),
-        lastMessageIndex: Value(newIndex),
-        lastReadIndex: fromSelf && index != null
-            ? Value(newIndex)
-            : const Value.absent(),
-        lastActiveAt: newer ? Value(sentAt) : const Value.absent(),
+        lastMessageId: Value(lastId),
+        lastMessageIndex: Value(lastIndex),
+        lastReadIndex: Value(lastRead),
+        lastActiveAt: Value(lastActive),
       ),
     );
   }
@@ -395,11 +422,16 @@ class ChatLocalDatasource {
   Future<void> upsertUsers(List<ChatUsersCompanion> rows) =>
       _db.batch((b) => b.insertAllOnConflictUpdate(_db.chatUsers, rows));
 
+  /// Only the ids: this runs for every incoming message, and the users table
+  /// holds everyone on the server.
   Future<Set<int>> knownUserIds(String accountId) async {
-    final rows = await (_db.select(
-      _db.chatUsers,
-    )..where((u) => u.accountId.equals(accountId))).get();
-    return {for (final r in rows) r.userId};
+    final u = _db.chatUsers;
+    final rows =
+        await (_db.selectOnly(u)
+              ..addColumns([u.userId])
+              ..where(u.accountId.equals(accountId)))
+            .get();
+    return {for (final r in rows) ?r.read(u.userId)};
   }
 
   Stream<List<ChatUserRow>> watchUsers(String accountId) => (_db.select(
