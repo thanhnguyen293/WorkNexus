@@ -14,6 +14,7 @@ void main() {
     WidgetTester tester, {
     String? initial,
     Alignment alignment = Alignment.center,
+    double? popoverMinWidth,
   }) async {
     String? picked = initial;
     await tester.pumpWidget(
@@ -35,6 +36,7 @@ void main() {
                   hintText: 'Select a user',
                   labelOf: (u) => u,
                   onChanged: (u) => setState(() => picked = u),
+                  popoverMinWidth: popoverMinWidth,
                 ),
               ),
             ),
@@ -121,5 +123,31 @@ void main() {
     for (final u in users) {
       expect(tester.getRect(find.text(u)).bottom, lessThan(screen.height));
     }
+  });
+
+  testWidgets('a wider popover grows toward the side with room', (
+    tester,
+  ) async {
+    // The field hugs the window's right edge, so a wider list grows left.
+    await pumpField(
+      tester,
+      alignment: Alignment.centerRight,
+      popoverMinWidth: 480,
+    );
+    await tester.tap(find.text('Select a user'));
+    await tester.pumpAndSettle();
+
+    final field = tester.getRect(find.text('Select a user').first);
+    final popover = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(CompositedTransformFollower),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(popover.width, 480);
+    expect(popover.left, lessThan(field.left));
+    expect(popover.right, lessThanOrEqualTo(800));
   });
 }

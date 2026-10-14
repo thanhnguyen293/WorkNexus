@@ -5,7 +5,9 @@ part of 'searchable_dropdown_field.dart';
 class _PopupOverlay<T> extends StatelessWidget {
   const _PopupOverlay({
     required this.link,
-    required this.fieldWidth,
+    required this.width,
+    required this.alignRight,
+    required this.labelMaxLines,
     required this.openUpward,
     required this.availableHeight,
     required this.searchController,
@@ -25,7 +27,9 @@ class _PopupOverlay<T> extends StatelessWidget {
   });
 
   final LayerLink link;
-  final double fieldWidth;
+  final double width;
+  final bool alignRight;
+  final int labelMaxLines;
   final bool openUpward;
   final double? availableHeight;
   final TextEditingController searchController;
@@ -89,6 +93,7 @@ class _PopupOverlay<T> extends StatelessWidget {
                       final item = items[i];
                       return _OptionTile(
                         label: labelOf(item),
+                        maxLines: labelMaxLines,
                         selected: item == selectedValue,
                         highlighted: i == highlighted,
                         onTap: () => onSelect(item),
@@ -111,15 +116,30 @@ class _PopupOverlay<T> extends StatelessWidget {
         ),
         CompositedTransformFollower(
           link: link,
-          targetAnchor: openUpward ? Alignment.topLeft : Alignment.bottomLeft,
-          followerAnchor: openUpward ? Alignment.bottomLeft : Alignment.topLeft,
+          targetAnchor: switch ((openUpward, alignRight)) {
+            (true, false) => Alignment.topLeft,
+            (true, true) => Alignment.topRight,
+            (false, false) => Alignment.bottomLeft,
+            (false, true) => Alignment.bottomRight,
+          },
+          followerAnchor: switch ((openUpward, alignRight)) {
+            (true, false) => Alignment.bottomLeft,
+            (true, true) => Alignment.bottomRight,
+            (false, false) => Alignment.topLeft,
+            (false, true) => Alignment.topRight,
+          },
           offset: Offset(0, openUpward ? -spacing.xs : spacing.xs),
           child: Align(
-            alignment: openUpward ? Alignment.bottomLeft : Alignment.topLeft,
+            alignment: switch ((openUpward, alignRight)) {
+              (true, false) => Alignment.bottomLeft,
+              (true, true) => Alignment.bottomRight,
+              (false, false) => Alignment.topLeft,
+              (false, true) => Alignment.topRight,
+            },
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: fieldWidth,
-                minWidth: fieldWidth,
+                maxWidth: width,
+                minWidth: width,
                 maxHeight: availableHeight ?? double.infinity,
               ),
               child: card,

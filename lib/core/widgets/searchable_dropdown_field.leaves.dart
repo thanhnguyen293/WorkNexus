@@ -47,9 +47,11 @@ class _OptionTile extends StatelessWidget {
     required this.selected,
     required this.highlighted,
     required this.onTap,
+    this.maxLines = 1,
   });
 
   final String label;
+  final int maxLines;
   final bool selected;
   final bool highlighted;
   final VoidCallback onTap;
@@ -86,7 +88,7 @@ class _OptionTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    maxLines: 1,
+                    maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.body.copyWith(
                       color: selected ? c.accent : c.textPrimary,
