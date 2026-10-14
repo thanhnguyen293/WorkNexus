@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../providers/wallpaper_providers.dart';
 import 'chat_style.dart';
 import 'chat_wallpaper.dart';
 
@@ -23,9 +23,7 @@ class ChatSeparator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = style.palette;
     final onPicture = ref.watch(
-      appSettingsProvider.select(
-        (s) => chatWallpaperIsPicture(s.chatWallpaper),
-      ),
+      shownChatWallpaperProvider.select(chatWallpaperIsPicture),
     );
     final ownPill = style.separator == ChatSeparatorStyle.pill;
     final scrimPill = onPicture && !ownPill;

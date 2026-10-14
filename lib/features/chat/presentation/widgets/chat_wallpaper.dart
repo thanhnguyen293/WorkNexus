@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/settings/app_settings.dart';
+import '../../../../core/settings/chat_wallpaper_color.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/chat_doodle_palette.dart';
+import '../providers/wallpaper_providers.dart';
 
 /// Whether the user's chat background is a picture (the pattern or an
 /// image) rather than the plain app background — then separators need a
@@ -16,8 +18,9 @@ bool chatWallpaperIsPicture(String wallpaper) =>
     wallpaper.isNotEmpty && wallpaper != kChatWallpaperPlain;
 
 /// The messages' background, shared by every chat style: the app's plain
-/// background, the doodle pattern, or a picked image darkened by
-/// `chatWallpaperDim` so separators and times stay readable over it.
+/// background, the doodle pattern, a chosen colour (with or without the
+/// pattern), or a picked image darkened by `chatWallpaperDim` so separators
+/// and times stay readable over it.
 class ChatBackground extends ConsumerWidget {
   const ChatBackground({super.key, required this.child});
 
@@ -25,18 +28,22 @@ class ChatBackground extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (wallpaper, dim) = ref.watch(
-      appSettingsProvider.select((s) => (s.chatWallpaper, s.chatWallpaperDim)),
+    final wallpaper = ref.watch(shownChatWallpaperProvider);
+    final dim = ref.watch(
+      appSettingsProvider.select((s) => s.chatWallpaperDim),
     );
-    final plain = ColoredBox(color: context.colors.background);
+    final background = context.colors.background;
     if (!chatWallpaperIsPicture(wallpaper)) {
-      return ColoredBox(color: context.colors.background, child: child);
+      return ColoredBox(color: background, child: child);
     }
-    if (wallpaper == kChatWallpaperPattern) {
-      return ChatWallpaper(
-        doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
-        child: child,
-      );
+    final brightness = Theme.of(context).brightness;
+    if (ChatWallpaperColor.parse(wallpaper) case final chosen?) {
+      // An unreadable colour (a hand-edited setting) falls back to plain.
+      final palette = ChatDoodlePalette.forColor(chosen.color, brightness);
+      if (palette == null) return ColoredBox(color: background, child: child);
+      return chosen.doodles
+          ? ChatWallpaper(doodle: palette, child: child)
+          : ColoredBox(color: palette.base, child: child);
     }
     return Stack(
       fit: StackFit.expand,
@@ -50,7 +57,7 @@ class ChatBackground extends ConsumerWidget {
             // again and the background blinked while each decode ran.
             cacheWidth: View.of(context).display.size.width.round(),
             gaplessPlayback: true,
-            errorBuilder: (_, _, _) => plain,
+            errorBuilder: (_, _, _) => ColoredBox(color: background),
           ),
         ),
         if (dim > 0)
