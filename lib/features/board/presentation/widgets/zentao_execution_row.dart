@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -15,6 +14,7 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../assigned_counts_provider.dart';
 import '../board_providers.dart';
+import '../util/open_execution_board.dart';
 import 'sidebar_primitives.dart';
 
 /// A single ZenTao execution (sprint/iteration) leaf under a project node.
@@ -56,7 +56,9 @@ class ZenTaoExecutionRow extends ConsumerWidget {
       opacity: loading ? 0.48 : 1,
       child: InkWell(
         mouseCursor: WidgetStateMouseCursor.clickable,
-        onTap: loading ? null : () => _select(ref),
+        onTap: loading
+            ? null
+            : () => openExecutionBoard(context, ref, execution),
         borderRadius: BorderRadius.circular(context.radii.sm),
         child: Container(
           height: context.sizes.controlSm,
@@ -120,22 +122,5 @@ class ZenTaoExecutionRow extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _select(WidgetRef ref) {
-    // Switch to this execution's task board; selecting it makes each column
-    // load the first page of its status view into the DB, which the board
-    // reads reactively. Selecting a task board and a bug board are mutually
-    // exclusive, so clear the product selection first.
-    ref.read(appNavProvider.notifier).show(MainView.board);
-    ref.read(selectedGitLabProjectProvider.notifier).clear();
-    ref.read(selectedGitHubRepoProvider.notifier).clear();
-    ref.read(selectedZenTaoProductProvider.notifier).clear();
-    ref.read(selectedZenTaoExecutionProvider.notifier).select(execution);
-    ref.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
-    // Restore this board's own filter; a first visit opens unfiltered.
-    ref
-        .read(filterStateProvider.notifier)
-        .openBoard(ref.read(boardKeyProvider));
   }
 }
