@@ -19,8 +19,10 @@ void main() {
   ) async {
     final dir = Directory.systemTemp.createTempSync('editor_drop');
     addTearDown(() => dir.deleteSync(recursive: true));
-    final image = File('${dir.path}/shot.png')..writeAsBytesSync([1, 2, 3]);
-    final text = File('${dir.path}/log.txt')..writeAsStringSync('log');
+    final image = File('${dir.path}${Platform.pathSeparator}shot.png')
+      ..writeAsBytesSync([1, 2, 3]);
+    final text = File('${dir.path}${Platform.pathSeparator}log.txt')
+      ..writeAsStringSync('log');
     final controller = HtmlEditingController();
     addTearDown(controller.dispose);
     final uploaded = <String>[];

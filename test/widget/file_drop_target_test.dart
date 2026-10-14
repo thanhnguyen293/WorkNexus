@@ -22,7 +22,8 @@ void main() {
   ) async {
     final dir = Directory.systemTemp.createTempSync('drop_test');
     addTearDown(() => dir.deleteSync(recursive: true));
-    final file = File('${dir.path}/notes.txt')..writeAsStringSync('hello');
+    final file = File('${dir.path}${Platform.pathSeparator}notes.txt')
+      ..writeAsStringSync('hello');
     List<DroppedFile>? dropped;
 
     await tester.pumpWidget(

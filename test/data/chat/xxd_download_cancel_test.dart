@@ -15,9 +15,10 @@ void main() {
     HttpOverrides.global = null;
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     server.listen((request) async {
-      // An upload is read but never answered, so the test can stop it.
+      // An upload is read but never answered, so the test can stop it. The
+      // client closing the connection mid-body is the point, not a failure.
       if (request.method == 'POST') {
-        await request.drain<void>();
+        await request.drain<void>().catchError((_) {});
         return;
       }
       final response = request.response

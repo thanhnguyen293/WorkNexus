@@ -36,6 +36,7 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/conversation_tile.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -502,7 +503,17 @@ void main() {
       findsOneWidget,
       reason: 'mention flattened, group preview names its sender',
     );
-    expect(find.text('3'), findsOneWidget);
+    // The row's own badge: the list tabs above it count the chat too.
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('VN Mobile Team'),
+          matching: find.byType(ConversationTile),
+        ),
+        matching: find.text('3'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Select a conversation'), findsOneWidget);
   });
 
