@@ -41,7 +41,22 @@ void main() {
     ).thenAnswer((_) async => const Ok(null));
   });
 
-  tearDown(() => mine.deleteSync(recursive: true));
+  // Switching packs remembers the pack in a file without waiting, and on
+  // Windows the folder cannot go while that write is open: give the real IO a
+  // moment to finish, outside the test clock.
+  tearDown(() async {
+    await TestWidgetsFlutterBinding.instance.runAsync(() async {
+      for (var attempt = 0; ; attempt++) {
+        try {
+          mine.deleteSync(recursive: true);
+          return;
+        } on FileSystemException {
+          if (attempt == 19) rethrow;
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+        }
+      }
+    });
+  });
 
   Future<void> pump(
     WidgetTester tester, {

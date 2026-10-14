@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/features/app_update/data/datasources/linux_update_installer.dart';
 
+/// The swap script and its fixtures run under `/bin/sh`, `chmod` and `true`.
+final _noShell = Platform.isWindows ? 'needs a POSIX shell' : null;
+
 void main() {
   late Directory root;
   late String install;
@@ -41,25 +44,33 @@ void main() {
     expect(result.exitCode, 0);
   }
 
-  test('replaces the bundle and starts the new build', () async {
-    await swap(staged);
+  test(
+    'replaces the bundle and starts the new build',
+    skip: _noShell,
+    () async {
+      await swap(staged);
 
-    expect(File('$install/new.txt').existsSync(), isTrue);
-    expect(File('$install/old.txt').existsSync(), isFalse);
-    expect(Directory('$install.previous').existsSync(), isFalse);
-    expect(Directory('$install.new').existsSync(), isFalse);
-    // The app is started in the background; give it a moment.
-    for (var i = 0; i < 50 && !File(marker).existsSync(); i++) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-    expect(File(marker).existsSync(), isTrue);
-  });
+      expect(File('$install/new.txt').existsSync(), isTrue);
+      expect(File('$install/old.txt').existsSync(), isFalse);
+      expect(Directory('$install.previous').existsSync(), isFalse);
+      expect(Directory('$install.new').existsSync(), isFalse);
+      // The app is started in the background; give it a moment.
+      for (var i = 0; i < 50 && !File(marker).existsSync(); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(File(marker).existsSync(), isTrue);
+    },
+  );
 
-  test('keeps the old bundle when the new one cannot be copied', () async {
-    await swap('${root.path}/missing');
+  test(
+    'keeps the old bundle when the new one cannot be copied',
+    skip: _noShell,
+    () async {
+      await swap('${root.path}/missing');
 
-    expect(File('$install/old.txt').existsSync(), isTrue);
-    expect(Directory('$install.previous').existsSync(), isFalse);
-    expect(Directory('$install.new').existsSync(), isFalse);
-  });
+      expect(File('$install/old.txt').existsSync(), isTrue);
+      expect(Directory('$install.previous').existsSync(), isFalse);
+      expect(Directory('$install.new').existsSync(), isFalse);
+    },
+  );
 }

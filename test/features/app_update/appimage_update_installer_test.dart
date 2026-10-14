@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/features/app_update/data/datasources/appimage_update_installer.dart';
 
+/// The swap script and its fixtures run under `/bin/sh`, `chmod` and `true`.
+final _noShell = Platform.isWindows ? 'needs a POSIX shell' : null;
+
 void main() {
   late Directory root;
   late String installed;
@@ -45,7 +48,7 @@ void main() {
     expect(installer.installPath, '/apps/WorkNexus.AppImage');
   });
 
-  test('replaces the image and starts the new one', () async {
+  test('replaces the image and starts the new one', skip: _noShell, () async {
     await swap(staged);
 
     expect(File(installed).readAsStringSync(), contains('touch'));
@@ -57,10 +60,14 @@ void main() {
     expect(File(marker).existsSync(), isTrue);
   });
 
-  test('keeps the old image when the new one cannot be copied', () async {
-    await swap('${root.path}/missing');
+  test(
+    'keeps the old image when the new one cannot be copied',
+    skip: _noShell,
+    () async {
+      await swap('${root.path}/missing');
 
-    expect(File(installed).readAsStringSync(), contains('# old'));
-    expect(File('$installed.new').existsSync(), isFalse);
-  });
+      expect(File(installed).readAsStringSync(), contains('# old'));
+      expect(File('$installed.new').existsSync(), isFalse);
+    },
+  );
 }
