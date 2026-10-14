@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
+import '../../../../core/settings/chat_wallpaper_color.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -20,11 +21,13 @@ import 'chat_attachments.dart';
 import 'chat_hover_remove.dart';
 import 'chat_snack.dart';
 import 'chat_wallpaper.dart';
+import 'chat_wallpaper_colors.dart';
 
 /// "Wallpaper" in the chat style panel — one background for every chat
-/// style: the plain app background, the doodle pattern, or one of the
-/// user's images (+ adds one, right-click removes it), and how much an
-/// image is darkened.
+/// style: a colour (one tile; [ChatWallpaperColors] under it picks the
+/// plain app background, a preset or a free colour, with or without the
+/// doodle pattern) or one of the user's images (+ adds one, right-click
+/// removes it), and how much an image is darkened.
 class ChatWallpaperPicker extends ConsumerWidget {
   const ChatWallpaperPicker({super.key});
 
@@ -79,7 +82,8 @@ class ChatWallpaperPicker extends ConsumerWidget {
       _ => const <String>[],
     };
     final usingImage =
-        chatWallpaperIsPicture(current) && current != kChatWallpaperPattern;
+        chatWallpaperIsPicture(current) &&
+        ChatWallpaperColor.parse(current) == null;
     return QuickSettingsField(
       label: l.chatWallpaper,
       stacked: true,
@@ -90,21 +94,16 @@ class ChatWallpaperPicker extends ConsumerWidget {
             spacing: s.md,
             runSpacing: s.md,
             children: [
+              // The colour wallpapers (plain, presets, a free colour, with
+              // or without the pattern) share one tile; the swatches below
+              // pick which.
               _Tile(
-                label: l.chatWallpaperDefault,
-                selected: !chatWallpaperIsPicture(current),
-                onTap: () => settings.setChatWallpaper(kChatWallpaperPlain),
-                child: ColoredBox(color: c.background),
-              ),
-              _Tile(
-                label: l.chatWallpaperPattern,
-                selected: current == kChatWallpaperPattern,
-                onTap: () => settings.setChatWallpaper(kChatWallpaperPattern),
-                child: ChatWallpaper(
-                  doodle: ChatDoodlePalette.of(Theme.of(context).brightness),
-                  scale: 0.3,
-                  child: const SizedBox.expand(),
-                ),
+                label: l.chatWallpaperColor,
+                selected: !usingImage,
+                onTap: usingImage
+                    ? () => settings.setChatWallpaper(kChatWallpaperPattern)
+                    : () {},
+                child: const _ColourPreview(),
               ),
               for (final path in images)
                 ChatHoverRemove(
@@ -133,6 +132,10 @@ class ChatWallpaperPicker extends ConsumerWidget {
               ),
             ],
           ),
+          if (!usingImage) ...[
+            SizedBox(height: s.md),
+            const ChatWallpaperColors(),
+          ],
           if (usingImage) ...[
             SizedBox(height: s.md),
             Row(
@@ -212,5 +215,37 @@ class _Tile extends StatelessWidget {
     final text = label;
     if (text == null) return tile;
     return Tooltip(message: text, child: tile);
+  }
+}
+
+/// The colour tile's picture: the colour wallpaper on screen (the default
+/// pattern while an image is in use, as tapping the tile brings it back).
+class _ColourPreview extends ConsumerWidget {
+  const _ColourPreview();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shown = ref.watch(shownChatWallpaperProvider);
+    final background = context.colors.background;
+    if (!chatWallpaperIsPicture(shown)) return ColoredBox(color: background);
+    final colour =
+        ChatWallpaperColor.parse(shown) ??
+        ChatWallpaperColor.parse(kChatWallpaperPattern);
+    final palette = colour == null
+        ? null
+        : ChatDoodlePalette.forColor(
+            colour.color,
+            Theme.of(context).brightness,
+          );
+    if (colour == null || palette == null) {
+      return ColoredBox(color: background);
+    }
+    return colour.doodles
+        ? ChatWallpaper(
+            doodle: palette,
+            scale: 0.3,
+            child: const SizedBox.expand(),
+          )
+        : ColoredBox(color: palette.base);
   }
 }

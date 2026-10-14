@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -11,6 +10,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
+import '../providers/wallpaper_providers.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_style.dart';
@@ -31,9 +31,7 @@ class ChatNotice extends ConsumerWidget {
     final p = style.palette;
     final s = context.spacing;
     final onPicture = ref.watch(
-      appSettingsProvider.select(
-        (st) => chatWallpaperIsPicture(st.chatWallpaper),
-      ),
+      shownChatWallpaperProvider.select(chatWallpaperIsPicture),
     );
     // Same look as the style's separators: its own pill, a dark scrim pill
     // over a picture background, or plain text.

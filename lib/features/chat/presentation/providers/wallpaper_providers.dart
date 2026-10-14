@@ -16,6 +16,27 @@ final chatWallpapersProvider = FutureProvider.autoDispose<Result<List<String>>>(
   (ref) => ref.watch(wallpaperRepositoryProvider).wallpapers(),
 );
 
+/// A wallpaper being tried out (a colour while it is dragged in the picker),
+/// shown over the saved one until it is saved; null when none. Kept apart
+/// from the setting so each step of a drag does not write it to disk.
+final chatWallpaperPreviewProvider =
+    NotifierProvider<ChatWallpaperPreview, String?>(ChatWallpaperPreview.new);
+
+class ChatWallpaperPreview extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void show(String wallpaper) => state = wallpaper;
+  void clear() => state = null;
+}
+
+/// The wallpaper on screen: the one being tried out, else the saved one.
+final shownChatWallpaperProvider = Provider<String>(
+  (ref) =>
+      ref.watch(chatWallpaperPreviewProvider) ??
+      ref.watch(appSettingsProvider.select((s) => s.chatWallpaper)),
+);
+
 final wallpaperControllerProvider = Provider<WallpaperController>(
   (ref) => WallpaperController(
     ref.watch(wallpaperRepositoryProvider),
