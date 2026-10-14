@@ -36,6 +36,12 @@ class ChatTypingChannel {
     final typing = switch (data['typing']) {
       final bool b => b,
       final num n => n != 0,
+      // xxd relays the flag as a string ("true" / "false").
+      final String s => switch (s.toLowerCase()) {
+        'true' || '1' => true,
+        'false' || '0' => false,
+        _ => null,
+      },
       _ => null,
     };
     if (gid is String && user != null && typing != null) {
