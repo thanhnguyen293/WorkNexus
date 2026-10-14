@@ -9,6 +9,7 @@ import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -71,40 +72,63 @@ class TicketTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fixed = columns.fold<double>(0, (sum, c) => sum + (c.width ?? 0));
-    final gutter = context.spacing.xl2 * 2;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = math.max(
-          constraints.maxWidth,
-          fixed + _kMinFlexWidth + gutter,
-        );
-        return Scrollbar(
-          child: SingleChildScrollView(
-            key: const PageStorageKey('ticket-table-x'),
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: width,
-              child: Column(
-                children: [
-                  _HeaderRow(columns, sort: sort, onSort: onSort),
-                  Expanded(
-                    child: ListView.builder(
-                      key: const PageStorageKey('ticket-table-y'),
-                      itemCount: rows.length + (footer == null ? 0 : 1),
-                      itemBuilder: (context, i) => i == rows.length
-                          ? Padding(
-                              padding: EdgeInsets.all(context.spacing.lg),
-                              child: footer,
-                            )
-                          : _TableRow(columns, rows[i]),
+    final gutter = context.spacing.xl * 2;
+    final radius = BorderRadius.circular(context.radii.lg);
+    // One card on the board's background, like a kanban column: the header
+    // and rows sit on the card, not straight on the page.
+    return Padding(
+      padding: EdgeInsets.all(context.spacing.xl2),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          // Rows on the card colour, like the board's ticket cards.
+          color: context.colors.card,
+          borderRadius: radius,
+          border: context.cardBorder,
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = math.max(
+                constraints.maxWidth,
+                fixed + _kMinFlexWidth + gutter,
+              );
+              return Scrollbar(
+                child: SingleChildScrollView(
+                  key: const PageStorageKey('ticket-table-x'),
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: width,
+                    child: Column(
+                      children: [
+                        _HeaderRow(columns, sort: sort, onSort: onSort),
+                        Expanded(
+                          child: ListView.builder(
+                            key: const PageStorageKey('ticket-table-y'),
+                            itemCount: rows.length + (footer == null ? 0 : 1),
+                            itemBuilder: (context, i) => i == rows.length
+                                ? Padding(
+                                    padding: EdgeInsets.all(context.spacing.lg),
+                                    child: footer,
+                                  )
+                                : _TableRow(
+                                    columns,
+                                    rows[i],
+                                    // The card's edge closes the last row.
+                                    last:
+                                        footer == null && i == rows.length - 1,
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -120,7 +144,7 @@ class _Cells extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.spacing;
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: s.xl2, vertical: s.md),
+      padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.md),
       child: Row(
         children: [
           for (var i = 0; i < columns.length; i++)
@@ -167,7 +191,9 @@ class _HeaderRow extends StatelessWidget {
     final c = context.colors;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: c.surface,
+        // A light accent wash: a neutral grey sits too close to the page's
+        // own grey (light theme) or the rows (dark) to read as a header.
+        color: c.mix(c.card, c.accent, 0.07),
         border: Border(bottom: context.hairlineSide),
       ),
       child: _Cells(columns, [
@@ -225,10 +251,11 @@ class _HeaderLabel extends StatelessWidget {
 }
 
 class _TableRow extends ConsumerWidget {
-  const _TableRow(this.columns, this.ticket);
+  const _TableRow(this.columns, this.ticket, {this.last = false});
 
   final List<TicketTableColumn> columns;
   final Ticket ticket;
+  final bool last;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -244,7 +271,7 @@ class _TableRow extends ConsumerWidget {
             ? null
             : () => ref.read(appNavProvider.notifier).openTicket(ticket.id),
         color: selected ? c.selectionFill : Colors.transparent,
-        border: Border(bottom: context.hairlineSide),
+        border: last ? null : Border(bottom: context.hairlineSide),
         child: _Cells(columns, [
           for (final column in columns) column.cell(ticket),
         ]),
