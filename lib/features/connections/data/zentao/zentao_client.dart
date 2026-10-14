@@ -482,7 +482,10 @@ class ZenTaoClient {
       cancelToken: _cancelToken(cancel),
     );
     final payload = _classicView(res);
-    if (payload == null) {
+    // The view always sends `tasks`, even empty. A reply without it is a
+    // refusal — 18.x answers an expired session with `{locate: user-login}` —
+    // and read as an empty view it would hide the column's cached tasks.
+    if (payload == null || !payload.containsKey('tasks')) {
       throw DioException(
         requestOptions: res.requestOptions,
         response: res,

@@ -85,12 +85,10 @@ final zentaoTaskSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
   return AsyncData({for (final s in streams) ...s.ids});
 });
 
-/// Whether a task column can still load more — the board then stays up even
-/// while every loaded task is filtered out, so its columns can fetch further
-/// pages.
+/// Whether a task column can still load more, now or once its failed page is
+/// retried — the board then stays up even while every loaded task is filtered
+/// out (or none loaded), so its columns can fetch further pages and a failed
+/// one shows its Retry.
 final zentaoTaskHasMoreProvider = Provider.autoDispose<bool>(
-  (ref) => ref
-      .watch(zentaoTaskStreamsProvider)
-      .values
-      .any((s) => s.hasMore && s.failure == null),
+  (ref) => ref.watch(zentaoTaskStreamsProvider).values.any((s) => s.hasMore),
 );

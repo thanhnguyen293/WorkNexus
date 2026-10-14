@@ -94,17 +94,15 @@ final zentaoBugSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
   return AsyncData({for (final s in streams.values) ...s.ids});
 });
 
-/// Whether a column on screen can still load more bugs — the board then stays
-/// up even while every loaded bug is filtered out, so its columns can fetch
-/// further pages.
+/// Whether a column on screen can still load more bugs, now or once its failed
+/// page is retried — the board then stays up even while every loaded bug is
+/// filtered out (or none loaded), so its columns can fetch further pages and a
+/// failed one shows its Retry.
 final zentaoBugHasMoreProvider = Provider.autoDispose<bool>((ref) {
   final streams = ref.watch(zentaoBugStreamsProvider);
   final closedShown =
       ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all;
   return streams.entries.any(
-    (e) =>
-        (closedShown || e.key != ZenTaoBugStream.all) &&
-        e.value.hasMore &&
-        e.value.failure == null,
+    (e) => (closedShown || e.key != ZenTaoBugStream.all) && e.value.hasMore,
   );
 });

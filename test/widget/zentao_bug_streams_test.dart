@@ -160,6 +160,42 @@ void main() {
     );
   });
 
+  test('a failed view keeps the board up while the rest are empty', () async {
+    when(
+      () => sync.syncProductBugsPage(
+        accountId: any(named: 'accountId'),
+        productId: any(named: 'productId'),
+        browseType: any(named: 'browseType'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer(
+      (_) async => const Ok(ViewPage(tickets: [], total: 0, hasMore: false)),
+    );
+    when(
+      () => sync.syncProductBugsPage(
+        accountId: any(named: 'accountId'),
+        productId: any(named: 'productId'),
+        browseType: 'toclosed',
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer((_) async => const Err(NetworkFailure('timeout')));
+    final container = open();
+    container.listen(zentaoBugHasMoreProvider, (_, _) {});
+    // Closed is off this tab, so only the failed view can keep the board up.
+    container
+        .read(zentaoBugTabProvider.notifier)
+        .set(ZenTaoBugBrowseType.unclosed);
+    await pumpEventQueue();
+
+    expect(container.read(zentaoBugSliceProvider).hasError, isFalse);
+    // So the board shows the failed column's Retry, not "no tickets".
+    expect(container.read(zentaoBugHasMoreProvider), isTrue);
+  });
+
   test('the board keeps loading Closed only on the All tab', () async {
     for (final v in ['unconfirmed', 'unresolved', 'toclosed']) {
       serve(v, total: 1);
