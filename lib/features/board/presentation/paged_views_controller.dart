@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/adapters/provider_adapter.dart';
+import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/cancel_signal.dart';
 import '../domain/entities/paged_view_state.dart';
@@ -73,10 +74,14 @@ abstract class PagedViewsController<V>
     final cancel = _cancel;
     _set(view, plan.loading);
     final pages = await Future.wait([
-      for (final page in plan.pages)
-        fetchPage(view, page: page, limit: kPagedViewPageSize, cancel: cancel),
+      for (final page in plan.pages) _fetch(view, page: page, cancel: cancel),
     ]);
-    if (!ref.mounted || generation != _generation) return;
+    // A rebuild cancels [cancel] at once but bumps [_generation] only once it
+    // runs — after this continuation, which reading [state] would then run
+    // early, folding the stale pages into the new board's views.
+    if (!ref.mounted || cancel.isCancelled || generation != _generation) {
+      return;
+    }
     _set(
       view,
       const ApplyViewPages()(
@@ -90,6 +95,25 @@ abstract class PagedViewsController<V>
     final current = state[view];
     if (current != null) _set(view, current.copyWith(failure: null));
     return loadMore(view);
+  }
+
+  /// [fetchPage], with whatever it throws (a keychain or database error the
+  /// data layer let through) as a failed page, so the view never stays loading.
+  Future<Result<ViewPage>> _fetch(
+    V view, {
+    required int page,
+    required CancelSignal cancel,
+  }) async {
+    try {
+      return await fetchPage(
+        view,
+        page: page,
+        limit: kPagedViewPageSize,
+        cancel: cancel,
+      );
+    } catch (e) {
+      return Err(UnexpectedFailure('Loading page $page failed: $e', cause: e));
+    }
   }
 
   void _set(V view, PagedViewState value) => state = {...state, view: value};

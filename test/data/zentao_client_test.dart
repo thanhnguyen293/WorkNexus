@@ -657,6 +657,46 @@ void main() {
     },
   );
 
+  test(
+    'listExecutionTasksPage fails on a reply that carries no task list',
+    () async {
+      var expired = true;
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.contains('execution-task-')) {
+          return _json({
+            'status': 'success',
+            'data': jsonEncode(
+              expired
+                  // 18.x answers an expired session by sending it to log in.
+                  ? {'locate': '/user-login.html'}
+                  : {
+                      'tasks': <Object>[],
+                      'pager': {'recTotal': 0},
+                    },
+            ),
+          });
+        }
+        return _json(const {});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+      Future<Result<ViewPage>> load() => adapter.listExecutionTasksPage(
+        '12',
+        browseType: 'wait',
+        page: 1,
+        limit: 50,
+      );
+
+      // Not an empty view: that would hide the column's cached tasks.
+      expect(await load(), isA<Err<ViewPage>>());
+
+      expired = false;
+      final empty = await load();
+      expect((empty as Ok<ViewPage>).value.tickets, isEmpty);
+      expect(empty.value.hasMore, isFalse);
+    },
+  );
+
   test('listComments parses actions given as an id-keyed object', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

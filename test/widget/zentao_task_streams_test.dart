@@ -192,7 +192,110 @@ void main() {
     await pumpEventQueue();
 
     expect(container.read(zentaoTaskSliceProvider).hasError, isTrue);
-    expect(container.read(zentaoTaskHasMoreProvider), isFalse);
+    // Each failed view can still load once retried.
+    expect(container.read(zentaoTaskHasMoreProvider), isTrue);
+  });
+
+  test('a failed view keeps the board up while the rest are empty', () async {
+    when(
+      () => sync.syncExecutionTasksPage(
+        accountId: any(named: 'accountId'),
+        executionId: any(named: 'executionId'),
+        browseType: any(named: 'browseType'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer(
+      (_) async => const Ok(ViewPage(tickets: [], total: 0, hasMore: false)),
+    );
+    when(
+      () => sync.syncExecutionTasksPage(
+        accountId: any(named: 'accountId'),
+        executionId: any(named: 'executionId'),
+        browseType: 'wait',
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer((_) async => const Err(NetworkFailure('timeout')));
+    final container = open();
+    container.listen(zentaoTaskHasMoreProvider, (_, _) {});
+    await pumpEventQueue();
+
+    expect(container.read(zentaoTaskSliceProvider).hasError, isFalse);
+    // So the board shows the failed column's Retry, not "no tickets".
+    expect(container.read(zentaoTaskHasMoreProvider), isTrue);
+  });
+
+  test(
+    'a page that throws fails its view instead of loading forever',
+    () async {
+      serveAll();
+      when(
+        () => sync.syncExecutionTasksPage(
+          accountId: any(named: 'accountId'),
+          executionId: any(named: 'executionId'),
+          browseType: 'doing',
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+          cancel: any(named: 'cancel'),
+        ),
+      ).thenThrow(Exception('keychain locked'));
+      final container = open();
+      await pumpEventQueue();
+
+      final failed = container.read(
+        zentaoTaskStreamsProvider,
+      )[ZenTaoTaskColumn.inProgress];
+      expect(failed?.loading, isFalse);
+      expect(failed?.failure, isA<UnexpectedFailure>());
+
+      serve('doing');
+      await container
+          .read(zentaoTaskStreamsProvider.notifier)
+          .retry(ZenTaoTaskColumn.inProgress);
+      expect(
+        container
+            .read(zentaoTaskStreamsProvider)[ZenTaoTaskColumn.inProgress]
+            ?.page,
+        1,
+      );
+    },
+  );
+
+  test('a refresh drops the pages its cancel cut short', () async {
+    serveAll();
+    // The first `wait` page is still loading when the board is refreshed and,
+    // like dio, answers the cancel with a failure — before the rebuild runs.
+    var waitCalls = 0;
+    when(
+      () => sync.syncExecutionTasksPage(
+        accountId: any(named: 'accountId'),
+        executionId: any(named: 'executionId'),
+        browseType: 'wait',
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    ).thenAnswer((call) async {
+      if (waitCalls++ == 0) {
+        await (call.namedArguments[#cancel] as CancelSignal).whenCancelled;
+        return const Err(CancelledFailure('cancelled'));
+      }
+      return Ok(ViewPage(tickets: [_task(1)], total: 1, hasMore: false));
+    });
+    final container = open();
+    await pumpEventQueue();
+
+    container.invalidate(zentaoTaskStreamsProvider);
+    await pumpEventQueue();
+
+    final reopened = container.read(
+      zentaoTaskStreamsProvider,
+    )[ZenTaoTaskColumn.notStarted];
+    expect(reopened?.failure, isNull);
+    expect(reopened?.page, 1);
   });
 
   test('a filtered board fetches several pages per load', () async {
