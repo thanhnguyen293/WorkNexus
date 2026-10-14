@@ -90,6 +90,16 @@ void main() {
 
     expect(find.textContaining('from the provider'), findsOneWidget);
     expect(find.textContaining('a local note'), findsNothing);
+    // Comments and activity can be selected and copied.
+    for (final text in ['from the provider', 'edited']) {
+      expect(
+        find.ancestor(
+          of: find.textContaining(text, findRichText: true),
+          matching: find.byType(SelectionArea),
+        ),
+        findsWidgets,
+      );
+    }
     expect(find.textContaining('edited', findRichText: true), findsOneWidget);
     // The composer posts to the provider only: no local-note switch.
     expect(find.text('Comment'), findsOneWidget);

@@ -12,7 +12,8 @@ const double kTimelineGutter = 24;
 
 /// One entry of the comments & activity timeline: a marker in the left gutter
 /// (the author's avatar for a comment, a small icon for an event) on a rail
-/// that runs unbroken from the first entry to the last, and [child] beside it.
+/// that runs unbroken from the first entry to the last, and [child] beside it,
+/// its text selectable.
 class TimelineItem extends StatelessWidget {
   const TimelineItem({
     super.key,
@@ -53,7 +54,9 @@ class TimelineItem extends StatelessWidget {
                 child: Center(child: marker),
               ),
               SizedBox(width: s.lg),
-              Expanded(child: child),
+              // Comments and notes are often copied (a link, a build URL), so
+              // the entry's text is selectable; links and chips still tap.
+              Expanded(child: SelectionArea(child: child)),
             ],
           ),
         ),
