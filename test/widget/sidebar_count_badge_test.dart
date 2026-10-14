@@ -22,9 +22,7 @@ void main() {
     ),
   );
 
-  testWidgets('shows the count as a pill, with what it counts', (
-    tester,
-  ) async {
+  testWidgets('shows the count as a pill, with what it counts', (tester) async {
     await pump(
       tester,
       SidebarGroupToggle(

@@ -256,44 +256,47 @@ void main() {
     },
   );
 
-  test('task names come from the task view, keeping the subtask mark', () async {
-    final (forms, _) = _forms((o) {
-      if (o.path.contains('task-ajaxGetExecutionTasks-31')) {
-        return [
-          {'value': 12492, 'text': '[C] 12492:Luci-VN-Flutter:share to IM'},
-          {'value': 12582, 'text': '12582:Sunshine_VN_Golang:Add id: field'},
-          {'value': 900, 'text': '900:Nobody:Gone'},
-        ];
-      }
-      if (o.path.contains('execution-task-31-all-')) {
-        return {
-          'pager': {'recTotal': 1},
-          'tasks': [
-            {
-              'id': 12582,
-              'name': 'Add id: field',
-              'children': [
-                {'id': 12492, 'name': 'share to IM'},
-              ],
-            },
-          ],
-        };
-      }
-      if (o.path.contains('ajaxGetProductStories')) return <Object>[];
-      return _page({
-        'bug': {'productID': 5},
+  test(
+    'task names come from the task view, keeping the subtask mark',
+    () async {
+      final (forms, _) = _forms((o) {
+        if (o.path.contains('task-ajaxGetExecutionTasks-31')) {
+          return [
+            {'value': 12492, 'text': '[C] 12492:Luci-VN-Flutter:share to IM'},
+            {'value': 12582, 'text': '12582:Sunshine_VN_Golang:Add id: field'},
+            {'value': 900, 'text': '900:Nobody:Gone'},
+          ];
+        }
+        if (o.path.contains('execution-task-31-all-')) {
+          return {
+            'pager': {'recTotal': 1},
+            'tasks': [
+              {
+                'id': 12582,
+                'name': 'Add id: field',
+                'children': [
+                  {'id': 12492, 'name': 'share to IM'},
+                ],
+              },
+            ],
+          };
+        }
+        if (o.path.contains('ajaxGetProductStories')) return <Object>[];
+        return _page({
+          'bug': {'productID': 5},
+        });
       });
-    });
 
-    final options = await forms.bugOptions('5', executionId: '31');
+      final options = await forms.bugOptions('5', executionId: '31');
 
-    expect(options.tasks.map((t) => t.label), [
-      '[C] #12492 share to IM',
-      '#12582 Add id: field',
-      // Not in the task view: the ajax label, as best it can be read.
-      '#900 Nobody:Gone',
-    ]);
-  });
+      expect(options.tasks.map((t) => t.label), [
+        '[C] #12492 share to IM',
+        '#12582 Add id: field',
+        // Not in the task view: the ajax label, as best it can be read.
+        '#900 Nobody:Gone',
+      ]);
+    },
+  );
 
   test('story / task labels read as "#id name"', () {
     const people = {'Dyno-VN-Flutter'};
