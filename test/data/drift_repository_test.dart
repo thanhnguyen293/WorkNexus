@@ -16,6 +16,7 @@ import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/data/local/database_seeder.dart';
 import 'package:work_nexus/data/local/mappers.dart';
 import 'package:work_nexus/data/local/repositories/local_ticket_repository.dart';
+import 'package:work_nexus/data/local/repositories/local_workspace_repository.dart';
 import 'package:work_nexus/features/connections/data/local_connection_repository.dart';
 import 'package:work_nexus/features/translation/data/repositories/local_translation_repository.dart';
 
@@ -32,6 +33,30 @@ void main() {
     // Re-seeding is a no-op.
     await seedDatabaseIfEmpty(db, now: DateTime(2026, 7, 17, 12));
     expect(await db.countTickets(), 48);
+  });
+
+  test('watchAccounts stays quiet when a sync re-writes an unchanged '
+      'account', () async {
+    await seedDatabaseIfEmpty(db, now: DateTime(2026, 7, 17, 12));
+    final repo = LocalWorkspaceRepository(db);
+    final emissions = <List<Account>>[];
+    final sub = repo.watchAccounts().listen(emissions.add);
+    await pumpEventQueue();
+    expect(emissions, hasLength(1));
+    final account = emissions.single.first;
+
+    // What every synced page does: upsert its account as it is.
+    Future<void> upsert(Account a) =>
+        db.into(db.accounts).insertOnConflictUpdate(accountToCompanion(a));
+    await upsert(account);
+    await pumpEventQueue();
+    expect(emissions, hasLength(1));
+
+    await upsert(account.copyWith(handle: 'renamed'));
+    await pumpEventQueue();
+    expect(emissions, hasLength(2));
+    expect(emissions.last.first.handle, 'renamed');
+    await sub.cancel();
   });
 
   test('watchTickets emits and re-emits after moveTicket', () async {
