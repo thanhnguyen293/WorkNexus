@@ -199,11 +199,15 @@ int? peerOf(String gid, int? selfUserId) {
 
 // ---- drift → domain ------------------------------------------------------------
 
+/// Maps a message row to its entity; [ChatRowCache] passes its own.
+typedef MessageOf = ChatMessage Function(ChatMessageRow row, {int? selfUserId});
+
 ChatConversation conversationFromRow(
   ChatConversationRow row, {
   ChatMessageRow? lastMessage,
   int? selfUserId,
   ParseMessageContent parse = const ParseMessageContent(),
+  MessageOf? messageOf,
 }) {
   final type = _chatType(row.type);
   // Sending reads the chat: the server's read mark only moves when the chat
@@ -223,6 +227,8 @@ ChatConversation conversationFromRow(
     lastActiveAt: row.lastActiveAt,
     lastMessage: lastMessage == null
         ? null
+        : messageOf != null
+        ? messageOf(lastMessage, selfUserId: selfUserId)
         : messageFromRow(lastMessage, selfUserId: selfUserId, parse: parse),
     peerUserId: peer,
     isMyCloud: peer != null && peer == selfUserId,

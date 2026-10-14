@@ -65,15 +65,21 @@ Priority mapZenTaoPriority(int? pri) {
   return Priority.fromLevel((pri - 1).clamp(0, 3));
 }
 
+// Compiled once: these run for every ticket of every synced page.
+final _tag = RegExp(r'<[^>]*>');
+final _blankRuns = RegExp(r'\n{3,}');
+final _addedFiles = RegExp(r'^Added Files\s+(.+?)(?:\r?\n|$)');
+final _keywordSeparators = RegExp(r'[,\s]+');
+
 /// Crudely strips HTML tags + decodes a few entities for a plaintext body.
 String stripHtml(String html) {
-  final noTags = html.replaceAll(RegExp(r'<[^>]*>'), '');
+  final noTags = html.replaceAll(_tag, '');
   return noTags
       .replaceAll('&nbsp;', ' ')
       .replaceAll('&amp;', '&')
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
-      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .replaceAll(_blankRuns, '\n\n')
       .trim();
 }
 
@@ -124,7 +130,7 @@ String zentaoActionText(ZenTaoAction action) {
 /// from the note so it isn't repeated as prose.
 ({List<String> files, String note}) zentaoActionAttachments(String comment) {
   final trimmed = comment.trimLeft();
-  final match = RegExp(r'^Added Files\s+(.+?)(?:\r?\n|$)').firstMatch(trimmed);
+  final match = _addedFiles.firstMatch(trimmed);
   if (match == null) return (files: const [], note: stripHtml(comment));
   final names = match
       .group(1)!
@@ -204,7 +210,7 @@ Ticket normalizeZenTao(
   // Labels: keywords (bug) + object type/category.
   final labels = <String>[];
   final keywords = e.keywords?.toString() ?? '';
-  labels.addAll(keywords.split(RegExp(r'[,\s]+')).where((s) => s.isNotEmpty));
+  labels.addAll(keywords.split(_keywordSeparators).where((s) => s.isNotEmpty));
   final resolution = e.resolution?.toString().trim().toLowerCase() ?? '';
   if (type == ZenTaoType.bug && resolution.isNotEmpty) {
     labels.add('resolution:$resolution');

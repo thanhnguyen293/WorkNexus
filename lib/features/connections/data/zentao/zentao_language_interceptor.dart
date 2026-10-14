@@ -16,12 +16,15 @@ class ZenTaoLanguageInterceptor extends Interceptor {
   final String Function() host;
   final String lang;
 
+  // Compiled once: this runs on every request.
+  static final _langCookie = RegExp(r'(^|;\s*)lang=');
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (options.uri.host == host()) {
       final cookie = options.headers['Cookie']?.toString() ?? '';
       // A cookie of the same name set by a caller wins.
-      if (!RegExp(r'(^|;\s*)lang=').hasMatch(cookie)) {
+      if (!_langCookie.hasMatch(cookie)) {
         options.headers['Cookie'] = cookie.isEmpty
             ? 'lang=$lang'
             : '$cookie; lang=$lang';

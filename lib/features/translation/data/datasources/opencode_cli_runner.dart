@@ -12,7 +12,7 @@ import 'cli_runner.dart';
 /// [queryTimeout] and the child is killed when it expires — a wedged CLI must
 /// not wedge the app.
 class OpenCodeCliRunner implements OpenCodeCli {
-  const OpenCodeCliRunner([this._runner = const CliRunner()]);
+  OpenCodeCliRunner([CliRunner? runner]) : _runner = runner ?? CliRunner();
 
   final CliRunner _runner;
 

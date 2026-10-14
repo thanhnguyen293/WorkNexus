@@ -1,18 +1,33 @@
 import 'dart:io';
 
 /// Resolves CLI binaries (GUI apps on macOS don't inherit the shell PATH) and
-/// spawns them.
+/// spawns them. One instance is shared through the composition root, so a
+/// binary is looked up once per session.
 class CliRunner {
-  const CliRunner();
+  CliRunner();
 
   /// Whether spawned CLIs must go through a shell. On Windows the binary may be
   /// a `.cmd`/`.bat` shim (e.g. npm-installed `opencode`), which `CreateProcess`
   /// cannot launch directly — it needs `%COMSPEC% /c`.
   static bool get needsShell => Platform.isWindows;
 
+  /// Binaries found so far, by name. Finding one spawns a login shell (which
+  /// sources the user's whole profile) and that ran on every translation. A
+  /// miss is looked up again, so a binary installed while the app runs is
+  /// still found; a hit is checked to still exist, so one removed is not
+  /// launched from a dead path.
+  final _found = <String, String>{};
+
   Future<String?> resolve(String name, {String? override}) async {
     if (override != null && override.trim().isNotEmpty) return override.trim();
-    return Platform.isWindows ? _resolveWindows(name) : _resolveUnix(name);
+    if (_found[name] case final path? when File(path).existsSync()) {
+      return path;
+    }
+    final path = Platform.isWindows
+        ? await _resolveWindows(name)
+        : await _resolveUnix(name);
+    if (path != null) _found[name] = path;
+    return path;
   }
 
   /// macOS/Linux: a GUI launch omits the interactive-shell PATH (nvm, asdf,
