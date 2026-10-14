@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/app.dart';
 import 'package:work_nexus/core/database/database.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/data/local/database_seeder.dart';
@@ -18,16 +17,7 @@ void main() {
     db = await setUpTestLocator();
   });
 
-  // With the board mounted, `db.close()` never completes — the database still
-  // answers queries, so nothing is stuck in a transaction — and the test hangs
-  // in tear-down. The in-memory database dies with the test process anyway, so
-  // give the close a moment, on the real clock, and go on.
-  tearDown(() async {
-    await TestWidgetsFlutterBinding.instance.runAsync(() async {
-      await getIt.reset();
-      await db.close().timeout(const Duration(seconds: 1), onTimeout: () {});
-    });
-  });
+  tearDown(() => resetTestLocator(db));
 
   testWidgets('App boots into Chat; the board opens on its welcome screen', (
     tester,

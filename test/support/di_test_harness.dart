@@ -20,9 +20,18 @@ Future<AppDatabase> setUpTestLocator({bool seed = true}) async {
 }
 
 /// Tears down the locator registered by [setUpTestLocator] and closes [db].
+///
+/// Drift's `close()` waits for the stream queries it still has listeners on to
+/// deliver their done event, and a listener a widget test left subscribed (a
+/// board mounted in it) is served by the test's fake-async zone, which nothing
+/// pumps in tear-down — so `close()` never completes, and the whole run sits
+/// there. It is given a second on the real clock, then let go: the in-memory
+/// database goes with the test process either way.
 Future<void> resetTestLocator(AppDatabase db) async {
   await getIt.reset();
-  await db.close();
+  await TestWidgetsFlutterBinding.ensureInitialized().runAsync(
+    () => db.close().timeout(const Duration(seconds: 1), onTimeout: () {}),
+  );
 }
 
 /// Unmounts the widget tree and advances time so drift's stream-query close
