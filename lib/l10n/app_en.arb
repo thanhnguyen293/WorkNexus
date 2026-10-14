@@ -867,6 +867,19 @@
   "chatAvatarTextHint": "Up to 4 characters",
   "chatChangeMyAvatarHint": "Choose a picture from your computer",
   "chatMyAvatarUpdated": "Your picture was updated",
+  "chatMyAvatarUploading": "Uploading your picture…",
+  "chatMyAvatarFailed": "Couldn't update your picture: {reason}",
+  "@chatMyAvatarFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCropAvatarTitle": "Crop your picture",
+  "chatCropAvatarHint": "Drag the frame to move it; drag a corner to resize it",
+  "chatCropAvatarApply": "Use this picture",
+  "chatCropAvatarUnreadable": "This picture can't be opened",
   "chatSendLike": "Send a like",
   "chatMention": "Mention someone",
   "chatEmoji": "Emoji",

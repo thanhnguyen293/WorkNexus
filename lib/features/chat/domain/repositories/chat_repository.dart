@@ -5,6 +5,7 @@ import '../entities/chat_cache_usage.dart';
 import '../entities/chat_conversation.dart';
 import '../entities/chat_message.dart';
 import '../entities/chat_user.dart';
+import '../value_objects/chat_avatar_crop.dart';
 import '../value_objects/chat_connection_status.dart';
 import '../value_objects/chat_presence.dart';
 import '../value_objects/chat_typing_signal.dart';
@@ -237,8 +238,13 @@ abstract class ChatRepository {
   });
 
   /// Sets the signed-in user's own picture from [image] (any common image
-  /// format; cut to its centred square), then reloads users so it shows.
-  Future<Result<void>> setMyAvatar(String accountId, Uint8List image);
+  /// format) cut to [crop] (its centred square when null), then reloads users
+  /// so it shows and tells the other users' clients about it.
+  Future<Result<void>> setMyAvatar(
+    String accountId,
+    Uint8List image, {
+    ChatAvatarCrop? crop,
+  });
 
   /// Peers starting and stopping typing in the account's chats, live.
   Stream<ChatTypingSignal> watchTyping(String accountId);

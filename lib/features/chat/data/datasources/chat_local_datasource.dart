@@ -144,6 +144,13 @@ class ChatLocalDatasource {
           ))
           .write(ChatUsersCompanion(status: Value(status)));
 
+  /// Sets a user's picture URL (null: none).
+  Future<void> setUserAvatar(String accountId, int userId, String? avatar) =>
+      (_db.update(_db.chatUsers)..where(
+            (u) => u.accountId.equals(accountId) & u.userId.equals(userId),
+          ))
+          .write(ChatUsersCompanion(avatar: Value(avatar)));
+
   /// Sets a chat's avatar (xxd JSON).
   Future<void> setChatAvatar(String accountId, String gid, String json) =>
       (_db.update(_db.chatConversations)

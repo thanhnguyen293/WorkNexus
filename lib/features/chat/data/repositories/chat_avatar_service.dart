@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../domain/value_objects/chat_avatar_crop.dart';
 import '../datasources/square_avatar_png.dart';
 import '../datasources/xxd/xxd_backend.dart';
 import '../datasources/xxd/xxd_http_datasource.dart';
@@ -62,15 +63,17 @@ class ChatAvatarService {
     );
   }
 
-  /// The signed-in user's own picture: [image] cut square, uploaded to
-  /// ZenTao (`my-uploadAvatar`) and made the avatar (`user-cropAvatar`) —
-  /// the steps ZenTao web's profile runs, as xxd has no call for it.
+  /// The signed-in user's own picture: [image] cut to [crop] (its centred
+  /// square when null), uploaded to ZenTao (`my-uploadAvatar`) and made the
+  /// avatar (`user-cropAvatar`) — the steps ZenTao web's profile runs, as xxd
+  /// has no call for it.
   Future<Result<void>> setMyAvatar(
     ChatSession? session,
-    Uint8List image,
-  ) async {
+    Uint8List image, {
+    ChatAvatarCrop? crop,
+  }) async {
     if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    final square = await squareAvatarPng(image);
+    final square = await squareAvatarPng(image, crop: crop);
     if (square case Err(:final failure)) return Err(failure);
     final (:png, :side) = (square as Ok<({Uint8List png, int side})>).value;
     final credentials = session.connection.credentials;
@@ -89,15 +92,15 @@ class ChatAvatarService {
     if (fileId case Err(:final failure)) return Err(failure);
 
     // A fresh token for the second call, as for every `im-authorize`.
-    final crop = await _authorize(
+    final cropCall = await _authorize(
       session,
       module: 'user',
       method: 'cropAvatar',
       params: {'imageID': (fileId as Ok<String>).value},
     );
-    if (crop case Err(:final failure)) return Err(failure);
+    if (cropCall case Err(:final failure)) return Err(failure);
     return _backend.cropUserAvatar(
-      (crop as Ok<Uri>).value,
+      (cropCall as Ok<Uri>).value,
       side,
       pinnedFingerprint: credentials.pinnedFingerprint,
     );

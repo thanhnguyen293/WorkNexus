@@ -19,6 +19,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart'
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_avatar_crop.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal.dart';
@@ -103,8 +104,11 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
-  Future<Result<void>> setMyAvatar(String a, Uint8List image) async =>
-      const Ok(null);
+  Future<Result<void>> setMyAvatar(
+    String a,
+    Uint8List image, {
+    ChatAvatarCrop? crop,
+  }) async => const Ok(null);
 
   @override
   Future<Result<void>> refreshUsers(String a) async => const Ok(null);
