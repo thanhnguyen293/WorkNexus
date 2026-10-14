@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -65,5 +67,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ImageViewerDialog), findsNothing);
+  });
+
+  testWidgets('a right-click copies the image and says so', (tester) async {
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('pasteboard'),
+      (call) async {
+        calls.add(call);
+        return null;
+      },
+    );
+    await pump(tester);
+
+    await tester.tap(find.byType(InlineImage), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Copy image'));
+    await tester.pumpAndSettle();
+
+    expect(calls.single.method, 'writeImage');
+    expect(find.text('Copied'), findsOneWidget);
+    expect(find.byType(ImageViewerDialog), findsNothing);
+  });
+
+  testWidgets('an image being edited has no right-click menu', (tester) async {
+    await pump(tester, zoomable: false);
+
+    await tester.tap(find.byType(InlineImage), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Copy image'), findsNothing);
   });
 }

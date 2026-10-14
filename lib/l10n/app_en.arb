@@ -719,6 +719,8 @@
   "fieldClosedBy": "Closed by",
   "fieldClosed": "Closed",
   "openImageInBrowser": "Open image in browser",
+  "copyImage": "Copy image",
+  "imageCopied": "Copied",
   "copyLink": "Copy link",
   "linkCopied": "Copied!",
   "copyTitle": "Copy title",

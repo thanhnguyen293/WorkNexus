@@ -51,7 +51,3 @@ Future<List<ChatAttachment>?> readClipboardAttachments() async {
 /// Asks where to save a file called [suggestedName]; null when cancelled.
 Future<String?> pickSaveLocation(String suggestedName) async =>
     (await getSaveLocation(suggestedName: suggestedName))?.path;
-
-/// Puts an image on the clipboard.
-Future<void> copyImageToClipboard(Uint8List bytes) =>
-    Pasteboard.writeImage(bytes);

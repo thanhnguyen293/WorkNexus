@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/image_clipboard.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
-import 'chat_attachments.dart';
 import 'chat_snack.dart';
 
 /// Puts the original of [image] on the clipboard and says so.

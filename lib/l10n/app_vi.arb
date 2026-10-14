@@ -644,6 +644,8 @@
   "fieldClosedBy": "Người đóng",
   "fieldClosed": "Ngày đóng",
   "openImageInBrowser": "Mở ảnh trong trình duyệt",
+  "copyImage": "Sao chép ảnh",
+  "imageCopied": "Đã sao chép",
   "copyLink": "Sao chép liên kết",
   "linkCopied": "Đã sao chép!",
   "copyTitle": "Sao chép tiêu đề",
