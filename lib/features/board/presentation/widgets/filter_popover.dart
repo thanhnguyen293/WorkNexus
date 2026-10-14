@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -81,6 +83,14 @@ class _PopoverHeader extends ConsumerWidget {
   }
 }
 
+/// The popover's width, and the most height it takes; it leaves
+/// [_kWindowReserve] of the window for the toolbar above it and a margin,
+/// but never shrinks below [_kMinHeight].
+const _kWidth = 440.0;
+const _kMaxHeight = 720.0;
+const _kMinHeight = 320.0;
+const _kWindowReserve = 160.0;
+
 class _PopoverShell extends StatelessWidget {
   const _PopoverShell({required this.child});
   final Widget child;
@@ -88,12 +98,19 @@ class _PopoverShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final radius = BorderRadius.circular(context.radii.lg);
+    // As tall as the window allows below the toolbar: long facet groups
+    // (assignees, reporters) then scroll less.
+    final maxHeight = math.min(
+      _kMaxHeight,
+      MediaQuery.sizeOf(context).height - _kWindowReserve,
+    );
     return Container(
-      width: 340,
-      constraints: const BoxConstraints(maxHeight: 500),
+      width: _kWidth,
+      constraints: BoxConstraints(maxHeight: math.max(maxHeight, _kMinHeight)),
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.lg),
+        borderRadius: radius,
         border: Border.all(color: c.borderStrong),
         boxShadow: [
           BoxShadow(
@@ -103,13 +120,21 @@ class _PopoverShell extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.fromLTRB(
-        context.spacing.xl2,
-        context.spacing.xl,
-        context.spacing.xl2,
-        context.spacing.xl2,
+      // The content is padded inside the scroll view, so the (platform)
+      // scrollbar runs along the popover's own right edge rather than inside
+      // the padding.
+      child: ClipRRect(
+        borderRadius: radius,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            context.spacing.xl2,
+            context.spacing.xl,
+            context.spacing.xl2,
+            context.spacing.xl2,
+          ),
+          child: child,
+        ),
       ),
-      child: SingleChildScrollView(child: child),
     );
   }
 }
