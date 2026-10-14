@@ -19,6 +19,11 @@ import 'zentao_normalize.dart';
 import 'zentao_order_by.dart';
 import 'zentao_workflow.dart';
 
+/// What [ZenTaoAdapter.listTaskBugs] read: the bugs, and how far they cover
+/// the execution's bug list — all of it ([complete]), or the bugs of every
+/// task above [above]; neither when ZenTao did not sort them by task.
+typedef TaskBugsRead = ({List<Ticket> bugs, bool complete, int? above});
+
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
 class ZenTaoAdapter implements ProviderAdapter {
   ZenTaoAdapter({required this.accountId, required ZenTaoClient client})
@@ -347,35 +352,51 @@ class ZenTaoAdapter implements ProviderAdapter {
     });
   }
 
-  /// Execution [executionId]'s bugs, page by page up to [maxPages] pages of
-  /// [limit] — a task's related bugs are found among them by their `task`.
-  Future<Result<List<Ticket>>> listExecutionBugs(
+  /// The bugs of execution [executionId] that task [taskId] may have, read
+  /// from its bug list sorted by task, highest first: reading stops at the
+  /// first bug of a lower task, so a recent task costs one page. Says how
+  /// far the pages read cover — the whole list ([TaskBugsRead.complete]), or
+  /// every task above [TaskBugsRead.above]. When ZenTao does not sort by
+  /// task, it reads on until the end, or [maxPages] pages of [limit].
+  Future<Result<TaskBugsRead>> listTaskBugs(
     String executionId, {
-    int limit = 200,
+    required int taskId,
+    int limit = 100,
     int maxPages = 5,
   }) => _guard(() async {
-    final out = <Ticket>[];
+    final bugs = <Ticket>[];
+    var sorted = true;
+    int? lowest;
     for (var page = 1; page <= maxPages; page++) {
       final res = await _client.classicExecutionBugs(
         executionId,
         recPerPage: limit,
         pageID: page,
+        orderBy: 'task_desc,id_desc',
       );
-      out.addAll([
-        for (final bug in res.bugs)
-          if (bug.idString.isNotEmpty)
-            normalizeZenTao(
-              bug,
-              type: ZenTaoType.bug,
-              accountId: accountId,
-              baseUrl: _client.baseUrl,
-            ),
-      ]);
-      // A page past the end answers the first page again, so stop on the
-      // total, not on a short page.
-      if (page * limit >= res.total) break;
+      for (final bug in res.bugs) {
+        if (bug.idString.isEmpty) continue;
+        final task = zentaoInt(bug.task) ?? 0;
+        if (lowest != null && task > lowest) sorted = false;
+        lowest = task;
+        bugs.add(
+          normalizeZenTao(
+            bug,
+            type: ZenTaoType.bug,
+            accountId: accountId,
+            baseUrl: _client.baseUrl,
+          ),
+        );
+      }
+      // A page past the end answers the first page again, so the total
+      // ends the list, not a short page.
+      if (page * limit >= res.total) {
+        return (bugs: bugs, complete: true, above: null);
+      }
+      // Bugs with the task's id cannot come after a lower task's.
+      if (sorted && lowest != null && lowest < taskId) break;
     }
-    return out;
+    return (bugs: bugs, complete: false, above: sorted ? lowest : null);
   });
 
   Ticket _productBug(Ticket ticket, String productId) => ticket.copyWith(
