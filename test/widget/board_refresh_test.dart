@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/di/service_locator.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
-import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/util/cancel_signal.dart';
+import 'package:work_nexus/features/board/domain/repositories/zentao_view_pages.dart';
 import 'package:work_nexus/features/board/presentation/board_providers.dart';
 import 'package:work_nexus/features/board/presentation/board_refresh.dart';
-import 'package:work_nexus/features/sync/data/sync_service.dart';
 
-class _MockSyncService extends Mock implements SyncService {}
+class _MockViewPages extends Mock implements ZenTaoViewPages {}
 
 const _product = ProviderProduct(
   id: '4',
@@ -25,14 +25,14 @@ const _execution = ProviderExecution(
 );
 
 void main() {
-  late _MockSyncService sync;
+  late _MockViewPages sync;
 
-  setUpAll(() => registerFallbackValue(_execution));
+  setUpAll(() => registerFallbackValue(CancelSignal()));
 
   setUp(() async {
-    sync = _MockSyncService();
+    sync = _MockViewPages();
     await getIt.reset();
-    getIt.registerSingleton<SyncService>(sync);
+    getIt.registerSingleton<ZenTaoViewPages>(sync);
   });
 
   tearDown(() => getIt.reset());
@@ -45,9 +45,10 @@ void main() {
         browseType: any(named: 'browseType'),
         page: any(named: 'page'),
         limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
       ),
     ).thenAnswer(
-      (_) async => const Ok(BugPage(tickets: [], total: 0, hasMore: false)),
+      (_) async => const Ok(ViewPage(tickets: [], total: 0, hasMore: false)),
     );
 
     final container = ProviderContainer();
@@ -69,48 +70,64 @@ void main() {
           browseType: view,
           page: 1,
           limit: any(named: 'limit'),
+          cancel: any(named: 'cancel'),
         ),
       ).called(2);
     }
   });
 
-  test('refreshing the task board re-syncs the open execution', () async {
-    when(
-      () => sync.syncExecutionTasks(any()),
-    ).thenAnswer((_) async => const Ok(3));
+  test(
+    'refreshing the task board reloads every status view from page 1',
+    () async {
+      when(
+        () => sync.syncExecutionTasksPage(
+          accountId: any(named: 'accountId'),
+          executionId: any(named: 'executionId'),
+          browseType: any(named: 'browseType'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+          cancel: any(named: 'cancel'),
+        ),
+      ).thenAnswer(
+        (_) async => const Ok(ViewPage(tickets: [], total: 0, hasMore: false)),
+      );
 
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    container.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
-    container.read(selectedZenTaoExecutionProvider.notifier).select(_execution);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
+      container
+          .read(selectedZenTaoExecutionProvider.notifier)
+          .select(_execution);
+      container.listen(zentaoTaskSliceProvider, (_, _) {});
+      await pumpEventQueue();
+      expect(container.read(boardRefreshingProvider), isFalse);
 
-    final result = await container.read(refreshBoardProvider)();
+      final result = await container.read(refreshBoardProvider)();
+      container.read(zentaoTaskSliceProvider);
+      await pumpEventQueue();
 
-    expect(result, isA<Ok<void>>());
-    verify(
-      () =>
-          sync.invalidateExecutionTasks(accountId: 'zentao', executionId: '9'),
-    ).called(1);
-    verify(() => sync.syncExecutionTasks(any())).called(1);
-    // The syncing indicator is released once the refetch finishes.
-    expect(container.read(zentaoExecutionSyncingProvider), isNull);
-  });
-
-  test('a failed task-board refresh reports the failure', () async {
-    when(
-      () => sync.syncExecutionTasks(any()),
-    ).thenAnswer((_) async => const Err(NetworkFailure('offline')));
-
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    container.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
-    container.read(selectedZenTaoExecutionProvider.notifier).select(_execution);
-
-    final result = await container.read(refreshBoardProvider)();
-
-    expect(result.failureOrNull?.message, 'offline');
-    expect(container.read(zentaoExecutionSyncingProvider), isNull);
-  });
+      expect(result, isA<Ok<void>>());
+      for (final view in [
+        'wait',
+        'doing',
+        'pause',
+        'done',
+        'closed',
+        'cancel',
+      ]) {
+        verify(
+          () => sync.syncExecutionTasksPage(
+            accountId: 'zentao',
+            executionId: '9',
+            browseType: view,
+            page: 1,
+            limit: any(named: 'limit'),
+            cancel: any(named: 'cancel'),
+          ),
+        ).called(2);
+      }
+    },
+  );
 
   test('refreshing with no board open is a no-op', () async {
     final container = ProviderContainer();

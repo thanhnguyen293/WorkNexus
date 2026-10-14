@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_count_badge.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../board_providers.dart';
 import 'filter_facet_groups.dart';
@@ -29,6 +34,8 @@ class FilterPopover extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _PopoverHeader(),
+          SizedBox(height: context.spacing.lg),
           const SavedFiltersSection(),
           if (usesFacetFilters)
             const FacetFilterGroups()
@@ -36,6 +43,40 @@ class FilterPopover extends ConsumerWidget {
             const GenericFilterGroups(),
         ],
       ),
+    );
+  }
+}
+
+/// The popover's title, how many filters are on, and the reset.
+class _PopoverHeader extends ConsumerWidget {
+  const _PopoverHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
+    final filter = ref.watch(filterStateProvider);
+    final count = filter.activeTokenCount;
+    return Row(
+      children: [
+        Text(
+          l.filters,
+          style: context.typography.bodySmStrong.copyWith(
+            color: context.colors.textPrimary,
+          ),
+        ),
+        if (count > 0) ...[
+          SizedBox(width: context.spacing.sm),
+          AppCountBadge(count, active: true),
+        ],
+        const Spacer(),
+        AppButton.textNeutral(
+          size: AppButtonSize.small,
+          icon: LucideIcons.rotateCcw300,
+          isDisabled: !filter.hasActiveFilters,
+          onPressed: ref.read(filterStateProvider.notifier).clearAll,
+          child: Text(l.filtersClearAll),
+        ),
+      ],
     );
   }
 }

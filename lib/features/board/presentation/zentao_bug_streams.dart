@@ -1,65 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/service_locator.dart';
+import '../../../core/di/providers.dart';
+import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
-import '../../sync/data/sync_service.dart';
+import '../../../core/util/cancel_signal.dart';
+import '../domain/entities/paged_view_state.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 import '../domain/value_objects/zentao_bug_column.dart';
 import '../domain/value_objects/zentao_bug_stream.dart';
 import 'board_providers.dart';
-
-/// Bugs per page of a column's view: enough to fill a column, small enough
-/// that the board shows up quickly.
-const kZenTaoBugStreamPageSize = 50;
-
-/// What the board has loaded of one [ZenTaoBugStream].
-class ZenTaoBugStreamState {
-  const ZenTaoBugStreamState({
-    this.ids = const <String>{},
-    this.page = 0,
-    this.total = 0,
-    this.hasMore = true,
-    this.loading = false,
-    this.failure,
-  });
-
-  /// The ids of the bugs loaded so far.
-  final Set<String> ids;
-
-  /// The last page loaded; 0 before the first.
-  final int page;
-
-  /// How many bugs the view holds on the server, across every page.
-  final int total;
-  final bool hasMore;
-  final bool loading;
-
-  /// Why the last page failed to load; cleared by a retry.
-  final Failure? failure;
-
-  bool get started => page > 0;
-
-  /// Whether the next page should be fetched as soon as the column's end is
-  /// shown: a failed page waits for a retry instead.
-  bool get canLoadMore => hasMore && !loading && failure == null;
-
-  ZenTaoBugStreamState copyWith({
-    Set<String>? ids,
-    int? page,
-    int? total,
-    bool? hasMore,
-    bool? loading,
-    Failure? Function()? failure,
-  }) => ZenTaoBugStreamState(
-    ids: ids ?? this.ids,
-    page: page ?? this.page,
-    total: total ?? this.total,
-    hasMore: hasMore ?? this.hasMore,
-    loading: loading ?? this.loading,
-    failure: failure == null ? this.failure : failure(),
-  );
-}
 
 /// The views loaded as soon as a product's bug board opens. [ZenTaoBugStream.all]
 /// only feeds the Closed column, so it waits until that column is shown.
@@ -70,85 +20,57 @@ const _openingStreams = [
 ];
 
 /// The selected product's bug views, each paged on its own as its columns
-/// scroll to the end. Pages are upserted into drift; the board reads the bugs
-/// from there and keeps the ids loaded here (local-first).
-class ZenTaoBugStreamsController
-    extends Notifier<Map<ZenTaoBugStream, ZenTaoBugStreamState>> {
-  /// Bumped on every rebuild (product switch, refresh) so a page that arrives
-  /// for the previous product is dropped.
-  int _generation = 0;
+/// scroll to the end (see [PagedViewsController]).
+class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
+  @override
+  Map<ZenTaoBugStream, PagedViewState> build() {
+    // A new order starts every view over from its first page.
+    ref.watch(zentaoBugFetchSortProvider);
+    return open(
+      views: ZenTaoBugStream.values,
+      opening: ref.watch(selectedZenTaoProductProvider) == null
+          ? const []
+          : _openingStreams,
+    );
+  }
 
   @override
-  Map<ZenTaoBugStream, ZenTaoBugStreamState> build() {
-    _generation++;
-    if (ref.watch(selectedZenTaoProductProvider) != null) {
-      Future.microtask(() {
-        for (final stream in _openingStreams) {
-          loadMore(stream);
-        }
-      });
-    }
-    return {
-      for (final stream in ZenTaoBugStream.values)
-        stream: const ZenTaoBugStreamState(),
-    };
-  }
-
-  /// Loads the next page of [stream], unless one is loading, the last failed
-  /// or there is none.
-  Future<void> loadMore(ZenTaoBugStream stream) async {
+  Future<Result<ViewPage>> fetchPage(
+    ZenTaoBugStream view, {
+    required int page,
+    required int limit,
+    required CancelSignal cancel,
+  }) async {
     final product = ref.read(selectedZenTaoProductProvider);
-    final current = state[stream];
-    if (product == null || current == null || !current.canLoadMore) return;
-    final generation = _generation;
-    _set(stream, current.copyWith(loading: true));
-    final res = await getIt<SyncService>().syncProductBugsPage(
-      accountId: product.accountId,
-      productId: product.productId,
-      browseType: stream.code,
-      page: current.page + 1,
-      limit: kZenTaoBugStreamPageSize,
-    );
-    if (!ref.mounted || generation != _generation) return;
-    final now = state[stream] ?? current;
-    _set(stream, switch (res) {
-      Ok(:final value) => now.copyWith(
-        ids: {...now.ids, for (final t in value.tickets) t.id},
-        page: now.page + 1,
-        total: value.total,
-        hasMore: value.hasMore,
-        loading: false,
-      ),
-      Err(:final failure) => now.copyWith(
-        loading: false,
-        failure: () => failure,
-      ),
-    });
+    if (product == null) {
+      return const Err(CancelledFailure('No product is selected'));
+    }
+    return ref
+        .read(zentaoViewPagesProvider)
+        .syncProductBugsPage(
+          accountId: product.accountId,
+          productId: product.productId,
+          browseType: view.code,
+          page: page,
+          limit: limit,
+          sort: ref.read(zentaoBugFetchSortProvider),
+          cancel: cancel,
+        );
   }
-
-  /// Tries [stream]'s failed page again.
-  Future<void> retry(ZenTaoBugStream stream) {
-    final current = state[stream];
-    if (current != null) _set(stream, current.copyWith(failure: () => null));
-    return loadMore(stream);
-  }
-
-  void _set(ZenTaoBugStream stream, ZenTaoBugStreamState value) =>
-      state = {...state, stream: value};
 }
 
 final zentaoBugStreamsProvider =
     NotifierProvider.autoDispose<
       ZenTaoBugStreamsController,
-      Map<ZenTaoBugStream, ZenTaoBugStreamState>
+      Map<ZenTaoBugStream, PagedViewState>
     >(ZenTaoBugStreamsController.new);
 
 /// What has been loaded of the view [column] draws on.
 final zentaoBugColumnStreamProvider = Provider.autoDispose
-    .family<ZenTaoBugStreamState, ZenTaoBugColumn>(
+    .family<PagedViewState, ZenTaoBugColumn>(
       (ref, column) =>
           ref.watch(zentaoBugStreamsProvider)[ZenTaoBugStream.of(column)] ??
-          const ZenTaoBugStreamState(),
+          const PagedViewState(),
     );
 
 /// The ids of every bug the board's views have loaded — loading until each

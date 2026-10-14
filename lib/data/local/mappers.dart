@@ -204,6 +204,11 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
     r.detailLayout,
     DetailLayout.twoPane,
   ),
+  boardLayout: _enumByName(
+    BoardLayout.values,
+    r.boardLayout,
+    BoardLayout.board,
+  ),
   dateFormat: _enumByName(
     DateDisplayFormat.values,
     r.dateFormat,
@@ -244,6 +249,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   surface: Value(s.surface.name),
   density: Value(s.density.name),
   detailLayout: Value(s.detailLayout.name),
+  boardLayout: Value(s.boardLayout.name),
   dateFormat: Value(s.dateFormat.name),
   companyTint: Value(s.companyTint),
   localeCode: Value(s.locale.languageCode),

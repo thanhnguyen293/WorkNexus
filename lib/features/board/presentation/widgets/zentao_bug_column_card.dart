@@ -13,6 +13,7 @@ import '../../domain/value_objects/zentao_bug_column.dart';
 import '../board_providers.dart';
 import 'board_column_frame.dart';
 import 'non_fix_resolution_dialog.dart';
+import 'paged_column_footer.dart';
 import 'ticket_card.dart';
 import 'zentao_bug_column_footer.dart';
 import 'zentao_bug_column_parts.dart';
@@ -54,14 +55,11 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
         highlighted: _over,
         dot: BoardColumnDot(color),
         label: label,
-        badge: BugColumnCount(col.count, more: more),
+        badge: PagedColumnCount(col.count, more: more),
         itemCount: col.tickets.length + (more ? 1 : 0),
         itemBuilder: (context, i) {
           if (i == col.tickets.length) {
-            return ZenTaoBugColumnFooter(
-              column: col.column,
-              empty: col.tickets.isEmpty,
-            );
+            return ZenTaoBugColumnFooter(column: col.column);
           }
           final ticket = col.tickets[i];
           return Draggable<Ticket>(

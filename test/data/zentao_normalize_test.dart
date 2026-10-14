@@ -52,6 +52,26 @@ void main() {
     });
   });
 
+  test(
+    'a closed ticket filed under the `closed` pseudo-account is unassigned',
+    () {
+      final t = normalizeZenTao(
+        ZenTaoEntity.fromJson(const {
+          'id': 8801,
+          'name': 'Daily report',
+          'status': 'closed',
+          'assignedTo': 'closed',
+        }),
+        type: ZenTaoType.task,
+        accountId: 'zt',
+        baseUrl: 'https://zentao.example.com/',
+      );
+
+      expect(t.assignee, isNull);
+      expect(assigneeHandle({'account': 'mobile2'}), 'mobile2');
+    },
+  );
+
   test('normalizes a REST v1 bug payload', () {
     final json = <String, dynamic>{
       'id': 1092,

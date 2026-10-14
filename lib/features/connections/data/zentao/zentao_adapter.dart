@@ -6,14 +6,17 @@ import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
+import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/network/api_paging.dart';
+import '../../../../core/util/cancel_signal.dart';
 import '../../../../core/util/synthetic_labels.dart';
 import 'zentao_action_result.dart';
 import 'zentao_client.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
+import 'zentao_order_by.dart';
 import 'zentao_workflow.dart';
 
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
@@ -304,11 +307,13 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
-  Future<Result<BugPage>> listProductBugsPage(
+  Future<Result<ViewPage>> listProductBugsPage(
     String productId, {
     required String browseType,
     required int page,
     required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
   }) async {
     return _guard(() async {
       final res = await _client.classicProductBugs(
@@ -316,11 +321,13 @@ class ZenTaoAdapter implements ProviderAdapter {
         browseType: browseType,
         recPerPage: limit,
         pageID: page,
+        orderBy: zentaoOrderBy(sort, bug: true),
+        cancel: cancel,
       );
       // ZenTao's pager answers a page past the end with the first page again,
       // so "more" comes from the view's total, never from a page being full.
       final hasMore = page * limit < res.total;
-      return BugPage(
+      return ViewPage(
         total: res.total,
         hasMore: hasMore,
         tickets: [
@@ -435,49 +442,49 @@ class ZenTaoAdapter implements ProviderAdapter {
   }
 
   @override
-  Future<Result<TicketPage>> listExecutionTasks(String executionId) async {
+  Future<Result<ViewPage>> listExecutionTasksPage(
+    String executionId, {
+    required String browseType,
+    required int page,
+    required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
+  }) async {
     return _guard(() async {
-      const limit = kDefaultApiPageLimit;
-      final out = <Ticket>[];
+      final res = await _client.classicExecutionTasks(
+        executionId,
+        browseType: browseType,
+        recPerPage: limit,
+        pageID: page,
+        orderBy: zentaoOrderBy(sort, bug: false),
+        cancel: cancel,
+      );
       final seen = <String>{};
-      var total = 0;
-      for (var page = 1; page <= 50; page++) {
-        final res = await _client.executionTasks(
-          executionId,
-          page: page,
-          limit: limit,
-        );
-        if (res.total > 0) total = res.total;
-        var added = 0;
-        for (final task in res.tasks) {
-          final id = task.idString;
-          if (id.isEmpty || !seen.add(id)) continue;
-          final ticket = normalizeZenTao(
-            task,
-            type: ZenTaoType.task,
-            accountId: accountId,
-            baseUrl: _client.baseUrl,
-          );
-          out.add(
-            ticket.copyWith(
-              labels: [...ticket.labels, zentaoExecutionLabel(executionId)],
-            ),
-          );
-          added++;
-        }
-        if (added == 0) break;
-        if (total > 0 && out.length >= total) break;
-      }
-      final maxUpdated = out
-          .map((t) => t.updatedAt)
-          .whereType<DateTime>()
-          .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
-      return TicketPage(
-        tickets: out,
-        nextCursor: maxUpdated?.toIso8601String(),
+      return ViewPage(
+        total: res.total,
+        // As with bugs, ZenTao's pager answers a page past the end with the
+        // first page again, so "more" comes from the view's total.
+        hasMore: page * limit < res.total,
+        tickets: [
+          for (final task in res.tasks)
+            if (task.idString.isNotEmpty && seen.add(task.idString))
+              _executionTask(
+                normalizeZenTao(
+                  task,
+                  type: ZenTaoType.task,
+                  accountId: accountId,
+                  baseUrl: _client.baseUrl,
+                ),
+                executionId,
+              ),
+        ],
       );
     });
   }
+
+  Ticket _executionTask(Ticket ticket, String executionId) => ticket.copyWith(
+    labels: [...ticket.labels, zentaoExecutionLabel(executionId)],
+  );
 
   @override
   Future<Result<bool>> assignTicket(
@@ -644,6 +651,9 @@ class ZenTaoAdapter implements ProviderAdapter {
     try {
       return Ok(await run());
     } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        return Err(CancelledFailure('ZenTao request cancelled', cause: e));
+      }
       final code = e.response?.statusCode;
       if (code == 401 || code == 403) {
         return Err(AuthFailure('ZenTao authentication failed', cause: e));

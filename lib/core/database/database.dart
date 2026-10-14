@@ -98,6 +98,9 @@ class Settings extends Table {
   TextColumn get density => text().withDefault(const Constant('comfortable'))();
   TextColumn get detailLayout =>
       text().withDefault(const Constant('twoPane'))();
+
+  /// `BoardLayout` of the ZenTao task and bug boards (`board` / `table`).
+  TextColumn get boardLayout => text().withDefault(const Constant('board'))();
   TextColumn get dateFormat => text().withDefault(const Constant('iso'))();
   BoolColumn get companyTint => boolean().withDefault(const Constant(false))();
   TextColumn get localeCode => text().withDefault(const Constant('en'))();
@@ -498,7 +501,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 47;
+  int get schemaVersion => 48;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -751,6 +754,21 @@ class AppDatabase extends _$AppDatabase {
       if (from < 47) {
         if (!await _hasColumn('settings', 'chat_send_typing_status')) {
           await m.addColumn(settings, settings.chatSendTypingStatus);
+        }
+      }
+      if (from < 48) {
+        // A dev build numbered `board_layout` 47, so a DB it opened skipped
+        // the two steps above; reconcile their columns too.
+        if (!await _hasColumn('chat_messages', 'broadcast')) {
+          await m.addColumn(chatMessages, chatMessages.broadcast);
+        }
+        for (final (name, column) in [
+          ('chat_send_typing_status', settings.chatSendTypingStatus),
+          ('board_layout', settings.boardLayout),
+        ]) {
+          if (!await _hasColumn('settings', name)) {
+            await m.addColumn(settings, column);
+          }
         }
       }
     },

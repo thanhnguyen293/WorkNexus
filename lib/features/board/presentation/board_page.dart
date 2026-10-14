@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_state_view.dart';
 import '../../../l10n/app_localizations.dart';
@@ -9,19 +10,19 @@ import 'board_refresh.dart';
 import 'widgets/board_view.dart';
 import 'widgets/chrome_bar.dart';
 import 'widgets/empty_state.dart';
-import 'widgets/filter_popover_layer.dart';
 import 'widgets/github_board_view.dart';
 import 'widgets/github_tabs.dart';
 import 'widgets/gitlab_board_view.dart';
 import 'widgets/gitlab_tabs.dart';
-import 'widgets/list_view.dart';
 import 'widgets/welcome_view.dart';
 import 'widgets/zentao_bug_board_view.dart';
+import 'widgets/zentao_bug_table_view.dart';
 import 'widgets/zentao_bug_tabs.dart';
 import 'widgets/zentao_task_board_view.dart';
+import 'widgets/zentao_task_table_view.dart';
 
-/// The main content area: chrome bar + (ZenTao bug tabs) + board/list/empty/
-/// skeleton + the advanced-filter popover overlay.
+/// The main content area: chrome bar (with the board tabs and the filter
+/// popover's button) over the board / table / empty state / skeleton.
 class BoardPage extends ConsumerWidget {
   const BoardPage({super.key});
 
@@ -39,7 +40,9 @@ class BoardPage extends ConsumerWidget {
 
     final loading = ref.watch(boardLoadingProvider);
     final count = ref.watch(resultCountProvider);
-    final advOpen = ref.watch(advFilterOpenProvider);
+    final table =
+        ref.watch(appSettingsProvider.select((s) => s.boardLayout)) ==
+        BoardLayout.table;
 
     // The active ZenTao bug tab's fetch status (null off the bug board). Each tab
     // is its own server call, so a tab switch re-enters loading here.
@@ -64,7 +67,9 @@ class BoardPage extends ConsumerWidget {
               ? ref.watch(githubMineSliceProvider)
               : ref.watch(githubItemsSliceProvider))
         : null;
-    final executionSyncing = ref.watch(zentaoExecutionSyncingProvider) != null;
+    final taskSlice = mode == ViewMode.zentaoTasks
+        ? ref.watch(zentaoTaskSliceProvider)
+        : null;
 
     // The active board's view tabs, rendered inline on the ChromeBar toolbar
     // row. The account-wide "my MRs/PRs" boards are MR/PR-only, so no tabs.
@@ -85,7 +90,7 @@ class BoardPage extends ConsumerWidget {
         ((bugSlice?.isLoading ?? false) && count == 0) ||
         ((gitlabSlice?.isLoading ?? false) && count == 0) ||
         ((githubSlice?.isLoading ?? false) && count == 0) ||
-        (executionSyncing && count == 0 && mode == ViewMode.zentaoTasks);
+        ((taskSlice?.isLoading ?? false) && count == 0);
 
     // A slice fetch that fails only blocks the board when nothing is cached yet
     // (offline-first: with cached tickets the board renders from the DB and the
@@ -95,24 +100,29 @@ class BoardPage extends ConsumerWidget {
       body = const BoardSkeleton();
     } else if (bugSlice != null && bugSlice.hasError && count == 0) {
       body = _SliceError(title: AppL10n.of(context).bugTabLoadFailed);
+    } else if (taskSlice != null && taskSlice.hasError && count == 0) {
+      body = _SliceError(title: AppL10n.of(context).executionOpenFailed);
     } else if (gitlabSlice != null && gitlabSlice.hasError && count == 0) {
       body = _SliceError(title: AppL10n.of(context).gitlabItemsLoadFailed);
     } else if (githubSlice != null && githubSlice.hasError && count == 0) {
       body = _SliceError(title: AppL10n.of(context).githubItemsLoadFailed);
     } else if (count == 0 &&
-        !(mode == ViewMode.zentaoBugs && ref.watch(zentaoBugHasMoreProvider))) {
-      // A bug board whose columns can load more stays up, so they can.
+        !(mode == ViewMode.zentaoBugs && ref.watch(zentaoBugHasMoreProvider)) &&
+        !(mode == ViewMode.zentaoTasks &&
+            ref.watch(zentaoTaskHasMoreProvider))) {
+      // A paged board whose columns can load more stays up, so they can.
       body = const EmptyState();
     } else {
       body = switch (mode) {
         // Unreachable — home returns early above — but keeps the switch total.
         ViewMode.home => const WelcomeView(),
         ViewMode.board => const BoardView(),
-        ViewMode.zentaoBugs => const ZenTaoBugBoardView(),
-        ViewMode.zentaoTasks => const ZenTaoTaskBoardView(),
+        ViewMode.zentaoBugs =>
+          table ? const ZenTaoBugTableView() : const ZenTaoBugBoardView(),
+        ViewMode.zentaoTasks =>
+          table ? const ZenTaoTaskTableView() : const ZenTaoTaskBoardView(),
         ViewMode.gitlab => const GitLabBoardView(),
         ViewMode.github => const GitHubBoardView(),
-        ViewMode.list => const TaskListView(),
       };
     }
 
@@ -121,14 +131,7 @@ class BoardPage extends ConsumerWidget {
       child: Column(
         children: [
           ChromeBar(tabs: boardTabs),
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(child: body),
-                if (advOpen) const Positioned.fill(child: FilterPopoverLayer()),
-              ],
-            ),
-          ),
+          Expanded(child: body),
         ],
       ),
     );

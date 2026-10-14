@@ -3,11 +3,12 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
-import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
+import 'package:work_nexus/core/domain/value_objects/ticket_sort.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/connections/data/zentao/zentao_adapter.dart';
@@ -591,38 +592,70 @@ void main() {
     expect(executions.every((e) => e.projectId == '3'), isTrue);
   });
 
-  test('listExecutionTasks tags tasks with the execution label', () async {
-    final fake = _FakeAdapter((opts) {
-      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
-      if (opts.uri.path.endsWith('/api.php/v1/executions/12/tasks')) {
-        return _json({
-          'total': 1,
-          'tasks': [
-            {
-              'id': 8801,
-              'name': 'Wire the task board',
-              'status': 'doing',
-              'pri': 1,
-            },
-          ],
-        });
-      }
-      return _json(const {});
-    });
-    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
-    final res = await adapter.listExecutionTasks('12');
+  test(
+    'listExecutionTasksPage fetches one page of a task status view',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.contains('execution-task-')) {
+          return _json({
+            'status': 'success',
+            'data': jsonEncode({
+              'tasks': {
+                '8801': {
+                  'id': 8801,
+                  'name': 'Wire the task board',
+                  'status': 'done',
+                  'children': {
+                    '8802': {'id': 8802, 'name': 'Sub', 'status': 'done'},
+                  },
+                },
+                '8800': {'id': 8800, 'name': 'Older', 'status': 'done'},
+              },
+              'pager': {'recTotal': 5},
+            }),
+          });
+        }
+        return _json(const {});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
 
-    expect(res, isA<Ok<TicketPage>>());
-    final tickets = (res as Ok<TicketPage>).value.tickets;
-    expect(tickets.single.externalKey, '8801');
-    expect(tickets.single.externalType, 'Task');
-    expect(tickets.single.labels, contains('zentao-execution:12'));
-    final req = fake.requests.firstWhere(
-      (r) => r.uri.path.endsWith('/api.php/v1/executions/12/tasks'),
-    );
-    expect(req.uri.queryParameters['page'], '1');
-    expect(req.uri.queryParameters['limit'], '500');
-  });
+      final second = await adapter.listExecutionTasksPage(
+        '12',
+        browseType: 'done',
+        page: 2,
+        limit: 2,
+      );
+      final last = await adapter.listExecutionTasksPage(
+        '12',
+        browseType: 'done',
+        page: 3,
+        limit: 2,
+        sort: const TicketSort(TicketSortField.priority),
+      );
+
+      expect(
+        fake.requests.map((r) => r.uri.path).where((p) => p.contains('task')),
+        [
+          contains('execution-task-12-done-0-id_desc-0-2-2.json'),
+          // A sort goes to ZenTao as the list's orderBy.
+          contains('execution-task-12-done-0-pri_asc-0-2-3.json'),
+        ],
+      );
+      final page = (second as Ok<ViewPage>).value;
+      // A parent task is followed by its subtasks.
+      expect(page.tickets.map((t) => t.externalKey), ['8801', '8802', '8800']);
+      expect(page.tickets.first.externalType, 'Task');
+      expect(
+        page.tickets.every((t) => t.labels.contains('zentao-execution:12')),
+        isTrue,
+      );
+      expect(page.total, 5);
+      expect(page.hasMore, isTrue);
+      // ZenTao answers past the end with page 1 again: the total ends it.
+      expect((last as Ok<ViewPage>).value.hasMore, isFalse);
+    },
+  );
 
   test('listComments parses actions given as an id-keyed object', () async {
     final fake = _FakeAdapter((opts) {
@@ -761,13 +794,13 @@ void main() {
           contains('bug-browse-4-0-toclosed-0-id_desc-0-2-3.json'),
         ],
       );
-      final page = (second as Ok<BugPage>).value;
+      final page = (second as Ok<ViewPage>).value;
       expect(page.tickets.map((t) => t.externalKey), ['12', '11']);
       expect(page.tickets.first.labels, contains('zentao-product:4'));
       expect(page.total, 5);
       expect(page.hasMore, isTrue);
       // ZenTao answers past the end with page 1 again: the total ends it.
-      expect((last as Ok<BugPage>).value.hasMore, isFalse);
+      expect((last as Ok<ViewPage>).value.hasMore, isFalse);
     },
   );
 }

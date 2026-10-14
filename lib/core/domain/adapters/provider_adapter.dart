@@ -1,8 +1,10 @@
 import '../../error/result.dart';
+import '../../util/cancel_signal.dart';
 import '../entities/activity_event.dart';
 import '../entities/comment.dart';
 import '../entities/ticket.dart';
 import '../value_objects/provider_type.dart';
+import '../value_objects/ticket_sort.dart';
 
 /// Outcome of a connection test.
 class ConnectionCheck {
@@ -32,10 +34,11 @@ class TicketPage {
   final String? nextCursor;
 }
 
-/// One page of a server-side bug view: its bugs, the view's [total] across
-/// every page, and whether a further page exists.
-class BugPage {
-  const BugPage({
+/// One page of a server-side ticket view (a bug tab, a task status): its
+/// tickets, the view's [total] across every page, and whether a further page
+/// exists.
+class ViewPage {
+  const ViewPage({
     required this.tickets,
     required this.total,
     required this.hasMore,
@@ -163,11 +166,13 @@ abstract class ProviderAdapter {
   /// One [page] (1-based, [limit] bugs each, newest first) of a product's
   /// server-side bug view [browseType] — for boards that page each column's
   /// view on demand rather than loading every bug up front.
-  Future<Result<BugPage>> listProductBugsPage(
+  Future<Result<ViewPage>> listProductBugsPage(
     String productId, {
     required String browseType,
     required int page,
     required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
   });
 
   /// Projects available to this account (each groups executions).
@@ -178,8 +183,18 @@ abstract class ProviderAdapter {
     String projectId,
   );
 
-  /// Tasks scoped to one execution/container.
-  Future<Result<TicketPage>> listExecutionTasks(String executionId);
+  /// One [page] (1-based, [limit] tasks each, newest first) of an execution's
+  /// server-side task view [browseType] (ZenTao's `wait`/`doing`/`done`/…
+  /// status views) — the task board pages each status column on demand rather
+  /// than loading every task up front.
+  Future<Result<ViewPage>> listExecutionTasksPage(
+    String executionId, {
+    required String browseType,
+    required int page,
+    required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
+  });
 
   /// Reassign the ticket to [assignee] (a provider account), with an optional note.
   Future<Result<bool>> assignTicket(

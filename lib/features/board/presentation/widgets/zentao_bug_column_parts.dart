@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_column.dart';
 
@@ -20,33 +18,6 @@ import '../../domain/value_objects/zentao_bug_column.dart';
     ZenTaoBugColumn.nonFix => (l.boardBugColNonFix, c.error),
     ZenTaoBugColumn.closed => (l.boardBugColClosed, c.textSecondary),
   };
-}
-
-/// The column's ticket count; a trailing "+" while it can load more.
-class BugColumnCount extends StatelessWidget {
-  const BugColumnCount(this.count, {super.key, this.more = false});
-
-  final int count;
-  final bool more;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!more) return AppCountBadge(count);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: context.spacing.xxs,
-      children: [
-        AppCountBadge(count),
-        Text(
-          '+',
-          style: context.typography.monoXs.copyWith(
-            color: context.colors.textTertiary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 /// The tilted card shown under the cursor while dragging a bug ticket.

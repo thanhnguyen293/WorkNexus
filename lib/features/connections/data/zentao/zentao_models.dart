@@ -264,25 +264,42 @@ class ZenTaoExecutionsResponse {
   }
 }
 
-/// `GET /executions/{id}/tasks` → `{ total, tasks: [...] }`.
+/// One page of the classic `execution-task-…json` view → `{ tasks, pager }`.
 class ZenTaoExecutionTasksResponse {
   const ZenTaoExecutionTasksResponse({
     required this.total,
     required this.tasks,
   });
 
+  /// How many tasks the view holds across every page (`pager.recTotal`).
   final int total;
+
+  /// The page's tasks, each parent followed by its subtasks.
   final List<ZenTaoEntity> tasks;
 
-  factory ZenTaoExecutionTasksResponse.fromJson(Map<String, dynamic> json) {
-    final raw = json['tasks'];
+  factory ZenTaoExecutionTasksResponse.fromClassicView(
+    Map<String, dynamic> view,
+  ) {
+    final tasks = <ZenTaoEntity>[];
+    void collect(Object? raw) {
+      final entries = switch (raw) {
+        List() => raw,
+        Map() => raw.values,
+        _ => const [],
+      };
+      for (final t in entries) {
+        if (t is! Map) continue;
+        tasks.add(ZenTaoEntity.fromJson(Map<String, dynamic>.from(t)));
+        collect(t['children']);
+      }
+    }
+
+    collect(view['tasks']);
+    final pager = view['pager'];
     return ZenTaoExecutionTasksResponse(
-      total: zentaoInt(json['total']) ?? 0,
-      tasks: [
-        if (raw is List)
-          for (final t in raw)
-            if (t is Map) ZenTaoEntity.fromJson(Map<String, dynamic>.from(t)),
-      ],
+      total:
+          (pager is Map ? zentaoInt(pager['recTotal']) : null) ?? tasks.length,
+      tasks: tasks,
     );
   }
 }

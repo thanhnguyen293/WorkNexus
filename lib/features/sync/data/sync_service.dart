@@ -15,13 +15,16 @@ import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/repo_change.dart';
+import '../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../core/domain/value_objects/unified_status.dart';
 import '../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/util/cancel_signal.dart';
 import '../../../core/util/synthetic_labels.dart';
 import '../../../data/local/mappers.dart';
+import '../../board/domain/repositories/zentao_view_pages.dart';
 import '../../connections/data/github/github_adapter.dart';
 import '../../connections/data/github/github_client.dart';
 import '../../connections/data/github/github_normalize.dart';
@@ -34,7 +37,6 @@ import '../../connections/data/zentao/zentao_client.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
 import 'source_list_cache.dart';
-import 'timed_slice_cache.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
 /// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
@@ -54,23 +56,20 @@ List<String> mergeDetailLabels(
 /// Pulls assigned tickets from a provider account and writes them (plus derived
 /// projects) into drift, from where the board reads reactively.
 class SyncService
-    implements GitLabMrService, GitHubPrService, ZenTaoTicketService {
+    implements
+        GitLabMrService,
+        GitHubPrService,
+        ZenTaoTicketService,
+        ZenTaoViewPages {
   SyncService(
     this._db,
     this._credentials, {
-    TimedSliceCache<int>? zentaoExecutionTaskCache,
     AttachmentFileCache? attachmentCache,
-  }) : _zentaoExecutionTaskCache =
-           zentaoExecutionTaskCache ??
-           TimedSliceCache<int>(ttl: zentaoTabCacheTtl),
-       _attachmentCache = attachmentCache ?? AttachmentFileCache(),
+  }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
        _listCache = SourceListCache(_db);
-
-  static const zentaoTabCacheTtl = Duration(minutes: 15);
 
   final AppDatabase _db;
   final CredentialStore _credentials;
-  final TimedSliceCache<int> _zentaoExecutionTaskCache;
   final AttachmentFileCache _attachmentCache;
   final SourceListCache _listCache;
 
@@ -147,12 +146,15 @@ class SyncService
   /// the DB — and returns the page so the board can tell which bugs belong to
   /// the view and whether more follow. Not cached: the board keeps the pages it
   /// has loaded and asks again only to load more or to refresh.
-  Future<Result<BugPage>> syncProductBugsPage({
+  @override
+  Future<Result<ViewPage>> syncProductBugsPage({
     required String accountId,
     required String productId,
     required String browseType,
     required int page,
     required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
   }) async {
     final accountRow = await (_db.select(
       _db.accounts,
@@ -170,6 +172,8 @@ class SyncService
       browseType: browseType,
       page: page,
       limit: limit,
+      sort: sort,
+      cancel: cancel,
     );
     if (res case Ok(:final value)) await _upsert(account, value.tickets);
     return res;
@@ -250,63 +254,43 @@ class SyncService
     return adapter.listProjectExecutions(projectId);
   }
 
-  Future<Result<int>> syncExecutionTasks(ProviderExecution execution) async {
-    final cacheKey = '${execution.accountId}:${execution.id}';
-    return _cached(
-      cache: _zentaoExecutionTaskCache,
-      key: cacheKey,
-      load: () => _syncExecutionTasksUncached(execution),
-    );
-  }
-
-  /// Drops the cached task slice for one execution so the next
-  /// [syncExecutionTasks] goes to the server (manual board refresh).
-  void invalidateExecutionTasks({
+  /// Fetches one [page] of an execution's ZenTao task view [browseType] (a task
+  /// status, newest first), upserts its tasks into drift — local-first: the
+  /// board renders from the DB — and returns the page so the board can tell
+  /// which tasks belong to the view and whether more follow. Not cached: the
+  /// board keeps the pages it has loaded and asks again only to load more or to
+  /// refresh.
+  @override
+  Future<Result<ViewPage>> syncExecutionTasksPage({
     required String accountId,
     required String executionId,
-  }) => _zentaoExecutionTaskCache.invalidate('$accountId:$executionId');
-
-  Future<Result<int>> _syncExecutionTasksUncached(
-    ProviderExecution execution,
-  ) async {
+    required String browseType,
+    required int page,
+    required int limit,
+    TicketSort sort = TicketSort.newest,
+    CancelSignal? cancel,
+  }) async {
     final accountRow = await (_db.select(
       _db.accounts,
-    )..where((a) => a.id.equals(execution.accountId))).getSingleOrNull();
+    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
     if (accountRow == null) {
       return const Err(AuthFailure('ZenTao account not found'));
     }
     final account = accountFromRow(accountRow);
-    final adapter = await _adapterFor(execution.accountId);
+    final adapter = await _adapterFor(accountId);
     if (adapter == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
     }
-    final res = await adapter.listExecutionTasks(execution.id);
-    switch (res) {
-      case Err(:final failure):
-        return Err(failure);
-      case Ok(:final value):
-        await _upsert(account, value.tickets);
-        return Ok(value.tickets.length);
-    }
-  }
-
-  Future<Result<T>> _cached<T>({
-    required TimedSliceCache<T> cache,
-    required String key,
-    required Future<Result<T>> Function() load,
-  }) async {
-    try {
-      final value = await cache.get(key, () async {
-        final res = await load();
-        return switch (res) {
-          Ok(:final value) => value,
-          Err(:final failure) => throw _CachedLoadFailure(failure),
-        };
-      });
-      return Ok(value);
-    } on _CachedLoadFailure catch (err) {
-      return Err(err.failure);
-    }
+    final res = await adapter.listExecutionTasksPage(
+      executionId,
+      browseType: browseType,
+      page: page,
+      limit: limit,
+      sort: sort,
+      cancel: cancel,
+    );
+    if (res case Ok(:final value)) await _upsert(account, value.tickets);
+    return res;
   }
 
   /// Fetches one GitLab project's recent issues OR merge requests (chosen by
@@ -1349,10 +1333,4 @@ class SyncService
           t,
     ];
   }
-}
-
-class _CachedLoadFailure implements Exception {
-  const _CachedLoadFailure(this.failure);
-
-  final Failure failure;
 }

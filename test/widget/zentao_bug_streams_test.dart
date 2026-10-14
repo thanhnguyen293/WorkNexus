@@ -9,13 +9,14 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/util/cancel_signal.dart';
+import 'package:work_nexus/features/board/domain/repositories/zentao_view_pages.dart';
 import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_browse_type.dart';
 import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_column.dart';
 import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_stream.dart';
 import 'package:work_nexus/features/board/presentation/board_providers.dart';
-import 'package:work_nexus/features/sync/data/sync_service.dart';
 
-class _MockSyncService extends Mock implements SyncService {}
+class _MockViewPages extends Mock implements ZenTaoViewPages {}
 
 const _product = ProviderProduct(id: '4', name: 'P', accountId: 'zentao');
 
@@ -35,12 +36,14 @@ Ticket _bug(int id) => Ticket(
 );
 
 void main() {
-  late _MockSyncService sync;
+  late _MockViewPages sync;
+
+  setUpAll(() => registerFallbackValue(CancelSignal()));
 
   setUp(() async {
-    sync = _MockSyncService();
+    sync = _MockViewPages();
     await getIt.reset();
-    getIt.registerSingleton<SyncService>(sync);
+    getIt.registerSingleton<ZenTaoViewPages>(sync);
   });
 
   tearDown(() => getIt.reset());
@@ -54,11 +57,12 @@ void main() {
           browseType: view,
           page: any(named: 'page'),
           limit: any(named: 'limit'),
+          cancel: any(named: 'cancel'),
         ),
       ).thenAnswer((call) async {
         final page = call.namedArguments[#page] as int;
         return Ok(
-          BugPage(
+          ViewPage(
             tickets: [_bug(view.length * 100 + page)],
             total: total,
             hasMore: page < total,
@@ -118,6 +122,7 @@ void main() {
         browseType: 'unresolved',
         page: any(named: 'page'),
         limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
       ),
     ).called(2);
   });
@@ -132,6 +137,7 @@ void main() {
         browseType: 'toclosed',
         page: any(named: 'page'),
         limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
       ),
     ).thenAnswer((_) async => const Err(NetworkFailure('offline')));
     final container = open();

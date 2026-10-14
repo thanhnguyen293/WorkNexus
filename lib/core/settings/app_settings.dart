@@ -17,6 +17,15 @@ enum DetailLayout {
   document,
 }
 
+/// How the ZenTao task and bug boards lay out their tickets.
+enum BoardLayout {
+  /// Kanban columns, one per status.
+  board,
+
+  /// One table, ordered by status then newest first.
+  table,
+}
+
 /// How a concrete timestamp (older than an hour) renders its date part. The time
 /// is always 24h `HH:mm`, and very recent times still show "just now" / "x min
 /// ago" regardless of this.
@@ -54,6 +63,7 @@ class AppSettings {
     this.surface = SurfaceStyle.outline,
     this.density = AppDensity.comfortable,
     this.detailLayout = DetailLayout.twoPane,
+    this.boardLayout = BoardLayout.board,
     this.dateFormat = DateDisplayFormat.iso,
     this.companyTint = false,
     this.locale = const Locale('en'),
@@ -88,6 +98,10 @@ class AppSettings {
   final SurfaceStyle surface;
   final AppDensity density;
   final DetailLayout detailLayout;
+
+  /// Whether the ZenTao task and bug boards open as kanban columns or as
+  /// a table. One choice for both, kept across restarts.
+  final BoardLayout boardLayout;
 
   /// How concrete timestamps render their date part across the app.
   final DateDisplayFormat dateFormat;
@@ -174,6 +188,7 @@ class AppSettings {
     SurfaceStyle? surface,
     AppDensity? density,
     DetailLayout? detailLayout,
+    BoardLayout? boardLayout,
     DateDisplayFormat? dateFormat,
     bool? companyTint,
     Locale? locale,
@@ -205,6 +220,7 @@ class AppSettings {
       surface: surface ?? this.surface,
       density: density ?? this.density,
       detailLayout: detailLayout ?? this.detailLayout,
+      boardLayout: boardLayout ?? this.boardLayout,
       dateFormat: dateFormat ?? this.dateFormat,
       companyTint: companyTint ?? this.companyTint,
       locale: locale ?? this.locale,
@@ -289,6 +305,7 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setSurface(SurfaceStyle s) => _set(state.copyWith(surface: s));
   void setDensity(AppDensity d) => _set(state.copyWith(density: d));
   void setDetailLayout(DetailLayout l) => _set(state.copyWith(detailLayout: l));
+  void setBoardLayout(BoardLayout l) => _set(state.copyWith(boardLayout: l));
   void setDateFormat(DateDisplayFormat f) =>
       _set(state.copyWith(dateFormat: f));
   void setCompanyTint(bool on) => _set(state.copyWith(companyTint: on));

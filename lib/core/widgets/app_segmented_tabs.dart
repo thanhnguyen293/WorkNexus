@@ -17,6 +17,7 @@ class AppSegmentedTab {
     required this.onTap,
     this.count,
     this.loading = false,
+    this.icon,
   });
 
   final String label;
@@ -28,6 +29,9 @@ class AppSegmentedTab {
 
   /// Shows a spinner in place of the count while the tab's view loads.
   final bool loading;
+
+  /// Shown before the label when set.
+  final IconData? icon;
 }
 
 /// View tabs (All / Unclosed, Issues / Merge Requests…) as a segmented
@@ -79,6 +83,14 @@ class _Segment extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (tab.icon case final icon?) ...[
+            Icon(
+              icon,
+              size: context.sizes.iconMd,
+              color: tab.active ? c.textPrimary : c.textSecondary,
+            ),
+            SizedBox(width: s.sm),
+          ],
           // One weight for both states, so switching tabs moves nothing.
           Text(
             tab.label,

@@ -5,9 +5,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/hours_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/summarize_task_effort.dart';
-import '../util/hours_text.dart';
 
 /// A ZenTao task's hours as a progress bar — logged against left, with the
 /// estimate under it — opening the task's body, since "how far along is it"
