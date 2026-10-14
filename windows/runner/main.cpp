@@ -27,7 +27,19 @@ void FocusExistingWindow() {
     return;
   }
 
-  ShowWindow(window, IsIconic(window) ? SW_RESTORE : SW_SHOW);
+  // Never call ShowWindow here. A launch from a shortcut or the taskbar's jump
+  // list carries a show state ("Normal window") in this process's
+  // STARTUPINFO, and Windows applies it to the first ShowWindow call the
+  // process makes — on the first instance's window too, so a maximized window
+  // came back at its normal size. These two keep the window's own state.
+  if (IsIconic(window)) {
+    // Back to what it was before it was minimized, maximized included.
+    SendMessageW(window, WM_SYSCOMMAND, SC_RESTORE, 0);
+  } else if (!IsWindowVisible(window)) {
+    // Hidden in the tray: show it as it is.
+    SetWindowPos(window, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+  }
   if (!SetForegroundWindow(window)) {
     // Windows may block foreground promotion from a background process.
     // Flash the taskbar icon so the user is still notified.
