@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/linked_item_kind.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
@@ -17,9 +18,10 @@ import '../providers/merge_request_providers.dart';
 import 'chat_labels.dart';
 import 'chat_link_card_frame.dart';
 
-/// A GitLab merge request / GitHub pull request linked in a message, as a
-/// compact quote-like card with its live state: `Merged · group/repo !12 ·
-/// 2h ago`, the title, then `author · +lines −lines · files`. The bar takes
+/// A GitLab merge request / GitHub pull request — or an issue of either —
+/// linked in a message, as a compact quote-like card with its live state:
+/// `Merged · group/repo !12 · 2h ago`, the title, then `author · +lines
+/// −lines · files` (an issue has no diff, so just the author). The bar takes
 /// the state's colour. It is fetched through the connected account for the
 /// link's host; a tap opens it beside the chat (or in the browser when it
 /// could not be loaded). Coming back to the app refetches one still open,
@@ -81,10 +83,14 @@ class MergeRequestCard extends ConsumerWidget {
   }
 }
 
-/// `group/repo !12` (GitLab) or `owner/repo #12` (GitHub).
-String _reference(MergeRequestLink link) =>
-    '${link.project} ${link.provider == ProviderType.gitlab ? '!' : '#'}'
-    '${link.number}';
+/// `group/repo !12` (a GitLab MR) or `owner/repo #12` (a GitHub PR, or an
+/// issue on either).
+String _reference(MergeRequestLink link) {
+  final gitlabMr =
+      link.provider == ProviderType.gitlab &&
+      link.kind == LinkedItemKind.mergeRequest;
+  return '${link.project} ${gitlabMr ? '!' : '#'}${link.number}';
+}
 
 /// `author · +1,867 −106 · 57 files`, as far as known.
 class _Footer extends StatelessWidget {

@@ -27,7 +27,7 @@ List<String> _previewUrls(ChatMessage message) => switch (message.content) {
 };
 
 /// In a message's bubble, under its text: a compact live card for each
-/// merge request and ZenTao ticket it links (a few at most), then a preview
+/// merge request, GitLab/GitHub issue and ZenTao ticket it links (a few at most), then a preview
 /// of the first other web page. The links themselves stay in the text.
 class MessageLinkPreviews extends StatelessWidget {
   const MessageLinkPreviews({super.key, required this.message});
