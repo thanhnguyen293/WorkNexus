@@ -24,6 +24,7 @@ void main() {
           body: DetailScrollBody(
             layout: layout,
             content: const Text('content-body'),
+            linked: const Text('linked-lists'),
             sidebar: const Text('sidebar-meta'),
             activity: const Text('activity-thread'),
           ),
@@ -46,6 +47,40 @@ void main() {
     expect(activity.top, greaterThan(content.top));
     expect(activity.right, lessThan(sidebar.left));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('linked lists follow the content in the main column', (
+    tester,
+  ) async {
+    await pump(tester, DetailLayout.twoPane);
+
+    final content = tester.getRect(find.text('content-body'));
+    final linked = tester.getRect(find.text('linked-lists'));
+    final sidebar = tester.getRect(find.text('sidebar-meta'));
+    final activity = tester.getRect(find.text('activity-thread'));
+    expect(linked.top, greaterThan(content.bottom));
+    expect(activity.top, greaterThan(linked.bottom));
+    expect(linked.right, lessThan(sidebar.left));
+    // They bring their own cards, outside the content's.
+    expect(
+      find.ancestor(
+        of: find.text('linked-lists'),
+        matching: find.byType(DetailRegionCard),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('document reads content, linked lists, then the sidebar', (
+    tester,
+  ) async {
+    await pump(tester, DetailLayout.document);
+
+    final content = tester.getRect(find.text('content-body'));
+    final linked = tester.getRect(find.text('linked-lists'));
+    final sidebar = tester.getRect(find.text('sidebar-meta'));
+    expect(linked.top, greaterThan(content.bottom));
+    expect(sidebar.top, greaterThan(linked.bottom));
   });
 
   testWidgets('content and activity each sit in a region card', (tester) async {

@@ -13,13 +13,16 @@ const double kDetailMetaPaneWidth = 320;
 
 /// Scrolls a detail tab's body and arranges it per the active [DetailLayout],
 /// on a tinted ground with [content] and [activity] each in a
-/// [DetailRegionCard]. The [sidebar] brings its own cards, as it may split
-/// into several regions.
+/// [DetailRegionCard]. The [sidebar] and [linked] bring their own cards, as
+/// they may split into several regions (or show none).
 ///
 /// - [DetailLayout.twoPane]: [content] fills the remaining width beside a
 ///   fixed-width [sidebar] pane (when provided).
 /// - [DetailLayout.document]: a centered column capped at [kDetailDocMaxWidth],
-///   reading [content] → [sidebar] → [activity].
+///   reading [content] → [linked] → [sidebar] → [activity].
+///
+/// [linked] (a task's subtasks, its related bugs) follows [content] in either
+/// layout; each of its cards spaces itself from the one above.
 ///
 /// [activity] (comments, timeline, composer) closes the main column in
 /// two-pane. In document it is split off so the metadata sits right after the
@@ -32,12 +35,14 @@ class DetailScrollBody extends StatelessWidget {
     super.key,
     required this.layout,
     required this.content,
+    this.linked,
     this.sidebar,
     this.activity,
   });
 
   final DetailLayout layout;
   final Widget content;
+  final Widget? linked;
   final Widget? sidebar;
   final Widget? activity;
 
@@ -53,14 +58,14 @@ class DetailScrollBody extends StatelessWidget {
 
     final Widget body;
     if (layout == DetailLayout.twoPane) {
-      final main = act == null
+      final main = act == null && linked == null
           ? content
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 content,
-                SizedBox(height: s.xl),
-                act,
+                ?linked,
+                if (act != null) ...[SizedBox(height: s.xl), act],
               ],
             );
       body = sb == null
@@ -81,6 +86,7 @@ class DetailScrollBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               content,
+              ?linked,
               if (sb != null) ...[SizedBox(height: s.xl), sb],
               if (act != null) ...[SizedBox(height: s.xl), act],
             ],

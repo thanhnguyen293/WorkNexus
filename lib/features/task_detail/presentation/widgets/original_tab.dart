@@ -26,6 +26,7 @@ import 'detail_section_title.dart';
 import 'provider_detail_sections.dart';
 import 'section_label.dart';
 import 'subtask_list.dart';
+import 'task_bug_list.dart';
 import 'task_detail_sections.dart';
 import 'task_effort_bar.dart';
 import 'ticket_status_pill.dart';
@@ -116,10 +117,6 @@ class OriginalTab extends ConsumerWidget {
             onOpenImage: imageFallback.open,
           ),
         ),
-        if (subtasks.isNotEmpty) ...[
-          SizedBox(height: context.spacing.xl2),
-          SubtaskList(ticket: ticket, subtasks: subtasks),
-        ],
         if (labels.isNotEmpty) ...[
           SizedBox(height: context.spacing.xl2),
           SectionLabel(l.labels),
@@ -136,6 +133,19 @@ class OriginalTab extends ConsumerWidget {
         ],
       ],
     );
+
+    // A task's subtasks and related bugs, each its own card under the
+    // narrative; they space themselves (the bugs show nothing while none).
+    final linked = task == null
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (subtasks.isNotEmpty)
+                SubtaskList(ticket: ticket, subtasks: subtasks),
+              TaskBugList(ticket: ticket),
+            ],
+          );
 
     final activity = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,6 +179,7 @@ class OriginalTab extends ConsumerWidget {
     return DetailScrollBody(
       layout: layout,
       content: content,
+      linked: linked,
       sidebar: sidebar,
       activity: activity,
     );
