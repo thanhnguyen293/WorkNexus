@@ -11,6 +11,8 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/app_resume.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/merge_request_state_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/parse_merge_request_link.dart';
@@ -57,12 +59,22 @@ class MergeRequestCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ChatCardLine(
-            spans: [
-              if (state != null) chatCardStrong(context, state.$2, state.$1),
-              _reference(link),
-              if (ticket?.updatedAt case final updated?)
-                chatAgo(context, updated),
+          // The provider's mark leads, as on a ZenTao ticket card.
+          Row(
+            children: [
+              ProviderBadge(link.provider),
+              SizedBox(width: context.spacing.sm),
+              Flexible(
+                child: ChatCardLine(
+                  spans: [
+                    if (state != null)
+                      chatCardStrong(context, state.$2, state.$1),
+                    _reference(link),
+                    if (ticket?.updatedAt case final updated?)
+                      chatAgo(context, updated),
+                  ],
+                ),
+              ),
             ],
           ),
           if (ticket != null) ...[
