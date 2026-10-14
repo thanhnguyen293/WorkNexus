@@ -617,6 +617,8 @@
   "fieldColor": "Màu",
   "addFiles": "Thêm file",
   "selectNone": "Không",
+  "taskNeedsExecution": "Chọn bản thực thi trước",
+  "searchExecutions": "Tìm bản thực thi…",
   "searchOptions": "Tìm…",
   "selectSome": "Đã chọn {count}",
   "fieldOs": "Hệ điều hành",
