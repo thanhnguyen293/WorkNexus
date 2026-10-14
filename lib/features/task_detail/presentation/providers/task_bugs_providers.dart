@@ -20,8 +20,9 @@ final taskBugsProvider = Provider.autoDispose.family<List<Ticket>, String>((
   );
 });
 
-/// Stores task [id]'s execution's bugs while its detail shows, fetched afresh
-/// each time it opens; the list updates through [taskBugsProvider].
+/// Stores task [id]'s related bugs as its detail opens (a recent read of its
+/// execution's bugs may already hold them); the list updates through
+/// [taskBugsProvider].
 final taskBugsSyncProvider = FutureProvider.autoDispose
     .family<Result<void>, String>((ref, id) async {
       // Only where the task sits: it may arrive after the panel opens, and
@@ -31,9 +32,10 @@ final taskBugsSyncProvider = FutureProvider.autoDispose
           (task) => switch (task) {
             Ticket(
               :final accountId,
+              :final externalKey,
               providerEntity: ZenTaoTaskEntity(:final execution?),
             ) =>
-              (accountId: accountId, execution: execution),
+              (accountId: accountId, execution: execution, task: externalKey),
             _ => null,
           },
         ),
@@ -41,8 +43,9 @@ final taskBugsSyncProvider = FutureProvider.autoDispose
       if (scope == null) return const Ok(null);
       return ref
           .read(zentaoTaskBugsProvider)
-          .syncExecutionBugs(
+          .syncTaskBugs(
             accountId: scope.accountId,
             executionId: scope.execution,
+            taskId: scope.task,
           );
     });

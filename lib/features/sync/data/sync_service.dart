@@ -38,6 +38,7 @@ import '../../task_detail/domain/repositories/zentao_task_bugs.dart';
 import 'attachment_file_cache.dart';
 import 'byte_lru_cache.dart';
 import 'source_list_cache.dart';
+import 'task_bugs_coverage.dart';
 
 /// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
 /// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
@@ -181,13 +182,25 @@ class SyncService
     return res;
   }
 
-  /// Stores execution [executionId]'s bugs (local-first: the task detail reads
-  /// a task's related bugs from the DB).
+  /// What recent reads of each execution's bug list covered, by
+  /// `accountId:executionId` (see [syncTaskBugs]).
+  final _taskBugsCoverage = <String, TaskBugsCoverage>{};
+
+  /// Stores task [taskId]'s bugs (local-first: the task detail reads a task's
+  /// related bugs from the DB), read from its execution's bug list — unless
+  /// a read of it in the last few minutes covered the task already.
   @override
-  Future<Result<void>> syncExecutionBugs({
+  Future<Result<void>> syncTaskBugs({
     required String accountId,
     required String executionId,
+    required String taskId,
   }) async {
+    final task = int.tryParse(taskId);
+    if (task == null) return const Ok(null);
+    final key = '$accountId:$executionId';
+    if (_taskBugsCoverage[key]?.covers(task, DateTime.now()) ?? false) {
+      return const Ok(null);
+    }
     final accountRow = await (_db.select(
       _db.accounts,
     )..where((a) => a.id.equals(accountId))).getSingleOrNull();
@@ -198,12 +211,18 @@ class SyncService
     if (adapter is! ZenTaoAdapter) {
       return const Err(AuthFailure('No signed-in ZenTao account'));
     }
-    final res = await adapter.listExecutionBugs(executionId);
+    final res = await adapter.listTaskBugs(executionId, taskId: task);
     switch (res) {
       case Err(:final failure):
         return Err(failure);
       case Ok(:final value):
-        await _upsert(accountFromRow(accountRow), value);
+        await _upsert(accountFromRow(accountRow), value.bugs);
+        _taskBugsCoverage[key] = TaskBugsCoverage(
+          at: DateTime.now(),
+          complete: value.complete,
+          above: value.above,
+          tasks: {task},
+        );
         return const Ok(null);
     }
   }

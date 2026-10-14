@@ -50,9 +50,10 @@ void main() {
   setUp(() => taskBugs = _MockTaskBugs());
 
   void answer(Result<void> result) => when(
-    () => taskBugs.syncExecutionBugs(
+    () => taskBugs.syncTaskBugs(
       accountId: any(named: 'accountId'),
       executionId: any(named: 'executionId'),
+      taskId: any(named: 'taskId'),
     ),
   ).thenAnswer((_) async => result);
 
@@ -100,9 +101,13 @@ void main() {
     expect(find.text('#6600'), findsOneWidget);
     expect(find.text('#6555'), findsOneWidget);
     expect(find.text('#6556'), findsNothing);
-    // The task's execution's bugs were fetched.
+    // The task's bugs were fetched from its execution.
     verify(
-      () => taskBugs.syncExecutionBugs(accountId: 'zt', executionId: '31'),
+      () => taskBugs.syncTaskBugs(
+        accountId: 'zt',
+        executionId: '31',
+        taskId: '11548',
+      ),
     ).called(1);
 
     await tester.tap(find.text('Ticket 6555'));
@@ -133,7 +138,11 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(
-      () => taskBugs.syncExecutionBugs(accountId: 'zt', executionId: '31'),
+      () => taskBugs.syncTaskBugs(
+        accountId: 'zt',
+        executionId: '31',
+        taskId: '11548',
+      ),
     ).called(2);
     expect(find.text('Retry'), findsNothing);
   });
