@@ -1,7 +1,8 @@
 name: Prepare Flutter build
 description: >
-  Installs the pinned Flutter toolchain and dependencies, runs code generation,
-  and stamps the release version and repository into the build inputs.
+  Installs the pinned Flutter toolchain and dependencies and runs code
+  generation. Given a version, it also stamps the release version and
+  repository into the build inputs (a release build; a test run leaves them).
   Call after actions/checkout.
 
 inputs:
@@ -9,11 +10,15 @@ inputs:
     description: Exact Flutter version to install.
     required: true
   version:
-    description: Release version written into pubspec.yaml.
-    required: true
+    description: >
+      Release version written into pubspec.yaml. Leave empty to stamp nothing
+      (no version, and the repository in .env is left as it is).
+    required: false
+    default: ""
   build-number:
-    description: Build number appended to the version.
-    required: true
+    description: Build number appended to the version; used with version.
+    required: false
+    default: ""
   desktop:
     description: Desktop platform to enable (macos, windows or linux).
     required: false
@@ -45,6 +50,7 @@ runs:
       run: dart run build_runner build --delete-conflicting-outputs
 
     - name: Stamp version
+      if: inputs.version != ''
       shell: bash
       run: |
         sed -i.bak -e "s|^version:.*|version: ${{ inputs.version }}+${{ inputs.build-number }}|" pubspec.yaml
@@ -53,6 +59,7 @@ runs:
     # Owner/repo come from the repository this workflow runs in, so upstream
     # and forks each build an app that updates from their own releases.
     - name: Point the build at this repository
+      if: inputs.version != ''
       shell: bash
       run: |
         sed -i.bak -e "s|^GITHUB_OWNER=.*|GITHUB_OWNER=${{ github.repository_owner }}|" .env
