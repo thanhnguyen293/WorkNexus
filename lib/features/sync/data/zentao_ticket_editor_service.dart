@@ -82,6 +82,12 @@ class ZenTaoTicketEditorService implements ZenTaoTicketEditor {
   );
 
   @override
+  Future<Result<List<FormOption>>> bugModules(
+    String accountId,
+    String productId,
+  ) => _run(accountId, (f) => f.bugModules(productId));
+
+  @override
   Future<Result<String>> saveBug(
     String accountId,
     BugForm form,

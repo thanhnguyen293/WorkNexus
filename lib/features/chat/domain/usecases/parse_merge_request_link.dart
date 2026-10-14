@@ -36,7 +36,13 @@ class ParseMergeRequestLink {
       _github.firstMatch(uri.path),
     )) {
       (final m?, _) => (ProviderType.gitlab, m),
-      (_, final m?) => (ProviderType.github, m),
+      // `owner/repo/issues/N` is common on other forges (Gitea, Bitbucket,
+      // GitLab's old links), so an issue is GitHub's only on a GitHub host;
+      // they keep their ordinary web preview.
+      (_, final m?) when m[2] == 'pull' || _isGitHubHost(host) => (
+        ProviderType.github,
+        m,
+      ),
       _ => (null, null),
     };
     if (provider == null || match == null) return null;
@@ -50,6 +56,10 @@ class ParseMergeRequestLink {
       number: match[3]!,
     );
   }
+
+  /// github.com, or a GitHub Enterprise host named like `github.acme.com`.
+  static bool _isGitHubHost(String host) =>
+      host == 'github.com' || host.startsWith('github.');
 
   /// Whether two links name the same item (case of host/path aside). GitLab
   /// numbers issues and MRs separately, so the kind must match; GitHub

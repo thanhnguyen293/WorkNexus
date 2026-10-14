@@ -41,6 +41,8 @@ class _ChatWallpaperColorsState extends ConsumerState<ChatWallpaperColors> {
       ref.watch(shownChatWallpaperProvider),
     );
     final settings = ref.read(appSettingsProvider.notifier);
+    // A colour still being tried out in the picker gives way to this choice.
+    final preview = ref.read(chatWallpaperPreviewProvider.notifier);
     const presets = ChatWallpaperTint.presets;
     final preset = presets.where((t) => t.id == chosen?.color).firstOrNull;
     final custom = chosen != null && preset == null
@@ -54,6 +56,7 @@ class _ChatWallpaperColorsState extends ConsumerState<ChatWallpaperColors> {
     // A new colour keeps the pattern choice; the first one starts with it.
     void pick(ChatWallpaperTint tint) {
       setState(() => _picking = false);
+      preview.clear();
       settings.setChatWallpaper(
         ChatWallpaperColor(tint.id, doodles: doodles).value,
       );
@@ -83,6 +86,7 @@ class _ChatWallpaperColorsState extends ConsumerState<ChatWallpaperColors> {
                   tooltip: l.chatWallpaperDefault,
                   onTap: () {
                     setState(() => _picking = false);
+                    preview.clear();
                     settings.setChatWallpaper(kChatWallpaperPlain);
                   },
                 ),

@@ -221,6 +221,12 @@ class ZenTaoTicketForms {
     executionId: executionId,
   );
 
+  /// Product [productId]'s bug modules — the form page's list alone, without
+  /// the stories and tasks [bugOptions] also loads.
+  Future<List<FormOption>> bugModules(String productId) async => _bugOptions(
+    await _page('bug-create-$productId-0-projectID=0,executionID=0'),
+  ).modules;
+
   /// Saves [draft]; returns the bug's ZenTao id.
   Future<String> saveBug(BugForm form, BugDraft draft, String uid) async {
     final legacy = form.kept[_legacyKey] == '1';

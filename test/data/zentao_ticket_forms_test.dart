@@ -256,7 +256,7 @@ void main() {
     },
   );
 
-  test('task names come from REST, keeping the subtask mark', () async {
+  test('task names come from the task view, keeping the subtask mark', () async {
     final (forms, _) = _forms((o) {
       if (o.path.contains('task-ajaxGetExecutionTasks-31')) {
         return [
@@ -265,9 +265,9 @@ void main() {
           {'value': 900, 'text': '900:Nobody:Gone'},
         ];
       }
-      if (o.path.endsWith('/executions/31/tasks')) {
+      if (o.path.contains('execution-task-31-all-')) {
         return {
-          'total': 1,
+          'pager': {'recTotal': 1},
           'tasks': [
             {
               'id': 12582,
@@ -290,7 +290,7 @@ void main() {
     expect(options.tasks.map((t) => t.label), [
       '[C] #12492 share to IM',
       '#12582 Add id: field',
-      // Not in REST: the ajax label, as best it can be read.
+      // Not in the task view: the ajax label, as best it can be read.
       '#900 Nobody:Gone',
     ]);
   });

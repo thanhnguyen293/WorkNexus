@@ -60,24 +60,34 @@ class CommentsSection extends ConsumerWidget {
             AppL10n.of(context).noActivityYet,
             style: context.typography.secondary.copyWith(color: c.textTertiary),
           ),
-        for (final (i, (_, item)) in items.indexed)
-          switch (item) {
-            final Comment cm => CommentTile(
-              cm,
-              html: isHtmlBody(ticket.providerType, cm.body),
-              isFirst: i == 0,
-              isLast: i == items.length - 1,
-              imageLoader: (url) =>
-                  getIt<SyncService>().fetchTicketImage(ticket, url),
-              imageFallback: imageFallback,
-            ),
-            final ActivityEvent a => ActivityRow(
-              a,
-              isFirst: i == 0,
-              isLast: i == items.length - 1,
-            ),
-            _ => const SizedBox.shrink(),
-          },
+        // Comments and notes are often copied (a link, a build URL), so the
+        // thread is one selectable area — a drag can span entries; links and
+        // chips still tap. The composer stays out of it.
+        SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, (_, item)) in items.indexed)
+                switch (item) {
+                  final Comment cm => CommentTile(
+                    cm,
+                    html: isHtmlBody(ticket.providerType, cm.body),
+                    isFirst: i == 0,
+                    isLast: i == items.length - 1,
+                    imageLoader: (url) =>
+                        getIt<SyncService>().fetchTicketImage(ticket, url),
+                    imageFallback: imageFallback,
+                  ),
+                  final ActivityEvent a => ActivityRow(
+                    a,
+                    isFirst: i == 0,
+                    isLast: i == items.length - 1,
+                  ),
+                  _ => const SizedBox.shrink(),
+                },
+            ],
+          ),
+        ),
         SizedBox(height: context.spacing.md),
         CommentComposer(ticket: ticket),
       ],
