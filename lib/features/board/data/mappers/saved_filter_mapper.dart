@@ -27,6 +27,10 @@ String encodeFilterState(FilterState f) => jsonEncode(<String, dynamic>{
   'reviewers': f.reviewers.toList(),
   'bugTypes': f.bugTypes.toList(),
   'resolutions': f.resolutions.toList(),
+  'zentaoStatuses': f.zentaoStatuses.toList(),
+  'resolvers': f.resolvers.toList(),
+  'reporters': f.reporters.toList(),
+  'confirmations': f.confirmations.toList(),
   'search': f.search,
 });
 
@@ -50,6 +54,10 @@ FilterState decodeFilterState(String json) {
     reviewers: _stringSet(map['reviewers']),
     bugTypes: _stringSet(map['bugTypes']),
     resolutions: _stringSet(map['resolutions']),
+    zentaoStatuses: _stringSet(map['zentaoStatuses']),
+    resolvers: _stringSet(map['resolvers']),
+    reporters: _stringSet(map['reporters']),
+    confirmations: _stringSet(map['confirmations']),
     search: map['search']?.toString() ?? '',
   );
 }

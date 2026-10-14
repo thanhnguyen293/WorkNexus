@@ -1,13 +1,20 @@
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../value_objects/zentao_bug_column.dart';
+import '../value_objects/zentao_task_column.dart';
+import 'zentao_status_of.dart';
 
 /// Which board the facets are derived for; selects which dimensions apply.
 enum BoardFacetScope { bug, task, gitlabMergeRequest, none }
 
 /// A filterable dimension of a board.
 enum BoardFacetKind {
+  status,
   assignee,
+  resolvedBy,
+  openedBy,
+  confirmed,
   reviewer,
   severity,
   priority,
@@ -60,14 +67,20 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
   BoardFacets call(BoardFacetsInput input) {
     if (input.scope == BoardFacetScope.none) return BoardFacets.empty;
     final kinds = switch (input.scope) {
+      // Status first: a table has no columns to tell them apart.
       BoardFacetScope.bug => const [
+        BoardFacetKind.status,
         BoardFacetKind.assignee,
+        BoardFacetKind.resolvedBy,
+        BoardFacetKind.openedBy,
+        BoardFacetKind.confirmed,
         BoardFacetKind.severity,
         BoardFacetKind.priority,
         BoardFacetKind.bugType,
         BoardFacetKind.resolution,
       ],
       BoardFacetScope.task => const [
+        BoardFacetKind.status,
         BoardFacetKind.assignee,
         BoardFacetKind.priority,
       ],
@@ -92,7 +105,13 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
           counts.entries
               .map((e) => BoardFacetOption(value: e.key, count: e.value))
               .toList()
-            ..sort((a, b) => b.count.compareTo(a.count));
+            ..sort(
+              kind == BoardFacetKind.status
+                  // Statuses read in the board's column order.
+                  ? (a, b) =>
+                        _statusOrder(a.value).compareTo(_statusOrder(b.value))
+                  : (a, b) => b.count.compareTo(a.count),
+            );
       groups.add(BoardFacetGroup(kind: kind, options: options));
     }
     return BoardFacets(groups: groups);
@@ -102,6 +121,20 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
   /// such as GitLab reviewers contribute one count to each user.
   List<String> _valuesFor(BoardFacetKind kind, Ticket t) {
     switch (kind) {
+      case BoardFacetKind.status:
+        final status = zentaoStatusOf(t);
+        return status == null ? const [] : [status];
+      case BoardFacetKind.resolvedBy:
+        final e = t.providerEntity;
+        final name = e is ZenTaoBugEntity ? (e.resolvedBy ?? '') : '';
+        return name.isEmpty ? const [] : [name];
+      case BoardFacetKind.openedBy:
+        final e = t.providerEntity;
+        final name = e is ZenTaoBugEntity ? (e.openedBy ?? '') : '';
+        return name.isEmpty ? const [] : [name];
+      case BoardFacetKind.confirmed:
+        final e = t.providerEntity;
+        return e is ZenTaoBugEntity ? ['${e.confirmed ?? 0}'] : const [];
       case BoardFacetKind.assignee:
         final e = t.providerEntity;
         if (e is GitLabItemEntity && e.assignees.isNotEmpty) {
@@ -132,4 +165,15 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
         return code.isEmpty ? const [] : [code];
     }
   }
+}
+
+/// Where status [value] (a bug or task column name) sits on its board.
+int _statusOrder(String value) {
+  for (final c in ZenTaoBugColumn.values) {
+    if (c.name == value) return c.order;
+  }
+  for (final c in ZenTaoTaskColumn.values) {
+    if (c.name == value) return c.order;
+  }
+  return 99;
 }

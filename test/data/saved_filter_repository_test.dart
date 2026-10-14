@@ -27,6 +27,10 @@ void main() {
         reviewers: {'lan'},
         bugTypes: {'codeerror'},
         resolutions: {'fixed'},
+        zentaoStatuses: {'resolvedVerify'},
+        resolvers: {'Thanh'},
+        reporters: {'Ryan'},
+        confirmations: {'1'},
         search: 'login',
       );
 

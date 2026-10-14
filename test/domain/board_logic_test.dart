@@ -291,6 +291,51 @@ void main() {
       );
     });
 
+    test('ZenTao status matches the board column a bug or task sits in', () {
+      final tickets = [
+        _ztBug(id: 'open', providerStatus: 'active'),
+        _ztBug(id: 'fixed', providerStatus: 'resolved', resolution: 'fixed'),
+        _ztBug(id: 'dup', providerStatus: 'resolved', resolution: 'duplicate'),
+        _ztTask(id: 'done', providerStatus: 'done'),
+        _t(id: 'gh'),
+      ];
+      expect(
+        filter(
+          _q(
+            tickets,
+            const FilterState(zentaoStatuses: {'resolvedVerify', 'doneVerify'}),
+          ),
+        ).map((t) => t.id),
+        ['fixed', 'done'],
+      );
+    });
+
+    test('resolver, reporter and confirmation narrow ZenTao bugs only', () {
+      Ticket bug(String id, {String? by, String? opened, int? confirmed}) =>
+          _ztBug(id: id, providerStatus: 'resolved').copyWith(
+            providerEntity: TicketProviderEntity.zentaoBug(
+              resolvedBy: by,
+              openedBy: opened,
+              confirmed: confirmed,
+            ),
+          );
+      final tickets = [
+        bug('a', by: 'Thanh', opened: 'Ryan', confirmed: 1),
+        bug('b', by: 'Luci', opened: 'Ryan', confirmed: 0),
+        bug('c', opened: 'Cat'),
+        _t(id: 'gh'),
+      ];
+      List<String> ids(FilterState f) =>
+          filter(_q(tickets, f)).map((t) => t.id).toList();
+      expect(ids(const FilterState(resolvers: {'Thanh'})), ['a']);
+      expect(ids(const FilterState(reporters: {'Ryan'})), ['a', 'b']);
+      expect(ids(const FilterState(confirmations: {'0'})), ['b', 'c']);
+      expect(
+        ids(const FilterState(reporters: {'Ryan'}, confirmations: {'1'})),
+        ['a'],
+      );
+    });
+
     test('saved view: mine = todo + inprogress', () {
       final tickets = [
         _t(id: 'a'),
