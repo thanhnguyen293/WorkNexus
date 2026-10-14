@@ -6,6 +6,7 @@ import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/domain/adapters/merge_request_link_service.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
+import 'package:work_nexus/core/domain/value_objects/linked_item_kind.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -44,16 +45,39 @@ const _mr = Ticket(
   ),
 );
 
+const _issueUrl = 'https://xddlabs.com/root/tbchat_packages/-/issues/3';
+
+const _issue = Ticket(
+  id: 'gl:issue:7',
+  accountId: 'gl',
+  projectId: 'gl:root/tbchat_packages',
+  providerType: ProviderType.gitlab,
+  externalKey: '3',
+  externalType: 'Issue',
+  title: 'Package fails to build',
+  body: '',
+  priority: Priority.medium,
+  status: UnifiedStatus.todo,
+  providerStatus: 'opened',
+  sourceHash: '',
+  url: _issueUrl,
+  providerEntity: TicketProviderEntity.gitlabItem(author: 'kan'),
+);
+
 void main() {
   late _MockService service;
 
-  setUpAll(() => registerFallbackValue(ProviderType.gitlab));
+  setUpAll(() {
+    registerFallbackValue(ProviderType.gitlab);
+    registerFallbackValue(LinkedItemKind.mergeRequest);
+  });
 
   setUp(() => service = _MockService());
 
   Future<ProviderContainer> pump(
     WidgetTester tester, {
     required List<Ticket> tickets,
+    String url = _url,
   }) async {
     final container = ProviderContainer(
       overrides: [
@@ -73,7 +97,7 @@ void main() {
           ),
           localizationsDelegates: AppL10n.localizationsDelegates,
           supportedLocales: AppL10n.supportedLocales,
-          home: const Scaffold(body: MergeRequestCard(url: _url)),
+          home: Scaffold(body: MergeRequestCard(url: url)),
         ),
       ),
     );
@@ -87,6 +111,7 @@ void main() {
     when(
       () => service.fetchMergeRequest(
         provider: any(named: 'provider'),
+        kind: any(named: 'kind'),
         host: any(named: 'host'),
         project: any(named: 'project'),
         number: any(named: 'number'),
@@ -98,6 +123,7 @@ void main() {
     verify(
       () => service.fetchMergeRequest(
         provider: ProviderType.gitlab,
+        kind: LinkedItemKind.mergeRequest,
         host: 'xddlabs.com',
         project: 'root/tbchat',
         number: '3458',
@@ -120,10 +146,54 @@ void main() {
     container.dispose();
   });
 
+  testWidgets('an issue shows its state, #reference and author, no diff', (
+    tester,
+  ) async {
+    when(
+      () => service.fetchMergeRequest(
+        provider: any(named: 'provider'),
+        kind: any(named: 'kind'),
+        host: any(named: 'host'),
+        project: any(named: 'project'),
+        number: any(named: 'number'),
+      ),
+    ).thenAnswer((_) async => const Ok('gl:issue:7'));
+
+    final container = await pump(
+      tester,
+      tickets: [_issue],
+      url: '$_issueUrl#note_1',
+    );
+
+    verify(
+      () => service.fetchMergeRequest(
+        provider: ProviderType.gitlab,
+        kind: LinkedItemKind.issue,
+        host: 'xddlabs.com',
+        project: 'root/tbchat_packages',
+        number: '3',
+      ),
+    ).called(1);
+    expect(find.text('Package fails to build'), findsOneWidget);
+    expect(find.textContaining('Open', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('root/tbchat_packages #3', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.textContaining('kan', findRichText: true), findsOneWidget);
+    expect(find.textContaining('files', findRichText: true), findsNothing);
+
+    await tester.tap(find.byType(MergeRequestCard));
+    expect(container.read(openTicketIdProvider), 'gl:issue:7');
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
+
   testWidgets('without an account for the host it says so', (tester) async {
     when(
       () => service.fetchMergeRequest(
         provider: any(named: 'provider'),
+        kind: any(named: 'kind'),
         host: any(named: 'host'),
         project: any(named: 'project'),
         number: any(named: 'number'),
@@ -156,6 +226,7 @@ void main() {
   void answerFetch() => when(
     () => service.fetchMergeRequest(
       provider: any(named: 'provider'),
+      kind: any(named: 'kind'),
       host: any(named: 'host'),
       project: any(named: 'project'),
       number: any(named: 'number'),
@@ -175,6 +246,7 @@ void main() {
     verify(
       () => service.fetchMergeRequest(
         provider: any(named: 'provider'),
+        kind: any(named: 'kind'),
         host: any(named: 'host'),
         project: any(named: 'project'),
         number: any(named: 'number'),
@@ -193,6 +265,7 @@ void main() {
     verify(
       () => service.fetchMergeRequest(
         provider: any(named: 'provider'),
+        kind: any(named: 'kind'),
         host: any(named: 'host'),
         project: any(named: 'project'),
         number: any(named: 'number'),

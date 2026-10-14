@@ -4,6 +4,7 @@ import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
+import '../../../core/domain/value_objects/linked_item_kind.dart';
 import '../../../core/domain/value_objects/priority.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/domain/value_objects/repo_change.dart';
@@ -13,11 +14,14 @@ import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../data/local/mappers.dart';
 import '../../connections/data/github/github_adapter.dart';
+import '../../connections/data/github/github_normalize.dart';
 import '../../connections/data/gitlab/gitlab_adapter.dart';
+import '../../connections/data/gitlab/gitlab_normalize.dart';
 import '../../connections/data/provider_adapter_factory.dart';
 
 /// [MergeRequestLinkService] over the connected GitLab/GitHub accounts: the
-/// account whose host matches the link fetches the MR/PR, which is stored
+/// account whose host matches the link fetches the MR/PR or issue, which is
+/// stored
 /// with the other tickets (the chat then reads it from the database).
 class MergeRequestLinkFetcher implements MergeRequestLinkService {
   MergeRequestLinkFetcher(this._db, this._credentials);
@@ -28,6 +32,7 @@ class MergeRequestLinkFetcher implements MergeRequestLinkService {
   @override
   Future<Result<String>> fetchMergeRequest({
     required ProviderType provider,
+    required LinkedItemKind kind,
     required String host,
     required String project,
     required String number,
@@ -53,17 +58,22 @@ class MergeRequestLinkFetcher implements MergeRequestLinkService {
     if (adapter == null) {
       return Err(AuthFailure('${provider.name} account is not signed in'));
     }
-    // The adapters read the MR/PR from project + number; the rest is filled
-    // from the reply.
+    // The adapters read the item from project + number + type; the rest
+    // (including the stored id, which the normalizers build) comes from the
+    // reply.
+    final gitlab = provider == ProviderType.gitlab;
     final stub = Ticket(
       id: '${account.id}:$project:$number',
       accountId: account.id,
       projectId: '${account.id}:$project',
       providerType: provider,
       externalKey: number,
-      externalType: provider == ProviderType.gitlab
-          ? 'MergeRequest'
-          : 'PullRequest',
+      externalType: switch (kind) {
+        LinkedItemKind.issue =>
+          gitlab ? GitLabKind.issue.label : GitHubKind.issue.label,
+        LinkedItemKind.mergeRequest =>
+          gitlab ? GitLabKind.mergeRequest.label : GitHubKind.pullRequest.label,
+      },
       title: '',
       body: '',
       priority: Priority.medium,
@@ -73,7 +83,10 @@ class MergeRequestLinkFetcher implements MergeRequestLinkService {
     );
     switch (await adapter.getTicket(stub)) {
       case Ok(:final value):
-        final ticket = await _withChangeSize(adapter, value);
+        // Issues have no diff to size.
+        final ticket = kind == LinkedItemKind.mergeRequest
+            ? await _withChangeSize(adapter, value)
+            : value;
         await _db
             .into(_db.tickets)
             .insertOnConflictUpdate(ticketToCompanion(ticket));

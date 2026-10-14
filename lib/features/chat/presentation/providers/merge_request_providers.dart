@@ -15,11 +15,11 @@ final mergeRequestLinkServiceProvider = Provider<MergeRequestLinkService>(
   (ref) => getIt<MergeRequestLinkService>(),
 );
 
-/// How long a fetched MR/PR state is trusted before a card seen again
+/// How long a fetched MR/PR (or issue) state is trusted before a card seen again
 /// fetches it anew.
 const _kFresh = Duration(minutes: 5);
 
-/// Fetches the MR/PR a link points to from its provider (and stores it);
+/// Fetches the MR/PR or issue a link points to from its provider (and stores it);
 /// the ticket id, or why it could not be loaded.
 final chatMergeRequestFetchProvider = FutureProvider.autoDispose
     .family<Result<String>, String>((ref, url) async {
@@ -34,13 +34,14 @@ final chatMergeRequestFetchProvider = FutureProvider.autoDispose
           .watch(mergeRequestLinkServiceProvider)
           .fetchMergeRequest(
             provider: link.provider,
+            kind: link.kind,
             host: link.host,
             project: link.project,
             number: link.number,
           );
     });
 
-/// The stored MR/PR [url] points to (watched: updates when it is fetched or
+/// The stored MR/PR or issue [url] points to (watched: updates when it is fetched or
 /// synced again).
 final chatMergeRequestProvider = Provider.autoDispose.family<Ticket?, String>(
   (ref, url) => const FindLinkedMergeRequest()(

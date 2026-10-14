@@ -38,14 +38,19 @@ void main() {
     );
   });
 
+  test('matches a GitLab issue, not the MR with the same number', () {
+    expect(
+      find('https://xddlabs.com/root/tbchat/-/issues/3458#note_1', tickets)?.id,
+      'issue',
+    );
+  });
+
   test('null for another MR or a non-MR link', () {
     expect(
       find('https://xddlabs.com/root/tbchat/-/merge_requests/1', tickets),
       isNull,
     );
-    expect(
-      find('https://xddlabs.com/root/tbchat/-/issues/3458', tickets),
-      isNull,
-    );
+    expect(find('https://xddlabs.com/root/tbchat/-/issues/1', tickets), isNull);
+    expect(find('https://zentao.example/task-view-1.html', tickets), isNull);
   });
 }
