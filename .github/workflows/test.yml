@@ -3,23 +3,21 @@ name: Test
 # Runs the test suite on every pull request into main, and on pushes to main so
 # a broken main shows up. build.yml only publishes releases; nothing else checks
 # a change before it is merged.
+#
+# No `paths-ignore`: if `Test` is a required check, a pull request that only
+# touches docs would wait for a run that never starts.
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
   workflow_dispatch:
 
-# A new push to a pull request supersedes the run still going for it.
+# A newer push to a pull request supersedes the run still going for it. Runs on
+# main are never cancelled, so each commit that lands keeps its own result.
 concurrency:
   group: test-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -30,34 +28,57 @@ env:
 
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    name: Test (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      # One platform failing says nothing about the others.
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Linux, os: ubuntu-latest, desktop: linux }
+          - { name: Windows, os: windows-latest, desktop: windows }
+          - { name: macOS, os: macos-latest, desktop: macos }
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       # sqlite3's build hook compiles its native library for the tests.
       - name: Install build tools
+        if: matrix.desktop == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config
 
-      - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
+      # The release build's own setup: Flutter, `pub get` (which also generates
+      # the localizations) and codegen, the *.g.dart / *.freezed.dart /
+      # *.config.dart files being gitignored. Without a version it stamps
+      # nothing.
+      - name: Prepare Flutter
+        uses: ./.github/actions/prepare-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
+          desktop: ${{ matrix.desktop }}
 
-      # Also generates the localizations (`flutter: generate: true`).
-      - name: Install dependencies
-        run: flutter pub get
+      # The project rules, checked once (they do not depend on the platform):
+      # formatted, and clean of analyzer errors and warnings
+      # (the infos it already carries do not fail the run).
+      - name: Check formatting
+        if: matrix.desktop == 'linux'
+        run: dart format --output=none --set-exit-if-changed lib test
 
-      # Codegen (freezed / drift / injectable / retrofit / json): the
-      # *.g.dart / *.freezed.dart / *.config.dart files are gitignored.
-      - name: Run code generation
-        run: dart run build_runner build --delete-conflicting-outputs
+      - name: Analyze
+        if: matrix.desktop == 'linux'
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test --reporter expanded
+
+      # The C++ runner (single-instance hand-over, tray, window placement) is
+      # not covered by any test: keep it compiling.
+      - name: Build the Windows runner
+        if: matrix.desktop == 'windows'
+        shell: bash
+        run: |
+          flutter create --platforms=windows --project-name work_nexus .
+          flutter build windows --debug
