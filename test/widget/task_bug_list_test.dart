@@ -14,7 +14,7 @@ import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/task_detail/domain/repositories/zentao_task_bugs.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/task_bugs_card.dart';
+import 'package:work_nexus/features/task_detail/presentation/widgets/task_bug_list.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 class _MockTaskBugs extends Mock implements ZenTaoTaskBugs {}
@@ -80,7 +80,7 @@ void main() {
           ),
           localizationsDelegates: AppL10n.localizationsDelegates,
           supportedLocales: AppL10n.supportedLocales,
-          home: Scaffold(body: TaskBugsCard(ticket: _task)),
+          home: Scaffold(body: TaskBugList(ticket: _task)),
         ),
       ),
     );

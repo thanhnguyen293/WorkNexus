@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -16,17 +16,16 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/task_bugs_providers.dart';
-import 'detail_fields_card.dart';
-import 'detail_region_card.dart';
+import 'detail_list_card.dart';
 import 'section_label.dart';
 
-/// A ZenTao task's related bugs (the bugs whose `task` is this one) as a
-/// sidebar card; tapping one opens it. The stored ones show at once while the
-/// task's execution's bugs are fetched. Nothing shows while there are none,
-/// unless the fetch failed — then it says so, with a retry. Spaces itself
-/// from the card above.
-class TaskBugsCard extends ConsumerWidget {
-  const TaskBugsCard({super.key, required this.ticket});
+/// A ZenTao task's related bugs (the bugs whose `task` is this one), listed in
+/// its own card below the description, like its subtasks; tapping one opens it. The stored ones
+/// show at once while the task's execution's bugs are fetched. Nothing shows
+/// while there are none, unless the fetch failed — then it says so, with a
+/// retry. Spaces itself from the section above.
+class TaskBugList extends ConsumerWidget {
+  const TaskBugList({super.key, required this.ticket});
 
   /// The task.
   final Ticket ticket;
@@ -38,44 +37,36 @@ class TaskBugsCard extends ConsumerWidget {
     final sync = ref.watch(taskBugsSyncProvider(ticket.id));
     final failed = sync.value is Err;
     if (bugs.isEmpty && !failed) return const SizedBox.shrink();
-    return Padding(
-      padding: EdgeInsets.only(top: context.spacing.xl),
-      child: DetailRegionCard(
-        padding: detailSidebarInset(context),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                SectionLabel('${l.relatedBugs} (${bugs.length})'),
-                if (sync.isLoading) ...[
-                  SizedBox(width: context.spacing.sm),
-                  SizedBox.square(
-                    dimension: context.sizes.iconXs,
-                    child: const CircularProgressIndicator(strokeWidth: 1.5),
-                  ),
-                ],
-              ],
+    return DetailListCard(
+      header: Row(
+        children: [
+          SectionLabel('${l.relatedBugs} (${bugs.length})'),
+          if (sync.isLoading) ...[
+            SizedBox(width: context.spacing.sm),
+            SizedBox.square(
+              dimension: context.sizes.iconXs,
+              child: const CircularProgressIndicator(strokeWidth: 1.5),
             ),
-            SizedBox(height: context.spacing.xs),
-            for (final bug in bugs)
-              _BugRow(
-                bug: bug,
-                onTap: () =>
-                    ref.read(appNavProvider.notifier).openTicket(bug.id),
-              ),
-            if (failed)
-              _LoadFailed(
-                onRetry: () => ref.invalidate(taskBugsSyncProvider(ticket.id)),
-              ),
           ],
-        ),
+        ],
       ),
+      rows: [
+        for (final bug in bugs)
+          _BugRow(
+            bug: bug,
+            onTap: () => ref.read(appNavProvider.notifier).openTicket(bug.id),
+          ),
+      ],
+      footer: failed
+          ? _LoadFailed(
+              onRetry: () => ref.invalidate(taskBugsSyncProvider(ticket.id)),
+            )
+          : null,
     );
   }
 }
 
-/// One related bug: its id and title (up to two lines), then its status.
+/// One related bug, as a subtask row: id, title, assignee, then its status.
 class _BugRow extends StatelessWidget {
   const _BugRow({required this.bug, required this.onTap});
 
@@ -86,30 +77,45 @@ class _BugRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    return HoverSurface(
+    return DetailListRow(
       onTap: onTap,
-      padding: EdgeInsets.symmetric(vertical: s.sm),
-      border: Border(bottom: context.hairlineSide),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '#${bug.externalKey}',
             style: context.typography.mono.copyWith(color: c.textSecondary),
           ),
-          SizedBox(width: s.md),
+          SizedBox(width: s.lg),
           Expanded(
             child: Text(
               bug.title,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typography.meta.copyWith(color: c.accent),
+              style: context.typography.bodySm.copyWith(
+                color: c.accent,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          SizedBox(width: s.md),
+          if (bug.assignee case final assignee? when assignee.isNotEmpty) ...[
+            SizedBox(width: s.lg),
+            Text(
+              assignee,
+              style: context.typography.caption.copyWith(
+                color: c.textSecondary,
+              ),
+            ),
+          ],
+          SizedBox(width: s.lg),
           TintedPill(
             color: statusColor(c, bug.status),
             label: statusLabel(AppL10n.of(context), bug.status),
+          ),
+          SizedBox(width: s.sm),
+          Icon(
+            LucideIcons.chevronRight300,
+            size: context.sizes.iconSm,
+            color: c.textTertiary,
           ),
         ],
       ),
