@@ -177,6 +177,7 @@ class QuickSettingsSwitchField extends StatelessWidget {
           ? SystemMouseCursors.basic
           : WidgetStateMouseCursor.clickable,
       onTap: onChanged == null ? null : () => onChanged(!value),
+      borderRadius: BorderRadius.circular(context.radii.md),
       child: Padding(
         padding: _rowPadding(context),
         child: Row(
@@ -193,7 +194,13 @@ class QuickSettingsSwitchField extends StatelessWidget {
               // The Material switch is sized for touch; the panel is dense.
               scale: 0.8,
               alignment: Alignment.centerRight,
-              child: Switch(value: value, onChanged: onChanged),
+              child: Switch(
+                value: value,
+                onChanged: onChanged,
+                // The whole row answers hover; the switch's own halo would
+                // double it (and sits off-centre once scaled down).
+                overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              ),
             ),
           ],
         ),
@@ -222,6 +229,7 @@ class QuickSettingsLinkField extends StatelessWidget {
     return InkWell(
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
+      borderRadius: BorderRadius.circular(context.radii.md),
       child: Padding(
         padding: _rowPadding(context),
         child: Row(
