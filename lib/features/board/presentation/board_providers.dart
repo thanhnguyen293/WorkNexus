@@ -23,6 +23,7 @@ import '../domain/usecases/scope_paged_view_tickets.dart';
 import '../domain/usecases/scope_provider_tickets.dart';
 import '../domain/value_objects/github_item_kind.dart';
 import '../domain/value_objects/gitlab_item_kind.dart';
+import '../domain/value_objects/paged_view_loads.dart';
 import '../domain/value_objects/zentao_bug_browse_type.dart';
 import '../domain/value_objects/zentao_bug_stream.dart';
 import '../domain/value_objects/zentao_task_column.dart';
@@ -521,13 +522,17 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
           membershipLabel: zentaoExecutionLabel(execution.executionId),
           slice: null,
         ),
-        views: ref.watch(zentaoTaskStreamsProvider),
+        // What the views loaded, not their whole state: a page starting or
+        // failing must not re-scope (and so re-filter and re-sort) the board.
+        loads: ref.watch(zentaoTaskStreamsProvider.select(PagedViewLoads.of)),
         viewOf: zentaoTaskColumnFor,
       ),
     );
   } else if (product != null) {
     final mine = ref.watch(zentaoBugMineProvider);
-    final streams = ref.watch(zentaoBugStreamsProvider);
+    // What the views loaded, not their whole state: a page starting or
+    // failing must not re-scope (and so re-filter and re-sort) the board.
+    final loads = ref.watch(zentaoBugStreamsProvider.select(PagedViewLoads.of));
     final account = ref.watch(
       lookupsProvider.select((l) => l.accounts[product.accountId]),
     );
@@ -535,7 +540,7 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
     // to the user locally; once it loads, the server's list decides.
     if (mine &&
         account != null &&
-        !(streams[ZenTaoBugStream.assignedToMe]?.started ?? false)) {
+        loads.ids[ZenTaoBugStream.assignedToMe] == null) {
       tickets = [
         for (final t in tickets)
           if (const IsAssignedToMe()(t, account)) t,
@@ -551,7 +556,7 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
           membershipLabel: zentaoProductLabel(product.productId),
           slice: null,
         ),
-        views: streams,
+        loads: loads,
         viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t), mine: mine),
       ),
     );
@@ -561,12 +566,15 @@ final _scopedTicketsProvider = Provider<List<Ticket>>((ref) {
 
 /// The query fed to the pure board/list use cases.
 final _boardQueryProvider = Provider<BoardQuery>((ref) {
+  // To the minute: `BoardQuery` compares by value so an unchanged query does
+  // not rebuild the boards, and the "Today" view counts in hours anyway.
+  final t = DateTime.now();
   return BoardQuery(
     tickets: ref.watch(_scopedTicketsProvider),
     filter: ref.watch(filterStateProvider),
     accountWorkspace: ref.watch(accountWorkspaceProvider),
     workspaceOrder: ref.watch(workspaceOrderProvider),
-    now: DateTime.now(),
+    now: DateTime(t.year, t.month, t.day, t.hour, t.minute),
   );
 });
 
@@ -816,6 +824,7 @@ final resultCountProvider = Provider<int>((ref) {
   if (ref.watch(viewModeProvider) == ViewMode.zentaoTasks) {
     return ref.watch(zentaoTaskBoardProvider).total;
   }
-  final q = ref.watch(_boardQueryProvider);
-  return const FilterTickets()(q).length;
+  // The board has already filtered the query; counting its columns saves a
+  // second pass over every ticket.
+  return ref.watch(boardProvider).total;
 });

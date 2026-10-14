@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -293,6 +294,11 @@ class XxdChatRepository implements ChatRepository {
   }
 
   // ---- reads -------------------------------------------------------------------
+  //
+  // Drift re-runs a watch on every write to its tables, changed or not (a
+  // read marker, a presence ping, a message in another chat); `distinct`
+  // keeps an unchanged list from re-rendering every consumer. The entities
+  // compare by value.
 
   @override
   Stream<List<ChatConversation>> watchConversations(String accountId) =>
@@ -308,7 +314,7 @@ class XxdChatRepository implements ChatRepository {
               parse: _parse,
             ),
         ],
-      );
+      ).distinct(const ListEquality<ChatConversation>().equals);
 
   @override
   Stream<List<ChatMessage>> watchMessages(
@@ -321,7 +327,7 @@ class XxdChatRepository implements ChatRepository {
     (rows, self) => [
       for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
     ],
-  );
+  ).distinct(const ListEquality<ChatMessage>().equals);
 
   @override
   Stream<ChatMessage?> watchMessage(
@@ -345,7 +351,7 @@ class XxdChatRepository implements ChatRepository {
           for (final r in rows)
             messageFromRow(r, selfUserId: self, parse: _parse),
         ],
-      );
+      ).distinct(const ListEquality<ChatMessage>().equals);
 
   @override
   Stream<List<ChatMessage>> watchAttachments(
@@ -362,7 +368,8 @@ class XxdChatRepository implements ChatRepository {
   @override
   Stream<List<ChatUser>> watchUsers(String accountId) => _local
       .watchUsers(accountId)
-      .map((rows) => rows.map(userFromRow).toList());
+      .map((rows) => rows.map(userFromRow).toList())
+      .distinct(const ListEquality<ChatUser>().equals);
 
   // ---- history & read state ----------------------------------------------------
 

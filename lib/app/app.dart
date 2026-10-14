@@ -14,6 +14,43 @@ import '../core/widgets/celebration_overlay.dart';
 import '../l10n/app_localizations.dart';
 import 'shell/app_shell.dart';
 
+/// The light and dark [ThemeData] for the current appearance settings.
+///
+/// Built from the appearance fields only (a record, so it compares by value):
+/// any other setting — the sidebar width, a pin, a chat slider — leaves these
+/// `ThemeData` instances untouched, and so neither re-themes the tree nor
+/// plays the theme transition. The theme extensions compare by identity, so
+/// reusing the instances is what keeps `Theme.of` dependents quiet.
+final appThemesProvider = Provider<({ThemeData light, ThemeData dark})>((ref) {
+  final a = ref.watch(
+    appSettingsProvider.select(
+      (s) => (
+        variant: s.variant,
+        followsSystem: s.themeFollowsSystem,
+        surface: s.surface,
+        density: s.density,
+        fontFamily: s.fontFamily,
+        componentRadius: s.componentRadius,
+        accentColorValue: s.accentColorValue,
+      ),
+    ),
+  );
+  ThemeData themeFor(AppThemeVariant variant) => buildAppTheme(
+    variant: variant,
+    surface: a.surface,
+    density: a.density,
+    fontFamily: a.fontFamily,
+    componentRadius: a.componentRadius,
+    accentColorValue: a.accentColorValue,
+  );
+  return (
+    // Following the OS, Flutter swaps light/dark live as the system does;
+    // otherwise the picked variant is the only theme.
+    light: themeFor(a.followsSystem ? AppThemeVariant.light : a.variant),
+    dark: themeFor(AppThemeVariant.dark),
+  );
+});
+
 /// Root application widget. Rebuilds the theme when appearance settings change
 /// and drives the locale from [appSettingsProvider].
 class WorkNexusApp extends ConsumerWidget {
@@ -34,19 +71,15 @@ class WorkNexusApp extends ConsumerWidget {
         unawaited(activeLifecycle.updateLocale(locale));
       }
     });
-    final settings = ref.watch(appSettingsProvider);
-    ThemeData themeFor(AppThemeVariant variant) => buildAppTheme(
-      variant: variant,
-      surface: settings.surface,
-      density: settings.density,
-      fontFamily: settings.fontFamily,
-      componentRadius: settings.componentRadius,
-      accentColorValue: settings.accentColorValue,
+    final locale = ref.watch(appSettingsProvider.select((s) => s.locale));
+    final followsSystem = ref.watch(
+      appSettingsProvider.select((s) => s.themeFollowsSystem),
     );
+    final themes = ref.watch(appThemesProvider);
     return MaterialApp(
       onGenerateTitle: (context) => AppL10n.of(context).appTitle,
       debugShowCheckedModeBanner: false,
-      locale: settings.locale,
+      locale: locale,
       localizationsDelegates: const [
         AppL10n.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -56,15 +89,9 @@ class WorkNexusApp extends ConsumerWidget {
         FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: AppL10n.supportedLocales,
-      // Following the OS, Flutter swaps light/dark live as the system does;
-      // otherwise the picked variant is the only theme.
-      theme: themeFor(
-        settings.themeFollowsSystem ? AppThemeVariant.light : settings.variant,
-      ),
-      darkTheme: themeFor(AppThemeVariant.dark),
-      themeMode: settings.themeFollowsSystem
-          ? ThemeMode.system
-          : ThemeMode.light,
+      theme: themes.light,
+      darkTheme: themes.dark,
+      themeMode: followsSystem ? ThemeMode.system : ThemeMode.light,
       // Above the navigator, so a show also plays over an open dialog.
       builder: (context, child) =>
           CelebrationOverlay(child: child ?? const SizedBox.shrink()),

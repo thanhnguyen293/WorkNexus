@@ -46,10 +46,14 @@ List<MessageAction> messageActions(
       )
       .asData
       ?.value;
+  // This message's entry only: translating one message must not rebuild
+  // every bubble on screen.
   final translated =
-      ref
-          .watch(messageTranslationControllerProvider)
-          .containsKey(message.gid) ||
+      ref.watch(
+        messageTranslationControllerProvider.select(
+          (m) => m.containsKey(message.gid),
+        ),
+      ) ||
       (storedTranslation?.visible ?? false);
   final text = switch (message.content) {
     TextContent(:final text) when !message.deleted => text,

@@ -4,7 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -20,14 +19,9 @@ import 'zentao_execution_row.dart';
 /// executions that hold the task board's tasks. Pinned executions are lifted out
 /// into the per-account Pinned area ([ZenTaoPinnedBranch]).
 class ZenTaoExecutionsBranch extends ConsumerWidget {
-  const ZenTaoExecutionsBranch({
-    super.key,
-    required this.account,
-    required this.tickets,
-  });
+  const ZenTaoExecutionsBranch({super.key, required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,20 +43,16 @@ class ZenTaoExecutionsBranch extends ConsumerWidget {
             assignedCountsProvider.select((c) => c.zentaoTasks(account.id)),
           ),
         ),
-        if (expanded)
-          SidebarTreeBranch(
-            child: _Projects(account: account, tickets: tickets),
-          ),
+        if (expanded) SidebarTreeBranch(child: _Projects(account: account)),
       ],
     );
   }
 }
 
 class _Projects extends ConsumerWidget {
-  const _Projects({required this.account, required this.tickets});
+  const _Projects({required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,7 +66,7 @@ class _Projects extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final p in items)
-              _ProjectNode(accountId: account.id, project: p, tickets: tickets),
+              _ProjectNode(accountId: account.id, project: p),
           ],
         );
       },
@@ -92,15 +82,10 @@ class _Projects extends ConsumerWidget {
 }
 
 class _ProjectNode extends ConsumerWidget {
-  const _ProjectNode({
-    required this.accountId,
-    required this.project,
-    required this.tickets,
-  });
+  const _ProjectNode({required this.accountId, required this.project});
 
   final String accountId;
   final ProviderProject project;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -131,11 +116,7 @@ class _ProjectNode extends ConsumerWidget {
         ),
         if (expanded)
           SidebarTreeBranch(
-            child: _Executions(
-              accountId: accountId,
-              projectId: project.id,
-              tickets: tickets,
-            ),
+            child: _Executions(accountId: accountId, projectId: project.id),
           ),
       ],
     );
@@ -143,15 +124,10 @@ class _ProjectNode extends ConsumerWidget {
 }
 
 class _Executions extends ConsumerWidget {
-  const _Executions({
-    required this.accountId,
-    required this.projectId,
-    required this.tickets,
-  });
+  const _Executions({required this.accountId, required this.projectId});
 
   final String accountId;
   final String projectId;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -178,7 +154,7 @@ class _Executions extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final e in rest)
-              ZenTaoExecutionRow(execution: e, tickets: tickets, pinned: false),
+              ZenTaoExecutionRow(execution: e, pinned: false),
           ],
         );
       },

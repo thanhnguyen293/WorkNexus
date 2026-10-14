@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -23,13 +22,11 @@ class ZenTaoProjectRow extends ConsumerWidget {
   const ZenTaoProjectRow({
     super.key,
     required this.product,
-    required this.tickets,
     required this.pinned,
     this.showKindTag = false,
   });
 
   final ProviderProduct product;
-  final List<Ticket> tickets;
   final bool pinned;
 
   /// Whether to show the "Bug" kind tag (used in the combined Pinned area, where

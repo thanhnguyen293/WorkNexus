@@ -1,19 +1,19 @@
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../entities/paged_view_state.dart';
+import '../value_objects/paged_view_loads.dart';
 
 /// A paged board's cached tickets and what its views have loaded.
 class PagedViewScopeQuery<V> {
   const PagedViewScopeQuery({
     required this.tickets,
-    required this.views,
+    required this.loads,
     required this.viewOf,
   });
 
   /// The board's tickets in the local database (already scoped to its
   /// account, type and product/execution).
   final List<Ticket> tickets;
-  final Map<V, PagedViewState> views;
+  final PagedViewLoads<V> loads;
 
   /// The view a ticket's column draws on.
   final V Function(Ticket ticket) viewOf;
@@ -30,10 +30,10 @@ class ScopePagedViewTickets<V>
 
   @override
   List<Ticket> call(PagedViewScopeQuery<V> q) {
-    final loaded = {for (final s in q.views.values) ...s.ids};
+    final loaded = {for (final ids in q.loads.ids.values) ...?ids};
     final unloaded = {
-      for (final MapEntry(:key, :value) in q.views.entries)
-        if (!value.started) key,
+      for (final MapEntry(:key, :value) in q.loads.ids.entries)
+        if (value == null) key,
     };
     return [
       for (final t in q.tickets)

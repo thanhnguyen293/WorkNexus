@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../board_providers.dart';
@@ -15,14 +14,9 @@ import 'zentao_project_row.dart';
 /// (tagged "Bug") and pinned executions (tagged "Task"), lifted out of the Bugs
 /// and Tasks groups for quick access. Hidden entirely when nothing is pinned.
 class ZenTaoPinnedBranch extends ConsumerWidget {
-  const ZenTaoPinnedBranch({
-    super.key,
-    required this.account,
-    required this.tickets,
-  });
+  const ZenTaoPinnedBranch({super.key, required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,12 +49,7 @@ class ZenTaoPinnedBranch extends ConsumerWidget {
         children: [
           const SidebarPinnedHeader(),
           for (final p in pinnedProducts)
-            ZenTaoProjectRow(
-              product: p,
-              tickets: tickets,
-              pinned: true,
-              showKindTag: true,
-            ),
+            ZenTaoProjectRow(product: p, pinned: true, showKindTag: true),
           for (final e in pinnedExecutions)
             ZenTaoExecutionRow(
               execution: ProviderExecution(
@@ -69,7 +58,6 @@ class ZenTaoPinnedBranch extends ConsumerWidget {
                 projectId: e.projectId,
                 accountId: e.accountId,
               ),
-              tickets: tickets,
               pinned: true,
               showKindTag: true,
             ),

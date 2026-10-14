@@ -27,14 +27,19 @@ final ticketsProvider = StreamProvider<List<Ticket>>(
   (ref) => getIt<TicketRepository>().watchTickets(),
 );
 
-/// A single ticket from the reactive set (null while loading / not found).
-final ticketByIdProvider = Provider.family<Ticket?, String>((ref, id) {
+/// The reactive ticket set keyed by id, built once per emission so the
+/// per-ticket lookups below cost a map read, not a scan of every ticket.
+final ticketIndexProvider = Provider<Map<String, Ticket>>((ref) {
   final tickets = ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
-  for (final t in tickets) {
-    if (t.id == id) return t;
-  }
-  return null;
+  return {for (final t in tickets) t.id: t};
 });
+
+/// A single ticket from the reactive set (null while loading / not found).
+/// Notifies only when that ticket changes (`Ticket` compares by value), not
+/// on every emission of the set.
+final ticketByIdProvider = Provider.autoDispose.family<Ticket?, String>(
+  (ref, id) => ref.watch(ticketIndexProvider.select((index) => index[id])),
+);
 
 final workspacesProvider = StreamProvider<List<Workspace>>(
   (ref) => getIt<WorkspaceRepository>().watchWorkspaces(),

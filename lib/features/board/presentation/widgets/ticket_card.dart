@@ -31,17 +31,31 @@ class TicketCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final lookups = ref.watch(lookupsProvider);
-    final account = lookups.accounts[ticket.accountId];
-    final ws = account == null ? null : lookups.workspaces[account.workspaceId];
-    final wsColor = ws == null ? c.workspaceFallback : Color(ws.colorValue);
-    final tint = ref.watch(appSettingsProvider).companyTint;
-    final selected = ref.watch(openTicketIdProvider) == ticket.id;
+    // Each watch narrows to the one value the card draws, so a card rebuilds
+    // for its own ticket, not for every change to the lookups, the settings
+    // or the open ticket.
+    final wsColorValue = ref.watch(
+      lookupsProvider.select((l) {
+        final account = l.accounts[ticket.accountId];
+        return account == null
+            ? null
+            : l.workspaces[account.workspaceId]?.colorValue;
+      }),
+    );
+    final wsColor = wsColorValue == null
+        ? c.workspaceFallback
+        : Color(wsColorValue);
+    final tint = ref.watch(appSettingsProvider.select((s) => s.companyTint));
+    final selected = ref.watch(
+      openTicketIdProvider.select((id) => id == ticket.id),
+    );
     final pending = ref.watch(
       ticketActionPendingProvider.select((ids) => ids.contains(ticket.id)),
     );
 
-    final trStatus = ref.watch(translationStatusProvider(ticket.id)).state;
+    final trStatus = ref.watch(
+      translationStatusProvider(ticket.id).select((t) => t.state),
+    );
     final cardLabels = visibleUserLabels(ticket.labels);
     final labelColors = labelColorsOf(ticket);
 
