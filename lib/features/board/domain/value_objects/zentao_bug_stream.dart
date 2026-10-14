@@ -16,20 +16,28 @@ enum ZenTaoBugStream {
   toClose('toclosed'),
 
   /// Every bug; ZenTao has no closed-only view, so Closed keeps the closed ones.
-  all('all');
+  all('all'),
+
+  /// The bugs assigned to the signed-in user, whatever their status: on the
+  /// Assigned-to-me tab this one view feeds every column. ZenTao assigns a
+  /// closed bug to "Closed", so none of them are closed.
+  assignedToMe('assigntome');
 
   const ZenTaoBugStream(this.code);
 
   /// The literal browse type ZenTao's bug-list API expects.
   final String code;
 
-  /// The view [column] draws its bugs from.
-  static ZenTaoBugStream of(ZenTaoBugColumn column) => switch (column) {
-    ZenTaoBugColumn.newUnconfirmed => unconfirmed,
-    ZenTaoBugColumn.confirmedToFix => unresolved,
-    ZenTaoBugColumn.resolvedVerify ||
-    ZenTaoBugColumn.postponed ||
-    ZenTaoBugColumn.nonFix => toClose,
-    ZenTaoBugColumn.closed => all,
-  };
+  /// The view [column] draws its bugs from — [assignedToMe] for every
+  /// column on the Assigned-to-me tab ([mine]).
+  static ZenTaoBugStream of(ZenTaoBugColumn column, {bool mine = false}) => mine
+      ? assignedToMe
+      : switch (column) {
+          ZenTaoBugColumn.newUnconfirmed => unconfirmed,
+          ZenTaoBugColumn.confirmedToFix => unresolved,
+          ZenTaoBugColumn.resolvedVerify ||
+          ZenTaoBugColumn.postponed ||
+          ZenTaoBugColumn.nonFix => toClose,
+          ZenTaoBugColumn.closed => all,
+        };
 }

@@ -34,10 +34,11 @@ final zentaoBugTableProvider =
     Provider.autoDispose<PagedTable<ZenTaoBugStream>>((ref) {
       final board = ref.watch(zentaoBugBoardProvider);
       final streams = ref.watch(zentaoBugStreamsProvider);
+      final mine = ref.watch(zentaoBugMineProvider);
       final byView = <ZenTaoBugStream, List<Ticket>>{};
       for (final col in board.columns) {
         byView
-            .putIfAbsent(ZenTaoBugStream.of(col.column), () => [])
+            .putIfAbsent(ZenTaoBugStream.of(col.column, mine: mine), () => [])
             .addAll(col.tickets);
       }
       return const BuildPagedTable<ZenTaoBugStream>()(

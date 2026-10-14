@@ -35,6 +35,7 @@ class ZenTaoBugTableView extends ConsumerWidget {
     final l = AppL10n.of(context);
     final table = ref.watch(zentaoBugTableProvider);
     final pending = table.pending;
+    final mine = ref.watch(zentaoBugMineProvider);
     return TicketTable(
       id: 'zentao-bug',
       rows: table.rows,
@@ -45,7 +46,7 @@ class ZenTaoBugTableView extends ConsumerWidget {
           ? null
           : ZenTaoBugColumnFooter(
               column: ZenTaoBugColumn.values.firstWhere(
-                (c) => ZenTaoBugStream.of(c) == pending,
+                (c) => ZenTaoBugStream.of(c, mine: mine) == pending,
               ),
             ),
       columns: [

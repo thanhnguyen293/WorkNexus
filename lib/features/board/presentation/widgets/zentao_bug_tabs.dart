@@ -6,9 +6,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../board_providers.dart';
 
-/// The ZenTao bug-board tab strip (All / Unclosed): All adds the Closed column,
-/// Unclosed (the default) leaves it off. The active tab shows a spinner while
-/// the columns' first pages load.
+/// The ZenTao bug-board tab strip (All / Unclosed / Assigned to me): All adds
+/// the Closed column, Unclosed (the default) leaves it off, Assigned to me
+/// loads only the bugs assigned to the user. The active tab shows a spinner
+/// while the columns' first pages load.
 class ZenTaoBugTabs extends ConsumerWidget {
   const ZenTaoBugTabs({super.key});
 
@@ -25,6 +26,7 @@ class ZenTaoBugTabs extends ConsumerWidget {
         for (final tab in const [
           ZenTaoBugBrowseType.all,
           ZenTaoBugBrowseType.unclosed,
+          ZenTaoBugBrowseType.assignedToMe,
         ])
           AppSegmentedTab(
             label: _label(l, tab),

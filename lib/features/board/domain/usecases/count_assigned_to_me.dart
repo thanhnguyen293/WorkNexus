@@ -1,17 +1,14 @@
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/util/ticket_open.dart';
 import '../value_objects/assigned_counts.dart';
+import 'is_assigned_to_me.dart';
 
 /// Counts the open tickets assigned to each account's own user for every node
 /// of the sources tree (see [AssignedCounts]).
 ///
-/// A ticket is the user's when its assignee is the account's handle: ZenTao
-/// stores the assignee's login; GitLab and GitHub store display names, so
-/// their assignees' logins are matched (with the display name as a fallback
-/// for items synced before logins were kept).
+/// A ticket is the user's as [IsAssignedToMe] decides.
 ///
 /// [pinnedProjects] holds `accountId:id` keys of pinned ZenTao products and
 /// GitLab / GitHub projects; [pinnedExecutions] of pinned ZenTao executions.
@@ -31,7 +28,9 @@ class CountAssignedToMe {
 
     for (final t in tickets) {
       final account = byId[t.accountId];
-      if (account == null || !isOpenForAssignee(t) || !_isMine(t, account)) {
+      if (account == null ||
+          !isOpenForAssignee(t) ||
+          !const IsAssignedToMe()(t, account)) {
         continue;
       }
       final a = account.id;
@@ -116,22 +115,4 @@ class CountAssignedToMe {
       ],
     );
   }
-
-  static bool _isMine(Ticket t, Account account) {
-    final me = account.handle.trim().toLowerCase();
-    if (me.isEmpty) return false;
-    bool isMe(String? name) => name?.trim().toLowerCase() == me;
-    return switch (t.providerType) {
-      ProviderType.zentao => isMe(t.assignee),
-      ProviderType.gitlab || ProviderType.github =>
-        isMe(t.assignee) || _logins(t.providerEntity).any(isMe),
-      _ => false,
-    };
-  }
-
-  static List<String> _logins(TicketProviderEntity? entity) => switch (entity) {
-    GitLabItemEntity(:final assigneeLogins) => assigneeLogins,
-    GitHubItemEntity(:final assigneeLogins) => assigneeLogins,
-    _ => const [],
-  };
 }
