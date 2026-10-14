@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -17,8 +18,12 @@ import '../../../../core/widgets/badges.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'bug_execution_link.dart';
+import 'bug_linked_ticket.dart';
+import 'bug_module_name.dart';
 import 'detail_field_rows.dart';
 import 'detail_region_card.dart';
+import 'empty_fields_toggle.dart';
 import 'section_label.dart';
 import 'ticket_status_pill.dart';
 
@@ -55,16 +60,13 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
         widget.ticket.providerStatus.trim().toLowerCase() == 'active';
     final reopened = bug.activatedCount ?? 0;
 
-    // Design order: filled rows surface first, the five id-only fields (Module,
-    // Branch, Plan, Story, Task) fall to the empty group when unset (ZenTao
-    // reports them as "0").
+    // Grouped by what a reader looks for: the triage facts first (state,
+    // how bad, how urgent, what kind), then where the bug lives (product →
+    // execution → module → plan → build), then what it links to. The id-only
+    // fields (Module, Branch, Plan, Story, Task) fall to the empty group when
+    // unset (ZenTao reports them as "0").
     final classification = <(String, String)>[
       (l.status, widget.ticket.providerStatus),
-      (l.fieldProduct, _joined([bug.productName, bug.product])),
-      (l.fieldExecution, _joined([bug.executionName, bug.execution])),
-      (l.fieldModule, bug.module ?? ''),
-      (l.fieldBranch, bug.branch ?? ''),
-      (l.fieldType, zentaoBugTypeLabel(bug.bugType) ?? ''),
       (l.fieldSeverity, _severity(bug.severity)),
       (
         l.priority,
@@ -72,18 +74,23 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
             ? priorityLabel(widget.ticket.providerType, widget.ticket.priority)
             : '',
       ),
-      // The triage facts ZenTao keeps in Basic Info. Whether an open bug was
-      // confirmed matters for triage; once it is resolved the flag is history.
+      // Whether an open bug was confirmed matters for triage; once it is
+      // resolved the flag is history.
       if (active)
         (
           l.fieldConfirmation,
           bug.confirmed == 1 ? l.confirmed : l.bugUnconfirmed,
         ),
       if (reopened > 0) (l.fieldReopened, '$reopened'),
-      (l.fieldPlan, _joined([bug.planName, bug.plan])),
+      (l.fieldType, zentaoBugTypeLabel(bug.bugType) ?? ''),
+      (l.fieldProduct, _nameOr(bug.productName, bug.product)),
+      (l.fieldExecution, _nameOr(bug.executionName, bug.execution)),
+      (l.fieldModule, bug.module ?? ''),
+      (l.fieldBranch, bug.branch ?? ''),
+      (l.fieldPlan, _nameOr(bug.planName, bug.plan)),
+      (l.fieldOpenedBuild, bug.openedBuild ?? ''),
       (l.fieldStory, _joined([bug.storyTitle, bug.story])),
       (l.task, _joined([bug.taskName, bug.task])),
-      (l.fieldOpenedBuild, bug.openedBuild ?? ''),
     ];
     final filled = classification.where((r) => !_isEmpty(r.$2)).toList();
     final empty = classification
@@ -148,12 +155,46 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
                       color: context.colors.warning,
                     ),
                   ),
+                  // The bug only knows its module's id; the name is looked up.
+                  if ((_linkId(bug.module), _linkId(bug.product)) case (
+                    final module?,
+                    final product?,
+                  ))
+                    l.fieldModule: BugModuleName(
+                      accountId: widget.ticket.accountId,
+                      productId: product,
+                      moduleId: module,
+                    ),
+                  if (_linkId(bug.execution) case final id?)
+                    l.fieldExecution: BugExecutionLink(
+                      execution: ProviderExecution(
+                        id: id,
+                        name: _nameOr(bug.executionName, id),
+                        projectId: _linkId(bug.project) ?? '0',
+                        accountId: widget.ticket.accountId,
+                      ),
+                    ),
+                  // Story and task open in the panel, like a parent task.
+                  if (_linkId(bug.story) case final id?)
+                    l.fieldStory: BugLinkedTicket(
+                      ticket: widget.ticket,
+                      type: 'story',
+                      id: id,
+                      label: _joined([bug.storyTitle, '#$id']),
+                    ),
+                  if (_linkId(bug.task) case final id?)
+                    l.task: BugLinkedTicket(
+                      ticket: widget.ticket,
+                      type: 'task',
+                      id: id,
+                      label: _joined([bug.taskName, '#$id']),
+                    ),
                 },
               ),
               if (_showEmpty && empty.isNotEmpty)
                 DetailFieldRows(rows: empty, labelWidth: 100, alignEnd: true),
               if (empty.isNotEmpty)
-                _EmptyFieldsToggle(
+                EmptyFieldsToggle(
                   count: empty.length,
                   expanded: _showEmpty,
                   onTap: () => setState(() => _showEmpty = !_showEmpty),
@@ -196,9 +237,19 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
     return v.isEmpty || v == '0' || v == '—';
   }
 
+  /// The linked ticket's id, or null when ZenTao reports it unset.
+  String? _linkId(String? id) => id == null || _isEmpty(id) ? null : id.trim();
+
   String _severity(int? severity) {
     final label = zentaoSeverityLabel(severity);
     return label == null ? '' : 'S$severity · $label';
+  }
+
+  /// [name] when ZenTao gave one, else the bare [id] — an id means nothing to
+  /// a reader next to a name.
+  String _nameOr(String? name, String? id) {
+    final n = name?.trim() ?? '';
+    return n.isNotEmpty ? n : (id ?? '');
   }
 
   String _joined(List<String?> values) => values
@@ -206,49 +257,6 @@ class _ZenTaoBugSectionsState extends ConsumerState<ZenTaoBugSections> {
       .map((v) => v.trim())
       .where((v) => v.isNotEmpty && v != '0')
       .join(' · ');
-}
-
-/// The accent "Show N empty fields" / "Hide empty fields" link under the
-/// classification rows.
-class _EmptyFieldsToggle extends StatelessWidget {
-  const _EmptyFieldsToggle({
-    required this.count,
-    required this.expanded,
-    required this.onTap,
-  });
-
-  final int count;
-  final bool expanded;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: HoverRegion(
-        // HoverSurface makes the link focusable and keyboard-activatable; the
-        // underline stays the hover cue, so it paints no tint.
-        builder: (context, hovered, _) => HoverSurface(
-          onTap: onTap,
-          tintOnHover: false,
-          borderRadius: BorderRadius.circular(context.radii.sm),
-          padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
-          child: Text(
-            expanded
-                ? AppL10n.of(context).hideEmptyFields
-                : AppL10n.of(context).showEmptyFields(count),
-            style: context.typography.caption.copyWith(
-              color: c.accent,
-              // A text link underlines on hover.
-              decoration: hovered ? TextDecoration.underline : null,
-              decorationColor: c.accent,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// The "Lifecycle" heading as a fold toggle, a chevron showing which way it
@@ -275,27 +283,6 @@ class _LifecycleToggle extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// A labeled group of key/value rows, kept for callers outside the bug sidebar.
-class DetailSection extends StatelessWidget {
-  const DetailSection({super.key, required this.title, required this.rows});
-
-  final String title;
-  final List<(String, String)> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    if (rows.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionLabel(title),
-        SizedBox(height: context.spacing.xs),
-        DetailFieldRows(rows: rows),
-      ],
     );
   }
 }

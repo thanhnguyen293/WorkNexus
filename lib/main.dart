@@ -11,6 +11,7 @@ import 'app/shell/storage_dialog.dart';
 import 'core/database/database.dart';
 import 'core/di/service_locator.dart';
 import 'core/navigation/open_storage.dart';
+import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
@@ -20,6 +21,7 @@ import 'core/platform/linux_desktop_entry.dart';
 import 'core/settings/app_settings.dart';
 import 'data/local/database_seeder.dart';
 import 'data/local/mappers.dart';
+import 'features/board/presentation/util/open_execution_board.dart';
 import 'features/chat/presentation/widgets/chat_person_chip.dart';
 import 'features/sync/data/sync_service.dart';
 
@@ -78,6 +80,8 @@ Future<void> main(List<String> arguments) async {
         // One storage dialog spans chat files and the synced data; features
         // open it without importing each other.
         openStorageProvider.overrideWithValue(StorageDialog.show),
+        // A bug's Execution field opens the board's task view.
+        openZenTaoExecutionProvider.overrideWithValue(openExecutionBoard),
         personChipBuilderProvider.overrideWithValue(
           (context, {required accountId, required name, required avatarSize}) =>
               ChatPersonChip(
