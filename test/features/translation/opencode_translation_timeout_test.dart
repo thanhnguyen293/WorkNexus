@@ -15,7 +15,7 @@ import 'package:work_nexus/features/translation/domain/adapters/translation_serv
 /// deadline of its own, and a queued or unauthenticated model can leave it
 /// running for minutes. The service must kill it and come back with a failure.
 class _ScriptedRunner extends CliRunner {
-  const _ScriptedRunner(this.script);
+  _ScriptedRunner(this.script);
 
   /// A `sh -c` script standing in for the `opencode` binary.
   final String script;
@@ -127,7 +127,7 @@ void main() {
 
   test('cancel stops an in-flight run', () async {
     final service = OpenCodeTranslationService(
-      runner: const _ScriptedRunner('sleep 30'),
+      runner: _ScriptedRunner('sleep 30'),
     );
     final pending = service.translate(
       ticketId: 't-1',

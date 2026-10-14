@@ -216,12 +216,14 @@ class _Markdown {
         MapEntry(key, key == 'code' ? _codeFence(piece.data) : value),
   ];
 
+  static final _backticks = RegExp('`+');
+
   /// A fence longer than any backtick run in [data], padded with a space
   /// when the code starts or ends with a backtick.
   static String _codeFence(Object data) {
     if (data is! String) return '`';
     var longest = 0;
-    for (final m in RegExp('`+').allMatches(data)) {
+    for (final m in _backticks.allMatches(data)) {
       if (m[0]!.length > longest) longest = m[0]!.length;
     }
     final pad = data.startsWith('`') || data.endsWith('`') ? ' ' : '';

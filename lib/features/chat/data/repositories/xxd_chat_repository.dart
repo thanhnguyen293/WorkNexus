@@ -32,6 +32,7 @@ import '../datasources/xxd/xxd_http_datasource.dart';
 import '../datasources/xxd/xxd_packet.dart';
 import '../datasources/xxd/xxd_server_info.dart';
 import '../mappers/chat_mappers.dart';
+import '../mappers/chat_row_cache.dart';
 import 'chat_attachment_loader.dart';
 import 'chat_avatar_service.dart';
 import 'chat_cache_manager.dart';
@@ -88,6 +89,9 @@ class XxdChatRepository implements ChatRepository {
   final XxdConnectionFactory _openConnection;
   final ChatErrorSink _onError;
   final ParseMessageContent _parse;
+
+  /// Rows mapped once per change, not once per emission.
+  late final ChatRowCache _rows = ChatRowCache(_parse);
   final DateTime Function() _now;
   final ChatPacketIngestor _ingestor;
   final ChatCredentialsResolver _resolver;
@@ -289,7 +293,7 @@ class XxdChatRepository implements ChatRepository {
     for (final gid in fresh) {
       final row = await _local.message(accountId, gid);
       if (row == null || row.senderId == self) continue;
-      _incoming.add(messageFromRow(row, selfUserId: self, parse: _parse));
+      _incoming.add(_rows.message(row, selfUserId: self));
     }
   }
 
@@ -307,12 +311,7 @@ class XxdChatRepository implements ChatRepository {
         _local.watchConversations(accountId),
         (rows, self) => [
           for (final (conv, last) in rows)
-            conversationFromRow(
-              conv,
-              lastMessage: last,
-              selfUserId: self,
-              parse: _parse,
-            ),
+            _rows.conversation(conv, lastMessage: last, selfUserId: self),
         ],
       ).distinct(const ListEquality<ChatConversation>().equals);
 
@@ -324,9 +323,7 @@ class XxdChatRepository implements ChatRepository {
   }) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.watchMessages(accountId, chatGid, limit: limit),
-    (rows, self) => [
-      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
-    ],
+    (rows, self) => [for (final r in rows) _rows.message(r, selfUserId: self)],
   ).distinct(const ListEquality<ChatMessage>().equals);
 
   @override
@@ -337,9 +334,7 @@ class XxdChatRepository implements ChatRepository {
   ) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.watchMessageByServerId(accountId, chatGid, serverId),
-    (row, self) => row == null
-        ? null
-        : messageFromRow(row, selfUserId: self, parse: _parse),
+    (row, self) => row == null ? null : _rows.message(row, selfUserId: self),
   );
 
   @override
@@ -348,8 +343,7 @@ class XxdChatRepository implements ChatRepository {
         _local.watchSelfUserId(accountId),
         _local.watchReplies(accountId, chatGid),
         (rows, self) => [
-          for (final r in rows)
-            messageFromRow(r, selfUserId: self, parse: _parse),
+          for (final r in rows) _rows.message(r, selfUserId: self),
         ],
       ).distinct(const ListEquality<ChatMessage>().equals);
 
@@ -360,9 +354,7 @@ class XxdChatRepository implements ChatRepository {
   ) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.watchAttachments(accountId, chatGid),
-    (rows, self) => [
-      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
-    ],
+    (rows, self) => [for (final r in rows) _rows.message(r, selfUserId: self)],
   );
 
   @override
@@ -391,9 +383,7 @@ class XxdChatRepository implements ChatRepository {
       from: fromIndex,
       to: toIndex,
     ),
-    (rows, self) => [
-      for (final r in rows) messageFromRow(r, selfUserId: self, parse: _parse),
-    ],
+    (rows, self) => [for (final r in rows) _rows.message(r, selfUserId: self)],
   );
 
   @override

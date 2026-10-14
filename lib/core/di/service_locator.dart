@@ -84,6 +84,7 @@ import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasou
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
 import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
 import '../../features/translation/data/api_translation_service.dart';
+import '../../features/translation/data/datasources/cli_runner.dart';
 import '../../features/translation/data/datasources/openai_model_catalog_datasource.dart';
 import '../../features/translation/data/datasources/opencode_auth_file.dart';
 import '../../features/translation/data/datasources/opencode_cli_runner.dart';
@@ -323,21 +324,26 @@ abstract class ServiceModule {
   TranslationApiModelCatalog get translationApiModelCatalog =>
       OpenAiModelCatalogDatasource(Dio());
 
+  /// One resolver for every OpenCode caller, so the binary is looked up once.
+  @lazySingleton
+  CliRunner get cliRunner => CliRunner();
+
   @lazySingleton
   TranslationService translationService(
     TranslationApiConfigRepository configs,
+    CliRunner runner,
   ) {
     Future<TranslationApiConfig?> config() async =>
         (await configs.load()).valueOrNull;
     return RoutingTranslationService(
       api: ApiTranslationService(Dio(), config),
-      openCode: OpenCodeTranslationService(),
+      openCode: OpenCodeTranslationService(runner: runner),
       config: config,
     );
   }
 
   @lazySingleton
-  OpenCodeCli get openCodeCli => const OpenCodeCliRunner();
+  OpenCodeCli openCodeCli(CliRunner runner) => OpenCodeCliRunner(runner);
 
   @prod
   @lazySingleton

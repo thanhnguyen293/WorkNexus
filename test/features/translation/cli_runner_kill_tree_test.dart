@@ -24,7 +24,7 @@ void main() {
       // Time for the shell to start its child.
       await Future<void>.delayed(const Duration(milliseconds: 700));
 
-      await const CliRunner().killTree(process);
+      await CliRunner().killTree(process);
 
       await process.exitCode.timeout(const Duration(seconds: 5));
       // Only once the child is gone do the pipes close.

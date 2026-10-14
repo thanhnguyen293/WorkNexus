@@ -24,17 +24,27 @@ bool chatShowsWide(ChatMessage message) =>
     !message.deleted &&
     switch (message.content) {
       CodeContent() => true,
-      TextContent(:final text, :final markdown) => _rendersMarkdown(
-        text,
-        markdown: markdown || chatLooksLikeMarkdown(text),
-      ),
+      final TextContent content => chatRendersMarkdownContent(content),
       _ => false,
     };
 
-// Many clients send everything as Markdown (`text`); a message without any of
-// its syntax skips the far costlier renderer.
-bool _rendersMarkdown(String text, {required bool markdown}) =>
-    markdown && hasMarkdownSyntax(text);
+/// Many clients send everything as Markdown (`text`); a message without any
+/// of its syntax skips the far costlier renderer. People also paste Markdown
+/// into `plain`, so that is looked for too.
+bool chatRendersMarkdown(String text, {required bool markdown}) =>
+    (markdown || chatLooksLikeMarkdown(text)) && hasMarkdownSyntax(text);
+
+/// [chatRendersMarkdown] for a message's content, decided once per content:
+/// the two regex scans ran for every bubble on every build. Keyed by the
+/// content object, which the repository keeps while its row is unchanged, so
+/// the answer outlives rebuilds and goes away with the content.
+bool chatRendersMarkdownContent(TextContent content) =>
+    _rendersMarkdownOf[content] ??= chatRendersMarkdown(
+      content.text,
+      markdown: content.markdown,
+    );
+
+final _rendersMarkdownOf = Expando<bool>('rendersMarkdown');
 
 /// The content of a message, by content type.
 class MessageBody extends StatelessWidget {
@@ -61,10 +71,10 @@ class MessageBody extends StatelessWidget {
       );
     }
     return switch (message.content) {
-      TextContent(:final text, :final markdown) => ChatTextBody(
+      final TextContent content => ChatTextBody(
         accountId: accountId,
-        text: text,
-        markdown: markdown || chatLooksLikeMarkdown(text),
+        text: content.text,
+        markdown: chatRendersMarkdownContent(content),
       ),
       // Large, without a bubble (the bubble treats it as media).
       EmojiContent(:final emoji) => Text(
@@ -131,6 +141,9 @@ class ChatTextBody extends ConsumerWidget {
 
   final String accountId;
   final String text;
+
+  /// Render through the Markdown engine (see [chatRendersMarkdown]); plain
+  /// text otherwise.
   final bool markdown;
 
   @override
@@ -140,7 +153,7 @@ class ChatTextBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_rendersMarkdown(text, markdown: markdown))
+        if (markdown)
           MarkdownText(
             text,
             fontSize: ink.fontSize,

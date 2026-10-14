@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/markdown_normalize.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
@@ -84,7 +85,9 @@ class NotificationBody extends ConsumerWidget {
             child: ChatTextBody(
               accountId: accountId,
               text: n.text,
-              markdown: n.markdown,
+              // A notice is rendered as Markdown only when sent as such — not
+              // when plain text happens to look like it, unlike a message.
+              markdown: n.markdown && hasMarkdownSyntax(n.text),
             ),
           ),
         if (links.isNotEmpty)

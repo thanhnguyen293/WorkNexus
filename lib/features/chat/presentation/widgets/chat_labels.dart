@@ -5,13 +5,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
-import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/resolve_chat_title.dart';
 import '../../domain/value_objects/chat_group_avatar.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/chat_role.dart';
-import '../../domain/value_objects/message_content.dart';
 import 'chat_avatar.dart';
 
 // Moved to the domain (storage counts videos too); kept reachable here for
@@ -19,44 +17,10 @@ import 'chat_avatar.dart';
 export '../../domain/value_objects/chat_media_kind.dart'
     show isVideoFile, isVideoName;
 
-/// `[@Display Name](@#userId)` — how xxd encodes a mention inside text.
-final chatMentionPattern = RegExp(r'\[@([^\]]+)\]\(@#(\d+)\)');
+// The text helpers (mentions, addresses, Markdown, previews) live beside.
+export 'chat_text_labels.dart';
 
-/// A mention (group `mention` = the name) or a web address, for rendering
-/// plain text.
-final chatTokenPattern = RegExp(
-  r'\[@(?<mention>[^\]]+)\]\(@#(?<mentionId>\d+)\)|' + _urlPattern,
-);
-
-/// The user id of a mention link target (`@#24`), else null.
-int? chatMentionUserId(String url) {
-  final m = RegExp(r'^@#(\d+)$').firstMatch(url.trim());
-  return m == null ? null : int.parse(m[1]!);
-}
-
-/// A web address, without trailing punctuation that ends the sentence.
-const _urlPattern =
-    r'https?://[^\s<>()]+[^\s<>().,;:!?'
-    "'"
-    r'"]';
-
-/// First web address in a text, for a link preview.
-String? chatFirstUrl(String text) => RegExp(_urlPattern).firstMatch(text)?[0];
-
-/// Every web address in [text], in order, without repeats.
-List<String> chatUrls(String text) =>
-    {for (final m in RegExp(_urlPattern).allMatches(text)) m[0]!}.toList();
-
-/// Whether plain text is evidently Markdown — people paste it into `plain`
-/// messages too — so it can be rendered formatted.
-bool chatLooksLikeMarkdown(String text) => _markdownSignal.hasMatch(text);
-
-final _markdownSignal = RegExp(
-  r'^\s{0,3}(#{1,6}\s|[-*+]\s+\S|\d+\.\s+\S|>\s|```|\|.*\|)'
-  r'|\*\*[^*\n]+\*\*|__[^_\n]+__|`[^`\n]+`|~~[^~\n]+~~'
-  r'|\[[^\]@][^\]]*\]\(https?://',
-  multiLine: true,
-);
+final _nameSeparators = RegExp(r'[\s_\-]+');
 
 /// A conversation's title, with a localized fallback.
 String chatTitle(
@@ -81,37 +45,9 @@ String chatUserName(BuildContext context, Map<int, ChatUser> users, int id) {
   return u.realname.isNotEmpty ? u.realname : u.account;
 }
 
-/// One-line preview of a message for the chat list.
-String chatPreview(BuildContext context, ChatMessage message) {
-  final l = AppL10n.of(context);
-  // A retracted message keeps no content; say so rather than show nothing.
-  if (message.deleted) return l.chatRetracted;
-  return switch (message.content) {
-    TextContent(:final text, :final markdown) =>
-      (markdown ? _stripMarkdown(text) : text)
-          .replaceAllMapped(chatMentionPattern, (m) => '@${m[1]}')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim(),
-    EmojiContent(:final emoji) => emoji,
-    NotificationContent(:final title, :final text) =>
-      (title ?? _stripMarkdown(text)).replaceAll(RegExp(r'\s+'), ' ').trim(),
-    ImageContent() => l.chatImage,
-    FileContent(:final name) => '${l.chatFile}: $name',
-    LinkContent(:final title, :final url) => title ?? url,
-    CodeContent(:final code, :final name) =>
-      '${l.chatCode}: ${name ?? code.trim().split('\n').first.trim()}',
-    UnsupportedContent(:final contentType) => l.chatUnsupportedMessage(
-      contentType,
-    ),
-  };
-}
-
 /// Up to two initials for an avatar.
 String chatInitials(String name) {
-  final words = name
-      .trim()
-      .split(RegExp(r'[\s_\-]+'))
-      .where((w) => w.isNotEmpty);
+  final words = name.trim().split(_nameSeparators).where((w) => w.isNotEmpty);
   final letters = words.take(2).map((w) => w.characters.first.toUpperCase());
   final joined = letters.join();
   return joined.isEmpty ? '?' : joined;
@@ -202,29 +138,6 @@ String chatFileBadge(String name) {
   final ext = name.substring(dot + 1).toUpperCase();
   return ext.length > 4 ? ext.substring(0, 4) : ext;
 }
-
-/// The text of a server notice with its mentions kept: the server writes it
-/// as Markdown (a chat name links to the chat, `_` comes escaped).
-String chatNoticeText(TextContent content) => content.markdown
-    ? _stripMarkdown(
-        content.text,
-      ).replaceAllMapped(RegExp(r'\\([\\`*_{}\[\]()#+\-.!])'), (m) => m[1]!)
-    : content.text;
-
-/// Markdown reduced to its words for one-line previews: code fences, list
-/// and heading markers, emphasis and plain link syntax are dropped (mention
-/// links are kept for [chatMentionPattern]).
-String _stripMarkdown(String text) => text
-    .replaceAll(RegExp(r'```[\s\S]*?```'), ' ')
-    .replaceAll(
-      RegExp(r'^\s{0,3}(#{1,6}|[-*+]|\d+\.|>)\s+', multiLine: true),
-      '',
-    )
-    .replaceAllMapped(
-      RegExp(r'\[([^\]@][^\]]*)\]\((?!@#)[^)]*\)'),
-      (m) => m[1]!,
-    )
-    .replaceAll(RegExp(r'(\*\*|__|\*|~~|`)'), '');
 
 /// How a chat's avatar is drawn: a picture, a text on a colour (groups
 /// that set one) or a glyph (My Cloud); null fields fall back to the title's
