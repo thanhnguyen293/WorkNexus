@@ -30,6 +30,8 @@ class SearchableDropdownField<T> extends StatefulWidget {
     this.searchHint = 'Search…',
     this.emptyLabel = 'No matches',
     this.maxListHeight = 260,
+    this.popoverMinWidth,
+    this.labelMaxLines = 1,
   });
 
   final List<T> items;
@@ -41,6 +43,14 @@ class SearchableDropdownField<T> extends StatefulWidget {
   final String searchHint;
   final String emptyLabel;
   final double maxListHeight;
+
+  /// Width the popover takes at least, when long labels need more room than
+  /// the field has; it grows toward whichever side of the window has space.
+  /// Null: as wide as the field.
+  final double? popoverMinWidth;
+
+  /// Lines an option label may wrap to in the popover before it ellipsizes.
+  final int labelMaxLines;
 
   @override
   State<SearchableDropdownField<T>> createState() =>
@@ -57,6 +67,12 @@ class _SearchableDropdownFieldState<T>
 
   String _query = '';
   double _fieldWidth = 260;
+  double _popoverWidth = 260;
+
+  /// Whether the popover lines up with the field's right edge (growing left)
+  /// rather than its left edge — when it is wider than the field and there is
+  /// more room on the left.
+  bool _alignRight = false;
   int _highlighted = 0;
 
   /// Placement decided on open: below the field unless the popover would not
@@ -92,6 +108,7 @@ class _SearchableDropdownFieldState<T>
     final box = context.findRenderObject() as RenderBox?;
     _fieldWidth = box?.size.width ?? 260;
     _placePopover(box);
+    _sizePopover(box);
     _search.clear();
     _query = '';
     final current = widget.value;
@@ -121,6 +138,26 @@ class _SearchableDropdownFieldState<T>
     _availableHeight = (_openUpward ? above : below).clamp(
       0.0,
       double.infinity,
+    );
+  }
+
+  void _sizePopover(RenderBox? box) {
+    final overlay =
+        Overlay.maybeOf(context)?.context.findRenderObject() as RenderBox?;
+    final wanted = widget.popoverMinWidth ?? 0;
+    _alignRight = false;
+    _popoverWidth = _fieldWidth;
+    if (box == null || overlay == null || !box.hasSize) return;
+    if (wanted <= _fieldWidth) return;
+    final left = box.localToGlobal(Offset.zero, ancestor: overlay).dx;
+    final margin = context.spacing.md;
+    final roomRight = overlay.size.width - left - margin;
+    final roomLeft = left + _fieldWidth - margin;
+    _alignRight = wanted > roomRight && roomLeft > roomRight;
+    final room = _alignRight ? roomLeft : roomRight;
+    _popoverWidth = wanted.clamp(
+      _fieldWidth,
+      room < _fieldWidth ? _fieldWidth : room,
     );
   }
 
@@ -183,7 +220,9 @@ class _SearchableDropdownFieldState<T>
       controller: _portal,
       overlayChildBuilder: (context) => _PopupOverlay<T>(
         link: _link,
-        fieldWidth: _fieldWidth,
+        width: _popoverWidth,
+        alignRight: _alignRight,
+        labelMaxLines: widget.labelMaxLines,
         openUpward: _openUpward,
         availableHeight: _availableHeight,
         searchController: _search,

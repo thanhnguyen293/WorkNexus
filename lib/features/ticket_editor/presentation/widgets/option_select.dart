@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -42,6 +43,10 @@ class OptionSelect extends StatelessWidget {
       emptyLabel: l.noMatches,
       hintText: l.selectNone,
       onChanged: (o) => onChanged(o.value),
+      // ZenTao labels run long (task and story titles), and the editor's side
+      // column is narrow: let the list outgrow the field and wrap.
+      popoverMinWidth: context.sizes.dialogMd,
+      labelMaxLines: 2,
     );
   }
 }
