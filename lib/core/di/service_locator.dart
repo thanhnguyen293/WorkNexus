@@ -67,6 +67,7 @@ import '../../features/sync/data/merge_request_link_fetcher.dart';
 import '../../features/sync/data/sync_service.dart';
 import '../../features/sync/data/zentao_ticket_editor_service.dart';
 import '../../features/sync/data/zentao_workflow_actions.dart';
+import '../../features/task_detail/domain/repositories/zentao_task_bugs.dart';
 import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
 import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
@@ -359,6 +360,9 @@ abstract class ServiceModule {
 
   @lazySingleton
   ZenTaoViewPages zenTaoViewPages(SyncService syncService) => syncService;
+
+  @lazySingleton
+  ZenTaoTaskBugs zenTaoTaskBugs(SyncService syncService) => syncService;
 
   @lazySingleton
   ZenTaoTicketEditor zenTaoTicketEditor(SyncService syncService) =>

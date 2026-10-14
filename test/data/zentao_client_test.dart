@@ -843,4 +843,51 @@ void main() {
       expect((last as Ok<ViewPage>).value.hasMore, isFalse);
     },
   );
+
+  test(
+    'listExecutionBugs reads every page of the execution bug view',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.contains('execution-bug-')) {
+          final page = opts.uri.path.contains('-2-1.json') ? 1 : 2;
+          return _json({
+            'status': 'success',
+            'data': jsonEncode({
+              'bugs': [
+                {
+                  'id': 10 + page,
+                  'title': 'Bug',
+                  'status': 'active',
+                  'task': 7,
+                },
+                {
+                  'id': 20 + page,
+                  'title': 'Bug',
+                  'status': 'active',
+                  'task': 0,
+                },
+              ],
+              'pager': {'recTotal': 4},
+            }),
+          });
+        }
+        return _json(const {});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+      final res = await adapter.listExecutionBugs('31', limit: 2);
+
+      expect(
+        fake.requests.map((r) => r.uri.path).where((p) => p.contains('bug')),
+        [
+          contains('execution-bug-31-0-all-id_desc-0-all-0-0-2-1.json'),
+          contains('execution-bug-31-0-all-id_desc-0-all-0-0-2-2.json'),
+        ],
+      );
+      final bugs = (res as Ok<List<Ticket>>).value;
+      expect(bugs.map((t) => t.externalKey), ['11', '21', '12', '22']);
+      expect((bugs.first.providerEntity as ZenTaoBugEntity?)?.task, '7');
+    },
+  );
 }

@@ -311,7 +311,33 @@ class ZenTaoClient {
       queryParameters: {'zentaosid': token},
       cancelToken: _cancelToken(cancel),
     );
-    Object? data = res.data;
+    return _bugListView(res.data);
+  }
+
+  /// One page of execution [executionId]'s bugs, every product and status,
+  /// via the **classic** `execution-bug-…json` action (REST v1 has no
+  /// execution bug list). ZenTao 18.x signature:
+  /// `{base}/execution-bug-{executionID}-{productID}-{branch}-{orderBy}-{build}-{type}-{param}-{recTotal}-{recPerPage}-{pageID}.json`.
+  /// The payload carries `bugs` and a `pager`, as [classicProductBugs]'s does.
+  Future<ZenTaoProductBugsResponse> classicExecutionBugs(
+    String executionId, {
+    required int recPerPage,
+    required int pageID,
+    String orderBy = 'id_desc',
+  }) async {
+    final token = await _ensureToken();
+    final path =
+        'execution-bug-$executionId-0-all-$orderBy-0-all-0-0-$recPerPage-$pageID';
+    final res = await _dio.get<dynamic>(
+      '$baseUrl/$path.json',
+      queryParameters: {'zentaosid': token},
+    );
+    return _bugListView(res.data);
+  }
+
+  /// A classic bug-list view's bugs and total; empty when the reply holds no
+  /// view.
+  ZenTaoProductBugsResponse _bugListView(Object? data) {
     if (data is String) {
       try {
         data = jsonDecode(data);

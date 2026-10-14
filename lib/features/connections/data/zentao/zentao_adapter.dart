@@ -347,6 +347,37 @@ class ZenTaoAdapter implements ProviderAdapter {
     });
   }
 
+  /// Execution [executionId]'s bugs, page by page up to [maxPages] pages of
+  /// [limit] — a task's related bugs are found among them by their `task`.
+  Future<Result<List<Ticket>>> listExecutionBugs(
+    String executionId, {
+    int limit = 200,
+    int maxPages = 5,
+  }) => _guard(() async {
+    final out = <Ticket>[];
+    for (var page = 1; page <= maxPages; page++) {
+      final res = await _client.classicExecutionBugs(
+        executionId,
+        recPerPage: limit,
+        pageID: page,
+      );
+      out.addAll([
+        for (final bug in res.bugs)
+          if (bug.idString.isNotEmpty)
+            normalizeZenTao(
+              bug,
+              type: ZenTaoType.bug,
+              accountId: accountId,
+              baseUrl: _client.baseUrl,
+            ),
+      ]);
+      // A page past the end answers the first page again, so stop on the
+      // total, not on a short page.
+      if (page * limit >= res.total) break;
+    }
+    return out;
+  });
+
   Ticket _productBug(Ticket ticket, String productId) => ticket.copyWith(
     labels: [...ticket.labels, zentaoProductLabel(productId)],
   );
