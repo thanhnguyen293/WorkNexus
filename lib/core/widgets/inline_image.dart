@@ -5,10 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../platform/image_clipboard.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'app_snack.dart';
+import 'image_context_menu.dart';
 import 'image_viewer_dialog.dart';
 
 /// Loads the bytes for an inline image URL (e.g. via an authenticated client).
@@ -24,7 +27,8 @@ typedef ImageExternalOpener = Future<void> Function(String url);
 /// An inline image in a description or comment (Markdown or HTML), fetched
 /// through [ImageBytesLoader] (memoized so it isn't refetched on every
 /// rebuild), with loading / broken states. A click opens it enlarged in
-/// [ImageViewerDialog] unless [zoomable] is off.
+/// [ImageViewerDialog] and a right-click offers to copy it, unless [zoomable]
+/// is off.
 class InlineImage extends StatefulWidget {
   const InlineImage({
     super.key,
@@ -56,6 +60,12 @@ class InlineImage extends StatefulWidget {
 
 class InlineImageState extends State<InlineImage> {
   late final Future<Uint8List?> _future = widget.loader(widget.url);
+
+  Future<void> _copy(Uint8List bytes) async {
+    final copied = AppL10n.of(context).imageCopied;
+    await copyImageToClipboard(bytes);
+    if (mounted) showAppSnack(context, copied);
+  }
 
   Widget _frame(BuildContext context, Widget child) => Container(
     height: 140,
@@ -107,44 +117,59 @@ class InlineImageState extends State<InlineImage> {
             _ImageFallbackActions(url: resolved, onOpen: widget.onOpenImage),
           );
         }
-        return Container(
-          padding:
-              widget.padding ??
-              EdgeInsets.symmetric(vertical: context.spacing.sm),
-          // A chosen width is honoured as is; otherwise tall images are capped.
-          constraints: widget.width == null
-              ? const BoxConstraints(maxHeight: 400)
-              : null,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(context.radii.md),
-            child: Stack(
-              children: [
-                Image.memory(
-                  bytes,
-                  width: widget.width,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => _frame(
-                    context,
-                    Icon(LucideIcons.imageOff300, color: c.textTertiary),
-                  ),
+        final external = widget.fallbackUrl?.call(widget.url);
+        final open = widget.onOpenImage;
+        return GestureDetector(
+          // Not on an image being edited, where the editor's own menu runs.
+          onSecondaryTapUp: !widget.zoomable
+              ? null
+              : (d) => showImageContextMenu(
+                  context,
+                  at: d.globalPosition,
+                  onCopy: () => _copy(bytes),
+                  onOpenExternally: external != null && open != null
+                      ? () => open(external)
+                      : null,
                 ),
-                if (widget.zoomable)
-                  // Over the image, so the hover tint shows on it.
-                  Positioned.fill(
-                    child: Material(
-                      type: MaterialType.transparency,
-                      child: InkWell(
-                        mouseCursor: SystemMouseCursors.zoomIn,
-                        onTap: () => ImageViewerDialog.show(
-                          context,
-                          bytes: bytes,
-                          externalUrl: widget.fallbackUrl?.call(widget.url),
-                          onOpenExternally: widget.onOpenImage,
+          child: Container(
+            padding:
+                widget.padding ??
+                EdgeInsets.symmetric(vertical: context.spacing.sm),
+            // A chosen width is honoured as is; otherwise tall images are capped.
+            constraints: widget.width == null
+                ? const BoxConstraints(maxHeight: 400)
+                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(context.radii.md),
+              child: Stack(
+                children: [
+                  Image.memory(
+                    bytes,
+                    width: widget.width,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => _frame(
+                      context,
+                      Icon(LucideIcons.imageOff300, color: c.textTertiary),
+                    ),
+                  ),
+                  if (widget.zoomable)
+                    // Over the image, so the hover tint shows on it.
+                    Positioned.fill(
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: InkWell(
+                          mouseCursor: SystemMouseCursors.zoomIn,
+                          onTap: () => ImageViewerDialog.show(
+                            context,
+                            bytes: bytes,
+                            externalUrl: external,
+                            onOpenExternally: open,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );
