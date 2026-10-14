@@ -50,6 +50,35 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config
 
+      # build_runner is most of the setup (about 100 s of the 120 s on Linux:
+      # compiling its builders, then running them). Flutter and the pub cache
+      # are already cached by the Flutter action. What it needs to go on from
+      # where an earlier run left off is its own state and the files it wrote
+      # (all gitignored). The key is of what it reads, so a run with the same
+      # inputs restores everything and one with changed inputs restores the
+      # latest of the platform and rebuilds only what changed; build_runner
+      # checks every digest itself, so a stale entry costs time, not
+      # correctness. Computed once, before codegen: the generated files are
+      # matched by the *.dart pattern, and would change the key at the save.
+      - name: Key of the generated code
+        id: codegen-key
+        shell: bash
+        run: echo "key=codegen-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock', 'build.yaml', 'lib/**/*.dart') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated code
+        id: codegen
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            .dart_tool/build
+            lib/**/*.g.dart
+            lib/**/*.freezed.dart
+            lib/**/*.config.dart
+            lib/gen
+          key: ${{ steps.codegen-key.outputs.key }}
+          restore-keys: |
+            codegen-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
       # The release build's own setup: Flutter, `pub get` (which also generates
       # the localizations) and codegen, the *.g.dart / *.freezed.dart /
       # *.config.dart files being gitignored. Without a version it stamps
@@ -59,6 +88,20 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           desktop: ${{ matrix.desktop }}
+
+      # Saved right here, not at the end of the job, so a failing test does not
+      # lose it: codegen does not depend on the tests.
+      - name: Save generated code
+        if: steps.codegen.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            .dart_tool/build
+            lib/**/*.g.dart
+            lib/**/*.freezed.dart
+            lib/**/*.config.dart
+            lib/gen
+          key: ${{ steps.codegen-key.outputs.key }}
 
       # The project rules, checked once (they do not depend on the platform):
       # formatted, and clean of analyzer errors and warnings
