@@ -201,6 +201,145 @@ void main() {
     expect(sent.containsKey('keywords'), isFalse);
   });
 
+  test('a new bug loads the stories and tasks to link by ajax (20+)', () async {
+    final (forms, fake) = _forms((o) {
+      if (o.path.contains('story-ajaxGetProductStories-5-')) {
+        return [
+          {'value': '', 'text': ''},
+          {'value': '88', 'text': '88:Share livestream'},
+        ];
+      }
+      if (o.path.contains('task-ajaxGetExecutionTasks-31')) {
+        return [
+          {'value': '10007', 'text': '10007:Build share sheet'},
+        ];
+      }
+      return _page({
+        'bug': {'productID': 5, 'executionID': 31, 'taskID': 10007},
+      });
+    });
+
+    final form = await forms.newBug('0', executionId: '31', taskId: '10007');
+
+    expect(form.options.stories, const [
+      FormOption(value: '88', label: '#88 Share livestream'),
+    ]);
+    expect(form.options.tasks, const [
+      FormOption(value: '10007', label: '#10007 Build share sheet'),
+    ]);
+    expect(form.draft.task, '10007');
+    expect(
+      fake.requests.map((r) => r.path),
+      isNot(contains(contains('ajaxGetProductStories-0-'))),
+    );
+  });
+
+  test(
+    'no execution, no task request; a list that fails stays empty',
+    () async {
+      final (forms, fake) = _forms((o) {
+        if (o.path.contains('ajaxGetProductStories'))
+          return '<select></select>';
+        return _page({
+          'bug': {'productID': 5},
+        });
+      });
+
+      final options = await forms.bugOptions('5');
+
+      expect(options.stories, isEmpty);
+      expect(options.tasks, isEmpty);
+      expect(
+        fake.requests.map((r) => r.path),
+        isNot(contains(contains('ajaxGetExecutionTasks'))),
+      );
+    },
+  );
+
+  test('task names come from REST, keeping the subtask mark', () async {
+    final (forms, _) = _forms((o) {
+      if (o.path.contains('task-ajaxGetExecutionTasks-31')) {
+        return [
+          {'value': 12492, 'text': '[C] 12492:Luci-VN-Flutter:share to IM'},
+          {'value': 12582, 'text': '12582:Sunshine_VN_Golang:Add id: field'},
+          {'value': 900, 'text': '900:Nobody:Gone'},
+        ];
+      }
+      if (o.path.endsWith('/executions/31/tasks')) {
+        return {
+          'total': 1,
+          'tasks': [
+            {
+              'id': 12582,
+              'name': 'Add id: field',
+              'children': [
+                {'id': 12492, 'name': 'share to IM'},
+              ],
+            },
+          ],
+        };
+      }
+      if (o.path.contains('ajaxGetProductStories')) return <Object>[];
+      return _page({
+        'bug': {'productID': 5},
+      });
+    });
+
+    final options = await forms.bugOptions('5', executionId: '31');
+
+    expect(options.tasks.map((t) => t.label), [
+      '[C] #12492 share to IM',
+      '#12582 Add id: field',
+      // Not in REST: the ajax label, as best it can be read.
+      '#900 Nobody:Gone',
+    ]);
+  });
+
+  test('story / task labels read as "#id name"', () {
+    const people = {'Dyno-VN-Flutter'};
+    expect(
+      zentaoLinkLabel('11421:Dyno-VN-Flutter:[Mobile] enhance', people: people),
+      '#11421 [Mobile] enhance',
+    );
+    expect(
+      zentaoLinkLabel('[C] 11983:Dyno-VN-Flutter:mobile', people: people),
+      '[C] #11983 mobile',
+    );
+    // Not finished: a colon in the name stays.
+    expect(
+      zentaoLinkLabel('7313:Fix: crash', people: people),
+      '#7313 Fix: crash',
+    );
+    expect(zentaoLinkLabel('Share post'), 'Share post');
+  });
+
+  test('picker items in the page are read by value, not position', () {
+    expect(
+      zentaoOptions([
+        {'value': '7', 'text': 'Login'},
+      ]),
+      const [FormOption(value: '7', label: 'Login')],
+    );
+    expect(
+      zentaoPickerOptions([
+        {'value': '18', 'label': 'Share livestream'},
+        {'value': '76', 'title': 'Gift'},
+        // 20+ story with a grade: `text` is a badge as HTML.
+        {
+          'text': {'html': "<span class='label'>SR</span> Share post"},
+          'hint': 'Share post',
+          'value': 173,
+          'keys': 'Share post',
+        },
+      ]),
+      const [
+        FormOption(value: '18', label: 'Share livestream'),
+        FormOption(value: '76', label: 'Gift'),
+        FormOption(value: '173', label: 'Share post'),
+      ],
+    );
+  });
+
   test('a copied bug on 18.x starts from the copy ZenTao fills in', () async {
     final (forms, fake) = _forms(
       (_) => _page({
@@ -216,13 +355,50 @@ void main() {
 
     final form = await forms.newBug('4', copyOf: '7');
 
-    expect(fake.requests.last.path, contains('bug-create-4-0-bugID=7'));
+    expect(
+      fake.requests.map((r) => r.path),
+      contains(endsWith('bug-create-4-0-bugID=7.json')),
+    );
     expect(form.draft.id, isNull);
     // 18.x's `title` is the page's own; the copy's is `bugTitle`.
     expect(form.draft.title, 'Login fails');
     expect(form.draft.openedBuilds, ['trunk', '12']);
     expect(form.draft.os, ['ios']);
     expect(form.draft.keywords, 'auth');
+  });
+
+  test('a bug from a task opens in the task\'s product and story', () async {
+    final (forms, fake) = _forms((o) {
+      if (o.path.endsWith('/tasks/12897')) {
+        return {'id': 12897, 'project': 7, 'execution': 31, 'story': 88};
+      }
+      if (o.path.endsWith('/executions/31')) {
+        return {
+          'id': 31,
+          'products': [
+            {'id': 4, 'name': 'VN_Socialfi'},
+            {'id': 5, 'name': 'VN_Shop'},
+          ],
+        };
+      }
+      // The execution spans two products: the story says which.
+      if (o.path.endsWith('/stories/88')) return {'id': 88, 'product': 4};
+      return _page({
+        'bug': {'productID': 4, 'executionID': 31},
+      });
+    });
+
+    final form = await forms.newBug('0', executionId: '31', taskId: '12897');
+
+    expect(
+      fake.requests.map((r) => r.path),
+      contains(
+        endsWith(
+          'bug-create-4-0-projectID=7,executionID=31,taskID=12897,storyID=88.json',
+        ),
+      ),
+    );
+    expect(form.draft.product, '4');
   });
 
   test('a bug from a task is filed against its execution and task', () async {
@@ -235,8 +411,8 @@ void main() {
     final form = await forms.newBug('0', executionId: '31', taskId: '12');
 
     expect(
-      fake.requests.last.path,
-      contains('bug-create-0-0-executionID=31,taskID=12'),
+      fake.requests.map((r) => r.path),
+      contains(endsWith('bug-create-0-0-executionID=31,taskID=12.json')),
     );
     // ZenTao picked its current product for '0'.
     expect(form.draft.product, '5');

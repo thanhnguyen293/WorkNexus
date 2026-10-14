@@ -445,6 +445,19 @@ class ZenTaoClient {
         : const ZenTaoEntity();
   }
 
+  /// The ids of the products execution [executionId] is linked to
+  /// (`GET /executions/{id}`, whose reply lists them under `products`).
+  Future<List<String>> executionProducts(String executionId) async {
+    final res = await _dio.get<dynamic>('$_v1/executions/$executionId');
+    final products = _responseMap(res.data)['products'];
+    return [
+      if (products is List)
+        for (final product in products)
+          if (product is Map)
+            if (zentaoInt(product['id']) case final id? when id > 0) '$id',
+    ];
+  }
+
   /// Executions of a project (`GET /projects/{id}/executions`).
   Future<ZenTaoExecutionsResponse> projectExecutions(
     String projectId, {

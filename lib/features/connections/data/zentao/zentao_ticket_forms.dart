@@ -5,12 +5,15 @@ import 'package:dio/dio.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/zentao_ticket_form.dart';
 import '../../../../core/error/failure.dart';
+import '../../../../core/network/api_paging.dart';
 import 'zentao_client.dart';
 import 'zentao_form_parsing.dart';
 import 'zentao_models.dart';
 import 'zentao_normalize.dart';
 import 'zentao_subtask_form.dart';
 
+part 'zentao_bug_from_task.dart';
+part 'zentao_link_options.dart';
 part 'zentao_task_forms.dart';
 
 /// Marks, in a form's `kept` fields, that it came from ZenTao 18.x — whose
@@ -78,27 +81,42 @@ class ZenTaoTicketForms {
     String? executionId,
     String? taskId,
   }) async {
+    // ZenTao takes nothing from the task but its id, and with no product it
+    // opens its first one, so a bug from a task names the task's own scope.
+    final scope = productId == '0' && taskId != null
+        ? await _taskScope(taskId, executionId)
+        : null;
+    if (scope?.product case final scoped?) productId = scoped;
     final extras = [
       if (copyOf != null) 'bugID=$copyOf',
-      if (executionId != null) 'executionID=$executionId',
+      if (scope?.project case final project?) 'projectID=$project',
+      if (scope?.execution ?? executionId case final execution?)
+        'executionID=$execution',
       if (taskId != null) 'taskID=$taskId',
+      if (scope?.story case final story?) 'storyID=$story',
     ].join(',');
     final page = await _page('bug-create-$productId-0-$extras');
     final legacy = page.containsKey('bugTitle');
     // 20+ keeps the defaults on an init `bug`; 18.x sends them flat.
     final bug = page['bug'] is Map ? page['bug'] as Map : page;
+    final product = productId != '0'
+        ? productId
+        : zentaoId(page['productID'] ?? bug['productID']);
+    final execution = zentaoId(
+      bug['executionID'] ?? page['executionID'] ?? _idOf(page['execution']),
+    );
     return BugForm(
-      options: _bugOptions(page),
+      options: await _withLinkOptions(
+        _bugOptions(page),
+        productId: product,
+        executionId: execution,
+      ),
       kept: {if (legacy) _legacyKey: '1'},
       draft: BugDraft(
-        product: productId != '0'
-            ? productId
-            : zentaoId(page['productID'] ?? bug['productID']),
+        product: product,
         module: zentaoId(bug['moduleID'] ?? page['moduleID']),
         project: zentaoId(bug['projectID'] ?? page['projectID']),
-        execution: zentaoId(
-          bug['executionID'] ?? page['executionID'] ?? _idOf(page['execution']),
-        ),
+        execution: execution,
         story: zentaoId(bug['storyID'] ?? page['storyID']),
         task: zentaoId(bug['taskID'] ?? page['taskID']),
         // A copy keeps its builds; a new bug starts on trunk.
@@ -171,6 +189,12 @@ class ZenTaoTicketForms {
         stories: options.stories.isEmpty ? extra.stories : options.stories,
         tasks: options.tasks.isEmpty ? extra.tasks : options.tasks,
       );
+    } else {
+      options = await _withLinkOptions(
+        options,
+        productId: draft.product,
+        executionId: draft.execution,
+      );
     }
     return BugForm(
       draft: draft,
@@ -187,32 +211,15 @@ class ZenTaoTicketForms {
     String productId, {
     String projectId = '0',
     String executionId = '0',
-  }) async => _bugOptions(
-    await _page(
-      'bug-create-$productId-0-projectID=$projectId,executionID=$executionId',
+  }) async => _withLinkOptions(
+    _bugOptions(
+      await _page(
+        'bug-create-$productId-0-projectID=$projectId,executionID=$executionId',
+      ),
     ),
+    productId: productId,
+    executionId: executionId,
   );
-
-  BugFormOptions _bugOptions(Map<String, dynamic> page) {
-    // 20+ also nests some lists in its init `bug`.
-    final bug = page['bug'] is Map ? page['bug'] as Map : const {};
-    Object? pick(String key, [String? alt]) =>
-        page[key] ?? (alt == null ? null : page[alt]) ?? bug[key];
-    return BugFormOptions(
-      products: zentaoOptions(pick('products')),
-      branches: zentaoOptions(pick('branches', 'branchTagOption')),
-      modules: zentaoOptions(pick('moduleOptionMenu', 'modules')),
-      projects: zentaoOptions(pick('projects')),
-      executions: zentaoOptions(pick('executions')),
-      plans: zentaoOptions(pick('plans')),
-      builds: zentaoOptions(pick('builds', 'openedBuilds')),
-      stories: zentaoOptions(pick('stories')),
-      tasks: zentaoOptions(pick('tasks')),
-      users: zentaoOptions(pick('assignedToList', 'productMembers')).isEmpty
-          ? zentaoOptions(pick('users'))
-          : zentaoOptions(pick('assignedToList', 'productMembers')),
-    );
-  }
 
   /// Saves [draft]; returns the bug's ZenTao id.
   Future<String> saveBug(BugForm form, BugDraft draft, String uid) async {
