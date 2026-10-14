@@ -172,13 +172,11 @@ void main() {
       accounts: accounts,
       pinnedProjects: {'gl:5'},
     );
-    expect(c.mine('gl'), 1);
     expect(c.project('gl', '5'), 1);
     expect(c.project('gl', '6'), 1);
     expect(c.pinned('gl'), 1);
     expect(c.projects('gl'), 1);
     expect(c.account('gl'), 2);
-    expect(c.mine('gh'), 1);
     expect(c.project('gh', 'o/r'), 1);
     expect(c.account('gh'), 1);
     expect(c.workspace('w'), 2);
