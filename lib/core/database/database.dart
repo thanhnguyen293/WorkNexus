@@ -46,6 +46,7 @@ class Projects extends Table {
 }
 
 @DataClassName('TicketRow')
+@TableIndex(name: 'tickets_by_account', columns: {#accountId})
 class Tickets extends Table {
   TextColumn get id => text()();
   TextColumn get accountId => text()();
@@ -72,6 +73,7 @@ class Tickets extends Table {
 }
 
 @DataClassName('CommentRow')
+@TableIndex(name: 'comments_by_ticket', columns: {#ticketId})
 class Comments extends Table {
   TextColumn get id => text()();
   TextColumn get ticketId => text()();
@@ -189,6 +191,7 @@ class Settings extends Table {
 }
 
 @DataClassName('ActivityRow')
+@TableIndex(name: 'activities_by_ticket', columns: {#ticketId, #at})
 class Activities extends Table {
   TextColumn get id => text()();
   TextColumn get ticketId => text()();
@@ -292,6 +295,17 @@ class ChatConversations extends Table {
 @TableIndex(
   name: 'chat_messages_by_chat',
   columns: {#accountId, #cgid, #sentAt},
+)
+// The chat list joins each conversation to its last message by server id,
+// and jump windows and history paging look messages up by their per-chat
+// index; without these, each is a scan of the chat's messages.
+@TableIndex(
+  name: 'chat_messages_by_server_id',
+  columns: {#accountId, #cgid, #serverId},
+)
+@TableIndex(
+  name: 'chat_messages_by_index',
+  columns: {#accountId, #cgid, #messageIndex},
 )
 class ChatMessages extends Table {
   TextColumn get accountId => text()();
@@ -533,13 +547,22 @@ class AppDatabase extends _$AppDatabase {
 
   static QueryExecutor _openDefault() => driftDatabase(
     name: kDatabaseName,
-    native: const DriftNativeOptions(
+    native: DriftNativeOptions(
       databaseDirectory: resolveDatabaseDirectory,
+      // Write-ahead logging: a sync's batch no longer blocks the UI's reads,
+      // and NORMAL sync is one fsync per checkpoint instead of per commit —
+      // safe against a crash of the app, which is the case that matters on
+      // a desktop (WAL stays consistent; only an OS crash can lose the last
+      // commits, and those are re-synced from the provider anyway).
+      setup: (db) {
+        db.execute('PRAGMA journal_mode = WAL');
+        db.execute('PRAGMA synchronous = NORMAL');
+      },
     ),
   );
 
   @override
-  int get schemaVersion => 53;
+  int get schemaVersion => 54;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -822,6 +845,22 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(miniApps, miniApps.lastUrl);
       }
       if (from < 53) await m.createTable(miniAppPermissions);
+      if (from < 54) {
+        // Indexes for the columns the detail panel, the chat list and the
+        // history pager filter on. Guarded like the first index above, and
+        // skipped for a table this database does not have (a partial dev or
+        // test fixture): the table's own creation brings the index with it.
+        for (final (table, index) in [
+          ('tickets', ticketsByAccount),
+          ('comments', commentsByTicket),
+          ('activities', activitiesByTicket),
+          ('chat_messages', chatMessagesByServerId),
+          ('chat_messages', chatMessagesByIndex),
+        ]) {
+          if (!await _hasTable(table)) continue;
+          if (!await _hasIndex(index.entityName)) await m.createIndex(index);
+        }
+      }
     },
   );
 

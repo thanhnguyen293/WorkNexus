@@ -117,6 +117,33 @@ TicketsCompanion ticketToCompanion(Ticket t) => TicketsCompanion.insert(
   sourceHash: t.sourceHash,
 );
 
+/// [value] as drift reads it back: drift keeps a `DateTime` as whole unix
+/// seconds and returns it in local time, so an entity about to be written
+/// compares equal to its stored row only once its timestamps are rounded the
+/// same way.
+DateTime storedDateTime(DateTime value) => DateTime.fromMillisecondsSinceEpoch(
+  (value.millisecondsSinceEpoch ~/ 1000) * 1000,
+);
+
+DateTime? storedDateTimeOrNull(DateTime? value) =>
+    value == null ? null : storedDateTime(value);
+
+/// [t] as it will read back once written — what to compare a stored row
+/// against before writing, so a sync that brings nothing new skips the write
+/// (and the re-render every write causes).
+Ticket ticketAsStored(Ticket t) => t.copyWith(
+  createdAt: storedDateTimeOrNull(t.createdAt),
+  updatedAt: storedDateTimeOrNull(t.updatedAt),
+);
+
+/// See [ticketAsStored].
+Comment commentAsStored(Comment c) =>
+    c.copyWith(createdAt: storedDateTime(c.createdAt));
+
+/// See [ticketAsStored].
+ActivityEvent activityAsStored(ActivityEvent e) =>
+    e.copyWith(at: storedDateTime(e.at));
+
 Comment commentFromRow(CommentRow r) => Comment(
   id: r.id,
   ticketId: r.ticketId,
