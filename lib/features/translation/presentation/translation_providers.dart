@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/di/service_locator.dart';
@@ -12,9 +13,13 @@ import '../../../core/util/html_to_markdown.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/usecases/resolve_translation_state.dart';
 
+part 'translation_providers.freezed.dart';
+
 /// The cached translation record for a ticket (reactive). The DB holds one
 /// record per ticket; [translationStatusProvider] decides whether it matches the
-/// currently-selected target language.
+/// currently-selected target language. Kept alive on purpose: a card scrolled
+/// out and back in reads the cached record at once instead of flashing
+/// "not translated" while a fresh stream starts.
 final translationRecordProvider =
     StreamProvider.family<TranslationRecord?, String>(
       (ref, ticketId) =>
@@ -22,10 +27,14 @@ final translationRecordProvider =
     );
 
 /// Transient UI state (in-flight / last error) for one ticket's translation.
-class TranslationUiState {
-  const TranslationUiState({this.loading = false, this.error});
-  final bool loading;
-  final String? error;
+/// Compares by value so a `select` on one ticket's entry stays quiet while
+/// other tickets translate.
+@freezed
+abstract class TranslationUiState with _$TranslationUiState {
+  const factory TranslationUiState({
+    @Default(false) bool loading,
+    String? error,
+  }) = _TranslationUiState;
 }
 
 /// Holds per-ticket transient translation state and runs the translate action.
@@ -98,23 +107,27 @@ final translationControllerProvider =
 /// selected target language. A cached record in a *different* language is
 /// treated as "not translated" so switching languages prompts a fresh run
 /// rather than showing the wrong-language text.
-final translationStatusProvider =
-    Provider.family<
-      ({TranslationState state, TranslationRecord? record}),
-      String
-    >((ref, id) {
+final translationStatusProvider = Provider.autoDispose
+    .family<({TranslationState state, TranslationRecord? record}), String>((
+      ref,
+      id,
+    ) {
       final targetLang = ref.watch(
         appSettingsProvider.select((s) => s.translationLang),
       );
       final cached = ref.watch(translationRecordProvider(id)).asData?.value;
       // Only surface the cached record when it matches the selected language.
       final record = cached?.targetLang == targetLang ? cached : null;
+      // This ticket's entry and content hash only: another ticket's run, or a
+      // sync that touched other tickets, must not recompute every card.
       final ui =
-          ref.watch(translationControllerProvider)[id] ??
+          ref.watch(translationControllerProvider.select((m) => m[id])) ??
           const TranslationUiState();
-      final ticket = ref.watch(ticketByIdProvider(id));
+      final sourceHash = ref.watch(
+        ticketIndexProvider.select((index) => index[id]?.sourceHash),
+      );
       final state = const ResolveTranslationState()(
-        currentSourceHash: ticket?.sourceHash ?? '',
+        currentSourceHash: sourceHash ?? '',
         record: record,
         loading: ui.loading,
         hasError: ui.error != null,

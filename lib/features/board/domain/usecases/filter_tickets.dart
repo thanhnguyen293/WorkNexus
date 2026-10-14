@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
@@ -28,6 +30,36 @@ class BoardQuery {
 
   /// Workspace ids in display order (for the List view sort).
   final List<String> workspaceOrder;
+
+  /// Value equality, so a provider rebuilt with the same inputs (a loading
+  /// flag flipping upstream, a settings change that left the scope alone) does
+  /// not re-filter, re-group and re-sort the board for every consumer. The
+  /// ticket lists mostly hold the same instances between emissions, so the
+  /// element comparison short-circuits on identity.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BoardQuery &&
+          filter == other.filter &&
+          now == other.now &&
+          const ListEquality<Ticket>().equals(tickets, other.tickets) &&
+          const MapEquality<String, String>().equals(
+            accountWorkspace,
+            other.accountWorkspace,
+          ) &&
+          const ListEquality<String>().equals(
+            workspaceOrder,
+            other.workspaceOrder,
+          );
+
+  @override
+  int get hashCode => Object.hash(
+    filter,
+    now,
+    const ListEquality<Ticket>().hash(tickets),
+    const MapEquality<String, String>().hash(accountWorkspace),
+    const ListEquality<String>().hash(workspaceOrder),
+  );
 }
 
 /// Whether a ticket satisfies a built-in saved view.

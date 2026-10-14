@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 
 import '../../../core/database/database.dart';
@@ -11,9 +12,13 @@ class LocalTicketRepository implements TicketRepository {
   LocalTicketRepository(this._db);
   final AppDatabase _db;
 
+  /// Drift re-runs the query on every write to the table, changed or not;
+  /// `distinct` keeps an unchanged set from re-rendering every consumer.
   @override
-  Stream<List<Ticket>> watchTickets() =>
-      _db.watchTickets().map((rows) => rows.map(ticketFromRow).toList());
+  Stream<List<Ticket>> watchTickets() => _db
+      .watchTickets()
+      .map((rows) => rows.map(ticketFromRow).toList())
+      .distinct(const ListEquality<Ticket>().equals);
 
   @override
   Future<Ticket?> getTicket(String id) async {

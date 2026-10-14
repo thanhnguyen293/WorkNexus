@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../assigned_counts_provider.dart';
@@ -16,14 +15,9 @@ import 'zentao_project_row.dart';
 /// account's products. Pinned products are lifted out into the per-account
 /// Pinned area ([ZenTaoPinnedBranch]), so this shows only the unpinned rest.
 class ZenTaoProjectsBranch extends ConsumerWidget {
-  const ZenTaoProjectsBranch({
-    super.key,
-    required this.account,
-    required this.tickets,
-  });
+  const ZenTaoProjectsBranch({super.key, required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,11 +35,7 @@ class ZenTaoProjectsBranch extends ConsumerWidget {
           for (final p in items)
             if (!pinned.contains(keyOf(p))) p,
         ];
-        return _ProjectsGroup(
-          accountId: account.id,
-          projects: rest,
-          tickets: tickets,
-        );
+        return _ProjectsGroup(accountId: account.id, projects: rest);
       },
       loading: () => SidebarStatusRow(label: l.loadingProjects, loading: true),
       error: (_, _) => SidebarStatusRow(
@@ -58,15 +48,10 @@ class ZenTaoProjectsBranch extends ConsumerWidget {
 }
 
 class _ProjectsGroup extends ConsumerWidget {
-  const _ProjectsGroup({
-    required this.accountId,
-    required this.projects,
-    required this.tickets,
-  });
+  const _ProjectsGroup({required this.accountId, required this.projects});
 
   final String accountId;
   final List<ProviderProduct> projects;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -94,7 +79,7 @@ class _ProjectsGroup extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final p in projects)
-                  ZenTaoProjectRow(product: p, tickets: tickets, pinned: false),
+                  ZenTaoProjectRow(product: p, pinned: false),
               ],
             ),
           ),

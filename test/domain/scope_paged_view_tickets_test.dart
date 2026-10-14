@@ -6,6 +6,7 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/features/board/domain/entities/paged_view_state.dart';
 import 'package:work_nexus/features/board/domain/usecases/scope_paged_view_tickets.dart';
+import 'package:work_nexus/features/board/domain/value_objects/paged_view_loads.dart';
 
 Ticket _t(String id, String status) => Ticket(
   id: id,
@@ -34,7 +35,7 @@ void main() {
     for (final t in scope(
       PagedViewScopeQuery(
         tickets: cached,
-        views: views,
+        loads: PagedViewLoads.of(views),
         viewOf: (t) => t.providerStatus,
       ),
     ))

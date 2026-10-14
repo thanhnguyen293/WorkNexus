@@ -44,7 +44,11 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final assigned = ref.watch(ticketsProvider).asData?.value.length;
+    // Only the count: the shell is the root of the tree, so it must not
+    // rebuild with every ticket emission.
+    final assigned = ref.watch(
+      ticketsProvider.select((t) => t.asData?.value.length),
+    );
     final integrationsVisible = ref.watch(integrationsVisibleProvider);
     final view = ref.watch(mainViewProvider);
     // A bug / task editor takes the whole area beside the rail.

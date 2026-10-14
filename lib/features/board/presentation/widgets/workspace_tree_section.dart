@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,8 +32,8 @@ class WorkspaceTreeSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final tickets =
-        ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
+    // The rows watch their own counts (`assignedCountsProvider.select`), so
+    // the tree itself never reads the tickets: a ticket write leaves it alone.
     final lookups = ref.watch(lookupsProvider);
     final workspaces = lookups.workspaces.values.toList();
     final total = ref.watch(assignedCountsProvider.select((c) => c.total));
@@ -49,21 +48,16 @@ class WorkspaceTreeSection extends ConsumerWidget {
           padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
         ),
         for (final w in workspaces)
-          _WorkspaceNode(workspace: w, tickets: tickets, lookups: lookups),
+          _WorkspaceNode(workspace: w, lookups: lookups),
       ],
     );
   }
 }
 
 class _WorkspaceNode extends ConsumerWidget {
-  const _WorkspaceNode({
-    required this.workspace,
-    required this.tickets,
-    required this.lookups,
-  });
+  const _WorkspaceNode({required this.workspace, required this.lookups});
 
   final Workspace workspace;
-  final List<Ticket> tickets;
   final Lookups lookups;
 
   @override
@@ -120,10 +114,7 @@ class _WorkspaceNode extends ConsumerWidget {
               strong: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final a in accounts)
-                    _AccountNode(account: a, tickets: tickets),
-                ],
+                children: [for (final a in accounts) _AccountNode(account: a)],
               ),
             ),
         ],
@@ -134,10 +125,9 @@ class _WorkspaceNode extends ConsumerWidget {
 
 /// Picks the branches an account shows by its provider.
 class _AccountNode extends StatelessWidget {
-  const _AccountNode({required this.account, required this.tickets});
+  const _AccountNode({required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context) => switch (account.providerType) {
@@ -146,8 +136,8 @@ class _AccountNode extends StatelessWidget {
       accountId: account.id,
       children: [
         ProviderMineRow(account: account),
-        GitLabPinnedBranch(account: account, tickets: tickets),
-        GitLabProjectsBranch(account: account, tickets: tickets),
+        GitLabPinnedBranch(account: account),
+        GitLabProjectsBranch(account: account),
       ],
     ),
     ProviderType.github => _ProviderNode(
@@ -155,17 +145,17 @@ class _AccountNode extends StatelessWidget {
       accountId: account.id,
       children: [
         ProviderMineRow(account: account),
-        GitHubPinnedBranch(account: account, tickets: tickets),
-        GitHubReposBranch(account: account, tickets: tickets),
+        GitHubPinnedBranch(account: account),
+        GitHubReposBranch(account: account),
       ],
     ),
     _ => _ProviderNode(
       provider: ProviderType.zentao,
       accountId: account.id,
       children: [
-        ZenTaoPinnedBranch(account: account, tickets: tickets),
-        ZenTaoProjectsBranch(account: account, tickets: tickets),
-        ZenTaoExecutionsBranch(account: account, tickets: tickets),
+        ZenTaoPinnedBranch(account: account),
+        ZenTaoProjectsBranch(account: account),
+        ZenTaoExecutionsBranch(account: account),
       ],
     ),
   };

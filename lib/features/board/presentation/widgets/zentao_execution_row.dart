@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -23,13 +22,11 @@ class ZenTaoExecutionRow extends ConsumerWidget {
   const ZenTaoExecutionRow({
     super.key,
     required this.execution,
-    required this.tickets,
     required this.pinned,
     this.showKindTag = false,
   });
 
   final ProviderExecution execution;
-  final List<Ticket> tickets;
   final bool pinned;
 
   /// Whether to show the "Task" kind tag (used in the combined Pinned area,

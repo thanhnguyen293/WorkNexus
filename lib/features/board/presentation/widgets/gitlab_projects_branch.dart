@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../assigned_counts_provider.dart';
@@ -17,14 +16,9 @@ import 'sidebar_tree_rows.dart';
 /// Pinned projects are lifted into the per-account Pinned area
 /// ([GitLabPinnedBranch]), so this shows only the unpinned rest.
 class GitLabProjectsBranch extends ConsumerWidget {
-  const GitLabProjectsBranch({
-    super.key,
-    required this.account,
-    required this.tickets,
-  });
+  const GitLabProjectsBranch({super.key, required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,11 +33,7 @@ class GitLabProjectsBranch extends ConsumerWidget {
           for (final p in items)
             if (!pinned.contains('${p.accountId}:${p.id}')) p,
         ];
-        return _ProjectsGroup(
-          accountId: account.id,
-          projects: rest,
-          tickets: tickets,
-        );
+        return _ProjectsGroup(accountId: account.id, projects: rest);
       },
       loading: () => SidebarStatusRow(label: l.loadingProjects, loading: true),
       error: (_, _) => SidebarStatusRow(
@@ -56,15 +46,10 @@ class GitLabProjectsBranch extends ConsumerWidget {
 }
 
 class _ProjectsGroup extends ConsumerWidget {
-  const _ProjectsGroup({
-    required this.accountId,
-    required this.projects,
-    required this.tickets,
-  });
+  const _ProjectsGroup({required this.accountId, required this.projects});
 
   final String accountId;
   final List<ProviderProject> projects;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,7 +77,7 @@ class _ProjectsGroup extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final p in projects)
-                  GitLabProjectRow(project: p, tickets: tickets, pinned: false),
+                  GitLabProjectRow(project: p, pinned: false),
               ],
             ),
           ),

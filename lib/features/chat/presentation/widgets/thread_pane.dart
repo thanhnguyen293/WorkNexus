@@ -65,10 +65,14 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
   @override
   Widget build(BuildContext context) {
     final t = widget.thread;
-    final chats =
-        ref.watch(chatConversationsProvider(t.accountId)).asData?.value ??
-        const <ChatConversation>[];
-    final chat = chats.where((c) => c.gid == t.chatGid).firstOrNull;
+    // This chat alone (it compares by value): a message in any other chat of
+    // the account re-emits the list but must not rebuild the open pane.
+    final chat = ref.watch(
+      chatConversationsProvider(t.accountId).select(
+        (chats) =>
+            chats.asData?.value.where((c) => c.gid == t.chatGid).firstOrNull,
+      ),
+    );
     final users =
         ref.watch(chatUsersProvider(t.accountId)).asData?.value ??
         const <int, ChatUser>{};

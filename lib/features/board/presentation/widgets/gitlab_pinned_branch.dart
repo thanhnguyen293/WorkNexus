@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../board_providers.dart';
 import 'gitlab_project_row.dart';
@@ -13,14 +12,9 @@ import 'provider_pinned_projects.dart';
 /// projects, resolved against its loaded projects list and lifted above the
 /// collapsible Projects group. Hidden when nothing is pinned.
 class GitLabPinnedBranch extends ConsumerWidget {
-  const GitLabPinnedBranch({
-    super.key,
-    required this.account,
-    required this.tickets,
-  });
+  const GitLabPinnedBranch({super.key, required this.account});
 
   final Account account;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,8 +30,7 @@ class GitLabPinnedBranch extends ConsumerWidget {
     ];
     return ProviderPinnedProjects(
       pinned: pinned,
-      rowBuilder: (p) =>
-          GitLabProjectRow(project: p, tickets: tickets, pinned: true),
+      rowBuilder: (p) => GitLabProjectRow(project: p, pinned: true),
     );
   }
 }
