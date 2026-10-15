@@ -8,8 +8,8 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/settings_section_heading.dart';
 import '../../../../l10n/app_localizations.dart';
-import 'settings_section_heading.dart';
 
 /// Settings' "Storage & cache" card: the way into the app's storage dialog
 /// (downloaded chat files and the synced local data).

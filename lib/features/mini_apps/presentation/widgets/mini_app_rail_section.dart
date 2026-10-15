@@ -8,35 +8,65 @@ import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../core/widgets/app_rail_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/mini_app.dart';
+import '../../domain/usecases/move_mini_app.dart';
 import '../providers/mini_app_providers.dart';
 import 'mini_app_dialog.dart';
 import 'mini_app_icon.dart';
 
 /// The rail's middle: one button per mini app (scrolling when they outgrow the
-/// rail) and the "+" that adds another. Fills the space between the places
-/// above and the utilities below.
-class MiniAppRailSection extends ConsumerWidget {
+/// rail; dragged to reorder) and the "+" that adds another. Fills the space
+/// between the places above and the utilities below.
+class MiniAppRailSection extends ConsumerStatefulWidget {
   const MiniAppRailSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final apps = ref.watch(miniAppsProvider).asData?.value ?? const <MiniApp>[];
+  ConsumerState<MiniAppRailSection> createState() => _MiniAppRailSectionState();
+}
+
+class _MiniAppRailSectionState extends ConsumerState<MiniAppRailSection> {
+  /// The order just dropped, shown until the database sends it back so the
+  /// moved button does not jump back for a frame.
+  List<MiniApp>? _dropped;
+
+  Future<void> _move(List<MiniApp> apps, int from, int to) async {
+    setState(() => _dropped = MoveMiniApp.reorder(apps, from: from, to: to));
+    final saved = await ref
+        .read(miniAppControllerProvider.notifier)
+        .move(apps, from: from, to: to);
+    if (saved.isErr && mounted) setState(() => _dropped = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(miniAppsProvider, (_, _) {
+      if (_dropped != null) setState(() => _dropped = null);
+    });
+    final apps =
+        _dropped ??
+        ref.watch(miniAppsProvider).asData?.value ??
+        const <MiniApp>[];
     final showing = ref.watch(selectedMainViewProvider) == MainView.miniApp;
     final openId = showing ? ref.watch(openMiniAppIdProvider) : null;
     return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            for (final app in apps)
-              _MiniAppRailButton(app: app, selected: app.id == openId),
-            AppRailButton(
-              icon: LucideIcons.plus300,
-              label: AppL10n.of(context).miniAppAdd,
-              selected: false,
-              onTap: () => MiniAppDialog.show(context),
-            ),
-          ],
+      child: ReorderableListView(
+        buildDefaultDragHandles: false,
+        onReorderItem: (from, to) => _move(apps, from, to),
+        proxyDecorator: (child, _, _) =>
+            Material(type: MaterialType.transparency, child: child),
+        footer: AppRailButton(
+          icon: LucideIcons.plus300,
+          label: AppL10n.of(context).miniAppAdd,
+          selected: false,
+          onTap: () => MiniAppDialog.show(context),
         ),
+        children: [
+          for (final (i, app) in apps.indexed)
+            ReorderableDragStartListener(
+              key: ValueKey(app.id),
+              index: i,
+              child: _MiniAppRailButton(app: app, selected: app.id == openId),
+            ),
+        ],
       ),
     );
   }

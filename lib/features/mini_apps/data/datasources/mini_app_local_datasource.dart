@@ -20,6 +20,15 @@ class MiniAppLocalDatasource {
         MiniAppsCompanion(lastUrl: Value(url)),
       );
 
+  /// Gives each app in [ids] its index as position, in one write.
+  Future<void> updatePositions(List<String> ids) => _db.transaction(() async {
+    for (final (i, id) in ids.indexed) {
+      await (_db.update(_db.miniApps)..where((a) => a.id.equals(id))).write(
+        MiniAppsCompanion(position: Value(i)),
+      );
+    }
+  });
+
   /// Removes the app with its remembered permissions.
   Future<void> delete(String id) => _db.transaction(() async {
     await (_db.delete(

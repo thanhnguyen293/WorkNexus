@@ -268,6 +268,8 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatAutoDownloadVideos: r.chatAutoDownloadVideos,
   chatAutoDownloadVideoMb: r.chatAutoDownloadVideoMb,
   chatTextScale: r.chatTextScale,
+  miniAppLiveLimit: r.miniAppLiveLimit,
+  miniAppNotifyInBackground: r.miniAppNotifyInBackground,
   themeFollowsSystem: r.themeFollowsSystem,
 );
 
@@ -302,6 +304,8 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatAutoDownloadVideos: Value(s.chatAutoDownloadVideos),
   chatAutoDownloadVideoMb: Value(s.chatAutoDownloadVideoMb),
   chatTextScale: Value(s.chatTextScale),
+  miniAppLiveLimit: Value(s.miniAppLiveLimit),
+  miniAppNotifyInBackground: Value(s.miniAppNotifyInBackground),
   themeFollowsSystem: Value(s.themeFollowsSystem),
 );
 

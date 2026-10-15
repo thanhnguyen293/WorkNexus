@@ -52,6 +52,11 @@ const double kSidebarWidthDefault = 290.0;
 /// The chat text sizes offered: small, default, large, extra large.
 const List<double> kChatTextScales = [0.9, 1.0, 1.15, 1.3];
 
+/// How many mini apps may keep running at once: the choices offered, and the
+/// default.
+const List<int> kMiniAppLiveLimits = [3, 5, 8];
+const int kMiniAppLiveLimitDefault = 5;
+
 const kChatWallpaperPlain = 'none';
 const kChatWallpaperPattern = 'pattern';
 
@@ -88,6 +93,8 @@ class AppSettings {
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
     this.chatTextScale = 1.0,
+    this.miniAppLiveLimit = kMiniAppLiveLimitDefault,
+    this.miniAppNotifyInBackground = true,
   });
 
   /// The theme picked by hand; also the light/dark pair's fallback.
@@ -187,6 +194,14 @@ class AppSettings {
   /// (1.0: as designed). See [kChatTextScales].
   final double chatTextScale;
 
+  /// How many mini apps keep running at once; past that the one left longest
+  /// ago closes, and reopens on the page it was on. See [kMiniAppLiveLimits].
+  final int miniAppLiveLimit;
+
+  /// Whether a mini app allowed to notify keeps running off screen (so its
+  /// notifications still arrive); off, every hidden one is suspended.
+  final bool miniAppNotifyInBackground;
+
   AppSettings copyWith({
     AppThemeVariant? variant,
     bool? themeFollowsSystem,
@@ -217,6 +232,8 @@ class AppSettings {
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
     double? chatTextScale,
+    int? miniAppLiveLimit,
+    bool? miniAppNotifyInBackground,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
   }) {
@@ -253,6 +270,9 @@ class AppSettings {
       chatAutoDownloadVideoMb:
           chatAutoDownloadVideoMb ?? this.chatAutoDownloadVideoMb,
       chatTextScale: chatTextScale ?? this.chatTextScale,
+      miniAppLiveLimit: miniAppLiveLimit ?? this.miniAppLiveLimit,
+      miniAppNotifyInBackground:
+          miniAppNotifyInBackground ?? this.miniAppNotifyInBackground,
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
@@ -349,6 +369,10 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatAutoDownloadVideoMb: mb));
   void setChatTextScale(double scale) =>
       _set(state.copyWith(chatTextScale: scale));
+  void setMiniAppLiveLimit(int limit) =>
+      _set(state.copyWith(miniAppLiveLimit: limit));
+  void setMiniAppNotifyInBackground(bool on) =>
+      _set(state.copyWith(miniAppNotifyInBackground: on));
   void setComponentRadius(double r) =>
       _set(state.copyWith(componentRadius: snapComponentRadius(r)));
 

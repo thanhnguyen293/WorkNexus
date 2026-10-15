@@ -1362,5 +1362,46 @@
   "miniAppPermissionAllowed": "Cho phép",
   "miniAppPermissionBlocked": "Đã chặn",
   "miniAppPermissionReset": "Hỏi lại",
-  "miniAppPermissionSaveFailed": "Không lưu được lựa chọn. Lần sau bạn sẽ được hỏi lại."
+  "miniAppPermissionSaveFailed": "Không lưu được lựa chọn. Lần sau bạn sẽ được hỏi lại.",
+  "miniAppSettingsTitle": "Mini app",
+  "miniAppSettingsSummary": "Chạy tối đa {limit} app · {count} app",
+  "@miniAppSettingsSummary": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "miniAppDataSection": "Dữ liệu duyệt web",
+  "miniAppDataHint": "Cache, cookie và dữ liệu các trang lưu trên máy này.",
+  "miniAppSettingsAppsHint": "Sửa mini app hoặc xoá dữ liệu riêng của từng trang.",
+  "miniAppLiveLimitLabel": "Số app chạy cùng lúc",
+  "miniAppLiveLimitHint": "Vượt quá số này, app bỏ lâu nhất sẽ đóng và mở lại đúng trang cũ khi bạn quay lại. Ít app hơn thì tốn ít bộ nhớ hơn.",
+  "miniAppNotifyBackgroundLabel": "Giữ app có thông báo chạy nền",
+  "miniAppNotifyBackgroundHint": "Tắt: app bị ẩn sẽ tạm dừng, thông báo của nó chỉ đến khi bạn mở lại.",
+  "miniAppClearCache": "Xoá cache",
+  "miniAppClearCacheHint": "Vẫn giữ đăng nhập, trang sẽ tải lại từ mạng.",
+  "miniAppClearAll": "Xoá toàn bộ dữ liệu duyệt web",
+  "miniAppClearAllHint": "Đăng xuất khỏi mọi mini app.",
+  "miniAppClearAllTitle": "Xoá toàn bộ dữ liệu duyệt web?",
+  "miniAppClearAllMessage": "Bạn sẽ bị đăng xuất khỏi mọi mini app. Không thể hoàn tác.",
+  "miniAppClearSite": "Xoá dữ liệu trang",
+  "miniAppClearSiteTitle": "Xoá dữ liệu của {name}?",
+  "@miniAppClearSiteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppClearSiteMessage": "Cookie, bộ nhớ và cache của trang sẽ bị xoá, bạn sẽ bị đăng xuất khỏi trang này.",
+  "miniAppClear": "Xoá",
+  "miniAppCleared": "Đã xoá dữ liệu",
+  "miniAppClearFailed": "Không xoá được dữ liệu",
+  "miniAppClearUnsupported": "Chỉ xoá được dữ liệu trên Windows.",
+  "miniAppSettingsApps": "Các mini app",
+  "miniAppSettingsEmpty": "Chưa có mini app nào. Thêm bằng nút + trên thanh bên."
 }

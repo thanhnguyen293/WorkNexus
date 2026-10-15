@@ -7,14 +7,19 @@ import '../../../../core/navigation/mini_app_links.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../core/platform/link_router.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_providers.dart';
+import '../util/live_mini_apps.dart';
 import '../util/mini_app_notifications.dart';
 import 'mini_app_view.dart';
 
-/// Holds every mini app opened this session, showing only the current one.
-/// The others stay mounted (hidden) so switching on the rail does not reload
-/// a page or sign the user out; a removed app is dropped.
+/// Holds the mini apps used most recently, showing only the current one. The
+/// others stay mounted (hidden) so switching on the rail does not reload a
+/// page or sign the user out. Each one is a whole browser process, so only
+/// [AppSettings.miniAppLiveLimit] are kept: past that the one left longest ago is closed, and
+/// opens again on the page it was on (its sign-in lives in the web view's
+/// profile, not in the closed page). A removed app is dropped.
 ///
 /// Also the bridge to the rest of the app: it brings a mini app forward when
 /// its notification is tapped, and for links it tells the rest of the app which sites have a
@@ -32,8 +37,8 @@ class MiniAppsHost extends ConsumerStatefulWidget {
 
 class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
     implements LinkHandler {
-  /// Ids opened so far, in opening order.
-  final _opened = <String>[];
+  /// Ids kept running, least recently shown first.
+  var _live = <String>[];
   int _seq = 0;
   StreamSubscription<String>? _taps;
 
@@ -92,18 +97,25 @@ class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
   Widget build(BuildContext context) {
     final apps = ref.watch(miniAppsProvider).asData?.value ?? const [];
     final current = ref.watch(openMiniAppIdProvider);
-    if (current != null && !_opened.contains(current)) _opened.add(current);
-    _opened.removeWhere((id) => !apps.any((a) => a.id == id));
+    _live = liveMiniApps(
+      live: _live,
+      current: current,
+      existing: {for (final a in apps) a.id},
+      max: ref.watch(appSettingsProvider.select((s) => s.miniAppLiveLimit)),
+    );
     return Offstage(
       offstage: !widget.visible,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          for (final app in apps.where((a) => _opened.contains(a.id)))
+          for (final app in apps.where((a) => _live.contains(a.id)))
             Offstage(
               key: ValueKey(app.id),
               offstage: app.id != current,
-              child: MiniAppView(app: app),
+              child: MiniAppView(
+                app: app,
+                active: widget.visible && app.id == current,
+              ),
             ),
         ],
       ),

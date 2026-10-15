@@ -162,6 +162,13 @@ class Settings extends Table {
 
   /// How much the chat's text is scaled (1.0: as designed).
   RealColumn get chatTextScale => real().withDefault(const Constant(1.0))();
+
+  /// How many mini apps keep running at once.
+  IntColumn get miniAppLiveLimit => integer().withDefault(const Constant(5))();
+
+  /// Whether a mini app allowed to notify keeps running off screen.
+  BoolColumn get miniAppNotifyInBackground =>
+      boolean().withDefault(const Constant(true))();
   IntColumn get chatAutoDownloadVideoMb =>
       integer().withDefault(const Constant(20))();
   IntColumn get accentColorValue => integer().nullable()();
@@ -562,7 +569,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 54;
+  int get schemaVersion => 55;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -859,6 +866,16 @@ class AppDatabase extends _$AppDatabase {
         ]) {
           if (!await _hasTable(table)) continue;
           if (!await _hasIndex(index.entityName)) await m.createIndex(index);
+        }
+      }
+      if (from < 55) {
+        for (final (name, column) in [
+          ('mini_app_live_limit', settings.miniAppLiveLimit),
+          ('mini_app_notify_in_background', settings.miniAppNotifyInBackground),
+        ]) {
+          if (!await _hasColumn('settings', name)) {
+            await m.addColumn(settings, column);
+          }
         }
       }
     },

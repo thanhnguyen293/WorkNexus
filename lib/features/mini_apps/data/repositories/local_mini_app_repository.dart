@@ -32,6 +32,10 @@ class LocalMiniAppRepository implements MiniAppRepository {
       guardStorage(_failure, () => _local.updateLastUrl(id, url));
 
   @override
+  Future<Result<void>> saveOrder(List<String> ids) =>
+      guardStorage(_failure, () => _local.updatePositions(ids));
+
+  @override
   Future<Result<void>> delete(String id) => guardStorage(_failure, () async {
     await _icons.delete(id);
     await _local.delete(id);

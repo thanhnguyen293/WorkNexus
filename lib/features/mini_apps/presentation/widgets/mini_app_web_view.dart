@@ -80,8 +80,18 @@ class MiniAppWebView extends ConsumerWidget {
       onReceivedHttpError: (_, request, response) => appTalker.warning(
         'Mini app $name: ${request.url} → HTTP ${response.statusCode}',
       ),
-      onConsoleMessage: (_, message) =>
-          appTalker.debug('Mini app $name console: ${message.message}'),
+      // The page's process died (macOS; out of memory, mostly): bring it back
+      // instead of leaving a blank view. Windows does not report it.
+      onWebContentProcessDidTerminate: (controller) {
+        appTalker.warning('Mini app $name: web process ended, reloading');
+        controller.reload();
+      },
+      // Every console line crosses to Dart; chatty pages pay for it, so only
+      // while debugging.
+      onConsoleMessage: kDebugMode
+          ? (_, message) =>
+                appTalker.debug('Mini app $name console: ${message.message}')
+          : null,
       // A page's own window (a sign-in pop-up, target=_blank) opens over the
       // mini app; the browser only opens from its button.
       onCreateWindow: (_, action) async {

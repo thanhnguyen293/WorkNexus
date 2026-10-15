@@ -72,11 +72,15 @@ import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
 import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
 import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
+import '../../features/mini_apps/data/datasources/web_profile_datasource.dart';
+import '../../features/mini_apps/data/repositories/local_mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
+import '../../features/mini_apps/domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
+import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
 import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
 import '../../features/mini_apps/domain/usecases/update_mini_app.dart';
@@ -456,6 +460,14 @@ abstract class ServiceModule {
     MiniAppRepository repository,
     RefreshMiniAppIcon refreshIcon,
   ) => UpdateMiniApp(repository, refreshIcon);
+
+  @lazySingleton
+  MoveMiniApp moveMiniApp(MiniAppRepository repository) =>
+      MoveMiniApp(repository);
+
+  @lazySingleton
+  MiniAppBrowsingDataRepository miniAppBrowsingDataRepository() =>
+      const LocalMiniAppBrowsingDataRepository(WebProfileDatasource());
 
   @lazySingleton
   TicketDraftRepository ticketDraftRepository(AppDatabase db) =>
