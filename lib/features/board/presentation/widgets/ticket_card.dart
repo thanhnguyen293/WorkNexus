@@ -82,86 +82,83 @@ class TicketCard extends ConsumerWidget {
         border: border,
         // Outline surfaces also firm up the line on hover.
         hoverBorder: border == null ? null : Border.all(color: c.borderStrong),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(context.radii.card),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        // The stripe is painted, not laid out: a clipped row with an
+        // intrinsic-height pass cost every card an extra layout and a clip
+        // layer on each scroll and resize.
+        child: CustomPaint(
+          painter: _WorkspaceStripe(
+            color: wsColor,
+            width: stripeWidth,
+            radius: context.radii.card,
+          ),
+          child: Padding(
+            padding: context.spacing.cardPadding.copyWith(
+              left: context.spacing.cardPadding.left + stripeWidth,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(width: stripeWidth, color: wsColor),
-                Expanded(
-                  child: Padding(
-                    padding: context.spacing.cardPadding,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              ticketRef(
-                                ticket.providerType,
-                                ticket.externalKey,
-                                ticket.externalType,
-                              ),
-                              style: context.typography.mono.copyWith(
-                                color: c.textTertiary,
-                              ),
-                            ),
-                            SizedBox(width: context.spacing.sm),
-                            Expanded(
-                              child: switch (ticket.providerEntity) {
-                                GitLabItemEntity(:final projectPath?)
-                                    when projectPath.isNotEmpty =>
-                                  _ProjectPath(projectPath),
-                                _ => const SizedBox.shrink(),
-                              },
-                            ),
-
-                            if (ticket.severity != null)
-                              SeverityTag(ticket.severity!),
-                            if (hasExplicitPriority(ticket)) ...[
-                              if (ticket.severity != null)
-                                SizedBox(width: context.spacing.sm),
-                              PriorityTag(ticket.providerType, ticket.priority),
-                            ],
-                          ],
-                        ),
-                        SizedBox(height: context.spacing.md),
-                        Text(
-                          ticket.title,
-                          style: context.typography.cardTitle.copyWith(
-                            color: c.textPrimary,
-                          ),
-                        ),
-                        if (cardLabels.isNotEmpty) ...[
-                          SizedBox(height: context.spacing.md),
-                          LabelChips(
-                            labels: cardLabels,
-                            colors: labelColors.background,
-                            textColors: labelColors.text,
-                          ),
-                        ],
-                        SizedBox(height: context.spacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AssigneeChip(
-                                ticket.assignee,
-                                wsColor,
-                                // Chat photos exist for ZenTao people only.
-                                accountId:
-                                    ticket.providerType == ProviderType.zentao
-                                    ? ticket.accountId
-                                    : null,
-                              ),
-                            ),
-                            SizedBox(width: context.spacing.sm),
-                            TranslationDot(trStatus),
-                          ],
-                        ),
-                      ],
+                Row(
+                  children: [
+                    Text(
+                      ticketRef(
+                        ticket.providerType,
+                        ticket.externalKey,
+                        ticket.externalType,
+                      ),
+                      style: context.typography.mono.copyWith(
+                        color: c.textTertiary,
+                      ),
                     ),
+                    SizedBox(width: context.spacing.sm),
+                    Expanded(
+                      child: switch (ticket.providerEntity) {
+                        GitLabItemEntity(:final projectPath?)
+                            when projectPath.isNotEmpty =>
+                          _ProjectPath(projectPath),
+                        _ => const SizedBox.shrink(),
+                      },
+                    ),
+
+                    if (ticket.severity != null) SeverityTag(ticket.severity!),
+                    if (hasExplicitPriority(ticket)) ...[
+                      if (ticket.severity != null)
+                        SizedBox(width: context.spacing.sm),
+                      PriorityTag(ticket.providerType, ticket.priority),
+                    ],
+                  ],
+                ),
+                SizedBox(height: context.spacing.md),
+                Text(
+                  ticket.title,
+                  style: context.typography.cardTitle.copyWith(
+                    color: c.textPrimary,
                   ),
+                ),
+                if (cardLabels.isNotEmpty) ...[
+                  SizedBox(height: context.spacing.md),
+                  LabelChips(
+                    labels: cardLabels,
+                    colors: labelColors.background,
+                    textColors: labelColors.text,
+                  ),
+                ],
+                SizedBox(height: context.spacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AssigneeChip(
+                        ticket.assignee,
+                        wsColor,
+                        // Chat photos exist for ZenTao people only.
+                        accountId: ticket.providerType == ProviderType.zentao
+                            ? ticket.accountId
+                            : null,
+                      ),
+                    ),
+                    SizedBox(width: context.spacing.sm),
+                    TranslationDot(trStatus),
+                  ],
                 ),
               ],
             ),
@@ -170,6 +167,37 @@ class TicketCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The workspace colour down the card's left edge, kept inside the card's
+/// rounded corners.
+class _WorkspaceStripe extends CustomPainter {
+  const _WorkspaceStripe({
+    required this.color,
+    required this.width,
+    required this.radius,
+  });
+
+  final Color color;
+  final double width;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, width, size.height),
+      Paint()..color = color,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_WorkspaceStripe old) =>
+      old.color != color || old.width != width || old.radius != radius;
 }
 
 /// The GitLab repository an issue / MR belongs to, beside its reference, so

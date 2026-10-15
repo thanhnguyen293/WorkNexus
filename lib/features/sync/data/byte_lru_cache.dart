@@ -4,7 +4,7 @@ import 'dart:typed_data';
 ///
 /// Backs [SyncService]'s inline-image cache: successfully fetched image bytes
 /// are kept so a detail panel reuses them instead of refetching on every tab
-/// switch / rebuild. Bounding the total at [maxBytes] (default 500 MB) is what
+/// switch / rebuild. Bounding the total at [maxBytes] (default 128 MB) is what
 /// stops it from growing without limit for the app's whole lifetime.
 ///
 /// Insertion order tracks least→most recently used: a [get] moves the entry to
@@ -12,7 +12,7 @@ import 'dart:typed_data';
 /// used entries until it fits again. A single blob larger than [maxBytes] is
 /// not cached — it would flush everything and still not fit.
 class ByteLruCache {
-  ByteLruCache({this.maxBytes = 500 * 1024 * 1024});
+  ByteLruCache({this.maxBytes = 128 * 1024 * 1024});
 
   /// Maximum total bytes retained across all entries.
   final int maxBytes;

@@ -102,7 +102,10 @@ class ChatAttachmentLoader {
     if (cached != null) return Ok(_cache[key] = cached);
     final onDisk = await _files.read(accountId, diskName);
     if (onDisk != null) {
-      _remember(key, onDisk);
+      // Only images are worth keeping in memory: a video or a file is read
+      // once (for its preview frame, to open it) and would push the images
+      // the thread shows out of the cache.
+      if (content is ImageContent) _remember(key, onDisk);
       return Ok(onDisk);
     }
     if (session == null || xxd == null || sessionId == null) {
@@ -126,6 +129,7 @@ class ChatAttachmentLoader {
           time: time,
           thumb: thumb,
           expected: expected,
+          image: content is ImageContent,
           // A block body: returning the removed future (this one) from the
           // callback would make whenComplete wait on itself forever.
         ).whenComplete(() {
@@ -146,6 +150,7 @@ class ChatAttachmentLoader {
     required int time,
     required bool thumb,
     required int? expected,
+    required bool image,
   }) async {
     final credentials = session.connection.credentials;
     final cancel = _cancels[key] = Completer<void>();
@@ -170,7 +175,7 @@ class ChatAttachmentLoader {
       },
     );
     if (result case Ok(:final value)) {
-      _remember(key, value);
+      if (image) _remember(key, value);
       await _files.write(accountId, diskName, value);
     }
     return result;

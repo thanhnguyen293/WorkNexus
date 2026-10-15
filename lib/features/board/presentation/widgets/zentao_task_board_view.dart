@@ -53,7 +53,7 @@ class _TaskColumn extends ConsumerWidget {
               column: column.column,
               visible: column.tickets.length,
             )
-          : TicketCard(column.tickets[i]),
+          : TicketCard(column.tickets[i], key: ValueKey(column.tickets[i].id)),
     );
   }
 }

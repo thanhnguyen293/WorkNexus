@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -16,8 +14,8 @@ import '../providers/chat_providers.dart';
 import 'attachment_download.dart';
 import 'cancel_download_button.dart';
 import 'chat_file_action_button.dart';
-import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
+import 'chat_media_grid_thumb.dart';
 
 /// Images and videos of a chat as a grid of square thumbnails; a tap opens
 /// the image viewer (browsing the chat's images) or plays the video.
@@ -50,85 +48,13 @@ class ChatMediaGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         for (final m in media)
-          _Thumb(
+          ChatMediaGridThumb(
             accountId: accountId,
             chatGid: m.chatGid,
             content: m.content,
             images: images,
           ),
       ],
-    );
-  }
-}
-
-class _Thumb extends ConsumerWidget {
-  const _Thumb({
-    required this.accountId,
-    required this.chatGid,
-    required this.content,
-    required this.images,
-  });
-
-  final String accountId;
-  final String chatGid;
-  final MessageContent content;
-  final List<ImageContent> images;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    final bytes = switch (content) {
-      ImageContent() => ref.watch(
-        chatAttachmentProvider((
-          accountId: accountId,
-          content: content,
-          thumbnail: true,
-        )),
-      ),
-      _ => ref.watch(
-        chatVideoThumbnailProvider((accountId: accountId, video: content)),
-      ),
-    }.value;
-    final video = content is FileContent;
-    return Material(
-      color: c.skeleton,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        mouseCursor: WidgetStateMouseCursor.clickable,
-        onTap: () => switch (content) {
-          final ImageContent image => ChatImageViewer.show(
-            context,
-            accountId: accountId,
-            images: images,
-            initialIndex: images.indexOf(image).clamp(0, images.length - 1),
-            chatGid: chatGid,
-          ),
-          final FileContent file => openChatFile(
-            context,
-            ref,
-            accountId: accountId,
-            file: file,
-            chatGid: chatGid,
-          ),
-          _ => null,
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (bytes case Ok(:final value))
-              Image.memory(value, fit: BoxFit.cover, gaplessPlayback: true),
-            if (video)
-              Center(
-                child: Icon(
-                  LucideIcons.circlePlay300,
-                  color: c.onScrim,
-                  size: context.sizes.iconXl,
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -63,6 +63,7 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
           }
           final ticket = col.tickets[i];
           return Draggable<Ticket>(
+            key: ValueKey(ticket.id),
             data: ticket,
             feedback: BugCardDragFeedback(child: TicketCard(ticket)),
             childWhenDragging: Opacity(opacity: 0.4, child: TicketCard(ticket)),

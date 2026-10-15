@@ -13,6 +13,7 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import 'chat_cover_decode.dart';
 import 'chat_media_viewer_bar.dart';
 import 'chat_shared_files.dart';
 
@@ -152,6 +153,7 @@ class _ChatMediaStripState extends ConsumerState<ChatMediaStrip> {
                   content: media[i],
                   selected: i == index,
                   onTap: () => widget.onPick(media[i]),
+                  size: size,
                 ),
               ),
             ),
@@ -173,12 +175,16 @@ class _Thumb extends ConsumerWidget {
     required this.content,
     required this.selected,
     required this.onTap,
+    required this.size,
   });
 
   final String accountId;
   final MessageContent content;
   final bool selected;
   final VoidCallback onTap;
+
+  /// The tile's side, so the bytes decode at that size and no larger.
+  final double size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -223,7 +229,22 @@ class _Thumb extends ConsumerWidget {
               children: [
                 ColoredBox(color: c.onScrim.withValues(alpha: 0.12)),
                 if (bytes case Ok(:final value))
-                  Image.memory(value, fit: BoxFit.cover, gaplessPlayback: true),
+                  Builder(
+                    builder: (context) {
+                      // Decoded at the tile's size, not the photo's.
+                      final decode = coverDecodeSize(
+                        content,
+                        (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                      );
+                      return Image.memory(
+                        value,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                        cacheWidth: decode.cacheWidth,
+                        cacheHeight: decode.cacheHeight,
+                      );
+                    },
+                  ),
                 if (content is FileContent)
                   Center(
                     child: Icon(

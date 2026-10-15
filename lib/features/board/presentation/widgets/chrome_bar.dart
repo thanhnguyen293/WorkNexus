@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -141,8 +143,21 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
     text: ref.read(filterStateProvider).search,
   );
 
+  /// A keystroke re-filters, re-groups and re-sorts every board; typing a
+  /// word is one filter after the last key, not one per key.
+  Timer? _debounce;
+  static const _settle = Duration(milliseconds: 150);
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(_settle, () {
+      if (mounted) ref.read(filterStateProvider.notifier).setSearch(value);
+    });
+  }
+
   @override
   void dispose() {
+    _debounce?.cancel();
     controller.dispose();
     super.dispose();
   }
@@ -151,12 +166,16 @@ class _SearchBoxState extends ConsumerState<_SearchBox> {
   Widget build(BuildContext context) {
     // Keep the field in sync when search is cleared externally (Clear all).
     ref.listen(filterStateProvider.select((f) => f.search), (_, next) {
-      if (next != controller.text) controller.text = next;
+      if (next != controller.text) {
+        // The outside change wins over a keystroke still waiting to apply.
+        _debounce?.cancel();
+        controller.text = next;
+      }
     });
     return AppSearchField(
       controller: controller,
       hint: AppL10n.of(context).search,
-      onChanged: (v) => ref.read(filterStateProvider.notifier).setSearch(v),
+      onChanged: _onChanged,
     );
   }
 }
