@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/zentao_notification.dart';
@@ -42,11 +44,24 @@ class ZenTaoNotificationRepository implements NotificationRepository {
         return Err(failure);
       case Ok(:final value):
         final items = zenTaoNotificationsFromView(value, accountId: accountId);
-        return _store(
-          () => _local.replaceAccount(accountId, [
+        return _store(() async {
+          // Every two minutes, for every account: only a changed set is
+          // written, so the rail badge and the panel stay quiet otherwise.
+          final stored = {
+            for (final r in await _local.rowsOf(accountId))
+              r.id: zenTaoNotificationFromRow(r),
+          };
+          final fresh = {for (final n in items) n.id: n};
+          if (const MapEquality<String, ZenTaoNotification>().equals(
+            stored,
+            fresh,
+          )) {
+            return;
+          }
+          await _local.replaceAccount(accountId, [
             for (final n in items) zenTaoNotificationToCompanion(n),
-          ]),
-        );
+          ]);
+        });
     }
   }
 

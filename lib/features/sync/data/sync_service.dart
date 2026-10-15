@@ -9,6 +9,8 @@ import '../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/adapters/zentao_ticket_service.dart';
 import '../../../core/domain/entities/account.dart';
+import '../../../core/domain/entities/activity_event.dart';
+import '../../../core/domain/entities/comment.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/value_objects/priority.dart';
@@ -561,8 +563,15 @@ class SyncService
     // replaces an optimistic guess that [ticket] predates.
     await _store.writeIfChanged(merged);
 
-    final comments = await adapter.listComments(ticket);
-    final activity = await adapter.listActivity(ticket);
+    // Independent requests, so one round trip of latency instead of two.
+    // `Future.wait` keeps an adapter's own exception type for the caller.
+    final [
+      comments as Result<List<Comment>>,
+      activity as Result<List<ActivityEvent>>,
+    ] = await Future.wait<Object>([
+      adapter.listComments(ticket),
+      adapter.listActivity(ticket),
+    ]);
     await _db.transaction(() async {
       if (comments case Ok(:final value)) {
         await _store.replaceProviderComments(ticket.id, value);
@@ -576,16 +585,23 @@ class SyncService
 
   // ---- provider actions (assign / resolve) ----
 
-  /// Builds an adapter that reuses this account's pooled ZenTao session, so the
-  /// adapter and the inline-image/attachment loaders never fight over the
-  /// session (see [_zenClientFrom]). Non-ZenTao providers authenticate with a
-  /// stateless token and need no pooling.
+  /// Builds an adapter over this account's pooled client (see
+  /// [zenTaoClientFrom] and the pools below): for ZenTao so the adapter and
+  /// the inline-image/attachment loaders never fight over the one session,
+  /// for GitLab and GitHub so they keep their connection instead of opening
+  /// a new one per sync, detail open and action.
   ProviderAdapter? _buildAdapter(Account account, String secret) =>
       buildProviderAdapter(
         account,
         secret,
         zenClient: account.providerType == ProviderType.zentao
-            ? _zenClientFrom(account, secret)
+            ? zenTaoClientFrom(account, secret)
+            : null,
+        gitlabClient: account.providerType == ProviderType.gitlab
+            ? _gitlabClientFrom(account, secret)
+            : null,
+        githubClient: account.providerType == ProviderType.github
+            ? _githubClientFrom(account, secret)
             : null,
       );
 
@@ -1109,15 +1125,25 @@ class SyncService
 
   // ---- inline image loading (authenticated + self-signed TLS) ----
 
-  final Map<String, ZenTaoClient> _zenClients = {};
-  final Map<String, GitLabClient> _gitlabClients = {};
-  final Map<String, GitHubClient> _githubClients = {};
+  /// One client per account, with the secret it was built for: a reconnect
+  /// with a new token or password gets a new client, everything else reuses
+  /// the connection (and, for ZenTao, the session).
+  final Map<String, (String, ZenTaoClient)> _zenClients = {};
+  final Map<String, (String, GitLabClient)> _gitlabClients = {};
+  final Map<String, (String, GitHubClient)> _githubClients = {};
 
   /// Successfully loaded inline-image bytes, keyed by account + url, so the detail
   /// panel reuses a loaded image instead of refetching on every Original/
   /// Translate tab switch. Only successes are cached, so a failed load can retry.
   /// LRU-bounded at 500 MB so it can't grow without limit over the app lifetime.
   final ByteLruCache _imageCache = ByteLruCache();
+
+  /// When an inline image last failed to load, by the same key. A failure
+  /// (a deleted file answering with HTML, a dead link) costs up to three
+  /// requests including a forced re-login, and every rebuild or tab switch
+  /// asked again; within [_imageRetryAfter] the answer is still "no".
+  final Map<String, DateTime> _imageMisses = {};
+  static const _imageRetryAfter = Duration(minutes: 5);
 
   /// Fetches the bytes for an inline image referenced by [ticket]'s rich text,
   /// via the ticket account's authenticated client (ZenTao session, GitLab or
@@ -1129,36 +1155,60 @@ class SyncService
     final key = '${ticket.accountId}|$url';
     final cached = _imageCache.get(key);
     if (cached != null) return cached;
-    final bytes = await _loadTicketImage(ticket, url);
-    if (bytes != null) _imageCache.put(key, bytes);
-    return bytes;
+    final now = DateTime.now();
+    if (_imageMisses[key] case final missed?) {
+      if (now.difference(missed) < _imageRetryAfter) return null;
+      _imageMisses.remove(key);
+    }
+    final ({Uint8List? bytes, bool answered}) load;
+    try {
+      load = await _loadTicketImage(ticket, url);
+    } catch (_) {
+      // A request that failed (offline, a timeout) is not an answer: the
+      // next rebuild may ask again.
+      return null;
+    }
+    if (load.bytes case final bytes?) {
+      _imageCache.put(key, bytes);
+    } else if (load.answered) {
+      _imageMisses[key] = now;
+    }
+    return load.bytes;
   }
 
-  Future<Uint8List?> _loadTicketImage(Ticket ticket, String url) async {
-    try {
-      final zen = await _zenClientFor(ticket.accountId);
-      if (zen != null) return await zen.fetchBytes(url);
-      final gitlab = await _gitlabClientFor(ticket.accountId);
-      if (gitlab != null) {
-        // A GitLab `/uploads/…` link is project-relative — pass the project ref
-        // so the client fetches it via the PAT-readable Markdown uploads API.
-        final (projectPath, projectId) = switch (ticket.providerEntity) {
-          GitLabItemEntity(:final projectPath, :final projectId) => (
-            projectPath,
-            projectId,
-          ),
-          _ => (null, null),
-        };
-        return await gitlab.fetchBytes(
-          url,
-          projectPath: projectPath,
-          projectId: projectId,
-        );
-      }
-      final github = await _githubClientFor(ticket.accountId);
-      if (github != null) return await github.fetchBytes(url);
-    } catch (_) {}
-    return null;
+  /// The image through the account's client; [answered] when a client was
+  /// asked and said no (as opposed to there being no client to ask).
+  Future<({Uint8List? bytes, bool answered})> _loadTicketImage(
+    Ticket ticket,
+    String url,
+  ) async {
+    final zen = await _zenClientFor(ticket.accountId);
+    if (zen != null) {
+      return (bytes: await zen.fetchBytes(url), answered: true);
+    }
+    final gitlab = await _gitlabClientFor(ticket.accountId);
+    if (gitlab != null) {
+      // A GitLab `/uploads/…` link is project-relative — pass the project ref
+      // so the client fetches it via the PAT-readable Markdown uploads API.
+      final (projectPath, projectId) = switch (ticket.providerEntity) {
+        GitLabItemEntity(:final projectPath, :final projectId) => (
+          projectPath,
+          projectId,
+        ),
+        _ => (null, null),
+      };
+      final bytes = await gitlab.fetchBytes(
+        url,
+        projectPath: projectPath,
+        projectId: projectId,
+      );
+      return (bytes: bytes, answered: true);
+    }
+    final github = await _githubClientFor(ticket.accountId);
+    if (github != null) {
+      return (bytes: await github.fetchBytes(url), answered: true);
+    }
+    return (bytes: null, answered: false);
   }
 
   /// Downloads a ticket [attachment] through the account's authenticated client
@@ -1214,12 +1264,51 @@ class SyncService
   /// previous session id on each login, so separate clients would knock each
   /// other's session out; that race is why inline images failed on a ticket's
   /// first open (the detail sync logged in concurrently on its own client).
-  ZenTaoClient _zenClientFrom(Account account, String secret) =>
-      _zenClients[account.id] ??= ZenTaoClient(
-        baseUrl: account.baseUrl ?? '',
-        account: account.handle,
-        password: secret,
-      );
+  ZenTaoClient zenTaoClientFrom(Account account, String secret) => _pooled(
+    _zenClients,
+    account.id,
+    secret,
+    () => ZenTaoClient(
+      baseUrl: account.baseUrl ?? '',
+      account: account.handle,
+      password: secret,
+    ),
+  );
+
+  GitLabClient _gitlabClientFrom(Account account, String secret) => _pooled(
+    _gitlabClients,
+    account.id,
+    secret,
+    () => GitLabClient(baseUrl: account.baseUrl ?? '', token: secret),
+  );
+
+  GitHubClient _githubClientFrom(Account account, String secret) => _pooled(
+    _githubClients,
+    account.id,
+    secret,
+    () => GitHubClient(baseUrl: account.baseUrl ?? '', token: secret),
+  );
+
+  /// The pooled client of [accountId] built for [secret], or a new one from
+  /// [build] when there is none yet or the secret changed.
+  C _pooled<C>(
+    Map<String, (String, C)> pool,
+    String accountId,
+    String secret,
+    C Function() build,
+  ) {
+    if (pool[accountId] case (
+      final pooledSecret,
+      final client,
+    ) when pooledSecret == secret) {
+      return client;
+    }
+    final client = build();
+    pool[accountId] = (secret, client);
+    // What the old client could not load may load with the new credentials.
+    _imageMisses.removeWhere((key, _) => key.startsWith('$accountId|'));
+    return client;
+  }
 
   /// The account's pooled ZenTao client (null without stored credentials), for
   /// work beyond syncing — such as ZenTao's bug and task forms.
@@ -1227,19 +1316,28 @@ class SyncService
       _zenClientFor(accountId);
 
   Future<ZenTaoClient?> _zenClientFor(String accountId) async {
-    final cached = _zenClients[accountId];
-    if (cached != null) return cached;
+    if (_zenClients[accountId] case (_, final client)) return client;
+    final found = await _accountSecret(accountId, ProviderType.zentao);
+    return found == null ? null : zenTaoClientFrom(found.account, found.secret);
+  }
+
+  /// The stored [provider] account [accountId] with its secret, or null when
+  /// there is no such account or it has no stored credentials.
+  Future<({Account account, String secret})?> _accountSecret(
+    String accountId,
+    ProviderType provider,
+  ) async {
     final row = await (_db.select(
       _db.accounts,
     )..where((a) => a.id.equals(accountId))).getSingleOrNull();
     if (row == null) return null;
     final account = accountFromRow(row);
-    if (account.providerType != ProviderType.zentao) return null;
+    if (account.providerType != provider) return null;
     final ref = account.credentialsRef;
     if (ref == null) return null;
     final secret = await _credentials.read(ref);
     if (secret == null) return null;
-    return _zenClientFrom(account, secret);
+    return (account: account, secret: secret);
   }
 
   /// The GitLab instance version for [accountId] (e.g. `16.3.8`), or null when
@@ -1255,42 +1353,22 @@ class SyncService
   /// account isn't GitLab / has no stored credentials. Used for inline image
   /// bytes (`/uploads/…`) that need the PAT.
   Future<GitLabClient?> _gitlabClientFor(String accountId) async {
-    final cached = _gitlabClients[accountId];
-    if (cached != null) return cached;
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
-    if (row == null) return null;
-    final account = accountFromRow(row);
-    if (account.providerType != ProviderType.gitlab) return null;
-    final ref = account.credentialsRef;
-    if (ref == null) return null;
-    final secret = await _credentials.read(ref);
-    if (secret == null) return null;
-    final client = GitLabClient(baseUrl: account.baseUrl ?? '', token: secret);
-    _gitlabClients[accountId] = client;
-    return client;
+    if (_gitlabClients[accountId] case (_, final client)) return client;
+    final found = await _accountSecret(accountId, ProviderType.gitlab);
+    return found == null
+        ? null
+        : _gitlabClientFrom(found.account, found.secret);
   }
 
   /// A cached authenticated [GitHubClient] for [accountId], or null when the
   /// account isn't GitHub / has no stored credentials. Used for inline image
   /// bytes that need the PAT (e.g. GitHub Enterprise same-host assets).
   Future<GitHubClient?> _githubClientFor(String accountId) async {
-    final cached = _githubClients[accountId];
-    if (cached != null) return cached;
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
-    if (row == null) return null;
-    final account = accountFromRow(row);
-    if (account.providerType != ProviderType.github) return null;
-    final ref = account.credentialsRef;
-    if (ref == null) return null;
-    final secret = await _credentials.read(ref);
-    if (secret == null) return null;
-    final client = GitHubClient(baseUrl: account.baseUrl ?? '', token: secret);
-    _githubClients[accountId] = client;
-    return client;
+    if (_githubClients[accountId] case (_, final client)) return client;
+    final found = await _accountSecret(accountId, ProviderType.github);
+    return found == null
+        ? null
+        : _githubClientFrom(found.account, found.secret);
   }
 
   Future<void> _upsert(Account account, List<Ticket> tickets) =>

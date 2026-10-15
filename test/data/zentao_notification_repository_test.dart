@@ -56,6 +56,25 @@ void main() {
     expect(ids, unorderedEquals(['a1:4', 'a2:3']));
   });
 
+  test('an unchanged server list leaves the store alone', () async {
+    await repository.refresh('a1');
+    var emissions = 0;
+    final sub = repository.watchAll().listen((_) => emissions++);
+    addTearDown(sub.cancel);
+    await pumpEventQueue();
+    final seen = emissions;
+
+    await repository.refresh('a1');
+    await pumpEventQueue();
+    expect(emissions, seen, reason: 'nothing changed, so nothing was written');
+
+    server['a1'] = [_message('1'), _message('2')];
+    await repository.refresh('a1');
+    await pumpEventQueue();
+    expect(emissions, greaterThan(seen));
+    expect((await stored()).where((n) => n.read), isEmpty);
+  });
+
   test('markRead updates the store and runs the ZenTao action', () async {
     await repository.refresh('a1');
 
