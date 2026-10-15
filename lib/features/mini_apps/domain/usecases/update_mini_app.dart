@@ -10,12 +10,15 @@ import 'refresh_mini_app_icon.dart';
 /// Applies an edit to [app]: a new address, name and icon. A blank [name]
 /// becomes the site's host; an app left without an icon gets its site's.
 class UpdateMiniApp {
-  UpdateMiniApp(this._repository)
-    : _refreshIcon = RefreshMiniAppIcon(_repository);
+  const UpdateMiniApp(
+    this._repository,
+    this._refreshIcon, {
+    this._normalize = const NormalizeMiniAppUrl(),
+  });
 
   final MiniAppRepository _repository;
   final RefreshMiniAppIcon _refreshIcon;
-  static const _normalize = NormalizeMiniAppUrl();
+  final NormalizeMiniAppUrl _normalize;
 
   Future<Result<MiniApp>> call({
     required MiniApp app,

@@ -71,9 +71,14 @@ import '../../features/task_detail/domain/repositories/zentao_task_bugs.dart';
 import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
 import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
 import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
+import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
+import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
+import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
+import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
+import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
 import '../../features/mini_apps/domain/usecases/update_mini_app.dart';
 import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
@@ -416,11 +421,29 @@ abstract class ServiceModule {
   );
 
   @lazySingleton
-  AddMiniApp addMiniApp(MiniAppRepository repository) => AddMiniApp(repository);
+  RefreshMiniAppIcon refreshMiniAppIcon(MiniAppRepository repository) =>
+      RefreshMiniAppIcon(repository);
 
   @lazySingleton
-  UpdateMiniApp updateMiniApp(MiniAppRepository repository) =>
-      UpdateMiniApp(repository);
+  AddMiniApp addMiniApp(
+    MiniAppRepository repository,
+    RefreshMiniAppIcon refreshIcon,
+  ) => AddMiniApp(repository, refreshIcon);
+
+  @lazySingleton
+  MiniAppPermissionRepository miniAppPermissionRepository(AppDatabase db) =>
+      LocalMiniAppPermissionRepository(MiniAppPermissionLocalDatasource(db));
+
+  @lazySingleton
+  ResolveMiniAppPermission resolveMiniAppPermission(
+    MiniAppPermissionRepository repository,
+  ) => ResolveMiniAppPermission(repository);
+
+  @lazySingleton
+  UpdateMiniApp updateMiniApp(
+    MiniAppRepository repository,
+    RefreshMiniAppIcon refreshIcon,
+  ) => UpdateMiniApp(repository, refreshIcon);
 
   @lazySingleton
   TicketDraftRepository ticketDraftRepository(AppDatabase db) =>

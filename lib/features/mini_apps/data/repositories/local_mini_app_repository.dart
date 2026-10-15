@@ -1,19 +1,22 @@
-import '../../../../core/error/failure.dart';
+import '../../../../core/error/guard_storage.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/repositories/mini_app_repository.dart';
-import '../datasources/favicon_fetcher.dart';
-import '../datasources/mini_app_icon_storage.dart';
+import '../datasources/mini_app_icon_store.dart';
 import '../datasources/mini_app_local_datasource.dart';
+import '../datasources/site_icon_source.dart';
 import '../mappers/mini_app_mapper.dart';
 
-/// [MiniAppRepository] over the local database and the icon folder.
+/// [MiniAppRepository] over the local database, an icon store and the site
+/// the icon comes from.
 class LocalMiniAppRepository implements MiniAppRepository {
-  const LocalMiniAppRepository(this._local, this._icons, this._favicons);
+  const LocalMiniAppRepository(this._local, this._icons, this._siteIcons);
 
   final MiniAppLocalDatasource _local;
-  final MiniAppIconStorage _icons;
-  final FaviconFetcher _favicons;
+  final MiniAppIconStore _icons;
+  final SiteIconSource _siteIcons;
+
+  static const _failure = 'Could not keep the mini app';
 
   @override
   Stream<List<MiniApp>> watchAll() => _local.watchAll().map(
@@ -22,14 +25,14 @@ class LocalMiniAppRepository implements MiniAppRepository {
 
   @override
   Future<Result<void>> save(MiniApp app) =>
-      _guard(() => _local.save(MiniAppMapper.toRow(app)));
+      guardStorage(_failure, () => _local.save(MiniAppMapper.toRow(app)));
 
   @override
   Future<Result<void>> saveLastUrl(String id, String url) =>
-      _guard(() => _local.updateLastUrl(id, url));
+      guardStorage(_failure, () => _local.updateLastUrl(id, url));
 
   @override
-  Future<Result<void>> delete(String id) => _guard(() async {
+  Future<Result<void>> delete(String id) => guardStorage(_failure, () async {
     await _icons.delete(id);
     await _local.delete(id);
   });
@@ -38,8 +41,8 @@ class LocalMiniAppRepository implements MiniAppRepository {
   Future<Result<String?>> fetchSiteIcon({
     required String id,
     required String pageUrl,
-  }) => _guard(() async {
-    final icon = await _favicons.fetch(Uri.parse(pageUrl));
+  }) => guardStorage(_failure, () async {
+    final icon = await _siteIcons.fetch(Uri.parse(pageUrl));
     if (icon == null) return null;
     return _icons.save(id, icon.bytes, icon.extension);
   });
@@ -48,13 +51,5 @@ class LocalMiniAppRepository implements MiniAppRepository {
   Future<Result<String>> importIcon({
     required String id,
     required String sourcePath,
-  }) => _guard(() => _icons.import(id, sourcePath));
-
-  Future<Result<T>> _guard<T>(Future<T> Function() run) async {
-    try {
-      return Ok(await run());
-    } on Exception catch (e) {
-      return Err(StorageFailure('Could not keep the mini app', cause: e));
-    }
-  }
+  }) => guardStorage(_failure, () => _icons.import(id, sourcePath));
 }

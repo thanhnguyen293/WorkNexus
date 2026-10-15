@@ -20,6 +20,11 @@ class MiniAppLocalDatasource {
         MiniAppsCompanion(lastUrl: Value(url)),
       );
 
-  Future<void> delete(String id) =>
-      (_db.delete(_db.miniApps)..where((a) => a.id.equals(id))).go();
+  /// Removes the app with its remembered permissions.
+  Future<void> delete(String id) => _db.transaction(() async {
+    await (_db.delete(
+      _db.miniAppPermissions,
+    )..where((p) => p.miniAppId.equals(id))).go();
+    await (_db.delete(_db.miniApps)..where((a) => a.id.equals(id))).go();
+  });
 }

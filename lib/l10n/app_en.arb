@@ -2003,5 +2003,52 @@
   "miniAppBack": "Back",
   "miniAppForward": "Forward",
   "miniAppStop": "Stop",
-  "miniAppDevTools": "Developer tools"
+  "miniAppDevTools": "Developer tools",
+  "miniAppPermNotificationsLabel": "Notifications",
+  "miniAppPermNotificationsAction": "show notifications",
+  "miniAppPermNotificationsDesc": "Appear as desktop notifications, also when WorkNexus is in the background.",
+  "miniAppPermClipboardLabel": "Clipboard",
+  "miniAppPermClipboardAction": "read your clipboard",
+  "miniAppPermClipboardDesc": "Lets it paste what you copied elsewhere.",
+  "miniAppPermAutoplayLabel": "Autoplay",
+  "miniAppPermAutoplayAction": "play media automatically",
+  "miniAppPermAutoplayDesc": "Sound and video can start without you pressing play.",
+  "miniAppPermMultipleDownloadsLabel": "Several downloads",
+  "miniAppPermMultipleDownloadsAction": "download several files at once",
+  "miniAppPermMultipleDownloadsDesc": "Lets it save more than one file without asking each time.",
+  "miniAppPermLocalFontsLabel": "Installed fonts",
+  "miniAppPermLocalFontsAction": "read your installed fonts",
+  "miniAppPermLocalFontsDesc": "Lets it use the fonts installed on this computer.",
+  "miniAppPermCameraLabel": "Camera",
+  "miniAppPermCameraAction": "use your camera",
+  "miniAppPermCameraDesc": "It can see through your camera while the page is open.",
+  "miniAppPermMicrophoneLabel": "Microphone",
+  "miniAppPermMicrophoneAction": "use your microphone",
+  "miniAppPermMicrophoneDesc": "It can hear you through your microphone while the page is open.",
+  "miniAppPermLocationLabel": "Location",
+  "miniAppPermLocationAction": "know your location",
+  "miniAppPermLocationDesc": "It can read where this computer is.",
+  "miniAppPermOtherLabel": "Other",
+  "miniAppPermOtherAction": "use another capability",
+  "miniAppPermOtherDesc": "A capability this app does not list by name.",
+  "miniAppDevTools": "Developer tools",
+  "miniAppPermissionTitle": "{site} wants to {action}",
+  "@miniAppPermissionTitle": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppPermissionAllow": "Allow",
+  "miniAppPermissionBlock": "Block",
+  "miniAppPermissionRemembered": "Your choice is remembered for this site. You can change it when you edit the mini app.",
+  "miniAppPermissionsTitle": "Permissions",
+  "miniAppPermissionsEmpty": "None yet. When the page asks to use something, your answer shows up here.",
+  "miniAppPermissionAllowed": "Allowed",
+  "miniAppPermissionBlocked": "Blocked",
+  "miniAppPermissionReset": "Ask again"
 }

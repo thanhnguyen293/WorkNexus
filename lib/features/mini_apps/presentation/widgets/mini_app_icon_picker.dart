@@ -62,7 +62,9 @@ class MiniAppIconPicker extends StatelessWidget {
                       ),
                     )
                   : DefaultTextStyle.merge(
-                      style: TextStyle(color: c.textPrimary),
+                      style: context.typography.body.copyWith(
+                        color: c.textPrimary,
+                      ),
                       child: MiniAppIcon(
                         name: name,
                         iconPath: iconPath,

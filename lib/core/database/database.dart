@@ -489,6 +489,18 @@ class MiniApps extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// What the user allowed or blocked for a mini app's page: one row per app and
+/// kind of permission ([kind] is the enum name); no row means ask.
+@DataClassName('MiniAppPermissionRow')
+class MiniAppPermissions extends Table {
+  TextColumn get miniAppId => text()();
+  TextColumn get kind => text()();
+  BoolColumn get allowed => boolean()();
+
+  @override
+  Set<Column> get primaryKey => {miniAppId, kind};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -513,6 +525,7 @@ class MiniApps extends Table {
     ChatSavedFiles,
     TicketDrafts,
     MiniApps,
+    MiniAppPermissions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -526,7 +539,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 52;
+  int get schemaVersion => 53;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -808,6 +821,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 52 && !await _hasColumn('mini_apps', 'last_url')) {
         await m.addColumn(miniApps, miniApps.lastUrl);
       }
+      if (from < 53) await m.createTable(miniAppPermissions);
     },
   );
 

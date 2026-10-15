@@ -6,6 +6,7 @@ import 'package:work_nexus/features/mini_apps/domain/entities/mini_app.dart';
 import 'package:work_nexus/features/mini_apps/domain/repositories/mini_app_repository.dart';
 import 'package:work_nexus/features/mini_apps/domain/usecases/add_mini_app.dart';
 import 'package:work_nexus/features/mini_apps/domain/usecases/normalize_mini_app_url.dart';
+import 'package:work_nexus/features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
 
 class _MockRepo extends Mock implements MiniAppRepository {}
 
@@ -51,7 +52,7 @@ void main() {
     });
 
     test('names it after the host and puts it last', () async {
-      final res = await AddMiniApp(repo)(
+      final res = await AddMiniApp(repo, RefreshMiniAppIcon(repo))(
         url: 'www.example.com',
         existing: const [
           MiniApp(id: 'a', name: 'A', url: 'https://a.io', position: 4),
@@ -64,7 +65,10 @@ void main() {
     });
 
     test('fails on a bad address without saving', () async {
-      final res = await AddMiniApp(repo)(url: 'ftp://x', existing: const []);
+      final res = await AddMiniApp(repo, RefreshMiniAppIcon(repo))(
+        url: 'ftp://x',
+        existing: const [],
+      );
       expect(res.failureOrNull, isA<ParseFailure>());
       verifyNever(() => repo.save(any()));
     });

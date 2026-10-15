@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'link_router.dart';
+
 /// Opens [url] in the user's default browser or URL handler.
 /// Uses the platform-appropriate launcher: `open` on macOS, `rundll32.exe
 /// url.dll,FileProtocolHandler` on Windows, and `xdg-open` on Linux.
@@ -26,20 +28,29 @@ Future<void> openExternally(String url) async {
   }
 }
 
-/// Gives a tapped web link to the app before the browser: returns true when it
-/// opened it itself (in a mini app). Set by the mini apps feature.
-bool Function(String url)? webLinkInterceptor;
-
-/// Opens a link tapped in rendered content (a description, a comment) in a
-/// mini app for that site when there is one, else the browser. Only web/mail links: `open` would launch a scheme-less path (e.g. a
-/// provider-relative `/zentao/…` href) as a local file.
-Future<void> openLinkExternally(String url) async {
-  final scheme = Uri.tryParse(url.trim())?.scheme.toLowerCase();
+/// Opens a link tapped in rendered content (a description, a comment): by the
+/// [LinkRouter] — in the app if it shows that kind of link itself, else in a
+/// mini app for that site — else in the browser. [inApp] false skips the first
+/// step, for a link that came from the app's own view of it ("open in
+/// browser" on the ticket). Only web/mail links: `open` would launch a
+/// scheme-less path (e.g. a provider-relative `/zentao/…` href) as a local
+/// file.
+Future<void> openLinkExternally(
+  String url, {
+  bool inApp = true,
+  LinkRouter? router,
+}) async {
+  final target = url.trim();
+  final scheme = Uri.tryParse(target)?.scheme.toLowerCase();
   if (scheme != 'http' && scheme != 'https' && scheme != 'mailto') return;
-  if (scheme != 'mailto' && (webLinkInterceptor?.call(url.trim()) ?? false)) {
-    return;
+  if (scheme != 'mailto') {
+    final opened = (router ?? linkRouter).route(
+      target,
+      skip: inApp ? const {} : const {LinkStage.app},
+    );
+    if (opened) return;
   }
-  await openExternally(url.trim());
+  await openExternally(target);
 }
 
 /// Shows the file at [path] in the system file manager, selected where the

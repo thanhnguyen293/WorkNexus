@@ -13,11 +13,19 @@ import 'refresh_mini_app_icon.dart';
 /// the site's host. The site's icon is fetched afterwards, without making the
 /// caller wait for it: it shows up when it arrives.
 class AddMiniApp {
-  AddMiniApp(this._repository) : _refreshIcon = RefreshMiniAppIcon(_repository);
+  const AddMiniApp(
+    this._repository,
+    this._refreshIcon, {
+    this._normalize = const NormalizeMiniAppUrl(),
+    this._newId = _uuid,
+  });
 
   final MiniAppRepository _repository;
   final RefreshMiniAppIcon _refreshIcon;
-  static const _normalize = NormalizeMiniAppUrl();
+  final NormalizeMiniAppUrl _normalize;
+  final String Function() _newId;
+
+  static String _uuid() => const Uuid().v4();
 
   Future<Result<MiniApp>> call({
     required String url,
@@ -30,7 +38,7 @@ class AddMiniApp {
         ? 0
         : existing.map((a) => a.position).reduce((a, b) => a > b ? a : b) + 1;
     final app = MiniApp(
-      id: const Uuid().v4(),
+      id: _newId(),
       name: name.trim().isEmpty ? _normalize.defaultName(uri) : name.trim(),
       url: uri.toString(),
       position: next,
