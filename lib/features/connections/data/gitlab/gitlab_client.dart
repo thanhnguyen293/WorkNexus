@@ -75,10 +75,20 @@ class GitLabClient {
 
   /// The authenticated user (`GET /user`) — used to verify the token and to
   /// resolve "assigned/reviewed by me".
-  Future<GitLabUser> currentUser() async {
-    final res = await _dio.get<dynamic>('/user');
-    return GitLabUser.fromJson(_asMap(res.data));
-  }
+  /// The token's user, asked once per client: every list sync needs the
+  /// username for the review queue, and the client lives as long as the
+  /// account's connection. A failed request is not kept.
+  Future<GitLabUser> currentUser() => _currentUser ??= _dio
+      .get<dynamic>('/user')
+      .then(
+        (res) => GitLabUser.fromJson(_asMap(res.data)),
+        onError: (Object error, StackTrace stack) {
+          _currentUser = null;
+          return Future<GitLabUser>.error(error, stack);
+        },
+      );
+
+  Future<GitLabUser>? _currentUser;
 
   /// The instance version string (`GET /version`, e.g. `16.3.8`), surfaced on
   /// the connected-accounts row. Null on any failure. Also tells us whether the

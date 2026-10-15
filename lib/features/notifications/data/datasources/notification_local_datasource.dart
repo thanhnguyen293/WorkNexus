@@ -15,6 +15,18 @@ class NotificationLocalDatasource {
           ]))
           .watch();
 
+  /// The stored rows of [accountId], newest first.
+  Future<List<ZenTaoNotificationRow>> rowsOf(String accountId) =>
+      (_db.select(_db.zenTaoNotifications)
+            ..where((n) => n.accountId.equals(accountId))
+            ..orderBy([
+              (n) => OrderingTerm(
+                expression: n.createdAt,
+                mode: OrderingMode.desc,
+              ),
+            ]))
+          .get();
+
   /// Replaces every row of [accountId] with [rows], atomically.
   Future<void> replaceAccount(
     String accountId,

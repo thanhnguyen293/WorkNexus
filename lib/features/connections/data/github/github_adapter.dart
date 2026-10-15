@@ -43,9 +43,12 @@ class GitHubAdapter implements ProviderAdapter {
   @override
   Future<Result<TicketPage>> listAssignedTickets({String? sinceCursor}) async {
     return _guard(() async {
-      final issues = await _client.assignedIssues();
-      final assignedPulls = await _client.assignedPulls();
-      final reviewPulls = await _client.reviewPulls();
+      // Three independent searches, one round trip of latency.
+      final [issues, assignedPulls, reviewPulls] = await Future.wait([
+        _client.assignedIssues(),
+        _client.assignedPulls(),
+        _client.reviewPulls(),
+      ]);
 
       // Dedupe by unified ticket id (a PR can be both assigned to me and
       // awaiting my review).
@@ -302,8 +305,10 @@ class GitHubAdapter implements ProviderAdapter {
   /// the account-wide "my pull requests" dashboard slice. Deduped (a PR can be
   /// both assigned and review-requested).
   Future<Result<List<Ticket>>> listMyPullRequests() => _guard(() async {
-    final assigned = await _client.assignedPulls();
-    final review = await _client.reviewPulls();
+    final [assigned, review] = await Future.wait([
+      _client.assignedPulls(),
+      _client.reviewPulls(),
+    ]);
     final byId = <String, Ticket>{};
     for (final p in [...assigned, ...review]) {
       final t = normalizeGitHubPullFromIssue(p, accountId: accountId);

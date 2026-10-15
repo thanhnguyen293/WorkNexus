@@ -56,10 +56,12 @@ class ZenTaoAdapter implements ProviderAdapter {
       // REST v1 "assigned to me" per type. Each `/user` group is paginated and
       // reports a `total`, so we page through it — otherwise only the first
       // (most-recent) page comes back and older items are silently dropped.
-      final tickets = <Ticket>[
-        ...await _fetchAssigned('bug', ZenTaoType.bug),
-        ...await _fetchAssigned('task', ZenTaoType.task),
-      ];
+      // Bugs and tasks page independently, so they are fetched side by side.
+      final [bugs, tasks] = await Future.wait([
+        _fetchAssigned('bug', ZenTaoType.bug),
+        _fetchAssigned('task', ZenTaoType.task),
+      ]);
+      final tickets = <Ticket>[...bugs, ...tasks];
 
       // Incremental cursor: max updatedAt seen, filtered client-side.
       final cursor = sinceCursor == null

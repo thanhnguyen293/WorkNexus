@@ -55,9 +55,18 @@ class GitLabAdapter implements GitLabMrAdapter {
   @override
   Future<Result<TicketPage>> listAssignedTickets({String? sinceCursor}) async {
     return _guard(() async {
-      final issues = await _client.assignedIssues();
-      final assignedMrs = await _client.assignedMergeRequests();
-      final me = await _client.currentUser();
+      // Independent requests go out together; the review list waits only
+      // for the username. `Future.wait` keeps a request's own exception for
+      // [_guard].
+      final [
+        issues as List<GitLabIssue>,
+        assignedMrs as List<GitLabMergeRequest>,
+        me as GitLabUser,
+      ] = await Future.wait<Object>([
+        _client.assignedIssues(),
+        _client.assignedMergeRequests(),
+        _client.currentUser(),
+      ]);
       final reviewMrs = me.username == null
           ? const <GitLabMergeRequest>[]
           : await _client.reviewMergeRequests(me.username!);
@@ -348,8 +357,13 @@ class GitLabAdapter implements GitLabMrAdapter {
   /// the account-wide "my merge requests" dashboard slice. Deduped (an MR can be
   /// both assigned and review-requested).
   Future<Result<List<Ticket>>> listMyMergeRequests() => _guard(() async {
-    final assigned = await _client.assignedMergeRequests();
-    final me = await _client.currentUser();
+    final [
+      assigned as List<GitLabMergeRequest>,
+      me as GitLabUser,
+    ] = await Future.wait<Object>([
+      _client.assignedMergeRequests(),
+      _client.currentUser(),
+    ]);
     final review = me.username == null
         ? const <GitLabMergeRequest>[]
         : await _client.reviewMergeRequests(me.username!);
@@ -661,13 +675,27 @@ class GitLabAdapter implements GitLabMrAdapter {
 
   // ---- helpers ----
 
-  /// Issue/MR notes (comments + system activity) for a ticket.
+  /// Issue/MR notes (comments + system activity) for a ticket. Fetched once
+  /// per adapter: a detail refresh asks for the comments and the activity,
+  /// which are the same paginated notes read two ways. A failed fetch is not
+  /// kept, so the next call asks again. Adapters are built per operation, so
+  /// this never serves notes from an earlier refresh.
   Future<List<GitLabNote>> _notes(Ticket ticket) {
+    final pending = _notesByTicket[ticket.id];
+    if (pending != null) return pending;
     final ref = _projectRef(ticket);
-    return _kindOf(ticket) == GitLabKind.issue
+    final future = _kindOf(ticket) == GitLabKind.issue
         ? _client.issueNotes(ref, ticket.externalKey)
         : _client.mrNotes(ref, ticket.externalKey);
+    _notesByTicket[ticket.id] = future;
+    future.catchError((Object _) {
+      _notesByTicket.remove(ticket.id);
+      return const <GitLabNote>[];
+    });
+    return future;
   }
+
+  final _notesByTicket = <String, Future<List<GitLabNote>>>{};
 
   /// Best effort: the behind-count only hints at a needed rebase, so it never
   /// fails the MR itself. A merged/closed MR needs no rebase and often has its

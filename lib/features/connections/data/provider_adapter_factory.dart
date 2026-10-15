@@ -11,15 +11,20 @@ import 'zentao/zentao_client.dart';
 /// Builds a live [ProviderAdapter] for a configured account + its secret.
 /// Returns null for providers not yet implemented (Jira).
 ///
-/// [zenClient] lets the caller inject a shared [ZenTaoClient] instead of minting
-/// a throwaway one. ZenTao rotates (and invalidates) its session id on every
-/// login, so two clients for the same account fighting over the session would
-/// churn the token — callers that also load session-protected assets (inline
-/// images, attachments) MUST pass the same pooled client the asset loader uses.
+/// [zenClient], [gitlabClient] and [githubClient] let the caller inject a
+/// shared client instead of minting a throwaway one. ZenTao rotates (and
+/// invalidates) its session id on every login, so two clients for the same
+/// account fighting over the session would churn the token — callers that
+/// also load session-protected assets (inline images, attachments) MUST pass
+/// the same pooled client the asset loader uses. GitLab and GitHub need no
+/// session, but a fresh client per call is a fresh TCP + TLS handshake per
+/// sync, detail open and action; a pooled one keeps the connection.
 ProviderAdapter? buildProviderAdapter(
   Account account,
   String secret, {
   ZenTaoClient? zenClient,
+  GitLabClient? gitlabClient,
+  GitHubClient? githubClient,
 }) {
   switch (account.providerType) {
     case ProviderType.zentao:
@@ -36,12 +41,16 @@ ProviderAdapter? buildProviderAdapter(
     case ProviderType.gitlab:
       return GitLabAdapter(
         accountId: account.id,
-        client: GitLabClient(baseUrl: account.baseUrl ?? '', token: secret),
+        client:
+            gitlabClient ??
+            GitLabClient(baseUrl: account.baseUrl ?? '', token: secret),
       );
     case ProviderType.github:
       return GitHubAdapter(
         accountId: account.id,
-        client: GitHubClient(baseUrl: account.baseUrl ?? '', token: secret),
+        client:
+            githubClient ??
+            GitHubClient(baseUrl: account.baseUrl ?? '', token: secret),
       );
     case ProviderType.jira:
       return null;

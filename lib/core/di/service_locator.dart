@@ -220,7 +220,13 @@ abstract class ServiceModule {
   ZenTaoProfileRepository zenTaoProfileRepository(
     AppDatabase db,
     CredentialStore credentials,
-  ) => LocalZenTaoProfileRepository(db, credentials);
+    SyncService sync,
+  ) => LocalZenTaoProfileRepository(
+    db,
+    credentials,
+    // The sync's pooled client, so the profile refresh shares its session.
+    clientFactory: sync.zenTaoClientFrom,
+  );
 
   @lazySingleton
   RefreshZenTaoProfile refreshZenTaoProfile(

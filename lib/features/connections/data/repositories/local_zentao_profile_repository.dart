@@ -15,8 +15,12 @@ import '../../domain/repositories/zentao_profile_repository.dart';
 import '../mappers/zentao_profile_mapper.dart';
 import '../zentao/zentao_client.dart';
 
+/// The client a profile refresh talks through. The composition root passes
+/// the sync service's pooled client: ZenTao invalidates the previous session
+/// on every login, so a client of this repository's own would knock the
+/// sync's session out (and get knocked out in turn) on every startup.
 typedef ZenTaoProfileClientFactory =
-    ZenTaoClient Function(String baseUrl, String account, String password);
+    ZenTaoClient Function(Account account, String password);
 
 class LocalZenTaoProfileRepository implements ZenTaoProfileRepository {
   LocalZenTaoProfileRepository(
@@ -29,11 +33,12 @@ class LocalZenTaoProfileRepository implements ZenTaoProfileRepository {
   final CredentialStore _credentials;
   final ZenTaoProfileClientFactory _clientFactory;
 
-  static ZenTaoClient _createClient(
-    String baseUrl,
-    String account,
-    String password,
-  ) => ZenTaoClient(baseUrl: baseUrl, account: account, password: password);
+  static ZenTaoClient _createClient(Account account, String password) =>
+      ZenTaoClient(
+        baseUrl: account.baseUrl ?? '',
+        account: account.handle,
+        password: password,
+      );
 
   @override
   Stream<ZenTaoProfile?> watch(String accountId) =>
@@ -77,7 +82,7 @@ class LocalZenTaoProfileRepository implements ZenTaoProfileRepository {
       if (password == null || password.isEmpty) {
         return const Err(AuthFailure('ZenTao password is missing'));
       }
-      final client = _clientFactory(baseUrl, account.handle, password);
+      final client = _clientFactory(account, password);
       final json = await client.userInfo();
       final profileJson = json['profile'];
       if (profileJson is! Map) {
@@ -211,7 +216,7 @@ class LocalZenTaoProfileRepository implements ZenTaoProfileRepository {
     if (password == null || password.isEmpty) {
       return null;
     }
-    return _clientFactory(baseUrl, account.handle, password);
+    return _clientFactory(account, password);
   }
 
   Failure _httpFailure(DioException error, String message) {
