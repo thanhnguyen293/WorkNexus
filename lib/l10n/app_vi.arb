@@ -1285,5 +1285,35 @@
   "chatTyping": "đang nhập…",
   "chatTypingOne": "{name} đang nhập…",
   "chatTypingTwo": "{first} và {second} đang nhập…",
-  "chatTypingMany": "{name} và {count} người khác đang nhập…"
+  "chatTypingMany": "{name} và {count} người khác đang nhập…",
+
+  "miniAppAdd": "Thêm mini app",
+  "miniAppUrlLabel": "Địa chỉ web",
+  "miniAppUrlHint": "example.com",
+  "miniAppNameLabel": "Tên (không bắt buộc)",
+  "miniAppInvalidUrl": "Nhập địa chỉ web, ví dụ example.com",
+  "miniAppRemove": "Gỡ khỏi thanh bên",
+  "miniAppRemoveTitle": "Gỡ {name}?",
+  "@miniAppRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppRemoveMessage": "Chỉ gỡ khỏi thanh bên, trang web không bị ảnh hưởng.",
+  "miniAppOpenInBrowser": "Mở bằng trình duyệt",
+  "miniAppReload": "Tải lại",
+  "miniAppUnsupported": "Hệ điều hành này không hiển thị được trang web trong ứng dụng.",
+  "miniAppEdit": "Sửa mini app",
+  "miniAppIcon": "Biểu tượng",
+  "miniAppIconChoose": "Chọn ảnh…",
+  "miniAppIconSite": "Dùng icon của trang",
+  "miniAppIconFailed": "Không lấy được biểu tượng theo cách này",
+  "miniAppLoadFailed": "Không tải được trang này",
+  "miniAppRetry": "Thử lại",
+  "miniAppBack": "Quay lại",
+  "miniAppForward": "Tiến tới",
+  "miniAppStop": "Dừng",
+  "miniAppDevTools": "Công cụ nhà phát triển"
 }

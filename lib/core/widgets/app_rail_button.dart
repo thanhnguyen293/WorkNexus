@@ -16,19 +16,25 @@ import '../theme/app_spacing.dart';
 class AppRailButton extends StatelessWidget {
   const AppRailButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.leading,
     required this.label,
+
     required this.selected,
     required this.onTap,
     this.badge,
     this.primary = false,
-  });
+  }) : assert(icon != null || leading != null);
 
   /// The rail's side gutter: the button is centred in the rail, so the edge
   /// bar sits this far to its left.
   static double gutterOf(BuildContext context) => context.spacing.md;
 
-  final IconData icon;
+  final IconData? icon;
+
+  /// A custom glyph (e.g. a site's initial) in place of [icon]; it is tinted
+  /// by the rail's ink through [DefaultTextStyle] / [IconTheme].
+  final Widget? leading;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -76,7 +82,17 @@ class AppRailButton extends StatelessWidget {
                       : null,
                   child: SizedBox.square(
                     dimension: s.xl6,
-                    child: Icon(icon, size: context.sizes.iconLg, color: ink),
+                    child: Center(
+                      child: leading == null
+                          ? Icon(icon, size: context.sizes.iconLg, color: ink)
+                          : IconTheme(
+                              data: IconThemeData(color: ink),
+                              child: DefaultTextStyle.merge(
+                                style: TextStyle(color: ink),
+                                child: leading!,
+                              ),
+                            ),
+                    ),
                   ),
                 ),
               ),

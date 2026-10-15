@@ -5,7 +5,7 @@ import 'ticket_editor_route.dart';
 part 'app_nav_state.freezed.dart';
 
 /// The app's main destinations, picked from the left rail.
-enum MainView { dashboard, chat, board }
+enum MainView { dashboard, chat, board, miniApp }
 
 /// Where the app shell is: the main view, what covers it (settings, the
 /// bug / task editor, the notifications panel) and the ticket detail
@@ -18,6 +18,9 @@ abstract class AppNavState with _$AppNavState {
   const factory AppNavState({
     // The app opens on chat.
     @Default(MainView.chat) MainView view,
+
+    /// The mini app shown when [view] is [MainView.miniApp].
+    String? miniAppId,
     @Default(false) bool settingsOpen,
     @Default(false) bool notificationsOpen,
     TicketEditorRoute? editor,

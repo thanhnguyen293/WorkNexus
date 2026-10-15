@@ -24,6 +24,7 @@ import '../../features/connections/presentation/widgets/local_cache_quick_settin
 import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/mini_apps/presentation/widgets/mini_apps_host.dart';
 import '../../features/notifications/presentation/widgets/notifications_panel.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
 import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart';
@@ -70,43 +71,62 @@ class AppShell extends ConsumerWidget {
                                 view == MainView.board)
                               const ResizableSidebar(),
                             Expanded(
-                              child: integrationsVisible
-                                  ? SettingsPage(
-                                      footer: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const TranslationSettingsCard(),
-                                          SizedBox(height: context.spacing.xl4),
-                                          const UpdateSettingsCard(),
-                                          SizedBox(height: context.spacing.xl4),
-                                          const LocalCacheCard(),
-                                        ],
-                                      ),
-                                    )
-                                  : editor != null
-                                  ? TicketEditorPage(route: editor)
-                                  : switch (view) {
-                                      MainView.dashboard =>
-                                        const DashboardPage(),
-                                      MainView.chat => ChatPage(
-                                        onViewProfile:
-                                            (dialogContext, accountId) {
-                                              for (final account in ref.read(
-                                                chatAccountsProvider,
-                                              )) {
-                                                if (account.id == accountId) {
-                                                  ZenTaoProfileDialog.show(
-                                                    dialogContext,
-                                                    account,
-                                                  );
-                                                  break;
-                                                }
-                                              }
-                                            },
-                                      ),
-                                      MainView.board => const BoardPage(),
-                                    },
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  MiniAppsHost(
+                                    visible:
+                                        !integrationsVisible &&
+                                        editor == null &&
+                                        view == MainView.miniApp,
+                                  ),
+                                  integrationsVisible
+                                      ? SettingsPage(
+                                          footer: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const TranslationSettingsCard(),
+                                              SizedBox(
+                                                height: context.spacing.xl4,
+                                              ),
+                                              const UpdateSettingsCard(),
+                                              SizedBox(
+                                                height: context.spacing.xl4,
+                                              ),
+                                              const LocalCacheCard(),
+                                            ],
+                                          ),
+                                        )
+                                      : editor != null
+                                      ? TicketEditorPage(route: editor)
+                                      : switch (view) {
+                                          MainView.dashboard =>
+                                            const DashboardPage(),
+                                          MainView.chat => ChatPage(
+                                            onViewProfile:
+                                                (dialogContext, accountId) {
+                                                  for (final account
+                                                      in ref.read(
+                                                        chatAccountsProvider,
+                                                      )) {
+                                                    if (account.id ==
+                                                        accountId) {
+                                                      ZenTaoProfileDialog.show(
+                                                        dialogContext,
+                                                        account,
+                                                      );
+                                                      break;
+                                                    }
+                                                  }
+                                                },
+                                          ),
+                                          MainView.board => const BoardPage(),
+                                          MainView.miniApp =>
+                                            const SizedBox.shrink(),
+                                        },
+                                ],
+                              ),
                             ),
                           ],
                         ),

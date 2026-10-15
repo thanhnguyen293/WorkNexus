@@ -10,8 +10,8 @@ import '../providers/chat_providers.dart';
 
 /// Opens a link tapped in chat. A ZenTao bug/task/story opens in the detail
 /// panel beside the chat — fetched from ZenTao first when the board has not
-/// synced it; anything else (or a ticket that cannot be loaded) opens in the
-/// browser.
+/// synced it; anything else (or a ticket that cannot be loaded) opens in a mini app for
+/// that site, else the browser.
 Future<void> openChatLink(WidgetRef ref, String url) async {
   final nav = ref.read(appNavProvider.notifier);
   final ticket = ref
@@ -23,7 +23,7 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
   }
   final link = FindLinkedTicket.parse(url);
   if (link == null) {
-    await openExternally(url);
+    await openLinkExternally(url);
     return;
   }
   final opened = await openZenTaoTicket(
@@ -32,5 +32,5 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
     type: link.type,
     id: link.id,
   );
-  if (opened is Err) await openExternally(url);
+  if (opened is Err) await openLinkExternally(url);
 }

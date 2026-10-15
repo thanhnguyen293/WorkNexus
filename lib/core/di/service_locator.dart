@@ -68,6 +68,13 @@ import '../../features/sync/data/sync_service.dart';
 import '../../features/sync/data/zentao_ticket_editor_service.dart';
 import '../../features/sync/data/zentao_workflow_actions.dart';
 import '../../features/task_detail/domain/repositories/zentao_task_bugs.dart';
+import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
+import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
+import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
+import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
+import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
+import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
+import '../../features/mini_apps/domain/usecases/update_mini_app.dart';
 import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
 import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
@@ -396,6 +403,24 @@ abstract class ServiceModule {
   RefreshNotifications refreshNotifications(
     NotificationRepository repository,
   ) => RefreshNotifications(repository);
+
+  @lazySingleton
+  MiniAppRepository miniAppRepository(AppDatabase db) => LocalMiniAppRepository(
+    MiniAppLocalDatasource(db),
+    MiniAppIconStorage(
+      () async => Directory(
+        '${(await getApplicationSupportDirectory()).path}/mini_app_icons',
+      ),
+    ),
+    FaviconFetcher(),
+  );
+
+  @lazySingleton
+  AddMiniApp addMiniApp(MiniAppRepository repository) => AddMiniApp(repository);
+
+  @lazySingleton
+  UpdateMiniApp updateMiniApp(MiniAppRepository repository) =>
+      UpdateMiniApp(repository);
 
   @lazySingleton
   TicketDraftRepository ticketDraftRepository(AppDatabase db) =>

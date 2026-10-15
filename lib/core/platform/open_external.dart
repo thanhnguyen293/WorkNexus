@@ -26,12 +26,19 @@ Future<void> openExternally(String url) async {
   }
 }
 
-/// Opens a link tapped in rendered content (a description, a comment) in the
-/// browser. Only web/mail links: `open` would launch a scheme-less path (e.g. a
+/// Gives a tapped web link to the app before the browser: returns true when it
+/// opened it itself (in a mini app). Set by the mini apps feature.
+bool Function(String url)? webLinkInterceptor;
+
+/// Opens a link tapped in rendered content (a description, a comment) in a
+/// mini app for that site when there is one, else the browser. Only web/mail links: `open` would launch a scheme-less path (e.g. a
 /// provider-relative `/zentao/…` href) as a local file.
 Future<void> openLinkExternally(String url) async {
   final scheme = Uri.tryParse(url.trim())?.scheme.toLowerCase();
   if (scheme != 'http' && scheme != 'https' && scheme != 'mailto') return;
+  if (scheme != 'mailto' && (webLinkInterceptor?.call(url.trim()) ?? false)) {
+    return;
+  }
   await openExternally(url.trim());
 }
 
