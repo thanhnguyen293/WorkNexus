@@ -124,6 +124,11 @@ dependencies:
   # Held at 0.7.x: desktop_drop depends on dbus ^0.7.
   dbus: 0.7.15
   package_info_plus: 10.2.2
+  # Mini apps: a web page the user added, shown inside the shell. Windows
+  # (WebView2) and macOS (WKWebView); Linux has no backend, so the page opens
+  # in the system browser there.
+  flutter_inappwebview: 6.1.5
+  url_launcher: 6.3.3
 
 dev_dependencies:
   flutter_test:

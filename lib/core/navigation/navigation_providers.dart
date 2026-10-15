@@ -37,6 +37,11 @@ final mainViewProvider = Provider<MainView>(
   (ref) => ref.watch(appNavProvider.select((s) => s.view)),
 );
 
+/// The mini app on show (null unless [MainView.miniApp] is the main view).
+final openMiniAppIdProvider = Provider<String?>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.miniAppId)),
+);
+
 /// Whether the ZenTao chat view is the main view.
 final chatOpenProvider = Provider<bool>(
   (ref) => ref.watch(mainViewProvider) == MainView.chat,

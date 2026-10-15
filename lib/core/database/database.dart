@@ -470,6 +470,25 @@ class TicketDrafts extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Web pages the user added to the app rail, in rail order.
+@DataClassName('MiniAppRow')
+class MiniApps extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get url => text()();
+
+  /// The icon's image file (the site's own or one the user picked); null
+  /// shows the name's initial.
+  TextColumn get iconPath => text().nullable()();
+
+  /// The page the app was last on, reopened next time; null opens [url].
+  TextColumn get lastUrl => text().nullable()();
+  IntColumn get position => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Workspaces,
@@ -493,6 +512,7 @@ class TicketDrafts extends Table {
     ChatLinkPreviews,
     ChatSavedFiles,
     TicketDrafts,
+    MiniApps,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -506,7 +526,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 49;
+  int get schemaVersion => 52;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -780,6 +800,13 @@ class AppDatabase extends _$AppDatabase {
         if (!await _hasColumn('settings', 'table_column_widths_json')) {
           await m.addColumn(settings, settings.tableColumnWidthsJson);
         }
+      }
+      if (from < 50) await m.createTable(miniApps);
+      if (from < 51 && !await _hasColumn('mini_apps', 'icon_path')) {
+        await m.addColumn(miniApps, miniApps.iconPath);
+      }
+      if (from < 52 && !await _hasColumn('mini_apps', 'last_url')) {
+        await m.addColumn(miniApps, miniApps.lastUrl);
       }
     },
   );

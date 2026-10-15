@@ -13,6 +13,10 @@ class AppNavController extends Notifier<AppNavState> {
   /// panel, the editor and the ticket detail.
   void show(MainView view) => state = AppNavState(view: view);
 
+  /// Shows the mini app [id], closing everything over it like [show].
+  void showMiniApp(String id) =>
+      state = AppNavState(view: MainView.miniApp, miniAppId: id);
+
   void toggleSettings() =>
       state.settingsOpen ? closeSettings() : openSettings();
 

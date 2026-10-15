@@ -11,6 +11,7 @@ import '../../features/app_update/presentation/widgets/update_rail_button.dart';
 import '../../features/board/presentation/widgets/board_rail_button.dart';
 import '../../features/chat/presentation/widgets/chat_rail_button.dart';
 import '../../features/dashboard/presentation/widgets/dashboard_rail_button.dart';
+import '../../features/mini_apps/presentation/widgets/mini_app_rail_section.dart';
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import '../../l10n/app_localizations.dart';
 import 'new_ticket_menu.dart';
@@ -47,7 +48,7 @@ class AppNavRail extends ConsumerWidget {
           const DashboardRailButton(),
           const BoardRailButton(),
           const ChatRailButton(),
-          const Spacer(),
+          const MiniAppRailSection(),
           // Global utilities: panels, the updater and settings.
           const AppRailDivider(),
           const NotificationsRailButton(),

@@ -1973,5 +1973,35 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "miniAppAdd": "Add mini app",
+  "miniAppUrlLabel": "Web address",
+  "miniAppUrlHint": "example.com",
+  "miniAppNameLabel": "Name (optional)",
+  "miniAppInvalidUrl": "Enter a web address such as example.com",
+  "miniAppRemove": "Remove from rail",
+  "miniAppRemoveTitle": "Remove {name}?",
+  "@miniAppRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppRemoveMessage": "It only leaves the rail. The website itself is not affected.",
+  "miniAppOpenInBrowser": "Open in browser",
+  "miniAppReload": "Reload",
+  "miniAppUnsupported": "Web pages can't be shown inside the app on this system.",
+  "miniAppEdit": "Edit mini app",
+  "miniAppIcon": "Icon",
+  "miniAppIconChoose": "Choose image…",
+  "miniAppIconSite": "Use site icon",
+  "miniAppIconFailed": "Couldn't get an icon this way",
+  "miniAppLoadFailed": "This page couldn't be loaded",
+  "miniAppRetry": "Try again",
+  "miniAppBack": "Back",
+  "miniAppForward": "Forward",
+  "miniAppStop": "Stop",
+  "miniAppDevTools": "Developer tools"
 }
