@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/debug/app_talker.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browser_controller.dart';
+import '../providers/mini_app_providers.dart';
 import '../util/ask_mini_app_permission.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
@@ -46,14 +47,22 @@ class MiniAppWebView extends ConsumerWidget {
         isInspectable: kDebugMode,
       ),
       onWebViewCreated: (controller) {
-        final page = MiniAppPageContext(context: context, ref: ref, app: app);
+        final page = MiniAppPageContext(
+          context: context,
+          ref: ref,
+          app: () => currentMiniApp(ref, app),
+        );
         for (final capability in capabilities) {
           capability.attach(controller, page);
         }
         browser.attach(controller);
       },
-      onPermissionRequest: (_, request) =>
-          answerMiniAppPermission(context, ref, app, request),
+      onPermissionRequest: (_, request) => answerMiniAppPermission(
+        context,
+        ref,
+        currentMiniApp(ref, app),
+        request,
+      ),
       onLoadStart: (_, url) {
         appTalker.info('Mini app $name: loading $url');
         browser.onLoadStart();

@@ -13,8 +13,8 @@ import '../providers/mini_app_providers.dart';
 import '../widgets/mini_app_permission_dialog.dart';
 import 'mini_app_permission_kind.dart';
 
-/// Requests for the same app and kinds that are being asked right now, so a
-/// page asking twice at once gets one dialog.
+/// Dialogs open right now, by app and kinds, so a page asking twice at once
+/// gets one dialog.
 final _asking = <String, Future<MiniAppPermissionDecision>>{};
 
 /// Whether app [app]'s page, now at [origin], may use [kinds]: the answer
@@ -22,26 +22,33 @@ final _asking = <String, Future<MiniAppPermissionDecision>>{};
 /// and then remembered. A dismissed dialog blocks this once without
 /// remembering it. A page on another site than the app's is blocked without
 /// asking: it would otherwise get the app's answers, or be asked about under
-/// the app's name.
+/// the app's name. A page in the background is asked once the user opens its
+/// app, not over whatever they are looking at.
 Future<MiniAppPermissionDecision> askMiniAppPermission(
   BuildContext context,
   WidgetRef ref,
   MiniApp app,
   Iterable<MiniAppPermissionKind> kinds, {
   required Uri? origin,
-}) {
+}) async {
   final sorted = {...kinds}.toList()
     ..sort((a, b) => a.index.compareTo(b.index));
   if (sorted.isEmpty || !const IsMiniAppOrigin()(app.url, origin)) {
-    return Future.value(MiniAppPermissionDecision.block);
+    return MiniAppPermissionDecision.block;
   }
+  final controller = ref.read(miniAppPermissionControllerProvider.notifier);
+  final saved = await controller.remembered(app.id, sorted);
+  if (saved != null) return saved;
+  // Waits outside [_asking]: a page closed while waiting never resolves, and
+  // must not leave its key behind to hang later requests.
+  await _untilShown(ref, app.id);
+  if (!context.mounted) return MiniAppPermissionDecision.block;
   final key = '${app.id}|${sorted.map((k) => k.name).join(',')}';
-  return _asking[key] ??= _ask(
-    context,
-    ref,
-    app,
-    sorted,
-  ).whenComplete(() => _asking.remove(key));
+  // A block body, not `=> _asking.remove(key)`: that returns this very
+  // future, which whenComplete would then wait for — forever.
+  return _asking[key] ??= _ask(context, ref, app, sorted).whenComplete(() {
+    _asking.remove(key);
+  });
 }
 
 Future<MiniAppPermissionDecision> _ask(
@@ -51,11 +58,9 @@ Future<MiniAppPermissionDecision> _ask(
   List<MiniAppPermissionKind> kinds,
 ) async {
   final controller = ref.read(miniAppPermissionControllerProvider.notifier);
+  // Answered by an earlier dialog while this request waited.
   final saved = await controller.remembered(app.id, kinds);
   if (saved != null) return saved;
-  // A page in the background asks once the user opens its app, not over
-  // whatever they are looking at.
-  await _untilShown(ref, app.id);
   if (!context.mounted) return MiniAppPermissionDecision.block;
   final uri = Uri.tryParse(app.url);
   final answer = await MiniAppPermissionDialog.show(

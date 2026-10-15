@@ -51,6 +51,17 @@ final miniAppShownProvider = Provider.family<bool, String>(
       ref.watch(openMiniAppIdProvider) == id,
 );
 
+/// [app] as the database has it now — edited since it was handed over, say —
+/// or [app] itself when it is not there (yet).
+MiniApp currentMiniApp(WidgetRef ref, MiniApp app) =>
+    ref
+        .read(miniAppsProvider)
+        .asData
+        ?.value
+        .where((a) => a.id == app.id)
+        .firstOrNull ??
+    app;
+
 /// What the user allowed or blocked for one mini app, live.
 final miniAppPermissionsProvider =
     StreamProvider.family<List<MiniAppPermissionGrant>, String>(

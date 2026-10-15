@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/mini_app.dart';
 
 /// Where a page's request is being answered: the app it belongs to and the
-/// view's own context and [ref] (for dialogs and providers).
+/// view's own context and [ref] (for dialogs and providers). [app] is read at
+/// each call, so an app edited after its page opened (a new address) is
+/// judged by what it is now.
 class MiniAppPageContext {
   const MiniAppPageContext({
     required this.context,
@@ -15,7 +17,7 @@ class MiniAppPageContext {
 
   final BuildContext context;
   final WidgetRef ref;
-  final MiniApp app;
+  final MiniApp Function() app;
 }
 
 /// Something the app lets a mini app's page do through the app itself — show a
