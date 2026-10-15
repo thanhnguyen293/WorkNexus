@@ -68,6 +68,12 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _browser.setBrightness(Theme.of(context).brightness);
+  }
+
+  @override
   void didUpdateWidget(MiniAppView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.app != widget.app) {
