@@ -47,7 +47,7 @@ Future<void> openNotification(
     if (res is Ok) return;
   }
   if (url != null && url.startsWith('http')) {
-    await openLinkExternally(url);
+    await openLinkExternally(url, inApp: false);
     return;
   }
   if (toastContext.mounted) showAppSnack(toastContext, failed, isError: true);

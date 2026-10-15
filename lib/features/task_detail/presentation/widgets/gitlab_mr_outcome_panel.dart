@@ -54,12 +54,12 @@ class GitLabMrOutcomePanel extends StatelessWidget {
           if (url.isNotEmpty) ...[
             AppButton.text(
               size: AppButtonSize.small,
-              onPressed: () => openExternally(url),
+              onPressed: () => openLinkExternally(url, inApp: false),
               child: Text(l.mrRevert),
             ),
             AppButton.text(
               size: AppButtonSize.small,
-              onPressed: () => openExternally(url),
+              onPressed: () => openLinkExternally(url, inApp: false),
               child: Text(l.mrCherryPick),
             ),
           ],

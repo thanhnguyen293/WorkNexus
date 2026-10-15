@@ -1,16 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'mini_app_icon_store.dart';
+
 /// The icon image files of the mini apps, one per app, in a folder of the
 /// app's support directory. A file's name carries a timestamp so a replaced
 /// icon is a new path (Flutter caches images by path).
-class MiniAppIconStorage {
+class MiniAppIconStorage implements MiniAppIconStore {
   const MiniAppIconStorage(this._folder);
 
   final Future<Directory> Function() _folder;
 
-  /// Keeps [bytes] as app [id]'s icon, replacing any earlier one; resolves to
-  /// the file's path.
+  @override
   Future<String> save(String id, Uint8List bytes, String extension) async {
     final dir = await _folder();
     await dir.create(recursive: true);
@@ -23,7 +24,7 @@ class MiniAppIconStorage {
     return file.path;
   }
 
-  /// Copies the image at [sourcePath] in as app [id]'s icon.
+  @override
   Future<String> import(String id, String sourcePath) async {
     final bytes = await File(sourcePath).readAsBytes();
     final dot = sourcePath.lastIndexOf('.');
@@ -31,7 +32,7 @@ class MiniAppIconStorage {
     return save(id, bytes, ext);
   }
 
-  /// Removes every icon file kept for app [id].
+  @override
   Future<void> delete(String id) async {
     final dir = await _folder();
     if (!await dir.exists()) return;

@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_sizes.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 
 /// One entry in the app's left icon rail: an icon with a tooltip and an
 /// optional [badge] (e.g. an unread count) on its top-right corner.
@@ -88,7 +89,9 @@ class AppRailButton extends StatelessWidget {
                           : IconTheme(
                               data: IconThemeData(color: ink),
                               child: DefaultTextStyle.merge(
-                                style: TextStyle(color: ink),
+                                style: context.typography.body.copyWith(
+                                  color: ink,
+                                ),
                                 child: leading!,
                               ),
                             ),

@@ -52,14 +52,14 @@ class DetailPanelHeaderActions extends StatelessWidget {
             outlined: true,
             icon: LucideIcons.squareArrowOutUpRight300,
             tooltip: l.openInBrowser,
-            onPressed: () => openExternally(url),
+            onPressed: () => openLinkExternally(url, inApp: false),
           ),
         if (hasUrl)
           AppIconButton(
             outlined: true,
             icon: LucideIcons.pencil300,
             tooltip: l.edit,
-            onPressed: () => openExternally('$url/edit'),
+            onPressed: () => openLinkExternally('$url/edit', inApp: false),
           ),
         ?menu,
         AppIconButton(

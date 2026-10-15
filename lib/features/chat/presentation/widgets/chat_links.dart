@@ -23,7 +23,7 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
   }
   final link = FindLinkedTicket.parse(url);
   if (link == null) {
-    await openLinkExternally(url);
+    await openLinkExternally(url, inApp: false);
     return;
   }
   final opened = await openZenTaoTicket(
@@ -32,5 +32,5 @@ Future<void> openChatLink(WidgetRef ref, String url) async {
     type: link.type,
     id: link.id,
   );
-  if (opened is Err) await openLinkExternally(url);
+  if (opened is Err) await openLinkExternally(url, inApp: false);
 }

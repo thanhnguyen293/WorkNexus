@@ -1315,5 +1315,52 @@
   "miniAppBack": "Quay lại",
   "miniAppForward": "Tiến tới",
   "miniAppStop": "Dừng",
-  "miniAppDevTools": "Công cụ nhà phát triển"
+  "miniAppDevTools": "Công cụ nhà phát triển",
+  "miniAppPermNotificationsLabel": "Thông báo",
+  "miniAppPermNotificationsAction": "hiện thông báo",
+  "miniAppPermNotificationsDesc": "Hiện thành thông báo trên máy, kể cả khi WorkNexus chạy nền.",
+  "miniAppPermClipboardLabel": "Bộ nhớ tạm",
+  "miniAppPermClipboardAction": "đọc nội dung bạn đã sao chép",
+  "miniAppPermClipboardDesc": "Cho phép dán nội dung bạn vừa sao chép ở nơi khác.",
+  "miniAppPermAutoplayLabel": "Tự phát",
+  "miniAppPermAutoplayAction": "tự phát âm thanh và video",
+  "miniAppPermAutoplayDesc": "Âm thanh và video có thể tự chạy mà không cần bấm phát.",
+  "miniAppPermMultipleDownloadsLabel": "Tải nhiều file",
+  "miniAppPermMultipleDownloadsAction": "tải nhiều file cùng lúc",
+  "miniAppPermMultipleDownloadsDesc": "Cho phép lưu nhiều file mà không hỏi từng lần.",
+  "miniAppPermLocalFontsLabel": "Font đã cài",
+  "miniAppPermLocalFontsAction": "đọc các font đã cài trên máy",
+  "miniAppPermLocalFontsDesc": "Cho phép dùng các font đã cài trên máy này.",
+  "miniAppPermCameraLabel": "Camera",
+  "miniAppPermCameraAction": "dùng camera của bạn",
+  "miniAppPermCameraDesc": "Có thể nhìn qua camera khi trang đang mở.",
+  "miniAppPermMicrophoneLabel": "Micro",
+  "miniAppPermMicrophoneAction": "dùng micro của bạn",
+  "miniAppPermMicrophoneDesc": "Có thể nghe qua micro khi trang đang mở.",
+  "miniAppPermLocationLabel": "Vị trí",
+  "miniAppPermLocationAction": "biết vị trí của bạn",
+  "miniAppPermLocationDesc": "Có thể đọc vị trí của máy này.",
+  "miniAppPermOtherLabel": "Khác",
+  "miniAppPermOtherAction": "dùng một quyền khác",
+  "miniAppPermOtherDesc": "Một quyền mà ứng dụng không liệt kê tên.",
+  "miniAppDevTools": "Công cụ nhà phát triển",
+  "miniAppPermissionTitle": "{site} muốn {action}",
+  "@miniAppPermissionTitle": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppPermissionAllow": "Cho phép",
+  "miniAppPermissionBlock": "Chặn",
+  "miniAppPermissionRemembered": "Lựa chọn được nhớ cho trang này. Bạn đổi lại được khi sửa mini app.",
+  "miniAppPermissionsTitle": "Quyền",
+  "miniAppPermissionsEmpty": "Chưa có. Khi trang xin dùng gì đó, câu trả lời của bạn sẽ hiện ở đây.",
+  "miniAppPermissionAllowed": "Cho phép",
+  "miniAppPermissionBlocked": "Đã chặn",
+  "miniAppPermissionReset": "Hỏi lại"
 }

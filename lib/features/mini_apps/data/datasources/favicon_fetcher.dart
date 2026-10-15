@@ -3,13 +3,12 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:html/parser.dart' as html;
 
-/// A site's icon image and the file extension to keep it under.
-typedef SiteIcon = ({Uint8List bytes, String extension});
+import 'site_icon_source.dart';
 
 /// Finds and downloads a web page's icon: the best `<link rel="…icon…">` the
 /// page declares, then `/favicon.ico`. Talks to the site itself only. SVG icons
 /// are skipped (Flutter does not draw them as images).
-class FaviconFetcher {
+class FaviconFetcher implements SiteIconSource {
   FaviconFetcher([Dio? dio])
     : _dio =
           dio ??
@@ -24,6 +23,7 @@ class FaviconFetcher {
   final Dio _dio;
   static const _maxBytes = 1024 * 1024;
 
+  @override
   Future<SiteIcon?> fetch(Uri page) async {
     final candidates = <Uri>[];
     var origin = page;

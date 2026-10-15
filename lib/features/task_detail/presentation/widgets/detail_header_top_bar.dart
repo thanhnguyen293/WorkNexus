@@ -94,7 +94,7 @@ class DetailHeaderTopBar extends ConsumerWidget {
             outlined: true,
             icon: LucideIcons.squareArrowOutUpRight300,
             tooltip: l.openInBrowser,
-            onPressed: () => openExternally(url),
+            onPressed: () => openLinkExternally(url, inApp: false),
           ),
           SizedBox(width: context.spacing.md),
         ],
