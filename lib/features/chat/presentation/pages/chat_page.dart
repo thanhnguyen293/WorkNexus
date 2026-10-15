@@ -13,25 +13,29 @@ import '../widgets/chat_notification_banner.dart';
 import '../widgets/chat_status_banner.dart';
 import '../widgets/chat_trust_dialog.dart';
 import '../widgets/chat_trust_gate.dart';
+import '../widgets/chat_wallpaper.dart';
 import '../widgets/conversation_list_pane.dart';
 import '../widgets/thread_pane.dart';
 
 /// The ZenTao chat view: connection banner, chat list and the open thread.
 class ChatPage extends ConsumerStatefulWidget {
-  const ChatPage({super.key, this.onViewProfile});
+  const ChatPage({
+    super.key,
+    this.onViewProfile,
+    this.showConversationList = true,
+  });
 
   final OpenAccountProfile? onViewProfile;
+
+  /// Whether the page lists the chats itself; false where the tool pane
+  /// already does.
+  final bool showConversationList;
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends ConsumerState<ChatPage> {
-  /// Moves the messages' background from one chat's pane to the next, so
-  /// switching chats keeps it on screen instead of building and painting it
-  /// again (each pane is keyed per chat).
-  final _background = GlobalKey(debugLabel: 'chat-background');
-
   /// The certificate already put to the user on this visit: opening chat
   /// asks once (chat cannot work until it is confirmed), and again only for
   /// a different certificate.
@@ -85,28 +89,30 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         layout: layout,
                         child: Row(
                           children: [
-                            SizedBox(
-                              width: layout.compactList
-                                  ? kChatListCompactWidth
-                                  : kChatListWidth,
-                              child: ConversationListPane(
-                                accountId: accountId,
-                                compact: layout.compactList,
-                                onViewProfile: widget.onViewProfile,
+                            if (widget.showConversationList)
+                              SizedBox(
+                                width: layout.compactList
+                                    ? kChatListCompactWidth
+                                    : kChatListWidth,
+                                child: ConversationListPane(
+                                  accountId: accountId,
+                                  compact: layout.compactList,
+                                  onViewProfile: widget.onViewProfile,
+                                ),
                               ),
-                            ),
                             Expanded(
-                              child: chatGid == null
-                                  ? Center(
-                                      child: AppInlineNote(
-                                        text: l.chatSelectConversation,
+                              child: ChatBackground(
+                                child: chatGid == null
+                                    ? Center(
+                                        child: AppInlineNote(
+                                          text: l.chatSelectConversation,
+                                        ),
+                                      )
+                                    : ThreadPane(
+                                        key: ValueKey('$accountId/$chatGid'),
+                                        thread: thread!,
                                       ),
-                                    )
-                                  : ThreadPane(
-                                      key: ValueKey('$accountId/$chatGid'),
-                                      thread: thread!,
-                                      backgroundKey: _background,
-                                    ),
+                              ),
                             ),
                           ],
                         ),

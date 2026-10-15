@@ -134,7 +134,7 @@ void main() {
     final raw = sqlite3.open(file.path);
     raw.execute('ALTER TABLE chat_messages DROP COLUMN detached;');
     raw.execute('PRAGMA user_version = 39;');
-    raw.dispose();
+    raw.close();
 
     final upgraded = AppDatabase(NativeDatabase(file));
     addTearDown(upgraded.close);

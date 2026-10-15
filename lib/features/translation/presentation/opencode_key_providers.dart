@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/di/service_locator.dart';
 import '../../../core/di/providers.dart';
-import '../../../core/di/service_locator.dart';
 import '../../../core/error/result.dart';
 import '../domain/entities/opencode_provider_auth.dart';
 import '../domain/repositories/opencode_key_repository.dart';

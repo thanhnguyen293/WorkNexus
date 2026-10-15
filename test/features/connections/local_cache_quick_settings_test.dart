@@ -20,7 +20,9 @@ void main() {
       overrides: [openStorageProvider.overrideWithValue((_) => opened++)],
     );
     addTearDown(container.dispose);
-    container.read(appNavProvider.notifier).show(MainView.board);
+    container
+        .read(appNavProvider.notifier)
+        .selectWorkspaceSection(WorkspaceSection.overview);
     container.read(quickSettingsOpenProvider.notifier).state = true;
 
     await tester.pumpWidget(

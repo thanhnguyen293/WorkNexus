@@ -9,15 +9,12 @@ typedef ChatTypingSend =
 /// sent or cleared, or the chat is closed ([stop]).
 class ChatTypingSender {
   ChatTypingSender({
-    required ChatTypingSend send,
-    required ChatConversation? Function() chat,
-    required bool Function() enabled,
-    DateTime Function() now = DateTime.now,
+    required this._send,
+    required this._chat,
+    required this._enabled,
+    this._now = DateTime.now,
     this.interval = const Duration(seconds: 3),
-  }) : _send = send,
-       _chat = chat,
-       _enabled = enabled,
-       _now = now;
+  });
 
   final ChatTypingSend _send;
   final ChatConversation? Function() _chat;

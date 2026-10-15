@@ -1,18 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_zentao_bug_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_zentao_task_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/filter_tickets.dart';
-import 'package:work_nexus/features/board/domain/value_objects/saved_view.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_column.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_stream.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_task_column.dart';
+import 'package:work_nexus/core/domain/value_objects/zentao_bug_column.dart';
+import 'package:work_nexus/core/domain/value_objects/zentao_task_column.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/build_board.dart';
+import 'package:work_nexus/shared/board/domain/usecases/filter_tickets.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/saved_view.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/build_zentao_bug_board.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/build_zentao_task_board.dart';
+import 'package:work_nexus/tools/zentao/domain/value_objects/zentao_bug_stream.dart';
 
 Ticket _t({
   required String id,
@@ -27,6 +28,7 @@ Ticket _t({
   List<String> labels = const [],
   DateTime? updated,
   int? severity,
+  String? assignee,
 }) {
   return Ticket(
     id: id,
@@ -43,6 +45,7 @@ Ticket _t({
     labels: labels,
     severity: severity,
     updatedAt: updated,
+    assignee: assignee,
   );
 }
 
@@ -85,6 +88,7 @@ BoardQuery _q(
   FilterState filter, {
   Map<String, String>? accountWorkspace,
   DateTime? now,
+  Map<String, Account>? accounts,
 }) {
   return BoardQuery(
     tickets: tickets,
@@ -92,6 +96,7 @@ BoardQuery _q(
     accountWorkspace:
         accountWorkspace ?? {'ghP': 'personal', 'ghA': 'compA', 'ztB': 'compB'},
     now: now ?? DateTime(2026, 7, 17, 12),
+    accounts: accounts ?? const {},
   );
 }
 
@@ -347,6 +352,49 @@ void main() {
       );
       expect(out.map((t) => t.id), ['a', 'b']);
     });
+
+    test(
+      'saved view: mine with account excludes tickets assigned to others',
+      () {
+        const myAccount = Account(
+          id: 'acc1',
+          handle: 'sonvu',
+          workspaceId: 'compB',
+          providerType: ProviderType.zentao,
+        );
+        final tickets = [
+          _t(
+            id: 'mine1',
+            account: 'acc1',
+            assignee: 'sonvu',
+            provider: ProviderType.zentao,
+          ),
+          _t(
+            id: 'other',
+            account: 'acc1',
+            assignee: 'junng',
+            provider: ProviderType.zentao,
+          ),
+          _t(id: 'unassigned', account: 'acc1', provider: ProviderType.zentao),
+          _t(
+            id: 'mineDone',
+            account: 'acc1',
+            assignee: 'sonvu',
+            status: UnifiedStatus.done,
+            providerStatus: 'closed',
+            provider: ProviderType.zentao,
+          ),
+        ];
+        final out = filter(
+          _q(
+            tickets,
+            const FilterState(savedView: SavedView.mine),
+            accounts: {'acc1': myAccount},
+          ),
+        );
+        expect(out.map((t) => t.id), ['mine1']);
+      },
+    );
 
     test('saved view: today keeps only recently-updated', () {
       final now = DateTime(2026, 7, 17, 12);

@@ -6,12 +6,12 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/check_zentao_task_input.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/list_zentao_bug_actions.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/list_zentao_create_actions.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/list_zentao_task_actions.dart';
-import 'package:work_nexus/features/task_detail/domain/value_objects/zentao_bug_action.dart';
-import 'package:work_nexus/features/task_detail/domain/value_objects/zentao_create_action.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/check_zentao_task_input.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/list_zentao_bug_actions.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/list_zentao_create_actions.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/list_zentao_task_actions.dart';
+import 'package:work_nexus/tools/zentao/domain/value_objects/zentao_bug_action.dart';
+import 'package:work_nexus/tools/zentao/domain/value_objects/zentao_create_action.dart';
 
 Ticket _ticket(
   String type,
@@ -241,13 +241,14 @@ void main() {
       expect(list(_ticket('Bug', 'active')), [ZenTaoCreateAction.copyBug]);
     });
 
-    test('an open task gets subtasks and bugs', () {
+    test('an open task gets copies, subtasks and bugs', () {
       final task = _ticket(
         'Task',
         'doing',
         entity: const TicketProviderEntity.zentaoTask(execution: '31'),
       );
       expect(list(task), [
+        ZenTaoCreateAction.copyTask,
         ZenTaoCreateAction.subtask,
         ZenTaoCreateAction.bugFromTask,
       ]);
@@ -263,6 +264,7 @@ void main() {
         ('doing', const TicketProviderEntity.zentaoTask()),
       ]) {
         expect(list(_ticket('Task', raw, entity: entity)), [
+          ZenTaoCreateAction.copyTask,
           ZenTaoCreateAction.bugFromTask,
         ], reason: '$raw $entity');
       }

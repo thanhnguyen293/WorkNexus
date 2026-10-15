@@ -14,12 +14,10 @@ import '../mappers/link_preview_mappers.dart';
 /// one is still shown.
 class CachedLinkPreviewRepository implements LinkPreviewRepository {
   CachedLinkPreviewRepository({
-    required LinkPreviewLocalDatasource local,
-    required LinkPreviewHttpDatasource http,
-    DateTime Function() now = DateTime.now,
-  }) : _local = local,
-       _http = http,
-       _now = now;
+    required this._local,
+    required this._http,
+    this._now = DateTime.now,
+  });
 
   /// Pages change rarely; a week-old preview is refetched on next view.
   static const maxAge = Duration(days: 7);

@@ -1,0 +1,59 @@
+targets:
+  $default:
+    builders:
+      # Drift: Chỉ quét file định nghĩa database chính thay vì quét toàn bộ repo
+      drift_dev:drift_dev:
+        generate_for:
+          - lib/core/database/database.dart
+      drift_dev:preparing_builder:
+        generate_for:
+          - lib/core/database/database.dart
+
+      # Retrofit: Chỉ quét các datasource API REST
+      retrofit_generator:
+        generate_for:
+          - lib/core/network/**
+          - lib/features/**/data/datasources/**
+          - lib/tools/**/data/datasources/**
+
+      # JsonSerializable: Chỉ quét models DTOs và entities
+      json_serializable:
+        generate_for:
+          include:
+            - lib/core/domain/entities/**
+            - lib/features/**/data/models/**
+            - lib/features/**/domain/entities/**
+            - lib/tools/**/data/models/**
+            - lib/tools/**/domain/entities/**
+            - lib/shared/**/data/models/**
+            - lib/shared/**/domain/entities/**
+
+      # Freezed: Quét domain models, value objects và state providers; bỏ qua hoàn toàn UI widgets, pages và tests
+      freezed:
+        generate_for:
+          include:
+            - lib/**/*.dart
+          exclude:
+            - lib/**/widgets/**
+            - lib/**/pages/**
+            - lib/**/legacy/**
+            - lib/core/theme/**
+            - lib/l10n/**
+            - test/**
+
+      # Injectable: Quét DI modules và services; bỏ qua UI và tests
+      injectable_generator:injectable_builder:
+        generate_for:
+          include:
+            - lib/**/*.dart
+          exclude:
+            - lib/**/widgets/**
+            - lib/**/pages/**
+            - lib/**/legacy/**
+            - lib/core/theme/**
+            - lib/l10n/**
+            - test/**
+
+      injectable_generator:injectable_config_builder:
+        generate_for:
+          - lib/app/di/service_locator.dart

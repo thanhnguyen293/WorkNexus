@@ -9,37 +9,13 @@ import 'chat_appearance.dart';
 import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
-enum DetailLayout {
-  /// Content beside a fixed-width metadata sidebar (wider panel).
-  twoPane,
-
-  /// A centered, single-column reading layout with metadata stacked below.
-  document,
-}
+enum DetailLayout { twoPane, document }
 
 /// How the ZenTao task and bug boards lay out their tickets.
-enum BoardLayout {
-  /// Kanban columns, one per status.
-  board,
+enum BoardLayout { board, table }
 
-  /// One table, ordered by status then newest first.
-  table,
-}
-
-/// How a concrete timestamp (older than an hour) renders its date part. The time
-/// is always 24h `HH:mm`, and very recent times still show "just now" / "x min
-/// ago" regardless of this.
-enum DateDisplayFormat {
-  /// `2026-05-26 10:28`
-  iso,
-
-  /// `26/05/2026 10:28`
-  dmy,
-
-  /// Locale-aware long form: `May 26, 2026 10:28` (en) / `26 thg 5, 2026 10:28`
-  /// (vi).
-  long,
-}
+/// How a concrete timestamp (older than an hour) renders its date part.
+enum DateDisplayFormat { iso, dmy, long }
 
 /// Default width (logical px) of the left sidebar, matching the historical
 /// fixed width before it became drag-resizable.
@@ -100,40 +76,30 @@ class AppSettings {
   /// The theme picked by hand; also the light/dark pair's fallback.
   final AppThemeVariant variant;
 
-  /// Light or dark with the OS instead of [variant] (off: the app opens light).
+  /// Light or dark with the OS instead of [variant].
   final bool themeFollowsSystem;
-
   final SurfaceStyle surface;
   final AppDensity density;
   final DetailLayout detailLayout;
 
-  /// Whether the ZenTao task and bug boards open as kanban columns or as
-  /// a table. One choice for both, kept across restarts.
+  /// Whether the ZenTao boards open as kanban columns or as a table.
   final BoardLayout boardLayout;
 
   /// How concrete timestamps render their date part across the app.
   final DateDisplayFormat dateFormat;
-
   final bool companyTint;
   final Locale locale;
 
-  /// Target language a ticket is machine-translated *into* (the "Vietnamese" tab
-  /// generalized). A BCP-47 code from [kTranslationLanguages]; defaults to
-  /// [kDefaultTranslationLang]. Distinct from [locale], which is the app's UI
-  /// language.
+  /// Target language a ticket is machine-translated into.
   final String translationLang;
 
-  /// The `provider/model` OpenCode translates with (e.g. `opencode-go/glm-5.3`).
-  /// Empty means "leave it to OpenCode's own default model", which is the
-  /// behaviour before this setting existed.
+  /// The model OpenCode translates with; empty means default model.
   final String translationModel;
 
-  /// Pinned ZenTao project keys (`"accountId:productId"`) surfaced at the top of
-  /// the sources tree. Persisted so pins survive restarts.
+  /// Pinned ZenTao project keys (`"accountId:productId"`).
   final Set<String> pinnedProjects;
 
-  /// Pinned ZenTao executions surfaced alongside pinned projects in the tree's
-  /// per-account "Pinned" area. Persisted so pins survive restarts.
+  /// Pinned ZenTao executions surfaced alongside pinned projects.
   final List<PinnedExecution> pinnedExecutions;
 
   /// Width (logical px) of the left sidebar, adjustable by dragging its right
@@ -394,19 +360,50 @@ class AppSettingsController extends Notifier<AppSettings> {
   }
 
   /// Pins/unpins a ZenTao project by its `"accountId:productId"` [key].
-  void togglePinnedProject(String key) {
-    final next = Set<String>.of(state.pinnedProjects);
-    next.contains(key) ? next.remove(key) : next.add(key);
-    _set(state.copyWith(pinnedProjects: next));
+  /// When unpinning a project, its child executions are also unpinned.
+  /// When pinning, [childExecutions] can also be pinned.
+  void togglePinnedProject(
+    String key, {
+    List<PinnedExecution>? childExecutions,
+  }) {
+    final nextProjects = Set<String>.of(state.pinnedProjects);
+    final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
+    if (nextProjects.contains(key)) {
+      nextProjects.remove(key);
+      final parts = key.split(':');
+      if (parts.length >= 2) {
+        nextExecs.removeWhere(
+          (e) => e.accountId == parts[0] && e.projectId == parts[1],
+        );
+      }
+    } else {
+      nextProjects.add(key);
+      if (childExecutions != null) {
+        final existing = {for (final e in nextExecs) e.key};
+        for (final c in childExecutions) {
+          if (!existing.contains(c.key)) nextExecs.add(c);
+        }
+      }
+    }
+    _set(
+      state.copyWith(pinnedProjects: nextProjects, pinnedExecutions: nextExecs),
+    );
   }
 
-  /// Pins/unpins a ZenTao [execution]. Matched by [PinnedExecution.key] so a
-  /// second toggle removes it regardless of a since-changed display name.
+  /// Pins/unpins a ZenTao [execution]. Pinning an execution also pins its parent project.
   void togglePinnedExecution(PinnedExecution execution) {
-    final next = List<PinnedExecution>.of(state.pinnedExecutions);
-    final index = next.indexWhere((e) => e.key == execution.key);
-    index >= 0 ? next.removeAt(index) : next.add(execution);
-    _set(state.copyWith(pinnedExecutions: next));
+    final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
+    final nextProjects = Set<String>.of(state.pinnedProjects);
+    final index = nextExecs.indexWhere((e) => e.key == execution.key);
+    if (index >= 0) {
+      nextExecs.removeAt(index);
+    } else {
+      nextExecs.add(execution);
+      nextProjects.add('${execution.accountId}:${execution.projectId}');
+    }
+    _set(
+      state.copyWith(pinnedExecutions: nextExecs, pinnedProjects: nextProjects),
+    );
   }
 
   void toggleCompanyTint() =>

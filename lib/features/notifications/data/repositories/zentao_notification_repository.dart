@@ -20,12 +20,10 @@ typedef ZenTaoMessageActionRunner =
 /// server refuses, the account is refetched to undo the optimistic change.
 class ZenTaoNotificationRepository implements NotificationRepository {
   const ZenTaoNotificationRepository({
-    required NotificationLocalDatasource local,
-    required ZenTaoMessagesFetcher fetch,
-    required ZenTaoMessageActionRunner run,
-  }) : _local = local,
-       _fetch = fetch,
-       _run = run;
+    required this._local,
+    required this._fetch,
+    required this._run,
+  });
 
   final NotificationLocalDatasource _local;
   final ZenTaoMessagesFetcher _fetch;
@@ -35,6 +33,10 @@ class ZenTaoNotificationRepository implements NotificationRepository {
   Stream<List<ZenTaoNotification>> watchAll() => _local.watchAll().map(
     (rows) => [for (final r in rows) zenTaoNotificationFromRow(r)],
   );
+
+  @override
+  Stream<Map<String, String>> watchAccountRealnames() =>
+      _local.watchAccountRealnames();
 
   @override
   Future<Result<void>> refresh(String accountId) async {

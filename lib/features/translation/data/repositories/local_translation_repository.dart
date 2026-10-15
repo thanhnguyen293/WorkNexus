@@ -1,7 +1,7 @@
 import '../../../../core/database/database.dart';
-import '../../../../core/domain/entities/translation_record.dart';
-import '../../../../core/domain/repositories/translation_repository.dart';
-import '../../../../data/local/mappers.dart';
+import '../../domain/entities/translation_record.dart';
+import '../../domain/repositories/translation_repository.dart';
+import '../mappers/translation_mappers.dart';
 
 /// Drift-backed [TranslationRepository] — the persisted Vietnamese translation
 /// per ticket. Owned by the translation feature (single consumer).

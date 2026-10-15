@@ -10,12 +10,12 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/badges.dart';
 import 'package:work_nexus/core/widgets/tinted_pill.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/bug_detail_sections.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/detail_field_rows.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/detail_people.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/task_effort_bar.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/ticket_status_pill.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/detail_field_rows.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/detail_people.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/ticket_status_pill.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/bug_detail_sections.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/task_effort_bar.dart';
 
 Ticket _ticket({String? assignee, TicketProviderEntity? entity}) => Ticket(
   id: 'zt:1',

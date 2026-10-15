@@ -5,13 +5,13 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_adapter.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_client.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_models.dart';
+import 'package:work_nexus/tools/gitlab/data/datasources/gitlab_client.dart';
+import 'package:work_nexus/tools/gitlab/data/models/gitlab_models.dart';
+import 'package:work_nexus/tools/gitlab/data/repositories/gitlab_adapter.dart';
 
 class _MockGitLabClient extends Mock implements GitLabClient {}
 
-final _issue = Ticket(
+const _issue = Ticket(
   id: 'gl-a:x',
   accountId: 'gl-a',
   projectId: 'gl-a:group/web',
@@ -38,8 +38,8 @@ void main() {
   test('comments and activity share one notes request', () async {
     when(() => client.issueNotes(any(), any())).thenAnswer(
       (_) async => [
-        GitLabNote(id: 1, body: 'looks good'),
-        GitLabNote(id: 2, body: 'assigned to @me', system: true),
+        const GitLabNote(id: 1, body: 'looks good'),
+        const GitLabNote(id: 2, body: 'assigned to @me', system: true),
       ],
     );
 
@@ -55,7 +55,7 @@ void main() {
     var calls = 0;
     when(() => client.issueNotes(any(), any())).thenAnswer((_) async {
       if (++calls == 1) throw StateError('down');
-      return [GitLabNote(id: 1, body: 'back')];
+      return [const GitLabNote(id: 1, body: 'back')];
     });
 
     expect(await adapter.listComments(_issue), isA<Err<Object?>>());

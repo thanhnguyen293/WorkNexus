@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/board/domain/repositories/zentao_view_pages.dart';
-import '../../features/task_detail/domain/repositories/zentao_task_bugs.dart';
-import '../../features/translation/domain/repositories/translation_api_config_repository.dart';
+import '../domain/adapters/github_pr_service.dart';
+import '../domain/adapters/gitlab_mr_service.dart';
 import '../domain/adapters/opencode_cli.dart';
+import '../domain/adapters/ticket_detail_service.dart';
 import '../domain/adapters/zentao_ticket_editor.dart';
 import '../domain/adapters/zentao_ticket_service.dart';
 import '../domain/adapters/zentao_workflow_service.dart';
@@ -11,10 +11,12 @@ import '../domain/entities/account.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/ticket.dart';
 import '../domain/entities/workspace.dart';
+import '../domain/repositories/sync_status_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
 import '../domain/usecases/resolve_zentao_ticket.dart';
-import 'service_locator.dart';
+import '../domain/value_objects/account_sync_status.dart';
+import 'locator.dart';
 
 // Reactive Riverpod state only. The object graph (databases, repositories,
 // services) is wired by the GetIt service locator (`service_locator.dart`) — the
@@ -85,12 +87,9 @@ final lookupsProvider = Provider<Lookups>((ref) {
 
 /// Whether translations go through the user's own API key rather than the
 /// OpenCode CLI — in which case OpenCode needs no linking first.
+/// Overridden in `main.dart` with the actual repository check.
 final translatesWithApiKeyProvider = FutureProvider.autoDispose<bool>(
-  (ref) async =>
-      (await getIt<TranslationApiConfigRepository>().load())
-          .valueOrNull
-          ?.isUsable ??
-      false,
+  (ref) async => false,
 );
 
 /// Whether OpenCode is authenticated (`opencode auth login` has been run, or a
@@ -133,13 +132,28 @@ final zenTaoWorkflowServiceProvider = Provider<ZenTaoWorkflowService>(
   (ref) => getIt<ZenTaoWorkflowService>(),
 );
 
-/// Pages of ZenTao's bug and task views, written to the local database as
-/// they arrive (the paged ZenTao boards).
-final zentaoViewPagesProvider = Provider<ZenTaoViewPages>(
-  (ref) => getIt<ZenTaoViewPages>(),
+/// GitLab MR actions and inspection.
+final gitLabMrServiceProvider = Provider<GitLabMrService>(
+  (ref) => getIt<GitLabMrService>(),
 );
 
-/// Brings a ZenTao task's related bugs into the local database.
-final zentaoTaskBugsProvider = Provider<ZenTaoTaskBugs>(
-  (ref) => getIt<ZenTaoTaskBugs>(),
+/// GitHub PR actions and inspection.
+final gitHubPrServiceProvider = Provider<GitHubPrService>(
+  (ref) => getIt<GitHubPrService>(),
 );
+
+/// Provider-agnostic ticket detail actions and attachment retrieval.
+final ticketDetailServiceProvider = Provider<TicketDetailService>(
+  (ref) => getIt<TicketDetailService>(),
+);
+
+/// Watches the real-time sync status for a given provider account.
+final syncStatusProvider = StreamProvider.autoDispose
+    .family<AccountSyncStatus, String>((ref, accountId) {
+      return getIt<SyncStatusRepository>().watch(accountId);
+    });
+
+/// 1-minute ticker provider to refresh relative timestamp text (e.g., 'Synced 2m ago').
+final syncTickerProvider = StreamProvider.autoDispose<int>((ref) {
+  return Stream.periodic(const Duration(minutes: 1), (i) => i);
+});

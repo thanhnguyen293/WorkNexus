@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_count_badge.dart';
-import 'package:work_nexus/features/board/presentation/widgets/sidebar_primitives.dart';
-import 'package:work_nexus/features/board/presentation/widgets/sidebar_tree_rows.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/shell_pane/sidebar_primitives.dart';
+import 'package:work_nexus/shared/shell_pane/sidebar_tree_rows.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) => tester.pumpWidget(

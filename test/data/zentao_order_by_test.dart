@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/value_objects/ticket_sort.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_order_by.dart';
+import 'package:work_nexus/tools/zentao/data/models/zentao_order_by.dart';
 
 void main() {
   test('maps a sort to the field names of each ZenTao list', () {

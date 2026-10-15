@@ -34,11 +34,12 @@ class TaskEditorController extends AsyncNotifier<TaskEditorState> {
     }
     final editor = ref.read(zenTaoTicketEditorProvider);
     final res = switch (route) {
-      NewTaskRoute(:final executionId, :final parentId) =>
+      NewTaskRoute(:final executionId, :final parentId, :final copyOf) =>
         await editor.newTaskForm(
           route.accountId,
           executionId,
           parentId: parentId,
+          copyOf: copyOf,
         ),
       EditTaskRoute(:final taskId) => await editor.editTaskForm(
         route.accountId,

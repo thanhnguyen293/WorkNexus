@@ -98,6 +98,15 @@ abstract class ChatRepository {
     required DateTime before,
   });
 
+  /// Searches stored messages matching [query]. If [chatGid] is provided, searches
+  /// only that chat; otherwise searches across all chats for the account.
+  Future<Result<List<ChatMessage>>> searchMessages(
+    String accountId, {
+    String? chatGid,
+    required String query,
+    int limit = 50,
+  });
+
   /// Shows the message immediately as pending, then sends it — as a reply to
   /// server message [replyToId] when given, as Markdown when [markdown].
   Future<Result<void>> sendText(

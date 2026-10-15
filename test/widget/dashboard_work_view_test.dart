@@ -11,11 +11,11 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/dashboard/domain/repositories/dashboard_repository.dart';
-import 'package:work_nexus/features/dashboard/domain/value_objects/dashboard_item_kind.dart';
-import 'package:work_nexus/features/dashboard/presentation/providers/dashboard_providers.dart';
-import 'package:work_nexus/features/dashboard/presentation/widgets/dashboard_work_header.dart';
-import 'package:work_nexus/features/dashboard/presentation/widgets/dashboard_work_view.dart';
+import 'package:work_nexus/features/workspace_overview/domain/repositories/dashboard_repository.dart';
+import 'package:work_nexus/features/workspace_overview/domain/value_objects/dashboard_item_kind.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/providers/dashboard_providers.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/widgets/dashboard_work_header.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/widgets/dashboard_work_view.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 class _MockRepository extends Mock implements DashboardRepository {}

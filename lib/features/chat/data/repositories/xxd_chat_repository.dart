@@ -57,25 +57,20 @@ class XxdChatRepository implements ChatRepository {
   XxdChatRepository({
     required ChatLocalDatasource local,
     required CredentialStore credentials,
-    required XxdConnectionFactory openConnection,
-    required ChatErrorSink onError,
+    required this._openConnection,
+    required this._onError,
     required XxdHttpDatasource http,
     ChatFileCache? files,
-    VideoThumbnailer thumbnailer = const VideoThumbnailer(),
-    VideoDurationReader durations = const VideoDurationReader(),
+    this._thumbnailer = const VideoThumbnailer(),
+    this._durations = const VideoDurationReader(),
     ParseMessageContent parse = const ParseMessageContent(),
-    DateTime Function() now = DateTime.now,
+    this._now = DateTime.now,
   }) : _local = local,
-       _openConnection = openConnection,
-       _onError = onError,
        _parse = parse,
-       _now = now,
        _ingestor = ChatPacketIngestor(local),
        _resolver = ChatCredentialsResolver(local, credentials),
        _history = ChatHistorySync(local, ChatPacketIngestor(local)),
-       _files = files ?? ChatFileCache.appDefault(),
-       _thumbnailer = thumbnailer,
-       _durations = durations {
+       _files = files ?? ChatFileCache.appDefault() {
     _attachments = ChatAttachmentLoader(http, _files);
     _cache = ChatCacheManager(local, _files, _attachments, parse);
     _avatars = ChatAvatarService(http);
@@ -450,6 +445,33 @@ class XxdChatRepository implements ChatRepository {
       return Ok(await _local.countOlder(accountId, chatGid, before));
     } on Exception catch (e) {
       return Err(StorageFailure('Could not read stored messages', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<List<ChatMessage>>> searchMessages(
+    String accountId, {
+    String? chatGid,
+    required String query,
+    int limit = 50,
+  }) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const Ok([]);
+    try {
+      final self = await _local.selfUserId(accountId);
+      final rows = await _local.searchMessages(
+        accountId,
+        cgid: chatGid,
+        query: trimmed,
+        limit: limit,
+      );
+      final messages = [
+        for (final r in rows)
+          messageFromRow(r, selfUserId: self, parse: _parse),
+      ];
+      return Ok(messages);
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not search messages', cause: e));
     }
   }
 

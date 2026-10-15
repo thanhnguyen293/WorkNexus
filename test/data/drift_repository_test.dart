@@ -1,7 +1,11 @@
 import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/data/mappers/mappers.dart';
+import 'package:work_nexus/core/data/repositories/local_ticket_repository.dart';
+import 'package:work_nexus/core/data/repositories/local_workspace_repository.dart';
 import 'package:work_nexus/core/database/database.dart';
+import 'package:work_nexus/core/database/database_seeder.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/activity_event.dart';
 import 'package:work_nexus/core/domain/entities/project.dart';
@@ -13,10 +17,6 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/fonts.dart';
-import 'package:work_nexus/data/local/database_seeder.dart';
-import 'package:work_nexus/data/local/mappers.dart';
-import 'package:work_nexus/data/local/repositories/local_ticket_repository.dart';
-import 'package:work_nexus/data/local/repositories/local_workspace_repository.dart';
 import 'package:work_nexus/features/connections/data/local_connection_repository.dart';
 import 'package:work_nexus/features/translation/data/repositories/local_translation_repository.dart';
 

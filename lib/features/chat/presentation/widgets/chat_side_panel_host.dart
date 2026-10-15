@@ -28,43 +28,40 @@ class ChatSidePanelHost extends StatelessWidget {
   Widget build(BuildContext context) {
     final panel = this.panel;
     if (panel == null) return messages;
-    return LayoutBuilder(
-      builder: (context, box) {
-        if (box.maxWidth - kChatPanelRoom >= kChatMessagesMinWidth) {
-          return Row(
-            children: [
-              Expanded(child: messages),
-              panel,
-            ],
-          );
-        }
-        final c = context.colors;
-        return Stack(
-          children: [
-            messages,
-            Positioned.fill(
-              child: ModalBarrier(
-                color: c.scrim.withValues(alpha: _kScrimAlpha),
-                onDismiss: onDismiss,
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: c.scrim.withValues(alpha: _kScrimAlpha),
-                      blurRadius: 24,
-                    ),
-                  ],
+    final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    if (infoRoom) {
+      return Row(
+        children: [
+          Expanded(child: messages),
+          panel,
+        ],
+      );
+    }
+    final c = context.colors;
+    return Stack(
+      children: [
+        messages,
+        Positioned.fill(
+          child: ModalBarrier(
+            color: c.scrim.withValues(alpha: _kScrimAlpha),
+            onDismiss: onDismiss,
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: c.scrim.withValues(alpha: _kScrimAlpha),
+                  blurRadius: 24,
                 ),
-                child: panel,
-              ),
+              ],
             ),
-          ],
-        );
-      },
+            child: panel,
+          ),
+        ),
+      ],
     );
   }
 }

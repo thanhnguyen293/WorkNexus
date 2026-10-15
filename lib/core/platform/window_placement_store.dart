@@ -17,19 +17,19 @@ class WindowPlacementStore {
   Future<File> _file() async =>
       File('${(await getApplicationSupportDirectory()).path}/$_fileName');
 
-  /// Whether the window was maximized last time; false on the first run or
-  /// when the file cannot be read.
+  /// Whether the window was maximized last time; defaults to true (full screen)
+  /// on the first run or when the file cannot be read.
   Future<bool> readMaximized() async {
     try {
       final file = await _file();
-      if (!await file.exists()) return false;
+      if (!await file.exists()) return true;
       return switch (jsonDecode(await file.readAsString())) {
-        {'maximized': true} => true,
-        _ => false,
+        {'maximized': false} => false,
+        _ => true,
       };
     } on Object catch (e, st) {
       appTalker.handle(e, st, 'Window placement: read failed');
-      return false;
+      return true;
     }
   }
 

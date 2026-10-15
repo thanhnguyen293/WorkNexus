@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/task_detail/presentation/util/activity_action_parts.dart';
+import 'package:work_nexus/shared/detail/presentation/util/activity_action_parts.dart';
 
 void main() {
   test('highlights the person an assignment names', () {

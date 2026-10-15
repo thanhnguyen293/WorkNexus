@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/content_hash.dart';
 import '../../../core/util/translation_languages.dart';
 import '../domain/adapters/translation_service.dart';
+import '../domain/entities/translation_record.dart';
 import 'datasources/cli_runner.dart';
 import 'translation_prompts.dart';
 

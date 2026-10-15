@@ -1,6 +1,6 @@
 /// Domain-level error type. Data-layer exceptions are mapped to one of these so
 /// the application/presentation layers never depend on transport specifics.
-sealed class Failure {
+sealed class Failure implements Exception {
   const Failure(this.message, {this.cause});
 
   final String message;

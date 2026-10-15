@@ -47,7 +47,11 @@ class _MentionTextState extends ConsumerState<MentionText> {
       height: 1.45,
       color: ink.text,
     );
-    final mention = base.copyWith(color: ink.link, fontWeight: FontWeight.w500);
+    final mention = base.copyWith(
+      color: ink.link,
+      backgroundColor: ink.link.withValues(alpha: 0.12),
+      fontWeight: FontWeight.w600,
+    );
     final link = base.copyWith(
       color: ink.link,
       decoration: TextDecoration.underline,
@@ -57,7 +61,11 @@ class _MentionTextState extends ConsumerState<MentionText> {
     final spans = <TextSpan>[];
     var at = 0;
     for (final m in chatTokenPattern.allMatches(text)) {
-      if (m.start > at) spans.add(TextSpan(text: text.substring(at, m.start)));
+      if (m.start > at) {
+        spans.add(TextSpan(text: text.substring(at, m.start)));
+      } else if (spans.isNotEmpty) {
+        spans.add(const TextSpan(text: ' '));
+      }
       final name = m.namedGroup('mention');
       if (name != null) {
         final userId = int.parse(m.namedGroup('mentionId')!);
@@ -81,6 +89,6 @@ class _MentionTextState extends ConsumerState<MentionText> {
       at = m.end;
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at)));
-    return SelectableText.rich(TextSpan(style: base, children: spans));
+    return Text.rich(TextSpan(style: base, children: spans));
   }
 }

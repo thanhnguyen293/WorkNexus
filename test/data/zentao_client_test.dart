@@ -11,8 +11,8 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/ticket_sort.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_adapter.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_client.dart';
+import 'package:work_nexus/tools/zentao/data/datasources/zentao_client.dart';
+import 'package:work_nexus/tools/zentao/data/repositories/zentao_adapter.dart';
 
 /// A minimal ZenTao bug ticket for detail/comment fetches.
 Ticket _bugTicket() => const Ticket(
@@ -124,7 +124,7 @@ void main() {
       final res = await adapter.listAssignedTickets();
 
       expect(res, isA<Ok<dynamic>>());
-      final tickets = (res as Ok).value.tickets;
+      final tickets = res.valueOrNull!.tickets;
       expect(tickets.length, 1);
       final t = tickets.single;
       expect(t.providerType, ProviderType.zentao);
@@ -167,7 +167,7 @@ void main() {
       final res = await adapter.listAssignedTickets();
 
       expect(res, isA<Ok<dynamic>>());
-      final tickets = (res as Ok).value.tickets;
+      final tickets = res.valueOrNull!.tickets;
       expect(tickets.map((t) => t.externalKey).toSet(), {'1871', '3259'});
     },
   );
@@ -261,7 +261,7 @@ void main() {
     final res = await adapter.getTicket(_bugTicket());
 
     expect(res, isA<Ok<dynamic>>());
-    final t = (res as Ok).value as Ticket;
+    final t = res.valueOrNull!;
     expect(t.title, 'Login loops');
     expect(t.status, UnifiedStatus.review); // resolved → review
     // Kept as HTML, to be shown as HTML.
@@ -484,7 +484,7 @@ void main() {
     final res = await adapter.listUsers();
 
     expect(res, isA<Ok<dynamic>>());
-    final users = (res as Ok).value;
+    final users = res.valueOrNull!;
     expect(users.map((u) => u.displayName).toList(), ['Amy', 'Zoe']); // sorted
     expect(users.first.account, 'amy');
   });
@@ -507,7 +507,7 @@ void main() {
     final res = await adapter.listProducts();
 
     expect(res, isA<Ok<dynamic>>());
-    final products = (res as Ok).value;
+    final products = res.valueOrNull!;
     expect(products.map((p) => p.id).toList(), ['8', '9']);
     expect(products.map((p) => p.name).toList(), ['VN_Socialfi', 'VN_IM_Chat']);
   });
@@ -731,7 +731,7 @@ void main() {
     final res = await adapter.listComments(_bugTicket());
 
     expect(res, isA<Ok<dynamic>>());
-    final comments = (res as Ok).value;
+    final comments = res.valueOrNull!;
     // Only the `commented` action becomes a comment (the empty 'opened' drops).
     expect(comments.length, 1);
     expect(comments.single.authorName, 'Thanh');

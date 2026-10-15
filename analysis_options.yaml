@@ -32,6 +32,8 @@ analyzer:
     avoid_print: warning
     # Rule 12 / 15 — don't silently drop a Future.
     unawaited_futures: warning
+    # flutter_quill 11.5 clipboard config is annotated @experimental
+    experimental_member_use: ignore
 
 linter:
   rules:

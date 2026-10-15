@@ -29,7 +29,7 @@ void main() {
     tester,
   ) async {
     var fullScreens = 0;
-    final key = (accountId: 'zt', content: video as MessageContent);
+    const key = (accountId: 'zt', content: video as MessageContent);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [

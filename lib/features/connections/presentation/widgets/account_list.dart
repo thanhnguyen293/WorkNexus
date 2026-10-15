@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/platform/credential_store.dart';

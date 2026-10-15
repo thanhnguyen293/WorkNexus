@@ -3,14 +3,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/zentao_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
+import '../../domain/usecases/filter_self_notifications.dart';
 import '../../domain/usecases/group_notifications_by_day.dart';
 import '../../domain/usecases/refresh_notifications.dart';
 
@@ -22,6 +23,14 @@ final refreshNotificationsProvider = Provider<RefreshNotifications>(
   (ref) => getIt<RefreshNotifications>(),
 );
 
+final filterSelfNotificationsProvider = Provider<FilterSelfNotifications>(
+  (ref) => const FilterSelfNotifications(),
+);
+
+final notificationRealnamesProvider = StreamProvider<Map<String, String>>(
+  (ref) => ref.watch(notificationRepositoryProvider).watchAccountRealnames(),
+);
+
 /// Notifications exist per connected ZenTao account.
 final notificationAccountsProvider = Provider<List<Account>>((ref) {
   final accounts = ref.watch(accountsProvider).asData?.value ?? const [];
@@ -31,10 +40,22 @@ final notificationAccountsProvider = Provider<List<Account>>((ref) {
   ];
 });
 
-/// Every stored notification of every ZenTao account, newest first.
-final notificationsProvider = StreamProvider<List<ZenTaoNotification>>(
-  (ref) => ref.watch(notificationRepositoryProvider).watchAll(),
-);
+/// Every stored notification of every ZenTao account, newest first,
+/// excluding actions initiated by the user themselves.
+final notificationsProvider = StreamProvider<List<ZenTaoNotification>>((ref) {
+  final accounts = ref.watch(notificationAccountsProvider);
+  final realnames =
+      ref.watch(notificationRealnamesProvider).asData?.value ?? const {};
+  final filter = ref.watch(filterSelfNotificationsProvider);
+
+  return ref
+      .watch(notificationRepositoryProvider)
+      .watchAll()
+      .map(
+        (all) =>
+            filter(all, accounts: accounts, realnamesByAccountId: realnames),
+      );
+});
 
 final unreadNotificationCountProvider = Provider<int>(
   (ref) =>

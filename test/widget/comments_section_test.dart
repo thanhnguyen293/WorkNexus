@@ -9,10 +9,10 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/detail_providers.dart';
-import 'package:work_nexus/features/task_detail/presentation/util/image_fallback.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/comments_section.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/detail_providers.dart';
+import 'package:work_nexus/shared/detail/presentation/util/image_fallback.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/comments_section.dart';
 
 void main() {
   const ticket = Ticket(

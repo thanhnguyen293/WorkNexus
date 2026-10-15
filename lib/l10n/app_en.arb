@@ -316,7 +316,13 @@
   "approvedByYou": "Approved by you",
   "approvalOptional": "Approval is optional",
   "approvalsLeft": "Requires {count} more {count, plural, =1{approval} other{approvals}}",
-  "@approvalsLeft": {"placeholders": {"count": {"type": "int"}}},
+  "@approvalsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "revokeApproval": "Revoke approval",
   "reviewerApproved": "Approved",
   "mergeBlockedDraft": "Merge blocked: this merge request is a draft.",
@@ -329,23 +335,74 @@
   "deleteSourceBranch": "Delete source branch",
   "squashCommits": "Squash commits",
   "mrMergedBy": "Merged by {name} {when}",
-  "@mrMergedBy": {"placeholders": {"name": {"type": "String"}, "when": {"type": "String"}}},
+  "@mrMergedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "mrClosedBy": "Closed by {name} {when}",
-  "@mrClosedBy": {"placeholders": {"name": {"type": "String"}, "when": {"type": "String"}}},
+  "@mrClosedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "mrChangesMergedInto": "Changes merged into {target} with {sha}.",
-  "@mrChangesMergedInto": {"placeholders": {"target": {"type": "String"}, "sha": {"type": "String"}}},
+  "@mrChangesMergedInto": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "sha": {
+        "type": "String"
+      }
+    }
+  },
   "mrCommitsSquashed": "Commits were squashed.",
   "mrSourceBranchDeleted": "Deleted the source branch.",
   "mrRevert": "Revert",
   "mrCherryPick": "Cherry-pick",
   "gitlabMrUnapproved": "Revoked approval on !{key}",
-  "@gitlabMrUnapproved": {"placeholders": {"key": {"type": "String"}}},
+  "@gitlabMrUnapproved": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "gitlabMrMarkedReady": "Marked !{key} as ready",
-  "@gitlabMrMarkedReady": {"placeholders": {"key": {"type": "String"}}},
+  "@gitlabMrMarkedReady": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "gitlabMrMarkedDraft": "Marked !{key} as draft",
-  "@gitlabMrMarkedDraft": {"placeholders": {"key": {"type": "String"}}},
+  "@gitlabMrMarkedDraft": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "gitlabMrReopened": "Reopened merge request !{key}",
-  "@gitlabMrReopened": {"placeholders": {"key": {"type": "String"}}},
+  "@gitlabMrReopened": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
   "gitlabReopen": "Reopen",
   "gitlabMrClosed": "Closed merge request !{key}",
   "@gitlabMrClosed": {
@@ -390,14 +447,26 @@
   "mrRequestedToMergeInto": "{author} requested to merge {source} into {target}",
   "@mrRequestedToMergeInto": {
     "placeholders": {
-      "author": {"type": "String"},
-      "source": {"type": "String"},
-      "target": {"type": "String"}
+      "author": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
     }
   },
   "copyBranchName": "Copy branch name",
   "reviewersTitle": "{count, plural, =1{Reviewer} other{Reviewers}}",
-  "@reviewersTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@reviewersTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sourceBranch": "Source branch",
   "targetBranch": "Target branch",
   "noDescription": "No description provided.",
@@ -1466,7 +1535,7 @@
   "dashboardInProgress": "In progress",
   "dashboardNotStarted": "Not started",
   "dashboardFullList": "Open the full list",
-  "dashboardSprints": "Sprints",
+  "dashboardSprints": "Executions",
   "myWorkStatusUnconfirmed": "Unconfirmed",
   "myWorkStatusConfirmed": "To fix",
   "myWorkStatusResolved": "Resolved",
@@ -1491,11 +1560,11 @@
       }
     }
   },
-  "myWorkUnassignedContext": "No sprint",
+  "myWorkUnassignedContext": "No execution",
   "dashboardStatBugs": "Open bugs",
   "dashboardStatTasks": "Open tasks",
   "dashboardStatStories": "Stories",
-  "dashboardStatSprints": "Sprints",
+  "dashboardStatSprints": "Executions",
   "dashboardStatUrgent": "{count} urgent",
   "@dashboardStatUrgent": {
     "placeholders": {
@@ -1974,7 +2043,6 @@
       }
     }
   },
-
   "miniAppAdd": "Add mini app",
   "miniAppUrlLabel": "Web address",
   "miniAppUrlHint": "example.com",
@@ -2094,5 +2162,207 @@
   "miniAppClearFailed": "Could not clear the data",
   "miniAppClearUnsupported": "Clearing data is only available on Windows.",
   "miniAppSettingsApps": "Your mini apps",
-  "miniAppSettingsEmpty": "No mini apps yet. Add one with + on the rail."
+  "miniAppSettingsEmpty": "No mini apps yet. Add one with + on the rail.",
+  "zentaoCopyTask": "Clone task",
+  "tableColumnSprint": "Sprint",
+  "tableColumnDue": "Due",
+  "copyId": "Copy ID",
+  "idCopied": "ID copied",
+  "copyMarkdownLink": "Copy Markdown link",
+  "markdownLinkCopied": "Markdown link copied",
+  "chatSearchMessages": "Search in conversation…",
+  "chatSearchAllChats": "Search all chats",
+  "chatSearchMatches": "{current} of {total}",
+  "@chatSearchMatches": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchNoMatches": "No results",
+  "chatSearchHistory": "Search chat history",
+  "chatSearchInThisChat": "In this chat",
+  "syncNotSyncedYet": "not synced yet",
+  "syncSyncing": "syncing…",
+  "syncOffline": "offline · cached",
+  "syncAuthExpired": "session expired",
+  "syncFailed": "sync failed",
+  "syncSynced": "synced {relative}",
+  "@syncSynced": {
+    "placeholders": {
+      "relative": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewRequested": "Review requested",
+  "recent": "Recent",
+  "showAll": "Show all…",
+  "showAllScopes": "Show all {count} {kind}…",
+  "@showAllScopes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "filterProjects": "Filter projects",
+  "filterProjectsCount": "Filter {count} projects…",
+  "@filterProjectsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterProducts": "Filter products",
+  "filterRepositories": "Filter repositories",
+  "searchChats": "Search chats",
+  "viewList": "List",
+  "viewKanban": "Kanban",
+  "viewBoard": "Board",
+  "viewCalendar": "Calendar",
+  "viewGantt": "Gantt",
+  "sprints": "Executions",
+  "docs": "Docs",
+  "roleProjectManagement": "Project management",
+  "roleCodeHosting": "Code hosting",
+  "roleCodeHostingCi": "Code hosting & CI",
+  "dueThisWeek": "Due this week",
+  "switchToView": "Switch to {view}",
+  "@switchToView": {
+    "placeholders": {
+      "view": {
+        "type": "String"
+      }
+    }
+  },
+  "allProjects": "All projects",
+  "allProducts": "All products",
+  "allRepositories": "All repositories",
+  "sprintCurrent": "Execution: Current",
+  "statusAny": "Status: Any",
+  "viewOpen": "Open",
+  "viewMerged": "Merged",
+  "viewClosed": "Closed",
+  "actions": "Actions",
+  "pipelines": "Pipelines",
+  "draft": "Draft",
+  "inReview": "In review",
+  "allOpen": "All open",
+  "overviewSubtitle": "{count, plural, =1{1 tool connected to {workspace}. Pick a tool to work in it.} other{{count} tools connected to {workspace}. Pick a tool to work in it.}}",
+  "@overviewSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
+  "manageIntegrations": "Manage integrations",
+  "connectATool": "Connect a tool",
+  "assignedToYou": "Assigned to you",
+  "fromAllTools": "from all tools",
+  "connectedWithCount": "Connected · {count}",
+  "@connectedWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "whoCanConnectTools": "Who can connect tools",
+  "connectionsSharedByEveryone": "Connections are shared by everyone in {workspace}.",
+  "@connectionsSharedByEveryone": {
+    "placeholders": {
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
+  "openToolAction": "Open {tool} →",
+  "@openToolAction": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "membersComingSoonBody": "Members are coming soon. Connections are currently shared by everyone using this app.",
+  "healthConnected": "Connected",
+  "healthAuthExpired": "Auth expired",
+  "healthOffline": "Offline",
+  "healthError": "Error",
+  "accountCapabilitiesPrefix": "Account: {handle} · {capabilities}",
+  "@accountCapabilitiesPrefix": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      },
+      "capabilities": {
+        "type": "String"
+      }
+    }
+  },
+  "accountManage": "Manage",
+  "members": "Members",
+  "settings": "Settings",
+  "showAllWithCount": "Show all {count}",
+  "@showAllWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noAssignedWork": "No open work assigned to you",
+  "noConnectedAccounts": "No tools connected yet",
+  "noConnectedAccountsDesc": "Connect a tool to start tracking work across your projects.",
+  "dueRelative": "Due {date}",
+  "@dueRelative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "overdueRelative": "Overdue {date}",
+  "@overdueRelative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "searchContextWorkspace": "Search tasks, bugs, PRs, MRs…",
+  "searchContextTool": "Search in {tool}…",
+  "@searchContextTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "searchNoResults": "No results found",
+  "findWorkspace": "Find a workspace",
+  "yourWorkspaces": "YOUR WORKSPACES",
+  "createWorkspace": "Create workspace",
+  "sessionExpiredBanner": "Your {tool} session expired. Cached data is read-only until you sign in again.",
+  "@sessionExpiredBanner": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "reauthenticate": "Re-authenticate"
 }

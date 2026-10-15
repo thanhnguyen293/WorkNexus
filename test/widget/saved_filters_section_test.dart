@@ -6,9 +6,9 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_button.dart';
-import 'package:work_nexus/features/board/presentation/board_providers.dart';
-import 'package:work_nexus/features/board/presentation/widgets/saved_filters_section.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/saved_filters_section.dart';
 
 import '../support/di_test_harness.dart';
 

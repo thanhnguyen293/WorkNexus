@@ -6,14 +6,14 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/approve_gitlab_mr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/close_gitlab_mr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/merge_gitlab_mr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/post_gitlab_mr_comment.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/rebase_gitlab_mr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/reopen_gitlab_mr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/set_gitlab_mr_draft.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/unapprove_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/approve_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/close_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/merge_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/post_gitlab_mr_comment.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/rebase_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/reopen_gitlab_mr.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/set_gitlab_mr_draft.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/unapprove_gitlab_mr.dart';
 
 class _MockGitLabMrService extends Mock implements GitLabMrService {}
 

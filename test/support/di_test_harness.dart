@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:injectable/injectable.dart';
+import 'package:work_nexus/app/di/service_locator.dart';
 import 'package:work_nexus/core/database/database.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
-import 'package:work_nexus/data/local/database_seeder.dart';
+import 'package:work_nexus/core/database/database_seeder.dart';
 
 /// Configures the GetIt service locator for the `test` environment — injectable
 /// binds an in-memory drift database — and seeds it with the demo dataset by

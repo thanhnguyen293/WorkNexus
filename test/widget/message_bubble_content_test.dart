@@ -6,6 +6,7 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/mention_text.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble_content.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_footer.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -20,7 +21,6 @@ ChatMessage _message(MessageContent content) => ChatMessage(
   sentAt: DateTime(2026, 10, 13, 10, 52),
   content: content,
   isMine: false,
-  sendState: SendState.sent,
 );
 
 void main() {
@@ -83,7 +83,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, const MessageContent.text('ok bác ạ'));
-    final text = tester.getRect(find.byType(SelectableText));
+    final text = tester.getRect(find.byType(MentionText));
     final at = tester.getRect(time());
     final content = tester.getRect(find.byKey(const Key('content')));
 

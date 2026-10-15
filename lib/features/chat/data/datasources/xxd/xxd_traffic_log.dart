@@ -85,9 +85,7 @@ class XxdTrafficLog {
 
 /// One chat-socket entry in the debug panel; [key] lets it be filtered there.
 class XxdLog extends TalkerLog {
-  XxdLog(super.message, {required String key, required LogLevel level})
-    : _key = key,
-      _level = level;
+  XxdLog(super.message, {required this._key, required this._level});
 
   final String _key;
   final LogLevel _level;

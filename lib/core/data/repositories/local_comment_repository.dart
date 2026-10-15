@@ -1,0 +1,31 @@
+import 'package:drift/drift.dart';
+
+import '../../database/database.dart';
+import '../../domain/entities/comment.dart';
+import '../../domain/repositories/comment_repository.dart';
+import '../mappers/mappers.dart';
+
+/// Drift-backed [CommentRepository] for a ticket's comment thread.
+class LocalCommentRepository implements CommentRepository {
+  LocalCommentRepository(this._db);
+  final AppDatabase _db;
+
+  @override
+  Stream<List<Comment>> watchComments(String ticketId) => _db
+      .watchComments(ticketId)
+      .map((rows) => rows.map(commentFromRow).toList());
+
+  @override
+  Future<void> upsertComments(List<Comment> comments) async {
+    if (comments.isEmpty) return;
+    await _db.batch((b) {
+      for (final c in comments) {
+        b.insert(
+          _db.comments,
+          commentToCompanion(c),
+          onConflict: DoUpdate((_) => commentToCompanion(c)),
+        );
+      }
+    });
+  }
+}

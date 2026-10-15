@@ -46,11 +46,13 @@ abstract interface class ZenTaoTicketEditor {
   });
 
   /// A new task's form in execution [executionId] (`'0'`: the one ZenTao has
-  /// current); a subtask of task [parentId] when given.
+  /// current); a subtask of task [parentId] when given; or a copy of task
+  /// [copyOf] when given.
   Future<Result<TaskForm>> newTaskForm(
     String accountId,
     String executionId, {
     String? parentId,
+    String? copyOf,
   });
 
   /// Task [taskId]'s form, filled in with the task.

@@ -11,8 +11,8 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_client.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_workflow.dart';
+import 'package:work_nexus/tools/zentao/data/datasources/zentao_client.dart';
+import 'package:work_nexus/tools/zentao/data/models/zentao_workflow.dart';
 
 class _Fake implements HttpClientAdapter {
   _Fake(this.reply);

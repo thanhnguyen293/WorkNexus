@@ -66,7 +66,7 @@ void main() {
       expect(systemFamily, isNot(kSansFont));
       expect(systemFamily, isNot(kSystemFont));
       expect(themeFor(kSansFont).textTheme.bodyMedium?.fontFamily, kSansFont);
-      expect(themeFor('').textTheme.bodyMedium?.fontFamily, kSansFont);
+      expect(themeFor('').textTheme.bodyMedium?.fontFamily, kVietnamFont);
     });
 
     test('system font follows Flutter platform typography', () {

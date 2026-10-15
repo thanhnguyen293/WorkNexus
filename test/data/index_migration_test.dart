@@ -43,7 +43,7 @@ void main() {
       raw.execute('DROP INDEX $name');
     }
     raw.execute('PRAGMA user_version = 53;');
-    raw.dispose();
+    raw.close();
 
     final db = AppDatabase(NativeDatabase(file));
     addTearDown(db.close);

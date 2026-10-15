@@ -3,9 +3,9 @@ import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_models.dart';
 import 'package:work_nexus/core/util/html_to_markdown.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_normalize.dart';
+import 'package:work_nexus/tools/zentao/data/mappers/zentao_normalize.dart';
+import 'package:work_nexus/tools/zentao/data/models/zentao_models.dart';
 
 void main() {
   group('status mapping', () {

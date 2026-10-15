@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/presentation/board_providers.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
 
 /// Switching boards used to wipe the filter(). [FilterController.openBoard] gives
 /// every board its own remembered filter instead.
