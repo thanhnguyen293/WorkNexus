@@ -21,12 +21,10 @@ const _imageExtensions = {'png', 'gif', 'webp', 'jpg', 'jpeg'};
 /// `pack.json` with its id and title.
 class LocalStickerRepository implements StickerRepository {
   LocalStickerRepository({
-    required AssetBundle bundle,
-    required Future<Directory> Function() directory,
-    StickerConverter? converter,
-  }) : _bundle = bundle,
-       _directory = directory,
-       _converter = converter;
+    required this._bundle,
+    required this._directory,
+    this._converter,
+  });
 
   final AssetBundle _bundle;
   final Future<Directory> Function() _directory;

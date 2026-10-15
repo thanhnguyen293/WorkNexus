@@ -15,11 +15,11 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_commands.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_overview.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/gitlab_mr_sidebar.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/user_picker_editor.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/user_picker_editor.dart';
+import 'package:work_nexus/tools/gitlab/presentation/detail/gitlab_mr_commands.dart';
+import 'package:work_nexus/tools/gitlab/presentation/detail/gitlab_mr_overview.dart';
+import 'package:work_nexus/tools/gitlab/presentation/detail/gitlab_mr_sidebar.dart';
 
 final _avatarBytes = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8A'

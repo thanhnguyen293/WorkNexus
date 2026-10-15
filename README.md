@@ -47,25 +47,112 @@ preview, and machine translation without jumping between several browser tabs.
 
 ---
 
+## UI Showcase & Navigation Architecture
+
+The workspace shell organizes multi-tool workflows into a unified 5-level hierarchy:  
+`Workspace (L1) → Account/Tool (L2) → Feature (L3) → Scope (L4) → Item (L5)`.
+
+<div align="center">
+  <img src="assets/screenshots/unified-workspace-shell-slideshow.gif" alt="WorkNexus Unified Workspace Shell Slideshow" width="100%" />
+  <p><em>Animated UI Tour: cycling through the 7 core workspace and provider views.</em></p>
+</div>
+
+### Desktop Window Anatomy & Layout Zones
+
+WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones designed for multi-tracker productivity:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [MW] MyWorkspace ▾ / Overview                  🔍 Search tickets, bugs, PRs, MRs... (Ctrl+K)    ⚙️  — □ ✕│ (56px Title Bar)
+├──────┬─────────────────────────────┬───────────────────────────────────────────────────────────────────┤
+│ (76) │ (300px Tool Nav Pane)       │ (Main Viewport Canvas - 0ms Switch via LRU Cache)                 │
+│ Rail │                             │                                                                   │
+│ [W]  │ Chat   |  Tasks  |  Bugs    │ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐       │
+│      │                             │ │ ZenTao (46 bugs)│ │ GitHub (12 PRs) │ │ GitLab (5 MRs)  │       │
+│ [Z]  │ ▾ Projects (Scopes):        │ └─────────────────┘ └─────────────────┘ └─────────────────┘       │
+│ [GH] │   ⭐ Core Platform           │ ───────────────────────────────────────────────────────────────── │
+│ [GL] │   • Mobile Client           │ 📋 Assigned to you across all connected tools:                    │
+│      │   • Payment Gateway         │   • [BUG-2041] Login session timeout (ZenTao · Confirmed)         │
+│  +   │                             │   • [!312] Add biometric auth flow (GitLab MR · Review requested) │
+│      │ ⚙️ Connection Health: OK     │   • [#128] Migrate to Riverpod 3 (GitHub PR · Changes requested)  │
+└──────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────┘
+                                     │ ◄── [460px Slide-over Detail Inspector (Original / Translation / Comments)]
+```
+
+| Zone | Dimensions | Purpose & User Experience |
+|---|---|---|
+| **Title Bar (L1)** | `56px` height | Houses the **Workspace Switcher** dropdown, global **Contextual Search** (`Ctrl/Cmd+K`), quick settings, and window caption controls. |
+| **Account Rail (L2)** | `76px` fixed width | Vertical switcher showing one button per connected account with provider brand badges, unread chat counters, and `Ctrl/Cmd+1…9` shortcuts. |
+| **Tool Nav Pane (L3 & L4)** | `300px` fixed width | Displays feature tabs (*Chat*, *Tasks*, *Bugs*, *MRs*, *PRs*), real-time sync status indicators, and searchable scope lists (*Projects*, *Products*, *Repos*). |
+| **Main Viewport (L5)** | Flexible fluid width | Renders table lists, 6-column kanban boards, or chat feeds. Keeps the 3 most recent views alive in off-stage memory for instantaneous switching. |
+| **Detail Slide-over** | `460px` slide-out | Opens smoothly from the right edge when clicking any work item; provides tabbed inspection for original description, machine translation, and timeline comments. |
+
+<details>
+<summary><b>Click to expand interactive slide-by-slide walkthrough (7 slides)</b></summary>
+<br/>
+
+#### 1. Workspace › Overview (L1)
+> **Cross-tool metrics & unified Assigned to you queue**  
+> Displays aggregated health cards for every connected account (open tasks, bugs, PRs, MRs) along with a consolidated "Assigned to you" list combining action items from ZenTao, GitLab, and GitHub.
+<p align="center"><img src="assets/screenshots/slides/01-workspace-overview.png" alt="Workspace Overview" width="96%"/></p>
+
+#### 2. ZenTao › Chat (L3)
+> **Real-time team messaging embedded directly within ZenTao**  
+> Instant messaging integrated natively inside the ZenTao workspace tool, supporting conversation switching, rich media previews, and member presence without context switching.
+<p align="center"><img src="assets/screenshots/slides/04-zentao-chat.png" alt="ZenTao Chat" width="96%"/></p>
+
+#### 3. ZenTao › Tasks (L3)
+> **Project task management with Sprint switcher & real-time filters**  
+> Complete project task tracking in both table and kanban modes, sprint execution switcher, and quick filter chips (*All*, *Assigned to me*, *Due this week*, *Status*).
+<p align="center"><img src="assets/screenshots/slides/02-zentao-tasks.png" alt="ZenTao Tasks" width="96%"/></p>
+
+#### 4. ZenTao › Bugs (L3)
+> **Native 6-stage workflow board & slide-over detail panel**  
+> Provider-native bug lifecycle columns (Unconfirmed → Confirmed → Resolved → Closed) with inline workflow transitions and a comprehensive 460px tabbed detail inspector.
+<p align="center"><img src="assets/screenshots/slides/03-zentao-bugs.png" alt="ZenTao Bugs" width="96%"/></p>
+
+#### 5. GitHub › Pull Requests (L3)
+> **Repository scopes, status tabs & pull request triage**  
+> Filter PRs across repositories by state (*Open*, *Merged*, *Closed*, *Board*) with reviewer status pills and assignees.
+<p align="center"><img src="assets/screenshots/slides/05-github-pull-requests.png" alt="GitHub Pull Requests" width="96%"/></p>
+
+#### 6. GitLab › Merge Requests (L3)
+> **MR review table, scope groups & filter chips**  
+> Fast MR triage table displaying pipeline status, draft state, approvals, and quick scope filtering (*Pinned*, *Recent*, *All projects*).
+<p align="center"><img src="assets/screenshots/slides/06-gitlab-merge-requests.png" alt="GitLab Merge Requests" width="96%"/></p>
+
+#### 7. Workspace › Integrations (L1)
+> **Multi-account management, connection health & sync status**  
+> Connect multiple accounts per provider, inspect real-time sync status, monitor authentication tokens, and configure account credentials.
+<p align="center"><img src="assets/screenshots/slides/07-workspace-integrations.png" alt="Workspace Integrations" width="96%"/></p>
+
+</details>
+
+---
+
 ## Features
 
-### Unified source tree and board
+### Unified workspace shell
 
-- Workspace-grouped sidebar with multiple provider accounts per company.
-- Source-specific boards:
-  - ZenTao product bug boards and execution task boards.
-  - GitLab project boards plus an account-wide **My merge requests** board.
-  - GitHub repository boards plus an account-wide **My pull requests** board.
-- Pinned projects/repos/executions stay at the top of each provider tree.
-- ZenTao task and bug boards show as **Kanban** or as a **Table** (ordered
-  status by status, sortable by column the way ZenTao sorts); the choice is
-  remembered across restarts.
-- Large ZenTao boards page per column: each status column loads 50 tickets
-  of its own server-side view at a time as it scrolls, so a column with
-  thousands of done/closed tasks never holds up the board. Under a filter, a
-  column stops loading by itself once pages stop turning up matches and
-  offers **Load more**.
-- Provider-native columns:
+- **5-level navigation:** Title bar → per-account rail → tool nav pane → section viewport → detail slide-over.
+- **Per-account rail** with provider-colored icons; `Ctrl/Cmd+1…9` keyboard shortcuts for quick switching.
+- **Workspace sections:** Overview (card grid + Assigned work), Integrations (health pills + Manage), Members (coming soon), Settings.
+- **Overview cards** show per-account metrics (open count, assigned count, last sync) with skeleton loading.
+- **"Assigned to you"** list aggregates work from all accounts in the active workspace with smart reason chips (reviewer, assignee).
+- **Workspace switcher** popover with search, keyboard nav, and "Create workspace" action.
+- **Contextual search** (`Ctrl/Cmd+K`): ranked local ticket search with title/key/description weighting and keyboard-navigable results overlay.
+- **State persistence:** per-workspace nav location (section, scope, view mode) is saved on every navigation change and restored on launch or workspace switch.
+- **Section caching:** the viewport keeps the last 3 sections alive off-stage (with suspended tickers/focus) for instant switching.
+- **Error boundary:** each section is wrapped in `SectionErrorBoundary` that catches rendering errors and shows a retry prompt instead of crashing the app.
+
+### Source-specific boards and tool sections
+
+- **ZenTao** — Chat, Tasks (List / Kanban / Calendar† / Gantt†), Bugs (Board / List), Docs†, Sprints†.
+- **GitLab** — Merge Requests (Open / Merged / Closed / Board), Issues (List / Board), Pipelines†.
+- **GitHub** — Pull Requests (Open / Merged / Closed / Board), Issues (List / Board), Actions†.
+- † = planned sections rendered as `ComingSoonView` with a "Switch to…" action.
+- Scopes: projects, products, or repositories with pinned-first ordering and recent history.
+- Provider-native board columns:
   - ZenTao bugs: new/unconfirmed, confirmed/to-fix, resolved/verify,
     postponed, non-fix, closed.
   - ZenTao tasks: not started, in progress, paused, done/verify, closed,
@@ -156,19 +243,34 @@ is not part of the default detail tab strip yet.
 
 ## Architecture
 
-WorkNexus follows a **feature-first Clean Architecture**: features are vertical
+WorkNexus follows a **feature-first Clean Architecture**: features and tools are vertical
 slices with `domain -> data -> presentation`, dependencies point inward, and
-domain objects stay pure Dart. The single composition root is `lib/core/di/`.
-The current repo still keeps shared drift repositories under `lib/data/local/`
-while feature ownership is being tightened. The full rulebook lives in
-[`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
+domain objects stay pure Dart. The single composition root is `lib/app/di/`.
+The full rulebook lives in [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
+
+### Shell hierarchy
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Title Bar (breadcrumb · search · settings)         │
+├────┬────────────┬───────────────────────┬────────────┤
+│Rail│  Nav Pane   │       Viewport        │  Detail    │
+│    │ (workspace  │  (section content     │  slide-    │
+│    │  or tool)   │   with view modes)    │  over      │
+└────┴────────────┴───────────────────────┴────────────┘
+```
+
+The **rail** shows one icon per connected account in the active workspace.
+Clicking an account switches the **nav pane** from workspace sections to the
+tool module's own pane (scope lists, section tabs). Each **tool module**
+implements `ToolModule` and registers in `app/tool_registry.dart`.
 
 ```mermaid
 flowchart LR
     subgraph Providers
         Z[ZenTao] & GL[GitLab] & GH[GitHub]
     end
-    Providers -->|dio + provider credentials| SYNC[SyncService]
+    Providers -->|dio + provider credentials| SYNC[SyncService / Coordinator]
     SYNC -->|normalize to Ticket / comments / activity| DB[(drift · SQLite<br/>source of truth)]
     DB -->|watch streams| UI[Riverpod + Flutter UI]
     UI -->|provider actions| SYNC
@@ -177,16 +279,13 @@ flowchart LR
 
 ```
 lib/
-├── app/                 # Root app widget, shell, title bar, sidebar host
-├── core/                # Shared kernel: theme, widgets, error, di, database, util
-├── data/local/          # Shared drift-backed repositories and mappers
-├── features/
-│   ├── agents/          # Dry-run/live CLI agent adapters and session streams
-│   ├── board/           # Unified source tree, kanban/table views, paging, board use cases
-│   ├── connections/     # Provider setup and provider-specific adapters
-│   ├── sync/            # Provider -> drift sync, actions, secure media cache
-│   ├── task_detail/     # Slide-over detail, comments, actions, MR/PR views
-│   └── translation/     # OpenCode-backed translation service and state
+├── app/                 # Composition root (di/), shell (rail, viewport, title bar),
+│                        #   navigation, and tool registry
+├── core/                # Shared kernel: theme, widgets, error, database, cache, platform
+├── shared/              # Shared slices: board, detail, shell_pane, sync
+├── tools/               # Provider tool modules: zentao, gitlab, github (implement ToolModule)
+├── features/            # Feature slices: chat, translation, app_update,
+│                        #   connections, notifications, workspace_overview
 ├── gen/                 # Generated asset accessors
 └── l10n/                # English/Vietnamese ARB files and generated l10n
 ```
@@ -263,14 +362,17 @@ Run `make help` to list the current targets.
 
 ## Testing
 
-The test suite covers domain board logic, provider normalization/adapters,
-drift repositories and migrations, caches, theme extensions, quick settings,
-provider badges, connection dialogs, MR/PR detail views, and translation state.
+The test suite covers navigation state machine, section caching, error boundary,
+shell integration (launch → overview → account → state restore), domain board
+logic, provider normalization/adapters, drift repositories and migrations,
+caches, theme extensions, quick settings, provider badges, connection dialogs,
+MR/PR detail views, search ranking, and translation state.
 
 ```bash
 make test
-make test TEST=test/domain/translation_languages_test.dart
-make test TEST=test/data/github_adapter_test.dart
+make test TEST=test/core/app_nav_controller_test.dart
+make test TEST=test/widget/shell_integration_test.dart
+make test TEST=test/architecture/import_rules_test.dart
 ```
 
 ---
@@ -284,9 +386,15 @@ make test TEST=test/data/github_adapter_test.dart
 - [x] OpenCode machine translation with multiple target languages.
 - [x] GitLab/GitHub MR/PR detail views with commits, changed files, and merge
   actions.
+- [x] **Unified workspace shell** with per-account rail, section caching, state
+  persistence, contextual search, and error boundaries.
+- [x] Workspace overview with Assigned-to-you aggregation and tool health pills.
 - [ ] Surface and polish the coding-agent Development workflow.
 - [ ] Persist dev links and agent sessions beyond the current in-memory store.
 - [ ] Jira adapter.
+- [ ] GitHub CI checks pill and GitLab pipeline/approval columns.
+- [ ] ZenTao Sprints, Docs, Calendar, and Gantt sections.
+- [ ] Narrow layout (<1024px responsive pass).
 - [ ] Validate Windows/Linux desktop targets.
 - [ ] Client/server sync split and mobile clients.
 

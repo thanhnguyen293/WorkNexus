@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/task_detail/presentation/util/template_runs.dart';
+import 'package:work_nexus/tools/gitlab/presentation/util/template_runs.dart';
 
 void main() {
   test('splits text around placeholders in message order', () {

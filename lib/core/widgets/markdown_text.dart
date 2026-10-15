@@ -120,19 +120,49 @@ class MarkdownText extends StatelessWidget {
               ),
         // gpt_markdown wraps a custom link in a bare GestureDetector, so the
         // hand cursor (and, for plain links, the hover underline) is ours to add.
-        linkBuilder: (context, label, url, style) {
-          final plain = isPlainLink?.call(url) ?? false;
-          return HoverRegion(
-            cursor: SystemMouseCursors.click,
-            builder: (context, hovered, _) => Text(
-              label.toPlainText(),
-              style: style.copyWith(
-                color: linkColor ?? c.accent,
-                fontWeight: plain ? FontWeight.w600 : null,
-                decoration: (plain || underlineLinksOnHover) && !hovered
-                    ? TextDecoration.none
-                    : TextDecoration.underline,
-                decorationColor: linkColor ?? c.accent,
+        inlineLinkBuilder: (details) {
+          final plain = isPlainLink?.call(details.url) ?? false;
+          final linkCol = linkColor ?? c.accent;
+          if (plain) {
+            return details.asWidgetSpan(
+              HoverRegion(
+                cursor: SystemMouseCursors.click,
+                builder: (context, hovered, _) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4.5,
+                    vertical: 0.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hovered
+                        ? linkCol.withValues(alpha: 0.22)
+                        : linkCol.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(4.0),
+                  ),
+                  child: Text(
+                    details.label,
+                    style: details.style.copyWith(
+                      color: linkCol,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+          return details.asWidgetSpan(
+            HoverRegion(
+              cursor: SystemMouseCursors.click,
+              builder: (context, hovered, _) => Text(
+                details.label,
+                style: details.style.copyWith(
+                  color: linkCol,
+                  decoration: underlineLinksOnHover && !hovered
+                      ? TextDecoration.none
+                      : TextDecoration.underline,
+                  decorationColor: linkCol,
+                ),
               ),
             ),
           );
@@ -141,7 +171,8 @@ class MarkdownText extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: context.spacing.sm),
           child: CodeBlock(code, fontSize: fontSize - 1),
         ),
-        highlightBuilder: (context, code, style) => _InlineCode(code, style),
+        inlineCodeBuilder: (context, code, style, codeStyle) =>
+            baselineWidgetSpan(_InlineCode(code, style)),
       ),
     );
   }

@@ -10,12 +10,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/task_editor_controller.dart';
 import 'confirm_discard_draft.dart';
 import 'draft_picker_button.dart';
-import 'editor_columns.dart';
 import 'editor_header.dart';
 import 'editor_shortcuts.dart';
 import 'rich_text_draft_sync.dart';
-import 'task_main_fields.dart';
-import 'task_side_fields.dart';
+import 'task_form_centered.dart';
 
 /// Adds or edits a task, full screen; saving opens the saved task.
 class TaskEditorView extends ConsumerStatefulWidget {
@@ -123,10 +121,15 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
           ),
           Expanded(
             child: switch (async) {
-              AsyncData() when state != null && desc != null => EditorColumns(
-                main: TaskMainFields(route: route, state: state, desc: desc),
-                side: TaskSideFields(route: route, state: state),
-              ),
+              AsyncData() when state != null && desc != null =>
+                TaskFormCentered(
+                  route: route,
+                  state: state,
+                  desc: desc,
+                  onSave: _save,
+                  onClose: _close,
+                  saving: state.saving,
+                ),
               AsyncError() => AppStateView.error(
                 title: l.formLoadFailed,
                 onRetry: () => ref.invalidate(taskEditorProvider(route)),

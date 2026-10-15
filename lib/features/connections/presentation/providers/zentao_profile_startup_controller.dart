@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/debug/app_talker.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
-import '../../domain/usecases/refresh_zentao_profile.dart';
+import '../../../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 
 final zenTaoProfileStartupControllerProvider =
     Provider<ZenTaoProfileStartupController>(

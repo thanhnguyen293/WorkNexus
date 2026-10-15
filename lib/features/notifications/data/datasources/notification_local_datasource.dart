@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/database.dart';
@@ -26,6 +28,25 @@ class NotificationLocalDatasource {
               ),
             ]))
           .get();
+
+  /// Realnames from stored ZenTao profiles, keyed by accountId.
+  Stream<Map<String, String>> watchAccountRealnames() =>
+      _db.select(_db.zenTaoProfiles).watch().map((rows) {
+        final map = <String, String>{};
+        for (final row in rows) {
+          try {
+            final json = jsonDecode(row.profileJson);
+            final raw = json is Map ? json['profile'] : null;
+            if (raw is Map) {
+              final realname = raw['realname']?.toString().trim();
+              if (realname != null && realname.isNotEmpty) {
+                map[row.accountId] = realname;
+              }
+            }
+          } catch (_) {}
+        }
+        return map;
+      });
 
   /// Replaces every row of [accountId] with [rows], atomically.
   Future<void> replaceAccount(

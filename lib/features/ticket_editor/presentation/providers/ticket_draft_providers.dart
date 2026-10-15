@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/saved_ticket_draft.dart';
 import '../../domain/repositories/ticket_draft_repository.dart';

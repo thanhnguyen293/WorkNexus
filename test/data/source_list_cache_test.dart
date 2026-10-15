@@ -2,7 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
-import 'package:work_nexus/features/sync/data/source_list_cache.dart';
+import 'package:work_nexus/shared/sync/data/source_list_cache.dart';
 
 void main() {
   late AppDatabase db;

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/hover_surface.dart';
+import '../providers/chat_providers.dart';
 import '../providers/chat_trust_preview.dart';
 
 /// Debug builds only: opens chat as if its server's certificate still needed
@@ -34,7 +35,11 @@ class ChatTrustDebugButton extends ConsumerWidget {
             return;
           }
           preview.state = kChatTrustPreviewRequest;
-          ref.read(appNavProvider.notifier).show(MainView.chat);
+          final accountId = ref.read(selectedChatAccountIdProvider);
+          if (accountId == null) return;
+          final nav = ref.read(appNavProvider.notifier);
+          nav.selectAccount(accountId);
+          nav.selectSection(const SectionId('zentao.chat'));
         },
         width: s.xl5 + s.xs,
         height: s.xl5 + s.xs,

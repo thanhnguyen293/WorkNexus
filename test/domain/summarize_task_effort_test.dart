@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/summarize_task_effort.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/summarize_task_effort.dart';
 
 void main() {
   const summarize = SummarizeTaskEffort();

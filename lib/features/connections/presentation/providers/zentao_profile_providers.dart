@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/result.dart';
-import '../../domain/entities/zentao_department.dart';
-import '../../domain/entities/zentao_profile.dart';
-import '../../domain/repositories/zentao_profile_repository.dart';
-import '../../domain/usecases/refresh_zentao_profile.dart';
+import '../../../../tools/zentao/domain/entities/zentao_department.dart';
+import '../../../../tools/zentao/domain/entities/zentao_profile.dart';
+import '../../../../tools/zentao/domain/repositories/zentao_profile_repository.dart';
+import '../../../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 
 final zenTaoProfileRepositoryProvider = Provider<ZenTaoProfileRepository>(
   (ref) => getIt<ZenTaoProfileRepository>(),

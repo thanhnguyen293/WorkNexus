@@ -10,8 +10,7 @@ const _imageExtensions = {'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'heic'};
 /// Wallpapers are files in [directory], named `<epoch ms>_<name>` so the
 /// newest sort first.
 class LocalWallpaperRepository implements WallpaperRepository {
-  LocalWallpaperRepository({required Future<Directory> Function() directory})
-    : _directory = directory;
+  LocalWallpaperRepository({required this._directory});
 
   final Future<Directory> Function() _directory;
 

@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/entities/account.dart';
+import '../domain/value_objects/provider_type.dart';
+import '../tools/tool_module.dart';
 import 'app_nav_state.dart';
 import 'ticket_editor_route.dart';
 
@@ -9,26 +12,227 @@ class AppNavController extends Notifier<AppNavState> {
   @override
   AppNavState build() => const AppNavState();
 
-  /// Shows [view], closing everything over it: settings, the notifications
-  /// panel, the editor and the ticket detail.
-  void show(MainView view) => state = AppNavState(view: view);
+  // ---- Workspace & Account Selection ----
 
-  /// Shows the mini app [id], closing everything over it like [show].
-  void showMiniApp(String id) =>
-      state = AppNavState(view: MainView.miniApp, miniAppId: id);
+  /// Switches the rail to the workspace level and sets the active workspace section.
+  void selectWorkspaceSection(WorkspaceSection section) {
+    state = state.copyWith(
+      rail: const RailTarget.workspace(),
+      workspaceSection: section,
+      userSelectedWorkspace: true,
+    );
+  }
 
-  void toggleSettings() =>
-      state.settingsOpen ? closeSettings() : openSettings();
+  /// Switches the rail to an account target. If no location has been stored for
+  /// this account yet (or [activateFirstFeature] is true), it is seeded with
+  /// the module's first section/default section.
+  void selectAccount(
+    String id, {
+    ToolModule? module,
+    bool activateFirstFeature = false,
+  }) {
+    final existingLoc = state.locations[id];
+    final defaultSec = (module != null && module.sections.isNotEmpty)
+        ? module.sections.first.id
+        : (module?.defaultSection ?? const SectionId('default'));
+    final locations = (existingLoc == null || activateFirstFeature)
+        ? <String, ToolLocation>{
+            ...state.locations,
+            id: ToolLocation(section: defaultSec),
+          }
+        : state.locations;
 
-  /// Opens settings over the main view. An open editor stays (hidden behind
-  /// settings, with the ticket it came from); an open ticket detail closes.
-  void openSettings() => state = state.copyWith(
-    settingsOpen: true,
-    notificationsOpen: false,
-    ticketHistory: state.editor == null ? const [] : state.ticketHistory,
-  );
+    state = state.copyWith(
+      rail: RailTarget.account(id),
+      locations: locations,
+      userSelectedWorkspace: false,
+    );
+  }
 
-  void closeSettings() => state = state.copyWith(settingsOpen: false);
+  /// Automatically selects the first app in [accounts] and activates its first
+  /// feature (section), unless the user has explicitly chosen the workspace section.
+  void selectDefaultAppIfApplicable({
+    required List<Account> accounts,
+    required Map<ProviderType, ToolModule> registry,
+    bool force = false,
+  }) {
+    if (accounts.isEmpty) return;
+
+    if (!force && state.userSelectedWorkspace) {
+      return;
+    }
+
+    if (!force) {
+      if (state.rail case AccountTarget(:final accountId)) {
+        if (accounts.any((a) => a.id == accountId)) {
+          return;
+        }
+      }
+    }
+
+    final sorted = Account.sort(accounts);
+    final firstAccount = sorted.first;
+    final module = registry[firstAccount.providerType];
+
+    selectAccount(firstAccount.id, module: module, activateFirstFeature: true);
+  }
+
+  /// Called when the user switches to a workspace in the workspace switcher.
+  /// Resets [userSelectedWorkspace] and activates the first app & first feature
+  /// of the new workspace.
+  void onWorkspaceSwitched({
+    required List<Account> newAccounts,
+    required Map<ProviderType, ToolModule> registry,
+  }) {
+    state = state.copyWith(userSelectedWorkspace: false);
+    if (newAccounts.isEmpty) {
+      state = state.copyWith(
+        rail: const RailTarget.workspace(),
+        workspaceSection: WorkspaceSection.overview,
+      );
+    } else {
+      selectDefaultAppIfApplicable(
+        accounts: newAccounts,
+        registry: registry,
+        force: true,
+      );
+    }
+  }
+
+  /// Changes the active section under the current account.
+  /// If the new and old sections share the same [ScopeKind], the selected scope
+  /// is preserved; otherwise it is reset to null ("All").
+  void selectSection(
+    SectionId section, {
+    ToolModule? module,
+    ScopeKind? newScopeKind,
+    ScopeKind? oldScopeKind,
+  }) {
+    if (state.rail case AccountTarget(:final accountId)) {
+      final cur = state.locations[accountId] ?? ToolLocation(section: section);
+
+      bool keepScope = false;
+      if (module != null) {
+        final oldSec = module.sections
+            .where((s) => s.id == cur.section)
+            .firstOrNull;
+        final newSec = module.sections
+            .where((s) => s.id == section)
+            .firstOrNull;
+        keepScope =
+            oldSec != null &&
+            newSec != null &&
+            oldSec.scopeKind == newSec.scopeKind;
+      } else if (newScopeKind != null) {
+        keepScope = newScopeKind == oldScopeKind;
+      }
+
+      final updated = cur.copyWith(
+        section: section,
+        scopeId: keepScope ? cur.scopeId : null,
+      );
+      state = state.copyWith(
+        locations: <String, ToolLocation>{
+          ...state.locations,
+          accountId: updated,
+        },
+      );
+    }
+  }
+
+  /// Sets the selected scope for the current account's active section and
+  /// updates the recent scope history (capped at 5, deduplicated, newest first).
+  void selectScope(String? scopeId) {
+    if (state.rail case AccountTarget(:final accountId)) {
+      final cur = state.locations[accountId];
+      if (cur == null) return;
+
+      final recents = (scopeId != null && scopeId.isNotEmpty)
+          ? [
+              scopeId,
+              ...cur.recentScopeIds.where((e) => e != scopeId),
+            ].take(5).toList()
+          : cur.recentScopeIds;
+
+      final updated = cur.copyWith(scopeId: scopeId, recentScopeIds: recents);
+      state = state.copyWith(
+        locations: <String, ToolLocation>{
+          ...state.locations,
+          accountId: updated,
+        },
+      );
+    }
+  }
+
+  /// Sets the quick scope filter (all, assigned to me, review requested) for
+  /// the active tool location.
+  void setQuickScope(QuickScope quickScope) {
+    if (state.rail case AccountTarget(:final accountId)) {
+      final cur = state.locations[accountId];
+      if (cur == null) return;
+      final updated = cur.copyWith(quickScope: quickScope);
+      state = state.copyWith(
+        locations: <String, ToolLocation>{
+          ...state.locations,
+          accountId: updated,
+        },
+      );
+    }
+  }
+
+  /// Sets the remembered view mode for the active section (e.g. tasks → kanban).
+  void setViewMode(ViewModeId viewMode) {
+    if (state.rail case AccountTarget(:final accountId)) {
+      final cur = state.locations[accountId];
+      if (cur == null) return;
+      final viewModes = Map<SectionId, ViewModeId>.from(cur.viewModes)
+        ..[cur.section] = viewMode;
+      final updated = cur.copyWith(viewModes: viewModes);
+      state = state.copyWith(
+        locations: <String, ToolLocation>{
+          ...state.locations,
+          accountId: updated,
+        },
+      );
+    }
+  }
+
+  /// Called when the workspace switches or its accounts change.
+  /// Falls back to Workspace › Overview if the active account is no longer in the workspace.
+  void onWorkspaceChanged(Set<String> accountIds) {
+    if (state.rail case AccountTarget(:final accountId)) {
+      if (!accountIds.contains(accountId)) {
+        state = state.copyWith(
+          rail: const RailTarget.workspace(),
+          workspaceSection: WorkspaceSection.overview,
+        );
+      }
+    }
+  }
+
+  /// Handles removal of an account, falling back to Overview if it was active.
+  void onAccountRemoved(String id) {
+    final nextLocations = Map<String, ToolLocation>.from(state.locations)
+      ..remove(id);
+    if (state.rail case AccountTarget(:final accountId) when accountId == id) {
+      state = state.copyWith(
+        rail: const RailTarget.workspace(),
+        workspaceSection: WorkspaceSection.overview,
+        locations: nextLocations,
+      );
+    } else {
+      state = state.copyWith(locations: nextLocations);
+    }
+  }
+
+  /// Restores navigation state from a persisted [NavLocationPayload].
+  void restoreLocation(NavLocationPayload payload) {
+    state = state.copyWith(
+      rail: payload.rail,
+      workspaceSection: payload.workspaceSection,
+      locations: payload.locations,
+    );
+  }
 
   void toggleNotifications() =>
       state = state.copyWith(notificationsOpen: !state.notificationsOpen);
@@ -62,13 +266,10 @@ class AppNavController extends Notifier<AppNavState> {
   void closeTicket() => state = state.copyWith(ticketHistory: const []);
 
   /// Opens the bug / task editor on [route]. It takes the whole area beside
-  /// the rail, so settings and the notifications panel close; the ticket
-  /// detail hides until the editor closes.
-  void openEditor(TicketEditorRoute route) => state = state.copyWith(
-    editor: route,
-    settingsOpen: false,
-    notificationsOpen: false,
-  );
+  /// the rail, so the notifications panel closes; the ticket detail hides until
+  /// the editor closes.
+  void openEditor(TicketEditorRoute route) =>
+      state = state.copyWith(editor: route, notificationsOpen: false);
 
   /// Closes the editor, back to the ticket detail it was opened from, if any.
   void closeEditor() => state = state.copyWith(editor: null);

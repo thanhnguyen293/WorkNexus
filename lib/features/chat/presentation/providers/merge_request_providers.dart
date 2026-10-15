@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/adapters/merge_request_link_service.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/failure.dart';

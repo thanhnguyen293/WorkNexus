@@ -15,7 +15,7 @@ import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/zentao_profile.dart';
+import '../../../../tools/zentao/domain/entities/zentao_profile.dart';
 import '../providers/zentao_profile_providers.dart';
 import 'zentao_profile_edit_dialog.dart';
 

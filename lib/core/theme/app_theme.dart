@@ -21,7 +21,7 @@ ThemeData buildAppTheme({
   required AppThemeVariant variant,
   required SurfaceStyle surface,
   required AppDensity density,
-  String fontFamily = kSansFont,
+  String fontFamily = kVietnamFont,
   double componentRadius = kComponentRadiusDefault,
   int? accentColorValue,
 }) {
@@ -49,7 +49,7 @@ ThemeData buildAppTheme({
   // a generated family name; the rest are bundled/system names used as-is.
   final googleFont = kGoogleFontFamilies[requestedFamily];
   final String? family = requestedFamily.isEmpty
-      ? kSansFont
+      ? kVietnamFont
       : requestedFamily == kSystemFont
       ? null
       : googleFont != null
@@ -94,8 +94,8 @@ ThemeData buildAppTheme({
     scaffoldBackgroundColor: p.bg,
     canvasColor: p.bg,
     fontFamily: family,
-    // Fall back to the bundled sans if a system family is unavailable.
-    fontFamilyFallback: const [kSansFont],
+    // Fall back to the bundled Be Vietnam Pro, then Space Grotesk.
+    fontFamilyFallback: const [kVietnamFont, kSansFont],
     visualDensity: density == AppDensity.compact
         ? const VisualDensity(horizontal: -1, vertical: -1)
         : VisualDensity.standard,

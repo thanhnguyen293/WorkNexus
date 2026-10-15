@@ -61,4 +61,18 @@ abstract interface class GitLabMrService {
   Future<Result<List<RepoCommit>>> listMergeRequestCommits(Ticket ticket);
 
   Future<Result<List<RepoFileChange>>> listMergeRequestChanges(Ticket ticket);
+
+  Future<Result<List<String>>> syncGitLabProjectItems({
+    required String accountId,
+    required String projectId,
+    required bool mergeRequests,
+  });
+
+  Future<Result<List<String>>> syncGitLabMine(String accountId);
+
+  Future<String?> gitlabServerVersion(String accountId);
+
+  Future<Result<List<ProviderProject>>> listProjects(String accountId);
+
+  Future<List<ProviderProject>?> cachedProjects(String accountId);
 }

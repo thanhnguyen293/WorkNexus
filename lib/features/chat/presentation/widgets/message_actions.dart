@@ -92,7 +92,10 @@ List<MessageAction> messageActions(
         icon: LucideIcons.copy300,
         tooltip: l.chatCopy,
         destructive: false,
-        onTap: () => Clipboard.setData(ClipboardData(text: copyText)),
+        onTap: () {
+          Clipboard.setData(ClipboardData(text: copyText));
+          showChatSnack(context, l.chatCopied);
+        },
       ),
     if (text != null)
       (

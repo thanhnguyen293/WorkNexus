@@ -1,8 +1,21 @@
 import '../../error/result.dart';
 import '../entities/ticket.dart';
+import '../value_objects/repo_change.dart';
 import 'provider_adapter.dart';
 
 abstract interface class GitLabMrAdapter implements ProviderAdapter {
+  Future<Result<List<Ticket>>> listProjectItems(
+    String projectId, {
+    required bool mergeRequests,
+  });
+
+  Future<Result<List<Ticket>>> listMyMergeRequests();
+
+  Future<String?> serverVersion();
+
+  Future<Result<List<RepoCommit>>> listMergeRequestCommits(Ticket ticket);
+
+  Future<Result<List<RepoFileChange>>> listMergeRequestChanges(Ticket ticket);
   Future<Result<List<ProviderUser>>> listProjectMembers(Ticket ticket);
 
   Future<Result<bool>> closeIssue(Ticket ticket);

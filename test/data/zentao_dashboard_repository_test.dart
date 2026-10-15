@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/dashboard/data/datasources/dashboard_local_datasource.dart';
-import 'package:work_nexus/features/dashboard/data/mappers/zentao_dashboard_mapper.dart';
-import 'package:work_nexus/features/dashboard/data/repositories/zentao_dashboard_repository.dart';
+import 'package:work_nexus/features/workspace_overview/data/datasources/dashboard_local_datasource.dart';
+import 'package:work_nexus/features/workspace_overview/data/mappers/zentao_dashboard_mapper.dart';
+import 'package:work_nexus/features/workspace_overview/data/repositories/zentao_dashboard_repository.dart';
 
 final _fetchedAt = DateTime(2026, 10, 9, 12);
 

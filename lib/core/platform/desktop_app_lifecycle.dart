@@ -9,11 +9,7 @@ import 'desktop_window_service.dart';
 
 /// Coordinates native close events with the tray and the app window.
 class DesktopAppLifecycle with WindowListener {
-  DesktopAppLifecycle({
-    required DesktopWindowService window,
-    required DesktopTrayService tray,
-  }) : _window = window,
-       _tray = tray;
+  DesktopAppLifecycle({required this._window, required this._tray});
 
   final DesktopWindowService _window;
   final DesktopTrayService _tray;

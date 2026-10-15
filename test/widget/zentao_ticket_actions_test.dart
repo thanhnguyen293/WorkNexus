@@ -18,9 +18,9 @@ import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_button.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/action_dialog_scaffold.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/zentao_ticket_actions.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/action_dialog_scaffold.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/zentao_ticket_actions.dart';
 
 class _MockWorkflow extends Mock implements ZenTaoWorkflowService {}
 
@@ -291,5 +291,28 @@ void main() {
       const NewBugRoute(accountId: 'zt', productId: '4', copyOf: '12'),
     );
     expect(container.read(openTicketIdProvider), isNull);
+  });
+
+  testWidgets('a task can be cloned via direct action button', (tester) async {
+    await pump(
+      tester,
+      _ticket(
+        'Task',
+        'doing',
+        entity: const TicketProviderEntity.zentaoTask(execution: '31'),
+      ),
+    );
+
+    expect(find.text('Clone task'), findsOneWidget);
+    await tester.tap(find.text('Clone task'));
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ZenTaoActions)),
+    );
+    expect(
+      container.read(ticketEditorProvider),
+      const NewTaskRoute(accountId: 'zt', executionId: '31', copyOf: '12'),
+    );
   });
 }

@@ -83,7 +83,7 @@ class ChatFilesPanel extends ConsumerWidget {
     return ChatSidePanelFrame(
       title: l.chatFilesAndMedia,
       onBack: () => backToChatInfo(ref, thread, infoRoom: infoRoom),
-      onClose: infoRoom ? null : () => closeChatSidePanel(ref, thread),
+      onClose: () => closeChatSidePanel(ref, thread),
       // On the header's colour, not the window's, so it reads as a panel.
       child: ColoredBox(color: context.colors.surface, child: body),
     );

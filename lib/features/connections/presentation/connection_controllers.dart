@@ -1,17 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/di/provider_adapter_registry_impl.dart';
+import '../../../app/di/service_locator.dart';
 import '../../../core/debug/app_talker.dart';
-import '../../../core/di/service_locator.dart';
+import '../../../core/domain/adapters/account_sync_service.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/workspace.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import '../../../core/util/content_hash.dart';
-import '../../sync/data/sync_service.dart';
-import '../data/provider_adapter_factory.dart';
+import '../../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 import '../domain/repositories/connection_repository.dart';
-import '../domain/usecases/refresh_zentao_profile.dart';
 
 /// State of the add-connection form.
 class AddConnectionState {
@@ -94,7 +94,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
     if (await getIt<RefreshZenTaoProfile>()(account) case Err(:final failure)) {
       appTalker.warning('ZenTao profile refresh failed: ${failure.message}');
     }
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await getIt<AccountSyncService>().syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         // Account is connected but the first sync failed — keep it, surface the error.
@@ -173,7 +173,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
 
     await getIt<CredentialStore>().write(credRef, token);
     await getIt<ConnectionRepository>().addAccount(account);
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await getIt<AccountSyncService>().syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         state = AddConnectionState(
@@ -251,7 +251,7 @@ class AddConnectionController extends Notifier<AddConnectionState> {
 
     await getIt<CredentialStore>().write(credRef, token);
     await getIt<ConnectionRepository>().addAccount(account);
-    final sync = await getIt<SyncService>().syncAccount(account);
+    final sync = await getIt<AccountSyncService>().syncAccount(account);
     switch (sync) {
       case Err(:final failure):
         state = AddConnectionState(

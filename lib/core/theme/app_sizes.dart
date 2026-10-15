@@ -33,6 +33,16 @@ class AppSizes extends ThemeExtension<AppSizes> {
   double get boardColumn => 272; // one kanban column
   double get stateMessage => 360; // max line length of an empty / error message
 
+  // ---- Shell layout (unified workspace shell) ----
+  double get railWidth => 76;
+  double get toolPaneWidth => 300;
+  double get titleBarHeight => 56;
+  double get detailPanelWidth => 460;
+  double get railButton => 32;
+  Size get switcherPopover => const Size(360, 440);
+  double get switcherPopoverWidth => 360;
+  double get switcherPopoverHeight => 440;
+
   @override
   AppSizes copyWith() => const AppSizes();
 

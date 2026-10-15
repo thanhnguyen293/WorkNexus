@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/app/di/service_locator.dart';
 import 'package:work_nexus/core/database/database.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/data/mappers/saved_filter_mapper.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/domain/repositories/saved_filter_repository.dart';
-import 'package:work_nexus/features/board/domain/value_objects/saved_filter.dart';
-import 'package:work_nexus/features/board/domain/value_objects/saved_view.dart';
+import 'package:work_nexus/shared/board/data/mappers/saved_filter_mapper.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/domain/repositories/saved_filter_repository.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/saved_filter.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/saved_view.dart';
 
 import '../support/di_test_harness.dart';
 

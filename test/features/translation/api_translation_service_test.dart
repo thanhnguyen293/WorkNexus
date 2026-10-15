@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/failure.dart';
-import 'package:work_nexus/core/domain/entities/translation_record.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/translation/data/api_translation_service.dart';
 import 'package:work_nexus/features/translation/data/routing_translation_service.dart';
 import 'package:work_nexus/features/translation/domain/adapters/translation_service.dart';
 import 'package:work_nexus/features/translation/domain/entities/translation_api_config.dart';
+import 'package:work_nexus/features/translation/domain/entities/translation_record.dart';
 
 class _Adapter implements HttpClientAdapter {
   _Adapter(this.status, this.body);

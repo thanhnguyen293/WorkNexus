@@ -9,6 +9,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
@@ -151,7 +152,37 @@ class ChatThreadHeader extends ConsumerWidget {
               ),
             ),
           ),
-          if (chat case final chat?) ChatMuteToggle(chat: chat),
+          if (chat case final chat?) ...[
+            AppIconButton(
+              icon: LucideIcons.search300,
+              tooltip: l.chatSearchMessages,
+              selected: ref.watch(chatThreadSearchIsOpenProvider(thread)),
+              onPressed: () {
+                final open = ref.read(chatThreadSearchIsOpenProvider(thread));
+                ref
+                        .read(chatThreadSearchIsOpenProvider(thread).notifier)
+                        .state =
+                    !open;
+              },
+            ),
+            SizedBox(width: context.spacing.xs),
+            ChatMuteToggle(chat: chat),
+            SizedBox(width: context.spacing.xs),
+            AppIconButton(
+              icon: LucideIcons.info300,
+              tooltip: l.chatInfo,
+              selected:
+                  ref.watch(chatSidePanelProvider(thread)) ==
+                  ChatSidePanel.info,
+              onPressed: () => showChatInfo(
+                context,
+                ref,
+                thread: thread,
+                chat: chat,
+                users: users,
+              ),
+            ),
+          ],
         ],
       ),
     );

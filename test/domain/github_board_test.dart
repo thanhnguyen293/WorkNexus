@@ -3,12 +3,12 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_github_issue_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_github_pr_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/filter_tickets.dart';
-import 'package:work_nexus/features/board/domain/value_objects/github_issue_column.dart';
-import 'package:work_nexus/features/board/domain/value_objects/github_pr_column.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/filter_tickets.dart';
+import 'package:work_nexus/tools/github/domain/usecases/build_github_issue_board.dart';
+import 'package:work_nexus/tools/github/domain/usecases/build_github_pr_board.dart';
+import 'package:work_nexus/tools/github/domain/value_objects/github_issue_column.dart';
+import 'package:work_nexus/tools/github/domain/value_objects/github_pr_column.dart';
 
 Ticket _pr({
   required String id,

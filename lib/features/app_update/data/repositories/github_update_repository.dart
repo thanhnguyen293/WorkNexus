@@ -18,14 +18,11 @@ import '../datasources/update_installer.dart';
 /// this platform, checked against the release's checksum file.
 class GitHubUpdateRepository implements UpdateRepository {
   GitHubUpdateRepository({
-    required GitHubReleaseDatasource releases,
-    required UpdateInstaller? installer,
-    required Future<Directory> Function() stagingRoot,
+    required this._releases,
+    required this._installer,
+    required this._stagingRoot,
     void Function()? quit,
-  }) : _releases = releases,
-       _installer = installer,
-       _stagingRoot = stagingRoot,
-       _quit = quit ?? (() => exit(0));
+  }) : _quit = quit ?? (() => exit(0));
 
   final GitHubReleaseDatasource _releases;
 

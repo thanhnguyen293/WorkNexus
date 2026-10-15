@@ -4,7 +4,7 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/task_detail/presentation/util/gitlab_mr_phase.dart';
+import 'package:work_nexus/tools/gitlab/presentation/util/gitlab_mr_phase.dart';
 
 Ticket _mr(String status) => Ticket(
   id: 'mr',

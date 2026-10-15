@@ -14,32 +14,36 @@ line-count and style rules.
 
 ## 1. Architecture: Clean Architecture, feature-first
 
-- **1.1 MUST** — Organize by **feature first, layer second**. Each feature is a
-  self-contained vertical slice with three layers: `domain/` → `data/` →
-  `presentation/`. Do not group by layer at the app level.
+- **1.1 MUST** — Organize by **feature first, layer second**. The repository is partitioned into five top-level areas:
+  - `app/`: composition root (`app/di/`), shell, navigation, global runners.
+  - `core/`: shared kernel, theme, cross-cutting infrastructure (database, cache, platform, error).
+  - `shared/`: reusable cross-feature slices (`shared/board/`, `shared/detail/`, `shared/sync/`).
+  - `tools/`: provider tool modules (`tools/zentao/`, `tools/gitlab/`, `tools/github/`), each implementing `ToolModule`.
+  - `features/`: domain vertical slices (`features/chat/`, `features/translation/`, `features/connections/`, `features/app_update/`).
 - **1.2 MUST — Dependency Rule.** Dependencies point inward only:
   `presentation → domain ← data`. `domain` MUST NOT import Flutter, drift, dio,
   Riverpod, or any other layer.
 - **1.3 MUST NOT** — `presentation` imports `data/` directly (datasources,
   repository implementations, DTOs, drift, dio). Presentation depends only on
   `domain` (use cases, interfaces, entities).
-- **1.4 MUST** — Standard feature layout:
+- **1.4 MUST** — Standard feature / tool module layout:
 
 ```
-features/<feature>/
+tools/<tool>/ or features/<feature>/
 ├── domain/
-│   ├── repositories/   # abstract interfaces (owned by the feature)
+│   ├── repositories/   # abstract interfaces (owned by the module)
 │   └── usecases/       # one use case = one job
 ├── data/
 │   ├── models/         # DTOs (JSON / drift rows)
-│   ├── datasources/    # drift DAO / dio client
+│   ├── datasources/    # drift DAO / dio / HTTP clients
 │   ├── mappers/        # DTO ↔ entity
-│   └── repositories/   # implementations of the domain interfaces
+│   └── repositories/   # implementations of domain interfaces
 └── presentation/
     ├── providers/      # Riverpod controllers/providers + state (freezed)
     ├── pages/          # screens
     └── widgets/        # child widgets — one widget (or a small group) per file
 ```
+- **1.5 MUST** — Tool modules in `tools/<tool>` implement `ToolModule` (`core/tools/tool_module.dart`) and register in `app/tool_registry.dart`. `ToolModule` defines the tool's shell contract: `sections` (available `ToolSection` list with `ScopeKind` and view modes), `defaultSection`, `roleLabel`, `buildNavPane` (scope list and section tabs), `buildSectionView` (renders active section with view modes), `metricsProvider` (`ToolMetrics` for workspace overview cards), and detail extensions (`detailSections`, `ticketActions`, `webUrl`). `shared/detail` and `shared/board` dynamically dispatch provider-specific details and boards via `toolRegistryProvider`.
 
 ## 2. Domain layer
 
@@ -74,20 +78,29 @@ features/<feature>/
 - **4.3 MUST** — `pages/` assemble a screen; `widgets/` are composable/reusable
   UI pieces. Do not stuff an entire screen into one page file.
 
-## 5. Shared kernel (`core/`) — controlled exception
+## 5. Shared kernel (`core/`) and shared modules (`shared/`)
 
 - **5.1 MUST** — `core/` holds cross-cutting concerns only: `theme/` (design
   tokens), `widgets/` (design-system components), `error/`, `util/`,
-  `usecase/` (base), `database/` (drift infra), `platform/`.
+  `usecase/` (base), `database/` (drift infra), `cache/`, `platform/`,
+  `tools/` (contracts).
 - **5.2 EXCEPTION** — `core/domain/` MAY hold **entities / value objects shared
   by ≥ 2 features** (e.g. `Ticket`, `Workspace`, `Project`) as a deliberate
   *shared kernel*. It is **not** a dumping ground for every entity.
-- **5.3 MUST** — An entity/interface used by **only one feature** lives in that
-  feature, not in `core/`.
-- **5.4 SHOULD** — Prefer feature ownership of repository interfaces; promote to
+- **5.3 MUST** — An entity/interface used by **only one feature or tool** lives in that
+  feature or tool, not in `core/`.
+- **5.4 SHOULD** — Prefer feature/tool ownership of repository interfaces; promote to
   the shared kernel only when ≥ 2 features consume it and no single feature
-  clearly owns it. Shared-kernel repository implementations are still split
-  **one file per repository** (never a god file).
+  clearly owns it. Shared-kernel repository implementations live in
+  `core/data/repositories/`, **one file per repository** (never a god file).
+- **5.5 MUST** — `shared/` (`shared/board/`, `shared/detail/`, `shared/sync/`,
+  `shared/shell_pane/`) holds feature-agnostic presentation and coordination
+  slices. `shared/shell_pane/` is the single pane kit (`ToolPaneScaffold`,
+  `ToolPaneHeader`, `FeatureTabStrip`, `ScopeFilterField`, `ScopeRow`,
+  `ScopeListBody`, `SidebarPrimitives`, `SidebarTreeRows`) used by all tool nav
+  panes and workspace navigation. `shared/` MUST NOT import `tools/`, `features/`,
+  or `app/`. `tools/` MAY depend on `shared/` public APIs to reuse the board engine,
+  detail framework, and shell pane primitives.
 
 ## 6. UI & widget splitting ⭐
 
@@ -126,11 +139,14 @@ features/<feature>/
 
 ## 8. Composition root (DI)
 
-- **8.1 MUST** — There is **one** place that wires implementations to interfaces
-  (composition root, e.g. `core/di/` or `app/di/`). It is the **only** place
-  allowed to know both `data` and `domain`.
-- **8.2 MUST** — Features receive dependencies through **interfaces** (via
-  providers); they never construct another layer's implementation themselves.
+- **8.1 MUST** — There is **one** place that wires implementations to interfaces:
+  `app/di/` (`service_locator.dart` and `provider_adapter_registry_impl.dart`). It
+  is the **only** place allowed to know both `data` and `domain` across all modules.
+- **8.2 MUST** — Features and tools receive dependencies through **interfaces**
+  (via providers or GetIt); they never construct another layer's implementation
+  themselves.
+- **8.3 MUST** — Provider adapters are decoupled via `ProviderAdapterRegistry`
+  (`core/domain/adapters/provider_adapter_registry.dart`), implemented in `app/di/`.
 
 ## 9. Naming & file organization
 
@@ -141,13 +157,14 @@ features/<feature>/
 - **9.3 SHOULD** — Non-UI files (data/domain) stay under ~400 lines; beyond that,
   check for merged responsibilities.
 
-## 10. Feature isolation (boundaries between features)
+## 10. Feature & tool isolation (boundaries between modules)
 
 - **10.1 MUST NOT** — Feature A imports feature B's internals (its providers,
-  widgets, datasources, or adapters).
-- **10.2 MUST** — Cross-feature communication goes only through the **shared
-  kernel** (`core/domain`, `core/widgets`) or a **public interface** — never
-  through an implementation.
+  widgets, datasources, or adapters). Tool modules (`tools/zentao`, `tools/github`,
+  `tools/gitlab`) MUST NOT import each other.
+- **10.2 MUST** — Cross-feature and cross-tool communication goes only through the
+  **shared kernel** (`core/domain`, `core/tools`, `core/widgets`) or a **public
+  interface / registry** — never through an implementation.
 - **10.3 SHOULD** — Utilities used across features move up to `core/` (e.g. a
   shared `statusLabel`), rather than being imported from another feature's file.
 
@@ -209,27 +226,30 @@ features/<feature>/
 - **17.1 SHOULD** — Tighten `analysis_options.yaml`: enable
   `prefer_const_constructors`, `avoid_print`, `require_trailing_commas`,
   `use_build_context_synchronously: error`, `sort_child_properties_last`.
-- **17.2 OPTIONAL** — Add `custom_lint` / `dart_code_metrics` to auto-enforce the
-  line limit (rule 6.1), parameter counts, and widget nesting depth instead of
-  relying on manual review.
+- **17.2 MUST** — Layering and boundaries are strictly enforced by
+  `test/architecture/import_rules_test.dart` against
+  `test/architecture/import_rules_allowlist.yaml`. Hand-written file line count
+  limits (UI ≤ 300, non-UI ≤ 400) are verified on every test pass with zero legacy bypass.
+- **17.3 OPTIONAL** — Add `custom_lint` / `dart_code_metrics` to auto-enforce
+  parameter counts and widget nesting depth.
 
 ---
 
 ## Appendix A — Current violations / tech debt
 
 Reference for incremental cleanup. Not required to fix immediately; do not add
-new violations. **Status column updated after the 2026-07-17 refactor pass**, and
-again after the theming pass that split the design system into function-specific
-`ThemeExtension`s (A9).
+new violations. **Status column updated after the 2026-10-14 tool modules restructure pass**
+(restructure-tool-modules), which established `app/ · core/ · shared/ · tools/ · features/`.
 
 | # | Original state | Rules | Status |
 |---|---|---|---|
-| A1 | `core/domain/` held single-feature entities/interfaces alongside the shared kernel | 1.1, 5.2, 5.3 | **Mostly done** — moved to owning features: board (`board_model`, `filter_state`, `saved_view`), `connection_repository`, `coding_agent_adapter`, `translation_service`. `Ticket`/`Workspace`/`Project` + other ≥2-feature types stay in `core/domain` per 5.2. **Remaining:** `translation_record` + `translation_repository` (still consumed by legacy `data/fixtures` + `data/local/mappers`; move with the `lib/data` dissolution). |
-| A2 | `data/local/local_repositories.dart` was **one file** of 6 repos | 3.1, 3.2 | **Done** — split one-file-per-repo under `data/local/repositories/`; `LocalTranslationRepository` moved to `translation/data/repositories/`. |
-| A3 | `task_detail/.../detail_panel.dart` was **1216 lines**, 19 classes | 6.1 | **Done** — split into 12 files under `task_detail/presentation/widgets/` (all ≤173 lines); `_uppercaseLabel` → `SectionLabel` widget. |
+| A1 | `core/domain/` held single-feature entities/interfaces alongside the shared kernel | 1.1, 5.2, 5.3 | **Done** — `translation_record` + `translation_repository` moved to `features/translation/domain/`; board models moved to `shared/board/`; `lib/data` dissolved. Shared entities (`Ticket`, `Workspace`, `Project`) remain in `core/domain/` per 5.2. |
+| A2 | `data/local/local_repositories.dart` was **one file** of 6 repos | 3.1, 3.2 | **Done** — split one-file-per-repo under `core/data/repositories/` and `features/translation/data/repositories/`. |
+| A3 | `task_detail/.../detail_panel.dart` was **1216 lines**, 19 classes | 6.1 | **Done** — split into 12 files under `shared/detail/presentation/widgets/` (all ≤173 lines); `_uppercaseLabel` → `SectionLabel` widget. |
 | A4 | `sidebar.dart` 660 · `settings_page.dart` 345 · `chrome_bar.dart` 345 · `ticket_actions.dart` 388 | 6.1 | **Done** — all split into child-widget files ≤300 lines. |
-| A5 | `agents`, `connections`, `task_detail` have **no use cases**; presentation calls repos/adapters directly | 2.3, 2.4 | **Not addressed** — still open; intertwined with A7 remaining (introduce use cases so presentation stops calling other features' providers). |
-| A6 | `board` had **no `data/`**; impl in shared `data/local` | 1.4, 3.1 | **Partial** — `board/domain/` now exists (entities + value objects + use cases). Ticket/Workspace repos are shared-kernel impls (kept in `data/local/repositories/` per 5.4). |
-| A7 | `translation → agents/data`, `sync → connections/data`, `task_detail → board + agents + translation` (incl. `show statusLabel`) | 1.3, 10.1 | **Partial** — `statusLabel`/`priorityName` lifted to `core/util/labels.dart` (10.3); `openTicketIdProvider` + `settingsOpenProvider` moved to `core/navigation/` (removed `task_detail→board`, `board→connections`). **Remaining:** `board`/`task_detail` presentation still read `agents`/`translation` providers; `translation→agents/data`; `sync→connections/data`; `ticket_card→task_detail`. Fix via shared-kernel contracts + use cases (with A5). |
+| A5 | `agents`, `connections`, `task_detail` have **no use cases**; presentation calls repos/adapters directly | 2.3, 2.4 | **Not addressed** — still open; partially mitigated by `ToolModule` and `ProviderAdapterRegistry` contracts. |
+| A6 | `board` had **no `data/`**; impl in shared `data/local` | 1.4, 3.1 | **Done** — `board` restructured into `shared/board/` (domain, data, presentation); tool boards moved to `tools/<tool>/`. |
+| A7 | `translation → agents/data`, `sync → connections/data`, `task_detail → board + agents + translation` (incl. `show statusLabel`) | 1.3, 10.1 | **Done** — Tool modules (`tools/zentao`, `tools/github`, `tools/gitlab`) fully isolated; `MergeRequestLinkFetcher` decoupled via `ProviderAdapterRegistry`; `ToolModule` dynamic registry used in `shared/detail` and `shared/board`. |
 | A8 | `Result`/`Failure` under-used; ad-hoc `try/catch` | 11.1–11.3 | **Not addressed** — `settings`/`ticket_actions`/`translation` already use `Result`; broaden it, and drop the `print` in `core/widgets/markdown_text.dart` (11.3). |
 | A9 | Hardcoded colors: `detail_panel`, `sidebar`, others | 7.1, 7.2 | **Done** — the monolithic `AppTokens` is split into five function-named `ThemeExtension`s: `AppColors` (semantic roles — `background`/`surface`/`success`/`warning`/`error`/…), `AppTypography` (named text ramp), `AppSpacing`, `AppRadii`, `AppBorders` — read via `context.colors/.typography/.spacing/.radii/.borders`; all built + registered in `core/theme/app_theme.dart`. All 38 call sites migrated; `AppTokens` deleted. Scrim/on-color-ink/workspace-fallback are now palette tokens, `Colors.white`→`onAccent`. No raw `Color(0x…)`/`Colors.*` in presentation except the `Colors.transparent` no-fill sentinel and data-driven `Color(ws.colorValue)`. Inline `TextStyle` + magic spacing/radius replaced by tokens (only the parameterized `markdown_text` rendering primitive keeps caller-supplied sizes). |
+| A10 | Architectural boundary enforcement & line limits | 6.1, 9.3, 10.1 | **Done** — `test/architecture/import_rules_test.dart` enforces layer boundaries and line count limits (UI ≤ 300, non-UI ≤ 400) without legacy skips. |

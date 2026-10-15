@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/navigation/person_chip.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/board/presentation/widgets/ticket_card_meta.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/ticket_card_meta.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, AssigneeChip chip) async {

@@ -6,8 +6,8 @@ import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/resize_handle.dart';
-import 'package:work_nexus/features/board/presentation/widgets/ticket_table.dart';
-import 'package:work_nexus/features/board/presentation/widgets/ticket_table_column.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/ticket_table.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/ticket_table_column.dart';
 
 void main() {
   late List<AppSettings> saved;

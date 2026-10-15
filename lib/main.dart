@@ -8,9 +8,13 @@ import 'package:fvp/fvp.dart' as fvp;
 import 'package:injectable/injectable.dart';
 
 import 'app/app.dart';
+import 'app/di/service_locator.dart';
 import 'app/shell/storage_dialog.dart';
+import 'app/tool_registry.dart';
+import 'core/data/mappers/mappers.dart';
 import 'core/database/database.dart';
-import 'core/di/service_locator.dart';
+import 'core/database/database_seeder.dart';
+import 'core/di/providers.dart';
 import 'core/navigation/open_storage.dart';
 import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
@@ -20,11 +24,11 @@ import 'core/platform/desktop_tray_service.dart';
 import 'core/platform/desktop_window_service.dart';
 import 'core/platform/linux_desktop_entry.dart';
 import 'core/settings/app_settings.dart';
-import 'data/local/database_seeder.dart';
-import 'data/local/mappers.dart';
-import 'features/board/presentation/util/open_execution_board.dart';
+import 'core/tools/tool_registry_provider.dart';
 import 'features/chat/presentation/widgets/chat_person_chip.dart';
-import 'features/sync/data/sync_service.dart';
+import 'features/translation/domain/repositories/translation_api_config_repository.dart';
+import 'shared/sync/data/sync_service.dart';
+import 'tools/zentao/presentation/util/open_execution_board.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,8 +76,17 @@ Future<void> main(List<String> arguments) async {
   runApp(
     ProviderScope(
       overrides: [
+        // Default tool registry (Phase 4 registers tool modules)
+        toolRegistryProvider.overrideWithValue(defaultToolRegistry),
         // Seed settings from drift and persist every change back to it. Settings
         // are reactive UI state (Riverpod), so they stay a provider override.
+        translatesWithApiKeyProvider.overrideWith(
+          (ref) async =>
+              (await getIt<TranslationApiConfigRepository>().load())
+                  .valueOrNull
+                  ?.isUsable ??
+              false,
+        ),
         initialAppSettingsProvider.overrideWithValue(initialSettings),
         settingsPersistProvider.overrideWithValue(
           (s) => db.saveSettings(appSettingsToCompanion(s)),

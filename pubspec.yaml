@@ -150,6 +150,8 @@ dev_dependencies:
 
   # Testing
   mocktail: 1.0.5
+  sqlite3: 3.5.2
+  yaml: 3.1.4
 
   # Type-safe asset references (assets/brands/*.svg → Assets.brands.*). The
   # build_runner integration of flutter_gen; its generated output (lib/gen/) is

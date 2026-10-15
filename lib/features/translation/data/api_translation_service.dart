@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/util/content_hash.dart' as hash;
 import '../../../core/util/translation_languages.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/entities/translation_api_config.dart';
+import '../domain/entities/translation_record.dart';
 import 'translation_prompts.dart';
 
 /// Translates through any OpenAI-compatible `/chat/completions` endpoint with

@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/detail_back_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/detail_back_button.dart';
 
 void main() {
   Future<ProviderContainer> pump(WidgetTester tester) async {

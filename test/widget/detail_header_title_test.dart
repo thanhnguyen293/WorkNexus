@@ -6,7 +6,7 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/detail_header_title.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/detail_header_title.dart';
 
 Ticket _ticket(ProviderType provider, String key) => Ticket(
   id: 'x:$key',

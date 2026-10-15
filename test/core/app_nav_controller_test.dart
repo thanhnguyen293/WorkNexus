@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
+import 'package:work_nexus/core/tools/tool_module.dart';
 
 void main() {
   late ProviderContainer container;
@@ -15,33 +16,112 @@ void main() {
 
   const editRoute = EditBugRoute(accountId: 'acc', bugId: '7', ticketId: 't1');
 
-  group('show', () {
-    test('closes settings, notifications, the editor and the detail', () {
-      nav()
-        ..openTicket('t1')
-        ..openEditor(const NewBugRoute(accountId: 'acc'))
-        ..openSettings()
-        ..toggleNotifications();
+  group('workspace and account navigation', () {
+    test(
+      'selectWorkspaceSection updates rail target and workspace section',
+      () {
+        nav().selectAccount('acc_1');
+        expect(
+          container.read(railTargetProvider),
+          const RailTarget.account('acc_1'),
+        );
 
-      nav().show(MainView.board);
+        nav().selectWorkspaceSection(WorkspaceSection.integrations);
 
-      expect(state(), const AppNavState(view: MainView.board));
+        expect(
+          container.read(railTargetProvider),
+          const RailTarget.workspace(),
+        );
+        expect(
+          container.read(workspaceSectionProvider),
+          WorkspaceSection.integrations,
+        );
+      },
+    );
+
+    test(
+      'selectAccount switches to account target and seeds default section',
+      () {
+        nav().selectAccount('acc_1');
+
+        expect(
+          container.read(railTargetProvider),
+          const RailTarget.account('acc_1'),
+        );
+        expect(
+          container.read(currentToolLocationProvider)?.section,
+          const SectionId('default'),
+        );
+      },
+    );
+
+    test(
+      'selectSection updates section and resets scope when scope kinds differ',
+      () {
+        nav().selectAccount('acc_1');
+        nav().selectScope('proj_1');
+        expect(container.read(currentToolLocationProvider)?.scopeId, 'proj_1');
+
+        nav().selectSection(
+          const SectionId('bugs'),
+          oldScopeKind: ScopeKind.project,
+          newScopeKind: ScopeKind.product,
+        );
+
+        expect(
+          container.read(currentToolLocationProvider)?.section,
+          const SectionId('bugs'),
+        );
+        expect(container.read(currentToolLocationProvider)?.scopeId, isNull);
+      },
+    );
+
+    test('selectScope records recents newest first capped at 5', () {
+      nav().selectAccount('acc_1');
+
+      nav().selectScope('s1');
+      nav().selectScope('s2');
+      nav().selectScope('s3');
+      nav().selectScope('s4');
+      nav().selectScope('s5');
+      nav().selectScope('s6');
+
+      final loc = container.read(currentToolLocationProvider)!;
+      expect(loc.scopeId, 's6');
+      expect(loc.recentScopeIds, ['s6', 's5', 's4', 's3', 's2']);
+    });
+  });
+
+  group('notifications', () {
+    test('toggleNotifications opens and closes the notifications panel', () {
+      expect(container.read(notificationsPanelOpenProvider), isFalse);
+
+      nav().toggleNotifications();
+      expect(container.read(notificationsPanelOpenProvider), isTrue);
+
+      nav().toggleNotifications();
+      expect(container.read(notificationsPanelOpenProvider), isFalse);
+    });
+
+    test('closeNotifications ensures notifications are closed', () {
+      nav().toggleNotifications();
+      expect(container.read(notificationsPanelOpenProvider), isTrue);
+
+      nav().closeNotifications();
+      expect(container.read(notificationsPanelOpenProvider), isFalse);
     });
   });
 
   group('editor', () {
-    test('opening closes settings and notifications, hides the detail', () {
+    test('opening closes notifications and hides the detail', () {
       nav()
         ..openTicket('t1')
         ..toggleNotifications()
-        ..openEditor(const NewBugRoute(accountId: 'acc'));
-      nav().openSettings();
+        ..openEditor(editRoute);
 
-      nav().openEditor(editRoute);
-
-      expect(state().settingsOpen, isFalse);
       expect(state().notificationsOpen, isFalse);
       expect(state().editor, editRoute);
+      expect(container.read(ticketEditorProvider), editRoute);
       expect(container.read(openTicketIdProvider), isNull);
     });
 
@@ -109,43 +189,5 @@ void main() {
 
       expect(state().ticketHistory, ['t3']);
     });
-  });
-
-  group('settings', () {
-    test('opening closes the detail and the notifications panel', () {
-      nav()
-        ..openTicket('t1')
-        ..toggleNotifications()
-        ..openSettings();
-
-      expect(container.read(settingsOpenProvider), isTrue);
-      expect(container.read(openTicketIdProvider), isNull);
-      expect(container.read(notificationsPanelOpenProvider), isFalse);
-    });
-
-    test('opened over the editor, closing it returns to the editor', () {
-      nav()
-        ..openTicket('t1')
-        ..openEditor(editRoute)
-        ..toggleSettings()
-        ..toggleSettings();
-
-      expect(state().editor, editRoute);
-      nav().closeEditor();
-      expect(container.read(openTicketIdProvider), 't1');
-    });
-  });
-
-  test('the rail marks no view while settings or the editor covers it', () {
-    nav().show(MainView.board);
-    expect(container.read(selectedMainViewProvider), MainView.board);
-
-    nav().openEditor(editRoute);
-    expect(container.read(selectedMainViewProvider), isNull);
-
-    nav()
-      ..closeEditor()
-      ..openSettings();
-    expect(container.read(selectedMainViewProvider), isNull);
   });
 }

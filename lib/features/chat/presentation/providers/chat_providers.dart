@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
@@ -279,8 +279,54 @@ final chatHighlightedMessageProvider =
     StateProvider.family<int?, ChatThreadKey>((ref, key) => null);
 
 /// Panels that can open beside a chat instead of a reply thread. [emoji] is
-/// the emoji and sticker picker, expanded out of its popup.
-enum ChatSidePanel { info, pinned, files, members, emoji }
+/// the emoji and sticker picker, expanded out of its popup; [search] is the
+/// global chat history search panel across all conversations.
+enum ChatSidePanel { info, pinned, files, members, emoji, search }
+
+/// Search query for the active in-thread search bar.
+final chatThreadSearchQueryProvider =
+    StateProvider.family<String, ChatThreadKey>((ref, key) => '');
+
+/// Whether the in-thread search bar is open.
+final chatThreadSearchIsOpenProvider =
+    StateProvider.family<bool, ChatThreadKey>((ref, key) => false);
+
+/// Active match index (0-based) for the in-thread search bar.
+final chatThreadSearchActiveIndexProvider =
+    StateProvider.family<int, ChatThreadKey>((ref, key) => 0);
+
+/// Matching messages for the current thread.
+final chatThreadSearchMatchesProvider = FutureProvider.autoDispose
+    .family<List<ChatMessage>, ChatThreadKey>((ref, key) async {
+      final query = ref.watch(chatThreadSearchQueryProvider(key)).trim();
+      if (query.isEmpty) return const [];
+      final result = await ref
+          .watch(chatRepositoryProvider)
+          .searchMessages(key.accountId, chatGid: key.chatGid, query: query);
+      return switch (result) {
+        Ok(:final value) => value,
+        Err() => const [],
+      };
+    });
+
+/// Query for searching across all chats of an account.
+final chatGlobalSearchQueryProvider = StateProvider.family<String, String>(
+  (ref, accountId) => '',
+);
+
+/// Matching messages across all chats of an account.
+final chatGlobalSearchResultsProvider = FutureProvider.autoDispose
+    .family<List<ChatMessage>, String>((ref, accountId) async {
+      final query = ref.watch(chatGlobalSearchQueryProvider(accountId)).trim();
+      if (query.isEmpty) return const [];
+      final result = await ref
+          .watch(chatRepositoryProvider)
+          .searchMessages(accountId, query: query, limit: 100);
+      return switch (result) {
+        Ok(:final value) => value,
+        Err() => const [],
+      };
+    });
 
 /// A chat's image and file messages stored locally, newest first.
 final chatAttachmentsProvider = StreamProvider.autoDispose

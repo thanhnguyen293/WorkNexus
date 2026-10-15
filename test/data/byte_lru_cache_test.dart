@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/sync/data/byte_lru_cache.dart';
+import 'package:work_nexus/core/cache/byte_lru_cache.dart';
 
 Uint8List _bytes(int length) => Uint8List(length);
 

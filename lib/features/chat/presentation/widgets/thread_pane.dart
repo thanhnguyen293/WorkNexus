@@ -12,6 +12,7 @@ import 'chat_emoji_side_panel.dart';
 import 'chat_file_send.dart';
 import 'chat_files_panel.dart';
 import 'chat_floating_video.dart';
+import 'chat_global_search_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
@@ -22,7 +23,7 @@ import 'chat_side_panel_host.dart';
 import 'chat_snack.dart';
 import 'chat_text_scale.dart';
 import 'chat_thread_header.dart';
-import 'chat_wallpaper.dart';
+import 'chat_thread_search_bar.dart';
 import 'message_list.dart';
 import 'pinned_message_bar.dart';
 import 'pinned_messages_panel.dart';
@@ -31,12 +32,9 @@ import 'reply_thread_panel.dart';
 /// Right pane: one open chat. Pulls the newest page and marks the chat read
 /// when it opens (keyed per chat by the parent, so this runs on every switch).
 class ThreadPane extends ConsumerStatefulWidget {
-  const ThreadPane({super.key, required this.thread, this.backgroundKey});
+  const ThreadPane({super.key, required this.thread});
 
   final ChatThreadKey thread;
-
-  /// Shared by every chat's pane so the background survives a switch.
-  final GlobalKey? backgroundKey;
 
   @override
   ConsumerState<ThreadPane> createState() => _ThreadPaneState();
@@ -95,49 +93,46 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
         draftKey: (chat: t, inThread: false),
         files: files,
       ),
-      child: ChatBackground(
-        key: widget.backgroundKey,
-        child: Column(
-          children: [
-            ChatThreadHeader(thread: t, chat: chat, users: users),
-            if (pinned.isNotEmpty)
-              PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
-            Expanded(
-              // Sits over the persistent background while messages load
-              // and scroll.
-              child: Stack(
-                children: [
-                  ChatTextScale(
-                    child: MessageList(
-                      // The background is reused across chats; the list is
-                      // not.
-                      key: ValueKey(t),
-                      thread: t,
-                      showSenders: chat?.type != ChatType.one2one,
-                    ),
+      child: Column(
+        children: [
+          ChatThreadHeader(thread: t, chat: chat, users: users),
+          if (ref.watch(chatThreadSearchIsOpenProvider(t)))
+            ChatThreadSearchBar(thread: t),
+          if (pinned.isNotEmpty)
+            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+          Expanded(
+            // Sits over the persistent background while messages load
+            // and scroll.
+            child: Stack(
+              children: [
+                ChatTextScale(
+                  child: MessageList(
+                    // The background is reused across chats; the list is
+                    // not.
+                    key: ValueKey(t),
+                    thread: t,
+                    showSenders: chat?.type != ChatType.one2one,
                   ),
-                  // A video scrolled out of view plays on over the list.
-                  Positioned.fill(child: ChatFloatingVideo(thread: t)),
-                ],
-              ),
-            ),
-            if (canSend)
-              ChatTextScale(
-                child: ChatComposer(
-                  thread: t,
-                  hint: chat == null
-                      ? null
-                      : AppL10n.of(
-                          context,
-                        ).chatMessageTo(chatTitle(context, chat, users)),
                 ),
-              )
-            else
-              ChatReadOnlyBar(
-                adminsOnly: chat?.committers.trim() == r'$ADMINS',
+                // A video scrolled out of view plays on over the list.
+                Positioned.fill(child: ChatFloatingVideo(thread: t)),
+              ],
+            ),
+          ),
+          if (canSend)
+            ChatTextScale(
+              child: ChatComposer(
+                thread: t,
+                hint: chat == null
+                    ? null
+                    : AppL10n.of(
+                        context,
+                      ).chatMessageTo(chatTitle(context, chat, users)),
               ),
-          ],
-        ),
+            )
+          else
+            ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
+        ],
       ),
     );
     final Widget? panel = openThread != null
@@ -166,6 +161,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               users: users,
             ),
             ChatSidePanel.emoji => ChatEmojiSidePanel(thread: t),
+            ChatSidePanel.search => ChatGlobalSearchPanel(thread: t),
             null => null,
           };
     return ChatSidePanelHost(

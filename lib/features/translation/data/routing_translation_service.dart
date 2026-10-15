@@ -1,18 +1,16 @@
-import '../../../core/domain/entities/translation_record.dart';
 import '../../../core/error/result.dart';
 import '../domain/adapters/translation_service.dart';
 import '../domain/entities/translation_api_config.dart';
+import '../domain/entities/translation_record.dart';
 
 /// Translates through the user's API key when one is set up and enabled, and
 /// through the OpenCode CLI otherwise.
 class RoutingTranslationService implements TranslationService {
   RoutingTranslationService({
-    required TranslationService api,
-    required TranslationService openCode,
-    required Future<TranslationApiConfig?> Function() config,
-  }) : _api = api,
-       _openCode = openCode,
-       _config = config;
+    required this._api,
+    required this._openCode,
+    required this._config,
+  });
 
   final TranslationService _api;
   final TranslationService _openCode;
