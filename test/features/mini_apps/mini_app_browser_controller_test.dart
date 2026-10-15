@@ -28,7 +28,7 @@ void main() {
   test('opens on the page the app was last on', () async {
     final container = await _container([_app]);
     expect(
-      container.read(miniAppBrowserProvider('a').notifier).initialUrl,
+      container.read(miniAppBrowserProvider('a')).initialUrl,
       'https://a.io/last',
     );
     expect(
@@ -40,7 +40,7 @@ void main() {
   test('opens on its own address when it was never left elsewhere', () async {
     final container = await _container([_app.copyWith(lastUrl: null)]);
     expect(
-      container.read(miniAppBrowserProvider('a').notifier).initialUrl,
+      container.read(miniAppBrowserProvider('a')).initialUrl,
       'https://a.io',
     );
   });
@@ -50,7 +50,7 @@ void main() {
     container.read(miniAppNavigationProvider.notifier).state =
         const MiniAppNavigation(id: 'a', url: 'https://a.io/ticket', seq: 1);
     expect(
-      container.read(miniAppBrowserProvider('a').notifier).initialUrl,
+      container.read(miniAppBrowserProvider('a')).initialUrl,
       'https://a.io/ticket',
     );
   });
@@ -60,7 +60,7 @@ void main() {
     container.read(miniAppNavigationProvider.notifier).state =
         const MiniAppNavigation(id: 'b', url: 'https://b.io/x', seq: 1);
     expect(
-      container.read(miniAppBrowserProvider('a').notifier).initialUrl,
+      container.read(miniAppBrowserProvider('a')).initialUrl,
       'https://a.io/last',
     );
   });

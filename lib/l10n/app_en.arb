@@ -2031,7 +2031,6 @@
   "miniAppPermOtherLabel": "Other",
   "miniAppPermOtherAction": "use another capability",
   "miniAppPermOtherDesc": "A capability this app does not list by name.",
-  "miniAppDevTools": "Developer tools",
   "miniAppPermissionTitle": "{site} wants to {action}",
   "@miniAppPermissionTitle": {
     "placeholders": {
@@ -2050,5 +2049,6 @@
   "miniAppPermissionsEmpty": "None yet. When the page asks to use something, your answer shows up here.",
   "miniAppPermissionAllowed": "Allowed",
   "miniAppPermissionBlocked": "Blocked",
-  "miniAppPermissionReset": "Ask again"
+  "miniAppPermissionReset": "Ask again",
+  "miniAppPermissionSaveFailed": "Couldn't save your choice. You'll be asked again next time."
 }

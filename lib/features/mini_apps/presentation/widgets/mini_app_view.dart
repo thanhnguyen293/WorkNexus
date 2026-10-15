@@ -34,6 +34,10 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
   final _address = TextEditingController();
   final _addressFocus = FocusNode();
 
+  /// Kept while the app is unchanged: the same widget instance is not rebuilt,
+  /// so the page is left alone on every progress tick of the bar above it.
+  late MiniAppWebView _webView = MiniAppWebView(app: widget.app);
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +47,14 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
       miniAppBrowserProvider(widget.app.id).select((s) => s.address),
       (_, address) => _address.text = address,
     );
+  }
+
+  @override
+  void didUpdateWidget(MiniAppView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.app != widget.app) {
+      _webView = MiniAppWebView(app: widget.app);
+    }
   }
 
   @override
@@ -120,7 +132,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
                 ? Stack(
                     fit: StackFit.expand,
                     children: [
-                      MiniAppWebView(app: widget.app),
+                      _webView,
                       if (state.loadError case final error?)
                         MiniAppLoadError(
                           message: error,

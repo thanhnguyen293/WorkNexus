@@ -12,17 +12,18 @@ import 'chat_links.dart';
 /// Makes a ZenTao bug / task / story link tapped anywhere in the app (a
 /// description, a comment, a notification) open in the ticket detail panel
 /// instead of a mini app or the browser. Links to anything else pass through
-/// to the next stages of the [LinkRouter].
-class ChatLinkRouter extends ConsumerStatefulWidget {
-  const ChatLinkRouter({super.key, required this.child});
+/// to the next stages of the [LinkRouter]. It sits in the chat feature because
+/// that is where a link is matched to a ticket ([FindLinkedTicket]).
+class TicketLinkHandler extends ConsumerStatefulWidget {
+  const TicketLinkHandler({super.key, required this.child});
 
   final Widget child;
 
   @override
-  ConsumerState<ChatLinkRouter> createState() => _ChatLinkRouterState();
+  ConsumerState<TicketLinkHandler> createState() => _TicketLinkHandlerState();
 }
 
-class _ChatLinkRouterState extends ConsumerState<ChatLinkRouter>
+class _TicketLinkHandlerState extends ConsumerState<TicketLinkHandler>
     implements LinkHandler {
   @override
   void initState() {

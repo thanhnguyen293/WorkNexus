@@ -14,11 +14,11 @@ import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../features/chat/presentation/widgets/chat_app_badge.dart';
 import '../../features/chat/presentation/widgets/chat_appearance_settings.dart';
 import '../../features/chat/presentation/widgets/chat_auto_download_settings.dart';
-import '../../features/chat/presentation/widgets/chat_link_router.dart';
 import '../../features/chat/presentation/widgets/chat_notification_listener.dart';
 import '../../features/chat/presentation/widgets/chat_notification_settings.dart';
 import '../../features/chat/presentation/widgets/chat_privacy_settings.dart';
 import '../../features/chat/presentation/widgets/sticker_import_listener.dart';
+import '../../features/chat/presentation/widgets/ticket_link_handler.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/local_cache_card.dart';
 import '../../features/connections/presentation/widgets/local_cache_quick_settings.dart';
@@ -50,7 +50,7 @@ class AppShell extends ConsumerWidget {
     // A bug / task editor takes the whole area beside the rail.
     final editor = integrationsVisible ? null : ref.watch(ticketEditorProvider);
 
-    return ChatLinkRouter(
+    return TicketLinkHandler(
       child: ChatNotificationListener(
         child: ChatAppBadge(
           child: StickerImportListener(
