@@ -55,6 +55,27 @@ void main() {
     );
   });
 
+  test(
+    'a link is used once: reopened later, the app is back where it was',
+    () async {
+      final container = await _container([_app]);
+      container.read(miniAppNavigationProvider.notifier).state =
+          const MiniAppNavigation(id: 'a', url: 'https://a.io/ticket', seq: 1);
+      // The open view keeps the app's browser alive.
+      final view = container.listen(miniAppBrowserProvider('a'), (_, _) {});
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(miniAppNavigationProvider), isNull);
+      // Closed to save memory: the view goes, and the browser with it.
+      view.close();
+      await Future<void>.delayed(Duration.zero);
+      expect(container.exists(miniAppBrowserProvider('a')), isFalse);
+      expect(
+        container.read(miniAppBrowserProvider('a')).initialUrl,
+        'https://a.io/last',
+      );
+    },
+  );
+
   test('a link aimed at another app is not its own', () async {
     final container = await _container([_app]);
     container.read(miniAppNavigationProvider.notifier).state =

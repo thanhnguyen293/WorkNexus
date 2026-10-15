@@ -6,10 +6,10 @@ import '../../../core/di/providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/settings_section_heading.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connect_account_dialog.dart';
 import 'widgets/account_list.dart';
-import 'widgets/settings_section_heading.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({this.footer, super.key});

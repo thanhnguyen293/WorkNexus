@@ -2050,5 +2050,49 @@
   "miniAppPermissionAllowed": "Allowed",
   "miniAppPermissionBlocked": "Blocked",
   "miniAppPermissionReset": "Ask again",
-  "miniAppPermissionSaveFailed": "Couldn't save your choice. You'll be asked again next time."
+  "miniAppPermissionSaveFailed": "Couldn't save your choice. You'll be asked again next time.",
+  "miniAppSettingsTitle": "Mini apps",
+  "@miniAppSettingsTitle": {
+    "description": "Heading of the mini apps section on the Settings page."
+  },
+  "miniAppSettingsSummary": "Up to {limit} running · {count} apps",
+  "@miniAppSettingsSummary": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "miniAppDataSection": "Browsing data",
+  "miniAppDataHint": "Cache, cookies and what sites keep on this device.",
+  "miniAppSettingsAppsHint": "Edit a mini app, or clear one site's data.",
+  "miniAppLiveLimitLabel": "Apps kept running",
+  "miniAppLiveLimitHint": "Past this, the app left longest ago closes and reopens where it was when you come back. Fewer uses less memory.",
+  "miniAppNotifyBackgroundLabel": "Keep apps that notify running",
+  "miniAppNotifyBackgroundHint": "Off: hidden apps pause, and their notifications wait until you open them.",
+  "miniAppClearCache": "Clear cache",
+  "miniAppClearCacheHint": "Sign-ins stay; pages load afresh.",
+  "miniAppClearAll": "Clear all browsing data",
+  "miniAppClearAllHint": "Signs you out of every mini app.",
+  "miniAppClearAllTitle": "Clear all browsing data?",
+  "miniAppClearAllMessage": "You will be signed out of every mini app. This cannot be undone.",
+  "miniAppClearSite": "Clear site data",
+  "miniAppClearSiteTitle": "Clear {name}'s data?",
+  "@miniAppClearSiteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppClearSiteMessage": "The site's cookies, storage and cache are deleted, and you are signed out of it.",
+  "miniAppClear": "Clear",
+  "miniAppCleared": "Browsing data cleared",
+  "miniAppClearFailed": "Could not clear the data",
+  "miniAppClearUnsupported": "Clearing data is only available on Windows.",
+  "miniAppSettingsApps": "Your mini apps",
+  "miniAppSettingsEmpty": "No mini apps yet. Add one with + on the rail."
 }

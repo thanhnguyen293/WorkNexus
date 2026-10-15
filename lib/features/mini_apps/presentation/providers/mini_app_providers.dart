@@ -6,9 +6,11 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/entities/mini_app_permission.dart';
+import '../../domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../domain/repositories/mini_app_permission_repository.dart';
 import '../../domain/repositories/mini_app_repository.dart';
 import '../../domain/usecases/add_mini_app.dart';
+import '../../domain/usecases/move_mini_app.dart';
 import '../../domain/usecases/resolve_mini_app_permission.dart';
 import '../../domain/usecases/update_mini_app.dart';
 
@@ -24,10 +26,19 @@ final miniAppPermissionRepositoryProvider =
       (ref) => getIt<MiniAppPermissionRepository>(),
     );
 
+final miniAppBrowsingDataRepositoryProvider =
+    Provider<MiniAppBrowsingDataRepository>(
+      (ref) => getIt<MiniAppBrowsingDataRepository>(),
+    );
+
 final addMiniAppProvider = Provider<AddMiniApp>((ref) => getIt<AddMiniApp>());
 
 final updateMiniAppProvider = Provider<UpdateMiniApp>(
   (ref) => getIt<UpdateMiniApp>(),
+);
+
+final moveMiniAppProvider = Provider<MoveMiniApp>(
+  (ref) => getIt<MoveMiniApp>(),
 );
 
 final resolveMiniAppPermissionProvider = Provider<ResolveMiniAppPermission>(
@@ -70,8 +81,8 @@ final miniAppPermissionsProvider =
     );
 
 /// Commands over the mini apps. Adding goes through [AddMiniApp] (URL
-/// validation); editing through [UpdateMiniApp]; the rest are CRUD
-/// pass-throughs to the repository interface.
+/// validation); editing through [UpdateMiniApp]; reordering through
+/// [MoveMiniApp]; the rest are CRUD pass-throughs to the repository interface.
 class MiniAppController extends Notifier<void> {
   @override
   void build() {}
@@ -96,6 +107,13 @@ class MiniAppController extends Notifier<void> {
     name: name,
     iconPath: iconPath,
   );
+
+  /// Moves the app at [from] to [to] in [apps] (rail order).
+  Future<Result<List<MiniApp>>> move(
+    List<MiniApp> apps, {
+    required int from,
+    required int to,
+  }) => ref.read(moveMiniAppProvider)(apps, from: from, to: to);
 
   Future<Result<String?>> fetchSiteIcon(String id, String url) =>
       _repository.fetchSiteIcon(id: id, pageUrl: url);

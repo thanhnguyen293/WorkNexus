@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/mini_app.dart';
+import '../../domain/entities/mini_app_permission.dart';
 import '../../domain/usecases/normalize_mini_app_url.dart';
 import '../providers/mini_app_browser_controller.dart';
+import '../providers/mini_app_providers.dart';
 import '../util/mini_app_shortcuts.dart';
 import 'mini_app_load_error.dart';
 import 'mini_app_toolbar.dart';
@@ -18,9 +21,13 @@ import 'mini_app_web_view.dart';
 /// the system browser instead. What the page is doing lives in the app's
 /// [MiniAppBrowserController]; this only draws it and keeps the address field.
 class MiniAppView extends ConsumerStatefulWidget {
-  const MiniAppView({super.key, required this.app});
+  const MiniAppView({super.key, required this.app, this.active = true});
 
   final MiniApp app;
+
+  /// Whether the page is the one on screen; off screen it stops drawing (see
+  /// [MiniAppBrowserController.setActivity]).
+  final bool active;
 
   static bool get embedded =>
       defaultTargetPlatform == TargetPlatform.windows ||
@@ -47,6 +54,16 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
       miniAppBrowserProvider(widget.app.id).select((s) => s.address),
       (_, address) => _address.text = address,
     );
+    // A page allowed to notify keeps running off screen.
+    ref.listenManual(
+      miniAppPermissionsProvider(widget.app.id),
+      (_, _) => _syncActivity(),
+      fireImmediately: true,
+    );
+    ref.listenManual(
+      appSettingsProvider.select((s) => s.miniAppNotifyInBackground),
+      (_, _) => _syncActivity(),
+    );
   }
 
   @override
@@ -55,6 +72,26 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
     if (oldWidget.app != widget.app) {
       _webView = MiniAppWebView(app: widget.app);
     }
+    if (oldWidget.active != widget.active) _syncActivity();
+  }
+
+  void _syncActivity() {
+    final grants =
+        ref.read(miniAppPermissionsProvider(widget.app.id)).asData?.value ??
+        const [];
+    final background = ref.read(
+      appSettingsProvider.select((s) => s.miniAppNotifyInBackground),
+    );
+    _browser.setActivity(
+      active: widget.active,
+      keepRunning:
+          background &&
+          grants.any(
+            (g) =>
+                g.kind == MiniAppPermissionKind.notifications &&
+                g.decision == MiniAppPermissionDecision.allow,
+          ),
+    );
   }
 
   @override

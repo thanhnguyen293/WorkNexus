@@ -25,6 +25,7 @@ import '../../features/connections/presentation/widgets/local_cache_quick_settin
 import '../../features/connections/presentation/widgets/zentao_profile_dialog.dart';
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/mini_apps/presentation/widgets/mini_app_settings_card.dart';
 import '../../features/mini_apps/presentation/widgets/mini_apps_host.dart';
 import '../../features/notifications/presentation/widgets/notifications_panel.dart';
 import '../../features/task_detail/presentation/detail_panel.dart';
@@ -93,6 +94,10 @@ class AppShell extends ConsumerWidget {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 const TranslationSettingsCard(),
+                                                SizedBox(
+                                                  height: context.spacing.xl4,
+                                                ),
+                                                const MiniAppSettingsCard(),
                                                 SizedBox(
                                                   height: context.spacing.xl4,
                                                 ),

@@ -13,6 +13,10 @@ abstract interface class MiniAppRepository {
   /// so it cannot undo an edit made meanwhile.
   Future<Result<void>> saveLastUrl(String id, String url);
 
+  /// Puts the apps in the order of [ids] on the rail, first to last. Touches
+  /// nothing but their positions.
+  Future<Result<void>> saveOrder(List<String> ids);
+
   /// Removes the app and its icon file.
   Future<Result<void>> delete(String id);
 
