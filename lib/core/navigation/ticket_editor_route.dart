@@ -48,22 +48,29 @@ class NewBugRoute extends TicketEditorRoute {
 }
 
 /// A new task in execution [executionId] (`'0'`: the one ZenTao has
-/// current); a subtask of task [parentId] when given — or kept draft
-/// [draftId].
+/// current); a subtask of task [parentId] when given; or a copy of task
+/// [copyOf] when given — or kept draft [draftId].
 class NewTaskRoute extends TicketEditorRoute {
   const NewTaskRoute({
     required super.accountId,
     this.executionId = '0',
     this.parentId,
     this.draftId,
+    this.copyOf,
   });
 
   final String executionId;
   final String? parentId;
   final String? draftId;
+  final String? copyOf;
 
   @override
-  List<Object> get _key => [executionId, parentId ?? '', draftId ?? ''];
+  List<Object> get _key => [
+    executionId,
+    parentId ?? '',
+    draftId ?? '',
+    copyOf ?? '',
+  ];
 }
 
 /// Bug [bugId] (its ZenTao id), as edited.

@@ -1,0 +1,36 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/domain/adapters/provider_adapter.dart';
+import '../../../../core/domain/entities/account.dart';
+import '../../../../core/settings/app_settings.dart';
+import '../../../../shared/shell_pane/provider_pinned_projects.dart';
+import '../providers/github_board_providers.dart';
+import '../widgets/github_repo_row.dart';
+
+/// The per-account "Pinned" area of a GitHub node: the account's pinned repos,
+/// resolved against its loaded repos list and lifted above the collapsible
+/// Repositories group. Hidden when nothing is pinned.
+class GitHubPinnedBranch extends ConsumerWidget {
+  const GitHubPinnedBranch({super.key, required this.account});
+
+  final Account account;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pinnedKeys = ref.watch(
+      appSettingsProvider.select((s) => s.pinnedProjects),
+    );
+    final repos =
+        ref.watch(githubReposProvider(account.id)).asData?.value ??
+        const <ProviderProject>[];
+    final pinned = [
+      for (final r in repos)
+        if (pinnedKeys.contains('${r.accountId}:${r.id}')) r,
+    ];
+    return ProviderPinnedProjects(
+      pinned: pinned,
+      rowBuilder: (r) => GitHubRepoRow(repo: r, pinned: true),
+    );
+  }
+}

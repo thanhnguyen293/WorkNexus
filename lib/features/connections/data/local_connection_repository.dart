@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 
+import '../../../core/data/mappers/mappers.dart';
 import '../../../core/database/database.dart';
 import '../../../core/domain/entities/account.dart';
 import '../../../core/domain/entities/workspace.dart';
-import '../../../data/local/mappers.dart';
 import '../domain/repositories/connection_repository.dart';
 
 class LocalConnectionRepository implements ConnectionRepository {

@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart' show Table, TableInfo;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/data/mappers/mappers.dart';
 import 'package:work_nexus/core/database/database.dart';
+import 'package:work_nexus/core/database/database_seeder.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
-import 'package:work_nexus/data/local/database_seeder.dart';
-import 'package:work_nexus/data/local/mappers.dart';
 import 'package:work_nexus/features/connections/data/repositories/drift_local_cache_repository.dart';
 import 'package:work_nexus/features/connections/domain/entities/cache_section.dart';
 

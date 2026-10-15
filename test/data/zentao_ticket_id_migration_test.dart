@@ -37,7 +37,7 @@ void main() {
         "VALUES ('c1', 'zt:6492', 'a', 'b', 0), ('c2', 'zt:g:1', 'a', 'b', 0)",
       );
       raw.execute('PRAGMA user_version = 43;');
-      raw.dispose();
+      raw.close();
 
       final db = AppDatabase(NativeDatabase(file));
       addTearDown(db.close);

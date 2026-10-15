@@ -1,0 +1,84 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../../core/di/locator.dart';
+import '../../../../core/domain/adapters/ticket_detail_service.dart';
+import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../l10n/app_localizations.dart';
+import 'action_dialog_scaffold.dart';
+
+/// Assigns a ticket to a provider user, with an optional note.
+class AssignDialog extends ConsumerStatefulWidget {
+  const AssignDialog({super.key, required this.ticket});
+  final Ticket ticket;
+
+  @override
+  ConsumerState<AssignDialog> createState() => _AssignDialogState();
+}
+
+class _AssignDialogState extends ConsumerState<AssignDialog> {
+  final _note = TextEditingController();
+  String? _assignee;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final assignee = _assignee;
+    if (assignee == null) return;
+    final l = AppL10n.of(context);
+    final navigator = Navigator.of(context);
+    setState(() => _busy = true);
+    final res = await getIt<TicketDetailService>().assignTicket(
+      widget.ticket,
+      assignee: assignee,
+      comment: _note.text,
+    );
+    if (!mounted) return;
+    showAppSnack(
+      context,
+      res.isOk
+          ? l.taskDetailAssignedTo(assignee)
+          : l.actionFailed(
+              res.failureOrNull?.message ?? l.providerActionFailed,
+            ),
+      isError: !res.isOk,
+    );
+    navigator.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return ActionScaffold(
+      title: l.zentaoActionTitle(l.assign, widget.ticket.externalKey),
+      submitLabel: l.assign,
+      icon: LucideIcons.userPlus300,
+      busy: _busy,
+      canSubmit: _assignee != null,
+      onSubmit: _submit,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FieldLabel(l.fieldAssignTo),
+          AssigneeDropdown(
+            ticketId: widget.ticket.id,
+            value: _assignee,
+            onChanged: (v) => setState(() => _assignee = v),
+          ),
+          SizedBox(height: context.spacing.xl2),
+          FieldLabel(l.zentaoNote),
+          NoteField(_note),
+        ],
+      ),
+    );
+  }
+}

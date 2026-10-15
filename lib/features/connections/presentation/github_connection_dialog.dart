@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/platform/open_external.dart';
 import '../../../core/widgets/connection_text_field.dart';
 import '../../../l10n/app_localizations.dart';
 import 'connection_controllers.dart';
@@ -136,11 +135,7 @@ class _GitHubConnectionDialogState
     final base = _tokenSettingsBase(_baseUrl.text);
     final url =
         '$base/settings/tokens/new?scopes=repo,read:org&description=WorkNexus';
-    try {
-      await Process.run('open', [url]);
-    } catch (_) {
-      // best-effort; nothing to surface if the platform lacks `open`.
-    }
+    await openExternally(url);
   }
 
   /// The web origin hosting the token settings page, derived from the entered

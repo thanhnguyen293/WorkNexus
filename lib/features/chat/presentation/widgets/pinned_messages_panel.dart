@@ -92,9 +92,7 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
         t,
         infoRoom: ChatLayoutScope.of(context).infoRoom,
       ),
-      onClose: ChatLayoutScope.of(context).infoRoom
-          ? null
-          : () => closeChatSidePanel(ref, t),
+      onClose: () => closeChatSidePanel(ref, t),
       child: ids.isEmpty
           ? AppStateView.empty(
               compact: true,

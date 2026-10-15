@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/domain/adapters/zentao_ticket_service.dart';
+import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
@@ -13,10 +14,9 @@ import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/core/domain/entities/provider_entity.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/parent_task_link.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/subtask_list.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/parent_task_link.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/subtask_list.dart';
 
 class _MockService extends Mock implements ZenTaoTicketService {}
 
@@ -90,7 +90,10 @@ void main() {
     await tester.tap(find.text('#12160'));
     await tester.pump();
 
-    expect(container.read(openTicketIdProvider), 'zt:task:12160');
+    expect(
+      container.read(openTicketIdProvider),
+      zenTaoTicketId('zt', 'task', '12160'),
+    );
     verifyNever(
       () => service.fetchZenTaoTicket(
         host: any(named: 'host'),
@@ -109,13 +112,16 @@ void main() {
         type: 'task',
         id: '12160',
       ),
-    ).thenAnswer((_) async => const Ok('zt:task:12160'));
+    ).thenAnswer((_) async => Ok(zenTaoTicketId('zt', 'task', '12160')));
     final container = await pump(tester, const []);
 
     await tester.tap(find.text('#12160'));
     await tester.pumpAndSettle();
 
-    expect(container.read(openTicketIdProvider), 'zt:task:12160');
+    expect(
+      container.read(openTicketIdProvider),
+      zenTaoTicketId('zt', 'task', '12160'),
+    );
   });
 
   testWidgets('a parent lists its subtasks and opens one on tap', (
@@ -143,6 +149,9 @@ void main() {
     await tester.tap(find.text('mobile'));
     await tester.pump();
 
-    expect(container.read(openTicketIdProvider), 'zt:task:12167');
+    expect(
+      container.read(openTicketIdProvider),
+      zenTaoTicketId('zt', 'task', '12167'),
+    );
   });
 }

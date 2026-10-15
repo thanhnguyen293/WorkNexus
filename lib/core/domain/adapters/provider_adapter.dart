@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../error/result.dart';
 import '../../util/cancel_signal.dart';
 import '../entities/activity_event.dart';
@@ -102,11 +104,15 @@ class ProviderProject {
     required this.id,
     required this.name,
     required this.accountId,
+    this.programId,
+    this.programName,
   });
 
   final String id;
   final String name;
   final String accountId;
+  final String? programId;
+  final String? programName;
 }
 
 /// A provider-side execution (sprint/iteration) that scopes task sync. Belongs
@@ -229,4 +235,17 @@ abstract class ProviderAdapter {
     String? assignee,
     String? comment,
   });
+
+  /// Fetches raw bytes for an inline image or file URL.
+  Future<Uint8List?> fetchBytes(
+    String url, {
+    String? projectPath,
+    String? projectId,
+  }) async => null;
+
+  /// Downloads raw bytes for an attachment URL.
+  Future<Uint8List?> downloadBytes(String url) async => null;
+
+  /// Optional underlying client object (e.g. ZenTaoClient, GitLabClient) for tool services.
+  Object? get rawClient => null;
 }

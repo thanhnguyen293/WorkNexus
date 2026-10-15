@@ -668,27 +668,58 @@ class AppDatabase extends _$AppDatabase {
           }
         }
       }
-      if (from < 35) {
-        if (!await _hasColumn('settings', 'chat_text_scale')) {
-          await m.addColumn(settings, settings.chatTextScale);
+      if (from < 22) {
+        if (!await _hasColumn('chat_conversations', 'admins_json')) {
+          await m.addColumn(chatConversations, chatConversations.adminsJson);
         }
       }
-      if (from < 34) {
-        if (!await _hasColumn('chat_conversations', 'committers')) {
-          await m.addColumn(chatConversations, chatConversations.committers);
+      if (from < 23) {
+        if (!await _hasColumn('settings', 'chat_cache_limit_mb')) {
+          await m.addColumn(settings, settings.chatCacheLimitMb);
         }
       }
-      if (from < 33) {
-        if (!await _hasColumn('settings', 'chat_notify_while_viewing')) {
-          await m.addColumn(settings, settings.chatNotifyWhileViewing);
+      if (from < 24) {
+        // Zalo became the default chat style; installs still on the old
+        // default follow it (the style menu changes it any time).
+        await customStatement(
+          "UPDATE settings SET chat_appearance = 'zalo' "
+          "WHERE chat_appearance = 'worknexus'",
+        );
+      }
+      if (from < 25) {
+        if (!await _hasColumn('chat_conversations', 'avatar_json')) {
+          await m.addColumn(chatConversations, chatConversations.avatarJson);
+        }
+        if (!await _hasColumn('chat_users', 'status')) {
+          await m.addColumn(chatUsers, chatUsers.status);
         }
       }
-      if (from < 32) {
-        if (!await _hasColumn('settings', 'chat_auto_download_videos')) {
-          await m.addColumn(settings, settings.chatAutoDownloadVideos);
+      if (from < 26) {
+        if (!await _hasColumn('settings', 'chat_primary_bubbles')) {
+          await m.addColumn(settings, settings.chatPrimaryBubbles);
         }
-        if (!await _hasColumn('settings', 'chat_auto_download_video_mb')) {
-          await m.addColumn(settings, settings.chatAutoDownloadVideoMb);
+      }
+      if (from < 27) {
+        if (!await _hasColumn('settings', 'chat_wallpaper')) {
+          await m.addColumn(settings, settings.chatWallpaper);
+        }
+        if (!await _hasColumn('settings', 'chat_wallpaper_dim')) {
+          await customStatement(
+            'ALTER TABLE "settings" ADD COLUMN "chat_wallpaper_dim" REAL NOT NULL DEFAULT 0.0;',
+          );
+          await customStatement(
+            'UPDATE "settings" SET chat_wallpaper_dim = 0.2 WHERE chat_wallpaper_dim = 0.0;',
+          );
+        }
+      }
+      if (from < 28) {
+        if (!await _hasColumn('chat_conversations', 'starred')) {
+          await m.addColumn(chatConversations, chatConversations.starred);
+        }
+      }
+      if (from < 29) {
+        if (!await _hasColumn('chat_conversations', 'muted')) {
+          await m.addColumn(chatConversations, chatConversations.muted);
         }
       }
       if (from < 31) {
@@ -701,53 +732,27 @@ class AppDatabase extends _$AppDatabase {
           );
         }
       }
-      if (from < 29) {
-        if (!await _hasColumn('chat_conversations', 'muted')) {
-          await m.addColumn(chatConversations, chatConversations.muted);
+      if (from < 32) {
+        if (!await _hasColumn('settings', 'chat_auto_download_videos')) {
+          await m.addColumn(settings, settings.chatAutoDownloadVideos);
+        }
+        if (!await _hasColumn('settings', 'chat_auto_download_video_mb')) {
+          await m.addColumn(settings, settings.chatAutoDownloadVideoMb);
         }
       }
-      if (from < 28) {
-        if (!await _hasColumn('chat_conversations', 'starred')) {
-          await m.addColumn(chatConversations, chatConversations.starred);
+      if (from < 33) {
+        if (!await _hasColumn('settings', 'chat_notify_while_viewing')) {
+          await m.addColumn(settings, settings.chatNotifyWhileViewing);
         }
       }
-      if (from < 27) {
-        if (!await _hasColumn('settings', 'chat_wallpaper')) {
-          await m.addColumn(settings, settings.chatWallpaper);
-        }
-        if (!await _hasColumn('settings', 'chat_wallpaper_dim')) {
-          await m.addColumn(settings, settings.chatWallpaperDim);
+      if (from < 34) {
+        if (!await _hasColumn('chat_conversations', 'committers')) {
+          await m.addColumn(chatConversations, chatConversations.committers);
         }
       }
-      if (from < 26) {
-        if (!await _hasColumn('settings', 'chat_primary_bubbles')) {
-          await m.addColumn(settings, settings.chatPrimaryBubbles);
-        }
-      }
-      if (from < 25) {
-        if (!await _hasColumn('chat_conversations', 'avatar_json')) {
-          await m.addColumn(chatConversations, chatConversations.avatarJson);
-        }
-        if (!await _hasColumn('chat_users', 'status')) {
-          await m.addColumn(chatUsers, chatUsers.status);
-        }
-      }
-      if (from < 24) {
-        // Zalo became the default chat style; installs still on the old
-        // default follow it (the style menu changes it any time).
-        await customStatement(
-          "UPDATE settings SET chat_appearance = 'zalo' "
-          "WHERE chat_appearance = 'worknexus'",
-        );
-      }
-      if (from < 23) {
-        if (!await _hasColumn('settings', 'chat_cache_limit_mb')) {
-          await m.addColumn(settings, settings.chatCacheLimitMb);
-        }
-      }
-      if (from < 22) {
-        if (!await _hasColumn('chat_conversations', 'admins_json')) {
-          await m.addColumn(chatConversations, chatConversations.adminsJson);
+      if (from < 35) {
+        if (!await _hasColumn('settings', 'chat_text_scale')) {
+          await m.addColumn(settings, settings.chatTextScale);
         }
       }
       // Versions 32–37 were used on parallel branches (36 twice: ZenTao

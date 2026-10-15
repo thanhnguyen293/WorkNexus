@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
-import '../../../../core/di/service_locator.dart';
+import '../../../../core/domain/adapters/account_sync_service.dart';
+import '../../../../core/domain/adapters/gitlab_mr_service.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/result.dart';
@@ -16,14 +18,14 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../sync/data/sync_service.dart';
 import '../../domain/repositories/connection_repository.dart';
 
 /// The GitLab instance version for an account (e.g. `16.3.8`), shown on its
 /// connected-accounts row. Null for non-GitLab accounts or when unavailable.
 final gitlabServerVersionProvider = FutureProvider.autoDispose
     .family<String?, String>(
-      (ref, accountId) => getIt<SyncService>().gitlabServerVersion(accountId),
+      (ref, accountId) =>
+          getIt<GitLabMrService>().gitlabServerVersion(accountId),
     );
 
 /// One connected account: provider, handle, the server it talks to, and its
@@ -145,7 +147,7 @@ class AccountRow extends ConsumerWidget {
   Future<void> _sync(BuildContext context) async {
     final l = AppL10n.of(context);
     showAppSnack(context, l.connectionsSyncing(account.handle));
-    final res = await getIt<SyncService>().syncAccount(account);
+    final res = await getIt<AccountSyncService>().syncAccount(account);
     if (!context.mounted) return;
     switch (res) {
       case Ok(:final value):

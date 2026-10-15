@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_language_interceptor.dart';
+import 'package:work_nexus/tools/zentao/data/datasources/zentao_language_interceptor.dart';
 
 /// Answers every request with an empty 200, keeping the request it was sent.
 class _RecordingAdapter implements HttpClientAdapter {

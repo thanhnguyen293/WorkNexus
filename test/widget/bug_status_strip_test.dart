@@ -7,8 +7,8 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/bug_status_strip.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/bug_status_strip.dart';
 
 void main() {
   Future<void> pump(

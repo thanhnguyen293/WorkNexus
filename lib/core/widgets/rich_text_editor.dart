@@ -155,17 +155,12 @@ class _RichTextEditorState extends State<RichTextEditor> {
                   color: c.surfaceSubtle,
                   sectionDividerColor: c.border,
                   buttonOptions: editorToolbarButtons(context, quill),
-                  multiRowsDisplay: true,
                   toolbarIconAlignment: WrapAlignment.start,
                   showFontFamily: false,
                   showFontSize: false,
-                  showSmallButton: false,
                   showSearchButton: false,
                   showSubscript: false,
                   showSuperscript: false,
-                  showClipboardCut: false,
-                  showClipboardCopy: false,
-                  showClipboardPaste: false,
                   customButtons: [
                     if (widget.onUploadImage != null)
                       QuillToolbarCustomButtonOptions(

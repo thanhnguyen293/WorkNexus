@@ -4,7 +4,7 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/ticket_sort.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_paged_table.dart';
+import 'package:work_nexus/shared/board/domain/usecases/build_paged_table.dart';
 
 Ticket _t(
   String key, {

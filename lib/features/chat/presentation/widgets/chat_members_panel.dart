@@ -30,7 +30,7 @@ class ChatMembersPanel extends ConsumerWidget {
     return ChatSidePanelFrame(
       title: AppL10n.of(context).chatMembersTitle,
       onBack: () => backToChatInfo(ref, thread, infoRoom: infoRoom),
-      onClose: infoRoom ? null : () => closeChatSidePanel(ref, thread),
+      onClose: () => closeChatSidePanel(ref, thread),
       child: ChatMemberList(
         chat: thread,
         users: users,

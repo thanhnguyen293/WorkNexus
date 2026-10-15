@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/sync/data/task_bugs_coverage.dart';
+import 'package:work_nexus/tools/zentao/data/services/task_bugs_coverage.dart';
 
 void main() {
   final at = DateTime(2026, 10, 14, 15);

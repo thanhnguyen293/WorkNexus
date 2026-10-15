@@ -44,7 +44,6 @@ MockUpdateRepository mockUpdateRepository() {
       currentVersion: '',
       latestVersion: '',
       releaseUrl: '',
-      releaseNotes: '',
     ),
   );
   final repository = MockUpdateRepository();

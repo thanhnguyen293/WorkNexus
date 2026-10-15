@@ -27,7 +27,10 @@ class _FakeInstaller extends UpdateInstaller {
 
   @override
   Future<String> unpack(String zipPath, String directory) async {
-    if (unpackError != null) throw unpackError!;
+    final err = unpackError;
+    if (err is Exception) throw err;
+    if (err is Error) throw err;
+    if (err != null) throw Exception(err.toString());
     return directory;
   }
 

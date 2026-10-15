@@ -8,6 +8,9 @@ abstract interface class NotificationRepository {
   /// Every stored notification of every account, newest first, live.
   Stream<List<ZenTaoNotification>> watchAll();
 
+  /// Realnames of connected ZenTao accounts, keyed by accountId.
+  Stream<Map<String, String>> watchAccountRealnames();
+
   /// Fetches the notifications of [accountId] from ZenTao and stores them.
   Future<Result<void>> refresh(String accountId);
 

@@ -53,7 +53,7 @@ class MergeRequestCard extends ConsumerWidget {
     return ChatLinkCardFrame(
       bar: state?.$1,
       onTap: () => ticket == null
-          ? openLinkExternally(url)
+          ? openExternally(url)
           : ref.read(appNavProvider.notifier).openTicket(ticket.id),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

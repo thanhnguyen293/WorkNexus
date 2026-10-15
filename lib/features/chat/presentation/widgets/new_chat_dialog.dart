@@ -84,7 +84,10 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
     if (!mounted) return;
     switch (result) {
       case Ok(:final value):
-        ref.read(appNavProvider.notifier).show(MainView.chat);
+        ref.read(appNavProvider.notifier).selectAccount(id);
+        ref
+            .read(appNavProvider.notifier)
+            .selectSection(const SectionId('zentao.chat'));
         ref.read(pickedChatAccountProvider.notifier).state = id;
         ref.read(selectedChatGidProvider(id).notifier).state = value;
         Navigator.of(context).pop();

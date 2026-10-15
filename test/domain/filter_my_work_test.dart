@@ -3,8 +3,8 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/dashboard/domain/usecases/filter_my_work.dart';
-import 'package:work_nexus/features/dashboard/domain/value_objects/dashboard_item_kind.dart';
+import 'package:work_nexus/features/workspace_overview/domain/usecases/filter_my_work.dart';
+import 'package:work_nexus/features/workspace_overview/domain/value_objects/dashboard_item_kind.dart';
 
 Ticket _t(
   String id, {

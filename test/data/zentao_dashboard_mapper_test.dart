@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/dashboard/data/mappers/zentao_dashboard_mapper.dart';
-import 'package:work_nexus/features/dashboard/domain/value_objects/dashboard_item_kind.dart';
+import 'package:work_nexus/features/workspace_overview/data/mappers/zentao_dashboard_mapper.dart';
+import 'package:work_nexus/features/workspace_overview/domain/value_objects/dashboard_item_kind.dart';
 
 final _fetchedAt = DateTime(2026, 10, 9, 12);
 

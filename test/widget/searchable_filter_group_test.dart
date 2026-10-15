@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/board/presentation/widgets/filter_option_group.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/filter_option_group.dart';
 
 /// [SearchableFilterGroup] only grows a search box once a group is long enough
 /// to need one, narrows the chips as you type, and never hides a chip that is

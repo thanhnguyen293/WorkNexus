@@ -6,92 +6,64 @@ import '../../core/debug/debug_celebrate_button.dart';
 import '../../core/platform/desktop_window_service.dart';
 import '../../core/theme/app_borders.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quick_settings_button.dart';
 import '../../features/chat/presentation/widgets/chat_trust_debug_button.dart';
 import '../../features/chat/presentation/widgets/chat_typing_debug_button.dart';
-import '../../l10n/app_localizations.dart';
+import 'contextual_search_field.dart';
+import 'desktop_window_buttons.dart';
+import 'workspace_breadcrumb.dart';
 
-/// The custom 34px window title bar: draggable, hosts the app title and
-/// Quick Settings. macOS traffic lights stay clear; on Windows and Linux it
-/// draws the caption buttons itself.
+/// The 56px window title bar for the unified workspace shell (design §2, §8):
+/// draggable, hosts [WorkspaceBreadcrumb] on the left, [ContextualSearchField]
+/// in the center, and settings/window caption buttons on the right.
 class TitleBar extends ConsumerWidget {
   const TitleBar({super.key, this.assignedCount});
 
   final int? assignedCount;
 
-  static const _height = 34.0;
-
-  /// The minimize / maximize / close buttons are 46px wide each.
-  static const _captionButtonWidth = 46.0;
-  static const _captionButtonsWidth = _captionButtonWidth * 3;
-
-  /// Room macOS keeps for its traffic-light buttons.
-  static const _macTrafficLightsWidth = 60.0;
+  /// Room macOS keeps for its traffic-light buttons on the left.
+  static const _macTrafficLightsWidth = 72.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final l10n = AppL10n.of(context);
+    final s = context.spacing;
     final drawsCaption = DesktopWindowService.drawsCaptionButtons;
-    final title = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          child: Text(
-            l10n.appTitle,
-            overflow: TextOverflow.ellipsis,
-            style: context.typography.bodySmStrong.copyWith(
-              color: c.textPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-    final bar = Container(
-      height: _height,
+    final isDesktop = DesktopWindowService.isDesktop;
+
+    return Container(
+      height: context.sizes.titleBarHeight,
       decoration: BoxDecoration(
         color: c.titleBar,
         border: Border(bottom: context.hairlineSide),
       ),
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
+      padding: EdgeInsets.only(left: s.md, right: drawsCaption ? 0 : s.md),
       child: Row(
         children: [
-          if (DesktopWindowService.isDesktop)
-            SizedBox(
-              width: drawsCaption
-                  ? _captionButtonsWidth +
-                        context.spacing.lg * 2 +
-                        context.spacing.xl5 +
-                        context.spacing.xs
-                  : _macTrafficLightsWidth,
-            ),
+          if (isDesktop && !drawsCaption)
+            const SizedBox(width: _macTrafficLightsWidth),
+          const WorkspaceBreadcrumb(),
+          SizedBox(width: s.md),
           Expanded(
-            child: DesktopWindowService.isDesktop
-                ? DragToMoveArea(child: title)
-                : title,
+            child: isDesktop
+                ? const DragToMoveArea(
+                    child: Center(child: ContextualSearchField()),
+                  )
+                : const Center(child: ContextualSearchField()),
           ),
-          SizedBox(width: context.spacing.lg),
-          // Debug builds only (renders nothing in release).
+          SizedBox(width: s.md),
           const DebugCelebrateButton(),
           const ChatTypingDebugButton(),
           const ChatTrustDebugButton(),
           const QuickSettingsButton(),
           if (drawsCaption) ...[
-            SizedBox(width: context.spacing.lg),
-            SizedBox(
-              width: _captionButtonsWidth,
-              child: WindowCaption(
-                backgroundColor: c.titleBar,
-                brightness: Theme.of(context).brightness,
-              ),
-            ),
+            SizedBox(width: s.sm),
+            const DesktopWindowButtons(),
           ],
         ],
       ),
     );
-
-    return bar;
   }
 }

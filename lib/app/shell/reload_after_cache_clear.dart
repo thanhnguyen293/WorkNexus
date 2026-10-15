@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/di/providers.dart';
-import '../../core/di/service_locator.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../features/connections/domain/entities/cache_section.dart';
-import '../../features/connections/domain/usecases/refresh_zentao_profile.dart';
-import '../../features/dashboard/presentation/providers/dashboard_providers.dart';
 import '../../features/notifications/presentation/providers/notification_providers.dart';
-import '../../features/sync/data/sync_service.dart';
+import '../../features/workspace_overview/presentation/providers/dashboard_providers.dart';
+import '../../shared/sync/data/sync_service.dart';
+import '../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
+import '../di/service_locator.dart';
 
 /// After [sections] of the local cache were cleared, fetches them again —
 /// the app shell is the one place that may reach every feature that owns

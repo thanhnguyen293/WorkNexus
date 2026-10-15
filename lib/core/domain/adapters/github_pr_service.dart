@@ -36,4 +36,16 @@ abstract interface class GitHubPrService {
   Future<Result<List<RepoCommit>>> listPullCommits(Ticket ticket);
 
   Future<Result<List<RepoFileChange>>> listPullFiles(Ticket ticket);
+
+  Future<Result<List<String>>> syncGitHubRepoItems({
+    required String accountId,
+    required String repoId,
+    required bool pullRequests,
+  });
+
+  Future<Result<List<String>>> syncGitHubMine(String accountId);
+
+  Future<Result<List<ProviderProject>>> listProjects(String accountId);
+
+  Future<List<ProviderProject>?> cachedProjects(String accountId);
 }

@@ -113,4 +113,18 @@ void main() {
     expect(res.failureOrNull, isA<NetworkFailure>());
     expect((await stored()).map((n) => n.id), unorderedEquals(['1', '2']));
   });
+
+  test('watchAccountRealnames streams realnames from ZenTaoProfiles', () async {
+    await db
+        .into(db.zenTaoProfiles)
+        .insert(
+          ZenTaoProfilesCompanion.insert(
+            accountId: 'a1',
+            profileJson: '{"profile":{"realname":"Son Vu"}}',
+          ),
+        );
+
+    final realnames = await repository.watchAccountRealnames().first;
+    expect(realnames, {'a1': 'Son Vu'});
+  });
 }

@@ -208,8 +208,7 @@ class _Thumb extends ConsumerWidget {
       borderRadius: radius,
       selected: selected,
       semanticLabel: content is FileContent ? l.chatPlayVideo : l.chatImage,
-      child: AnimatedOpacity(
-        duration: AppMotion.fast,
+      child: Opacity(
         // The others recede so the shown one stands out.
         opacity: selected ? 1 : 0.55,
         // On top: the picture would cover a border drawn beneath it.

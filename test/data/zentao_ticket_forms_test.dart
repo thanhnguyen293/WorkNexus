@@ -5,9 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/zentao_ticket_form.dart';
 import 'package:work_nexus/core/error/failure.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_client.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_form_parsing.dart';
-import 'package:work_nexus/features/connections/data/zentao/zentao_ticket_forms.dart';
+import 'package:work_nexus/tools/zentao/data/datasources/zentao_client.dart';
+import 'package:work_nexus/tools/zentao/data/datasources/zentao_form_parsing.dart';
+import 'package:work_nexus/tools/zentao/data/models/zentao_ticket_forms.dart';
 
 class _Fake implements HttpClientAdapter {
   _Fake(this.handler);
@@ -238,8 +238,9 @@ void main() {
     'no execution, no task request; a list that fails stays empty',
     () async {
       final (forms, fake) = _forms((o) {
-        if (o.path.contains('ajaxGetProductStories'))
+        if (o.path.contains('ajaxGetProductStories')) {
           return '<select></select>';
+        }
         return _page({
           'bug': {'productID': 5},
         });
@@ -462,10 +463,11 @@ void main() {
 
   test('a subtask ZenTao gives no id for opens its parent', () async {
     final (forms, _) = _forms((o) {
-      if (o.method == 'GET')
+      if (o.method == 'GET') {
         return _page({
           'moduleOptionMenu': {'0': '/'},
         });
+      }
       return {'result': 'success'};
     });
     final form = await forms.newTask('31', parentId: '120');

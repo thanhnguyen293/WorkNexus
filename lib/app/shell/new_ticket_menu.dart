@@ -12,8 +12,8 @@ import '../../core/navigation/ticket_editor_route.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_context_menu.dart';
 import '../../core/widgets/app_rail_button.dart';
-import '../../features/board/presentation/board_providers.dart';
 import '../../l10n/app_localizations.dart';
+import '../../tools/zentao/presentation/providers/zentao_board_providers.dart';
 
 /// A new ZenTao bug or task the "+" menu offers, in [account].
 typedef NewTicketChoice = ({

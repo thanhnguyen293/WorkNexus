@@ -17,7 +17,7 @@ import 'chat_mention_text_controller.dart';
 /// off, it is [plain] text in a platform text field. Switching carries the
 /// text and its mentions across.
 class ChatComposerController implements Listenable {
-  ChatComposerController({bool markdown = false}) : _markdown = markdown;
+  ChatComposerController({this._markdown = false});
 
   /// Pasting brings text only: what the toolbar can make is what is sent.
   final quill = QuillController(

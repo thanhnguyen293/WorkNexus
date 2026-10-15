@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../domain/repositories/wallpaper_repository.dart';
@@ -54,12 +54,10 @@ final wallpaperControllerProvider = Provider<WallpaperController>(
 class WallpaperController {
   WallpaperController(
     this._repository, {
-    required AppSettingsController settings,
-    required String Function() current,
-    required void Function() onChanged,
-  }) : _settings = settings,
-       _current = current,
-       _onChanged = onChanged;
+    required this._settings,
+    required this._current,
+    required this._onChanged,
+  });
 
   final WallpaperRepository _repository;
   final AppSettingsController _settings;

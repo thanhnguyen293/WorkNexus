@@ -6,9 +6,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/board/presentation/board_providers.dart';
-import 'package:work_nexus/features/board/presentation/widgets/chrome_bar.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/filter_popover_anchor.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/filters_button.dart';
 
 import '../support/di_test_harness.dart';
 
@@ -48,7 +49,7 @@ void main() {
           home: const Scaffold(
             body: Column(
               children: [
-                ChromeBar(),
+                Align(alignment: Alignment.centerLeft, child: FiltersButton()),
                 Expanded(child: SizedBox.expand(key: _outside)),
               ],
             ),
@@ -57,7 +58,9 @@ void main() {
       ),
     );
     await tester.pump();
-    return ProviderScope.containerOf(tester.element(find.byType(ChromeBar)));
+    return ProviderScope.containerOf(
+      tester.element(find.byType(FiltersButton)),
+    );
   }
 
   Finder clearAll() => find.text('Clear all');

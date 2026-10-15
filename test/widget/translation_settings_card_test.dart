@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
-import 'package:work_nexus/features/translation/presentation/widgets/translation_settings_card.dart';
 import 'package:work_nexus/features/translation/domain/entities/translation_api_config.dart';
 import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
+import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
+import 'package:work_nexus/features/translation/presentation/widgets/translation_settings_card.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {

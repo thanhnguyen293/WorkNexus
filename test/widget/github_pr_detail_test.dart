@@ -12,8 +12,8 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/github_pr_overview.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/tools/github/presentation/detail/github_pr_overview.dart';
 
 final _avatarBytes = base64Decode(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8A'

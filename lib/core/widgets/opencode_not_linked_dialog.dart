@@ -55,7 +55,9 @@ class OpenCodeNotLinkedDialog extends ConsumerWidget {
           icon: LucideIcons.settings300,
           onPressed: () {
             Navigator.of(context).pop();
-            ref.read(appNavProvider.notifier).openSettings();
+            ref
+                .read(appNavProvider.notifier)
+                .selectWorkspaceSection(WorkspaceSection.settings);
           },
           child: Text(l.openCodeOpenSettings),
         ),

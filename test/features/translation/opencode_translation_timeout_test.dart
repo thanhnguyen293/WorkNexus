@@ -10,6 +10,7 @@ import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/translation/data/datasources/cli_runner.dart';
 import 'package:work_nexus/features/translation/data/opencode_translation_service.dart';
 import 'package:work_nexus/features/translation/domain/adapters/translation_service.dart';
+import 'package:work_nexus/features/translation/domain/entities/translation_record.dart';
 
 /// Regression for the "Translate spins forever" report: `opencode run` has no
 /// deadline of its own, and a queued or unauthenticated model can leave it
@@ -29,13 +30,16 @@ class _ScriptedRunner extends CliRunner {
     List<String> args, {
     required String workingDir,
     Map<String, String>? extraEnv,
-  }) => Process.start('/bin/sh', ['-c', script]);
+  }) => Process.start('/bin/sh', [
+    '-c',
+    script.startsWith('sleep') ? 'exec $script' : script,
+  ]);
 }
 
 void main() {
   const source = TicketSource(title: 'Fix login', body: 'It does not respond.');
 
-  Future<Result<dynamic>> translateWith(
+  Future<Result<TranslationRecord>> translateWith(
     String script, {
     Duration timeout = const Duration(seconds: 30),
   }) =>
@@ -59,9 +63,9 @@ void main() {
       );
       sw.stop();
 
-      expect(res, isA<Err<dynamic>>());
+      expect(res, isA<Err<TranslationRecord>>());
       expect(
-        (res as Err).failure,
+        (res as Err<TranslationRecord>).failure,
         isA<AgentFailure>().having(
           (f) => f.message,
           'message',
@@ -79,7 +83,7 @@ void main() {
     );
 
     expect(
-      (res as Err).failure.message,
+      (res as Err<TranslationRecord>).failure.message,
       allOf(contains('exited 1'), contains('Token refresh failed: 401')),
     );
   });
@@ -91,9 +95,9 @@ void main() {
       'exit 1',
     );
 
-    final message = (res as Err).failure.message;
+    final message = (res as Err<TranslationRecord>).failure.message;
     expect(message, contains('Error: model requires opt in'));
-    expect(message, isNot(contains('')));
+    expect(message, isNot(contains('\x1B')));
   });
 
   test('a successful run is parsed into a record', () async {
@@ -101,8 +105,8 @@ void main() {
       r'''echo '{"title":"Sửa đăng nhập","body":"Không phản hồi."}' ''',
     );
 
-    expect(res, isA<Ok<dynamic>>());
-    final record = (res as Ok).value;
+    expect(res, isA<Ok<TranslationRecord>>());
+    final record = (res as Ok<TranslationRecord>).value;
     expect(record.translatedTitle, 'Sửa đăng nhập');
     expect(record.translatedBody, 'Không phản hồi.');
     expect(record.targetLang, 'vi');
@@ -115,7 +119,7 @@ void main() {
       final res = await translateWith('echo "usage: opencode run [message..]"');
 
       expect(
-        (res as Err).failure,
+        (res as Err<TranslationRecord>).failure,
         isA<ParseFailure>().having(
           (f) => f.message,
           'message',
@@ -139,6 +143,6 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     await service.cancel('t-1');
 
-    expect(await pending, isA<Err<dynamic>>());
+    expect(await pending, isA<Err<TranslationRecord>>());
   });
 }

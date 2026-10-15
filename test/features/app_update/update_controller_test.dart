@@ -34,7 +34,6 @@ void main() {
         currentVersion: '',
         latestVersion: '',
         releaseUrl: '',
-        releaseNotes: '',
       ),
     );
   });

@@ -22,6 +22,15 @@ abstract interface class ZenTaoWorkflowService {
     String? comment,
   });
 
+  /// Resolves a bug.
+  Future<Result<void>> resolveBug(
+    Ticket ticket, {
+    required String resolution,
+    String? build,
+    String? assignee,
+    String? comment,
+  });
+
   /// Closes a resolved bug.
   Future<Result<void>> closeBug(Ticket ticket, {String? comment});
 

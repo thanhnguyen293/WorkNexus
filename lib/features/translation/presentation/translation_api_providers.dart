@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/di/service_locator.dart';
+import '../../../app/di/service_locator.dart';
 import '../../../core/error/result.dart';
 import '../domain/entities/translation_api_config.dart';
 import '../domain/repositories/translation_api_config_repository.dart';

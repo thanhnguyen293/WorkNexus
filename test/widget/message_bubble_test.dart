@@ -26,7 +26,6 @@ ChatMessage _message(MessageContent content) => ChatMessage(
   sentAt: DateTime(2026, 10, 13, 13, 42),
   content: content,
   isMine: false,
-  sendState: SendState.sent,
 );
 
 void main() {

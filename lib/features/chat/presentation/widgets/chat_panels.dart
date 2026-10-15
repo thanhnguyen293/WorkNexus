@@ -25,19 +25,16 @@ void jumpToChatMessage(WidgetRef ref, ChatThreadKey chat, int messageId) {
     ..state = messageId;
 }
 
-/// The panel shown beside chat [chat]: the one the user opened, else the
-/// info panel when there is room for it ([infoRoom]).
+/// The panel shown beside chat [chat]: the one the user opened, else null
+/// (default is hidden).
 ChatSidePanel? effectiveSidePanel(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
-}) =>
-    ref.watch(chatSidePanelProvider(chat)) ??
-    (infoRoom ? ChatSidePanel.info : null);
+}) => ref.watch(chatSidePanelProvider(chat));
 
 /// Opens [panel] beside chat [chat] (closing a reply thread), or closes it
-/// when it is already open. With room, the info panel is always there, so
-/// "closing" anything returns to it.
+/// when it is already open.
 void toggleChatSidePanel(
   WidgetRef ref,
   ChatThreadKey chat,
@@ -45,10 +42,8 @@ void toggleChatSidePanel(
   required bool infoRoom,
 }) {
   final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  final shown = notifier.state ?? (infoRoom ? ChatSidePanel.info : null);
-  notifier.state = shown == panel || (infoRoom && panel == ChatSidePanel.info)
-      ? null
-      : panel;
+  final shown = notifier.state;
+  notifier.state = shown == panel ? null : panel;
   ref.read(openReplyThreadProvider(chat).notifier).state = null;
 }
 
@@ -57,11 +52,9 @@ void backToChatInfo(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
-}) => ref.read(chatSidePanelProvider(chat).notifier).state = infoRoom
-    ? null
-    : ChatSidePanel.info;
+}) => ref.read(chatSidePanelProvider(chat).notifier).state = ChatSidePanel.info;
 
-/// Closes the panel beside chat [chat] (with room, the info panel stays).
+/// Closes the panel beside chat [chat].
 void closeChatSidePanel(WidgetRef ref, ChatThreadKey chat) =>
     ref.read(chatSidePanelProvider(chat).notifier).state = null;
 
@@ -79,7 +72,10 @@ Future<void> openDirectChatWith(
   if (!context.mounted) return;
   switch (result) {
     case Ok(:final value):
-      ref.read(appNavProvider.notifier).show(MainView.chat);
+      ref.read(appNavProvider.notifier).selectAccount(accountId);
+      ref
+          .read(appNavProvider.notifier)
+          .selectSection(const SectionId('zentao.chat'));
       ref.read(pickedChatAccountProvider.notifier).state = accountId;
       ref.read(selectedChatGidProvider(accountId).notifier).state = value;
     case Err(:final failure):

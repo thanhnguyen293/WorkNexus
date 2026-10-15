@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
@@ -79,9 +80,9 @@ class MessageListView extends StatelessWidget {
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
           child: ListView.custom(
+            scrollCacheExtent: const ScrollCacheExtent.pixels(_kCacheExtent),
             controller: scroll,
             reverse: true,
-            cacheExtent: _kCacheExtent,
             // Rows add their own side margins, so a highlighted row's tint
             // spans the full width.
             padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),

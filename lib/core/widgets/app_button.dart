@@ -27,7 +27,7 @@ class AppButton extends StatelessWidget {
   }) : _variant = null;
 
   const AppButton._({
-    required AppButtonVariant variant,
+    required AppButtonVariant this._variant,
     required this.child,
     this.size = AppButtonSize.medium,
     this.isDisabled = false,
@@ -35,8 +35,7 @@ class AppButton extends StatelessWidget {
     this.onPressed,
     this.icon,
     super.key,
-  }) : _variant = variant,
-       style = null;
+  }) : style = null;
 
   final Widget child;
   final AppButtonSize size;

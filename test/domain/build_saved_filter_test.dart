@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_saved_filter.dart';
-import 'package:work_nexus/features/board/domain/value_objects/saved_filter.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/build_saved_filter.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/saved_filter.dart';
 
 void main() {
   const useCase = BuildSavedFilter();

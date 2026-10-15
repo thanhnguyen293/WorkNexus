@@ -6,10 +6,9 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/connections/data/github/github_adapter.dart';
-import 'package:work_nexus/features/connections/data/github/github_client.dart';
-import 'package:work_nexus/features/connections/data/github/github_models.dart';
-import 'package:work_nexus/features/connections/data/github/github_normalize.dart';
+import 'package:work_nexus/tools/github/data/datasources/github_client.dart';
+import 'package:work_nexus/tools/github/data/models/github_models.dart';
+import 'package:work_nexus/tools/github/data/repositories/github_adapter.dart';
 
 class _MockGitHubClient extends Mock implements GitHubClient {}
 
@@ -84,7 +83,7 @@ void main() {
     final res = await adapter.mergePull(_ticket(externalType: 'PullRequest'));
 
     expect(res, isA<Ok<bool>>());
-    verify(() => client.mergePull(ref, '42', mergeMethod: 'merge')).called(1);
+    verify(() => client.mergePull(ref, '42')).called(1);
   });
 
   test('listRepoAssignees maps, dedupes, and sorts by login', () async {
@@ -115,7 +114,7 @@ void main() {
       ),
     ).thenAnswer((_) async => const [GitHubPull(number: 7, state: 'open')]);
 
-    final res = await adapter.listRepoItems(ref, kind: GitHubKind.pullRequest);
+    final res = await adapter.listRepoItems(ref, pullRequests: true);
 
     final tickets = (res as Ok<List<Ticket>>).value;
     expect(tickets, hasLength(1));

@@ -12,7 +12,6 @@ ChatMessage _message(MessageContent content, {bool deleted = false}) =>
       sentAt: DateTime(2026, 10, 13),
       content: content,
       isMine: true,
-      sendState: SendState.sent,
       deleted: deleted,
     );
 

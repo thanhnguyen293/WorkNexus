@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/app/di/service_locator.dart';
 import 'package:work_nexus/core/di/providers.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
+import 'package:work_nexus/core/domain/adapters/ticket_detail_service.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/sync/data/sync_service.dart';
-import 'package:work_nexus/features/task_detail/presentation/detail_providers.dart';
+import 'package:work_nexus/shared/detail/presentation/detail_providers.dart';
+import 'package:work_nexus/shared/sync/data/sync_service.dart';
 
 class _MockSyncService extends Mock implements SyncService {}
 
@@ -37,12 +38,13 @@ void main() {
     sync = _MockSyncService();
     await getIt.reset();
     getIt.registerSingleton<SyncService>(sync);
+    getIt.registerSingleton<TicketDetailService>(sync);
     when(
       () => sync.syncTicketDetail(any()),
     ).thenAnswer((_) async => const Ok(null));
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   Future<ProviderContainer> container() async {
     final c = ProviderContainer(

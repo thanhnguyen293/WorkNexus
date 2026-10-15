@@ -3,22 +3,26 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/app/di/service_locator.dart';
 import 'package:work_nexus/core/di/providers.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
+import 'package:work_nexus/core/domain/value_objects/zentao_bug_column.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/navigation/navigation_providers.dart';
+import 'package:work_nexus/core/tools/tool_registry_provider.dart';
 import 'package:work_nexus/core/util/cancel_signal.dart';
-import 'package:work_nexus/features/board/domain/repositories/zentao_view_pages.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_browse_type.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_column.dart';
-import 'package:work_nexus/features/board/domain/value_objects/zentao_bug_stream.dart';
-import 'package:work_nexus/features/board/presentation/board_providers.dart';
+import 'package:work_nexus/tools/zentao/domain/repositories/zentao_view_pages.dart';
+import 'package:work_nexus/tools/zentao/domain/value_objects/zentao_bug_browse_type.dart';
+import 'package:work_nexus/tools/zentao/domain/value_objects/zentao_bug_stream.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_board_providers.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_bug_streams.dart';
+import 'package:work_nexus/tools/zentao/zentao_module.dart';
 
 class _MockViewPages extends Mock implements ZenTaoViewPages {}
 
@@ -50,7 +54,7 @@ void main() {
     getIt.registerSingleton<ZenTaoViewPages>(sync);
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   /// Answers [view]'s pages with two bugs each out of [total].
   void serve(String view, {int total = 3}) =>
@@ -287,6 +291,9 @@ void main() {
     ).copyWith(assignee: assignee, labels: const ['zentao-product:4']);
     final container = ProviderContainer(
       overrides: [
+        toolRegistryProvider.overrideWithValue({
+          ProviderType.zentao: const ZentaoModule(),
+        }),
         ticketsProvider.overrideWith(
           (ref) => Stream.value([cached(1, 'me'), cached(2, 'bob')]),
         ),
@@ -303,6 +310,10 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    container.read(appNavProvider.notifier).selectAccount('zentao');
+    container
+        .read(appNavProvider.notifier)
+        .selectSection(const SectionId('zentao.bugs'));
     container.read(selectedZenTaoProductProvider.notifier).select(_product);
     container
         .read(zentaoBugTabProvider.notifier)

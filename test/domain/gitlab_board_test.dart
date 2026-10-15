@@ -3,12 +3,12 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/entities/filter_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_gitlab_issue_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/build_gitlab_mr_board.dart';
-import 'package:work_nexus/features/board/domain/usecases/filter_tickets.dart';
-import 'package:work_nexus/features/board/domain/value_objects/gitlab_issue_column.dart';
-import 'package:work_nexus/features/board/domain/value_objects/gitlab_mr_column.dart';
+import 'package:work_nexus/shared/board/domain/entities/filter_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/filter_tickets.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/build_gitlab_issue_board.dart';
+import 'package:work_nexus/tools/gitlab/domain/usecases/build_gitlab_mr_board.dart';
+import 'package:work_nexus/tools/gitlab/domain/value_objects/gitlab_issue_column.dart';
+import 'package:work_nexus/tools/gitlab/domain/value_objects/gitlab_mr_column.dart';
 
 Ticket _mr({
   required String id,

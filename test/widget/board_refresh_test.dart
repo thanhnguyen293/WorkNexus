@@ -1,13 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:work_nexus/core/di/service_locator.dart';
+import 'package:work_nexus/app/di/service_locator.dart';
+import 'package:work_nexus/app/shell/board_refresh.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/util/cancel_signal.dart';
-import 'package:work_nexus/features/board/domain/repositories/zentao_view_pages.dart';
-import 'package:work_nexus/features/board/presentation/board_providers.dart';
-import 'package:work_nexus/features/board/presentation/board_refresh.dart';
+import 'package:work_nexus/tools/zentao/domain/repositories/zentao_view_pages.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_board_providers.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_bug_streams.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_task_streams.dart';
 
 class _MockViewPages extends Mock implements ZenTaoViewPages {}
 
@@ -35,7 +38,7 @@ void main() {
     getIt.registerSingleton<ZenTaoViewPages>(sync);
   });
 
-  tearDown(() => getIt.reset());
+  tearDown(getIt.reset);
 
   test('refreshing the bug board reloads every view from page 1', () async {
     when(
@@ -53,7 +56,10 @@ void main() {
 
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.read(viewModeProvider.notifier).set(ViewMode.zentaoBugs);
+    container.read(appNavProvider.notifier).selectAccount('zentao');
+    container
+        .read(appNavProvider.notifier)
+        .selectSection(const SectionId('zentao.bugs'));
     container.read(selectedZenTaoProductProvider.notifier).select(_product);
     container.listen(zentaoBugSliceProvider, (_, _) {});
     await pumpEventQueue();
@@ -94,7 +100,10 @@ void main() {
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      container.read(viewModeProvider.notifier).set(ViewMode.zentaoTasks);
+      container.read(appNavProvider.notifier).selectAccount('zentao');
+      container
+          .read(appNavProvider.notifier)
+          .selectSection(const SectionId('zentao.tasks'));
       container
           .read(selectedZenTaoExecutionProvider.notifier)
           .select(_execution);

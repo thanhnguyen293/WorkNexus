@@ -30,15 +30,13 @@ Duration defaultXxdBackoff(int attempt) =>
 class XxdConnection {
   XxdConnection({
     required this.credentials,
-    required XxdHttpDatasource http,
-    XxdSocketConnector connector = connectIoXxdSocket,
+    required this._http,
+    this._connector = connectIoXxdSocket,
     this.pingInterval = const Duration(seconds: 60),
     this.requestTimeout = const Duration(seconds: 15),
     this.backoff = defaultXxdBackoff,
-    XxdTrafficLog log = const XxdTrafficLog(),
-  }) : _http = http,
-       _connector = connector,
-       _log = log;
+    this._log = const XxdTrafficLog(),
+  });
 
   final XxdCredentials credentials;
   final Duration pingInterval;

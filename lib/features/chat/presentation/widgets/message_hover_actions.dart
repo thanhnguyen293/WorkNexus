@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -58,11 +57,11 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final s = context.spacing;
     final own = actions.take(widget.buttons).toList();
     final rest = actions.skip(widget.buttons).toList();
-    final buttons = AnimatedOpacity(
-      opacity: _hover || _menuOpen ? 1 : 0,
-      duration: AppMotion.fast,
+    final isVisible = _hover || _menuOpen;
+    final buttons = Opacity(
+      opacity: isVisible ? 1 : 0,
       child: IgnorePointer(
-        ignoring: !(_hover || _menuOpen),
+        ignoring: !isVisible,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: s.md),
           child: Row(

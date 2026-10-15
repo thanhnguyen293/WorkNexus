@@ -269,6 +269,33 @@ class ChatLocalDatasource {
             ..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid)))
           .write(ChatMessagesCompanion(sendState: Value(state.name)));
 
+  /// Searches stored messages by query text within an account and optionally
+  /// filtered by chat ([cgid]). Ordered newest first.
+  Future<List<ChatMessageRow>> searchMessages(
+    String accountId, {
+    String? cgid,
+    required String query,
+    int limit = 50,
+  }) {
+    final pattern = '%$query%';
+    final m = _db.chatMessages;
+    final stmt = _db.select(m)
+      ..where(
+        (t) =>
+            t.accountId.equals(accountId) &
+            t.deleted.equals(false) &
+            t.content.like(pattern) &
+            (cgid != null ? t.cgid.equals(cgid) : const Constant(true)),
+      )
+      ..orderBy([(t) => OrderingTerm.desc(t.sentAt)])
+      ..limit(limit);
+    return stmt.get();
+  }
+
+  Future<int?> selfUserId(String accountId) async => (await (_db.select(
+    _db.chatAccounts,
+  )..where((c) => c.accountId.equals(accountId))).getSingleOrNull())?.userId;
+
   /// Where a copy of attachment [fileId] was last saved, if anywhere.
   Future<String?> savedFilePath(String accountId, int fileId) async =>
       (await (_db.select(_db.chatSavedFiles)..where(

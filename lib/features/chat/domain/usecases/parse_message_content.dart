@@ -21,11 +21,14 @@ class ParseMessageContent {
   static final _mention = RegExp(r'\[@([^\]]+)\]\(@#\d+\)');
   static final _nameStop = RegExp(r'[^A-Za-z0-9_]');
 
-  /// Undoes two quirks of the official client's mention markup: a mention
-  /// nested in another link to the same user (see [_nested]), and the rest
-  /// of a typed name left after the mention — it links only the start up
-  /// to the first symbol ("@Felix" of "@Felix-VN-Flutter"), giving
-  /// `[@Felix-VN-Flutter](@#35)-VN-Flutter`.
+  static final _adjacentMarkdown = RegExp(r'(\]\(@#[^)]+\))(?=\[?@)');
+  static final _adjacentPlain = RegExp(r'(@[A-Za-z0-9_\-\.]+)(?=@)');
+
+  /// Undoes quirks of the official client's mention markup:
+  /// 1. A mention nested in another link to the same user ([_nested]).
+  /// 2. Duplicated name tails after the mention link.
+  /// 3. Adjacent mentions jammed together without spaces (e.g. `[@A](@#1)[@B](@#2)`
+  ///    or `@User1@User2`).
   static String repairMentions(String text) {
     final unwrapped = text.replaceAllMapped(
       _nested,
@@ -44,7 +47,16 @@ class ParseMessageContent {
       }
     }
     out.write(unwrapped.substring(at));
-    return out.toString();
+
+    final stripped = out.toString();
+    final separatedMarkdown = stripped.replaceAllMapped(
+      _adjacentMarkdown,
+      (m) => '${m[1]} ',
+    );
+    return separatedMarkdown.replaceAllMapped(
+      _adjacentPlain,
+      (m) => '${m[1]} ',
+    );
   }
 
   /// U+FFFC, which a sender's rich-text editor leaves in place of an inline

@@ -189,20 +189,36 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     if (!mounted || widget.thread != t) return;
     var target = _shown.where((m) => m.serverId == serverId).firstOrNull;
     if (target == null) {
-      final around = await ref
-          .read(chatControllerProvider)
-          .loadAround(t.accountId, t.chatGid, serverId);
-      if (!mounted || widget.thread != t) return;
-      if (around case Ok(value: final span?)) {
+      final localMsg = await ref
+          .read(chatRepositoryProvider)
+          .watchMessage(t.accountId, t.chatGid, serverId)
+          .first;
+      if (localMsg != null && localMsg.index != null && localMsg.index! > 0) {
         setState(resetPaging);
+        final idx = localMsg.index!;
         ref.read(chatMessageWindowProvider(t).notifier).state = AroundWindow(
-          from: span.from,
-          to: span.to,
+          from: math.max(1, idx - 25),
+          to: idx + 25,
         );
         final shown = await ref.read(chatMessagesProvider(t).future);
         target = shown.where((m) => m.serverId == serverId).firstOrNull;
-      } else {
-        target = await _stepBackTo(serverId);
+      }
+      if (target == null) {
+        final around = await ref
+            .read(chatControllerProvider)
+            .loadAround(t.accountId, t.chatGid, serverId);
+        if (!mounted || widget.thread != t) return;
+        if (around case Ok(value: final span?)) {
+          setState(resetPaging);
+          ref.read(chatMessageWindowProvider(t).notifier).state = AroundWindow(
+            from: span.from,
+            to: span.to,
+          );
+          final shown = await ref.read(chatMessagesProvider(t).future);
+          target = shown.where((m) => m.serverId == serverId).firstOrNull;
+        } else {
+          target = await _stepBackTo(serverId);
+        }
       }
     }
     if (!mounted || widget.thread != t) return;

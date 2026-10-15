@@ -6,11 +6,11 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/close_github_item.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/merge_github_pr.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/post_github_comment.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/reopen_github_item.dart';
-import 'package:work_nexus/features/task_detail/domain/usecases/update_github_pr_branch.dart';
+import 'package:work_nexus/tools/github/domain/usecases/close_github_item.dart';
+import 'package:work_nexus/tools/github/domain/usecases/merge_github_pr.dart';
+import 'package:work_nexus/tools/github/domain/usecases/post_github_comment.dart';
+import 'package:work_nexus/tools/github/domain/usecases/reopen_github_item.dart';
+import 'package:work_nexus/tools/github/domain/usecases/update_github_pr_branch.dart';
 
 class _MockGitHubPrService extends Mock implements GitHubPrService {}
 

@@ -4,9 +4,9 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/failure.dart';
-import 'package:work_nexus/features/board/domain/entities/paged_view_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/scope_paged_view_tickets.dart';
-import 'package:work_nexus/features/board/domain/value_objects/paged_view_loads.dart';
+import 'package:work_nexus/shared/board/domain/entities/paged_view_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/scope_paged_view_tickets.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/paged_view_loads.dart';
 
 Ticket _t(String id, String status) => Ticket(
   id: id,

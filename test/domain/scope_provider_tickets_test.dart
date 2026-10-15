@@ -3,7 +3,7 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/board/domain/usecases/scope_provider_tickets.dart';
+import 'package:work_nexus/shared/board/domain/usecases/scope_provider_tickets.dart';
 
 Ticket _t({
   required String id,
@@ -34,7 +34,7 @@ void main() {
   final all = [
     _t(id: 'a', labels: const [projectLabel]),
     _t(id: 'b', labels: const [projectLabel]),
-    _t(id: 'c', labels: const []), // right account/type, no membership label
+    _t(id: 'c'), // right account/type, no membership label
     _t(id: 'd', accountId: 'other', labels: const [projectLabel]),
     _t(id: 'e', externalType: 'Issue', labels: const [projectLabel]),
     _t(

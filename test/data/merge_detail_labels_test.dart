@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/sync/data/ticket_store.dart';
+import 'package:work_nexus/shared/sync/data/sync_service.dart';
 
 void main() {
   group('mergeDetailLabels', () {

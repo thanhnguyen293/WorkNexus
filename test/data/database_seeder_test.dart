@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
-import 'package:work_nexus/data/local/database_seeder.dart';
+import 'package:work_nexus/core/database/database_seeder.dart';
 
 void main() {
   late AppDatabase db;

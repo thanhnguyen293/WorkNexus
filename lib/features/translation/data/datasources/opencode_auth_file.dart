@@ -5,7 +5,7 @@ import 'dart:io';
 /// `opencode auth login` writes. Infrastructure detail, confined to `data/`
 /// (CLAUDE.md rule 3.4).
 class OpenCodeAuthFile {
-  const OpenCodeAuthFile({String? pathOverride}) : _pathOverride = pathOverride;
+  const OpenCodeAuthFile({this._pathOverride});
 
   /// Explicit file path, for tests and unusual installs. Null ⇒ [_candidates].
   final String? _pathOverride;

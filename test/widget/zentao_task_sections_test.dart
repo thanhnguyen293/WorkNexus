@@ -10,9 +10,9 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/navigation/open_zentao_execution.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/task_detail_sections.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/zentao_linked_ticket.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/task_detail_sections.dart';
+import 'package:work_nexus/tools/zentao/presentation/detail/zentao_linked_ticket.dart';
 
 Ticket _ticket(ZenTaoTaskEntity task) => Ticket(
   id: 'zt:task:12897',

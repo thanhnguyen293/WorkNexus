@@ -49,18 +49,111 @@ qua lại giữa nhiều tab trình duyệt.
 
 ---
 
+## Trải nghiệm giao diện & Kiến trúc điều hướng
+
+Hệ thống shell không gian làm việc tổ chức quy trình làm việc đa công cụ theo cấu trúc phân cấp 5 cấp độ rõ ràng:  
+`Workspace (L1) → Tài khoản/Công cụ (L2) → Tính năng (L3) → Phạm vi (L4) → Mục chi tiết (L5)`.
+
+<div align="center">
+  <img src="assets/screenshots/unified-workspace-shell-slideshow.vi.gif" alt="WorkNexus Unified Workspace Shell Slideshow" width="100%" />
+  <p><em>Slide trình chiếu động: tự động chuyển đổi lần lượt qua 7 màn hình cốt lõi của không gian làm việc.</em></p>
+</div>
+
+### Giải phẫu kiến trúc giao diện & 5 phân vùng Desktop
+
+WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, giúp tối ưu hóa năng suất khi làm việc đồng thời với nhiều hệ thống quản lý công việc:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [MW] MyWorkspace ▾ / Overview                  🔍 Tìm kiếm ticket, bug, PR, MR... (Ctrl+K)      ⚙️  — □ ✕│ (Title Bar 56px)
+├──────┬─────────────────────────────┬───────────────────────────────────────────────────────────────────┤
+│ (76) │ (Cột Tool Nav Pane 300px)   │ (Vùng Canvas chính - Chuyển tab 0ms nhờ bộ nhớ đệm LRU)           │
+│ Rail │                             │                                                                   │
+│ [W]  │ Chat   |  Tasks  |  Bugs    │ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐       │
+│      │                             │ │ ZenTao (46 bugs)│ │ GitHub (12 PRs) │ │ GitLab (5 MRs)  │       │
+│ [Z]  │ ▾ Dự án (Phạm vi):          │ └─────────────────┘ └─────────────────┘ └─────────────────┘       │
+│ [GH] │   ⭐ Nền tảng cốt lõi        │ ───────────────────────────────────────────────────────────────── │
+│ [GL] │   • Ứng dụng Mobile         │ 📋 Danh sách việc được giao trên tất cả công cụ:                  │
+│      │   • Cổng thanh toán         │   • [BUG-2041] Hết hạn phiên đăng nhập (ZenTao · Đã xác nhận)     │
+│  +   │                             │   • [!312] Thêm luồng xác thực sinh trắc (GitLab MR · Cần review) │
+│      │ ⚙️ Trạng thái sync: OK       │   • [#128] Nâng cấp lên Riverpod 3 (GitHub PR · Yêu cầu chỉnh sửa)│
+└──────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────┘
+                                     │ ◄── [Slide-over Detail 460px: Xem chi tiết (Bản gốc / Dịch / Trao đổi)]
+```
+
+| Phân vùng | Kích thước | Mục đích & Trải nghiệm người dùng |
+|---|---|---|
+| **Thanh tiêu đề (Title Bar - L1)** | Cao `56px` | Chứa menu chuyển đổi **Workspace**, ô **Tìm kiếm theo ngữ cảnh** (`Ctrl/Cmd+K`), cài đặt nhanh và cụm nút điều khiển cửa sổ. |
+| **Thanh Rail tài khoản (L2)** | Rộng cố định `76px` | Hiển thị biểu tượng nhận diện từng tài khoản kết nối (ZenTao, GitHub, GitLab), số tin nhắn chưa đọc và phím tắt `Ctrl/Cmd+1…9`. |
+| **Cột Pane công cụ (L3 & L4)** | Rộng cố định `300px` | Gom các tab tính năng (*Chat*, *Tasks*, *Bugs*, *MRs*, *PRs*), trạng thái kết nối sync và danh sách phạm vi (*Dự án*, *Product*, *Repository*). |
+| **Vùng Viewport chính (L5)** | Độ rộng linh hoạt | Hiển thị bảng danh sách, kanban 6 cột hoặc luồng chat. Duy trì 3 view gần nhất trong bộ nhớ ẩn để chuyển đổi tức thì không cần tải lại mạng. |
+| **Panel trượt chi tiết (Detail)** | Rộng trượt `460px` | Mở êm ái từ mép phải khi click vào bất kỳ ticket nào; hỗ trợ các tab xem mô tả gốc, dịch máy OpenCode và lịch sử bình luận. |
+
+<details>
+<summary><b>Nhấn để xem chi tiết từng slide thuyết trình (7 slide)</b></summary>
+<br/>
+
+#### 1. Workspace › Overview (Cấp L1)
+> **Số liệu đa công cụ & hàng đợi Việc được giao thống nhất**  
+> Hiển thị các thẻ tổng quan trực quan cho từng tài khoản kết nối (nhiệm vụ, bug, PR, MR mở) cùng danh sách "Assigned to you" tổng hợp các đầu việc cần xử lý từ ZenTao, GitLab và GitHub.
+<p align="center"><img src="assets/screenshots/slides/01-workspace-overview.png" alt="Workspace Overview" width="96%"/></p>
+
+#### 2. ZenTao › Chat (Cấp L3)
+> **Kênh chat nội bộ thời gian thực tích hợp trực tiếp trong ZenTao**  
+> Trò chuyện tức thì ngay trong ngữ cảnh công cụ ZenTao, hỗ trợ danh sách hội thoại, xem ảnh đính kèm và trạng thái thành viên mà không cần mở ứng dụng rời.
+<p align="center"><img src="assets/screenshots/slides/04-zentao-chat.png" alt="ZenTao Chat" width="96%"/></p>
+
+#### 3. ZenTao › Tasks (Cấp L3)
+> **Quản lý task dự án với chuyển đổi Sprint & bộ lọc theo thời gian thực**  
+> Theo dõi toàn diện vòng đời task dưới dạng bảng danh sách hoặc kanban, chọn sprint execution linh hoạt và lọc nhanh (*Tất cả*, *Giao cho tôi*, *Đến hạn tuần này*, *Trạng thái*).
+<p align="center"><img src="assets/screenshots/slides/02-zentao-tasks.png" alt="ZenTao Tasks" width="96%"/></p>
+
+#### 4. ZenTao › Bugs (Cấp L3)
+> **Bảng kanban 6 cột trạng thái workflow & slide-over chi tiết bug**  
+> Quy trình chuẩn ZenTao (Chưa xác nhận → Đã xác nhận → Đã giải quyết → Đã đóng) với các nút thao tác nhanh và panel chi tiết 460px đa tab.
+<p align="center"><img src="assets/screenshots/slides/03-zentao-bugs.png" alt="ZenTao Bugs" width="96%"/></p>
+
+#### 5. GitHub › Pull Requests (Cấp L3)
+> **Phạm vi repo, tab trạng thái (Open/Merged/Closed) & chế độ bảng**  
+> Lọc PR giữa các repository theo trạng thái (*Open*, *Merged*, *Closed*, *Board*) với nhãn reviewer và danh sách người thực hiện.
+<p align="center"><img src="assets/screenshots/slides/05-github-pull-requests.png" alt="GitHub Pull Requests" width="96%"/></p>
+
+#### 6. GitLab › Merge Requests (Cấp L3)
+> **Bảng review MR, nhóm phạm vi (Đã ghim/Gần đây) & chip lọc linh hoạt**  
+> Bảng tra cứu MR nhanh kèm trạng thái pipeline, bản nháp, duyệt phê duyệt và phân loại project thuận tiện.
+<p align="center"><img src="assets/screenshots/slides/06-gitlab-merge-requests.png" alt="GitLab Merge Requests" width="96%"/></p>
+
+#### 7. Workspace › Integrations (Cấp L1)
+> **Quản lý kết nối nhiều tài khoản, thẻ sức khỏe & trạng thái sync**  
+> Kết nối và quản trị nhiều tài khoản trên từng provider, theo dõi trạng thái đồng bộ tức thì và bảo mật token xác thực trong Keychain.
+<p align="center"><img src="assets/screenshots/slides/07-workspace-integrations.png" alt="Workspace Integrations" width="96%"/></p>
+
+</details>
+
+---
+
 ## Tính năng
 
-### Cây nguồn và bảng công việc
+### Unified workspace shell (Shell không gian làm việc thống nhất)
 
-- Sidebar nhóm theo workspace, mỗi workspace có thể có nhiều tài khoản từ nhiều
-  provider khác nhau.
-- Bảng riêng theo từng nguồn:
-  - ZenTao: bug board theo product và task board theo execution.
-  - GitLab: project board và bảng **My merge requests** cấp account.
-  - GitHub: repository board và bảng **My pull requests** cấp account.
-- Project/repo/execution đã ghim luôn nằm ở đầu nhánh provider.
-- Xem cùng một dữ liệu `Ticket` dưới dạng Kanban hoặc List.
+- **Điều hướng 5 cấp:** Title bar → Rail tài khoản → Nav pane của công cụ → Viewport section → Detail slide-over.
+- **Rail theo từng tài khoản** với màu nhận diện của provider; phím tắt `Ctrl/Cmd+1…9` để chuyển đổi nhanh.
+- **Các section cấp workspace:** Overview (lưới thẻ + công việc được giao), Integrations (trạng thái sync + Quản lý), Members (sắp ra mắt), Settings.
+- **Thẻ tổng quan (Overview cards)** hiển thị số liệu theo từng tài khoản (đang mở, được giao, lần sync cuối) kèm hiệu ứng skeleton loading.
+- **Danh sách "Assigned to you"** tổng hợp công việc từ tất cả tài khoản trong workspace với chip lý do thông minh (reviewer, assignee).
+- **Trình chuyển workspace** dạng popover với tìm kiếm, điều hướng bàn phím và thao tác "Tạo workspace".
+- **Tìm kiếm theo ngữ cảnh** (`Ctrl/Cmd+K`): tìm kiếm ticket cục bộ có xếp hạng trọng số (tiêu đề/mã số/mô tả) cùng overlay kết quả điều hướng bàn phím.
+- **Lưu trạng thái liên tục:** vị trí điều hướng của từng workspace (section, scope, view mode) được tự động lưu lại và phục hồi khi mở lại app hoặc chuyển workspace.
+- **Bộ nhớ đệm section (Section caching):** viewport giữ 3 section gần nhất ở trạng thái ẩn (tạm dừng ticker/focus) để chuyển đổi tức thì.
+- **Bảo vệ lỗi (Error boundary):** mỗi section được bọc bởi `SectionErrorBoundary` giúp bắt lỗi render và hiển thị nút thử lại thay vì làm sập ứng dụng.
+
+### Bảng công việc và section riêng theo từng công cụ
+
+- **ZenTao** — Chat, Tasks (List / Kanban / Calendar† / Gantt†), Bugs (Board / List), Docs†, Sprints†.
+- **GitLab** — Merge Requests (Open / Merged / Closed / Board), Issues (List / Board), Pipelines†.
+- **GitHub** — Pull Requests (Open / Merged / Closed / Board), Issues (List / Board), Actions†.
+- † = các section dự kiến, render dưới dạng `ComingSoonView` kèm nút "Chuyển sang…".
+- Phạm vi (Scope): project, product hoặc repository với thứ tự ưu tiên ghim đầu và lịch sử gần đây.
 - Cột theo vòng đời thật của từng provider:
   - ZenTao bug: new/unconfirmed, confirmed/to-fix, resolved/verify,
     postponed, non-fix, closed.
@@ -152,17 +245,32 @@ strip mặc định của panel chi tiết.
 
 WorkNexus đi theo **Clean Architecture feature-first**: mỗi feature là một lát
 cắt dọc gồm `domain -> data -> presentation`, dependency chỉ hướng vào trong, và
-domain là Dart thuần. Composition root duy nhất nằm ở `lib/core/di/`. Repo hiện
-vẫn giữ một số repository drift dùng chung trong `lib/data/local/` trong lúc
-siết dần ownership theo feature. Bộ quy tắc đầy đủ nằm trong
-[`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
+domain là Dart thuần. Composition root duy nhất nằm ở `lib/app/di/`.
+Bộ quy tắc đầy đủ nằm trong [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md).
+
+### Cấu trúc phân cấp của Shell
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Title Bar (breadcrumb · tìm kiếm · settings)       │
+├────┬────────────┬───────────────────────┬────────────┤
+│Rail│  Nav Pane   │       Viewport        │  Detail    │
+│    │ (workspace  │  (nội dung section    │  slide-    │
+│    │  hoặc tool) │   cùng các view mode) │  over      │
+└────┴────────────┴───────────────────────┴────────────┘
+```
+
+**Rail** hiển thị một icon cho mỗi tài khoản được kết nối trong workspace đang chọn.
+Nhấp vào tài khoản sẽ chuyển **nav pane** từ các mục workspace sang pane riêng của
+module công cụ đó (danh sách scope, các tab section). Mỗi **tool module**
+triển khai `ToolModule` và đăng ký trong `app/tool_registry.dart`.
 
 ```mermaid
 flowchart LR
     subgraph Providers
         Z[ZenTao] & GL[GitLab] & GH[GitHub]
     end
-    Providers -->|dio + credential của provider| SYNC[SyncService]
+    Providers -->|dio + credential của provider| SYNC[SyncService / Coordinator]
     SYNC -->|chuẩn hóa Ticket / comment / activity| DB[(drift · SQLite<br/>nguồn dữ liệu chính)]
     DB -->|watch streams| UI[Riverpod + Flutter UI]
     UI -->|provider actions| SYNC
@@ -171,16 +279,13 @@ flowchart LR
 
 ```
 lib/
-├── app/                 # Root app widget, shell, title bar, nơi gắn sidebar
-├── core/                # Shared kernel: theme, widgets, error, di, database, util
-├── data/local/          # Repository drift dùng chung và mapper
-├── features/
-│   ├── agents/          # Adapter dry-run/live CLI và stream session
-│   ├── board/           # Cây nguồn, board/list view, use case cho board
-│   ├── connections/     # Kết nối provider và adapter theo provider
-│   ├── sync/            # Sync provider -> drift, action, cache media an toàn
-│   ├── task_detail/     # Panel chi tiết, comment, action, view MR/PR
-│   └── translation/     # Dịch qua OpenCode và state bản dịch
+├── app/                 # Composition root (di/), shell (rail, viewport, title bar),
+│                        #   navigation và tool registry
+├── core/                # Shared kernel: theme, widgets, error, database, cache, platform
+├── shared/              # Shared slices: board, detail, shell_pane, sync
+├── tools/               # Provider tool modules: zentao, gitlab, github (implement ToolModule)
+├── features/            # Feature slices: chat, translation, app_update,
+│                        #   connections, notifications, workspace_overview
 ├── gen/                 # Asset accessor sinh tự động
 └── l10n/                # ARB tiếng Anh/Việt và l10n sinh tự động
 ```
@@ -257,14 +362,16 @@ Chạy `make help` để xem danh sách target hiện tại.
 
 ## Kiểm thử
 
-Test suite đang phủ logic board ở domain, normalize/adapter của provider,
-repository và migration drift, cache, theme extension, quick settings, provider
-badge, dialog kết nối, detail view cho MR/PR và state bản dịch.
+Test suite bao quát máy trạng thái điều hướng, bộ nhớ đệm section, error boundary,
+tích hợp shell (khởi chạy → tổng quan → tài khoản → khôi phục trạng thái), logic board ở domain,
+chuẩn hoá/adapter của provider, repository và migration drift, cache, theme extension,
+quick settings, provider badge, dialog kết nối, detail view cho MR/PR, xếp hạng tìm kiếm và state bản dịch.
 
 ```bash
 make test
-make test TEST=test/domain/translation_languages_test.dart
-make test TEST=test/data/github_adapter_test.dart
+make test TEST=test/core/app_nav_controller_test.dart
+make test TEST=test/widget/shell_integration_test.dart
+make test TEST=test/architecture/import_rules_test.dart
 ```
 
 ---
@@ -278,9 +385,15 @@ make test TEST=test/data/github_adapter_test.dart
 - [x] Dịch máy bằng OpenCode với nhiều ngôn ngữ đích.
 - [x] Detail view cho GitLab/GitHub MR/PR với commit, changed files và merge
   action.
+- [x] **Unified workspace shell** với rail theo tài khoản, lưu vị trí điều hướng,
+  cache section, tìm kiếm theo ngữ cảnh và error boundary.
+- [x] Tổng quan workspace (Overview) với bảng tổng hợp công việc được giao và thẻ trạng thái sync.
 - [ ] Đưa luồng Development/coding-agent ra UI chính và polish thêm.
 - [ ] Lưu bền vững dev link và agent session thay vì chỉ giữ in-memory.
 - [ ] Adapter Jira.
+- [ ] Trạng thái kiểm tra CI của GitHub và cột approval/pipeline của GitLab.
+- [ ] Các section Sprint, Docs, Calendar và Gantt cho ZenTao.
+- [ ] Layout màn hình nhỏ (pass responsive <1024px).
 - [ ] Kiểm chứng desktop target Windows/Linux.
 - [ ] Tách sync client/server và client mobile.
 

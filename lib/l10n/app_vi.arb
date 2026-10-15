@@ -1107,7 +1107,7 @@
   "dashboardInProgress": "Đang làm",
   "dashboardNotStarted": "Chưa bắt đầu",
   "dashboardFullList": "Xem toàn bộ danh sách",
-  "dashboardSprints": "Sprint",
+  "dashboardSprints": "Bản thực thi",
   "myWorkStatusUnconfirmed": "Chưa xác nhận",
   "myWorkStatusConfirmed": "Cần sửa",
   "myWorkStatusResolved": "Đã giải quyết",
@@ -1118,11 +1118,11 @@
   "myWorkStatusDone": "Hoàn thành",
   "myWorkSubtasks": "{count, plural, other{{count} task con}}",
   "myWorkReopened": "Mở lại {count} lần",
-  "myWorkUnassignedContext": "Chưa có sprint",
+  "myWorkUnassignedContext": "Chưa có bản thực thi",
   "dashboardStatBugs": "Bug đang mở",
   "dashboardStatTasks": "Task đang mở",
   "dashboardStatStories": "Story",
-  "dashboardStatSprints": "Sprint",
+  "dashboardStatSprints": "Bản thực thi",
   "dashboardStatUrgent": "{count} khẩn cấp",
   "dashboardStatInProgress": "{count} đang làm",
   "dashboardStatAssigned": "giao cho bạn",
@@ -1286,7 +1286,6 @@
   "chatTypingOne": "{name} đang nhập…",
   "chatTypingTwo": "{first} và {second} đang nhập…",
   "chatTypingMany": "{name} và {count} người khác đang nhập…",
-
   "miniAppAdd": "Thêm mini app",
   "miniAppUrlLabel": "Địa chỉ web",
   "miniAppUrlHint": "example.com",
@@ -1403,5 +1402,207 @@
   "miniAppClearFailed": "Không xoá được dữ liệu",
   "miniAppClearUnsupported": "Chỉ xoá được dữ liệu trên Windows.",
   "miniAppSettingsApps": "Các mini app",
-  "miniAppSettingsEmpty": "Chưa có mini app nào. Thêm bằng nút + trên thanh bên."
+  "miniAppSettingsEmpty": "Chưa có mini app nào. Thêm bằng nút + trên thanh bên.",
+  "zentaoCopyTask": "Clone task",
+  "tableColumnSprint": "Sprint",
+  "tableColumnDue": "Hạn",
+  "copyId": "Sao chép ID",
+  "idCopied": "Đã sao chép ID",
+  "copyMarkdownLink": "Sao chép liên kết Markdown",
+  "markdownLinkCopied": "Đã sao chép liên kết Markdown",
+  "chatSearchMessages": "Tìm trong hội thoại…",
+  "chatSearchAllChats": "Tìm trong tất cả hội thoại",
+  "chatSearchMatches": "{current} trên {total}",
+  "@chatSearchMatches": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchNoMatches": "Không có kết quả",
+  "chatSearchHistory": "Tìm kiếm lịch sử chat",
+  "chatSearchInThisChat": "Trong hội thoại này",
+  "syncNotSyncedYet": "chưa đồng bộ",
+  "syncSyncing": "đang đồng bộ…",
+  "syncOffline": "ngoại tuyến · đã lưu cache",
+  "syncAuthExpired": "phiên đã hết hạn",
+  "syncFailed": "đồng bộ thất bại",
+  "syncSynced": "đồng bộ {relative}",
+  "@syncSynced": {
+    "placeholders": {
+      "relative": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewRequested": "Yêu cầu duyệt",
+  "recent": "Gần đây",
+  "showAll": "Xem tất cả…",
+  "showAllScopes": "Xem tất cả {count} {kind}…",
+  "@showAllScopes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "filterProjects": "Lọc project",
+  "filterProjectsCount": "Lọc {count} project…",
+  "@filterProjectsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filterProducts": "Lọc product",
+  "filterRepositories": "Lọc kho lưu trữ",
+  "searchChats": "Tìm kiếm cuộc trò chuyện",
+  "viewList": "Danh sách",
+  "viewKanban": "Kanban",
+  "viewBoard": "Bảng",
+  "viewCalendar": "Lịch",
+  "viewGantt": "Gantt",
+  "sprints": "Bản thực thi",
+  "docs": "Tài liệu",
+  "roleProjectManagement": "Quản lý dự án",
+  "roleCodeHosting": "Lưu trữ mã nguồn",
+  "roleCodeHostingCi": "Lưu trữ mã nguồn & CI",
+  "dueThisWeek": "Hạn trong tuần này",
+  "switchToView": "Chuyển sang {view}",
+  "@switchToView": {
+    "placeholders": {
+      "view": {
+        "type": "String"
+      }
+    }
+  },
+  "allProjects": "Tất cả project",
+  "allProducts": "Tất cả product",
+  "allRepositories": "Tất cả kho lưu trữ",
+  "sprintCurrent": "Bản thực thi: Hiện tại",
+  "statusAny": "Trạng thái: Tất cả",
+  "viewOpen": "Đang mở",
+  "viewMerged": "Đã merge",
+  "viewClosed": "Đã đóng",
+  "actions": "Actions",
+  "pipelines": "Pipelines",
+  "draft": "Bản nháp",
+  "inReview": "Đang review",
+  "allOpen": "Tất cả đang mở",
+  "overviewSubtitle": "{count, plural, =1{1 công cụ đã kết nối với {workspace}. Chọn một công cụ để làm việc.} other{{count} công cụ đã kết nối với {workspace}. Chọn một công cụ để làm việc.}}",
+  "@overviewSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
+  "manageIntegrations": "Quản lý kết nối",
+  "connectATool": "Kết nối công cụ",
+  "assignedToYou": "Giao cho bạn",
+  "fromAllTools": "từ tất cả công cụ",
+  "connectedWithCount": "Đã kết nối · {count}",
+  "@connectedWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "whoCanConnectTools": "Ai có thể kết nối công cụ",
+  "connectionsSharedByEveryone": "Các kết nối được chia sẻ cho mọi người trong {workspace}.",
+  "@connectionsSharedByEveryone": {
+    "placeholders": {
+      "workspace": {
+        "type": "String"
+      }
+    }
+  },
+  "openToolAction": "Mở {tool} →",
+  "@openToolAction": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "membersComingSoonBody": "Tính năng thành viên sắp ra mắt. Các kết nối hiện được chia sẻ cho tất cả người dùng ứng dụng này.",
+  "healthConnected": "Đã kết nối",
+  "healthAuthExpired": "Hết phiên",
+  "healthOffline": "Ngoại tuyến",
+  "healthError": "Lỗi",
+  "accountCapabilitiesPrefix": "Tài khoản: {handle} · {capabilities}",
+  "@accountCapabilitiesPrefix": {
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      },
+      "capabilities": {
+        "type": "String"
+      }
+    }
+  },
+  "accountManage": "Quản lý",
+  "members": "Thành viên",
+  "settings": "Cài đặt",
+  "showAllWithCount": "Xem tất cả {count}",
+  "@showAllWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noAssignedWork": "Không có công việc nào được giao cho bạn",
+  "noConnectedAccounts": "Chưa có công cụ nào được kết nối",
+  "noConnectedAccountsDesc": "Kết nối một công cụ để bắt đầu theo dõi công việc trên các dự án của bạn.",
+  "dueRelative": "Hạn {date}",
+  "@dueRelative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "overdueRelative": "Quá hạn {date}",
+  "@overdueRelative": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "searchContextWorkspace": "Tìm kiếm tác vụ, lỗi, PR, MR…",
+  "searchContextTool": "Tìm kiếm trong {tool}…",
+  "@searchContextTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "searchNoResults": "Không tìm thấy kết quả",
+  "findWorkspace": "Tìm không gian làm việc",
+  "yourWorkspaces": "KHÔNG GIAN LÀM VIỆC",
+  "createWorkspace": "Tạo không gian làm việc",
+  "sessionExpiredBanner": "Phiên làm việc {tool} đã hết hạn. Dữ liệu lưu trong bộ nhớ tạm ở chế độ chỉ đọc cho đến khi bạn đăng nhập lại.",
+  "@sessionExpiredBanner": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "reauthenticate": "Đăng nhập lại"
 }

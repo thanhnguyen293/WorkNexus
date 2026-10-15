@@ -38,6 +38,10 @@ final _abbreviation = RegExp(r'^ {0,3}\*\[[^\]]+\]:');
 /// `::: warning` / `:::` — a custom container's fences.
 final _container = RegExp(r'^ {0,3}:::\s*(\S*)');
 
+/// Adjacent mention links (`[@Name](@#12)[@Name2]`) or raw mentions (`@User1@User2`).
+final _adjacentMention = RegExp(r'(\]\(@#\d+\))(?=\[@|@)');
+final _adjacentAt = RegExp(r'(@[^\s@]+)(?=@)');
+
 /// `:   definition` or `  ~ definition` under a definition list's term.
 final _definitionItem = RegExp(r'^ {0,3}(?::|\s~)\s+(\S.*)$');
 
@@ -171,7 +175,9 @@ String _normalizeLine(
         )
         .replaceAllMapped(_titled, (m) => '](${m[1]})')
         .replaceAllMapped(_underscoreBold, (m) => '**${m[1]}**')
-        .replaceAllMapped(_underscoreItalic, (m) => '*${m[1]}*');
+        .replaceAllMapped(_underscoreItalic, (m) => '*${m[1]}*')
+        .replaceAllMapped(_adjacentMention, (m) => '${m[1]} ')
+        .replaceAllMapped(_adjacentAt, (m) => '${m[1]} ');
   }
   return parts.join('`').replaceAllMapped(_escaped, (m) {
     final mark = String.fromCharCode(m[0]!.codeUnitAt(0) - _escapedBase);

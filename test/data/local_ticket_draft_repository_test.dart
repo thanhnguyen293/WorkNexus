@@ -113,7 +113,7 @@ void main() {
     final raw = sqlite3.open(file.path);
     raw.execute('DROP TABLE ticket_drafts;');
     raw.execute('PRAGMA user_version = 44;');
-    raw.dispose();
+    raw.close();
 
     final upgraded = AppDatabase(NativeDatabase(file));
     addTearDown(upgraded.close);

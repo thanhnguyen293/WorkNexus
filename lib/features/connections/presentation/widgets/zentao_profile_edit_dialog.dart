@@ -14,8 +14,8 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/zentao_profile.dart';
-import '../../domain/entities/zentao_profile_update.dart';
+import '../../../../tools/zentao/domain/entities/zentao_profile.dart';
+import '../../../../tools/zentao/domain/entities/zentao_profile_update.dart';
 import '../providers/zentao_profile_edit_controller.dart';
 import '../providers/zentao_profile_providers.dart';
 

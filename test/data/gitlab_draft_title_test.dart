@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/connections/data/gitlab/gitlab_draft_title.dart';
+import 'package:work_nexus/tools/gitlab/data/mappers/gitlab_draft_title.dart';
 
 void main() {
   test('readyTitle strips every prefix GitLab treats as draft', () {

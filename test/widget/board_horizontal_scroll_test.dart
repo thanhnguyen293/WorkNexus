@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/board/presentation/widgets/board_horizontal_scroll.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/board_horizontal_scroll.dart';
 
 void main() {
   testWidgets('the board comes back scrolled where it was left', (

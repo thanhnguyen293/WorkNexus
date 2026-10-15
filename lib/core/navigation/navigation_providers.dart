@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../di/providers.dart';
+import '../domain/entities/account.dart';
+import '../domain/entities/workspace.dart';
 import 'app_nav_controller.dart';
 import 'app_nav_state.dart';
 import 'ticket_editor_route.dart';
@@ -22,29 +24,33 @@ final openTicketIdProvider = Provider<String?>(
   (ref) => ref.watch(appNavProvider.select((s) => s.openTicketId)),
 );
 
+/// The rail destination (workspace or specific account).
+final railTargetProvider = Provider<RailTarget>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.rail)),
+);
+
+/// The active workspace section when rail is workspace.
+final workspaceSectionProvider = Provider<WorkspaceSection>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.workspaceSection)),
+);
+
+/// The current tool location when rail is an account (null otherwise).
+final currentToolLocationProvider = Provider<ToolLocation?>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.currentLocation)),
+);
+
 /// Whether the detail slide-over has an earlier ticket to go back to.
 final ticketCanGoBackProvider = Provider<bool>(
   (ref) => ref.watch(appNavProvider.select((s) => s.canGoBack)),
 );
 
-/// Whether the Settings / Integrations view was opened (replaces the board).
-final settingsOpenProvider = Provider<bool>(
-  (ref) => ref.watch(appNavProvider.select((s) => s.settingsOpen)),
-);
-
-/// Which main view fills the window (settings still wins when open).
-final mainViewProvider = Provider<MainView>(
-  (ref) => ref.watch(appNavProvider.select((s) => s.view)),
-);
-
-/// The mini app on show (null unless [MainView.miniApp] is the main view).
-final openMiniAppIdProvider = Provider<String?>(
-  (ref) => ref.watch(appNavProvider.select((s) => s.miniAppId)),
-);
-
-/// Whether the ZenTao chat view is the main view.
+/// Whether the ZenTao chat view is the active section.
 final chatOpenProvider = Provider<bool>(
-  (ref) => ref.watch(mainViewProvider) == MainView.chat,
+  (ref) =>
+      ref.watch(
+        appNavProvider.select((s) => s.currentLocation?.section.value),
+      ) ==
+      'zentao.chat',
 );
 
 /// The open bug / task editor, which replaces the board and sidebar; null when
@@ -62,38 +68,33 @@ final notificationsPanelOpenProvider = Provider<bool>(
 /// Whether the Quick Settings panel is docked open at the window's right.
 final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
 
-/// First-run onboarding state: when there is no workspace or no connected
-/// provider account yet, the app should open Integrations instead of an empty
-/// board.
-final needsInitialIntegrationsProvider = Provider<bool>((ref) {
-  final workspaces = ref.watch(workspacesProvider);
-  final accounts = ref.watch(accountsProvider);
-  final noWorkspaces = workspaces.maybeWhen(
-    data: (items) => items.isEmpty,
-    orElse: () => false,
-  );
-  final noAccounts = accounts.maybeWhen(
-    data: (items) => items.isEmpty,
-    orElse: () => false,
-  );
-  return noWorkspaces || noAccounts;
-});
-
-/// Effective Integrations visibility. Manual opens still use
-/// [settingsOpenProvider], while first-run empty state forces the page open.
-final integrationsVisibleProvider = Provider<bool>(
-  (ref) =>
-      ref.watch(settingsOpenProvider) ||
-      ref.watch(needsInitialIntegrationsProvider),
-);
-
-/// The main view the rail marks as current: none while settings or the bug /
-/// task editor covers it.
-final selectedMainViewProvider = Provider<MainView?>((ref) {
-  if (ref.watch(integrationsVisibleProvider)) return null;
-  if (ref.watch(ticketEditorProvider) != null) return null;
-  return ref.watch(mainViewProvider);
-});
-
 /// Hidden developer log panel, opened from the title-bar settings trigger.
 final talkerDebugOpenProvider = StateProvider<bool>((ref) => false);
+
+/// The currently joined/active workspace id. Null means default to first workspace.
+final activeWorkspaceIdProvider = StateProvider<String?>((ref) {
+  final workspaces = ref.watch(workspacesProvider).asData?.value ?? const [];
+  return workspaces.isNotEmpty ? workspaces.first.id : null;
+});
+
+/// The currently active workspace entity.
+final activeWorkspaceProvider = Provider<Workspace?>((ref) {
+  final activeId = ref.watch(activeWorkspaceIdProvider);
+  final workspaces = ref.watch(workspacesProvider).asData?.value ?? const [];
+  if (workspaces.isEmpty) return null;
+  if (activeId == null) return workspaces.first;
+  for (final w in workspaces) {
+    if (w.id == activeId) return w;
+  }
+  return workspaces.first;
+});
+
+/// The sorted accounts belonging to the active workspace.
+final sortedActiveAccountsProvider = Provider<List<Account>>((ref) {
+  final activeWsId = ref.watch(activeWorkspaceIdProvider);
+  final allAccounts = ref.watch(accountsProvider).asData?.value ?? const [];
+  final activeAccounts = allAccounts
+      .where((a) => activeWsId == null || a.workspaceId == activeWsId)
+      .toList();
+  return Account.sort(activeAccounts);
+});

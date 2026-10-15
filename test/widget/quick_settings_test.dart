@@ -5,11 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
+import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
@@ -18,6 +17,7 @@ import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/core/widgets/quick_settings_font_control.dart';
 import 'package:work_nexus/core/widgets/quick_settings_side_panel.dart';
 import 'package:work_nexus/features/connections/presentation/settings_page.dart';
+import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
 import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -411,14 +411,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  Future<void> pumpPanelWithChat(WidgetTester tester, MainView view) async {
+  Future<void> pumpPanelWithChat(
+    WidgetTester tester, {
+    bool isChat = false,
+  }) async {
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.read(appNavProvider.notifier).show(view);
+    if (isChat) {
+      container.read(appNavProvider.notifier).selectAccount('acc-zt');
+      container
+          .read(appNavProvider.notifier)
+          .selectSection(const SectionId('zentao.chat'));
+    } else {
+      container
+          .read(appNavProvider.notifier)
+          .selectWorkspaceSection(WorkspaceSection.overview);
+    }
     container.read(quickSettingsOpenProvider.notifier).state = true;
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -432,7 +444,7 @@ void main() {
   }
 
   testWidgets('chat settings live on their own tab', (tester) async {
-    await pumpPanelWithChat(tester, MainView.board);
+    await pumpPanelWithChat(tester);
 
     expect(find.text('Theme'), findsOneWidget);
     expect(find.text('chat-section'), findsNothing);
@@ -451,7 +463,7 @@ void main() {
   testWidgets('opened from the chat view, the panel starts on the Chat tab', (
     tester,
   ) async {
-    await pumpPanelWithChat(tester, MainView.chat);
+    await pumpPanelWithChat(tester, isChat: true);
 
     expect(find.text('chat-section'), findsOneWidget);
     expect(find.text('Theme'), findsNothing);

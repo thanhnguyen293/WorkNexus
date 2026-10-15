@@ -9,8 +9,8 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/rich_text_editor.dart';
-import 'package:work_nexus/features/task_detail/presentation/widgets/comment_composer.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/comment_composer.dart';
 
 Ticket _ticket(ProviderType type) => Ticket(
   id: 'x:1',

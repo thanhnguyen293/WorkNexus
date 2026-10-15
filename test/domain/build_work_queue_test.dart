@@ -3,7 +3,7 @@ import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
-import 'package:work_nexus/features/dashboard/domain/usecases/build_work_queue.dart';
+import 'package:work_nexus/features/workspace_overview/domain/usecases/build_work_queue.dart';
 
 Ticket _t(String id, UnifiedStatus status, Priority priority) => Ticket(
   id: id,

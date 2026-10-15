@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../../domain/repositories/sticker_pack_source.dart';
@@ -86,8 +86,8 @@ class TelegramStickerImporter {
   TelegramStickerImporter(
     this._importPack,
     this._tokens, {
-    required void Function() onImported,
-  }) : _onImported = onImported;
+    required this._onImported,
+  });
 
   final ImportStickerPack _importPack;
   final TelegramTokenStore _tokens;
@@ -123,12 +123,10 @@ class TelegramStickerImporter {
 class StickerController {
   StickerController(
     this._stickers, {
-    required SendSticker sendSticker,
-    required SaveImageAsSticker saveImage,
-    required void Function() onChanged,
-  }) : _sendSticker = sendSticker,
-       _saveImage = saveImage,
-       _onChanged = onChanged;
+    required this._sendSticker,
+    required this._saveImage,
+    required this._onChanged,
+  });
 
   final StickerRepository _stickers;
   final SendSticker _sendSticker;

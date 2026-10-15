@@ -24,7 +24,6 @@ final _message = ChatMessage(
   sentAt: DateTime(2026, 10, 13),
   content: const MessageContent.text('xem cái này'),
   isMine: false,
-  sendState: SendState.sent,
 );
 
 ChatConversation _group(String gid, String name, {String committers = ''}) =>

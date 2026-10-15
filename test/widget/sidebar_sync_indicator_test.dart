@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/features/board/presentation/widgets/sidebar_primitives.dart';
+import 'package:work_nexus/shared/shell_pane/sidebar_primitives.dart';
 
 void main() {
   testWidgets('sidebar sync indicator renders as a compact progress glyph', (

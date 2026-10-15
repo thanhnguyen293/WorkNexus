@@ -6,11 +6,11 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/board/domain/entities/paged_view_state.dart';
-import 'package:work_nexus/features/board/domain/usecases/apply_view_pages.dart';
-import 'package:work_nexus/features/board/domain/usecases/plan_view_load.dart';
-import 'package:work_nexus/features/board/domain/usecases/should_auto_load.dart';
-import 'package:work_nexus/features/board/domain/value_objects/paging_policy.dart';
+import 'package:work_nexus/shared/board/domain/entities/paged_view_state.dart';
+import 'package:work_nexus/shared/board/domain/usecases/apply_view_pages.dart';
+import 'package:work_nexus/shared/board/domain/usecases/plan_view_load.dart';
+import 'package:work_nexus/shared/board/domain/usecases/should_auto_load.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/paging_policy.dart';
 
 Ticket _t(String id) => Ticket(
   id: id,

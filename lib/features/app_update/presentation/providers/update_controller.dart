@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/debug/app_talker.dart';
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/available_update.dart';
 import '../../domain/usecases/check_for_update.dart';
@@ -16,13 +16,11 @@ import 'update_state.dart';
 /// then holds it in [UpdateReady] until the user asks to restart into it.
 class UpdateController extends Notifier<UpdateState> {
   UpdateController({
-    required CheckForUpdate checkForUpdate,
-    required DownloadUpdate downloadUpdate,
-    required InstallUpdate installUpdate,
+    required this._checkForUpdate,
+    required this._downloadUpdate,
+    required this._installUpdate,
     this.checkEvery = const Duration(hours: 1),
-  }) : _checkForUpdate = checkForUpdate,
-       _downloadUpdate = downloadUpdate,
-       _installUpdate = installUpdate;
+  });
 
   final CheckForUpdate _checkForUpdate;
   final DownloadUpdate _downloadUpdate;

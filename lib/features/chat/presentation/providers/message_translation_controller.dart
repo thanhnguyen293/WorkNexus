@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/service_locator.dart';
+import '../../../../app/di/service_locator.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../domain/entities/chat_message.dart';

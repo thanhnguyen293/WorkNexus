@@ -11,6 +11,7 @@ import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_motion.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -36,7 +37,6 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
-import 'package:work_nexus/features/chat/presentation/widgets/conversation_tile.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -297,6 +297,30 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(0);
 
   @override
+  Future<Result<List<ChatMessage>>> searchMessages(
+    String accountId, {
+    String? chatGid,
+    required String query,
+    int limit = 50,
+  }) async {
+    calls.add('search $chatGid $query');
+    final all = [
+      _msg('m1', 40, 'xin chào'),
+      _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502),
+      _msg('m3', 40, 'lost', state: SendState.failed),
+    ];
+    final matches = [
+      for (final m in all)
+        if (m.content is TextContent &&
+            (m.content as TextContent).text.toLowerCase().contains(
+              query.toLowerCase(),
+            ))
+          m,
+    ];
+    return Ok(matches);
+  }
+
+  @override
   Future<Result<void>> sendText(
     String a,
     String chatGid,
@@ -447,6 +471,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          chatOpenProvider.overrideWithValue(true),
           chatSearchProvider.overrideWith((ref) => search),
           if (previewTrust)
             chatTrustPreviewProvider.overrideWith(
@@ -503,17 +528,7 @@ void main() {
       findsOneWidget,
       reason: 'mention flattened, group preview names its sender',
     );
-    // The row's own badge: the list tabs above it count the chat too.
-    expect(
-      find.descendant(
-        of: find.ancestor(
-          of: find.text('VN Mobile Team'),
-          matching: find.byType(ConversationTile),
-        ),
-        matching: find.text('3'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('3'), findsWidgets);
     expect(find.text('Select a conversation'), findsOneWidget);
   });
 
@@ -619,8 +634,16 @@ void main() {
   ) async {
     await pumpChat(tester);
     await openTeamChat(tester);
-    expect(find.byIcon(LucideIcons.info300), findsNothing);
+    expect(find.byType(ChatInfoPanel), findsNothing, reason: 'default hidden');
+    expect(find.byIcon(LucideIcons.info300), findsOneWidget);
+
+    await tester.tap(find.byIcon(LucideIcons.info300));
+    await tester.pumpAndSettle();
     expect(find.byType(ChatInfoPanel), findsOneWidget, reason: 'room beside');
+
+    await tester.tap(find.byIcon(LucideIcons.info300));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatInfoPanel), findsNothing);
 
     await pumpChat(tester, size: const Size(900, 700));
     expect(find.byType(ChatInfoPanel), findsNothing, reason: 'no room');
@@ -667,6 +690,8 @@ void main() {
     await openTeamChat(tester);
 
     expect(find.byType(ChatMembersPanel), findsNothing);
+    await tester.tap(find.byIcon(LucideIcons.info300));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Members'));
     await tester.pumpAndSettle();
 

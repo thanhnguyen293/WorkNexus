@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../app/di/service_locator.dart';
 import '../../../core/di/providers.dart';
-import '../../../core/di/service_locator.dart';
 import '../../../core/domain/adapters/opencode_cli.dart';
-import '../../../core/domain/entities/translation_record.dart';
-import '../../../core/domain/repositories/translation_repository.dart';
 import '../../../core/domain/value_objects/translation_state.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/util/body_format.dart';
 import '../../../core/util/html_to_markdown.dart';
 import '../domain/adapters/translation_service.dart';
+import '../domain/entities/translation_record.dart';
+import '../domain/repositories/translation_repository.dart';
 import '../domain/usecases/resolve_translation_state.dart';
 
 part 'translation_providers.freezed.dart';

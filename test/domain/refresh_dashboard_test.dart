@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/dashboard/domain/entities/dashboard_profile.dart';
-import 'package:work_nexus/features/dashboard/domain/entities/zentao_dashboard.dart';
-import 'package:work_nexus/features/dashboard/domain/repositories/dashboard_repository.dart';
-import 'package:work_nexus/features/dashboard/domain/usecases/refresh_dashboard.dart';
+import 'package:work_nexus/features/workspace_overview/domain/entities/dashboard_profile.dart';
+import 'package:work_nexus/features/workspace_overview/domain/entities/zentao_dashboard.dart';
+import 'package:work_nexus/features/workspace_overview/domain/repositories/dashboard_repository.dart';
+import 'package:work_nexus/features/workspace_overview/domain/usecases/refresh_dashboard.dart';
 
 class _MockDashboardRepository extends Mock implements DashboardRepository {}
 

@@ -7,8 +7,8 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/sync/data/sync_service.dart';
-import 'package:work_nexus/features/sync/data/zentao_workflow_actions.dart';
+import 'package:work_nexus/shared/sync/data/sync_service.dart';
+import 'package:work_nexus/tools/zentao/data/services/zentao_workflow_actions.dart';
 
 class _MockSync extends Mock implements SyncService {}
 
@@ -86,21 +86,15 @@ void main() {
     expect(ticket.status, UnifiedStatus.done);
   });
 
-  test(
-    'confirm and reopen go through the bug flows sync already has',
-    () async {
-      when(
-        () => sync.confirmBug(any(), assignee: 'an', comment: 'c'),
-      ).thenAnswer((_) async => const Ok(null));
-      when(
-        () => sync.activateBug(any(), build: '7'),
-      ).thenAnswer((_) async => const Ok(null));
+  test('confirm and reopen show their optimistic state', () async {
+    await actions.confirmBug(_task, assignee: 'an', comment: 'c');
+    final confirmed = shown();
+    expect(confirmed.providerStatus, 'active');
+    expect(confirmed.assignee, 'an');
 
-      await actions.confirmBug(_task, assignee: 'an', comment: 'c');
-      await actions.activateBug(_task, build: '7');
-
-      verify(() => sync.confirmBug(_task, assignee: 'an', comment: 'c'));
-      verify(() => sync.activateBug(_task, build: '7'));
-    },
-  );
+    await actions.activateBug(_task, build: '7');
+    final activated = shown();
+    expect(activated.providerStatus, 'active');
+    expect(activated.status, UnifiedStatus.todo);
+  });
 }
