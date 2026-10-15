@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -119,6 +120,14 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
     }
   }
 
+  void _onPointerDown(PointerDownEvent event) {
+    if (event.buttons & kBackMouseButton != 0) {
+      _browser.goBack();
+    } else if (event.buttons & kForwardMouseButton != 0) {
+      _browser.goForward();
+    }
+  }
+
   void _focusAddress() {
     _addressFocus.requestFocus();
     _address.selection = TextSelection(
@@ -169,7 +178,9 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
                 ? Stack(
                     fit: StackFit.expand,
                     children: [
-                      _webView,
+                      // The Windows web view drops the mouse's back and
+                      // forward buttons, so they are taken here.
+                      Listener(onPointerDown: _onPointerDown, child: _webView),
                       if (state.loadError case final error?)
                         MiniAppLoadError(
                           message: error,
