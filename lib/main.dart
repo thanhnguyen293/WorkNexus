@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -53,7 +54,9 @@ Future<void> main(List<String> arguments) async {
 
   // Scope the on-disk attachment cache to a single session: clear last
   // session's downloaded repro videos/screenshots so temp doesn't accumulate.
-  await getIt<SyncService>().purgeAttachmentCache();
+  // Not awaited: a recursive delete of temp is nothing the first frame needs,
+  // and no attachment is downloaded before a ticket is opened.
+  unawaited(getIt<SyncService>().purgeAttachmentCache());
 
   // Restore persisted appearance/language settings (defaults on first run).
   final settingsRow = await db.getSettings();

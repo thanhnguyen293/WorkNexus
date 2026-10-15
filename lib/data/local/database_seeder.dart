@@ -9,9 +9,10 @@ import 'mappers.dart';
 /// leaving any real user-connected accounts and their data intact. Idempotent —
 /// a no-op once the demo rows are gone. Returns the number of tickets removed.
 Future<int> purgeSeededDemoData(AppDatabase db) async {
-  final seed = SeedData.build();
-  final accountIds = seed.accounts.map((a) => a.id).toList();
-  final workspaceIds = seed.workspaces.map((w) => w.id).toList();
+  // Only the ids: building the whole seed (tickets, hashes, translations)
+  // on every launch just to name them delayed the first frame.
+  final accountIds = [for (final a in kSeedAccounts) a.id];
+  final workspaceIds = [for (final w in kSeedWorkspaces) w.id];
 
   // Fast path: nothing to do if no demo account is present.
   final present = await (db.select(

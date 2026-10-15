@@ -1135,7 +1135,7 @@ class SyncService
   /// Successfully loaded inline-image bytes, keyed by account + url, so the detail
   /// panel reuses a loaded image instead of refetching on every Original/
   /// Translate tab switch. Only successes are cached, so a failed load can retry.
-  /// LRU-bounded at 500 MB so it can't grow without limit over the app lifetime.
+  /// LRU-bounded (see [ByteLruCache]) so it cannot grow without limit.
   final ByteLruCache _imageCache = ByteLruCache();
 
   /// When an inline image last failed to load, by the same key. A failure

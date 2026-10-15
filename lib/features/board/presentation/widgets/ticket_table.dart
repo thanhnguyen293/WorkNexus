@@ -194,6 +194,7 @@ class _TicketTableState extends ConsumerState<TicketTable> {
                                 : _TableRow(
                                     columns,
                                     rows[i],
+                                    key: ValueKey(rows[i].id),
                                     // The card's edge closes the last row.
                                     last:
                                         footer == null && i == rows.length - 1,
@@ -214,7 +215,7 @@ class _TicketTableState extends ConsumerState<TicketTable> {
 }
 
 class _TableRow extends ConsumerWidget {
-  const _TableRow(this.columns, this.ticket, {this.last = false});
+  const _TableRow(this.columns, this.ticket, {this.last = false, super.key});
 
   final List<TicketTableColumn> columns;
   final Ticket ticket;

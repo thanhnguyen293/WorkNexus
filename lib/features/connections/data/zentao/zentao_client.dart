@@ -673,7 +673,9 @@ class ZenTaoClient {
           data != null &&
           data.isNotEmpty &&
           (!imageOnly || contentType.startsWith('image'))) {
-        return Uint8List.fromList(data);
+        // dio already hands back a Uint8List; copying an image or a video
+        // again doubled its memory for nothing.
+        return data is Uint8List ? data : Uint8List.fromList(data);
       }
       return null;
     }

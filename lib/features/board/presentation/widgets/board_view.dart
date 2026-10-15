@@ -69,7 +69,10 @@ class _ColumnState extends ConsumerState<_Column> {
         itemCount: col.tickets.length,
         itemBuilder: (context, i) {
           final ticket = col.tickets[i];
+          // Keyed by ticket, so a re-sort moves elements instead of
+          // rebuilding every card in place with another ticket.
           return Draggable<String>(
+            key: ValueKey(ticket.id),
             data: ticket.id,
             feedback: _DragFeedback(child: TicketCard(ticket)),
             childWhenDragging: Opacity(opacity: 0.4, child: TicketCard(ticket)),
