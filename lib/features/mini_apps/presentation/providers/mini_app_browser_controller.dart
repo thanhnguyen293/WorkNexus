@@ -72,6 +72,45 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
   void attach(InAppWebViewController web) {
     _web = web;
     unawaited(_applyActivity());
+    unawaited(_applyBrightness());
+  }
+
+  // ---- Light / dark ----
+
+  Brightness? _brightness;
+  Brightness? _appliedBrightness;
+
+  /// The look the app shows ([brightness]), which the page's
+  /// `prefers-color-scheme` follows, so a page never differs from the app
+  /// around it: the OS's look only when the app follows the OS. Windows only:
+  /// the web view there takes the OS's look unasked, while macOS's takes the
+  /// app window's.
+  void setBrightness(Brightness brightness) {
+    _brightness = brightness;
+    unawaited(_applyBrightness());
+  }
+
+  Future<void> _applyBrightness() async {
+    final web = _web;
+    final brightness = _brightness;
+    if (web == null ||
+        brightness == null ||
+        brightness == _appliedBrightness ||
+        defaultTargetPlatform != TargetPlatform.windows) {
+      return;
+    }
+    _appliedBrightness = brightness;
+    await web.callDevToolsProtocolMethod(
+      methodName: 'Emulation.setEmulatedMedia',
+      parameters: {
+        'features': [
+          {
+            'name': 'prefers-color-scheme',
+            'value': brightness == Brightness.dark ? 'dark' : 'light',
+          },
+        ],
+      },
+    );
   }
 
   // ---- Off screen ----
