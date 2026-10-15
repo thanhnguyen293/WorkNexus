@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,9 +23,6 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
   InAppWebViewController? _web;
   int _handledSeq = 0;
 
-  /// The address the page opens on.
-  late final String initialUrl;
-
   @override
   MiniAppBrowserState build() {
     final app = ref
@@ -36,13 +34,13 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
     final pending = ref.read(miniAppNavigationProvider);
     final claimed = pending != null && pending.id == appId;
     if (claimed) _handledSeq = pending.seq;
-    initialUrl = claimed ? pending.url : app?.lastUrl ?? app?.url ?? '';
+    final initialUrl = claimed ? pending.url : app?.lastUrl ?? app?.url ?? '';
     ref.listen<MiniAppNavigation?>(miniAppNavigationProvider, (_, next) {
       if (next == null || next.id != appId || next.seq == _handledSeq) return;
       _handledSeq = next.seq;
       load(next.url);
     });
-    return MiniAppBrowserState(address: initialUrl);
+    return MiniAppBrowserState(initialUrl: initialUrl, address: initialUrl);
   }
 
   void attach(InAppWebViewController web) => _web = web;
@@ -52,11 +50,26 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
 
   void reload() => _web?.reload();
 
-  /// A reload that skips the cache, through the DevTools protocol.
-  void hardReload() => _web?.callDevToolsProtocolMethod(
-    methodName: 'Page.reload',
-    parameters: {'ignoreCache': true},
-  );
+  /// A reload that skips the cache. Each web view offers it its own way, and
+  /// calling the other one's throws: WebView2 (Windows) through the DevTools
+  /// protocol, WKWebView (macOS) as a reload from the origin.
+  void hardReload() {
+    final web = _web;
+    if (web == null) return;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.windows:
+        unawaited(
+          web.callDevToolsProtocolMethod(
+            methodName: 'Page.reload',
+            parameters: {'ignoreCache': true},
+          ),
+        );
+      case TargetPlatform.macOS:
+        unawaited(web.reloadFromOrigin());
+      default:
+        unawaited(web.reload());
+    }
+  }
 
   void stop() => _web?.stopLoading();
 

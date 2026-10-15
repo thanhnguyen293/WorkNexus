@@ -16,6 +16,10 @@ abstract class MiniAppBrowserState with _$MiniAppBrowserState {
     /// Why the page could not load; null while it is fine.
     String? loadError,
 
+    /// The address the page opened on: the link that opened the app, else
+    /// the page it was last on, else its own address.
+    @Default('') String initialUrl,
+
     /// The page's current address.
     @Default('') String address,
   }) = _MiniAppBrowserState;

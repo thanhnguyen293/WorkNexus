@@ -1343,7 +1343,6 @@
   "miniAppPermOtherLabel": "Khác",
   "miniAppPermOtherAction": "dùng một quyền khác",
   "miniAppPermOtherDesc": "Một quyền mà ứng dụng không liệt kê tên.",
-  "miniAppDevTools": "Công cụ nhà phát triển",
   "miniAppPermissionTitle": "{site} muốn {action}",
   "@miniAppPermissionTitle": {
     "placeholders": {
@@ -1362,5 +1361,6 @@
   "miniAppPermissionsEmpty": "Chưa có. Khi trang xin dùng gì đó, câu trả lời của bạn sẽ hiện ở đây.",
   "miniAppPermissionAllowed": "Cho phép",
   "miniAppPermissionBlocked": "Đã chặn",
-  "miniAppPermissionReset": "Hỏi lại"
+  "miniAppPermissionReset": "Hỏi lại",
+  "miniAppPermissionSaveFailed": "Không lưu được lựa chọn. Lần sau bạn sẽ được hỏi lại."
 }

@@ -34,7 +34,9 @@ class MiniAppWebView extends ConsumerWidget {
     final name = app.name;
     final browser = ref.read(miniAppBrowserProvider(app.id).notifier);
     return InAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri(browser.initialUrl)),
+      initialUrlRequest: URLRequest(
+        url: WebUri(ref.read(miniAppBrowserProvider(app.id)).initialUrl),
+      ),
       initialUserScripts: UnmodifiableListView([
         for (final capability in capabilities) ?capability.userScript,
       ]),

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/mini_app_permission.dart';
 import '../providers/mini_app_providers.dart';
@@ -66,8 +68,14 @@ class _PermissionRow extends ConsumerWidget {
     final l = AppL10n.of(context);
     final controller = ref.read(miniAppPermissionControllerProvider.notifier);
     final allowed = grant.decision == MiniAppPermissionDecision.allow;
+    Future<void> report(Future<Result<void>> change) async {
+      if ((await change).isErr && context.mounted) {
+        showAppSnack(context, l.miniAppPermissionSaveFailed, isError: true);
+      }
+    }
+
     void set(MiniAppPermissionDecision decision) =>
-        controller.remember(miniAppId, [grant.kind], decision);
+        report(controller.remember(miniAppId, [grant.kind], decision));
     return Row(
       spacing: s.md,
       children: [
@@ -101,7 +109,7 @@ class _PermissionRow extends ConsumerWidget {
         AppIconButton(
           icon: LucideIcons.rotateCcw300,
           tooltip: l.miniAppPermissionReset,
-          onPressed: () => controller.forget(miniAppId, grant.kind),
+          onPressed: () => report(controller.forget(miniAppId, grant.kind)),
         ),
       ],
     );

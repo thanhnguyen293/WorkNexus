@@ -1,8 +1,8 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_window_service.dart';
 import '../../domain/entities/mini_app_permission.dart';
+import '../../domain/usecases/is_mini_app_origin.dart';
 import '../providers/mini_app_providers.dart';
 import 'ask_mini_app_permission.dart';
 import 'mini_app_page_capability.dart';
@@ -22,9 +22,12 @@ String? miniAppIdOfNotificationPayload(String payload) =>
 
 /// Lets a page show notifications, as OS notifications. The web view has no
 /// notification event of its own on Windows, so a script replaces the page's
-/// `Notification` (and a service worker registration's `showNotification`)
-/// with one that reports to the app. The permission it reports is the one the
-/// user gave, asked for the first time the page requests it.
+/// `Notification` (and `showNotification` called on a service worker
+/// registration from the page) with one that reports to the app. A
+/// notification raised inside the service worker itself (on a push) is not
+/// seen: the script does not run there. The permission it reports is the one
+/// the user gave, asked for the first time the page requests it; a page on
+/// another site than the app's is always denied.
 class MiniAppNotificationCapability implements MiniAppPageCapability {
   MiniAppNotificationCapability();
 
@@ -41,26 +44,35 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
     final app = page.app;
     final ref = page.ref;
     final permissions = ref.read(miniAppPermissionControllerProvider.notifier);
+    // The script runs in the main frame only, so the page's address is the
+    // caller's.
+    Future<Uri?> origin() => controller.getUrl();
+    Future<bool> onAppSite() async =>
+        const IsMiniAppOrigin()(app.url, await origin());
 
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotificationState',
-      callback: (_) async =>
-          switch (await permissions.remembered(app.id, _kinds)) {
-            MiniAppPermissionDecision.allow => 'granted',
-            MiniAppPermissionDecision.block => 'denied',
-            null => 'default',
-          },
+      callback: (_) async {
+        if (!await onAppSite()) return 'denied';
+        return switch (await permissions.remembered(app.id, _kinds)) {
+          MiniAppPermissionDecision.allow => 'granted',
+          MiniAppPermissionDecision.block => 'denied',
+          null => 'default',
+        };
+      },
     );
 
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotificationPermission',
       callback: (_) async {
+        final at = await origin();
         if (!page.context.mounted) return 'denied';
         final answer = await askMiniAppPermission(
           page.context,
           ref,
           app,
           _kinds,
+          origin: at,
         );
         return answer == MiniAppPermissionDecision.allow ? 'granted' : 'denied';
       },
@@ -69,15 +81,14 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotify',
       callback: (args) async {
+        if (args.isEmpty || !await onAppSite()) return;
         final allowed = await permissions.remembered(app.id, _kinds);
-        if (allowed != MiniAppPermissionDecision.allow || args.isEmpty) return;
+        if (allowed != MiniAppPermissionDecision.allow) return;
         final title = '${args[0]}';
         final body = args.length > 1 ? '${args[1]}' : '';
         final tag = args.length > 2 ? '${args[2]}' : '';
         // The user is looking at this very page: it needs no pop-up.
-        final showing =
-            ref.read(selectedMainViewProvider) == MainView.miniApp &&
-            ref.read(openMiniAppIdProvider) == app.id;
+        final showing = ref.read(miniAppShownProvider(app.id));
         if (showing && await const DesktopWindowService().isFocused()) return;
         await ref
             .read(miniAppNotifierProvider)

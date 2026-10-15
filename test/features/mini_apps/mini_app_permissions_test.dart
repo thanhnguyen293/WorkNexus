@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/database/database.dart';
+import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/mini_apps/data/datasources/favicon_fetcher.dart';
 import 'package:work_nexus/features/mini_apps/data/datasources/mini_app_icon_storage.dart';
@@ -16,6 +18,7 @@ import 'package:work_nexus/features/mini_apps/domain/entities/mini_app.dart';
 import 'package:work_nexus/features/mini_apps/domain/entities/mini_app_permission.dart';
 import 'package:work_nexus/features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import 'package:work_nexus/features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
+import 'package:work_nexus/features/mini_apps/presentation/providers/mini_app_providers.dart';
 import 'package:work_nexus/features/mini_apps/presentation/util/mini_app_notifications.dart';
 import 'package:work_nexus/features/mini_apps/presentation/util/mini_app_permission_kind.dart';
 
@@ -74,6 +77,56 @@ void main() {
         ]),
         isNull,
       );
+    });
+  });
+
+  group('MiniAppPermissionController', () {
+    late _MockRepo repo;
+    late ProviderContainer container;
+    setUpAll(
+      () => registerFallbackValue(
+        const MiniAppPermissionGrant(
+          miniAppId: 'a',
+          kind: MiniAppPermissionKind.other,
+          decision: _block,
+        ),
+      ),
+    );
+    setUp(() {
+      repo = _MockRepo();
+      container = ProviderContainer(
+        overrides: [
+          miniAppPermissionRepositoryProvider.overrideWithValue(repo),
+        ],
+      );
+      addTearDown(container.dispose);
+    });
+
+    MiniAppPermissionController controller() =>
+        container.read(miniAppPermissionControllerProvider.notifier);
+
+    test('remember reports a failure instead of dropping it', () async {
+      when(() => repo.save(any())).thenAnswer(
+        (inv) async =>
+            (inv.positionalArguments.first as MiniAppPermissionGrant).kind ==
+                MiniAppPermissionKind.microphone
+            ? const Err(StorageFailure('disk full'))
+            : const Ok(null),
+      );
+      final res = await controller().remember('a', const [
+        MiniAppPermissionKind.camera,
+        MiniAppPermissionKind.microphone,
+      ], _allow);
+      expect(res.failureOrNull, isA<StorageFailure>());
+      verify(() => repo.save(any())).called(2);
+    });
+
+    test('forget passes the result through', () async {
+      when(
+        () => repo.clear('a', MiniAppPermissionKind.camera),
+      ).thenAnswer((_) async => const Err(StorageFailure('locked')));
+      final res = await controller().forget('a', MiniAppPermissionKind.camera);
+      expect(res.isErr, isTrue);
     });
   });
 

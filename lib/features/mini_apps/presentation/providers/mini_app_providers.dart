@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/entities/mini_app_permission.dart';
@@ -41,6 +42,13 @@ final miniAppNotifierProvider = Provider<DesktopNotifier>(
 /// The user's mini apps in rail order, watched from the database.
 final miniAppsProvider = StreamProvider<List<MiniApp>>(
   (ref) => ref.watch(miniAppRepositoryProvider).watchAll(),
+);
+
+/// Whether mini app [id] is the one on screen.
+final miniAppShownProvider = Provider.family<bool, String>(
+  (ref, id) =>
+      ref.watch(selectedMainViewProvider) == MainView.miniApp &&
+      ref.watch(openMiniAppIdProvider) == id,
 );
 
 /// What the user allowed or blocked for one mini app, live.
@@ -108,25 +116,29 @@ class MiniAppPermissionController extends Notifier<void> {
     Iterable<MiniAppPermissionKind> kinds,
   ) => ref.read(resolveMiniAppPermissionProvider)(miniAppId, kinds);
 
-  /// Keeps the user's answer for each of [kinds].
-  Future<void> remember(
+  /// Keeps the user's answer for each of [kinds]; the first failure, if one
+  /// could not be kept.
+  Future<Result<void>> remember(
     String miniAppId,
     Iterable<MiniAppPermissionKind> kinds,
     MiniAppPermissionDecision decision,
   ) async {
+    Result<void> result = const Ok(null);
     for (final kind in kinds.toSet()) {
-      await _repository.save(
+      final saved = await _repository.save(
         MiniAppPermissionGrant(
           miniAppId: miniAppId,
           kind: kind,
           decision: decision,
         ),
       );
+      if (saved.isErr && !result.isErr) result = saved;
     }
+    return result;
   }
 
   /// Forgets an answer: the page is asked about it again next time.
-  Future<void> forget(String miniAppId, MiniAppPermissionKind kind) =>
+  Future<Result<void>> forget(String miniAppId, MiniAppPermissionKind kind) =>
       _repository.clear(miniAppId, kind);
 }
 
