@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../../../core/platform/desktop_window_service.dart';
@@ -28,33 +30,50 @@ String? miniAppIdOfNotificationPayload(String payload) =>
 /// seen: the script does not run there. The permission it reports is the one
 /// the user gave, asked for the first time the page requests it; a page on
 /// another site than the app's is always denied.
+///
+/// The web view's JavaScript bridge is open to every frame (macOS injects it
+/// into iframes too), and [InAppWebViewController.getUrl] names the main
+/// frame, not the caller. So each call carries a [token] that only the
+/// main-frame script knows — a cross-origin iframe cannot read it — and a
+/// call without it is ignored.
 class MiniAppNotificationCapability implements MiniAppPageCapability {
-  MiniAppNotificationCapability();
+  MiniAppNotificationCapability({String? token}) : token = token ?? _newToken();
+
+  /// The secret the script passes first on each call.
+  final String token;
 
   static const _kinds = [MiniAppPermissionKind.notifications];
 
+  static String _newToken() {
+    final random = Random.secure();
+    return [
+      for (var i = 0; i < 16; i++)
+        random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ].join();
+  }
+
   @override
-  final UserScript userScript = UserScript(
+  late final UserScript userScript = UserScript(
     injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-    source: _script,
+    source: _script.replaceAll('__TOKEN__', token),
   );
+
+  /// Whether a handler call came from this capability's own script: its first
+  /// argument is the [token].
+  bool isOwnCall(List<dynamic> args) => args.isNotEmpty && args.first == token;
 
   @override
   void attach(InAppWebViewController controller, MiniAppPageContext page) {
-    final app = page.app;
     final ref = page.ref;
     final permissions = ref.read(miniAppPermissionControllerProvider.notifier);
-    // The script runs in the main frame only, so the page's address is the
-    // caller's.
-    Future<Uri?> origin() => controller.getUrl();
     Future<bool> onAppSite() async =>
-        const IsMiniAppOrigin()(app.url, await origin());
+        const IsMiniAppOrigin()(page.app().url, await controller.getUrl());
 
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotificationState',
-      callback: (_) async {
-        if (!await onAppSite()) return 'denied';
-        return switch (await permissions.remembered(app.id, _kinds)) {
+      callback: (args) async {
+        if (!isOwnCall(args) || !await onAppSite()) return 'denied';
+        return switch (await permissions.remembered(page.app().id, _kinds)) {
           MiniAppPermissionDecision.allow => 'granted',
           MiniAppPermissionDecision.block => 'denied',
           null => 'default',
@@ -64,13 +83,14 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
 
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotificationPermission',
-      callback: (_) async {
-        final at = await origin();
+      callback: (args) async {
+        if (!isOwnCall(args)) return 'denied';
+        final at = await controller.getUrl();
         if (!page.context.mounted) return 'denied';
         final answer = await askMiniAppPermission(
           page.context,
           ref,
-          app,
+          page.app(),
           _kinds,
           origin: at,
         );
@@ -81,12 +101,13 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
     controller.addJavaScriptHandler(
       handlerName: 'miniAppNotify',
       callback: (args) async {
-        if (args.isEmpty || !await onAppSite()) return;
+        if (args.length < 2 || !isOwnCall(args) || !await onAppSite()) return;
+        final app = page.app();
         final allowed = await permissions.remembered(app.id, _kinds);
         if (allowed != MiniAppPermissionDecision.allow) return;
-        final title = '${args[0]}';
-        final body = args.length > 1 ? '${args[1]}' : '';
-        final tag = args.length > 2 ? '${args[2]}' : '';
+        final title = '${args[1]}';
+        final body = args.length > 2 ? '${args[2]}' : '';
+        final tag = args.length > 3 ? '${args[3]}' : '';
         // The user is looking at this very page: it needs no pop-up.
         final showing = ref.read(miniAppShownProvider(app.id));
         if (showing && await const DesktopWindowService().isFocused()) return;
@@ -107,8 +128,9 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
 (() => {
   if (window.__wnNotifications) return;
   window.__wnNotifications = true;
-  const call = (...args) => new Promise((resolve) => {
-    const go = () => resolve(window.flutter_inappwebview.callHandler(...args));
+  const token = '__TOKEN__';
+  const call = (name, ...args) => new Promise((resolve) => {
+    const go = () => resolve(window.flutter_inappwebview.callHandler(name, token, ...args));
     if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
       go();
     } else {
