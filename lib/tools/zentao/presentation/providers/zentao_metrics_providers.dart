@@ -7,10 +7,17 @@ import '../../domain/usecases/compute_zentao_metrics.dart';
 final computeZentaoMetricsProvider =
     Provider.family<AsyncValue<ToolMetrics>, String>((ref, accountId) {
       final ticketsAsync = ref.watch(ticketsProvider);
+      final account = ref
+          .watch(accountsProvider)
+          .asData
+          ?.value
+          .where((a) => a.id == accountId)
+          .firstOrNull;
+      if (account == null) return const AsyncLoading();
       return ticketsAsync.whenData(
         (tickets) => const ComputeZentaoMetrics().call(
           tickets: tickets,
-          accountId: accountId,
+          account: account,
         ),
       );
     });

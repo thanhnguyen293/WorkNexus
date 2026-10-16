@@ -1654,6 +1654,8 @@
   "dashboardMyWork": "My work",
   "dashboardMyTasks": "My tasks",
   "dashboardMyBugs": "My bugs",
+  "zentaoMyOpenTasks": "My open tasks",
+  "zentaoMyOpenBugs": "My open bugs",
   "dashboardShowAll": "Show all",
   "editorSectionContent": "Content",
   "editorSectionLocation": "Location",
