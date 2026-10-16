@@ -123,34 +123,6 @@ class MarkdownText extends StatelessWidget {
         inlineLinkBuilder: (details) {
           final plain = isPlainLink?.call(details.url) ?? false;
           final linkCol = linkColor ?? c.accent;
-          if (plain) {
-            return details.asWidgetSpan(
-              HoverRegion(
-                cursor: SystemMouseCursors.click,
-                builder: (context, hovered, _) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2.0),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4.5,
-                    vertical: 0.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: hovered
-                        ? linkCol.withValues(alpha: 0.22)
-                        : linkCol.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(4.0),
-                  ),
-                  child: Text(
-                    details.label,
-                    style: details.style.copyWith(
-                      color: linkCol,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
           return details.asWidgetSpan(
             HoverRegion(
               cursor: SystemMouseCursors.click,
@@ -158,7 +130,8 @@ class MarkdownText extends StatelessWidget {
                 details.label,
                 style: details.style.copyWith(
                   color: linkCol,
-                  decoration: underlineLinksOnHover && !hovered
+                  fontWeight: plain ? FontWeight.w600 : null,
+                  decoration: (plain || underlineLinksOnHover) && !hovered
                       ? TextDecoration.none
                       : TextDecoration.underline,
                   decorationColor: linkCol,
