@@ -11,6 +11,19 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
+    // An empty unified toolbar makes the title bar 52pt tall with the traffic
+    // lights centred in it, so they line up with the Flutter title bar drawn
+    // under it (TitleBar, AppSizes.macTitleBarHeight). With the default 28pt
+    // title bar they sat above the bar's content.
+    let toolbar = NSToolbar(identifier: "WorkNexusTitleBar")
+    self.toolbar = toolbar
+    if #available(macOS 11.0, *) {
+      self.toolbarStyle = .unified
+      self.titlebarSeparatorStyle = .none
+    } else {
+      toolbar.showsBaselineSeparator = false
+    }
+
     // The unread count on the Dock icon (lib/core/platform/app_icon_badge.dart).
     FlutterMethodChannel(
       name: "worknexus/app_icon_badge",

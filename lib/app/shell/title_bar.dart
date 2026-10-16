@@ -15,7 +15,7 @@ import 'contextual_search_field.dart';
 import 'desktop_window_buttons.dart';
 import 'workspace_breadcrumb.dart';
 
-/// The 56px window title bar for the unified workspace shell (design §2, §8):
+/// The window title bar for the unified workspace shell (design §2, §8):
 /// draggable, hosts [WorkspaceBreadcrumb] on the left, [ContextualSearchField]
 /// in the center, and settings/window caption buttons on the right.
 class TitleBar extends ConsumerWidget {
@@ -23,8 +23,9 @@ class TitleBar extends ConsumerWidget {
 
   final int? assignedCount;
 
-  /// Room macOS keeps for its traffic-light buttons on the left.
-  static const _macTrafficLightsWidth = 72.0;
+  /// Room macOS keeps for its traffic-light buttons on the left; in a unified
+  /// toolbar they sit further in than in a plain title bar.
+  static const _macTrafficLightsWidth = 80.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,9 +33,14 @@ class TitleBar extends ConsumerWidget {
     final s = context.spacing;
     final drawsCaption = DesktopWindowService.drawsCaptionButtons;
     final isDesktop = DesktopWindowService.isDesktop;
+    // macOS draws its own traffic lights, centred in a native title bar of
+    // this height; the bar's content has to share that centre line.
+    final isMac = isDesktop && !drawsCaption;
 
     return Container(
-      height: context.sizes.titleBarHeight,
+      height: isMac
+          ? context.sizes.macTitleBarHeight
+          : context.sizes.titleBarHeight,
       decoration: BoxDecoration(
         color: c.titleBar,
         border: Border(bottom: context.hairlineSide),
@@ -42,8 +48,7 @@ class TitleBar extends ConsumerWidget {
       padding: EdgeInsets.only(left: s.md, right: drawsCaption ? 0 : s.md),
       child: Row(
         children: [
-          if (isDesktop && !drawsCaption)
-            const SizedBox(width: _macTrafficLightsWidth),
+          if (isMac) const SizedBox(width: _macTrafficLightsWidth),
           const WorkspaceBreadcrumb(),
           SizedBox(width: s.md),
           Expanded(

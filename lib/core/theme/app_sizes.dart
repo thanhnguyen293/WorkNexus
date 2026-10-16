@@ -37,6 +37,11 @@ class AppSizes extends ThemeExtension<AppSizes> {
   double get railWidth => 76;
   double get toolPaneWidth => 300;
   double get titleBarHeight => 56;
+
+  /// The title bar on macOS: the height of the native unified toolbar
+  /// (macos/Runner/MainFlutterWindow.swift), which centres the traffic
+  /// lights in it.
+  double get macTitleBarHeight => 52;
   double get detailPanelWidth => 460;
   double get railButton => 32;
   Size get switcherPopover => const Size(360, 440);
