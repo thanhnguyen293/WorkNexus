@@ -85,4 +85,28 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('a link inside a selection area still opens on tap', (
+    tester,
+  ) async {
+    String? opened;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: SelectionArea(
+            child: MarkdownText(
+              'see [the docs](https://example.com) here',
+              onLinkTap: (url) => opened = url,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('the docs'));
+    await tester.pumpAndSettle();
+
+    expect(opened, 'https://example.com');
+  });
 }

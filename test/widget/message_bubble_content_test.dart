@@ -111,6 +111,19 @@ void main() {
     await disposeTree(tester);
   });
 
+  testWidgets('a Markdown message is selectable too', (tester) async {
+    await pump(tester, const MessageContent.text('**bold** and `code`'));
+
+    expect(find.byType(SelectionArea), findsOneWidget);
+    expect(
+      tester
+          .widget<SelectionArea>(find.byType(SelectionArea))
+          .contextMenuBuilder,
+      isNull,
+    );
+    await disposeTree(tester);
+  });
+
   testWidgets('code puts the time on a row of its own, at the end', (
     tester,
   ) async {

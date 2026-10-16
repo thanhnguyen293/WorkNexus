@@ -34,6 +34,7 @@ void main() {
         overrides: [
           appIconBadgeProvider.overrideWithValue(badge),
           chatBadgeUnreadProvider.overrideWithValue(3),
+          chatAutoConnectProvider.overrideWith((ref) {}),
         ],
         child: MaterialApp(
           theme: buildAppTheme(
@@ -54,5 +55,29 @@ void main() {
         textColor: any(named: 'textColor'),
       ),
     ).called(1);
+  });
+
+  testWidgets('logs into chat as soon as the shell is up', (tester) async {
+    var connects = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appIconBadgeProvider.overrideWithValue(badge),
+          chatBadgeUnreadProvider.overrideWithValue(0),
+          chatAutoConnectProvider.overrideWith((ref) => connects++),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          home: const ChatAppBadge(child: SizedBox()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(connects, 1);
   });
 }

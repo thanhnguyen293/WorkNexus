@@ -154,21 +154,26 @@ class ChatTextBody extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (markdown)
-          MarkdownText(
-            text,
-            fontSize: ink.fontSize,
-            height: 1.5,
-            color: ink.text,
-            linkColor: ink.link,
-            isPlainLink: (link) => chatMentionUserId(link) != null,
-            onLinkTap: (link) => switch (chatMentionUserId(link)) {
-              final userId? => ChatUserProfileDialog.show(
-                context,
-                accountId: accountId,
-                userId: userId,
-              ),
-              null => openChatLink(ref, link),
-            },
+          // Selectable like plain text (see `MentionText`), with no menu of
+          // its own: a right-click opens the message's menu.
+          SelectionArea(
+            contextMenuBuilder: null,
+            child: MarkdownText(
+              text,
+              fontSize: ink.fontSize,
+              height: 1.5,
+              color: ink.text,
+              linkColor: ink.link,
+              isPlainLink: (link) => chatMentionUserId(link) != null,
+              onLinkTap: (link) => switch (chatMentionUserId(link)) {
+                final userId? => ChatUserProfileDialog.show(
+                  context,
+                  accountId: accountId,
+                  userId: userId,
+                ),
+                null => openChatLink(ref, link),
+              },
+            ),
           )
         else
           MentionText(text, accountId: accountId),
