@@ -25,16 +25,19 @@ void jumpToChatMessage(WidgetRef ref, ChatThreadKey chat, int messageId) {
     ..state = messageId;
 }
 
-/// The panel shown beside chat [chat]: the one the user opened, else null
-/// (default is hidden).
+/// The panel shown beside chat [chat]: the one the user opened, else the
+/// info panel when there is room for it ([infoRoom]).
 ChatSidePanel? effectiveSidePanel(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
-}) => ref.watch(chatSidePanelProvider(chat));
+}) =>
+    ref.watch(chatSidePanelProvider(chat)) ??
+    (infoRoom ? ChatSidePanel.info : null);
 
 /// Opens [panel] beside chat [chat] (closing a reply thread), or closes it
-/// when it is already open.
+/// when it is already open. With room, the info panel is always there, so
+/// "closing" anything returns to it.
 void toggleChatSidePanel(
   WidgetRef ref,
   ChatThreadKey chat,
@@ -42,8 +45,10 @@ void toggleChatSidePanel(
   required bool infoRoom,
 }) {
   final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  final shown = notifier.state;
-  notifier.state = shown == panel ? null : panel;
+  final shown = notifier.state ?? (infoRoom ? ChatSidePanel.info : null);
+  notifier.state = shown == panel || (infoRoom && panel == ChatSidePanel.info)
+      ? null
+      : panel;
   ref.read(openReplyThreadProvider(chat).notifier).state = null;
 }
 
@@ -52,9 +57,11 @@ void backToChatInfo(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
-}) => ref.read(chatSidePanelProvider(chat).notifier).state = ChatSidePanel.info;
+}) => ref.read(chatSidePanelProvider(chat).notifier).state = infoRoom
+    ? null
+    : ChatSidePanel.info;
 
-/// Closes the panel beside chat [chat].
+/// Closes the panel beside chat [chat] (with room, the info panel stays).
 void closeChatSidePanel(WidgetRef ref, ChatThreadKey chat) =>
     ref.read(chatSidePanelProvider(chat).notifier).state = null;
 

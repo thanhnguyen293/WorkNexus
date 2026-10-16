@@ -634,16 +634,9 @@ void main() {
   ) async {
     await pumpChat(tester);
     await openTeamChat(tester);
-    expect(find.byType(ChatInfoPanel), findsNothing, reason: 'default hidden');
-    expect(find.byIcon(LucideIcons.info300), findsOneWidget);
-
-    await tester.tap(find.byIcon(LucideIcons.info300));
-    await tester.pumpAndSettle();
+    // No info button: with room the info sits beside the chat, as before.
+    expect(find.byIcon(LucideIcons.info300), findsNothing);
     expect(find.byType(ChatInfoPanel), findsOneWidget, reason: 'room beside');
-
-    await tester.tap(find.byIcon(LucideIcons.info300));
-    await tester.pumpAndSettle();
-    expect(find.byType(ChatInfoPanel), findsNothing);
 
     await pumpChat(tester, size: const Size(900, 700));
     expect(find.byType(ChatInfoPanel), findsNothing, reason: 'no room');
@@ -690,8 +683,6 @@ void main() {
     await openTeamChat(tester);
 
     expect(find.byType(ChatMembersPanel), findsNothing);
-    await tester.tap(find.byIcon(LucideIcons.info300));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Members'));
     await tester.pumpAndSettle();
 

@@ -167,21 +167,6 @@ class ChatThreadHeader extends ConsumerWidget {
             ),
             SizedBox(width: context.spacing.xs),
             ChatMuteToggle(chat: chat),
-            SizedBox(width: context.spacing.xs),
-            AppIconButton(
-              icon: LucideIcons.info300,
-              tooltip: l.chatInfo,
-              selected:
-                  ref.watch(chatSidePanelProvider(thread)) ==
-                  ChatSidePanel.info,
-              onPressed: () => showChatInfo(
-                context,
-                ref,
-                thread: thread,
-                chat: chat,
-                users: users,
-              ),
-            ),
           ],
         ],
       ),
