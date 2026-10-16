@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
@@ -11,55 +10,45 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/relative_time.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/zentao_dashboard.dart';
 import '../providers/dashboard_providers.dart';
-import 'dashboard_account_picker.dart';
 
-/// Today's date over the last update, beside the account picker and
-/// refresh.
-class DashboardHeadlineStatus extends ConsumerWidget {
-  const DashboardHeadlineStatus({
+/// When the account's dashboard was last fetched, and refresh — which
+/// fetches the dashboard and the assigned work again.
+class DashboardSyncStatus extends ConsumerWidget {
+  const DashboardSyncStatus({
     super.key,
     required this.account,
-    required this.dashboard,
+    required this.fetchedAt,
   });
 
   final Account account;
-  final ZenTaoDashboard? dashboard;
+  final DateTime? fetchedAt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final s = context.spacing;
-    final t = context.typography;
     final l = AppL10n.of(context);
     final format = ref.watch(appSettingsProvider.select((s) => s.dateFormat));
     final refreshing =
         ref.watch(dashboardRefreshProvider(account.id)).isLoading ||
         ref.watch(myWorkSyncProvider(account.id)).isLoading;
-    final locale = Localizations.localeOf(context).toString();
-    final fetchedAt = dashboard?.fetchedAt;
+    final fetchedAt = this.fetchedAt;
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const DashboardAccountPicker(),
-        SizedBox(width: s.md),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              DateFormat.MMMMEEEEd(locale).format(DateTime.now()),
-              style: t.bodySmStrong.copyWith(color: c.textSecondary),
-            ),
-            if (fetchedAt != null)
-              Text(
-                l.dashboardUpdated(
-                  formatWhen(context, fetchedAt, format: format),
-                ),
-                style: t.caption.copyWith(color: c.textTertiary),
+        if (fetchedAt != null) ...[
+          Flexible(
+            child: Text(
+              l.dashboardUpdated(
+                formatWhen(context, fetchedAt, format: format),
               ),
-          ],
-        ),
-        SizedBox(width: s.sm),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.caption.copyWith(color: c.textTertiary),
+            ),
+          ),
+          SizedBox(width: context.spacing.xs),
+        ],
         AppIconButton(
           icon: LucideIcons.rotateCw300,
           tooltip: l.refresh,

@@ -14,7 +14,7 @@ import '../../domain/value_objects/dashboard_item_kind.dart';
 import '../providers/dashboard_providers.dart';
 import 'dashboard_work_view.dart';
 
-/// The full lists' header: back to the overview, open-only or everything,
+/// The full lists' header: back to the Overview, open-only or everything,
 /// and refresh — plus, when only one list fits (see
 /// [DashboardWorkView.twoColumnsMinWidth]), whether it shows tasks or bugs.
 class DashboardWorkHeader extends ConsumerWidget {
@@ -35,7 +35,6 @@ class DashboardWorkHeader extends ConsumerWidget {
     final l = AppL10n.of(context);
     final syncing = ref.watch(myWorkSyncProvider(account.id)).isLoading;
     final openOnly = ref.watch(dashboardWorkOpenOnlyProvider);
-    final work = ref.watch(workQueueProvider(account));
     int countOf(DashboardItemKind k, {required bool open}) => ref
         .watch(
           myWorkProvider((
@@ -48,7 +47,10 @@ class DashboardWorkHeader extends ConsumerWidget {
         .length;
     final bug = kind == DashboardItemKind.bug;
     void showKind(DashboardItemKind k) =>
-        ref.read(dashboardWorkKindProvider.notifier).state = k;
+        ref.read(myWorkTargetProvider.notifier).state = (
+          account: account,
+          kind: k,
+        );
     void showOpenOnly(bool v) =>
         ref.read(dashboardWorkOpenOnlyProvider.notifier).state = v;
     return LayoutBuilder(
@@ -71,7 +73,7 @@ class DashboardWorkHeader extends ConsumerWidget {
                   icon: LucideIcons.arrowLeft300,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onPressed: () =>
-                      ref.read(dashboardWorkKindProvider.notifier).state = null,
+                      ref.read(myWorkTargetProvider.notifier).state = null,
                 ),
                 SizedBox(width: s.sm),
                 Icon(
@@ -91,13 +93,13 @@ class DashboardWorkHeader extends ConsumerWidget {
                 tabs: [
                   AppSegmentedTab(
                     label: l.dashboardTasksTab,
-                    count: work.openTasks,
+                    count: countOf(DashboardItemKind.task, open: true),
                     active: kind == DashboardItemKind.task,
                     onTap: () => showKind(DashboardItemKind.task),
                   ),
                   AppSegmentedTab(
                     label: l.dashboardBugsTab,
-                    count: work.openBugs,
+                    count: countOf(DashboardItemKind.bug, open: true),
                     active: bug,
                     onTap: () => showKind(DashboardItemKind.bug),
                   ),

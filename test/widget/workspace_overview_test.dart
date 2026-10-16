@@ -22,7 +22,10 @@ import 'package:work_nexus/features/workspace_overview/presentation/widgets/assi
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/integration_row.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/tool_card.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/widgets/zentao_overview_section.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+
+import '../support/dashboard_overrides.dart';
 
 const _testWorkspace = Workspace(
   id: 'ws-1',
@@ -93,6 +96,7 @@ Widget _buildTestApp({
 }) {
   return ProviderScope(
     overrides: [
+      ...dashboardOverrides(),
       toolRegistryProvider.overrideWithValue(defaultToolRegistry),
       activeWorkspaceProvider.overrideWithValue(activeWorkspace),
       accountsProvider.overrideWith((ref) => Stream.value(accounts)),
@@ -144,9 +148,8 @@ void main() {
       },
     );
 
-    testWidgets('overview with 1 account renders card grid and assigned work', (
-      tester,
-    ) async {
+    testWidgets('overview with a ZenTao account renders its section and '
+        'assigned work', (tester) async {
       final ticket = _makeTicket(
         id: 'TASK-101',
         title: 'Build auth flow',
@@ -168,16 +171,25 @@ void main() {
         find.text('1 tool connected to Mobile App. Pick a tool to work in it.'),
         findsOneWidget,
       );
-      expect(find.byType(ToolCard), findsOneWidget);
+      // ZenTao gets a full-width section instead of a compact card.
+      expect(find.byType(ToolCard), findsNothing);
+      expect(find.byType(ZenTaoOverviewSection), findsOneWidget);
       expect(find.text('ZenTao'), findsOneWidget);
       expect(find.text('Open ZenTao →'), findsOneWidget);
       expect(find.text('Assigned to you'), findsOneWidget);
-      expect(find.text('Build auth flow'), findsOneWidget);
+      // In the assigned work and in the section's My tasks.
+      expect(
+        find.descendant(
+          of: find.byType(AssignedWorkList),
+          matching: find.text('Build auth flow'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('My tasks'), findsOneWidget);
     });
 
-    testWidgets('overview with 3 accounts renders 3 tool cards', (
-      tester,
-    ) async {
+    testWidgets('overview with 3 accounts renders 2 cards and a ZenTao '
+        'section', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
           child: const OverviewPage(),
@@ -192,7 +204,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.byType(ToolCard), findsNWidgets(3));
+      expect(find.byType(ToolCard), findsNWidgets(2));
+      expect(find.byType(ZenTaoOverviewSection), findsOneWidget);
       expect(find.text('ZenTao'), findsOneWidget);
       expect(find.text('GitHub'), findsOneWidget);
       expect(find.text('GitLab'), findsOneWidget);
