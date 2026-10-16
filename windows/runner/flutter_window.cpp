@@ -9,6 +9,7 @@
 
 #include "activation.h"
 #include "flutter/generated_plugin_registrant.h"
+#include "resource.h"
 
 namespace {
 
@@ -37,7 +38,7 @@ void ActivateWindow(HWND window) {
 
 // An icon from |size|×|size| straight RGBA pixels, or null when they do not
 // add up to that size.
-HICON CreateBadgeIcon(const std::vector<uint8_t>& rgba, int size) {
+HICON CreateIconFromRgba(const std::vector<uint8_t>& rgba, int size) {
   if (size <= 0 || rgba.size() != static_cast<size_t>(size) * size * 4) {
     return nullptr;
   }
@@ -107,6 +108,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetUpBadgeChannel();
+  SetUpAppIconChannel();
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   // Dart shows the window itself, maximized when it was left maximized; Show()
@@ -126,6 +128,15 @@ bool FlutterWindow::OnCreate() {
 
 void FlutterWindow::OnDestroy() {
   badge_channel_ = nullptr;
+  app_icon_channel_ = nullptr;
+  if (app_icon_large_) {
+    DestroyIcon(app_icon_large_);
+    app_icon_large_ = nullptr;
+  }
+  if (app_icon_small_) {
+    DestroyIcon(app_icon_small_);
+    app_icon_small_ = nullptr;
+  }
   if (badge_icon_) {
     DestroyIcon(badge_icon_);
     badge_icon_ = nullptr;
@@ -161,12 +172,64 @@ void FlutterWindow::SetUpBadgeChannel() {
             const auto* pixels =
                 std::get_if<std::vector<uint8_t>>(&rgba->second);
             const auto* side = std::get_if<int32_t>(&size->second);
-            if (pixels && side) icon = CreateBadgeIcon(*pixels, *side);
+            if (pixels && side) icon = CreateIconFromRgba(*pixels, *side);
           }
         }
         if (badge_icon_) DestroyIcon(badge_icon_);
         badge_icon_ = icon;
         ApplyBadge();
+        result->Success();
+      });
+}
+
+void FlutterWindow::SetUpAppIconChannel() {
+  app_icon_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "worknexus/app_icon",
+          &flutter::StandardMethodCodec::GetInstance());
+  app_icon_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() != "set") {
+          result->NotImplemented();
+          return;
+        }
+        // No arguments gives the window the executable's own icon back.
+        HICON big_icon = nullptr;
+        HICON small_icon = nullptr;
+        if (const auto* args =
+                std::get_if<flutter::EncodableMap>(call.arguments())) {
+          const auto make = [&](const char* pixels_key, const char* size_key) {
+            const auto pixels = args->find(flutter::EncodableValue(pixels_key));
+            const auto size = args->find(flutter::EncodableValue(size_key));
+            if (pixels == args->end() || size == args->end()) return HICON(nullptr);
+            const auto* rgba =
+                std::get_if<std::vector<uint8_t>>(&pixels->second);
+            const auto* side = std::get_if<int32_t>(&size->second);
+            return rgba && side ? CreateIconFromRgba(*rgba, *side)
+                                : HICON(nullptr);
+          };
+          big_icon = make("large", "largeSize");
+          small_icon = make("small", "smallSize");
+        }
+        HINSTANCE instance = GetModuleHandle(nullptr);
+        HWND window = GetHandle();
+        // The executable's icon is shared; only the ones made here are freed.
+        SendMessage(window, WM_SETICON, ICON_BIG,
+                    reinterpret_cast<LPARAM>(
+                        big_icon ? big_icon
+                              : LoadIcon(instance,
+                                         MAKEINTRESOURCE(IDI_APP_ICON))));
+        SendMessage(window, WM_SETICON, ICON_SMALL,
+                    reinterpret_cast<LPARAM>(
+                        small_icon ? small_icon
+                              : LoadIcon(instance,
+                                         MAKEINTRESOURCE(IDI_APP_ICON))));
+        if (app_icon_large_) DestroyIcon(app_icon_large_);
+        if (app_icon_small_) DestroyIcon(app_icon_small_);
+        app_icon_large_ = big_icon;
+        app_icon_small_ = small_icon;
         result->Success();
       });
 }
