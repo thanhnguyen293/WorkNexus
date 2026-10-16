@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/settings/app_settings.dart';
-import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -18,22 +13,18 @@ import '../../domain/entities/zentao_project_group.dart';
 import '../providers/zentao_board_providers.dart';
 import 'zentao_project_tree_node.dart';
 
-/// Level 1 node in the ZenTao Tasks navigation tree: represents a Project Set / Program.
-/// Groups related projects (e.g. `VN`, `HK`, or a ZenTao Program).
+/// A program's folder in the ZenTao Tasks navigation tree, holding its
+/// projects (see [ZenTaoProjectGroup]).
 class ZentaoProjectSetNode extends ConsumerWidget {
   const ZentaoProjectSetNode({
     super.key,
     required this.account,
     required this.group,
-    required this.tickets,
-    required this.location,
     required this.openCountOf,
   });
 
   final Account account;
   final ZenTaoProjectGroup group;
-  final List<Ticket> tickets;
-  final ToolLocation location;
   final int Function(String projectId) openCountOf;
 
   @override
@@ -52,12 +43,6 @@ class ZentaoProjectSetNode extends ConsumerWidget {
       0,
       (sum, p) => sum + openCountOf(p.id),
     );
-
-    final pinned = ref.watch(
-      appSettingsProvider.select((st) => st.pinnedProjects),
-    );
-
-    String keyOf(ProviderProject p) => zentaoProjectPinKey(p.accountId, p.id);
 
     return Padding(
       padding: EdgeInsets.only(bottom: s.xs),
@@ -123,13 +108,7 @@ class ZentaoProjectSetNode extends ConsumerWidget {
                       key: ValueKey('zentao_proj_${p.id}'),
                       account: account,
                       project: p,
-                      tickets: tickets,
-                      location: location,
                       openCount: openCountOf(p.id),
-                      isPinned: pinned.contains(keyOf(p)),
-                      onPinToggle: () => ref
-                          .read(appSettingsProvider.notifier)
-                          .togglePinnedProject(keyOf(p)),
                     ),
                 ],
               ),

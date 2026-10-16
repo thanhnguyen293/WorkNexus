@@ -1426,19 +1426,6 @@
   "chatSearchNoMatches": "Không có kết quả",
   "chatSearchHistory": "Tìm kiếm lịch sử chat",
   "chatSearchInThisChat": "Trong hội thoại này",
-  "syncNotSyncedYet": "chưa đồng bộ",
-  "syncSyncing": "đang đồng bộ…",
-  "syncOffline": "ngoại tuyến · đã lưu cache",
-  "syncAuthExpired": "phiên đã hết hạn",
-  "syncFailed": "đồng bộ thất bại",
-  "syncSynced": "đồng bộ {relative}",
-  "@syncSynced": {
-    "placeholders": {
-      "relative": {
-        "type": "String"
-      }
-    }
-  },
   "reviewRequested": "Yêu cầu duyệt",
   "recent": "Gần đây",
   "showAll": "Xem tất cả…",
@@ -1612,5 +1599,6 @@
   "taskFormModeFull": "Đầy đủ",
   "workspaceCreateFailed": "Không tạo được workspace: {error}",
   "zentaoProductsGroup": "Product",
-  "zentaoProjectsGroup": "Project"
+  "zentaoProjectsGroup": "Project",
+  "zentaoPickExecution": "Chọn một bản thực thi để xem task"
 }

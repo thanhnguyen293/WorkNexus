@@ -1,57 +1,61 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/data/mappers/mappers.dart';
-import 'package:work_nexus/core/database/database.dart' show decodeLabels;
+import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/settings/app_settings.dart';
-import 'package:work_nexus/core/settings/pinned_execution.dart';
 
-/// Pins as older versions saved them: products as bare `accountId:id` keys,
-/// executions without the pin they came with.
-const _oldProjectsJson = '["zt:12","gl-a:77"]';
-const _oldExecutionsJson =
-    '[{"accountId":"zt","projectId":"30","executionId":"e1","name":"S1"}]';
+/// Saves a settings row whose pins are as older builds wrote them: product
+/// and repo pins as bare `accountId:id` keys, executions — and, from one
+/// build, ZenTao project pins (`zentao-project:…`, executions carrying a
+/// `parentKey`).
+Future<AppSettings> _load(
+  AppDatabase db, {
+  required String projects,
+  required String executions,
+}) async {
+  await db.saveSettings(
+    appSettingsToCompanion(const AppSettings()).copyWith(
+      pinnedProjectsJson: Value(projects),
+      pinnedExecutionsJson: Value(executions),
+    ),
+  );
+  return appSettingsFromRow((await db.getSettings())!);
+}
 
 void main() {
-  test('pins saved by older versions load as they were', () {
-    final projects = decodeLabels(_oldProjectsJson).toSet();
-    final executions = decodePinnedExecutions(_oldExecutionsJson);
+  late AppDatabase db;
 
-    expect(projects, {'zt:12', 'gl-a:77'});
-    expect(executions.single.key, 'zt:e1');
-    expect(executions.single.parentKey, isNull);
-    // It goes with its project, as it did.
-    expect(executions.single.ownerKey, zentaoProjectPinKey('zt', '30'));
-    // Saved again, it reads back the same.
+  setUp(() => db = AppDatabase(NativeDatabase.memory()));
+  tearDown(() => db.close());
+
+  test(
+    'product and repo pins load as they were; project pins are dropped',
+    () async {
+      final s = await _load(
+        db,
+        projects: '["zt:12","gl-a:77","zentao-project:zt:30"]',
+        executions:
+            '[{"accountId":"zt","projectId":"30","executionId":"e1",'
+            '"name":"S1","parentKey":"zentao-project:zt:30"}]',
+      );
+
+      expect(s.pinnedProjects, {'zt:12', 'gl-a:77'});
+      expect(s.pinnedExecutions.single.key, 'zt:e1');
+      expect(s.pinnedExecutions.single.name, 'S1');
+    },
+  );
+
+  test('saved again, the dropped project pins are gone', () async {
+    final s = await _load(
+      db,
+      projects: '["zentao-project:zt:30","zt:12"]',
+      executions: '[]',
+    );
+
     expect(
-      decodePinnedExecutions(encodePinnedExecutions(executions)),
-      executions,
+      appSettingsToCompanion(s).pinnedProjectsJson.value,
+      isNot(contains('zentao-project:')),
     );
-  });
-
-  test('old pins keep their cascades in the separated key spaces', () {
-    final container = ProviderContainer(
-      overrides: [
-        initialAppSettingsProvider.overrideWithValue(
-          AppSettings(
-            pinnedProjects: decodeLabels(_oldProjectsJson).toSet(),
-            pinnedExecutions: decodePinnedExecutions(_oldExecutionsJson),
-          ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final controller = container.read(appSettingsProvider.notifier);
-
-    // The old product pin 'zt:12' is a product: unpinning it leaves the
-    // execution of project 30 alone.
-    controller.togglePinnedProject('zt:12');
-    expect(container.read(appSettingsProvider).pinnedExecutions, hasLength(1));
-
-    // Its project's unpin takes it along.
-    controller
-      ..togglePinnedProject(zentaoProjectPinKey('zt', '30'))
-      ..togglePinnedProject(zentaoProjectPinKey('zt', '30'));
-    expect(container.read(appSettingsProvider).pinnedExecutions, isEmpty);
-    expect(container.read(appSettingsProvider).pinnedProjects, {'gl-a:77'});
   });
 }

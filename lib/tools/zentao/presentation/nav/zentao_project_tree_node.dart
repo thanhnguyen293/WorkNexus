@@ -4,10 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -19,83 +16,26 @@ import '../../../../shared/shell_pane/sidebar_tree_rows.dart';
 import '../providers/zentao_board_providers.dart';
 import '../widgets/zentao_execution_row.dart';
 
-/// Level 2 node in the ZenTao Tasks navigation tree: represents a single Project.
-/// Can be expanded to show child Executions (sprints), and tapped to filter tasks by project.
-class ZentaoProjectTreeNode extends ConsumerStatefulWidget {
+/// A project in the ZenTao Tasks navigation tree: a container of executions
+/// — tapping it opens or closes them. ZenTao lists tasks per execution, so a
+/// project is neither selected nor pinned; its count is information only.
+class ZentaoProjectTreeNode extends ConsumerWidget {
   const ZentaoProjectTreeNode({
     super.key,
     required this.account,
     required this.project,
-    required this.tickets,
-    required this.location,
     required this.openCount,
-    required this.isPinned,
-    required this.onPinToggle,
   });
 
   final Account account;
   final ProviderProject project;
-  final List<Ticket> tickets;
-  final ToolLocation location;
   final int openCount;
-  final bool isPinned;
-  final VoidCallback onPinToggle;
 
   @override
-  ConsumerState<ZentaoProjectTreeNode> createState() =>
-      _ZentaoProjectTreeNodeState();
-}
-
-class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
-  bool _hovered = false;
-
-  void _togglePin(String key) async {
-    if (widget.isPinned) {
-      ref.read(appSettingsProvider.notifier).togglePinnedProject(key);
-    } else {
-      var childExecs = ref
-          .read(
-            zentaoExecutionsProvider((
-              accountId: widget.account.id,
-              projectId: widget.project.id,
-            )),
-          )
-          .asData
-          ?.value;
-      if (childExecs == null) {
-        try {
-          childExecs = await ref.read(
-            zentaoExecutionsProvider((
-              accountId: widget.account.id,
-              projectId: widget.project.id,
-            )).future,
-          );
-        } catch (_) {}
-      }
-      ref
-          .read(appSettingsProvider.notifier)
-          .togglePinnedProject(
-            key,
-            childExecutions: childExecs
-                ?.map(
-                  (e) => PinnedExecution(
-                    accountId: e.accountId,
-                    projectId: e.projectId,
-                    executionId: e.id,
-                    name: e.name,
-                  ),
-                )
-                .toList(),
-          );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
-    final l = AppL10n.of(context);
-    final key = '${widget.account.id}:${widget.project.id}';
+    final key = '${account.id}:${project.id}';
 
     final expanded = ref.watch(
       zentaoExecutionProjectsExpandedProvider.select(
@@ -103,96 +43,56 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
       ),
     );
 
-    final selected =
-        widget.location.scopeId == widget.project.id &&
-        ref.watch(selectedZenTaoExecutionProvider) == null;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        MouseRegion(
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: InkWell(
-            mouseCursor: WidgetStateMouseCursor.clickable,
-            onTap: () {
-              ref.read(appNavProvider.notifier).selectScope(widget.project.id);
-              ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-            },
-            borderRadius: BorderRadius.circular(context.radii.sm),
-            child: Container(
-              height: context.sizes.controlSm,
-              padding: EdgeInsets.symmetric(horizontal: s.xs),
-              decoration: BoxDecoration(
-                color: selected ? c.selectionFill : Colors.transparent,
-                borderRadius: BorderRadius.circular(context.radii.sm),
-              ),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => ref
-                        .read(zentaoExecutionProjectsExpandedProvider.notifier)
-                        .toggle(key),
-                    borderRadius: BorderRadius.circular(context.radii.xs),
-                    child: Padding(
-                      padding: EdgeInsets.all(s.xxs),
-                      child: Icon(
-                        expanded
-                            ? LucideIcons.chevronDown300
-                            : LucideIcons.chevronRight300,
-                        size: context.sizes.iconXs,
-                        color: c.textTertiary,
-                      ),
+        InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
+          onTap: () => ref
+              .read(zentaoExecutionProjectsExpandedProvider.notifier)
+              .toggle(key),
+          borderRadius: BorderRadius.circular(context.radii.sm),
+          child: Container(
+            height: context.sizes.controlSm,
+            padding: EdgeInsets.symmetric(horizontal: s.xs),
+            child: Row(
+              children: [
+                Icon(
+                  expanded
+                      ? LucideIcons.chevronDown300
+                      : LucideIcons.chevronRight300,
+                  size: context.sizes.iconXs,
+                  color: c.textTertiary,
+                ),
+                SizedBox(width: s.xs),
+                Icon(
+                  LucideIcons.folder300,
+                  size: context.sizes.iconSm,
+                  color: c.textSecondary,
+                ),
+                SizedBox(width: s.xs),
+                Expanded(
+                  child: Text(
+                    project.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.bodySm.copyWith(
+                      color: c.textSecondary,
                     ),
                   ),
-                  SizedBox(width: s.xxs),
-                  Icon(
-                    LucideIcons.folder300,
-                    size: context.sizes.iconSm,
-                    color: selected ? c.accent : c.textSecondary,
-                  ),
+                ),
+                if (openCount > 0) ...[
+                  SidebarCountBadge(openCount),
                   SizedBox(width: s.xs),
-                  Expanded(
-                    child: Text(
-                      widget.project.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.typography.bodySm.copyWith(
-                        fontWeight: selected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: selected ? c.textPrimary : c.textSecondary,
-                      ),
-                    ),
-                  ),
-                  if (widget.openCount > 0) ...[
-                    SidebarCountBadge(widget.openCount),
-                    SizedBox(width: s.xs),
-                  ],
-                  if (widget.isPinned || _hovered)
-                    SidebarPinButton(
-                      pinned: widget.isPinned,
-                      onTap: () => _togglePin(
-                        zentaoProjectPinKey(
-                          widget.account.id,
-                          widget.project.id,
-                        ),
-                      ),
-                      tooltip: widget.isPinned ? l.unpinProject : l.pinProject,
-                    ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
         if (expanded)
           SidebarTreeBranch(
-            child: _ProjectExecutions(
-              account: widget.account,
-              projectId: widget.project.id,
-              tickets: widget.tickets,
-            ),
+            child: _ProjectExecutions(account: account, projectId: project.id),
           ),
       ],
     );
@@ -200,15 +100,10 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
 }
 
 class _ProjectExecutions extends ConsumerWidget {
-  const _ProjectExecutions({
-    required this.account,
-    required this.projectId,
-    required this.tickets,
-  });
+  const _ProjectExecutions({required this.account, required this.projectId});
 
   final Account account;
   final String projectId;
-  final List<Ticket> tickets;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -228,16 +123,18 @@ class _ProjectExecutions extends ConsumerWidget {
         if (executions.isEmpty) {
           return SidebarStatusRow(label: l.noExecutions);
         }
+        // Pinned executions are lifted into Pinned, out of the tree.
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final execution in executions)
-              ZenTaoExecutionRow(
-                key: ValueKey('exec_${execution.id}'),
-                execution: execution,
-                pinned: pinnedKeys.contains('${account.id}:${execution.id}'),
-              ),
+              if (!pinnedKeys.contains('${account.id}:${execution.id}'))
+                ZenTaoExecutionRow(
+                  key: ValueKey('exec_${execution.id}'),
+                  execution: execution,
+                  pinned: false,
+                ),
           ],
         );
       },

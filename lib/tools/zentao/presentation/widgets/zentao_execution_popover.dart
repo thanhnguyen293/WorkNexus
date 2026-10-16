@@ -4,12 +4,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_popup_card.dart';
-import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
 import '../util/open_execution_board.dart';
 import 'zentao_execution_list.dart';
@@ -137,7 +135,6 @@ class _ZenTaoExecutionPopoverState
                 search: _search,
                 isMine: _tab == 0,
                 currentExec: currentExec,
-                onSelectProject: _selectProject,
                 onSelectExecution: _selectExecution,
               ),
             ),
@@ -149,21 +146,6 @@ class _ZenTaoExecutionPopoverState
 
   void _selectExecution(ProviderExecution execution) {
     openExecutionBoard(context, ref, execution);
-    widget.onClose();
-  }
-
-  void _selectProject(ProviderProject project) {
-    final accountId = widget.account?.id ?? project.accountId;
-    ref.read(appNavProvider.notifier).selectAccount(accountId);
-    ref
-        .read(appNavProvider.notifier)
-        .selectSection(const SectionId('zentao.tasks'));
-    ref.read(appNavProvider.notifier).selectScope(project.id);
-    ref.read(selectedZenTaoProductProvider.notifier).clear();
-    ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-    ref
-        .read(filterStateProvider.notifier)
-        .openBoard(ref.read(boardKeyProvider));
     widget.onClose();
   }
 }

@@ -68,6 +68,17 @@ class _TestNavNotifier extends AppNavController {
   AppNavState build() => _initial;
 }
 
+/// The execution the tasks board shows (ZenTao lists tasks per execution).
+class _ExecutionSelection extends SelectedZenTaoExecution {
+  @override
+  ZenTaoExecutionSelection? build() => const ZenTaoExecutionSelection(
+    accountId: 'acc-zt',
+    projectId: 'proj-1',
+    executionId: 'exec-1',
+    executionName: 'Sprint 1',
+  );
+}
+
 class _TicketsController extends ScopedTicketsOverrideController {
   _TicketsController(this._initial);
   final List<Ticket> _initial;
@@ -94,6 +105,20 @@ Widget _buildHarness({
         () => _TicketsController([_testTask]),
       ),
       appNavProvider.overrideWith(() => _TestNavNotifier(initialNav)),
+      selectedZenTaoExecutionProvider.overrideWith(_ExecutionSelection.new),
+      zentaoExecutionsProvider((
+        accountId: 'acc-zt',
+        projectId: 'proj-1',
+      )).overrideWith(
+        (ref) async => const [
+          ProviderExecution(
+            id: 'exec-1',
+            name: 'Sprint 1',
+            projectId: 'proj-1',
+            accountId: 'acc-zt',
+          ),
+        ],
+      ),
     ],
     child: MaterialApp(
       locale: const Locale('en'),
@@ -131,6 +156,7 @@ void main() {
         locations: {
           'acc-zt': ToolLocation(
             section: SectionId('zentao.tasks'),
+            scopeId: 'exec-1',
             viewModes: {SectionId('zentao.tasks'): ViewModeId('list')},
           ),
         },
@@ -176,6 +202,7 @@ void main() {
           locations: {
             'acc-zt': ToolLocation(
               section: SectionId('zentao.tasks'),
+              scopeId: 'exec-1',
               viewModes: {SectionId('zentao.tasks'): ViewModeId('calendar')},
             ),
           },
@@ -218,6 +245,7 @@ void main() {
           locations: {
             'acc-zt': ToolLocation(
               section: SectionId('zentao.tasks'),
+              scopeId: 'exec-1',
               viewModes: {SectionId('zentao.tasks'): ViewModeId('gantt')},
             ),
           },
@@ -288,7 +316,7 @@ void main() {
 
   group('ZenTao Nav Pane', () {
     testWidgets(
-      'renders sections, no quick scopes, and selects project scope',
+      'renders sections, no quick scopes; a project opens, an execution is picked',
       (tester) async {
         tester.view.physicalSize = const Size(1400, 900);
         tester.view.devicePixelRatio = 1.0;
@@ -334,14 +362,21 @@ void main() {
         // Verify project row
         expect(find.text('Alpha Project'), findsOneWidget);
 
-        // Tap project row
+        // A project only opens: it is never the board's scope.
         await tester.tap(find.text('Alpha Project'));
         await tester.pumpAndSettle();
+        expect(
+          capturedRef.read(appNavProvider).currentLocation?.scopeId,
+          isNull,
+        );
 
-        final locAfterProject = capturedRef
-            .read(appNavProvider)
-            .currentLocation;
-        expect(locAfterProject?.scopeId, equals('proj-1'));
+        // Its executions are what opens a board.
+        await tester.tap(find.text('Sprint 1'));
+        await tester.pumpAndSettle();
+        expect(
+          capturedRef.read(appNavProvider).currentLocation?.scopeId,
+          equals('exec-1'),
+        );
       },
     );
   });

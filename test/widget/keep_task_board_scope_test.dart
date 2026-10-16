@@ -19,20 +19,32 @@ const _account = Account(
 
 const _projects = [
   ProviderProject(id: '1', name: 'First', accountId: 'zt'),
-  ProviderProject(id: '2', name: 'Pinned', accountId: 'zt'),
+  ProviderProject(id: '2', name: 'Second', accountId: 'zt'),
 ];
+
+const _pinned = PinnedExecution(
+  accountId: 'zt',
+  projectId: '2',
+  executionId: '50',
+  name: 'Sprint 50',
+);
 
 void main() {
   Future<ProviderContainer> pump(
     WidgetTester tester, {
     AppSettings settings = const AppSettings(),
     String? scope,
+    List<ProviderExecution> firstProjectExecutions = const [],
   }) async {
     final container = ProviderContainer(
       overrides: [
         zentaoProjectsProvider(
           'zt',
         ).overrideWith((ref) => Stream.value(_projects)),
+        zentaoExecutionsProvider((
+          accountId: 'zt',
+          projectId: '1',
+        )).overrideWith((ref) async => firstProjectExecutions),
         initialAppSettingsProvider.overrideWithValue(settings),
       ],
     );
@@ -61,53 +73,66 @@ void main() {
 
   String? scope(ProviderContainer c) =>
       c.read(currentToolLocationProvider)?.scopeId;
+  String? execution(ProviderContainer c) =>
+      c.read(selectedZenTaoExecutionProvider)?.executionId;
 
-  testWidgets('with nothing picked, a pinned execution opens (paged)', (
-    tester,
-  ) async {
-    final container = await pump(
+  testWidgets('with nothing picked, a pinned execution opens', (tester) async {
+    final c = await pump(
       tester,
-      settings: const AppSettings(
-        pinnedExecutions: [
-          PinnedExecution(
-            accountId: 'zt',
+      settings: const AppSettings(pinnedExecutions: [_pinned]),
+    );
+
+    expect((scope(c), execution(c)), ('50', '50'));
+  });
+
+  testWidgets('else the first execution of the first project', (tester) async {
+    final c = await pump(
+      tester,
+      firstProjectExecutions: const [
+        ProviderExecution(id: '7', name: 'S7', projectId: '1', accountId: 'zt'),
+        ProviderExecution(id: '8', name: 'S8', projectId: '1', accountId: 'zt'),
+      ],
+    );
+
+    expect((scope(c), execution(c)), ('7', '7'));
+  });
+
+  testWidgets('with no execution to pick, nothing is selected (never a '
+      'project)', (tester) async {
+    final c = await pump(tester);
+
+    expect(scope(c), isNull);
+    expect(execution(c), isNull);
+  });
+
+  testWidgets('a project-only scope gives way to an execution', (tester) async {
+    final c = await pump(
+      tester,
+      scope: '2',
+      settings: const AppSettings(pinnedExecutions: [_pinned]),
+    );
+
+    expect((scope(c), execution(c)), ('50', '50'));
+  });
+
+  testWidgets('a picked execution stays', (tester) async {
+    final c = await pump(
+      tester,
+      settings: const AppSettings(pinnedExecutions: [_pinned]),
+    );
+    c.read(appNavProvider.notifier).selectScope('9');
+    c
+        .read(selectedZenTaoExecutionProvider.notifier)
+        .select(
+          const ProviderExecution(
+            id: '9',
+            name: 'S9',
             projectId: '1',
-            executionId: '50',
-            name: 'Sprint 50',
+            accountId: 'zt',
           ),
-        ],
-      ),
-    );
+        );
+    await tester.pumpAndSettle();
 
-    expect(scope(container), '50');
-    expect(container.read(selectedZenTaoExecutionProvider)?.executionId, '50');
-  });
-
-  testWidgets('else a pinned project', (tester) async {
-    final container = await pump(
-      tester,
-      settings: AppSettings(pinnedProjects: {zentaoProjectPinKey('zt', '2')}),
-    );
-
-    expect(scope(container), '2');
-    expect(container.read(selectedZenTaoExecutionProvider), isNull);
-  });
-
-  testWidgets('else the first project', (tester) async {
-    final container = await pump(tester);
-
-    expect(scope(container), '1');
-  });
-
-  testWidgets('a project still there is left as picked', (tester) async {
-    final container = await pump(tester, scope: '2');
-
-    expect(scope(container), '2');
-  });
-
-  testWidgets('a project that is gone gives way to another', (tester) async {
-    final container = await pump(tester, scope: '99');
-
-    expect(scope(container), '1');
+    expect((scope(c), execution(c)), ('9', '9'));
   });
 }

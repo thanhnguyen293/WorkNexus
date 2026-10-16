@@ -17,20 +17,14 @@ import 'zentao_board_providers.dart';
 import 'zentao_bug_streams.dart';
 import 'zentao_task_streams.dart';
 
-/// The ZenTao tickets the Tasks section shows before the user's filters: the
-/// cached tasks tagged with the open execution, narrowed view by view to what
-/// each status view has loaded — or filtered by the selected project scope.
-/// Whether [t] is a task of ZenTao project [projectId] (the numeric id the
-/// sidebar scopes by; a task's own `projectId` is built from a name).
-bool zentaoTaskInProject(Ticket t, String projectId) {
-  final entity = t.providerEntity;
-  if (t.externalType?.toLowerCase() != 'task' && entity is! ZenTaoTaskEntity) {
-    return false;
-  }
-  return (entity is ZenTaoTaskEntity && entity.project == projectId) ||
-      t.projectId == projectId ||
-      t.projectId.endsWith(':$projectId');
-}
+/// Whether [t] is a task of ZenTao project [projectId] (its numeric id), for
+/// the open-task counts on project rows — information only: a project is
+/// never a task board.
+bool zentaoTaskInProject(Ticket t, String projectId) =>
+    switch (t.providerEntity) {
+      ZenTaoTaskEntity(:final project) => project == projectId,
+      _ => false,
+    };
 
 /// The rail's account and the open scope. The product / execution selections
 /// are app-wide, so they apply only while they match this place: another
@@ -72,24 +66,9 @@ List<Ticket> scopeZenTaoTasks(Ref ref, List<Ticket> tickets) {
     );
   }
 
-  final (:accountId, :scopeId) = place;
-
-  if (scopeId != null && scopeId.isNotEmpty) {
-    return tickets.where((t) {
-      if (accountId != null && t.accountId != accountId) return false;
-      return zentaoTaskInProject(t, scopeId);
-    }).toList();
-  }
-
-  if (accountId != null) {
-    return tickets.where((t) {
-      if (t.accountId != accountId) return false;
-      return t.externalType?.toLowerCase() == 'task' ||
-          t.providerEntity is ZenTaoTaskEntity;
-    }).toList();
-  }
-
-  return tickets;
+  // Tasks are listed per execution: until this board's is picked (the
+  // section picks one) there are none to show.
+  return const [];
 }
 
 /// The ZenTao tickets the Bugs section shows before the user's filters: the

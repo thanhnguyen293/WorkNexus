@@ -186,7 +186,7 @@ void main() {
     });
 
     test(
-      'parent project scope in tasks loads all tasks across executions for that project',
+      'a project is no task board: with only a project scope, no tasks show',
       () {
         final container = ProviderContainer();
         addTearDown(container.dispose);
@@ -242,8 +242,8 @@ void main() {
           Provider((ref) => scopeZenTaoTasks(ref, tasks)),
         );
 
-        // All tasks belonging to proj_10 are loaded
-        expect(scoped.length, 2);
+        // Tasks are listed per execution: a project holds executions only.
+        expect(scoped, isEmpty);
       },
     );
 

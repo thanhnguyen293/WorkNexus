@@ -24,7 +24,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
     required this.search,
     required this.isMine,
     required this.currentExec,
-    required this.onSelectProject,
     required this.onSelectExecution,
   });
 
@@ -32,7 +31,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
   final String search;
   final bool isMine;
   final ZenTaoExecutionSelection? currentExec;
-  final ValueChanged<ProviderProject> onSelectProject;
   final ValueChanged<ProviderExecution> onSelectExecution;
 
   @override
@@ -55,8 +53,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
 
     final tickets =
         ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
-    final nav = ref.watch(appNavProvider);
-    final currentScopeId = nav.currentLocation?.scopeId;
 
     int openCount(String projectId) => tickets
         .where(
@@ -140,18 +136,14 @@ class ZenTaoExecutionList extends ConsumerWidget {
       itemCount: filtered.length,
       itemBuilder: (context, i) {
         final item = filtered[i];
-        final isFolderSelected =
-            currentExec == null && currentScopeId == item.id;
         final count = openCount(item.id);
 
         return ZenTaoPopoverProjectNode(
           key: ValueKey('popover_proj_${item.id}'),
           targetAccountId: targetAccountId,
           project: item,
-          isFolderSelected: isFolderSelected,
           currentExec: currentExec,
           openCount: count,
-          onSelectProject: onSelectProject,
           onSelectExecution: onSelectExecution,
           initiallyExpanded: search.trim().isNotEmpty,
         );
