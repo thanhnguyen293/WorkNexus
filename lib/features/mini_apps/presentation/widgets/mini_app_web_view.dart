@@ -13,6 +13,7 @@ import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/ask_mini_app_permission.dart';
+import '../util/mini_app_login_capability.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
 import '../util/route_mini_app_window_link.dart';
@@ -28,7 +29,9 @@ class MiniAppWebView extends ConsumerWidget {
     super.key,
     required this.app,
     List<MiniAppPageCapability>? capabilities,
-  }) : capabilities = capabilities ?? [MiniAppNotificationCapability()];
+  }) : capabilities =
+           capabilities ??
+           [MiniAppNotificationCapability(), MiniAppLoginCapability()];
 
   final MiniApp app;
   final List<MiniAppPageCapability> capabilities;

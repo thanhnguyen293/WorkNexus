@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../../../../core/platform/desktop_window_service.dart';
@@ -8,6 +6,7 @@ import '../../domain/usecases/is_mini_app_origin.dart';
 import '../providers/mini_app_providers.dart';
 import 'ask_mini_app_permission.dart';
 import 'mini_app_page_capability.dart';
+import 'mini_app_page_token.dart';
 
 /// What a notification's payload starts with, so a tap on it finds its mini
 /// app again ([miniAppIdOfNotificationPayload]).
@@ -37,20 +36,13 @@ String? miniAppIdOfNotificationPayload(String payload) =>
 /// main-frame script knows — a cross-origin iframe cannot read it — and a
 /// call without it is ignored.
 class MiniAppNotificationCapability implements MiniAppPageCapability {
-  MiniAppNotificationCapability({String? token}) : token = token ?? _newToken();
+  MiniAppNotificationCapability({String? token})
+    : token = token ?? newMiniAppPageToken();
 
   /// The secret the script passes first on each call.
   final String token;
 
   static const _kinds = [MiniAppPermissionKind.notifications];
-
-  static String _newToken() {
-    final random = Random.secure();
-    return [
-      for (var i = 0; i < 16; i++)
-        random.nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ].join();
-  }
 
   @override
   late final UserScript userScript = UserScript(
