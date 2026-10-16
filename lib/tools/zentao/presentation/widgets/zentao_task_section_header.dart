@@ -65,7 +65,8 @@ class _ZentaoTaskSectionHeaderState
         }
       }
     }
-    final displayTitle = scopeTitle ?? l.allProjects;
+    // Only until the section has picked a place.
+    final displayTitle = scopeTitle ?? l.zentaoProjectsGroup;
     final taskTable = ref.watch(zentaoTaskTableProvider);
     final taskCount = taskTable.rows.length;
 

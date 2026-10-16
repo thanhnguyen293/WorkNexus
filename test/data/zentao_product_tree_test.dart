@@ -39,6 +39,7 @@ const _tree = {
       },
     },
     {'id': 16, 'name': 'Daily Work Log', 'type': 'normal'},
+    {'id': 17, 'name': 'Archive', 'type': 'normal'},
   ],
 };
 
@@ -64,6 +65,7 @@ void main() {
         ('14', 'Website', 'VN Program', null),
         ('15', 'Code Security Review', null, 'Tools'),
         ('16', 'Daily Work Log', null, null),
+        ('17', 'Archive', null, null),
       ],
     );
   });
@@ -88,7 +90,8 @@ void main() {
     expect(program.allProducts.map((p) => p.id), ['12', '13', '14']);
     // No folder made up from a name: "Code …" stays in its real line.
     expect(tree.groups.last.products.single.name, 'Code Security Review');
-    expect(tree.ungrouped.map((p) => p.name), ['Daily Work Log']);
+    // The loose products read by name; folders keep ZenTao's order.
+    expect(tree.ungrouped.map((p) => p.name), ['Archive', 'Daily Work Log']);
   });
 
   test('a plain list (no tree) stays flat, sorted by name', () {

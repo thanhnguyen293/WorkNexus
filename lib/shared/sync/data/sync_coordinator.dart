@@ -63,9 +63,23 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   Future<T> trackSync<T>(String accountId, Future<T> Function() action) =>
       trackSyncStatus(_statusRepo, accountId, action);
 
+  /// Syncs in flight, by account: the launch sync and the Overview's can ask
+  /// at once, and the second shares the first instead of fetching again.
+  final Map<String, Future<Result<int>>> _accountSyncs = {};
+
   @override
-  Future<Result<int>> syncAccount(Account account) =>
-      trackSync(account.id, () => _syncAccount(account));
+  Future<Result<int>> syncAccount(Account account) {
+    final running = _accountSyncs[account.id];
+    if (running != null) return running;
+    final run = trackSync(account.id, () => _syncAccount(account));
+    _accountSyncs[account.id] = run;
+    run.whenComplete(() {
+      if (identical(_accountSyncs[account.id], run)) {
+        _accountSyncs.remove(account.id);
+      }
+    }).ignore();
+    return run;
+  }
 
   Future<Result<int>> _syncAccount(Account account) async {
     final ref = account.credentialsRef;
@@ -126,7 +140,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     }
     final res = await adapter.listProjects();
     if (res case Ok(:final value)) {
-      final named = await _keepProgramNames(accountId, value);
+      final named = await _listCache.withKnownProgramNames(accountId, value);
       await _listCache.saveProjects(accountId, named);
       return Ok(named);
     }
@@ -135,34 +149,6 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
 
   Future<List<ProviderProject>?> cachedProjects(String accountId) =>
       _listCache.readProjects(accountId);
-
-  /// Program names a fetch could not get (`/programs` failing this time)
-  /// from the last list that had them, so the grouping does not come and go.
-  Future<List<ProviderProject>> _keepProgramNames(
-    String accountId,
-    List<ProviderProject> projects,
-  ) async {
-    if (!projects.any((p) => p.programId != null && p.programName == null)) {
-      return projects;
-    }
-    final cached =
-        await _listCache.readProjects(accountId) ?? const <ProviderProject>[];
-    final known = <String, String>{
-      for (final p in cached)
-        if ((p.programId, p.programName) case (final id?, final name?))
-          id: name,
-    };
-    return [
-      for (final p in projects)
-        ProviderProject(
-          id: p.id,
-          name: p.name,
-          accountId: p.accountId,
-          programId: p.programId,
-          programName: p.programName ?? known[p.programId],
-        ),
-    ];
-  }
 
   // Not tracked: one ticket's refresh (and its own failures, like a deleted
   // ticket) is no news about the account's sync.

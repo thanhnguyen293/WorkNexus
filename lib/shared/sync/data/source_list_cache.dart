@@ -51,6 +51,33 @@ class SourceListCache {
         .toList();
   }
 
+  /// Program names a fetch could not get (`/programs` failing this time)
+  /// from the last list that had them, so the grouping does not come and go.
+  Future<List<ProviderProject>> withKnownProgramNames(
+    String accountId,
+    List<ProviderProject> projects,
+  ) async {
+    if (!projects.any((p) => p.programId != null && p.programName == null)) {
+      return projects;
+    }
+    final cached = await readProjects(accountId) ?? const <ProviderProject>[];
+    final known = <String, String>{
+      for (final p in cached)
+        if ((p.programId, p.programName) case (final id?, final name?))
+          id: name,
+    };
+    return [
+      for (final p in projects)
+        ProviderProject(
+          id: p.id,
+          name: p.name,
+          accountId: p.accountId,
+          programId: p.programId,
+          programName: p.programName ?? known[p.programId],
+        ),
+    ];
+  }
+
   Future<void> saveProducts(String accountId, List<ProviderProduct> items) =>
       _save(accountId, _products, [
         for (final p in items)

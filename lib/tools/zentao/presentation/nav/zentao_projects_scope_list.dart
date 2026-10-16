@@ -126,27 +126,11 @@ class _ZentaoProjectsScopeListState
             ),
             Expanded(
               child: ScopeListBody(
-                groupTitle: l.allProjects,
+                // No "all projects" row: ZenTao lists tasks per execution.
+                groupTitle: l.zentaoProjectsGroup,
                 initiallyExpanded: true,
                 cap: 100,
                 quickScopeRows: [
-                  ScopeQuickRow(
-                    label: l.allProjects,
-                    icon: LucideIcons.layers300,
-                    selected:
-                        widget.location.scopeId == null &&
-                        widget.location.quickScope == QuickScope.all &&
-                        ref.watch(selectedZenTaoExecutionProvider) == null,
-                    onTap: () {
-                      ref.read(appNavProvider.notifier).selectScope(null);
-                      ref
-                          .read(appNavProvider.notifier)
-                          .setQuickScope(QuickScope.all);
-                      ref
-                          .read(selectedZenTaoExecutionProvider.notifier)
-                          .clear();
-                    },
-                  ),
                   ScopeQuickRow(
                     label: l.assignedToMe,
                     icon: LucideIcons.user300,
