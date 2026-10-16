@@ -1,4 +1,6 @@
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/widgets/editor_table_embed.dart';
 import 'package:work_nexus/core/widgets/html_editing_controller.dart';
 
 void main() {
@@ -37,23 +39,22 @@ void main() {
     },
   );
 
-  test(
-    'editor displays table rows with line breaks rather than fused text',
-    () {
-      final controller = HtmlEditingController(html: tableHtml);
-      final plainText = controller.quill.document.toPlainText();
-      // Cells should not be fused together like Task IDNameFrom Date...
-      expect(plainText.contains('Task IDNameFrom Date'), isFalse);
-      expect(plainText.contains('Task ID'), isTrue);
-      expect(plainText.contains('Name'), isTrue);
-      expect(plainText.contains('12787'), isTrue);
-      expect(
-        plainText.contains('[Socialfi][Backend][Feed] Add reply hierarchy ids'),
-        isTrue,
-      );
-      controller.dispose();
-    },
-  );
+  test('editor parses table HTML into table embed in document delta', () {
+    final controller = HtmlEditingController(html: tableHtml);
+    final delta = controller.quill.document.toDelta().toList();
+    final tableOp = delta.firstWhere(
+      (op) =>
+          op.data is Map &&
+          (op.data as Map).containsKey(EditorTableEmbedBuilder.tableType),
+    );
+    expect(tableOp, isNotNull);
+    final rows =
+        parseTableRows((tableOp.data as Map)[EditorTableEmbedBuilder.tableType]);
+    expect(rows.first, contains('Task ID'));
+    expect(rows.first, contains('Name'));
+    expect(rows[1].first, equals('12787'));
+    controller.dispose();
+  });
 
   test('restores edited or reconstructed table to valid HTML table', () {
     final controller = HtmlEditingController(html: tableHtml);
@@ -64,6 +65,68 @@ void main() {
     expect(result.contains('<th>Task ID</th>'), isTrue);
     expect(result.contains('<td>12787</td>'), isTrue);
     expect(result.contains('Note:'), isTrue);
+    controller.dispose();
+  });
+
+  test('converts typed markdown table with multiple rows into a single HTML table', () {
+    final controller = HtmlEditingController();
+    const typedTable =
+        '| Header 1 | Header 2 |\n'
+        '| --- | --- |\n'
+        '| Value 1 | Value 2 |\n'
+        '| Value 3 | Value 4 |\n';
+    controller.quill.document.insert(0, typedTable);
+    final result = controller.html;
+
+    expect(result.contains('<table'), isTrue);
+    // Should be exactly ONE table, not multiple tables
+    expect(result.indexOf('<table'), equals(result.lastIndexOf('<table')));
+    expect(result.contains('<th>Header 1</th>'), isTrue);
+    expect(result.contains('<th>Header 2</th>'), isTrue);
+    expect(result.contains('<td>Value 1</td>'), isTrue);
+    expect(result.contains('<td>Value 2</td>'), isTrue);
+    expect(result.contains('<td>Value 3</td>'), isTrue);
+    expect(result.contains('<td>Value 4</td>'), isTrue);
+    // Separator row should be stripped
+    expect(result.contains('---'), isFalse);
+    controller.dispose();
+  });
+
+  test('preserves text before and after a table without corrupting table structure', () {
+    final controller = HtmlEditingController();
+    const content =
+        'Before table text\n'
+        '| Col A | Col B |\n'
+        '| Val A | Val B |\n'
+        'After table text\n';
+    controller.quill.document.insert(0, content);
+    final result = controller.html;
+
+    expect(result.contains('Before table text'), isTrue);
+    expect(result.contains('<table'), isTrue);
+    expect(result.contains('<th>Col A</th>'), isTrue);
+    expect(result.contains('<td>Val A</td>'), isTrue);
+    expect(result.contains('After table text'), isTrue);
+    controller.dispose();
+  });
+
+  test('serializes inserted table BlockEmbed into valid HTML table', () {
+    final controller = HtmlEditingController();
+    controller.quill.replaceText(
+      0,
+      0,
+      const BlockEmbed(
+        EditorTableEmbedBuilder.tableType,
+        '{"rows":[["Col 1","Col 2"],["Val 1","Val 2"]]}',
+      ),
+      null,
+    );
+    final html = controller.html;
+    expect(html, contains('<table'));
+    expect(html, contains('<th>Col 1</th>'));
+    expect(html, contains('<th>Col 2</th>'));
+    expect(html, contains('<td>Val 1</td>'));
+    expect(html, contains('<td>Val 2</td>'));
     controller.dispose();
   });
 }

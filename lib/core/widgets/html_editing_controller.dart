@@ -2,12 +2,17 @@
 // text depends on them.
 // ignore_for_file: experimental_member_use
 
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
+
+import 'editor_table_embed.dart';
 
 /// Holds rich text being edited, read from and written back as HTML — the
 /// format ZenTao's own editor stores descriptions in.
@@ -36,14 +41,15 @@ class HtmlEditingController {
 
   /// The text as HTML; empty when nothing but whitespace was written.
   String get html {
-    if (quill.document.toDelta() == _initialDelta) {
-      return _initialHtml;
-    }
     if (quill.document.toPlainText().trim().isEmpty &&
         !_hasEmbeds(quill.document.toDelta())) {
       return '';
     }
-    final raw = QuillDeltaToHtmlConverter(
+    if (quill.document.toDelta() == _initialDelta &&
+        _initialHtml.contains('<table')) {
+      return _initialHtml;
+    }
+    final converter = QuillDeltaToHtmlConverter(
       _withImageWidths(quill.document.toDelta()),
       ConverterOptions(
         converterOptions: OpConverterOptions(
@@ -51,7 +57,17 @@ class HtmlEditingController {
           linkTarget: '',
         ),
       ),
-    ).convert();
+    );
+    converter.renderCustomWith = (customOp, contextOp) {
+      if (customOp.insert.type == EditorTableEmbedBuilder.tableType) {
+        final rows = parseTableRows(customOp.insert.value);
+        if (rows.isNotEmpty) {
+          return _buildTableHtml(rows);
+        }
+      }
+      return '';
+    };
+    final raw = converter.convert();
     return _restoreTables(raw);
   }
 
@@ -61,105 +77,246 @@ class HtmlEditingController {
 Document _document(String html) {
   final source = html.trim();
   if (source.isEmpty) return Document();
-  final preprocessed = _preprocessTables(_widthsAsStyle(source));
-  final delta = HtmlToDelta().convert(preprocessed);
+  final extracted = _extractTables(_widthsAsStyle(source));
+  final delta = HtmlToDelta().convert(extracted.html);
+  final replaced = _replaceTablePlaceholders(delta, extracted.tables);
   // A document must end with a line break.
-  if (delta.isEmpty ||
-      !(delta.last.data is String &&
-          (delta.last.data! as String).endsWith('\n'))) {
-    delta.insert('\n');
+  if (replaced.isEmpty ||
+      !(replaced.last.data is String &&
+          (replaced.last.data! as String).endsWith('\n'))) {
+    replaced.insert('\n');
   }
-  return Document.fromDelta(delta);
+  return Document.fromDelta(replaced);
 }
 
-/// Converts HTML tables into structured row paragraphs separated by `<br>` so
-/// that table rows and cells do not fuse together when converted into Quill.
-String _preprocessTables(String html) {
+({String html, List<List<List<String>>> tables}) _extractTables(String html) {
   final doc = html_parser.parseFragment(html);
   final tables = doc.querySelectorAll('table');
-  if (tables.isEmpty) return html;
+  if (tables.isEmpty) return (html: html, tables: const []);
 
+  final tableList = <List<List<String>>>[];
   for (final table in tables) {
-    final rows = <String>[];
+    final rows = <List<String>>[];
     for (final tr in table.querySelectorAll('tr')) {
       final cells = tr.querySelectorAll('th, td');
       if (cells.isEmpty) continue;
-      final cellTexts = cells.map((c) {
-        final inner = c.innerHtml.replaceAll('|', '&#124;').trim();
-        return inner.isEmpty ? ' ' : inner;
-      }).toList();
-      rows.add('| ${cellTexts.join(' | ')} |');
+      rows.add(cells.map((c) => c.text.trim()).toList());
     }
     if (rows.isNotEmpty) {
+      final maxCols =
+          rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+      for (var i = 0; i < rows.length; i++) {
+        while (rows[i].length < maxCols) {
+          rows[i].add('');
+        }
+      }
+      final idx = tableList.length;
+      tableList.add(rows);
       table.replaceWith(
-        html_parser.parseFragment('<p>${rows.join('<br>')}</p>'),
+        html_parser.parseFragment('<p>WORKNEXUS_TABLE_$idx</p>'),
       );
     }
   }
-  return doc.outerHtml;
+  return (html: doc.outerHtml, tables: tableList);
+}
+
+Delta _replaceTablePlaceholders(
+  Delta delta,
+  List<List<List<String>>> tables,
+) {
+  if (tables.isEmpty) return delta;
+  final newDelta = Delta();
+  for (final op in delta.toList()) {
+    if (op.data is String) {
+      final text = op.data as String;
+      final regex = RegExp(r'WORKNEXUS_TABLE_(\d+)');
+      final matches = regex.allMatches(text);
+      if (matches.isEmpty) {
+        newDelta.insert(op.data, op.attributes);
+      } else {
+        var lastEnd = 0;
+        for (final m in matches) {
+          if (m.start > lastEnd) {
+            newDelta.insert(text.substring(lastEnd, m.start), op.attributes);
+          }
+          final idx = int.tryParse(m.group(1) ?? '');
+          if (idx != null && idx < tables.length) {
+            newDelta.insert({
+              EditorTableEmbedBuilder.tableType:
+                  jsonEncode({'rows': tables[idx]}),
+            });
+          }
+          lastEnd = m.end;
+        }
+        if (lastEnd < text.length) {
+          newDelta.insert(text.substring(lastEnd), op.attributes);
+        }
+      }
+    } else {
+      newDelta.insert(op.data, op.attributes);
+    }
+  }
+  return newDelta;
 }
 
 /// Restores markdown table rows back to clean HTML `<table>` elements.
 String _restoreTables(String html) {
+  if (!html.contains('|')) return html;
   final doc = html_parser.parseFragment(html);
-  var modified = false;
+  _processContainer(doc);
+  for (final container in doc.querySelectorAll('div, section, article')) {
+    _processContainer(container);
+  }
+  return doc.outerHtml;
+}
 
-  for (final p in doc.querySelectorAll('p, div')) {
-    final inner = p.innerHtml;
-    if (!inner.contains('|')) continue;
+void _processContainer(dom.Node container) {
+  if (container.nodes.isEmpty) return;
+  final hasCandidate = container.nodes.any(
+    (n) =>
+        n is dom.Element &&
+        (n.localName == 'p' || n.localName == 'div') &&
+        n.innerHtml.contains('|'),
+  );
+  if (!hasCandidate) return;
 
-    final parts = inner.split(RegExp(r'<br\s*/?>|\n'));
-    final beforeLines = <String>[];
-    final tableRows = <List<String>>[];
-    final afterLines = <String>[];
+  final newNodes = _processNodes(container.nodes);
+  container.nodes.clear();
+  container.nodes.addAll(newNodes);
+}
 
-    for (final line in parts) {
-      final trimmed = line.trim();
-      if (trimmed.startsWith('|') &&
-          trimmed.endsWith('|') &&
-          trimmed.length > 2) {
-        final cells = trimmed
-            .substring(1, trimmed.length - 1)
-            .split('|')
-            .map((c) => c.trim())
-            .toList();
-        tableRows.add(cells);
-      } else if (tableRows.isEmpty) {
-        if (trimmed.isNotEmpty) beforeLines.add(line);
-      } else {
-        if (trimmed.isNotEmpty) afterLines.add(line);
-      }
-    }
+List<dom.Node> _processNodes(List<dom.Node> nodes) {
+  final result = <dom.Node>[];
+  final pendingTableRows = <List<String>>[];
 
-    if (tableRows.length >= 2 ||
-        (tableRows.length == 1 && tableRows.first.length >= 2)) {
-      final buf = StringBuffer();
-      if (beforeLines.isNotEmpty) {
-        buf.write('<p>${beforeLines.join('<br/>')}</p>');
+  void flushTable() {
+    if (pendingTableRows.isEmpty) return;
+    final rows = List<List<String>>.from(pendingTableRows);
+    pendingTableRows.clear();
+
+    final hasMultipleCols = rows.any((r) => r.length >= 2);
+    if ((rows.length >= 2 || (rows.length == 1 && rows.first.length >= 2)) &&
+        hasMultipleCols) {
+      final tableHtml = _buildTableHtml(rows);
+      result.addAll(html_parser.parseFragment(tableHtml).nodes);
+    } else {
+      for (final r in rows) {
+        final p = html_parser.parseFragment('<p>| ${r.join(' | ')} |</p>');
+        result.addAll(p.nodes);
       }
-      buf.write(
-        '<table border="1" cellpadding="4" cellspacing="0" '
-        'style="border-collapse: collapse; width: 100%;"><tbody>',
-      );
-      for (var r = 0; r < tableRows.length; r++) {
-        final row = tableRows[r];
-        buf.write('<tr>');
-        final tag = r == 0 ? 'th' : 'td';
-        for (final cell in row) {
-          buf.write('<$tag>$cell</$tag>');
-        }
-        buf.write('</tr>');
-      }
-      buf.write('</tbody></table>');
-      if (afterLines.isNotEmpty) {
-        buf.write('<p>${afterLines.join('<br/>')}</p>');
-      }
-      p.replaceWith(html_parser.parseFragment(buf.toString()));
-      modified = true;
     }
   }
 
-  return modified ? doc.outerHtml : html;
+  for (final node in nodes) {
+    if (node is dom.Element &&
+        (node.localName == 'p' || node.localName == 'div')) {
+      final inner = node.innerHtml;
+      if (!inner.contains('|')) {
+        flushTable();
+        result.add(node);
+        continue;
+      }
+
+      final lines = inner.split(RegExp(r'<br\s*/?>|\n'));
+      final beforeLines = <String>[];
+      final currentTableLines = <List<String>>[];
+      final afterLines = <String>[];
+      var inTable = false;
+
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (_isTableRow(trimmed)) {
+          final cells = _extractCells(trimmed);
+          if (_isSeparatorRow(cells)) {
+            inTable = true;
+          } else {
+            inTable = true;
+            currentTableLines.add(cells);
+          }
+        } else if (!inTable) {
+          if (trimmed.isNotEmpty) beforeLines.add(line);
+        } else {
+          if (trimmed.isNotEmpty) afterLines.add(line);
+        }
+      }
+
+      if (beforeLines.isNotEmpty) {
+        flushTable();
+        final p = html_parser.parseFragment(
+          '<p>${beforeLines.join('<br>')}</p>',
+        );
+        result.addAll(p.nodes);
+      }
+
+      if (currentTableLines.isNotEmpty) {
+        pendingTableRows.addAll(currentTableLines);
+      }
+
+      if (afterLines.isNotEmpty) {
+        flushTable();
+        final p = html_parser.parseFragment(
+          '<p>${afterLines.join('<br>')}</p>',
+        );
+        result.addAll(p.nodes);
+      }
+    } else if (node is dom.Text && node.text.trim().isEmpty) {
+      if (pendingTableRows.isEmpty) {
+        result.add(node);
+      }
+    } else {
+      flushTable();
+      result.add(node);
+    }
+  }
+
+  flushTable();
+  return result;
+}
+
+bool _isTableRow(String trimmed) =>
+    trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 2;
+
+List<String> _extractCells(String trimmed) {
+  final inner = trimmed.substring(1, trimmed.length - 1);
+  return inner.split('|').map((c) => c.trim()).toList();
+}
+
+bool _isSeparatorRow(List<String> cells) {
+  if (cells.isEmpty) return false;
+  return cells.every((c) {
+    final t = c.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+    return t.isNotEmpty && RegExp(r'^[:\- ]+$').hasMatch(t);
+  });
+}
+
+String _buildTableHtml(List<List<String>> rows) {
+  final buf = StringBuffer(
+    '<table border="1" cellpadding="6" cellspacing="0" '
+    'style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">',
+  );
+  if (rows.length > 1) {
+    buf.write('<thead><tr>');
+    for (final cell in rows.first) {
+      buf.write('<th>$cell</th>');
+    }
+    buf.write('</tr></thead><tbody>');
+    for (var r = 1; r < rows.length; r++) {
+      buf.write('<tr>');
+      for (final cell in rows[r]) {
+        buf.write('<td>$cell</td>');
+      }
+      buf.write('</tr>');
+    }
+    buf.write('</tbody>');
+  } else {
+    buf.write('<tbody><tr>');
+    for (final cell in rows.first) {
+      buf.write('<td>$cell</td>');
+    }
+    buf.write('</tr></tbody>');
+  }
+  buf.write('</table>');
+  return buf.toString();
 }
 
 /// ZenTao sizes images with `<img width>`, which [HtmlToDelta] ignores; it

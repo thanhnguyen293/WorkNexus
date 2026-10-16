@@ -47,11 +47,55 @@ class HtmlText extends StatelessWidget {
     final loader = imageLoader;
     final onLink = onLinkTap ?? openLinkExternally;
     final link = _cssColor(c.accent);
+    final border = _cssColor(c.border);
+    final headerBg = _cssColor(c.surfaceSubtle);
+    final codeBg = _cssColor(c.surfaceSubtle);
     return HtmlWidget(
       html,
       textStyle: style,
-      customStylesBuilder: (element) =>
-          element.localName == 'a' ? {'color': link} : null,
+      customStylesBuilder: (element) {
+        switch (element.localName) {
+          case 'a':
+            return {'color': link};
+          case 'table':
+            return {
+              'border-collapse': 'collapse',
+              'width': '100%',
+              'margin': '8px 0',
+              'border': '1px solid $border',
+            };
+          case 'th':
+            return {
+              'border': '1px solid $border',
+              'padding': '6px 10px',
+              'background-color': headerBg,
+              'font-weight': '600',
+              'text-align': 'left',
+            };
+          case 'td':
+            return {
+              'border': '1px solid $border',
+              'padding': '6px 10px',
+              'vertical-align': 'top',
+            };
+          case 'code':
+            return {
+              'background-color': codeBg,
+              'padding': '2px 4px',
+              'border-radius': '4px',
+              'font-family': 'monospace',
+            };
+          case 'pre':
+            return {
+              'background-color': codeBg,
+              'padding': '8px 12px',
+              'border-radius': '6px',
+              'border': '1px solid $border',
+            };
+          default:
+            return null;
+        }
+      },
       customWidgetBuilder: (element) {
         final src = element.attributes['src']?.trim() ?? '';
         if (loader == null || element.localName != 'img' || src.isEmpty) {
