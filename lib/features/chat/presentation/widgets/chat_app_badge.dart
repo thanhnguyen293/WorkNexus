@@ -21,6 +21,9 @@ class _ChatAppBadgeState extends ConsumerState<ChatAppBadge> {
   @override
   void initState() {
     super.initState();
+    // Logs every ZenTao account into chat from launch, so the count is live
+    // before the chat view is opened.
+    ref.listenManual(chatAutoConnectProvider, (_, _) {});
     ref.listenManual(chatBadgeUnreadProvider, (_, count) => _show(count));
     // The count already there (chats loaded before this appeared) too, or
     // the icon only shows it once it next changes. After this frame: the

@@ -83,8 +83,8 @@ final selectedChatAccountIdProvider = Provider<String?>((ref) {
   return accounts.isEmpty ? null : accounts.first.id;
 });
 
-/// Logs every ZenTao account into chat. Watched by the always-visible sidebar
-/// entry so unread counts are live before the chat view is opened.
+/// Logs every ZenTao account into chat. Kept alive by `ChatAppBadge`, which
+/// wraps the app shell, so unread counts are live before the chat view opens.
 final chatAutoConnectProvider = Provider<void>((ref) {
   final controller = ref.watch(chatControllerProvider);
   // Also applies the attachment cache and video auto-download limits from
