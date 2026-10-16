@@ -6,18 +6,32 @@ part 'paged_view_loads.freezed.dart';
 
 /// What a paged board's views have loaded, and nothing else of their state:
 /// the ids a started view holds, or `null` for a view that has not loaded its
-/// first page yet (still loading, failed, offline, or not asked for).
+/// first page yet (still loading, failed, offline, or not asked for), and
+/// which started views still have pages to load ([partial]).
 ///
 /// Compares by value, so a page starting, failing or being retried — which
 /// changes the view's [PagedViewState] but not what is loaded — does not
 /// re-scope the board.
 @freezed
 abstract class PagedViewLoads<V> with _$PagedViewLoads<V> {
-  const factory PagedViewLoads(Map<V, Set<String>?> ids) = _PagedViewLoads<V>;
+  const factory PagedViewLoads(
+    Map<V, Set<String>?> ids, {
+
+    /// The started views that have more pages on the server: what they have
+    /// loaded is only the start of the view, so a cached ticket they did not
+    /// load may still belong to it.
+    @Default(<Never>{}) Set<V> partial,
+  }) = _PagedViewLoads<V>;
 
   /// Projects the views' states down to what each has loaded.
-  factory PagedViewLoads.of(Map<V, PagedViewState> views) => PagedViewLoads({
-    for (final MapEntry(:key, :value) in views.entries)
-      key: value.started ? value.ids : null,
-  });
+  factory PagedViewLoads.of(Map<V, PagedViewState> views) => PagedViewLoads(
+    {
+      for (final MapEntry(:key, :value) in views.entries)
+        key: value.started ? value.ids : null,
+    },
+    partial: {
+      for (final MapEntry(:key, :value) in views.entries)
+        if (value.started && value.hasMore) key,
+    },
+  );
 }

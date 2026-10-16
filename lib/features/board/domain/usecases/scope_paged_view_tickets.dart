@@ -22,8 +22,11 @@ class PagedViewScopeQuery<V> {
 /// The tickets a paged board shows, local-first: a ticket a view has loaded
 /// this session, or — for a view that has not loaded yet (still loading,
 /// failed, offline, or not asked for) — whatever the database holds for it.
-/// Once a view loads, it prunes the cached tickets the server no longer lists
-/// there.
+/// Once a view has loaded every page, it prunes the cached tickets the server
+/// no longer lists there. While it has pages left it cannot tell a ticket the
+/// server dropped from one on a later page, so it keeps the cached ones — a
+/// column filled from the end of a shared view (Non-Fix among Resolved) would
+/// otherwise lose its cards on every refresh until it scrolled that far.
 class ScopePagedViewTickets<V>
     extends UseCase<List<Ticket>, PagedViewScopeQuery<V>> {
   const ScopePagedViewTickets();
@@ -31,13 +34,14 @@ class ScopePagedViewTickets<V>
   @override
   List<Ticket> call(PagedViewScopeQuery<V> q) {
     final loaded = {for (final ids in q.loads.ids.values) ...?ids};
-    final unloaded = {
+    final cachedViews = {
       for (final MapEntry(:key, :value) in q.loads.ids.entries)
         if (value == null) key,
+      ...q.loads.partial,
     };
     return [
       for (final t in q.tickets)
-        if (loaded.contains(t.id) || unloaded.contains(q.viewOf(t))) t,
+        if (loaded.contains(t.id) || cachedViews.contains(q.viewOf(t))) t,
     ];
   }
 }
