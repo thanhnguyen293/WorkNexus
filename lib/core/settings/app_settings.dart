@@ -359,48 +359,22 @@ class AppSettingsController extends Notifier<AppSettings> {
     _set(state.copyWith(tableColumnWidths: next));
   }
 
-  /// Pins/unpins [key]: a ZenTao product (`accountId:productId`), a ZenTao
-  /// project ([zentaoProjectPinKey]) or a GitLab / GitHub project. Pinning
-  /// can bring [childExecutions] along; unpinning drops the executions that
-  /// go with this pin ([PinnedExecution.ownerKey]) — never another kind's
-  /// whose id merely looks alike.
-  void togglePinnedProject(
-    String key, {
-    List<PinnedExecution>? childExecutions,
-  }) {
-    final nextProjects = Set<String>.of(state.pinnedProjects);
-    final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
-    if (nextProjects.contains(key)) {
-      nextProjects.remove(key);
-      nextExecs.removeWhere((e) => e.ownerKey == key);
-    } else {
-      nextProjects.add(key);
-      final existing = {for (final e in nextExecs) e.key};
-      for (final c in childExecutions ?? const <PinnedExecution>[]) {
-        if (!existing.contains(c.key)) nextExecs.add(c.withParent(key));
-      }
-    }
-    _set(
-      state.copyWith(pinnedProjects: nextProjects, pinnedExecutions: nextExecs),
-    );
+  /// Pins/unpins [key]: a ZenTao product (`accountId:productId`) or a
+  /// GitLab / GitHub project. A ZenTao project is no pin: it only holds the
+  /// executions, which are pinned one by one.
+  void togglePinnedProject(String key) {
+    final next = Set<String>.of(state.pinnedProjects);
+    next.contains(key) ? next.remove(key) : next.add(key);
+    _set(state.copyWith(pinnedProjects: next));
   }
 
-  /// Pins/unpins a ZenTao [execution]; pinning it pins its project too.
+  /// Pins/unpins a ZenTao [execution]. Matched by [PinnedExecution.key] so a
+  /// second toggle removes it regardless of a since-changed display name.
   void togglePinnedExecution(PinnedExecution execution) {
-    final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
-    final nextProjects = Set<String>.of(state.pinnedProjects);
-    final index = nextExecs.indexWhere((e) => e.key == execution.key);
-    if (index >= 0) {
-      nextExecs.removeAt(index);
-    } else {
-      nextExecs.add(execution);
-      nextProjects.add(
-        zentaoProjectPinKey(execution.accountId, execution.projectId),
-      );
-    }
-    _set(
-      state.copyWith(pinnedExecutions: nextExecs, pinnedProjects: nextProjects),
-    );
+    final next = List<PinnedExecution>.of(state.pinnedExecutions);
+    final index = next.indexWhere((e) => e.key == execution.key);
+    index >= 0 ? next.removeAt(index) : next.add(execution);
+    _set(state.copyWith(pinnedExecutions: next));
   }
 
   void toggleCompanyTint() =>

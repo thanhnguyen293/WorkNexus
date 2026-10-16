@@ -5,64 +5,79 @@ import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/settings/pinned_execution.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
 
-/// Keeps the Tasks board on a place of [account]: ZenTao lists tasks per
-/// execution only, so there is no account-wide board. The scope the user
-/// picked when it is still there; otherwise — first open, the project gone,
-/// another account — a pinned execution (paged), else a pinned project, else
-/// the first project (their cached tasks). Only while the section is on
-/// screen (the viewport keeps a few alive).
+/// Whether the Tasks board of [account] at [location] has its execution:
+/// ZenTao lists tasks per execution only, so that is the one place a task
+/// board can be.
+bool taskBoardHasExecution(
+  WidgetRef ref,
+  Account account,
+  ToolLocation location,
+) {
+  final execution = ref.watch(selectedZenTaoExecutionProvider);
+  return location.scopeId != null &&
+      execution?.accountId == account.id &&
+      execution?.executionId == location.scopeId;
+}
+
+/// Keeps the Tasks board of [account] on an execution, as the old board was
+/// (it only opened on one): the one picked while it still is; else a pinned
+/// execution of the account (the scope's own when it is pinned); else the
+/// first execution of the first project, loaded on demand. With none of
+/// those the section asks the user to pick one. Never a project: it holds
+/// executions, not a task list. Only while the section is on screen (the
+/// viewport keeps a few alive).
 void keepTaskBoardScope(
   BuildContext context,
   WidgetRef ref,
   Account account,
   ToolLocation location,
 ) {
-  final projects = ref.watch(zentaoProjectsProvider(account.id)).asData?.value;
-  if (projects == null ||
-      projects.isEmpty ||
-      !TickerMode.valuesOf(context).enabled) {
-    return;
-  }
-  final scope = location.scopeId;
-  final execution = ref.read(selectedZenTaoExecutionProvider);
-  final onExecution =
-      execution?.accountId == account.id && execution?.executionId == scope;
-  if (scope != null && (onExecution || projects.any((p) => p.id == scope))) {
-    return;
-  }
+  if (!TickerMode.valuesOf(context).enabled) return;
+  if (taskBoardHasExecution(ref, account, location)) return;
 
-  final settings = ref.read(appSettingsProvider);
-  final pinnedExecution = settings.pinnedExecutions
+  final pinned = ref
+      .read(appSettingsProvider)
+      .pinnedExecutions
       .where((e) => e.accountId == account.id)
-      .firstOrNull;
-  final ProviderProject project = projects.firstWhere(
-    (p) =>
-        settings.pinnedProjects.contains(zentaoProjectPinKey(account.id, p.id)),
-    orElse: () => projects.first,
-  );
+      .toList();
+  final ProviderExecution pick;
+  if (pinned.isNotEmpty) {
+    final e =
+        pinned.where((e) => e.executionId == location.scopeId).firstOrNull ??
+        pinned.first;
+    pick = ProviderExecution(
+      id: e.executionId,
+      name: e.name,
+      projectId: e.projectId,
+      accountId: account.id,
+    );
+  } else {
+    final first = ref
+        .watch(zentaoProjectsProvider(account.id))
+        .asData
+        ?.value
+        .firstOrNull;
+    if (first == null) return;
+    final executions = ref
+        .watch(
+          zentaoExecutionsProvider((
+            accountId: account.id,
+            projectId: first.id,
+          )),
+        )
+        .asData
+        ?.value;
+    final execution = executions?.firstOrNull;
+    if (execution == null) return;
+    pick = execution;
+  }
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (!context.mounted) return;
-    final nav = ref.read(appNavProvider.notifier);
-    if (pinnedExecution != null) {
-      nav.selectScope(pinnedExecution.executionId);
-      ref
-          .read(selectedZenTaoExecutionProvider.notifier)
-          .select(
-            ProviderExecution(
-              id: pinnedExecution.executionId,
-              name: pinnedExecution.name,
-              projectId: pinnedExecution.projectId,
-              accountId: account.id,
-            ),
-          );
-    } else {
-      nav.selectScope(project.id);
-      ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-    }
+    ref.read(appNavProvider.notifier).selectScope(pick.id);
+    ref.read(selectedZenTaoExecutionProvider.notifier).select(pick);
     ref
         .read(filterStateProvider.notifier)
         .openBoard(ref.read(boardKeyProvider));

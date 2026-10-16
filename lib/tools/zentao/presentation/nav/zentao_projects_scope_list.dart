@@ -8,7 +8,6 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -48,9 +47,6 @@ class _ZentaoProjectsScopeListState
     final l = AppL10n.of(context);
     final projectsAsync = ref.watch(zentaoProjectsProvider(widget.account.id));
     final tickets = ref.watch(ticketsProvider).asData?.value ?? const [];
-    final pinned = ref.watch(
-      appSettingsProvider.select((s) => s.pinnedProjects),
-    );
 
     return projectsAsync.when(
       data: (projects) {
@@ -72,16 +68,6 @@ class _ZentaoProjectsScopeListState
                   zentaoTaskInProject(t, projectId),
             )
             .length;
-
-        String keyOf(ProviderProject p) =>
-            zentaoProjectPinKey(p.accountId, p.id);
-
-        final pinnedProjects = filtered
-            .where((p) => pinned.contains(keyOf(p)))
-            .toList();
-        final unpinnedProjects = filtered
-            .where((p) => !pinned.contains(keyOf(p)))
-            .toList();
 
         final pinnedExecutions = ref
             .watch(appSettingsProvider.select((s) => s.pinnedExecutions))
@@ -108,14 +94,12 @@ class _ZentaoProjectsScopeListState
 
         final selectedExec = ref.watch(selectedZenTaoExecutionProvider);
 
-        final recentIds = widget.location.recentScopeIds.toSet();
-        final recentProjects = unpinnedProjects
-            .where((p) => recentIds.contains(p.id))
-            .toList();
-
         // ZenTao's own grouping by program (or one flat list when the
-        // programs are not known).
-        final tree = ZenTaoProjectTree.of(unpinnedProjects);
+        // programs are not known). Projects only hold executions: no pins,
+        // no selection. No "recent" rows either — the nav keeps only scope
+        // ids, and an execution's name and project are not known without
+        // loading its project's executions.
+        final tree = ZenTaoProjectTree.of(filtered);
 
         return Column(
           children: [
@@ -130,23 +114,9 @@ class _ZentaoProjectsScopeListState
                 groupTitle: l.zentaoProjectsGroup,
                 initiallyExpanded: true,
                 cap: 100,
+                // Only executions are pinned (lifted out of the tree).
                 pinnedRows: [
-                  for (final p in pinnedProjects)
-                    ZentaoProjectTreeNode(
-                      key: ValueKey('pinned_proj_${p.id}'),
-                      account: widget.account,
-                      project: p,
-                      tickets: tickets,
-                      location: widget.location,
-                      openCount: openCount(p.id),
-                      isPinned: true,
-                      onPinToggle: () => ref
-                          .read(appSettingsProvider.notifier)
-                          .togglePinnedProject(keyOf(p)),
-                    ),
-                  for (final e in filteredExecutions.where(
-                    (e) => !pinnedProjects.any((p) => p.id == e.projectId),
-                  ))
+                  for (final e in filteredExecutions)
                     ScopeRow(
                       name: e.name,
                       color: context.colors.info,
@@ -170,31 +140,12 @@ class _ZentaoProjectsScopeListState
                       ),
                     ),
                 ],
-                recentRows: [
-                  for (final p in recentProjects)
-                    ScopeRow(
-                      name: p.name,
-                      count: openCount(p.id),
-                      selected: widget.location.scopeId == p.id,
-                      onPinToggle: () => ref
-                          .read(appSettingsProvider.notifier)
-                          .togglePinnedProject(keyOf(p)),
-                      onTap: () {
-                        ref.read(appNavProvider.notifier).selectScope(p.id);
-                        ref
-                            .read(selectedZenTaoExecutionProvider.notifier)
-                            .clear();
-                      },
-                    ),
-                ],
                 allRows: [
                   for (final group in tree.groups)
                     ZentaoProjectSetNode(
                       key: ValueKey('zentao_group_${group.id}'),
                       account: widget.account,
                       group: group,
-                      tickets: tickets,
-                      location: widget.location,
                       openCountOf: openCount,
                     ),
                   // In no program: after the folders.
@@ -203,13 +154,7 @@ class _ZentaoProjectsScopeListState
                       key: ValueKey('zentao_proj_${p.id}'),
                       account: widget.account,
                       project: p,
-                      tickets: tickets,
-                      location: widget.location,
                       openCount: openCount(p.id),
-                      isPinned: false,
-                      onPinToggle: () => ref
-                          .read(appSettingsProvider.notifier)
-                          .togglePinnedProject(keyOf(p)),
                     ),
                 ],
               ),

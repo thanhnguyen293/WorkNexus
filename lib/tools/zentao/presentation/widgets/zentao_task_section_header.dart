@@ -50,23 +50,8 @@ class _ZentaoTaskSectionHeaderState
             picked?.executionId == widget.location.scopeId
         ? picked
         : null;
-    final projects = ref
-        .watch(zentaoProjectsProvider(widget.account.id))
-        .asData
-        ?.value;
-    String? scopeTitle;
-    if (execution != null) {
-      scopeTitle = execution.executionName;
-    } else if (widget.location.scopeId != null && projects != null) {
-      for (final p in projects) {
-        if (p.id == widget.location.scopeId) {
-          scopeTitle = p.name;
-          break;
-        }
-      }
-    }
-    // Only until the section has picked a place.
-    final displayTitle = scopeTitle ?? l.zentaoProjectsGroup;
+    // Only until the section has picked an execution.
+    final displayTitle = execution?.executionName ?? l.zentaoProjectsGroup;
     final taskTable = ref.watch(zentaoTaskTableProvider);
     final taskCount = taskTable.rows.length;
 

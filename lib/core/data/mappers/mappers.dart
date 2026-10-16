@@ -224,7 +224,12 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   fontFamily: r.fontFamily,
   componentRadius: r.componentRadius,
   accentColorValue: r.accentColorValue,
-  pinnedProjects: decodeLabels(r.pinnedProjectsJson).toSet(),
+  // `zentao-project:` keys came from a build that pinned ZenTao projects;
+  // projects are no pins, so they are dropped (and gone on the next save).
+  pinnedProjects: {
+    for (final key in decodeLabels(r.pinnedProjectsJson))
+      if (!key.startsWith('zentao-project:')) key,
+  },
   pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
   sidebarWidth: r.sidebarWidth,
   tableColumnWidths: decodeColumnWidths(r.tableColumnWidthsJson),

@@ -8,30 +8,24 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/zentao_board_providers.dart';
 
-/// Interactive tree node for a ZenTao Project in the header switcher popover.
-///
-/// Clicking the folder selects the project (filtering by its child group).
-/// Expanding the chevron reveals child executions with bullet icons;
-/// clicking a child execution selects and filters exclusively for that execution.
+/// A ZenTao project in the header switcher popover: a container — tapping it
+/// opens or closes its executions, which are what the user picks (ZenTao
+/// lists tasks per execution, so a project is never selected).
 class ZenTaoPopoverProjectNode extends ConsumerStatefulWidget {
   const ZenTaoPopoverProjectNode({
     super.key,
     required this.targetAccountId,
     required this.project,
-    required this.isFolderSelected,
     required this.currentExec,
     required this.openCount,
-    required this.onSelectProject,
     required this.onSelectExecution,
     this.initiallyExpanded = false,
   });
 
   final String targetAccountId;
   final ProviderProject project;
-  final bool isFolderSelected;
   final ZenTaoExecutionSelection? currentExec;
   final int openCount;
-  final ValueChanged<ProviderProject> onSelectProject;
   final ValueChanged<ProviderExecution> onSelectExecution;
   final bool initiallyExpanded;
 
@@ -58,49 +52,38 @@ class _ZenTaoPopoverProjectNodeState
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final isCurrentFolder = widget.isFolderSelected;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Project folder row
         InkWell(
-          onTap: () => widget.onSelectProject(widget.project),
+          onTap: () => setState(() => _expanded = !_expanded),
           borderRadius: BorderRadius.circular(context.radii.xs),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
             margin: const EdgeInsets.symmetric(vertical: 1),
             decoration: BoxDecoration(
-              color: isCurrentFolder ? c.selectionFill : Colors.transparent,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(context.radii.xs),
             ),
             child: Row(
               children: [
-                // Expand / Collapse Chevron
-                InkWell(
-                  onTap: () => setState(() => _expanded = !_expanded),
-                  borderRadius: BorderRadius.circular(context.radii.xs),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: Icon(
-                      _expanded
-                          ? LucideIcons.chevronDown300
-                          : LucideIcons.chevronRight300,
-                      size: 13,
-                      color: c.textTertiary,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Icon(
+                    _expanded
+                        ? LucideIcons.chevronDown300
+                        : LucideIcons.chevronRight300,
+                    size: 13,
+                    color: c.textTertiary,
                   ),
                 ),
                 const SizedBox(width: 2),
-                Icon(
-                  LucideIcons.folder300,
-                  size: 14,
-                  color: isCurrentFolder ? c.accent : c.textSecondary,
-                ),
+                Icon(LucideIcons.folder300, size: 14, color: c.textSecondary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -108,10 +91,8 @@ class _ZenTaoPopoverProjectNodeState
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.typography.bodySm.copyWith(
-                      color: isCurrentFolder ? c.accent : c.textPrimary,
-                      fontWeight: isCurrentFolder
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                      color: c.textPrimary,
+                      fontWeight: FontWeight.w400,
                       fontSize: 12,
                     ),
                   ),
@@ -120,7 +101,7 @@ class _ZenTaoPopoverProjectNodeState
                   Text(
                     '${widget.openCount}',
                     style: context.typography.monoXs.copyWith(
-                      color: isCurrentFolder ? c.accent : c.textTertiary,
+                      color: c.textTertiary,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -133,15 +114,13 @@ class _ZenTaoPopoverProjectNodeState
                     vertical: 1,
                   ),
                   decoration: BoxDecoration(
-                    color: isCurrentFolder
-                        ? c.accent.withValues(alpha: 0.15)
-                        : c.surfaceSubtle,
+                    color: c.surfaceSubtle,
                     borderRadius: BorderRadius.circular(context.radii.xs),
                   ),
                   child: Text(
                     'Project',
                     style: context.typography.monoXs.copyWith(
-                      color: isCurrentFolder ? c.accent : c.textTertiary,
+                      color: c.textTertiary,
                       fontSize: 9.5,
                     ),
                   ),

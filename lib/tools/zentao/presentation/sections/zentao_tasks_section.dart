@@ -10,6 +10,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/tools/tool_module.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/coming_soon_view.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -69,32 +70,41 @@ class ZentaoTasksSection extends ConsumerWidget {
     keepTaskBoardScope(context, ref, account, location);
 
     final Widget body;
-    switch (viewMode.value) {
-      case 'kanban':
-        body = const ZenTaoTaskBoardView();
-      case 'calendar':
-        body = ComingSoonView(
-          icon: LucideIcons.calendar300,
-          title: l.viewCalendar,
-          body: 'Calendar view for ZenTao tasks is coming soon.',
-          actionLabel: l.switchToView(l.viewList),
-          onAction: () => ref
-              .read(appNavProvider.notifier)
-              .setViewMode(const ViewModeId('list')),
-        );
-      case 'gantt':
-        body = ComingSoonView(
-          icon: LucideIcons.chartGantt300,
-          title: l.viewGantt,
-          body: 'Gantt chart view for ZenTao tasks is coming soon.',
-          actionLabel: l.switchToView(l.viewKanban),
-          onAction: () => ref
-              .read(appNavProvider.notifier)
-              .setViewMode(const ViewModeId('kanban')),
-        );
-      case 'list':
-      default:
-        body = const ZenTaoTaskTableView();
+    if (!taskBoardHasExecution(ref, account, location)) {
+      // Until an execution is picked (or none could be): tasks are listed
+      // per execution only.
+      body = AppStateView.empty(
+        icon: LucideIcons.listChecks300,
+        title: l.zentaoPickExecution,
+      );
+    } else {
+      switch (viewMode.value) {
+        case 'kanban':
+          body = const ZenTaoTaskBoardView();
+        case 'calendar':
+          body = ComingSoonView(
+            icon: LucideIcons.calendar300,
+            title: l.viewCalendar,
+            body: 'Calendar view for ZenTao tasks is coming soon.',
+            actionLabel: l.switchToView(l.viewList),
+            onAction: () => ref
+                .read(appNavProvider.notifier)
+                .setViewMode(const ViewModeId('list')),
+          );
+        case 'gantt':
+          body = ComingSoonView(
+            icon: LucideIcons.chartGantt300,
+            title: l.viewGantt,
+            body: 'Gantt chart view for ZenTao tasks is coming soon.',
+            actionLabel: l.switchToView(l.viewKanban),
+            onAction: () => ref
+                .read(appNavProvider.notifier)
+                .setViewMode(const ViewModeId('kanban')),
+          );
+        case 'list':
+        default:
+          body = const ZenTaoTaskTableView();
+      }
     }
 
     final filter = ref.watch(filterStateProvider);

@@ -2186,19 +2186,6 @@
   "chatSearchNoMatches": "No results",
   "chatSearchHistory": "Search chat history",
   "chatSearchInThisChat": "In this chat",
-  "syncNotSyncedYet": "not synced yet",
-  "syncSyncing": "syncing…",
-  "syncOffline": "offline · cached",
-  "syncAuthExpired": "session expired",
-  "syncFailed": "sync failed",
-  "syncSynced": "synced {relative}",
-  "@syncSynced": {
-    "placeholders": {
-      "relative": {
-        "type": "String"
-      }
-    }
-  },
   "reviewRequested": "Review requested",
   "recent": "Recent",
   "showAll": "Show all…",
@@ -2379,5 +2366,6 @@
     }
   },
   "zentaoProductsGroup": "Products",
-  "zentaoProjectsGroup": "Projects"
+  "zentaoProjectsGroup": "Projects",
+  "zentaoPickExecution": "Pick an execution to see its tasks"
 }
