@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -109,21 +108,9 @@ class _ZentaoProductsScopeListState
             ),
             Expanded(
               child: ScopeListBody(
-                // No "all products" row: ZenTao lists bugs per product only.
+                // No quick rows: ZenTao lists bugs per product only, and the
+                // board's own "Assigned to me" chip narrows to your bugs.
                 groupTitle: l.zentaoProductsGroup,
-                quickScopeRows: [
-                  ScopeQuickRow(
-                    label: l.assignedToMe,
-                    icon: LucideIcons.user300,
-                    selected:
-                        widget.location.quickScope == QuickScope.assignedToMe,
-                    onTap: () {
-                      ref
-                          .read(appNavProvider.notifier)
-                          .setQuickScope(QuickScope.assignedToMe);
-                    },
-                  ),
-                ],
                 pinnedRows: [
                   for (final p in pinnedProducts)
                     ZentaoProductTreeNode(

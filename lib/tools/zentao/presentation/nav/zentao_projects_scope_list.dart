@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -126,23 +125,11 @@ class _ZentaoProjectsScopeListState
             ),
             Expanded(
               child: ScopeListBody(
-                // No "all projects" row: ZenTao lists tasks per execution.
+                // No quick rows: ZenTao lists tasks per execution only, and
+                // the board's own "Assigned to me" chip narrows to your tasks.
                 groupTitle: l.zentaoProjectsGroup,
                 initiallyExpanded: true,
                 cap: 100,
-                quickScopeRows: [
-                  ScopeQuickRow(
-                    label: l.assignedToMe,
-                    icon: LucideIcons.user300,
-                    selected:
-                        widget.location.quickScope == QuickScope.assignedToMe,
-                    onTap: () {
-                      ref
-                          .read(appNavProvider.notifier)
-                          .setQuickScope(QuickScope.assignedToMe);
-                    },
-                  ),
-                ],
                 pinnedRows: [
                   for (final p in pinnedProjects)
                     ZentaoProjectTreeNode(
