@@ -49,4 +49,40 @@ void main() {
     final cursor = await cursorOverLink(tester);
     expect(cursor, SystemMouseCursors.click);
   });
+
+  testWidgets('a plain link (a chat mention) is bold text with no chip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: MarkdownText(
+            'hi [@Thanh](@#12) there',
+            onLinkTap: (_) {},
+            isPlainLink: (url) => url.startsWith('@#'),
+          ),
+        ),
+      ),
+    );
+
+    final mention = find.text('@Thanh');
+    final style = tester.widget<Text>(mention).style;
+    expect(style?.fontWeight, FontWeight.w600);
+    expect(style?.decoration, TextDecoration.none);
+    expect(
+      find.ancestor(
+        of: mention,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              switch (w.decoration) {
+                BoxDecoration(:final color) => color != null,
+                _ => false,
+              },
+        ),
+      ),
+      findsNothing,
+    );
+  });
 }
