@@ -26,11 +26,7 @@ class DesktopTrayService with TrayListener {
     _onQuit = onQuit;
     try {
       trayManager.addListener(this);
-      await trayManager.setIcon(
-        Platform.isWindows
-            ? 'assets/tray/app_icon.ico'
-            : 'assets/tray/app_icon.png',
-      );
+      await trayManager.setIcon(_defaultIcon);
       await trayManager.setToolTip('WorkNexus');
       await updateLocale(locale);
       _ready = true;
@@ -40,6 +36,16 @@ class DesktopTrayService with TrayListener {
       await dispose();
       return false;
     }
+  }
+
+  static String get _defaultIcon => Platform.isWindows
+      ? 'assets/tray/app_icon.ico'
+      : 'assets/tray/app_icon.png';
+
+  /// Shows the icon file at [path] in the tray, or the app's own for null.
+  Future<void> setIcon(String? path) async {
+    if (!_ready) return;
+    await trayManager.setIcon(path ?? _defaultIcon);
   }
 
   Future<void> updateLocale(Locale locale) async {

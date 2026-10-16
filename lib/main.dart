@@ -18,6 +18,8 @@ import 'core/di/providers.dart';
 import 'core/navigation/open_storage.dart';
 import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
+import 'core/platform/app_icon_providers.dart';
+import 'core/platform/app_icon_service.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
 import 'core/platform/desktop_tray_service.dart';
@@ -72,6 +74,10 @@ Future<void> main(List<String> arguments) async {
     tray: DesktopTrayService(),
   );
   await lifecycle.initialize(initialSettings.locale);
+  // The icon the user chose, over the window and the tray the lines above
+  // made; not awaited, the first frame does not need it.
+  final appIcon = AppIconService(setTrayIcon: lifecycle.setTrayIcon);
+  unawaited(appIcon.apply());
 
   runApp(
     ProviderScope(
@@ -88,6 +94,7 @@ Future<void> main(List<String> arguments) async {
               false,
         ),
         initialAppSettingsProvider.overrideWithValue(initialSettings),
+        appIconServiceProvider.overrideWithValue(appIcon),
         settingsPersistProvider.overrideWithValue(
           (s) => db.saveSettings(appSettingsToCompanion(s)),
         ),

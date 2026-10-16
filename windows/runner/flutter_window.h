@@ -32,6 +32,10 @@ class FlutterWindow : public Win32Window {
   // Puts |badge_icon_| (or nothing) over the taskbar button.
   void ApplyBadge();
 
+  // Listens for the icon the user chose, drawn by
+  // lib/core/platform/app_icon_service.dart.
+  void SetUpAppIconChannel();
+
   // The project to run.
   flutter::DartProject project_;
 
@@ -43,6 +47,14 @@ class FlutterWindow : public Win32Window {
 
   // The overlay currently shown; null when there is no badge.
   HICON badge_icon_ = nullptr;
+
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      app_icon_channel_;
+
+  // The window icons the user chose (title bar / Alt-Tab and taskbar); null
+  // while the window has the icon of the executable.
+  HICON app_icon_large_ = nullptr;
+  HICON app_icon_small_ = nullptr;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

@@ -34,6 +34,9 @@ class DesktopAppLifecycle with WindowListener {
     }
   }
 
+  /// Shows the icon file at [path] in the tray, or the app's own for null.
+  Future<void> setTrayIcon(String? path) => _tray.setIcon(path);
+
   Future<void> updateLocale(Locale locale) async {
     if (_trayReady) await _tray.updateLocale(locale);
   }
