@@ -1142,6 +1142,8 @@
   "dashboardMyWork": "Việc của tôi",
   "dashboardMyTasks": "Task của tôi",
   "dashboardMyBugs": "Bug của tôi",
+  "zentaoMyOpenTasks": "Task đang mở của tôi",
+  "zentaoMyOpenBugs": "Bug đang mở của tôi",
   "dashboardShowAll": "Xem tất cả",
   "editorSectionContent": "Nội dung",
   "editorSectionLocation": "Vị trí",

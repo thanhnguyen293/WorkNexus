@@ -161,7 +161,7 @@ void main() {
     );
     // ZenTao's card keeps the account-wide numbers.
     expect(
-      find.descendant(of: cards.first, matching: find.text('Open tasks')),
+      find.descendant(of: cards.first, matching: find.text('My open tasks')),
       findsOneWidget,
     );
 

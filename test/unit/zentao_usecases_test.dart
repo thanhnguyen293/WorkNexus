@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
@@ -63,6 +64,12 @@ void main() {
   group('ComputeZentaoMetrics', () {
     const compute = ComputeZentaoMetrics();
     const accountId = 'zentao-acc-1';
+    const account = Account(
+      id: accountId,
+      workspaceId: 'ws',
+      providerType: ProviderType.zentao,
+      handle: 'thanh',
+    );
 
     Ticket makeTicket({
       required String id,
@@ -70,6 +77,7 @@ void main() {
       required UnifiedStatus status,
       required String providerStatus,
       String accId = accountId,
+      String? assignee = 'Thanh',
       ProviderType provider = ProviderType.zentao,
       TicketProviderEntity? entity,
     }) {
@@ -87,10 +95,11 @@ void main() {
         sourceHash: 'hash',
         externalType: externalType,
         providerEntity: entity,
+        assignee: assignee,
       );
     }
 
-    test('counts only open tasks and open bugs for the target account', () {
+    test('counts only my open tasks and bugs in the target account', () {
       final tickets = [
         // Open task
         makeTicket(
@@ -148,6 +157,23 @@ void main() {
           status: UnifiedStatus.todo,
           providerStatus: 'wait',
         ),
+        // Someone else's open task and bug (should not count)
+        makeTicket(
+          id: '9',
+          externalType: 'task',
+          status: UnifiedStatus.todo,
+          providerStatus: 'wait',
+          assignee: 'Kenny',
+          entity: const TicketProviderEntity.zentaoTask(),
+        ),
+        makeTicket(
+          id: '10',
+          externalType: 'bug',
+          status: UnifiedStatus.todo,
+          providerStatus: 'active',
+          assignee: 'thanhle',
+          entity: const TicketProviderEntity.zentaoBug(),
+        ),
         // Ticket from gitlab (should not count)
         makeTicket(
           id: '8',
@@ -158,7 +184,7 @@ void main() {
         ),
       ];
 
-      final metrics = compute(tickets: tickets, accountId: accountId);
+      final metrics = compute(tickets: tickets, account: account);
 
       expect(metrics.primaryCount, equals(2)); // tasks 1 and 2
       expect(metrics.secondaryCount, equals(1)); // bug 5
