@@ -18,29 +18,64 @@ class SourceListCache {
 
   Future<List<ProviderProduct>?> readProducts(String accountId) async {
     final items = await _read(accountId, _products);
+    // Snapshots saved before the grouping was kept have no program / line:
+    // those products read back ungrouped until the next fetch.
     return items
         ?.map(
-          (e) => ProviderProduct(id: e.id, name: e.name, accountId: accountId),
+          (e) => ProviderProduct(
+            id: e.id,
+            name: e.name,
+            accountId: accountId,
+            programId: e.extra['programId'],
+            programName: e.extra['programName'],
+            lineId: e.extra['lineId'],
+            lineName: e.extra['lineName'],
+          ),
         )
         .toList();
   }
 
   Future<List<ProviderProject>?> readProjects(String accountId) async {
     final items = await _read(accountId, _projects);
+    // Older snapshots have no program: read back ungrouped.
     return items
         ?.map(
-          (e) => ProviderProject(id: e.id, name: e.name, accountId: accountId),
+          (e) => ProviderProject(
+            id: e.id,
+            name: e.name,
+            accountId: accountId,
+            programId: e.extra['programId'],
+            programName: e.extra['programName'],
+          ),
         )
         .toList();
   }
 
   Future<void> saveProducts(String accountId, List<ProviderProduct> items) =>
-      _save(accountId, _products, [for (final p in items) (p.id, p.name)]);
+      _save(accountId, _products, [
+        for (final p in items)
+          {
+            'id': p.id,
+            'name': p.name,
+            'programId': ?p.programId,
+            'programName': ?p.programName,
+            'lineId': ?p.lineId,
+            'lineName': ?p.lineName,
+          },
+      ]);
 
   Future<void> saveProjects(String accountId, List<ProviderProject> items) =>
-      _save(accountId, _projects, [for (final p in items) (p.id, p.name)]);
+      _save(accountId, _projects, [
+        for (final p in items)
+          {
+            'id': p.id,
+            'name': p.name,
+            'programId': ?p.programId,
+            'programName': ?p.programName,
+          },
+      ]);
 
-  Future<List<({String id, String name})>?> _read(
+  Future<List<({String id, String name, Map<String, String> extra})>?> _read(
     String accountId,
     String kind,
   ) async {
@@ -58,6 +93,10 @@ class SourceListCache {
           (
             id: (e as Map<String, dynamic>)['id'] as String,
             name: e['name'] as String,
+            extra: {
+              for (final MapEntry(:key, :value) in e.entries)
+                if (value is String && key != 'id' && key != 'name') key: value,
+            },
           ),
       ];
     } on Object {
@@ -68,16 +107,14 @@ class SourceListCache {
   Future<void> _save(
     String accountId,
     String kind,
-    List<(String, String)> items,
+    List<Map<String, String>> items,
   ) => _db
       .into(_db.sourceListSnapshots)
       .insertOnConflictUpdate(
         SourceListSnapshotsCompanion.insert(
           accountId: accountId,
           kind: kind,
-          json: jsonEncode([
-            for (final (id, name) in items) {'id': id, 'name': name},
-          ]),
+          json: jsonEncode(items),
           fetchedAt: DateTime.now(),
         ),
       );

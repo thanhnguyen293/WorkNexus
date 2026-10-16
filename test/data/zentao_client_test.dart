@@ -489,6 +489,134 @@ void main() {
     expect(users.first.account, 'amy');
   });
 
+  test('listProducts asks for the tree and files products under their '
+      'program and line', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/products')) {
+        return _json({
+          'total': 2,
+          'products': [
+            {
+              'id': 1,
+              'name': 'VN Program',
+              'type': 'program',
+              'children': [
+                {
+                  'id': 3,
+                  'name': 'Mobile',
+                  'type': 'line',
+                  'children': [
+                    {'id': 8, 'name': 'Wallet', 'type': 'normal'},
+                  ],
+                },
+              ],
+            },
+            {'id': 9, 'name': 'Daily', 'type': 'normal'},
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+    final products = (await adapter.listProducts()).valueOrNull!;
+
+    expect(
+      fake.requests
+          .firstWhere((r) => r.uri.path.endsWith('/products'))
+          .uri
+          .queryParameters['mergeChildren'],
+      '1',
+    );
+    expect(
+      [for (final p in products) (p.id, p.programName, p.lineName)],
+      [('8', 'VN Program', 'Mobile'), ('9', null, null)],
+    );
+  });
+
+  test(
+    'listProducts falls back to the plain list when the tree fails',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+        if (opts.uri.path.endsWith('/api.php/v1/products')) {
+          if (opts.uri.queryParameters.containsKey('mergeChildren')) {
+            return ResponseBody.fromString('boom', 500);
+          }
+          return _json({
+            'total': 1,
+            'products': [
+              {'id': 8, 'name': 'Wallet'},
+            ],
+          });
+        }
+        return _json(const {});
+      });
+      final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+      final products = (await adapter.listProducts()).valueOrNull!;
+
+      expect([for (final p in products) (p.id, p.programId)], [('8', null)]);
+    },
+  );
+
+  test('listProjects names each project\'s program (its parent) from '
+      '/programs', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/projects')) {
+        return _json({
+          'total': 2,
+          'projects': [
+            {'id': 7, 'name': 'Wallet', 'parent': 3},
+            {'id': 8, 'name': 'Daily', 'parent': 0},
+          ],
+        });
+      }
+      if (opts.uri.path.endsWith('/api.php/v1/programs')) {
+        return _json({
+          'total': 1,
+          'programs': [
+            {'id': 3, 'name': 'VN Program'},
+          ],
+        });
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+    final projects = (await adapter.listProjects()).valueOrNull!;
+
+    expect(
+      [for (final p in projects) (p.id, p.programId, p.programName)],
+      [('7', '3', 'VN Program'), ('8', null, null)],
+    );
+  });
+
+  test('listProjects leaves programs unnamed when /programs fails', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      if (opts.uri.path.endsWith('/api.php/v1/projects')) {
+        return _json({
+          'total': 1,
+          'projects': [
+            {'id': 7, 'name': 'Wallet', 'parent': 3},
+          ],
+        });
+      }
+      if (opts.uri.path.endsWith('/api.php/v1/programs')) {
+        return ResponseBody.fromString('boom', 500);
+      }
+      return _json(const {});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+
+    final projects = (await adapter.listProjects()).valueOrNull!;
+
+    expect([for (final p in projects) (p.id, p.programName)], [('7', null)]);
+  });
+
   test('listProducts parses /products into provider products', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

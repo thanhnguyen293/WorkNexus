@@ -126,13 +126,43 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     }
     final res = await adapter.listProjects();
     if (res case Ok(:final value)) {
-      await _listCache.saveProjects(accountId, value);
+      final named = await _keepProgramNames(accountId, value);
+      await _listCache.saveProjects(accountId, named);
+      return Ok(named);
     }
     return res;
   }
 
   Future<List<ProviderProject>?> cachedProjects(String accountId) =>
       _listCache.readProjects(accountId);
+
+  /// Program names a fetch could not get (`/programs` failing this time)
+  /// from the last list that had them, so the grouping does not come and go.
+  Future<List<ProviderProject>> _keepProgramNames(
+    String accountId,
+    List<ProviderProject> projects,
+  ) async {
+    if (!projects.any((p) => p.programId != null && p.programName == null)) {
+      return projects;
+    }
+    final cached =
+        await _listCache.readProjects(accountId) ?? const <ProviderProject>[];
+    final known = <String, String>{
+      for (final p in cached)
+        if ((p.programId, p.programName) case (final id?, final name?))
+          id: name,
+    };
+    return [
+      for (final p in projects)
+        ProviderProject(
+          id: p.id,
+          name: p.name,
+          accountId: p.accountId,
+          programId: p.programId,
+          programName: p.programName ?? known[p.programId],
+        ),
+    ];
+  }
 
   // Not tracked: one ticket's refresh (and its own failures, like a deleted
   // ticket) is no news about the account's sync.

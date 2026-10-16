@@ -91,11 +91,25 @@ class ProviderProduct {
     required this.id,
     required this.name,
     required this.accountId,
+    this.programId,
+    this.programName,
+    this.lineId,
+    this.lineName,
   });
 
   final String id;
   final String name;
   final String accountId;
+
+  /// The program the product sits in, as the provider groups it (ZenTao's
+  /// program › product line › product); null when it has none, or the
+  /// provider did not say.
+  final String? programId;
+  final String? programName;
+
+  /// The product line, within the program (or on its own).
+  final String? lineId;
+  final String? lineName;
 }
 
 /// A provider-side project that groups executions (ZenTao `Project`).

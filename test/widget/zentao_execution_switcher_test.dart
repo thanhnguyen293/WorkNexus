@@ -4,15 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
-import 'package:work_nexus/tools/zentao/presentation/providers/zentao_filter_providers.dart';
 import 'package:work_nexus/tools/zentao/presentation/widgets/zentao_execution_switcher.dart';
 
 void main() {
   Widget buildHarness() {
     return ProviderScope(
-      overrides: [
-        activeZoneFilterProvider.overrideWith(() => _TestZoneController('VN')),
-      ],
       child: MaterialApp(
         locale: const Locale('en'),
         localizationsDelegates: AppL10n.localizationsDelegates,
@@ -37,10 +33,10 @@ void main() {
     await tester.pumpWidget(buildHarness());
     await tester.pumpAndSettle();
 
-    // Verify breadcrumb label & zone pill
+    // The breadcrumb label, and no made-up "zone" pill.
     expect(find.text('Project'), findsOneWidget);
     expect(find.text('Select Project'), findsOneWidget);
-    expect(find.text('VN'), findsOneWidget);
+    expect(find.text('VN'), findsNothing);
 
     // Tap to open popover
     await tester.tap(find.byType(ZenTaoExecutionSwitcher));
@@ -49,14 +45,6 @@ void main() {
     // Verify popover components
     expect(find.text('Mine'), findsOneWidget);
     expect(find.text('Others'), findsOneWidget);
-    expect(find.text('VN'), findsWidgets);
+    expect(find.text('All Zones'), findsNothing);
   });
-}
-
-class _TestZoneController extends ActiveZoneFilterController {
-  _TestZoneController(this._initial);
-  final String? _initial;
-
-  @override
-  String? build() => _initial;
 }

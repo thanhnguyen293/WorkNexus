@@ -19,7 +19,6 @@ import '../../../../shared/shell_pane/scope_rows.dart';
 import '../../../../shared/shell_pane/sidebar_tree_rows.dart';
 import '../../domain/entities/zentao_project_group.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import '../providers/zentao_scope_providers.dart';
 import '../util/open_execution_board.dart';
 import 'zentao_project_set_node.dart';
@@ -115,11 +114,9 @@ class _ZentaoProjectsScopeListState
             .where((p) => recentIds.contains(p.id))
             .toList();
 
-        final userZone = ref.watch(userZoneProvider);
-        final groups = ZenTaoProjectGroup.group(
-          unpinnedProjects,
-          prioritizeZone: userZone,
-        );
+        // ZenTao's own grouping by program (or one flat list when the
+        // programs are not known).
+        final tree = ZenTaoProjectTree.of(unpinnedProjects);
 
         return Column(
           children: [
@@ -220,7 +217,7 @@ class _ZentaoProjectsScopeListState
                     ),
                 ],
                 allRows: [
-                  for (final group in groups)
+                  for (final group in tree.groups)
                     ZentaoProjectSetNode(
                       key: ValueKey('zentao_group_${group.id}'),
                       account: widget.account,
@@ -228,6 +225,20 @@ class _ZentaoProjectsScopeListState
                       tickets: tickets,
                       location: widget.location,
                       openCountOf: openCount,
+                    ),
+                  // In no program: after the folders.
+                  for (final p in tree.ungrouped)
+                    ZentaoProjectTreeNode(
+                      key: ValueKey('zentao_proj_${p.id}'),
+                      account: widget.account,
+                      project: p,
+                      tickets: tickets,
+                      location: widget.location,
+                      openCount: openCount(p.id),
+                      isPinned: false,
+                      onPinToggle: () => ref
+                          .read(appSettingsProvider.notifier)
+                          .togglePinnedProject(keyOf(p)),
                     ),
                 ],
               ),

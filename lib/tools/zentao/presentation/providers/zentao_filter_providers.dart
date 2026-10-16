@@ -1,49 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../features/connections/presentation/providers/zentao_profile_providers.dart';
 import 'zentao_board_providers.dart';
-
-/// Detected regional zone (e.g. 'VN') derived from user profile's department or realname.
-final userZoneProvider = Provider<String>((ref) {
-  final lookups = ref.watch(lookupsProvider);
-  for (final account in lookups.accounts.values) {
-    if (account.providerType.name.toLowerCase() == 'zentao') {
-      final profile = ref
-          .watch(zenTaoProfileProvider(account.id))
-          .asData
-          ?.value;
-      if (profile != null) {
-        if (profile.department != null && profile.department!.isNotEmpty) {
-          final parts = profile.department!.split('>');
-          final first = parts.first.trim();
-          if (first.isNotEmpty) return first;
-        }
-        final match = RegExp(r'_([A-Z]{2})_').firstMatch(profile.realname);
-        if (match != null) return match.group(1)!;
-        if (profile.realname.contains('VN')) return 'VN';
-      }
-    }
-  }
-  return 'VN';
-});
-
-/// Currently active zone filter string ('VN' by default, null for 'All Zones').
-final activeZoneFilterProvider =
-    NotifierProvider<ActiveZoneFilterController, String?>(
-      ActiveZoneFilterController.new,
-    );
-
-class ActiveZoneFilterController extends Notifier<String?> {
-  @override
-  String? build() => ref.watch(userZoneProvider);
-
-  void setZone(String? zone) => state = zone;
-  void toggleAll() =>
-      state = (state == null) ? ref.read(userZoneProvider) : null;
-}
 
 /// Currently selected functional module tag filter (e.g. 'Backend', 'Mobile', null for All).
 final selectedModuleProvider =

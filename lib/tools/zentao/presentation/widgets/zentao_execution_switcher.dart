@@ -7,11 +7,10 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import 'zentao_execution_popover.dart';
 
 /// ZenTao header breadcrumb quick-switcher (`Execution > Project / Execution ▾`).
-/// Opens a compact popover with search, Mine/Others, and zone-prioritized executions.
+/// Opens a compact popover with search and Mine/Others executions.
 class ZenTaoExecutionSwitcher extends ConsumerStatefulWidget {
   const ZenTaoExecutionSwitcher({super.key, this.account});
 
@@ -30,7 +29,6 @@ class _ZenTaoExecutionSwitcherState
   Widget build(BuildContext context) {
     final c = context.colors;
     final execution = ref.watch(selectedZenTaoExecutionProvider);
-    final zone = ref.watch(activeZoneFilterProvider);
 
     final title = execution != null
         ? execution.executionName
@@ -87,27 +85,6 @@ class _ZenTaoExecutionSwitcherState
                     ),
                   ),
                 ),
-                if (zone != null) ...[
-                  SizedBox(width: context.spacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: c.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(context.radii.xs),
-                    ),
-                    child: Text(
-                      zone,
-                      style: context.typography.monoXs.copyWith(
-                        color: c.accent,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
                 SizedBox(width: context.spacing.xs),
                 Icon(
                   Icons.arrow_drop_down_rounded,

@@ -8,7 +8,6 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_popup_card.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../providers/zentao_filter_providers.dart';
 import 'zentao_popover_tab_button.dart';
 import 'zentao_product_popover_list.dart';
 
@@ -33,7 +32,6 @@ class _ZenTaoProductPopoverState extends ConsumerState<ZenTaoProductPopover> {
   final TextEditingController _searchController = TextEditingController();
   String _search = '';
   int _tab = 0; // 0 = Mine, 1 = Others
-  String? _othersZone;
 
   @override
   void dispose() {
@@ -45,9 +43,6 @@ class _ZenTaoProductPopoverState extends ConsumerState<ZenTaoProductPopover> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    final activeZone = _tab == 0
-        ? ref.watch(activeZoneFilterProvider)
-        : _othersZone;
 
     return AppPopupCard(
       child: SizedBox(
@@ -108,7 +103,7 @@ class _ZenTaoProductPopoverState extends ConsumerState<ZenTaoProductPopover> {
               ),
             ),
 
-            // Tabs: Mine vs Others + Zone toggle badge
+            // Tabs: Mine (where you have work) vs Others
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
@@ -125,65 +120,7 @@ class _ZenTaoProductPopoverState extends ConsumerState<ZenTaoProductPopover> {
                   ZenTaoPopoverTabButton(
                     label: 'Others',
                     active: _tab == 1,
-                    onTap: () => setState(() {
-                      _tab = 1;
-                      _othersZone = null;
-                    }),
-                  ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      if (_tab == 0) {
-                        ref.read(activeZoneFilterProvider.notifier).toggleAll();
-                      } else {
-                        setState(() {
-                          _othersZone = (_othersZone == null)
-                              ? ref.read(userZoneProvider)
-                              : null;
-                        });
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(context.radii.xs),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: activeZone != null
-                            ? c.selectionFill
-                            : c.surfaceSubtle,
-                        borderRadius: BorderRadius.circular(context.radii.xs),
-                        border: Border.all(
-                          color: activeZone != null
-                              ? c.accent.withValues(alpha: 0.3)
-                              : c.border,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LucideIcons.building2300,
-                            size: 11,
-                            color: activeZone != null
-                                ? c.accent
-                                : c.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            activeZone ?? 'All Zones',
-                            style: context.typography.monoXs.copyWith(
-                              color: activeZone != null
-                                  ? c.accent
-                                  : c.textSecondary,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    onTap: () => setState(() => _tab = 1),
                   ),
                 ],
               ),
@@ -195,7 +132,6 @@ class _ZenTaoProductPopoverState extends ConsumerState<ZenTaoProductPopover> {
                 account: widget.account,
                 search: _search,
                 tab: _tab,
-                activeZone: activeZone,
                 onClose: widget.onClose,
               ),
             ),

@@ -22,6 +22,7 @@ import '../models/zentao_action_result.dart';
 import '../models/zentao_models.dart';
 import '../models/zentao_order_by.dart';
 import '../models/zentao_workflow.dart';
+import 'zentao_source_lists.dart';
 
 /// What [ZenTaoAdapter.listTaskBugs] read: the bugs, and how far they cover
 /// the execution's bug list — all of it ([complete]), or the bugs of every
@@ -30,10 +31,12 @@ typedef TaskBugsRead = ({List<Ticket> bugs, bool complete, int? above});
 
 /// ZenTao implementation of [ProviderAdapter], bound to one account.
 class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
-  ZenTaoAdapter({required this.accountId, required this._client});
+  ZenTaoAdapter({required this.accountId, required this._client})
+    : _lists = ZenTaoSourceLists(_client, accountId: accountId);
 
   final String accountId;
   final ZenTaoClient _client;
+  final ZenTaoSourceLists _lists;
 
   @override
   Future<Uint8List?> fetchBytes(
@@ -249,33 +252,8 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
   }
 
   @override
-  Future<Result<List<ProviderProduct>>> listProducts() async {
-    return _guard(() async {
-      const limit = kDefaultApiPageLimit;
-      final out = <ProviderProduct>[];
-      final seen = <String>{};
-      var total = 0;
-      for (var page = 1; page <= 50; page++) {
-        final res = await _client.products(page: page, limit: limit);
-        if (res.total > 0) total = res.total;
-        var added = 0;
-        for (final product in res.products) {
-          if (product.id.isEmpty || !seen.add(product.id)) continue;
-          out.add(
-            ProviderProduct(
-              id: product.id,
-              name: product.name.isEmpty ? product.id : product.name,
-              accountId: accountId,
-            ),
-          );
-          added++;
-        }
-        if (added == 0) break;
-        if (total > 0 && out.length >= total) break;
-      }
-      return out;
-    });
-  }
+  Future<Result<List<ProviderProduct>>> listProducts() =>
+      _guard(_lists.products);
 
   @override
   Future<Result<TicketPage>> listProductBugs(
@@ -450,35 +428,8 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
   }
 
   @override
-  Future<Result<List<ProviderProject>>> listProjects() async {
-    return _guard(() async {
-      const limit = kDefaultApiPageLimit;
-      final out = <ProviderProject>[];
-      final seen = <String>{};
-      var total = 0;
-      for (var page = 1; page <= 50; page++) {
-        final res = await _client.projects(page: page, limit: limit);
-        if (res.total > 0) total = res.total;
-        var added = 0;
-        for (final project in res.projects) {
-          if (project.id.isEmpty || !seen.add(project.id)) continue;
-          out.add(
-            ProviderProject(
-              id: project.id,
-              name: project.name.isEmpty ? project.id : project.name,
-              accountId: accountId,
-              programId: project.programId,
-              programName: project.programName,
-            ),
-          );
-          added++;
-        }
-        if (added == 0) break;
-        if (total > 0 && out.length >= total) break;
-      }
-      return out;
-    });
-  }
+  Future<Result<List<ProviderProject>>> listProjects() =>
+      _guard(_lists.projects);
 
   @override
   Future<Result<List<ProviderExecution>>> listProjectExecutions(

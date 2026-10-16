@@ -18,7 +18,6 @@ import '../../../../shared/shell_pane/scope_rows.dart';
 import '../../../../shared/shell_pane/sidebar_tree_rows.dart';
 import '../../domain/entities/zentao_product_group.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import 'zentao_product_set_node.dart';
 import 'zentao_product_tree_node.dart';
 
@@ -85,11 +84,9 @@ class _ZentaoProductsScopeListState
             .where((p) => recentIds.contains(p.id))
             .toList();
 
-        final userZone = ref.watch(userZoneProvider);
-        final groups = ZenTaoProductGroup.group(
-          unpinnedProducts,
-          prioritizeZone: userZone,
-        );
+        // ZenTao's own program › line grouping (or one flat list when the
+        // server gives none).
+        final tree = ZenTaoProductTree.of(unpinnedProducts);
 
         void selectProduct(ProviderProduct p) {
           ref.read(appNavProvider.notifier).selectScope(p.id);
@@ -133,7 +130,6 @@ class _ZentaoProductsScopeListState
                       key: ValueKey('pinned_prod_${p.id}'),
                       account: widget.account,
                       product: p,
-                      tickets: tickets,
                       location: widget.location,
                       openCount: openCount(p.id),
                       isPinned: true,
@@ -157,15 +153,28 @@ class _ZentaoProductsScopeListState
                     ),
                 ],
                 allRows: [
-                  for (final group in groups)
+                  for (final group in tree.groups)
                     ZentaoProductSetNode(
                       key: ValueKey('zentao_prod_group_${group.id}'),
                       account: widget.account,
                       group: group,
-                      tickets: tickets,
                       location: widget.location,
                       openCountOf: openCount,
                       onSelectProduct: selectProduct,
+                    ),
+                  // In no program or line: after the folders, as ZenTao
+                  // lists them.
+                  for (final p in tree.ungrouped)
+                    ZentaoProductTreeNode(
+                      key: ValueKey('zentao_prod_${p.id}'),
+                      account: widget.account,
+                      product: p,
+                      location: widget.location,
+                      openCount: openCount(p.id),
+                      isPinned: false,
+                      onPinToggle: () => ref
+                          .read(appSettingsProvider.notifier)
+                          .togglePinnedProject(keyOf(p)),
                     ),
                 ],
               ),
