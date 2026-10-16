@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:work_nexus/core/domain/entities/account.dart';
-import 'package:work_nexus/core/domain/value_objects/account_sync_status.dart';
-import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/theme/app_colors.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -15,7 +12,6 @@ import 'package:work_nexus/shared/shell_pane/feature_tab_strip.dart';
 import 'package:work_nexus/shared/shell_pane/scope_filter_field.dart';
 import 'package:work_nexus/shared/shell_pane/scope_list_body.dart';
 import 'package:work_nexus/shared/shell_pane/scope_rows.dart';
-import 'package:work_nexus/shared/shell_pane/tool_pane_header.dart';
 import 'package:work_nexus/shared/shell_pane/tool_pane_scaffold.dart';
 
 Widget _buildTestApp(Widget child) {
@@ -34,102 +30,6 @@ Widget _buildTestApp(Widget child) {
 }
 
 void main() {
-  const testAccount = Account(
-    id: 'acc-1',
-    workspaceId: 'ws-1',
-    providerType: ProviderType.zentao,
-    handle: 'admin_zentao',
-  );
-
-  group('ToolPaneHeader', () {
-    testWidgets(
-      'renders account handle and all 5 sync status states correctly',
-      (tester) async {
-        final statuses =
-            <
-              ({
-                AccountSyncStatus status,
-                String textSnippet,
-                Color Function(AppColors) colorGetter,
-              })
-            >[
-              (
-                status: const AccountSyncStatus.idle(),
-                textSnippet: 'not synced yet',
-                colorGetter: (c) => c.success,
-              ),
-              (
-                status: AccountSyncStatus.idle(lastSyncedAt: DateTime.now()),
-                textSnippet: 'synced',
-                colorGetter: (c) => c.success,
-              ),
-              (
-                status: const AccountSyncStatus.syncing(),
-                textSnippet: 'syncing…',
-                colorGetter: (c) => c.accent,
-              ),
-              (
-                status: const AccountSyncStatus.offline(),
-                textSnippet: 'offline · cached',
-                colorGetter: (c) => c.textTertiary,
-              ),
-              (
-                status: const AccountSyncStatus.authExpired(),
-                textSnippet: 'session expired',
-                colorGetter: (c) => c.warning,
-              ),
-              (
-                status: const AccountSyncStatus.error('error'),
-                textSnippet: 'sync failed',
-                colorGetter: (c) => c.warning,
-              ),
-            ];
-
-        for (final s in statuses) {
-          await tester.pumpWidget(
-            _buildTestApp(
-              ToolPaneHeader(
-                account: testAccount,
-                syncStatusOverride: s.status,
-              ),
-            ),
-          );
-          await tester.pumpAndSettle();
-
-          expect(find.text('admin_zentao'), findsOneWidget);
-          expect(find.textContaining(s.textSnippet), findsOneWidget);
-
-          final dot = tester.widget<Container>(
-            find.byKey(const Key('tool_pane_header_sync_dot')),
-          );
-          final deco = dot.decoration! as BoxDecoration;
-          final element = tester.element(find.byType(ToolPaneHeader));
-          final expectedColor = s.colorGetter(element.colors);
-          expect(deco.color, equals(expectedColor));
-        }
-      },
-    );
-
-    testWidgets('triggers onWebUrlTap when external link icon is pressed', (
-      tester,
-    ) async {
-      var tapped = false;
-      await tester.pumpWidget(
-        _buildTestApp(
-          ToolPaneHeader(
-            account: testAccount,
-            syncStatusOverride: const AccountSyncStatus.idle(),
-            onWebUrlTap: () => tapped = true,
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(LucideIcons.externalLink300));
-      expect(tapped, isTrue);
-    });
-  });
-
   group('FeatureTabStrip & UnreadBadge', () {
     testWidgets('renders tabs, switches sections, and caps badge at 99+', (
       tester,
@@ -312,13 +212,12 @@ void main() {
   });
 
   group('ToolPaneScaffold', () {
-    testWidgets('renders header, tabStrip and body within toolPaneWidth', (
+    testWidgets('renders tabStrip and body within toolPaneWidth', (
       tester,
     ) async {
       await tester.pumpWidget(
         _buildTestApp(
           const ToolPaneScaffold(
-            header: Text('HeaderSlot'),
             tabStrip: Text('TabStripSlot'),
             body: Text('BodySlot'),
           ),
@@ -326,7 +225,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('HeaderSlot'), findsOneWidget);
       expect(find.text('TabStripSlot'), findsOneWidget);
       expect(find.text('BodySlot'), findsOneWidget);
 

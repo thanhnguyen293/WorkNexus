@@ -8,7 +8,6 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/coming_soon_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/shell_pane/feature_tab_strip.dart';
-import '../../../../shared/shell_pane/tool_pane_header.dart';
 import '../../../../shared/shell_pane/tool_pane_scaffold.dart';
 import 'zentao_scope_lists.dart';
 
@@ -21,14 +20,12 @@ class ZentaoNavPane extends ConsumerWidget {
     required this.location,
     required this.sections,
     this.chatPane,
-    this.onWebUrlTap,
   });
 
   final Account account;
   final ToolLocation location;
   final List<ToolSection> sections;
   final WidgetBuilder? chatPane;
-  final VoidCallback? onWebUrlTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,7 +62,6 @@ class ZentaoNavPane extends ConsumerWidget {
     }
 
     return ToolPaneScaffold(
-      header: ToolPaneHeader(account: account, onWebUrlTap: onWebUrlTap),
       tabStrip: FeatureTabStrip(
         sections: sections,
         selectedSectionId: location.section,

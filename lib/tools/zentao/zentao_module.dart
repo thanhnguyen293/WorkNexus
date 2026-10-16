@@ -95,9 +95,6 @@ class ZentaoModule extends ToolModule {
       location: location,
       sections: sections,
       chatPane: chatPane,
-      onWebUrlTap: () {
-        // Deep-link hook
-      },
     );
   }
 
