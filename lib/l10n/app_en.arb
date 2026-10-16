@@ -2047,6 +2047,7 @@
     }
   },
   "miniAppAdd": "Add mini app",
+  "miniAppAddShort": "Add",
   "miniAppUrlLabel": "Web address",
   "miniAppUrlHint": "example.com",
   "miniAppNameLabel": "Name (optional)",
