@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
+import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -11,12 +12,16 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../providers/dashboard_providers.dart';
 import '../providers/overview_providers.dart';
 import '../widgets/assigned_work_list.dart';
 import '../widgets/tool_card.dart';
+import '../widgets/zentao_overview_section.dart';
+import 'dashboard_work_page.dart';
 
 /// The Workspace Overview page (design §5, specs S6.1).
-/// Displays connected tools in a responsive card grid and open assigned work.
+/// Displays the connected tools — compact cards, then a full-width section
+/// per ZenTao account with its dashboard — and the open assigned work.
 class OverviewPage extends ConsumerWidget {
   const OverviewPage({super.key, this.onConnect});
 
@@ -92,6 +97,28 @@ class OverviewPage extends ConsumerWidget {
       );
     }
 
+    // "Show all" of a ZenTao section opens the account's full lists in the
+    // Overview's place, until their back button (or a workspace without that
+    // account) brings the Overview back.
+    final target = ref.watch(myWorkTargetProvider);
+    final targetAccount = accounts
+        .where((a) => a.id == target?.account.id)
+        .firstOrNull;
+    if (target != null && targetAccount != null) {
+      return DashboardWorkPage(account: targetAccount, kind: target.kind);
+    }
+
+    // ZenTao accounts get a full-width section with their dashboard; the
+    // other tools stay compact cards above them.
+    final zentao = [
+      for (final a in accounts)
+        if (a.providerType == ProviderType.zentao) a,
+    ];
+    final compact = [
+      for (final a in accounts)
+        if (a.providerType != ProviderType.zentao) a,
+    ];
+
     return ColoredBox(
       color: c.background,
       child: SingleChildScrollView(
@@ -108,8 +135,14 @@ class OverviewPage extends ConsumerWidget {
                   workspaceName: wsName,
                 ),
                 SizedBox(height: s.xl4),
-                _ToolCardGrid(accounts: accounts),
-                SizedBox(height: s.xl4),
+                if (compact.isNotEmpty) ...[
+                  _ToolCardGrid(accounts: compact),
+                  SizedBox(height: s.xl4),
+                ],
+                for (final account in zentao) ...[
+                  ZenTaoOverviewSection(account: account),
+                  SizedBox(height: s.xl4),
+                ],
                 const AssignedWorkList(),
               ],
             ),

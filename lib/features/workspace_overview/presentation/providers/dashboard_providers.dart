@@ -5,7 +5,6 @@ import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
-import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/zentao_dashboard.dart';
@@ -22,26 +21,6 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>(
 final refreshDashboardProvider = Provider<RefreshDashboard>(
   (ref) => getIt<RefreshDashboard>(),
 );
-
-/// The dashboard exists per connected ZenTao account.
-final dashboardAccountsProvider = Provider<List<Account>>((ref) {
-  final accounts = ref.watch(accountsProvider).asData?.value ?? const [];
-  return [
-    for (final a in accounts)
-      if (a.providerType == ProviderType.zentao) a,
-  ];
-});
-
-/// The account picked in the dashboard header (null = the first one).
-final dashboardPickedAccountIdProvider = StateProvider<String?>((ref) => null);
-
-/// The account whose dashboard is shown, or null without a ZenTao account.
-final dashboardAccountProvider = Provider<Account?>((ref) {
-  final accounts = ref.watch(dashboardAccountsProvider);
-  final picked = ref.watch(dashboardPickedAccountIdProvider);
-  return accounts.where((a) => a.id == picked).firstOrNull ??
-      accounts.firstOrNull;
-});
 
 /// The stored dashboard of an account (null until first fetched), live.
 final dashboardProvider = StreamProvider.autoDispose
@@ -92,10 +71,13 @@ class DashboardRefreshException implements Exception {
   String toString() => failure.toString();
 }
 
-/// The "my work" list opened from a dashboard card (null = the overview).
-final dashboardWorkKindProvider = StateProvider<DashboardItemKind?>(
-  (ref) => null,
-);
+/// The full "my work" list shown in place of the Overview: whose and which
+/// kind first (null = the Overview).
+typedef MyWorkTarget = ({Account account, DashboardItemKind kind});
+
+/// The full "my work" list opened from a ZenTao section's "Show all" (null =
+/// the Overview); its header's back button clears it.
+final myWorkTargetProvider = StateProvider<MyWorkTarget?>((ref) => null);
 
 /// Which "my work" list: the account, its user, the kind and whether only
 /// unfinished items count.
@@ -122,8 +104,14 @@ final dashboardWorkOpenOnlyProvider = StateProvider<bool>((ref) => true);
 
 /// Sync state of an account's assigned work: watching it fetches every
 /// assigned bug and task once; [MyWorkSyncController.refresh] does it again.
-final myWorkSyncProvider = AsyncNotifierProvider.autoDispose
-    .family<MyWorkSyncController, void, String>(MyWorkSyncController.new);
+/// Kept for the session: the stored lists show at once and the launch sync
+/// keeps them current, so revisiting the Overview must not fetch them again
+/// (a sync already in flight, like the launch one, is shared — see
+/// `SyncCoordinator.syncAccount`).
+final myWorkSyncProvider =
+    AsyncNotifierProvider.family<MyWorkSyncController, void, String>(
+      MyWorkSyncController.new,
+    );
 
 class MyWorkSyncController extends AsyncNotifier<void> {
   MyWorkSyncController(this.accountId);
@@ -147,26 +135,18 @@ class MyWorkSyncController extends AsyncNotifier<void> {
   }
 }
 
-/// The user's open bugs and tasks as one queue (in progress, then not
-/// started), plus how many of each are open.
-final workQueueProvider = Provider.autoDispose
-    .family<({WorkQueue queue, int openTasks, int openBugs}), Account>((
-      ref,
-      account,
-    ) {
-      List<Ticket> open(DashboardItemKind kind) => ref.watch(
-        myWorkProvider((
-          accountId: account.id,
-          user: account.handle,
-          kind: kind,
-          openOnly: true,
-        )),
-      );
-      final tasks = open(DashboardItemKind.task);
-      final bugs = open(DashboardItemKind.bug);
-      return (
-        queue: const BuildWorkQueue()([...bugs, ...tasks]),
-        openTasks: tasks.length,
-        openBugs: bugs.length,
-      );
-    });
+/// The user's open tasks or bugs of an account, in progress first, then not
+/// started.
+final myWorkQueueProvider = Provider.autoDispose
+    .family<WorkQueue, ({Account account, DashboardItemKind kind})>(
+      (ref, key) => const BuildWorkQueue()(
+        ref.watch(
+          myWorkProvider((
+            accountId: key.account.id,
+            user: key.account.handle,
+            kind: key.kind,
+            openOnly: true,
+          )),
+        ),
+      ),
+    );

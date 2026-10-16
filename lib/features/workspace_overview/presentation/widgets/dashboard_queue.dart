@@ -17,39 +17,47 @@ import '../providers/dashboard_providers.dart';
 import 'dashboard_card.dart';
 import 'my_work_row.dart';
 
-/// The open work as one queue in two groups — in progress, then not
-/// started — with bugs and tasks mixed and the most urgent on top. The
-/// footer opens the full task and bug lists.
+/// The user's open tasks or open bugs of one account — in progress, then
+/// not started, the most urgent on top — with "Show all" opening the full
+/// list in place of the Overview.
 class DashboardQueue extends ConsumerWidget {
-  const DashboardQueue({super.key, required this.account});
+  const DashboardQueue({super.key, required this.account, required this.kind});
 
   final Account account;
+  final DashboardItemKind kind;
 
   /// Rows per group before the full list takes over.
-  static const _perGroup = 6;
+  static const _perGroup = 5;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final work = ref.watch(workQueueProvider(account));
-    final queue = work.queue;
+    final bug = kind == DashboardItemKind.bug;
+    final queue = ref.watch(
+      myWorkQueueProvider((account: account, kind: kind)),
+    );
     final sync = ref.watch(myWorkSyncProvider(account.id));
-    final syncing = sync.isLoading;
     final empty = queue.inProgress.isEmpty && queue.notStarted.isEmpty;
-    void open(DashboardItemKind kind) =>
-        ref.read(dashboardWorkKindProvider.notifier).state = kind;
     return DashboardCard(
-      title: l.dashboardMyWork,
-      icon: LucideIcons.inbox300,
-      count: work.openBugs + work.openTasks,
+      title: bug ? l.dashboardMyBugs : l.dashboardMyTasks,
+      icon: bug ? LucideIcons.bug300 : LucideIcons.clipboardList300,
+      count: queue.inProgress.length + queue.notStarted.length,
+      action: AppButton.text(
+        size: AppButtonSize.small,
+        onPressed: () => ref.read(myWorkTargetProvider.notifier).state = (
+          account: account,
+          kind: kind,
+        ),
+        child: Text(l.dashboardShowAll),
+      ),
       padding: EdgeInsets.fromLTRB(s.sm, s.md, s.sm, s.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (empty && syncing)
-            for (var i = 0; i < 4; i++)
+          if (empty && sync.isLoading)
+            for (var i = 0; i < 3; i++)
               Padding(
                 padding: EdgeInsets.all(s.md),
                 child: SkeletonBox(height: s.xl6),
@@ -80,23 +88,6 @@ class DashboardQueue extends ConsumerWidget {
               tickets: queue.notStarted.take(_perGroup).toList(),
               total: queue.notStarted.length,
             ),
-          Divider(height: s.xl, thickness: 1, color: c.border),
-          Row(
-            children: [
-              AppButton.text(
-                size: AppButtonSize.small,
-                icon: LucideIcons.clipboardList300,
-                onPressed: () => open(DashboardItemKind.task),
-                child: Text(l.dashboardAllTasks),
-              ),
-              AppButton.text(
-                size: AppButtonSize.small,
-                icon: LucideIcons.bug300,
-                onPressed: () => open(DashboardItemKind.bug),
-                child: Text(l.dashboardAllBugs),
-              ),
-            ],
-          ),
         ],
       ),
     );

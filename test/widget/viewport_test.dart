@@ -25,6 +25,7 @@ import 'package:work_nexus/features/workspace_overview/presentation/pages/overvi
 import 'package:work_nexus/features/workspace_overview/presentation/providers/overview_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
+import '../support/dashboard_overrides.dart';
 import '../support/mini_app_overrides.dart';
 
 class _TestToolModule extends ToolModule {
@@ -110,6 +111,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             ...miniAppShellOverrides(),
+            ...dashboardOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -139,6 +141,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             ...miniAppShellOverrides(),
+            ...dashboardOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -211,6 +214,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           ...miniAppShellOverrides(),
+          ...dashboardOverrides(),
           activeWorkspaceProvider.overrideWithValue(_testWorkspace),
           workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
           accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
@@ -281,6 +285,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           ...miniAppShellOverrides(),
+          ...dashboardOverrides(),
           activeWorkspaceProvider.overrideWithValue(_testWorkspace),
           workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
           accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
@@ -314,6 +319,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           ...miniAppShellOverrides(),
+          ...dashboardOverrides(),
           activeWorkspaceProvider.overrideWithValue(_testWorkspace),
           workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
           accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
@@ -347,6 +353,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             ...miniAppShellOverrides(),
+            ...dashboardOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -384,6 +391,7 @@ void main() {
         final container = ProviderContainer(
           overrides: [
             ...miniAppShellOverrides(),
+            ...dashboardOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
