@@ -7,12 +7,15 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/navigation/mini_app_links.dart';
+import '../../../../core/platform/link_router.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/ask_mini_app_permission.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
+import '../util/route_mini_app_window_link.dart';
 import 'mini_app_popup.dart';
 
 /// The web page of a mini app, with the app's answers to what the page asks
@@ -93,9 +96,23 @@ class MiniAppWebView extends ConsumerWidget {
                 appTalker.debug('Mini app $name console: ${message.message}')
           : null,
       // A page's own window (a sign-in pop-up, target=_blank) opens over the
-      // mini app; the browser only opens from its button.
+      // mini app, unless the link is one the app or another mini app takes;
+      // the browser only opens from its button.
       onCreateWindow: (_, action) async {
         if (!context.mounted) return false;
+        // Where any other tapped link goes: the app if it shows that link
+        // itself, else the mini app of that site (never this very app, whose
+        // own links stay in its window), else the pop-up below.
+        final url = action.request.url?.toString();
+        if (url != null &&
+            routeMiniAppWindowLink(
+              linkRouter,
+              ref.read(miniAppLinkTargetsProvider),
+              url,
+              currentAppId: app.id,
+            )) {
+          return false;
+        }
         unawaited(MiniAppPopup.show(context, action.windowId));
         return true;
       },
