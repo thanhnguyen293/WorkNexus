@@ -42,21 +42,32 @@ void main() {
       t.id,
   ];
 
-  test('a loaded view shows only what it loaded', () {
+  test('a view that loaded every page shows only what it loaded', () {
+    expect(
+      ids({
+        'wait': const PagedViewState(page: 1, ids: {'1'}, hasMore: false),
+        'pause': const PagedViewState(page: 1, ids: {'3'}, hasMore: false),
+        'done': const PagedViewState(page: 1, ids: {'4'}, hasMore: false),
+      }),
+      ['1', '3', '4'],
+    );
+  });
+
+  test('a view with pages left keeps its cached tickets it did not load', () {
     expect(
       ids({
         'wait': const PagedViewState(page: 1, ids: {'1'}),
-        'pause': const PagedViewState(page: 1, ids: {'3'}),
-        'done': const PagedViewState(page: 1, ids: {'4'}),
+        'pause': const PagedViewState(page: 1, ids: {'3'}, hasMore: false),
+        'done': const PagedViewState(page: 1, ids: {'4'}, hasMore: false),
       }),
-      ['1', '3', '4'],
+      ['1', '2', '3', '4'],
     );
   });
 
   test('a view that failed or has not loaded keeps its cached tickets', () {
     expect(
       ids({
-        'wait': const PagedViewState(page: 1, ids: {'1'}),
+        'wait': const PagedViewState(page: 1, ids: {'1'}, hasMore: false),
         'pause': const PagedViewState(failure: NetworkFailure('offline')),
         'done': const PagedViewState(),
       }),
@@ -67,9 +78,9 @@ void main() {
   test('a ticket loaded under one view still shows after its status moves', () {
     expect(
       ids({
-        'wait': const PagedViewState(page: 1, ids: {'4'}),
-        'pause': const PagedViewState(page: 1),
-        'done': const PagedViewState(page: 1),
+        'wait': const PagedViewState(page: 1, ids: {'4'}, hasMore: false),
+        'pause': const PagedViewState(page: 1, hasMore: false),
+        'done': const PagedViewState(page: 1, hasMore: false),
       }),
       ['4'],
     );
