@@ -287,63 +287,62 @@ void main() {
   });
 
   group('ZenTao Nav Pane', () {
-    testWidgets('renders sections, quick scopes, and selects project scope', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(1400, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'renders sections, no quick scopes, and selects project scope',
+      (tester) async {
+        tester.view.physicalSize = const Size(1400, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      const initialNav = AppNavState(
-        rail: RailTarget.account('acc-zt'),
-        locations: {'acc-zt': ToolLocation(section: SectionId('zentao.tasks'))},
-      );
+        const initialNav = AppNavState(
+          rail: RailTarget.account('acc-zt'),
+          locations: {
+            'acc-zt': ToolLocation(section: SectionId('zentao.tasks')),
+          },
+        );
 
-      late WidgetRef capturedRef;
-      await tester.pumpWidget(
-        _buildHarness(
-          initialNav: initialNav,
-          builder: (loc) => Consumer(
-            builder: (context, ref, _) {
-              capturedRef = ref;
-              return SizedBox(
-                width: 260,
-                child: ZentaoNavPane(
-                  account: _testAccount,
-                  location: loc,
-                  sections: zentaoModule.sections,
-                ),
-              );
-            },
+        late WidgetRef capturedRef;
+        await tester.pumpWidget(
+          _buildHarness(
+            initialNav: initialNav,
+            builder: (loc) => Consumer(
+              builder: (context, ref, _) {
+                capturedRef = ref;
+                return SizedBox(
+                  width: 260,
+                  child: ZentaoNavPane(
+                    account: _testAccount,
+                    location: loc,
+                    sections: zentaoModule.sections,
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Verify sections in feature tab strip
-      expect(find.text('Tasks'), findsOneWidget);
-      expect(find.text('Bugs'), findsOneWidget);
+        // Verify sections in feature tab strip
+        expect(find.text('Tasks'), findsOneWidget);
+        expect(find.text('Bugs'), findsOneWidget);
 
-      // Verify quick scopes
-      expect(find.text('All projects'), findsOneWidget);
-      expect(find.text('Assigned to me'), findsOneWidget);
+        // No quick scopes: ZenTao has no account-wide task list, and the
+        // board's own chip narrows to your tasks.
+        expect(find.text('All projects'), findsNothing);
+        expect(find.text('Assigned to me'), findsNothing);
 
-      // Tap quick scope "Assigned to me"
-      await tester.tap(find.text('Assigned to me'));
-      await tester.pumpAndSettle();
+        // Verify project row
+        expect(find.text('Alpha Project'), findsOneWidget);
 
-      final locAfterQuick = capturedRef.read(appNavProvider).currentLocation;
-      expect(locAfterQuick?.quickScope, equals(QuickScope.assignedToMe));
+        // Tap project row
+        await tester.tap(find.text('Alpha Project'));
+        await tester.pumpAndSettle();
 
-      // Verify project row
-      expect(find.text('Alpha Project'), findsOneWidget);
-
-      // Tap project row
-      await tester.tap(find.text('Alpha Project'));
-      await tester.pumpAndSettle();
-
-      final locAfterProject = capturedRef.read(appNavProvider).currentLocation;
-      expect(locAfterProject?.scopeId, equals('proj-1'));
-    });
+        final locAfterProject = capturedRef
+            .read(appNavProvider)
+            .currentLocation;
+        expect(locAfterProject?.scopeId, equals('proj-1'));
+      },
+    );
   });
 }
