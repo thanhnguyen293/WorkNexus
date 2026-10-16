@@ -190,7 +190,16 @@ class GitLabMrServiceImpl implements GitLabMrService {
     required String accountId,
     required String projectId,
     required bool mergeRequests,
-  }) async {
+  }) => _coordinator.trackSync(
+    accountId,
+    () => _syncProjectItems(accountId, projectId, mergeRequests),
+  );
+
+  Future<Result<List<String>>> _syncProjectItems(
+    String accountId,
+    String projectId,
+    bool mergeRequests,
+  ) async {
     final db = _coordinator.db;
     final accountRow = await (db.select(
       db.accounts,
@@ -221,7 +230,10 @@ class GitLabMrServiceImpl implements GitLabMrService {
   }
 
   @override
-  Future<Result<List<String>>> syncGitLabMine(String accountId) async {
+  Future<Result<List<String>>> syncGitLabMine(String accountId) =>
+      _coordinator.trackSync(accountId, () => _syncMine(accountId));
+
+  Future<Result<List<String>>> _syncMine(String accountId) async {
     final db = _coordinator.db;
     final accountRow = await (db.select(
       db.accounts,

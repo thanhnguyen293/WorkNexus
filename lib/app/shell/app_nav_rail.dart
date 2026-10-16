@@ -11,6 +11,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../features/app_update/presentation/widgets/update_rail_button.dart';
 import '../../features/chat/presentation/providers/chat_providers.dart';
+import '../../features/mini_apps/presentation/widgets/mini_app_rail_section.dart';
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import 'rail_account_button.dart';
 import 'rail_connect_button.dart';
@@ -97,6 +98,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
     final registry = ref.watch(toolRegistryProvider);
     final unreadTotal = ref.watch(chatUnreadTotalProvider);
     final sorted = ref.watch(sortedActiveAccountsProvider);
+    final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
     final providerCounts = <ProviderType, int>{};
     for (final a in sorted) {
@@ -111,48 +113,76 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
         border: Border(right: context.hairlineSide),
       ),
       padding: EdgeInsets.symmetric(vertical: s.md),
-      child: Column(
-        children: [
-          const RailWorkspaceButton(),
-          Divider(height: s.lg, indent: s.md, endIndent: s.md, color: c.border),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              itemCount: sorted.length,
-              itemBuilder: (context, i) {
-                final account = sorted[i];
-                final isSelected = switch (nav.rail) {
-                  AccountTarget(:final accountId) => accountId == account.id,
-                  WorkspaceTarget() => false,
-                };
-                final hasDuplicate =
-                    (providerCounts[account.providerType] ?? 0) > 1;
-                final module = registry[account.providerType];
-
-                return RailAccountButton(
-                  account: account,
-                  isSelected: isSelected,
-                  hasDuplicateProvider: hasDuplicate,
-                  unreadCount: account.providerType == ProviderType.zentao
-                      ? unreadTotal
-                      : 0,
-                  onTap: () {
-                    if (module != null) {
-                      ref
-                          .read(appNavProvider.notifier)
-                          .selectAccount(account.id, module: module);
-                    }
-                  },
-                );
-              },
+      child: LayoutBuilder(
+        builder: (context, rail) => Column(
+          children: [
+            const RailWorkspaceButton(),
+            Divider(
+              height: s.lg,
+              indent: s.md,
+              endIndent: s.md,
+              color: c.border,
             ),
-          ),
-          Divider(height: s.md, indent: s.md, endIndent: s.md, color: c.border),
-          const NotificationsRailButton(),
-          const UpdateRailButton(),
-          SizedBox(height: s.xs),
-          const RailConnectButton(),
-        ],
+            // The accounts take what they need (up to half the rail, then
+            // they scroll); the mini apps fill the rest. Not two flex
+            // children: a flex split gives each its share even when the
+            // accounts need less.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: rail.maxHeight / 2),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: sorted.length,
+                itemBuilder: (context, i) {
+                  final account = sorted[i];
+                  final isSelected =
+                      !miniAppOnScreen &&
+                      switch (nav.rail) {
+                        AccountTarget(:final accountId) =>
+                          accountId == account.id,
+                        WorkspaceTarget() => false,
+                      };
+                  final hasDuplicate =
+                      (providerCounts[account.providerType] ?? 0) > 1;
+                  final module = registry[account.providerType];
+
+                  return RailAccountButton(
+                    account: account,
+                    isSelected: isSelected,
+                    hasDuplicateProvider: hasDuplicate,
+                    unreadCount: account.providerType == ProviderType.zentao
+                        ? unreadTotal
+                        : 0,
+                    onTap: () {
+                      if (module != null) {
+                        ref
+                            .read(appNavProvider.notifier)
+                            .selectAccount(account.id, module: module);
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+            Divider(
+              height: s.md,
+              indent: s.md,
+              endIndent: s.md,
+              color: c.border,
+            ),
+            const MiniAppRailSection(),
+            Divider(
+              height: s.md,
+              indent: s.md,
+              endIndent: s.md,
+              color: c.border,
+            ),
+            const NotificationsRailButton(),
+            const UpdateRailButton(),
+            SizedBox(height: s.xs),
+            const RailConnectButton(),
+          ],
+        ),
       ),
     );
   }

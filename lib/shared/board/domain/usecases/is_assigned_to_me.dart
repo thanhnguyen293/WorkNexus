@@ -19,9 +19,9 @@ class IsAssignedToMe {
       if (n == me) return true;
       final cleanN = n.replaceAll(RegExp(r'[\._\s\-]'), '');
       final cleanMe = me.replaceAll(RegExp(r'[\._\s\-]'), '');
-      if (cleanN.isNotEmpty && cleanN == cleanMe) return true;
-      if (cleanN.startsWith(cleanMe) || cleanMe.startsWith(cleanN)) return true;
-      return false;
+      // Separators may differ (`thanh.nguyen` / `thanh_nguyen`); a mere
+      // prefix is someone else (`thanh` is not `thanhle`).
+      return cleanN.isNotEmpty && cleanN == cleanMe;
     }
 
     return switch (ticket.providerType) {

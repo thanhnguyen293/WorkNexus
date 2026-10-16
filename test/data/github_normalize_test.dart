@@ -197,6 +197,18 @@ void main() {
       expect(g.mergeableState, 'clean');
       expect(g.draft, false);
       expect(g.reviewers, ['Rev Iewer']);
+      // The login too: the account knows its user by login, not by name.
+      expect(g.reviewerLogins, ['rev']);
+    });
+
+    test('an item stored before reviewer logins were kept still reads', () {
+      final e = TicketProviderEntity.fromJson(const {
+        'runtimeType': 'githubItem',
+        'repo': 'octo/web',
+        'reviewers': ['Rev Iewer'],
+      });
+      expect((e as GitHubItemEntity).reviewerLogins, isEmpty);
+      expect(e.reviewers, ['Rev Iewer']);
     });
 
     test('search-feed and rich normalizers agree on the ticket id', () {

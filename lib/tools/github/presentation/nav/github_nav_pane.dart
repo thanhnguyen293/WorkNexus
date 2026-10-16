@@ -32,8 +32,9 @@ class GithubNavPane extends ConsumerWidget {
       tabStrip: FeatureTabStrip(
         sections: sections,
         selectedSectionId: location.section,
-        onSectionSelected: (section) =>
-            ref.read(appNavProvider.notifier).selectSection(section),
+        onSectionSelected: (section) => ref
+            .read(appNavProvider.notifier)
+            .selectSection(section, sections: sections),
       ),
       body: GithubReposScopeList(account: account, location: location),
     );

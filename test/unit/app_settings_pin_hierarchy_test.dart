@@ -21,7 +21,10 @@ void main() {
 
       final settings = container.read(appSettingsProvider);
       expect(settings.pinnedExecutions, contains(execution));
-      expect(settings.pinnedProjects, contains('acc1:proj1'));
+      expect(
+        settings.pinnedProjects,
+        contains(zentaoProjectPinKey('acc1', 'proj1')),
+      );
     });
 
     test('unpinning an execution keeps the parent project pinned', () {
@@ -41,7 +44,10 @@ void main() {
 
       final settings = container.read(appSettingsProvider);
       expect(settings.pinnedExecutions, isEmpty);
-      expect(settings.pinnedProjects, contains('acc1:proj1'));
+      expect(
+        settings.pinnedProjects,
+        contains(zentaoProjectPinKey('acc1', 'proj1')),
+      );
     });
 
     test('unpinning a project also unpins all its child executions', () {
@@ -75,15 +81,21 @@ void main() {
       expect(container.read(appSettingsProvider).pinnedExecutions.length, 3);
       expect(
         container.read(appSettingsProvider).pinnedProjects,
-        contains('acc1:proj1'),
+        contains(zentaoProjectPinKey('acc1', 'proj1')),
       );
 
       // Unpin proj1
-      controller.togglePinnedProject('acc1:proj1');
+      controller.togglePinnedProject(zentaoProjectPinKey('acc1', 'proj1'));
 
       final settings = container.read(appSettingsProvider);
-      expect(settings.pinnedProjects, isNot(contains('acc1:proj1')));
-      expect(settings.pinnedProjects, contains('acc1:proj2'));
+      expect(
+        settings.pinnedProjects,
+        isNot(contains(zentaoProjectPinKey('acc1', 'proj1'))),
+      );
+      expect(
+        settings.pinnedProjects,
+        contains(zentaoProjectPinKey('acc1', 'proj2')),
+      );
       expect(settings.pinnedExecutions, [otherExecution]);
     });
 
@@ -107,11 +119,74 @@ void main() {
         ),
       ];
 
-      controller.togglePinnedProject('acc1:proj1', childExecutions: execs);
+      controller.togglePinnedProject(
+        zentaoProjectPinKey('acc1', 'proj1'),
+        childExecutions: execs,
+      );
 
       final settings = container.read(appSettingsProvider);
-      expect(settings.pinnedProjects, contains('acc1:proj1'));
-      expect(settings.pinnedExecutions, containsAll(execs));
+      expect(
+        settings.pinnedProjects,
+        contains(zentaoProjectPinKey('acc1', 'proj1')),
+      );
+      expect(settings.pinnedExecutions.map((e) => e.key), [
+        'acc1:exec1',
+        'acc1:exec2',
+      ]);
+    });
+    // Products (bare `accountId:id`, the first pin format) and projects are
+    // numbered apart by ZenTao: the same id must not tie them together.
+    test('a product and a project with the same id stay apart', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(appSettingsProvider.notifier);
+      const projectExec = PinnedExecution(
+        accountId: 'acc1',
+        projectId: '30',
+        executionId: 'e1',
+        name: 'Sprint 1',
+      );
+      controller
+        ..togglePinnedExecution(projectExec)
+        ..togglePinnedProject('acc1:30')
+        ..togglePinnedProject('acc1:30');
+
+      final settings = container.read(appSettingsProvider);
+      expect(settings.pinnedExecutions, [projectExec]);
+      expect(settings.pinnedProjects, {zentaoProjectPinKey('acc1', '30')});
+    });
+
+    test('unpinning a product drops the executions pinned with it, only', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final controller = container.read(appSettingsProvider.notifier);
+      const ownExec = PinnedExecution(
+        accountId: 'acc1',
+        projectId: '12',
+        executionId: 'e9',
+        name: 'Other',
+      );
+      controller
+        ..togglePinnedExecution(ownExec)
+        ..togglePinnedProject(
+          'acc1:12',
+          childExecutions: const [
+            PinnedExecution(
+              accountId: 'acc1',
+              projectId: '30',
+              executionId: 'e1',
+              name: 'Sprint 1',
+            ),
+          ],
+        );
+      expect(
+        container.read(appSettingsProvider).pinnedExecutions,
+        hasLength(2),
+      );
+
+      controller.togglePinnedProject('acc1:12');
+
+      expect(container.read(appSettingsProvider).pinnedExecutions, [ownExec]);
     });
   });
 }

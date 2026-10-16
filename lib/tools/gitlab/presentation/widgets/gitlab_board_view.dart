@@ -20,11 +20,15 @@ import 'gitlab_ticket_card.dart';
 /// selected project, switching between merge-request and issue columns with the
 /// active [gitlabKindProvider]. Read-only (drag → state changes is Phase 3).
 class GitLabBoardView extends ConsumerWidget {
-  const GitLabBoardView({super.key});
+  const GitLabBoardView({super.key, required this.kind});
+
+  /// The section's kind. Not [gitlabKindProvider]: that is global and keeps
+  /// the last Board tab picked, which may be the other section's.
+  final GitLabItemKind kind;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final columns = ref.watch(gitlabKindProvider) == GitLabItemKind.mergeRequest
+    final columns = kind == GitLabItemKind.mergeRequest
         ? _mrColumns(context, ref.watch(gitlabMrBoardProvider))
         : _issueColumns(context, ref.watch(gitlabIssueBoardProvider));
     return BoardHorizontalScroll(

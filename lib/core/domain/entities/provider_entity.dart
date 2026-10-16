@@ -161,6 +161,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     // The assignees' logins: [assignees] are display names, and an account
     // knows its user by login.
     @Default(<String>[]) List<String> assigneeLogins,
+    // The requested reviewers' logins, likewise ([reviewers] are names).
+    // Empty in items stored before they were kept.
+    @Default(<String>[]) List<String> reviewerLogins,
   }) = GitHubItemEntity;
 
   factory TicketProviderEntity.fromJson(Map<String, dynamic> json) =>

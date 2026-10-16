@@ -53,7 +53,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
     ref
             .read(chatThreadSearchActiveIndexProvider(widget.thread).notifier)
             .state =
-        0;
+        -1;
   }
 
   void _stepMatch(List<ChatMessage> matches, int delta) {
@@ -61,7 +61,10 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
     final currentIndex = ref.read(
       chatThreadSearchActiveIndexProvider(widget.thread),
     );
-    final nextIndex = (currentIndex + delta + matches.length) % matches.length;
+    // Nothing visited yet (or the matches shrank): start at an end.
+    final nextIndex = currentIndex < 0 || currentIndex >= matches.length
+        ? (delta > 0 ? 0 : matches.length - 1)
+        : (currentIndex + delta + matches.length) % matches.length;
     ref
             .read(chatThreadSearchActiveIndexProvider(widget.thread).notifier)
             .state =
@@ -81,7 +84,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
     ref
             .read(chatThreadSearchActiveIndexProvider(widget.thread).notifier)
             .state =
-        0;
+        -1;
   }
 
   void _openGlobalSearch(BuildContext context) {
@@ -107,6 +110,10 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
     final c = context.colors;
     final l = AppL10n.of(context);
     final query = ref.watch(chatThreadSearchQueryProvider(widget.thread));
+    // The global search panel writes the same query: keep the field in step.
+    ref.listen(chatThreadSearchQueryProvider(widget.thread), (_, next) {
+      if (_controller.text != next) _controller.text = next;
+    });
     final matchesAsync = ref.watch(
       chatThreadSearchMatchesProvider(widget.thread),
     );
@@ -238,7 +245,7 @@ class _MatchCounterBadge extends StatelessWidget {
     final l = AppL10n.of(context);
     final text = count == 0
         ? l.chatSearchNoMatches
-        : l.chatSearchMatches(activeIndex + 1, count);
+        : l.chatSearchMatches(activeIndex.clamp(0, count - 1) + 1, count);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

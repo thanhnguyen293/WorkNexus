@@ -173,7 +173,12 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
                   if (widget.isPinned || _hovered)
                     SidebarPinButton(
                       pinned: widget.isPinned,
-                      onTap: () => _togglePin(key),
+                      onTap: () => _togglePin(
+                        zentaoProjectPinKey(
+                          widget.account.id,
+                          widget.project.id,
+                        ),
+                      ),
                       tooltip: widget.isPinned ? l.unpinProject : l.pinProject,
                     ),
                 ],

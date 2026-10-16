@@ -4,15 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/di/service_locator.dart';
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/domain/repositories/workspace_repository.dart';
+import '../../../../core/error/failure.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/tools/tool_registry_provider.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import 'workspace_chips.dart';
 
@@ -87,10 +91,28 @@ class _CreateWorkspaceDialogState extends ConsumerState<CreateWorkspaceDialog> {
       // Auto-join this space immediately
       ref.read(activeWorkspaceIdProvider.notifier).state = workspace.id;
       ref.read(filterStateProvider.notifier).setWorkspace(workspace.id);
+      // A new workspace has no accounts yet: leave the old workspace's tool
+      // for its overview, as the switcher does.
+      ref
+          .read(appNavProvider.notifier)
+          .onWorkspaceSwitched(
+            newAccounts: const [],
+            registry: ref.read(toolRegistryProvider),
+          );
 
       Navigator.of(context).pop(workspace);
-    } catch (_) {
-      if (mounted) setState(() => _submitting = false);
+    } on Object catch (e) {
+      // The repository writes to the local database; say why it failed
+      // rather than just re-enabling the button.
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      showAppSnack(
+        context,
+        AppL10n.of(
+          context,
+        ).workspaceCreateFailed(e is Failure ? e.message : '$e'),
+        isError: true,
+      );
     }
   }
 

@@ -132,23 +132,13 @@ class ChatHistorySync {
     int serverId,
   ) async {
     if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    final localRow = await _local
-        .watchMessageByServerId(accountId, chatGid, serverId)
-        .first;
-    var targetIndex = localRow?.messageIndex;
-    if (targetIndex == null) {
-      await fetchByIds(session, accountId, chatGid, [serverId]);
-      final fetched = await _local
-          .watchMessageByServerId(accountId, chatGid, serverId)
-          .first;
-      targetIndex = fetched?.messageIndex;
-    }
-    final syncFrom = targetIndex ?? serverId;
+    // `messageSync` pages by server message id (like [loadOlder] and
+    // [loadNewer]), not by the per-chat index.
     final older = await _syncPage(
       session,
       accountId,
       chatGid,
-      from: syncFrom,
+      from: serverId,
       link: MessageLink.detached,
     );
     if (older case Err(:final failure)) return Err(failure);
@@ -156,7 +146,7 @@ class ChatHistorySync {
       session,
       accountId,
       chatGid,
-      from: syncFrom,
+      from: serverId,
       link: MessageLink.detached,
       reverse: false,
     );

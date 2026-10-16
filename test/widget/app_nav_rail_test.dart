@@ -29,6 +29,8 @@ import 'package:work_nexus/features/connections/presentation/connect_account_dia
 import 'package:work_nexus/features/notifications/presentation/providers/notification_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
+import '../support/mini_app_overrides.dart';
+
 const _testWorkspace = Workspace(
   id: 'ws-1',
   name: 'Default Workspace',
@@ -86,6 +88,7 @@ Widget _buildTestApp({
 }) {
   return ProviderScope(
     overrides: [
+      ...miniAppShellOverrides(),
       toolRegistryProvider.overrideWithValue(defaultToolRegistry),
       activeWorkspaceProvider.overrideWithValue(_testWorkspace),
       activeWorkspaceIdProvider.overrideWith((ref) => 'ws-1'),

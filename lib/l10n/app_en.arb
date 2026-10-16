@@ -2245,7 +2245,6 @@
     }
   },
   "allProjects": "All projects",
-  "allProducts": "All products",
   "allRepositories": "All repositories",
   "sprintCurrent": "Execution: Current",
   "statusAny": "Status: Any",
@@ -2364,5 +2363,20 @@
       }
     }
   },
-  "reauthenticate": "Re-authenticate"
+  "reauthenticate": "Re-authenticate",
+  "taskFormNext": "After saving",
+  "taskAfterSaveOpen": "Open the task",
+  "taskAfterSaveContinue": "Add another task",
+  "taskAfterSaveList": "Back to the list",
+  "taskFormModeSimple": "Simple",
+  "taskFormModeFull": "Full",
+  "workspaceCreateFailed": "Couldn't create the workspace: {error}",
+  "@workspaceCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "zentaoProductsGroup": "Products"
 }

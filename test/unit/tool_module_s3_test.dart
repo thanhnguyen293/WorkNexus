@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/app/di/service_locator.dart';
 import 'package:work_nexus/core/di/providers.dart';
+import 'package:work_nexus/core/domain/adapters/ticket_detail_service.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/project.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
@@ -18,9 +19,8 @@ import 'package:work_nexus/core/tools/tool_module.dart';
 import 'package:work_nexus/core/tools/tool_registry_provider.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/shared/detail/presentation/detail_panel.dart';
-import 'package:work_nexus/shared/sync/data/sync_service.dart';
 
-class _MockSyncService extends Mock implements SyncService {}
+class _MockSyncService extends Mock implements TicketDetailService {}
 
 class _FakeCustomToolModule extends ToolModule {
   const _FakeCustomToolModule();
@@ -80,7 +80,7 @@ void main() {
   setUp(() async {
     sync = _MockSyncService();
     await getIt.reset();
-    getIt.registerSingleton<SyncService>(sync);
+    getIt.registerSingleton<TicketDetailService>(sync);
     when(
       () => sync.syncTicketDetail(any()),
     ).thenAnswer((_) async => const Ok(null));

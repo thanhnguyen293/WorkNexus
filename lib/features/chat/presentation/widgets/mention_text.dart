@@ -89,6 +89,13 @@ class _MentionTextState extends ConsumerState<MentionText> {
       at = m.end;
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at)));
-    return Text.rich(TextSpan(style: base, children: spans));
+    // Selectable, so a part of a message can be copied. Its own right-click
+    // menu is off: a right-click on the bubble opens the message's menu
+    // (see `MessageHoverActions`), and the span taps (mentions, links) work as
+    // they do on plain text.
+    return SelectableText.rich(
+      TextSpan(style: base, children: spans),
+      contextMenuBuilder: null,
+    );
   }
 }

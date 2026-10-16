@@ -227,6 +227,9 @@ void main() {
               return p.endsWith('.dart') &&
                   !p.endsWith('.g.dart') &&
                   !p.endsWith('.freezed.dart') &&
+                  // Generated injectable wiring (CLAUDE.md exempts all
+                  // generated files from the line limits).
+                  !p.endsWith('.config.dart') &&
                   !p.contains('/l10n/') &&
                   !p.contains('/gen/');
             })

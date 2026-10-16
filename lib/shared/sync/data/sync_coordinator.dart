@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -12,40 +13,61 @@ import '../../../core/domain/adapters/provider_adapter.dart';
 import '../../../core/domain/adapters/provider_adapter_registry.dart';
 import '../../../core/domain/adapters/ticket_detail_service.dart';
 import '../../../core/domain/entities/account.dart';
-import '../../../core/domain/entities/project.dart';
+import '../../../core/domain/entities/activity_event.dart';
+import '../../../core/domain/entities/comment.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
+import '../../../core/domain/repositories/sync_status_repository.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
 import 'attachment_file_cache.dart';
 import 'merge_detail_labels.dart';
+import 'provider_adapter_pool.dart';
 import 'source_list_cache.dart';
+import 'sync_status_tracking.dart';
+import 'ticket_store.dart';
 
 /// Provider-agnostic coordinator implementing [TicketDetailService] and [AccountSyncService].
+/// Registered once, so its [ProviderAdapterPool] is the only one.
 class SyncCoordinator implements TicketDetailService, AccountSyncService {
   SyncCoordinator(
     this._db,
     this._credentials, {
     required this._registry,
     AttachmentFileCache? attachmentCache,
+    SyncStatusRepository? statusRepository,
   }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
+       _statusRepo = statusRepository,
+       _adapters = ProviderAdapterPool(_db, _credentials, _registry),
+       _store = TicketStore(_db),
        _listCache = SourceListCache(_db);
 
   final AppDatabase _db;
   final CredentialStore _credentials;
   final ProviderAdapterRegistry _registry;
   final AttachmentFileCache _attachmentCache;
+  final SyncStatusRepository? _statusRepo;
+  final ProviderAdapterPool _adapters;
+  final TicketStore _store;
   final SourceListCache _listCache;
   final ByteLruCache _imageCache = ByteLruCache();
-  final Map<String, ProviderAdapter> _adapters = {};
+  final Map<String, DateTime> _imageMisses = {};
+  static const _imageRetryAfter = Duration(minutes: 5);
 
   AppDatabase get db => _db;
   CredentialStore get credentials => _credentials;
   ProviderAdapterRegistry get registry => _registry;
 
+  /// Runs the sync [action] for [accountId], reporting its sync status.
+  Future<T> trackSync<T>(String accountId, Future<T> Function() action) =>
+      trackSyncStatus(_statusRepo, accountId, action);
+
   @override
-  Future<Result<int>> syncAccount(Account account) async {
+  Future<Result<int>> syncAccount(Account account) =>
+      trackSync(account.id, () => _syncAccount(account));
+
+  Future<Result<int>> _syncAccount(Account account) async {
     final ref = account.credentialsRef;
     if (ref == null) {
       return const Err(AuthFailure('No stored credentials for this account'));
@@ -112,6 +134,8 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   Future<List<ProviderProject>?> cachedProjects(String accountId) =>
       _listCache.readProjects(accountId);
 
+  // Not tracked: one ticket's refresh (and its own failures, like a deleted
+  // ticket) is no news about the account's sync.
   @override
   Future<Result<void>> syncTicketDetail(Ticket ticket) async {
     final adapter = await adapterFor(ticket.accountId);
@@ -131,33 +155,25 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
         ticket.providerEntity,
       ),
     );
-    await _db
-        .into(_db.tickets)
-        .insertOnConflictUpdate(ticketToCompanion(merged));
+    // Only rows that differ are written (an unchanged refresh must not re-run
+    // every watch over these tables); compared against the stored row, so the
+    // server's answer still replaces an optimistic guess.
+    await _store.writeIfChanged(merged);
 
-    final comments = await adapter.listComments(ticket);
-    final activity = await adapter.listActivity(ticket);
+    // Concurrently; `Future.wait` keeps an adapter's own exception type.
+    final [
+      comments as Result<List<Comment>>,
+      activity as Result<List<ActivityEvent>>,
+    ] = await Future.wait<Object>([
+      adapter.listComments(ticket),
+      adapter.listActivity(ticket),
+    ]);
     await _db.transaction(() async {
       if (comments case Ok(:final value)) {
-        await (_db.delete(_db.comments)..where(
-              (c) => c.ticketId.equals(ticket.id) & c.origin.equals('provider'),
-            ))
-            .go();
-        for (final c in value) {
-          await _db
-              .into(_db.comments)
-              .insertOnConflictUpdate(commentToCompanion(c));
-        }
+        await _store.replaceProviderComments(ticket.id, value);
       }
       if (activity case Ok(:final value)) {
-        await (_db.delete(
-          _db.activities,
-        )..where((a) => a.ticketId.equals(ticket.id))).go();
-        for (final e in value) {
-          await _db
-              .into(_db.activities)
-              .insertOnConflictUpdate(activityToCompanion(e));
-        }
+        await _store.replaceActivity(ticket.id, value);
       }
     });
     return const Ok(null);
@@ -168,29 +184,39 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     final key = '${ticket.accountId}|$url';
     final cached = _imageCache.get(key);
     if (cached != null) return cached;
-    final bytes = await _loadTicketImage(ticket, url);
-    if (bytes != null) _imageCache.put(key, bytes);
-    return bytes;
-  }
-
-  Future<Uint8List?> _loadTicketImage(Ticket ticket, String url) async {
+    final now = DateTime.now();
+    if (_imageMisses[key] case final missed?) {
+      if (now.difference(missed) < _imageRetryAfter) return null;
+      _imageMisses.remove(key);
+    }
+    final (projectPath, projectId) = switch (ticket.providerEntity) {
+      GitLabItemEntity(:final projectPath, :final projectId) => (
+        projectPath,
+        projectId,
+      ),
+      _ => (null, null),
+    };
+    final Uint8List? bytes;
     try {
       final adapter = await adapterFor(ticket.accountId);
       if (adapter == null) return null;
-      final (projectPath, projectId) = switch (ticket.providerEntity) {
-        GitLabItemEntity(:final projectPath, :final projectId) => (
-          projectPath,
-          projectId,
-        ),
-        _ => (null, null),
-      };
-      return await adapter.fetchBytes(
+      bytes = await adapter.fetchBytes(
         url,
         projectPath: projectPath,
         projectId: projectId?.toString(),
       );
-    } catch (_) {}
-    return null;
+    } catch (_) {
+      // A failed request (offline, a timeout) is no answer: ask again later.
+      return null;
+    }
+    if (bytes != null) {
+      _imageCache.put(key, bytes);
+    } else {
+      // The provider answered "no" (a deleted file, a dead link): each try
+      // costs requests and, on ZenTao, a re-login, so it rests a while.
+      _imageMisses[key] = now;
+    }
+    return bytes;
   }
 
   @override
@@ -300,18 +326,21 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     Future<Result<void>> Function() action,
   ) async {
     await optimisticallyUpdateTicket(optimistic);
+    final Result<void> res;
     try {
-      final res = await action();
-      if (res case Err(:final failure)) {
-        await rollbackTicket(ticket);
-        return Err(failure);
-      }
-      await syncTicketDetail(ticket);
-      return const Ok(null);
+      res = await action();
     } catch (_) {
       await rollbackTicket(ticket);
       rethrow;
     }
+    if (res case Err(:final failure)) {
+      await rollbackTicket(ticket);
+      return Err(failure);
+    }
+    // The action already landed on the server: a failed refresh must not roll
+    // the ticket back to its pre-action state, so it runs outside the try.
+    await syncTicketDetail(ticket);
+    return const Ok(null);
   }
 
   Future<void> optimisticallyUpdateTicket(Ticket ticket) async {
@@ -328,61 +357,12 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     return adapter?.rawClient;
   }
 
-  ProviderAdapter? buildAdapter(Account account, String secret) {
-    final cached = _adapters[account.id];
-    if (cached != null) return cached;
-    final adapter = _registry.createAdapter(account, secret);
-    if (adapter != null) {
-      _adapters[account.id] = adapter;
-    }
-    return adapter;
-  }
+  ProviderAdapter? buildAdapter(Account account, String secret) =>
+      _adapters.build(account, secret);
 
-  Future<ProviderAdapter?> adapterFor(String accountId) async {
-    final cached = _adapters[accountId];
-    if (cached != null) return cached;
-    final row = await (_db.select(
-      _db.accounts,
-    )..where((a) => a.id.equals(accountId))).getSingleOrNull();
-    if (row == null) return null;
-    final account = accountFromRow(row);
-    final ref = account.credentialsRef;
-    if (ref == null) return null;
-    final secret = await _credentials.read(ref);
-    if (secret == null) return null;
-    return buildAdapter(account, secret);
-  }
+  Future<ProviderAdapter?> adapterFor(String accountId) =>
+      _adapters.forAccount(accountId);
 
-  Future<void> upsert(Account account, List<Ticket> tickets) async {
-    final merged = await carryMembershipLabels(_db, tickets);
-    await _db.batch((b) {
-      b.insert(
-        _db.accounts,
-        accountToCompanion(account),
-        onConflict: DoUpdate((_) => accountToCompanion(account)),
-      );
-      final projects = {
-        for (final t in merged)
-          t.projectId: Project(
-            id: t.projectId,
-            accountId: account.id,
-            name: t.projectId.split(':').skip(1).join(':'),
-          ),
-      };
-      for (final p in projects.values) {
-        b.insert(
-          _db.projects,
-          projectToCompanion(p),
-          onConflict: DoUpdate((_) => projectToCompanion(p)),
-        );
-      }
-      for (final t in merged) {
-        b.insert(
-          _db.tickets,
-          ticketToCompanion(t),
-          onConflict: DoUpdate((_) => ticketToCompanion(t)),
-        );
-      }
-    });
-  }
+  Future<void> upsert(Account account, List<Ticket> tickets) =>
+      _store.writeSynced(account, tickets);
 }

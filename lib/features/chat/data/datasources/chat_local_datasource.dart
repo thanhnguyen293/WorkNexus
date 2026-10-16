@@ -277,14 +277,21 @@ class ChatLocalDatasource {
     required String query,
     int limit = 50,
   }) {
-    final pattern = '%$query%';
+    // Typed text matches literally: LIKE's own wildcards are escaped.
+    final escaped = query.replaceAllMapped(
+      RegExp(r'[\\%_]'),
+      (m) => '\\${m[0]}',
+    );
     final m = _db.chatMessages;
     final stmt = _db.select(m)
       ..where(
         (t) =>
             t.accountId.equals(accountId) &
             t.deleted.equals(false) &
-            t.content.like(pattern) &
+            // Only text messages: an image/file row's content is its JSON
+            // payload, which would match words like "name" or "png".
+            t.contentType.isIn(const ['plain', 'text']) &
+            t.content.like('%$escaped%', escapeChar: '\\') &
             (cgid != null ? t.cgid.equals(cgid) : const Constant(true)),
       )
       ..orderBy([(t) => OrderingTerm.desc(t.sentAt)])

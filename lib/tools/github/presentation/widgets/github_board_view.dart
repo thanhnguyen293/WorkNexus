@@ -21,11 +21,15 @@ import '../providers/github_board_providers.dart';
 /// active [githubKindProvider]. Read-only (state changes go through the detail
 /// panel actions).
 class GitHubBoardView extends ConsumerWidget {
-  const GitHubBoardView({super.key});
+  const GitHubBoardView({super.key, required this.kind});
+
+  /// The section's kind. Not [githubKindProvider]: that is global and keeps
+  /// the last Board tab picked, which may be the other section's.
+  final GitHubItemKind kind;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final columns = ref.watch(githubKindProvider) == GitHubItemKind.pullRequest
+    final columns = kind == GitHubItemKind.pullRequest
         ? _prColumns(context, ref.watch(githubPrBoardProvider))
         : _issueColumns(context, ref.watch(githubIssueBoardProvider));
     return BoardHorizontalScroll(

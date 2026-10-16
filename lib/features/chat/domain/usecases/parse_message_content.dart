@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../../core/util/adjacent_mentions.dart';
 import '../value_objects/message_content.dart';
 import 'decode_emoji.dart';
 
@@ -22,7 +23,6 @@ class ParseMessageContent {
   static final _nameStop = RegExp(r'[^A-Za-z0-9_]');
 
   static final _adjacentMarkdown = RegExp(r'(\]\(@#[^)]+\))(?=\[?@)');
-  static final _adjacentPlain = RegExp(r'(@[A-Za-z0-9_\-\.]+)(?=@)');
 
   /// Undoes quirks of the official client's mention markup:
   /// 1. A mention nested in another link to the same user ([_nested]).
@@ -53,10 +53,7 @@ class ParseMessageContent {
       _adjacentMarkdown,
       (m) => '${m[1]} ',
     );
-    return separatedMarkdown.replaceAllMapped(
-      _adjacentPlain,
-      (m) => '${m[1]} ',
-    );
+    return splitAdjacentMentions(separatedMarkdown);
   }
 
   /// U+FFFC, which a sender's rich-text editor leaves in place of an inline

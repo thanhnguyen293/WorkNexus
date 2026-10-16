@@ -380,5 +380,59 @@ void main() {
         'no-due-2',
       ]);
     });
+    test('a ZenTao "no deadline" (0000-00-00) is no due date', () {
+      final bug = _makeTicket(
+        id: 'bug',
+        externalType: 'Bug',
+        providerEntity: const ZenTaoBugEntity(deadline: '0000-00-00'),
+      );
+
+      final result = useCase(
+        ListAssignedWorkInput(
+          tickets: [bug],
+          accounts: const [_accZenTao],
+          now: now,
+        ),
+      );
+
+      expect(result.single.due, isNull);
+    });
+
+    test('a date-only due date is not overdue during that day', () {
+      final today = _makeTicket(id: 'today', labels: ['due:2026-10-14']);
+
+      final result = useCase(
+        ListAssignedWorkInput(
+          tickets: [today],
+          accounts: const [_accZenTao],
+          now: now,
+        ),
+      );
+
+      expect(result.single.due!.isAfter(now), isTrue);
+    });
+    test('a GitHub review request is matched on the reviewer login', () {
+      final pr = _makeTicket(
+        id: 'pr',
+        accountId: 'acc-gh-1',
+        provider: ProviderType.github,
+        externalType: 'PullRequest',
+        assignee: null,
+        providerEntity: const GitHubItemEntity(
+          reviewers: ['Octo Cat'],
+          reviewerLogins: ['octocat'],
+        ),
+      );
+
+      final result = useCase(
+        ListAssignedWorkInput(
+          tickets: [pr],
+          accounts: const [_accGh1],
+          now: now,
+        ),
+      );
+
+      expect(result.single.reason, AssignedReason.reviewer);
+    });
   });
 }

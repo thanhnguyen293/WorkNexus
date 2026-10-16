@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -68,7 +69,11 @@ class _MiniAppDialogState extends ConsumerState<MiniAppDialog> {
           );
     if (!mounted) return;
     switch (res) {
-      case Ok():
+      case Ok(:final value):
+        // A new app opens at once, as picking it on the rail would.
+        if (existing == null) {
+          ref.read(appNavProvider.notifier).showMiniApp(value.id);
+        }
         navigator.pop();
       case Err(:final failure):
         setState(() {

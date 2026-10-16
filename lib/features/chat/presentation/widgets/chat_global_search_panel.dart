@@ -65,6 +65,11 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
         query;
     ref.read(chatThreadSearchQueryProvider(widget.thread).notifier).state =
         query;
+    // The in-thread bar steps through these matches: a new query starts over.
+    ref
+            .read(chatThreadSearchActiveIndexProvider(widget.thread).notifier)
+            .state =
+        -1;
   }
 
   void _selectMessage(ChatMessage message) {

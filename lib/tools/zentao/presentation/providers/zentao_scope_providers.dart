@@ -20,8 +20,41 @@ import 'zentao_task_streams.dart';
 /// The ZenTao tickets the Tasks section shows before the user's filters: the
 /// cached tasks tagged with the open execution, narrowed view by view to what
 /// each status view has loaded — or filtered by the selected project scope.
+/// Whether [t] is a task of ZenTao project [projectId] (the numeric id the
+/// sidebar scopes by; a task's own `projectId` is built from a name).
+bool zentaoTaskInProject(Ticket t, String projectId) {
+  final entity = t.providerEntity;
+  if (t.externalType?.toLowerCase() != 'task' && entity is! ZenTaoTaskEntity) {
+    return false;
+  }
+  return (entity is ZenTaoTaskEntity && entity.project == projectId) ||
+      t.projectId == projectId ||
+      t.projectId.endsWith(':$projectId');
+}
+
+/// The rail's account and the open scope. The product / execution selections
+/// are app-wide, so they apply only while they match this place: another
+/// account, or a scope reset to "All", must not keep showing them.
+({String? accountId, String? scopeId}) _place(Ref ref) {
+  final nav = ref.watch(appNavProvider);
+  return (
+    accountId: switch (nav.rail) {
+      AccountTarget(:final accountId) => accountId,
+      _ => null,
+    },
+    scopeId: nav.currentLocation?.scopeId,
+  );
+}
+
 List<Ticket> scopeZenTaoTasks(Ref ref, List<Ticket> tickets) {
-  final execution = ref.watch(selectedZenTaoExecutionProvider);
+  final place = _place(ref);
+  final selected = ref.watch(selectedZenTaoExecutionProvider);
+  final execution =
+      selected != null &&
+          selected.accountId == place.accountId &&
+          selected.executionId == place.scopeId
+      ? selected
+      : null;
   if (execution != null) {
     return const ScopePagedViewTickets<ZenTaoTaskColumn>()(
       PagedViewScopeQuery(
@@ -39,23 +72,12 @@ List<Ticket> scopeZenTaoTasks(Ref ref, List<Ticket> tickets) {
     );
   }
 
-  final nav = ref.watch(appNavProvider);
-  final accountId = switch (nav.rail) {
-    AccountTarget(:final accountId) => accountId,
-    _ => null,
-  };
-  final scopeId = nav.currentLocation?.scopeId;
+  final (:accountId, :scopeId) = place;
 
   if (scopeId != null && scopeId.isNotEmpty) {
     return tickets.where((t) {
       if (accountId != null && t.accountId != accountId) return false;
-      if (t.externalType?.toLowerCase() != 'task' &&
-          t.providerEntity is! ZenTaoTaskEntity) {
-        return false;
-      }
-      return t.projectId == scopeId ||
-          t.projectId.endsWith(':$scopeId') ||
-          (t.providerEntity as ZenTaoTaskEntity?)?.project == scopeId;
+      return zentaoTaskInProject(t, scopeId);
     }).toList();
   }
 
@@ -75,9 +97,21 @@ List<Ticket> scopeZenTaoTasks(Ref ref, List<Ticket> tickets) {
 /// bug view has loaded. When a child execution is selected, filters strictly to that
 /// execution; otherwise shows all bugs of the parent product.
 List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
-  final product = ref.watch(selectedZenTaoProductProvider);
-  if (product == null) return tickets;
-  final execution = ref.watch(selectedZenTaoExecutionProvider);
+  final place = _place(ref);
+  final selected = ref.watch(selectedZenTaoProductProvider);
+  final product =
+      selected != null &&
+          selected.accountId == place.accountId &&
+          selected.productId == place.scopeId
+      ? selected
+      : null;
+  // Bugs are listed per product; until this board's product is picked (the
+  // section picks one) there are none to show.
+  if (product == null) return const [];
+  final pickedExecution = ref.watch(selectedZenTaoExecutionProvider);
+  final execution = pickedExecution?.accountId == product.accountId
+      ? pickedExecution
+      : null;
   final mine = ref.watch(zentaoBugMineProvider);
   final streams = ref.watch(zentaoBugStreamsProvider);
   final account = ref.watch(

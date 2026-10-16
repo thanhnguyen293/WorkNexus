@@ -47,6 +47,7 @@ Ticket _makePr({
   bool draft = false,
   bool merged = false,
   List<String> reviewers = const [],
+  List<String> reviewerLogins = const [],
   String repo = 'owner/repo-a',
 }) {
   return Ticket(
@@ -71,6 +72,7 @@ Ticket _makePr({
       draft: draft,
       merged: merged,
       reviewers: reviewers,
+      reviewerLogins: reviewerLogins,
     ),
   );
 }
@@ -163,8 +165,22 @@ void main() {
     title: 'Other Reviewer PR',
     reviewers: ['someone_else'],
   );
+  // A reviewer with a profile name: the name differs from the login.
+  final namedReviewPr = _makePr(
+    id: '106',
+    title: 'Named Reviewer PR',
+    reviewers: ['Octo Cat'],
+    reviewerLogins: ['octocat'],
+  );
 
-  final testTickets = [openPr, mergedPr, closedPr, reviewPr, otherPr];
+  final testTickets = [
+    openPr,
+    mergedPr,
+    closedPr,
+    reviewPr,
+    otherPr,
+    namedReviewPr,
+  ];
 
   group('GitHub Pull Requests Section', () {
     testWidgets('filters by state tabs (Open / Merged / Closed / Board)', (
@@ -258,8 +274,10 @@ void main() {
         await tester.tap(find.text('Review requested'));
         await tester.pumpAndSettle();
 
-        // Only PR with octocat in reviewers matches
+        // Only PRs requesting octocat match — by login, also when the
+        // reviewer's display name differs.
         expect(find.text('Review Requested PR'), findsOneWidget);
+        expect(find.text('Named Reviewer PR'), findsOneWidget);
         expect(find.text('Open PR Alpha'), findsNothing);
         expect(find.text('Other Reviewer PR'), findsNothing);
       },

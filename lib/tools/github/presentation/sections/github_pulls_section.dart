@@ -20,6 +20,7 @@ import '../../../../core/widgets/view_mode_tab_bar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../providers/github_board_providers.dart';
+import '../util/watch_github_items.dart';
 import '../widgets/github_board_view.dart';
 import '../widgets/github_pr_row.dart';
 
@@ -60,6 +61,7 @@ class GithubPullsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchGitHubItems(context, ref, GitHubItemKind.pullRequest);
     final l = AppL10n.of(context);
     final c = context.colors;
     final s = context.spacing;
@@ -90,7 +92,12 @@ class GithubPullsSection extends ConsumerWidget {
       // QuickScope: Review requested
       if (isReviewRequested) {
         final entity = t.providerEntity as GitHubItemEntity?;
-        final reviewers = entity?.reviewers ?? const <String>[];
+        // Logins, as the account knows its user; items stored before they
+        // were kept only have the reviewers' display names.
+        final logins = entity?.reviewerLogins ?? const <String>[];
+        final reviewers = logins.isNotEmpty
+            ? logins
+            : entity?.reviewers ?? const <String>[];
         if (!reviewers.any(
           (r) => r.toLowerCase() == account.handle.toLowerCase(),
         )) {
@@ -103,7 +110,7 @@ class GithubPullsSection extends ConsumerWidget {
 
     final Widget body;
     if (viewMode.value == 'board') {
-      body = const GitHubBoardView();
+      body = const GitHubBoardView(kind: GitHubItemKind.pullRequest);
     } else {
       final List<Ticket> filteredByState = switch (viewMode.value) {
         'merged' =>

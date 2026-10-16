@@ -93,6 +93,24 @@ void main() {
     await disposeTree(tester);
   });
 
+  testWidgets('message text is selectable, with mentions and links still '
+      'tappable', (tester) async {
+    await pump(
+      tester,
+      const MessageContent.text('hi [@Dyno](@#31) see https://a.dev/x'),
+    );
+
+    final text = tester.widget<SelectableText>(find.byType(SelectableText));
+    final spans = [
+      for (final span in text.textSpan!.children!) span as TextSpan,
+    ];
+    final mention = spans.firstWhere((s) => s.text == '@Dyno');
+    final link = spans.firstWhere((s) => s.text == 'https://a.dev/x');
+    expect(mention.recognizer, isNotNull);
+    expect(link.recognizer, isNotNull);
+    await disposeTree(tester);
+  });
+
   testWidgets('code puts the time on a row of its own, at the end', (
     tester,
   ) async {

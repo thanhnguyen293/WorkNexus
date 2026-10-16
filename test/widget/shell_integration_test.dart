@@ -27,6 +27,7 @@ import 'package:work_nexus/features/notifications/presentation/providers/notific
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
 
 import '../support/di_test_harness.dart';
+import '../support/mini_app_overrides.dart';
 
 class _FakeUpdateRepo implements UpdateRepository {
   @override
@@ -86,6 +87,7 @@ class _SavedNavController extends AppNavController {
 Widget _buildApp({AppNavState? initialNav}) {
   return ProviderScope(
     overrides: [
+      ...miniAppShellOverrides(),
       toolRegistryProvider.overrideWithValue(defaultToolRegistry),
       updateControllerProvider.overrideWith(_MockUpdateController.new),
       notificationAccountsProvider.overrideWith((ref) => const []),

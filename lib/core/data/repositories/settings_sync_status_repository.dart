@@ -66,20 +66,17 @@ class SettingsSyncStatusRepository implements SyncStatusRepository {
       if (rows.isNotEmpty) {
         final millis = int.tryParse(rows.first.read<String>('value'));
         if (millis != null) {
-          final status = AccountSyncStatus.idle(
+          // A status reported during the read is newer than the stored one.
+          return _lastStatuses[accountId] ??= AccountSyncStatus.idle(
             lastSyncedAt: DateTime.fromMillisecondsSinceEpoch(millis),
           );
-          _lastStatuses[accountId] = status;
-          return status;
         }
       }
     } catch (_) {
       // Fallback on read error
     }
 
-    const defaultStatus = AccountSyncStatus.idle();
-    _lastStatuses[accountId] = defaultStatus;
-    return defaultStatus;
+    return _lastStatuses[accountId] ??= const AccountSyncStatus.idle();
   }
 
   @override

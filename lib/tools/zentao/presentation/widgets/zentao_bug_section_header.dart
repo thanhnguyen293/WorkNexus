@@ -42,8 +42,19 @@ class _ZentaoBugSectionHeaderState
     final c = context.colors;
     final s = context.spacing;
 
-    final selectedProduct = ref.watch(selectedZenTaoProductProvider);
-    final selectedExec = ref.watch(selectedZenTaoExecutionProvider);
+    // The selections are app-wide: they are this board's only while they
+    // match this account and scope (as the board's own scoping requires).
+    final pickedProduct = ref.watch(selectedZenTaoProductProvider);
+    final selectedProduct =
+        pickedProduct?.accountId == widget.account.id &&
+            pickedProduct?.productId == widget.location.scopeId
+        ? pickedProduct
+        : null;
+    final pickedExec = ref.watch(selectedZenTaoExecutionProvider);
+    final selectedExec =
+        selectedProduct != null && pickedExec?.accountId == widget.account.id
+        ? pickedExec
+        : null;
     final products = ref
         .watch(zentaoProductsProvider(widget.account.id))
         .asData
@@ -61,7 +72,8 @@ class _ZentaoBugSectionHeaderState
         }
       }
     }
-    final displayTitle = scopeTitle ?? l.allProducts;
+    // Only until the section has picked a product.
+    final displayTitle = scopeTitle ?? l.fieldProduct;
     final bugTable = ref.watch(zentaoBugTableProvider);
     final bugCount = bugTable.rows.length;
 

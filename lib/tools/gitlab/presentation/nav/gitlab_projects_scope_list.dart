@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -17,8 +16,8 @@ import '../../../../shared/shell_pane/scope_list_body.dart';
 import '../../../../shared/shell_pane/scope_rows.dart';
 import '../../../../shared/shell_pane/sidebar_tree_rows.dart';
 import '../../domain/entities/gitlab_project_tree.dart';
-import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
+import '../providers/gitlab_scope.dart';
 import 'gitlab_group_node_widget.dart';
 import 'gitlab_project_tree_node.dart';
 
@@ -66,10 +65,7 @@ class _GitlabProjectsScopeListState
               (t) =>
                   t.accountId == widget.account.id &&
                   t.status != UnifiedStatus.done &&
-                  ((t.providerEntity is GitLabItemEntity &&
-                          (t.providerEntity as GitLabItemEntity).projectPath ==
-                              projectId) ||
-                      t.projectId == projectId),
+                  gitlabTicketInProject(t, projectId),
             )
             .length;
 
@@ -147,9 +143,6 @@ class _GitlabProjectsScopeListState
                             .read(selectedGitLabProjectProvider.notifier)
                             .select(p);
                         ref
-                            .read(gitlabKindProvider.notifier)
-                            .set(GitLabItemKind.mergeRequest);
-                        ref
                             .read(filterStateProvider.notifier)
                             .openBoard(ref.read(boardKeyProvider));
                       },
@@ -169,9 +162,6 @@ class _GitlabProjectsScopeListState
                         ref
                             .read(selectedGitLabProjectProvider.notifier)
                             .select(p);
-                        ref
-                            .read(gitlabKindProvider.notifier)
-                            .set(GitLabItemKind.mergeRequest);
                         ref
                             .read(filterStateProvider.notifier)
                             .openBoard(ref.read(boardKeyProvider));

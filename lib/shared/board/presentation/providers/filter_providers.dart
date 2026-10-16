@@ -21,14 +21,26 @@ final customBoardKeyProvider =
     );
 
 /// A stable identity for the board on screen — the key its filter is remembered
-/// under by [FilterController.openBoard].
+/// under by [FilterController.openBoard]: section, account and scope, so a
+/// filter built on one product / project / account's board does not follow
+/// you to another (where its chips would silently hide everything).
 final boardKeyProvider = Provider<String>((ref) {
   final custom = ref.watch(customBoardKeyProvider);
   if (custom != null) return custom;
-  final section = ref.watch(
-    appNavProvider.select((s) => s.currentLocation?.section.value),
+  final (section, accountId, scopeId) = ref.watch(
+    appNavProvider.select(
+      (s) => (
+        s.currentLocation?.section.value,
+        switch (s.rail) {
+          AccountTarget(:final accountId) => accountId,
+          WorkspaceTarget() => null,
+        },
+        s.currentLocation?.scopeId,
+      ),
+    ),
   );
-  return section ?? 'default';
+  if (section == null) return 'default';
+  return '$section|${accountId ?? ''}|${scopeId ?? ''}';
 });
 
 /// Active filter selection + intent methods (the design's filter interactions).
@@ -49,6 +61,14 @@ class FilterController extends Notifier<FilterState> {
     ref.listen<String>(boardKeyProvider, (prev, next) {
       if (prev != next) {
         openBoard(next);
+      }
+    });
+    // Follow the workspace in effect when it changes without the switcher —
+    // e.g. the joined one was deleted — or the filter keeps scoping to it and
+    // every board comes up empty.
+    ref.listen<String?>(activeWorkspaceProvider.select((w) => w?.id), (_, id) {
+      if (id != null && state.workspaceId != 'all' && state.workspaceId != id) {
+        state = state.copyWith(workspaceId: id, accountIds: {}, projectIds: {});
       }
     });
     final initialKey = ref.read(boardKeyProvider);
@@ -124,7 +144,9 @@ class FilterController extends Notifier<FilterState> {
       ..clear()
       ..addAll(next.memory);
     _activeKey = key;
-    state = next.filter;
+    // The workspace is where the user is now, not where the board was left:
+    // a remembered one from another workspace would hide every ticket.
+    state = next.filter.copyWith(workspaceId: state.workspaceId);
   }
 
   /// Replaces the chip filters with a saved preset's, keeping the board's own

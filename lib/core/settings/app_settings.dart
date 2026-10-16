@@ -359,9 +359,11 @@ class AppSettingsController extends Notifier<AppSettings> {
     _set(state.copyWith(tableColumnWidths: next));
   }
 
-  /// Pins/unpins a ZenTao project by its `"accountId:productId"` [key].
-  /// When unpinning a project, its child executions are also unpinned.
-  /// When pinning, [childExecutions] can also be pinned.
+  /// Pins/unpins [key]: a ZenTao product (`accountId:productId`), a ZenTao
+  /// project ([zentaoProjectPinKey]) or a GitLab / GitHub project. Pinning
+  /// can bring [childExecutions] along; unpinning drops the executions that
+  /// go with this pin ([PinnedExecution.ownerKey]) — never another kind's
+  /// whose id merely looks alike.
   void togglePinnedProject(
     String key, {
     List<PinnedExecution>? childExecutions,
@@ -370,19 +372,12 @@ class AppSettingsController extends Notifier<AppSettings> {
     final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
     if (nextProjects.contains(key)) {
       nextProjects.remove(key);
-      final parts = key.split(':');
-      if (parts.length >= 2) {
-        nextExecs.removeWhere(
-          (e) => e.accountId == parts[0] && e.projectId == parts[1],
-        );
-      }
+      nextExecs.removeWhere((e) => e.ownerKey == key);
     } else {
       nextProjects.add(key);
-      if (childExecutions != null) {
-        final existing = {for (final e in nextExecs) e.key};
-        for (final c in childExecutions) {
-          if (!existing.contains(c.key)) nextExecs.add(c);
-        }
+      final existing = {for (final e in nextExecs) e.key};
+      for (final c in childExecutions ?? const <PinnedExecution>[]) {
+        if (!existing.contains(c.key)) nextExecs.add(c.withParent(key));
       }
     }
     _set(
@@ -390,7 +385,7 @@ class AppSettingsController extends Notifier<AppSettings> {
     );
   }
 
-  /// Pins/unpins a ZenTao [execution]. Pinning an execution also pins its parent project.
+  /// Pins/unpins a ZenTao [execution]; pinning it pins its project too.
   void togglePinnedExecution(PinnedExecution execution) {
     final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
     final nextProjects = Set<String>.of(state.pinnedProjects);
@@ -399,7 +394,9 @@ class AppSettingsController extends Notifier<AppSettings> {
       nextExecs.removeAt(index);
     } else {
       nextExecs.add(execution);
-      nextProjects.add('${execution.accountId}:${execution.projectId}');
+      nextProjects.add(
+        zentaoProjectPinKey(execution.accountId, execution.projectId),
+      );
     }
     _set(
       state.copyWith(pinnedExecutions: nextExecs, pinnedProjects: nextProjects),

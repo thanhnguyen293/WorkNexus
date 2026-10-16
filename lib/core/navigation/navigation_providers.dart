@@ -19,6 +19,20 @@ final appNavProvider = NotifierProvider<AppNavController, AppNavState>(
   AppNavController.new,
 );
 
+/// The mini app picked on the rail (null: none), even while the editor covers
+/// it.
+final openMiniAppIdProvider = Provider<String?>(
+  (ref) => ref.watch(appNavProvider.select((s) => s.miniAppId)),
+);
+
+/// Whether a mini app is the view beside the rail (picked, and not covered by
+/// the editor).
+final miniAppOnScreenProvider = Provider<bool>(
+  (ref) => ref.watch(
+    appNavProvider.select((s) => s.miniAppId != null && s.editor == null),
+  ),
+);
+
 /// The ticket in the detail slide-over (null = closed).
 final openTicketIdProvider = Provider<String?>(
   (ref) => ref.watch(appNavProvider.select((s) => s.openTicketId)),
@@ -71,11 +85,13 @@ final quickSettingsOpenProvider = StateProvider<bool>((ref) => false);
 /// Hidden developer log panel, opened from the title-bar settings trigger.
 final talkerDebugOpenProvider = StateProvider<bool>((ref) => false);
 
-/// The currently joined/active workspace id. Null means default to first workspace.
-final activeWorkspaceIdProvider = StateProvider<String?>((ref) {
-  final workspaces = ref.watch(workspacesProvider).asData?.value ?? const [];
-  return workspaces.isNotEmpty ? workspaces.first.id : null;
-});
+/// The workspace the user joined. Null means default to the first workspace.
+///
+/// Holds only the user's choice and watches nothing: deriving it from
+/// [workspacesProvider] would recreate it — dropping the choice — every time
+/// any workspace changes. Read [activeWorkspaceProvider] for the workspace in
+/// effect, which falls back to the first one when the choice is gone.
+final activeWorkspaceIdProvider = StateProvider<String?>((ref) => null);
 
 /// The currently active workspace entity.
 final activeWorkspaceProvider = Provider<Workspace?>((ref) {
@@ -91,7 +107,7 @@ final activeWorkspaceProvider = Provider<Workspace?>((ref) {
 
 /// The sorted accounts belonging to the active workspace.
 final sortedActiveAccountsProvider = Provider<List<Account>>((ref) {
-  final activeWsId = ref.watch(activeWorkspaceIdProvider);
+  final activeWsId = ref.watch(activeWorkspaceProvider)?.id;
   final allAccounts = ref.watch(accountsProvider).asData?.value ?? const [];
   final activeAccounts = allAccounts
       .where((a) => activeWsId == null || a.workspaceId == activeWsId)

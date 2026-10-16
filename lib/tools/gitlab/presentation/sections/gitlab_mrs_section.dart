@@ -18,8 +18,11 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/view_mode_tab_bar.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
+import '../providers/gitlab_scope.dart';
+import '../util/watch_gitlab_items.dart';
 import '../widgets/gitlab_board_view.dart';
 import '../widgets/gitlab_mr_table.dart';
 
@@ -75,6 +78,7 @@ class GitlabMrsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchGitLabItems(context, ref, GitLabItemKind.mergeRequest);
     final l = AppL10n.of(context);
     final c = context.colors;
     final s = context.spacing;
@@ -94,26 +98,15 @@ class GitlabMrsSection extends ConsumerWidget {
       if (!isMr) return false;
 
       // Scoping: by project
-      if (location.scopeId != null) {
-        final entity = t.providerEntity is GitLabItemEntity
-            ? t.providerEntity as GitLabItemEntity
-            : null;
-        final path = entity?.projectPath ?? t.projectId;
-        if (path != location.scopeId && t.projectId != location.scopeId) {
-          return false;
-        }
+      if (location.scopeId case final scopeId?) {
+        if (!gitlabTicketInProject(t, scopeId)) return false;
       }
 
       // QuickScope: Assigned to me
-      if (location.quickScope == QuickScope.assignedToMe) {
-        final entity = t.providerEntity as GitLabItemEntity?;
-        final assignees = entity?.assignees ?? const <String>[];
-        final handleMatch =
-            t.assignee?.toLowerCase() == account.handle.toLowerCase() ||
-            assignees.any(
-              (a) => a.toLowerCase() == account.handle.toLowerCase(),
-            );
-        if (!handleMatch) return false;
+      // (matched on assignee logins: names are display names)
+      if (location.quickScope == QuickScope.assignedToMe &&
+          !const IsAssignedToMe()(t, account)) {
+        return false;
       }
 
       return true;
@@ -121,7 +114,7 @@ class GitlabMrsSection extends ConsumerWidget {
 
     final Widget body;
     if (viewMode.value == 'board') {
-      body = const GitLabBoardView();
+      body = const GitLabBoardView(kind: GitLabItemKind.mergeRequest);
     } else {
       // Filter by state view mode
       final List<Ticket> stateFiltered = switch (viewMode.value) {
@@ -156,13 +149,7 @@ class GitlabMrsSection extends ConsumerWidget {
           GitLabMrChip.allOpen => true,
           GitLabMrChip.draft => entity?.draft == true,
           GitLabMrChip.inReview => entity?.reviewers.isNotEmpty == true,
-          GitLabMrChip.assignedToMe => () {
-            final assignees = entity?.assignees ?? const <String>[];
-            return t.assignee?.toLowerCase() == account.handle.toLowerCase() ||
-                assignees.any(
-                  (a) => a.toLowerCase() == account.handle.toLowerCase(),
-                );
-          }(),
+          GitLabMrChip.assignedToMe => const IsAssignedToMe()(t, account),
         };
       }).toList();
 

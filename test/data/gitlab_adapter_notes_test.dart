@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/domain/entities/comment.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
@@ -60,6 +61,23 @@ void main() {
 
     expect(await adapter.listComments(_issue), isA<Err<Object?>>());
     expect((await adapter.listComments(_issue) as Ok).value, hasLength(1));
+    verify(() => client.issueNotes(any(), any())).called(2);
+  });
+
+  // The adapter is pooled for the session: a later refresh (which starts
+  // with getTicket) must not be served the notes of an earlier one.
+  test('a later detail refresh fetches the notes again', () async {
+    var calls = 0;
+    when(
+      () => client.issueNotes(any(), any()),
+    ).thenAnswer((_) async => [GitLabNote(id: ++calls, body: 'note $calls')]);
+    when(() => client.issue(any(), any())).thenThrow(StateError('skip'));
+
+    await adapter.listComments(_issue);
+    await adapter.getTicket(_issue);
+    final again = await adapter.listComments(_issue);
+
+    expect((again as Ok<List<Comment>>).value.single.body, 'note 2');
     verify(() => client.issueNotes(any(), any())).called(2);
   });
 }
