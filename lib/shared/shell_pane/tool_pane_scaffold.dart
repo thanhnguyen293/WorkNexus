@@ -5,16 +5,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_sizes.dart';
 
 /// The 300px column hosting a tool's navigation pane (L3/L4).
-/// Composed of a [header], an optional [tabStrip], and a scrollable [body].
+/// Composed of an optional [tabStrip] and a scrollable [body].
 class ToolPaneScaffold extends StatelessWidget {
-  const ToolPaneScaffold({
-    super.key,
-    required this.header,
-    this.tabStrip,
-    required this.body,
-  });
+  const ToolPaneScaffold({super.key, this.tabStrip, required this.body});
 
-  final Widget header;
   final Widget? tabStrip;
   final Widget body;
 
@@ -33,7 +27,6 @@ class ToolPaneScaffold extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            header,
             ?tabStrip,
             Expanded(child: body),
           ],
