@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../platform/app_icon_service.dart';
+import '../platform/app_name_service.dart';
 import '../settings/app_settings.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_spacing.dart';
 import 'app_dropdown.dart';
 import 'quick_settings_app_icon_control.dart';
+import 'quick_settings_app_name_control.dart';
 import 'quick_settings_color_control.dart';
 import 'quick_settings_font_control.dart';
 import 'quick_settings_parts.dart';
@@ -80,6 +82,11 @@ class QuickSettingsPanel extends ConsumerWidget {
               value: settings.companyTint,
               onChanged: controller.setCompanyTint,
             ),
+            if (AppNameService.supported)
+              QuickSettingsField(
+                label: l.appName,
+                control: const QuickSettingsAppNameControl(),
+              ),
             if (AppIconService.supported)
               QuickSettingsField(
                 label: l.appIcon,

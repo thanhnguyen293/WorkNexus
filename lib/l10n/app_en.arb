@@ -627,6 +627,7 @@
   "dateFormatDmy": "DD/MM",
   "dateFormatLong": "Long",
   "companyTint": "Company tint",
+  "appName": "App name",
   "appIcon": "App icon",
   "appIconChoose": "Choose image…",
   "appIconReset": "Use the default icon",

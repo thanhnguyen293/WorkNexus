@@ -514,6 +514,7 @@
   "dateFormatDmy": "DD/MM",
   "dateFormatLong": "Dài",
   "companyTint": "Màu công ty",
+  "appName": "Tên ứng dụng",
   "appIcon": "Biểu tượng ứng dụng",
   "appIconChoose": "Chọn ảnh…",
   "appIconReset": "Dùng biểu tượng mặc định",

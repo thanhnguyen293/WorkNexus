@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:tray_manager/tray_manager.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../config/app_config.dart';
 import '../debug/app_talker.dart';
 
 /// Owns the native tray icon and translates its events into app actions.
@@ -27,7 +28,7 @@ class DesktopTrayService with TrayListener {
     try {
       trayManager.addListener(this);
       await trayManager.setIcon(_defaultIcon);
-      await trayManager.setToolTip('WorkNexus');
+      await trayManager.setToolTip(AppConfig.appName);
       await updateLocale(locale);
       _ready = true;
       return true;
@@ -41,6 +42,12 @@ class DesktopTrayService with TrayListener {
   static String get _defaultIcon => Platform.isWindows
       ? 'assets/tray/app_icon.ico'
       : 'assets/tray/app_icon.png';
+
+  /// Shows [name] as the tray tooltip, or the app's own name for null.
+  Future<void> setToolTip(String? name) async {
+    if (!_ready) return;
+    await trayManager.setToolTip(name ?? AppConfig.appName);
+  }
 
   /// Shows the icon file at [path] in the tray, or the app's own for null.
   Future<void> setIcon(String? path) async {
