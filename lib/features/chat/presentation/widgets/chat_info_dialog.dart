@@ -22,9 +22,7 @@ void showChatInfo(
 }) {
   if (ChatLayoutScope.of(context).infoRoom) {
     ref.read(openReplyThreadProvider(thread).notifier).state = null;
-    final current = ref.read(chatSidePanelProvider(thread));
-    ref.read(chatSidePanelProvider(thread).notifier).state =
-        current == ChatSidePanel.info ? null : ChatSidePanel.info;
+    ref.read(chatSidePanelProvider(thread).notifier).state = null;
     return;
   }
   showDialog<void>(

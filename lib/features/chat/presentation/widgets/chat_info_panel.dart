@@ -129,7 +129,12 @@ class ChatInfoPanel extends ConsumerWidget {
 
     return ChatSidePanelFrame(
       title: l.chatInfo,
-      onClose: onClose ?? () => closeChatSidePanel(ref, thread),
+      // With room the info panel stays: it only closes in a narrow window.
+      onClose:
+          onClose ??
+          (ChatLayoutScope.of(context).infoRoom
+              ? null
+              : () => closeChatSidePanel(ref, thread)),
       child: ListView(
         padding: EdgeInsets.all(s.xl),
         children: [
