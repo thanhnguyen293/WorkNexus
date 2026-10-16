@@ -20,6 +20,8 @@ import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
 import 'core/platform/app_icon_providers.dart';
 import 'core/platform/app_icon_service.dart';
+import 'core/platform/app_name_providers.dart';
+import 'core/platform/app_name_service.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
 import 'core/platform/desktop_single_instance_service.dart';
 import 'core/platform/desktop_tray_service.dart';
@@ -78,6 +80,8 @@ Future<void> main(List<String> arguments) async {
   // made; not awaited, the first frame does not need it.
   final appIcon = AppIconService(setTrayIcon: lifecycle.setTrayIcon);
   unawaited(appIcon.apply());
+  final appName = AppNameService(setTrayToolTip: lifecycle.setTrayToolTip);
+  unawaited(appName.apply());
 
   runApp(
     ProviderScope(
@@ -95,6 +99,7 @@ Future<void> main(List<String> arguments) async {
         ),
         initialAppSettingsProvider.overrideWithValue(initialSettings),
         appIconServiceProvider.overrideWithValue(appIcon),
+        appNameServiceProvider.overrideWithValue(appName),
         settingsPersistProvider.overrideWithValue(
           (s) => db.saveSettings(appSettingsToCompanion(s)),
         ),
