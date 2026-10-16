@@ -35,7 +35,7 @@ class AppDatePickerPanel extends StatelessWidget {
     final s = context.spacing;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final picked = this.picked;
+    final picked = this.picked?.toLocal();
     final day = picked == null
         ? null
         : DateTime(picked.year, picked.month, picked.day);

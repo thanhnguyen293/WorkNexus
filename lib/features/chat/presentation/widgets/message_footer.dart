@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
@@ -8,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/relative_time.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
@@ -66,7 +66,7 @@ class MessageFooter extends ConsumerWidget {
             ),
             SizedBox(width: context.spacing.md),
           ],
-          Text(DateFormat('HH:mm').format(message.sentAt), style: style),
+          Text(formatTime(message.sentAt), style: style),
           if (tick case final color?) ...[
             SizedBox(width: context.spacing.xxs),
             Icon(LucideIcons.check300, size: iconSize, color: color),

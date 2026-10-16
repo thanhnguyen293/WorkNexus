@@ -99,7 +99,7 @@ String? repoFromUrl(String? url) {
 
 DateTime? parseGitHubDate(String? value) {
   if (value == null || value.isEmpty) return null;
-  return DateTime.tryParse(value);
+  return DateTime.tryParse(value)?.toUtc();
 }
 
 List<String> _labelNames(List<GitHubLabel> labels) => [

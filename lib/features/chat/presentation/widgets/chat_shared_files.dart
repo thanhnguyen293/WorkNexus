@@ -73,7 +73,7 @@ class ChatFileRow extends ConsumerWidget {
     final s = context.spacing;
     final date = DateFormat.yMd(
       Localizations.localeOf(context).toString(),
-    ).format(message.sentAt);
+    ).format(message.sentAt.toLocal());
     final key = (accountId: message.accountId, content: file);
     final downloading = ref.watch(
       chatDownloadingProvider.select((d) => d.contains(key)),

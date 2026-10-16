@@ -5,7 +5,7 @@ import 'package:work_nexus/core/settings/pinned_execution.dart';
 
 void main() {
   group('AppSettings Pin Hierarchy', () {
-    test('pinning a child execution also pins its parent project', () {
+    test('pinning a child execution does NOT pin its parent project', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -21,10 +21,10 @@ void main() {
 
       final settings = container.read(appSettingsProvider);
       expect(settings.pinnedExecutions, contains(execution));
-      expect(settings.pinnedProjects, contains('acc1:proj1'));
+      expect(settings.pinnedProjects, isNot(contains('acc1:proj1')));
     });
 
-    test('unpinning an execution keeps the parent project pinned', () {
+    test('unpinning an execution leaves pinnedProjects untouched', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -41,77 +41,54 @@ void main() {
 
       final settings = container.read(appSettingsProvider);
       expect(settings.pinnedExecutions, isEmpty);
-      expect(settings.pinnedProjects, contains('acc1:proj1'));
+      expect(settings.pinnedProjects, isEmpty);
     });
 
-    test('unpinning a project also unpins all its child executions', () {
+    test('pinning and unpinning a project does NOT modify child executions', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       final controller = container.read(appSettingsProvider.notifier);
-      const execution1 = PinnedExecution(
+      const execution = PinnedExecution(
         accountId: 'acc1',
         projectId: 'proj1',
         executionId: 'exec1',
         name: 'Sprint 1',
       );
-      const execution2 = PinnedExecution(
-        accountId: 'acc1',
-        projectId: 'proj1',
-        executionId: 'exec2',
-        name: 'Sprint 2',
-      );
-      const otherExecution = PinnedExecution(
-        accountId: 'acc1',
-        projectId: 'proj2',
-        executionId: 'exec3',
-        name: 'Other Sprint',
-      );
 
-      controller.togglePinnedExecution(execution1);
-      controller.togglePinnedExecution(execution2);
-      controller.togglePinnedExecution(otherExecution);
+      // Pin child execution first
+      controller.togglePinnedExecution(execution);
+      expect(container.read(appSettingsProvider).pinnedExecutions, [execution]);
+      expect(container.read(appSettingsProvider).pinnedProjects, isEmpty);
 
-      expect(container.read(appSettingsProvider).pinnedExecutions.length, 3);
+      // Pin parent project
+      controller.togglePinnedProject('acc1:proj1');
       expect(
         container.read(appSettingsProvider).pinnedProjects,
         contains('acc1:proj1'),
       );
+      expect(container.read(appSettingsProvider).pinnedExecutions, [execution]);
 
-      // Unpin proj1
+      // Unpin parent project
       controller.togglePinnedProject('acc1:proj1');
-
-      final settings = container.read(appSettingsProvider);
-      expect(settings.pinnedProjects, isNot(contains('acc1:proj1')));
-      expect(settings.pinnedProjects, contains('acc1:proj2'));
-      expect(settings.pinnedExecutions, [otherExecution]);
+      expect(
+        container.read(appSettingsProvider).pinnedProjects,
+        isNot(contains('acc1:proj1')),
+      );
+      // Independent child execution remains pinned
+      expect(container.read(appSettingsProvider).pinnedExecutions, [execution]);
     });
 
-    test('pinning a project with childExecutions pins all of them', () {
+    test('pinning a project does not add children to pinnedExecutions', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       final controller = container.read(appSettingsProvider.notifier);
-      const execs = [
-        PinnedExecution(
-          accountId: 'acc1',
-          projectId: 'proj1',
-          executionId: 'exec1',
-          name: 'Sprint 1',
-        ),
-        PinnedExecution(
-          accountId: 'acc1',
-          projectId: 'proj1',
-          executionId: 'exec2',
-          name: 'Sprint 2',
-        ),
-      ];
-
-      controller.togglePinnedProject('acc1:proj1', childExecutions: execs);
+      controller.togglePinnedProject('acc1:proj1');
 
       final settings = container.read(appSettingsProvider);
       expect(settings.pinnedProjects, contains('acc1:proj1'));
-      expect(settings.pinnedExecutions, containsAll(execs));
+      expect(settings.pinnedExecutions, isEmpty);
     });
   });
 }

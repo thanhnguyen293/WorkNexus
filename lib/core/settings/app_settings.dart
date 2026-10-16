@@ -362,48 +362,26 @@ class AppSettingsController extends Notifier<AppSettings> {
   /// Pins/unpins a ZenTao project by its `"accountId:productId"` [key].
   /// When unpinning a project, its child executions are also unpinned.
   /// When pinning, [childExecutions] can also be pinned.
-  void togglePinnedProject(
-    String key, {
-    List<PinnedExecution>? childExecutions,
-  }) {
+  void togglePinnedProject(String key) {
     final nextProjects = Set<String>.of(state.pinnedProjects);
-    final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
     if (nextProjects.contains(key)) {
       nextProjects.remove(key);
-      final parts = key.split(':');
-      if (parts.length >= 2) {
-        nextExecs.removeWhere(
-          (e) => e.accountId == parts[0] && e.projectId == parts[1],
-        );
-      }
     } else {
       nextProjects.add(key);
-      if (childExecutions != null) {
-        final existing = {for (final e in nextExecs) e.key};
-        for (final c in childExecutions) {
-          if (!existing.contains(c.key)) nextExecs.add(c);
-        }
-      }
     }
-    _set(
-      state.copyWith(pinnedProjects: nextProjects, pinnedExecutions: nextExecs),
-    );
+    _set(state.copyWith(pinnedProjects: nextProjects));
   }
 
-  /// Pins/unpins a ZenTao [execution]. Pinning an execution also pins its parent project.
+  /// Pins/unpins a ZenTao [execution]. Does not modify parent project pinning.
   void togglePinnedExecution(PinnedExecution execution) {
     final nextExecs = List<PinnedExecution>.of(state.pinnedExecutions);
-    final nextProjects = Set<String>.of(state.pinnedProjects);
     final index = nextExecs.indexWhere((e) => e.key == execution.key);
     if (index >= 0) {
       nextExecs.removeAt(index);
     } else {
       nextExecs.add(execution);
-      nextProjects.add('${execution.accountId}:${execution.projectId}');
     }
-    _set(
-      state.copyWith(pinnedExecutions: nextExecs, pinnedProjects: nextProjects),
-    );
+    _set(state.copyWith(pinnedExecutions: nextExecs));
   }
 
   void toggleCompanyTint() =>

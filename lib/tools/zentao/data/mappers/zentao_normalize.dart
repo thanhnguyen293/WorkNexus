@@ -84,11 +84,13 @@ String stripHtml(String html) {
 }
 
 /// Parses ZenTao dates (ISO-8601 or `YYYY-MM-DD HH:MM:SS`); `0000-00-00` → null.
+/// Treats server dates without offset as local and normalizes to UTC.
 DateTime? parseZenTaoDate(Object? value) {
   if (value == null) return null;
   final s = value.toString().trim();
   if (s.isEmpty || s.startsWith('0000-00-00')) return null;
-  return DateTime.tryParse(s.replaceFirst(' ', 'T'));
+  final parsed = DateTime.tryParse(s.replaceFirst(' ', 'T'));
+  return parsed?.toUtc();
 }
 
 /// Human-readable phrase for a ZenTao action/history record, rendered after the

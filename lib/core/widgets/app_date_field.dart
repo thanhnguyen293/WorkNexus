@@ -57,7 +57,7 @@ class _AppDateFieldState extends State<AppDateField> {
   /// A calendar day, keeping the time already picked (or now's).
   void _pickDay(DateTime day) {
     if (!widget.withTime) return _set(day, close: true);
-    final time = widget.value ?? DateTime.now();
+    final time = widget.value?.toLocal() ?? DateTime.now();
     _set(
       DateTime(day.year, day.month, day.day, time.hour, time.minute),
       close: false,
@@ -65,7 +65,7 @@ class _AppDateFieldState extends State<AppDateField> {
   }
 
   void _pickTime(TimeOfDay time) {
-    final day = widget.value ?? DateTime.now();
+    final day = widget.value?.toLocal() ?? DateTime.now();
     _set(
       DateTime(day.year, day.month, day.day, time.hour, time.minute),
       close: false,
@@ -125,7 +125,9 @@ class _AppDateFieldState extends State<AppDateField> {
               quickPicks: _quickPicks(l),
               footer: widget.withTime
                   ? _TimeRow(
-                      value: TimeOfDay.fromDateTime(value ?? DateTime.now()),
+                      value: TimeOfDay.fromDateTime(
+                        (value?.toLocal()) ?? DateTime.now(),
+                      ),
                       onChanged: _pickTime,
                     )
                   : null,

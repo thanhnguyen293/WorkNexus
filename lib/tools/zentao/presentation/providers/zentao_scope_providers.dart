@@ -47,15 +47,39 @@ List<Ticket> scopeZenTaoTasks(Ref ref, List<Ticket> tickets) {
   final scopeId = nav.currentLocation?.scopeId;
 
   if (scopeId != null && scopeId.isNotEmpty) {
+    final execs = accountId != null
+        ? ref
+            .watch(
+              zentaoExecutionsProvider((
+                accountId: accountId,
+                projectId: scopeId,
+              )),
+            )
+            .asData
+            ?.value
+        : null;
+    final childExecIds =
+        execs?.map((e) => e.id).toSet() ?? const <String>{};
+
     return tickets.where((t) {
       if (accountId != null && t.accountId != accountId) return false;
       if (t.externalType?.toLowerCase() != 'task' &&
           t.providerEntity is! ZenTaoTaskEntity) {
         return false;
       }
-      return t.projectId == scopeId ||
+      final task = t.providerEntity as ZenTaoTaskEntity?;
+      if (t.projectId == scopeId ||
           t.projectId.endsWith(':$scopeId') ||
-          (t.providerEntity as ZenTaoTaskEntity?)?.project == scopeId;
+          task?.project == scopeId) {
+        return true;
+      }
+      if (task?.execution != null && childExecIds.contains(task!.execution)) {
+        return true;
+      }
+      for (final execId in childExecIds) {
+        if (t.labels.contains(zentaoExecutionLabel(execId))) return true;
+      }
+      return false;
     }).toList();
   }
 
@@ -94,12 +118,30 @@ List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
     ];
   }
 
+  // Scope to bugs belonging to this product
+  final prodId = product.productId;
+  final prodName = product.productName;
+  final prodLabel = zentaoProductLabel(prodId);
+
+  tickets = tickets.where((t) {
+    if (t.accountId != product.accountId) return false;
+    if (t.externalType?.toLowerCase() != 'bug' &&
+        t.providerEntity is! ZenTaoBugEntity) {
+      return false;
+    }
+    if (t.labels.contains(prodLabel)) return true;
+    if (t.providerEntity is ZenTaoBugEntity) {
+      final b = t.providerEntity as ZenTaoBugEntity;
+      if (b.product == prodId || b.productName == prodName) return true;
+    }
+    return false;
+  }).toList();
+
   // When a child execution is selected, narrow bugs exclusively to that execution.
   // When no execution is selected (parent product only), all bugs for this product are included.
   if (execution != null) {
     final execId = execution.executionId;
     tickets = tickets.where((t) {
-      if (t.accountId != execution.accountId) return false;
       if (t.providerEntity is ZenTaoBugEntity) {
         final b = t.providerEntity as ZenTaoBugEntity;
         if (b.execution == execId) return true;
@@ -115,7 +157,6 @@ List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
         accountId: product.accountId,
         providerType: ProviderType.zentao,
         externalType: 'bug',
-        membershipLabel: zentaoProductLabel(product.productId),
         slice: null,
       ),
       loads: PagedViewLoads.of(streams),

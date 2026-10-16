@@ -22,11 +22,13 @@ class ZentaoProductExecutions extends ConsumerWidget {
     required this.account,
     required this.product,
     required this.tickets,
+    this.onlyPinned = false,
   });
 
   final Account account;
   final ProviderProduct product;
   final List<Ticket> tickets;
+  final bool onlyPinned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,8 +78,16 @@ class ZentaoProductExecutions extends ConsumerWidget {
           }
         }
 
-        if (allExecs.isEmpty) {
-          return SidebarStatusRow(label: l.noExecutions);
+        final displayed = onlyPinned
+            ? allExecs
+                .where((e) => pinnedKeys.contains('${account.id}:${e.id}'))
+                .toList()
+            : allExecs;
+
+        if (displayed.isEmpty) {
+          return onlyPinned
+              ? const SizedBox.shrink()
+              : SidebarStatusRow(label: l.noExecutions);
         }
 
         int executionBugCount(String executionId) => tickets
@@ -97,7 +107,7 @@ class ZentaoProductExecutions extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final execution in allExecs)
+            for (final execution in displayed)
               ZenTaoExecutionRow(
                 key: ValueKey('prod_exec_${execution.id}'),
                 execution: execution,

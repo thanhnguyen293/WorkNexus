@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -10,6 +11,7 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/util/synthetic_labels.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/shell_pane/scope_filter_field.dart';
@@ -60,22 +62,49 @@ class _ZentaoProductsScopeListState
                   .where((p) => p.name.toLowerCase().contains(query))
                   .toList();
 
+        final projects = ref
+                .watch(zentaoProjectsProvider(widget.account.id))
+                .asData
+                ?.value ??
+            const <ProviderProject>[];
+
+        String matchedProjectId(ProviderProduct prod) {
+          final matched = projects.firstWhereOrNull(
+            (proj) =>
+                proj.name.trim().toLowerCase() ==
+                    prod.name.trim().toLowerCase() ||
+                proj.id == prod.id,
+          );
+          return matched?.id ?? prod.id;
+        }
+
         int openCount(String productId) => tickets
             .where(
               (t) =>
                   t.accountId == widget.account.id &&
-                  (t.providerEntity is ZenTaoBugEntity &&
-                      (t.providerEntity as ZenTaoBugEntity).product ==
-                          productId) &&
-                  t.status != UnifiedStatus.done,
+                  t.status != UnifiedStatus.done &&
+                  ((t.providerEntity is ZenTaoBugEntity &&
+                          (t.providerEntity as ZenTaoBugEntity).product ==
+                              productId) ||
+                      t.labels.contains(zentaoProductLabel(productId))),
             )
             .length;
 
         String keyOf(ProviderProduct p) => '${p.accountId}:${p.id}';
 
-        final pinnedProducts = filtered
-            .where((p) => pinned.contains(keyOf(p)))
+        final pinnedExecutions = ref
+            .watch(appSettingsProvider.select((s) => s.pinnedExecutions))
+            .where((e) => e.accountId == widget.account.id)
             .toList();
+
+        final pinnedProducts = filtered.where((p) {
+          final isProdPinned = pinned.contains(keyOf(p));
+          final mId = matchedProjectId(p);
+          final hasPinnedChild = pinnedExecutions
+              .any((e) => e.projectId == p.id || e.projectId == mId);
+          return isProdPinned || hasPinnedChild;
+        }).toList();
+
         final unpinnedProducts = filtered
             .where((p) => !pinned.contains(keyOf(p)))
             .toList();
@@ -147,7 +176,9 @@ class _ZentaoProductsScopeListState
                       tickets: tickets,
                       location: widget.location,
                       openCount: openCount(p.id),
-                      isPinned: true,
+                      isPinned: pinned.contains(keyOf(p)),
+                      isInPinned: true,
+                      onlyPinnedExecutions: !pinned.contains(keyOf(p)),
                       onPinToggle: () => ref
                           .read(appSettingsProvider.notifier)
                           .togglePinnedProject(keyOf(p)),

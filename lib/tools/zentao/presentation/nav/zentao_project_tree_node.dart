@@ -7,7 +7,6 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
-import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -31,6 +30,8 @@ class ZentaoProjectTreeNode extends ConsumerStatefulWidget {
     required this.openCount,
     required this.isPinned,
     required this.onPinToggle,
+    this.isInPinned = false,
+    this.onlyPinnedExecutions = false,
   });
 
   final Account account;
@@ -40,6 +41,8 @@ class ZentaoProjectTreeNode extends ConsumerStatefulWidget {
   final int openCount;
   final bool isPinned;
   final VoidCallback onPinToggle;
+  final bool isInPinned;
+  final bool onlyPinnedExecutions;
 
   @override
   ConsumerState<ZentaoProjectTreeNode> createState() =>
@@ -48,45 +51,13 @@ class ZentaoProjectTreeNode extends ConsumerStatefulWidget {
 
 class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
   bool _hovered = false;
+  bool? _pinnedExpanded;
 
-  void _togglePin(String key) async {
-    if (widget.isPinned) {
-      ref.read(appSettingsProvider.notifier).togglePinnedProject(key);
+  void _onToggleExpand(String key, bool currentExpanded) {
+    if (widget.isInPinned) {
+      setState(() => _pinnedExpanded = !currentExpanded);
     } else {
-      var childExecs = ref
-          .read(
-            zentaoExecutionsProvider((
-              accountId: widget.account.id,
-              projectId: widget.project.id,
-            )),
-          )
-          .asData
-          ?.value;
-      if (childExecs == null) {
-        try {
-          childExecs = await ref.read(
-            zentaoExecutionsProvider((
-              accountId: widget.account.id,
-              projectId: widget.project.id,
-            )).future,
-          );
-        } catch (_) {}
-      }
-      ref
-          .read(appSettingsProvider.notifier)
-          .togglePinnedProject(
-            key,
-            childExecutions: childExecs
-                ?.map(
-                  (e) => PinnedExecution(
-                    accountId: e.accountId,
-                    projectId: e.projectId,
-                    executionId: e.id,
-                    name: e.name,
-                  ),
-                )
-                .toList(),
-          );
+      ref.read(zentaoExecutionProjectsExpandedProvider.notifier).toggle(key);
     }
   }
 
@@ -97,11 +68,13 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
     final l = AppL10n.of(context);
     final key = '${widget.account.id}:${widget.project.id}';
 
-    final expanded = ref.watch(
-      zentaoExecutionProjectsExpandedProvider.select(
-        (set) => set.contains(key),
-      ),
-    );
+    final expanded = widget.isInPinned
+        ? (_pinnedExpanded ?? true)
+        : ref.watch(
+            zentaoExecutionProjectsExpandedProvider.select(
+              (set) => set.contains(key),
+            ),
+          );
 
     final selected =
         widget.location.scopeId == widget.project.id &&
@@ -131,9 +104,7 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
               child: Row(
                 children: [
                   InkWell(
-                    onTap: () => ref
-                        .read(zentaoExecutionProjectsExpandedProvider.notifier)
-                        .toggle(key),
+                    onTap: () => _onToggleExpand(key, expanded),
                     borderRadius: BorderRadius.circular(context.radii.xs),
                     child: Padding(
                       padding: EdgeInsets.all(s.xxs),
@@ -173,7 +144,7 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
                   if (widget.isPinned || _hovered)
                     SidebarPinButton(
                       pinned: widget.isPinned,
-                      onTap: () => _togglePin(key),
+                      onTap: widget.onPinToggle,
                       tooltip: widget.isPinned ? l.unpinProject : l.pinProject,
                     ),
                 ],
@@ -187,6 +158,7 @@ class _ZentaoProjectTreeNodeState extends ConsumerState<ZentaoProjectTreeNode> {
               account: widget.account,
               projectId: widget.project.id,
               tickets: widget.tickets,
+              onlyPinned: widget.onlyPinnedExecutions,
             ),
           ),
       ],
@@ -199,11 +171,13 @@ class _ProjectExecutions extends ConsumerWidget {
     required this.account,
     required this.projectId,
     required this.tickets,
+    this.onlyPinned = false,
   });
 
   final Account account;
   final String projectId;
   final List<Ticket> tickets;
+  final bool onlyPinned;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -220,14 +194,21 @@ class _ProjectExecutions extends ConsumerWidget {
 
     return executionsAsync.when(
       data: (executions) {
-        if (executions.isEmpty) {
-          return SidebarStatusRow(label: l.noExecutions);
+        final displayed = onlyPinned
+            ? executions
+                .where((e) => pinnedKeys.contains('${account.id}:${e.id}'))
+                .toList()
+            : executions;
+        if (displayed.isEmpty) {
+          return onlyPinned
+              ? const SizedBox.shrink()
+              : SidebarStatusRow(label: l.noExecutions);
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final execution in executions)
+            for (final execution in displayed)
               ZenTaoExecutionRow(
                 key: ValueKey('exec_${execution.id}'),
                 execution: execution,

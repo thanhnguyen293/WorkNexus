@@ -88,8 +88,8 @@ Ticket ticketFromRow(TicketRow r) => Ticket(
   assignee: r.assignee,
   url: r.url,
   severity: r.severity,
-  createdAt: r.createdAt,
-  updatedAt: r.updatedAt,
+  createdAt: r.createdAt?.toUtc(),
+  updatedAt: r.updatedAt?.toUtc(),
   providerEntity: decodeProviderEntity(r.providerEntityJson),
   sourceHash: r.sourceHash,
 );
@@ -117,11 +117,10 @@ TicketsCompanion ticketToCompanion(Ticket t) => TicketsCompanion.insert(
 );
 
 /// [value] as drift reads it back: drift keeps a `DateTime` as whole unix
-/// seconds and returns it in local time, so an entity about to be written
-/// compares equal to its stored row only once its timestamps are rounded the
-/// same way.
+/// seconds. Entities store timestamps normalized to UTC.
 DateTime storedDateTime(DateTime value) => DateTime.fromMillisecondsSinceEpoch(
   (value.millisecondsSinceEpoch ~/ 1000) * 1000,
+  isUtc: true,
 );
 
 DateTime? storedDateTimeOrNull(DateTime? value) =>
@@ -148,7 +147,7 @@ Comment commentFromRow(CommentRow r) => Comment(
   ticketId: r.ticketId,
   authorName: r.authorName,
   body: r.body,
-  createdAt: r.createdAt,
+  createdAt: r.createdAt.toUtc(),
   origin: CommentOrigin.values.firstWhere(
     (o) => o.name == r.origin,
     orElse: () => CommentOrigin.provider,
@@ -171,7 +170,7 @@ ActivityEvent activityFromRow(ActivityRow r) => ActivityEvent(
   ticketId: r.ticketId,
   actor: r.actor,
   action: r.action,
-  at: r.at,
+  at: r.at.toUtc(),
   detail: r.detail,
   attachments: r.attachmentsJson == null
       ? const []

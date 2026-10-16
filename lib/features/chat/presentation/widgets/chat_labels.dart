@@ -103,7 +103,8 @@ String? chatAvatarUrl(Map<int, ChatUser> users, int? id) =>
 String chatDayLabel(BuildContext context, DateTime day, {DateTime? now}) {
   final l = AppL10n.of(context);
   final today = DateUtils.dateOnly(now ?? DateTime.now());
-  final d = DateUtils.dateOnly(day);
+  final localDay = day.toLocal();
+  final d = DateUtils.dateOnly(localDay);
   if (d == today) return l.chatToday;
   if (d == today.subtract(const Duration(days: 1))) return l.chatYesterday;
   final locale = Localizations.localeOf(context).toString();
@@ -113,19 +114,20 @@ String chatDayLabel(BuildContext context, DateTime day, {DateTime? now}) {
 }
 
 /// Compact time for the chat list: 10:05 today, "Yesterday", a weekday within
-/// the week, else a short date.
+/// the week, else a short date. Always rendered in user local time.
 String chatListTime(BuildContext context, DateTime? t, {DateTime? now}) {
   if (t == null) return '';
+  final local = t.toLocal();
   final today = DateUtils.dateOnly(now ?? DateTime.now());
-  final day = DateUtils.dateOnly(t);
+  final day = DateUtils.dateOnly(local);
   final locale = Localizations.localeOf(context).toString();
   final age = today.difference(day).inDays;
-  if (age == 0) return DateFormat('HH:mm').format(t);
+  if (age == 0) return DateFormat('HH:mm').format(local);
   if (age == 1) return AppL10n.of(context).chatYesterday;
-  if (age < 7) return DateFormat.E(locale).format(t);
-  return t.year == today.year
-      ? DateFormat('dd/MM').format(t)
-      : DateFormat('dd/MM/yy').format(t);
+  if (age < 7) return DateFormat.E(locale).format(local);
+  return local.year == today.year
+      ? DateFormat('dd/MM').format(local)
+      : DateFormat('dd/MM/yy').format(local);
 }
 
 /// The host of a URL, for link cards.
@@ -271,13 +273,16 @@ String chatPresenceLabel(BuildContext context, ChatPresence presence) {
 }
 
 /// How long ago [t] was, compactly: "just now", "5m ago", "2h ago", "3d
-/// ago", then the date.
+/// ago", then the date. Always rendered in user local time.
 String chatAgo(BuildContext context, DateTime t, {DateTime? now}) {
   final l = AppL10n.of(context);
-  final diff = (now ?? DateTime.now()).difference(t);
+  final local = t.toLocal();
+  final diff = (now ?? DateTime.now()).difference(local);
   if (diff.inMinutes < 1) return l.justNow;
   if (diff.inHours < 1) return l.minutesAgo(diff.inMinutes);
   if (diff.inDays < 1) return l.hoursAgo(diff.inHours);
   if (diff.inDays < 30) return l.daysAgo(diff.inDays);
-  return DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(t);
+  return DateFormat.yMMMd(
+    Localizations.localeOf(context).toString(),
+  ).format(local);
 }

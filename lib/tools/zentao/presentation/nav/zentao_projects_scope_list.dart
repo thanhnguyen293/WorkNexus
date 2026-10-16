@@ -11,6 +11,7 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/util/synthetic_labels.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/shell_pane/scope_filter_field.dart';
 import '../../../../shared/shell_pane/scope_list_body.dart';
@@ -64,30 +65,60 @@ class _ZentaoProjectsScopeListState
                 return false;
               }).toList();
 
-        int openCount(String projectId) => tickets
-            .where(
-              (t) =>
-                  t.accountId == widget.account.id &&
-                  t.projectId == projectId &&
-                  t.status != UnifiedStatus.done &&
-                  (t.externalType?.toLowerCase() == 'task' ||
-                      t.providerEntity is ZenTaoTaskEntity),
-            )
-            .length;
+        int openCount(String projectId) {
+          final execs = ref
+              .watch(
+                zentaoExecutionsProvider((
+                  accountId: widget.account.id,
+                  projectId: projectId,
+                )),
+              )
+              .asData
+              ?.value;
+          final childExecIds =
+              execs?.map((e) => e.id).toSet() ?? const <String>{};
+          return tickets.where((t) {
+            if (t.accountId != widget.account.id) return false;
+            if (t.status == UnifiedStatus.done) return false;
+            if (t.externalType?.toLowerCase() != 'task' &&
+                t.providerEntity is! ZenTaoTaskEntity) {
+              return false;
+            }
+            final task = t.providerEntity as ZenTaoTaskEntity?;
+            if (t.projectId == projectId ||
+                t.projectId.endsWith(':$projectId') ||
+                task?.project == projectId) {
+              return true;
+            }
+            if (task?.execution != null &&
+                childExecIds.contains(task!.execution)) {
+              return true;
+            }
+            for (final execId in childExecIds) {
+              if (t.labels.contains(zentaoExecutionLabel(execId))) return true;
+            }
+            return false;
+          }).length;
+        }
 
         String keyOf(ProviderProject p) => '${p.accountId}:${p.id}';
-
-        final pinnedProjects = filtered
-            .where((p) => pinned.contains(keyOf(p)))
-            .toList();
-        final unpinnedProjects = filtered
-            .where((p) => !pinned.contains(keyOf(p)))
-            .toList();
 
         final pinnedExecutions = ref
             .watch(appSettingsProvider.select((s) => s.pinnedExecutions))
             .where((e) => e.accountId == widget.account.id)
             .toList();
+
+        final pinnedProjects = filtered.where((p) {
+          final isProjPinned = pinned.contains(keyOf(p));
+          final hasPinnedChild =
+              pinnedExecutions.any((e) => e.projectId == p.id);
+          return isProjPinned || hasPinnedChild;
+        }).toList();
+
+        final unpinnedProjects = filtered
+            .where((p) => !pinned.contains(keyOf(p)))
+            .toList();
+
         final filteredExecutions = query.isEmpty
             ? pinnedExecutions
             : pinnedExecutions
@@ -170,13 +201,15 @@ class _ZentaoProjectsScopeListState
                       tickets: tickets,
                       location: widget.location,
                       openCount: openCount(p.id),
-                      isPinned: true,
+                      isPinned: pinned.contains(keyOf(p)),
+                      isInPinned: true,
+                      onlyPinnedExecutions: !pinned.contains(keyOf(p)),
                       onPinToggle: () => ref
                           .read(appSettingsProvider.notifier)
                           .togglePinnedProject(keyOf(p)),
                     ),
                   for (final e in filteredExecutions.where(
-                    (e) => !pinnedProjects.any((p) => p.id == e.projectId),
+                    (e) => !filtered.any((p) => p.id == e.projectId),
                   ))
                     ScopeRow(
                       name: e.name,
