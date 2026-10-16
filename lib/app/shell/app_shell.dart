@@ -22,6 +22,7 @@ import '../../features/notifications/presentation/widgets/notifications_panel.da
 import '../../features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
 import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
 import '../../shared/detail/presentation/detail_panel.dart';
+import 'account_sync_at_launch.dart';
 import 'app_nav_rail.dart';
 import 'new_ticket_menu.dart';
 import 'title_bar.dart';
@@ -77,47 +78,49 @@ class AppShell extends ConsumerWidget {
     // A mini app, like the editor, takes the whole area beside the rail.
     final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
-    return BoardFilterKeepAlive(
-      child: TicketLinkHandler(
-        child: ChatNotificationListener(
-          child: ChatAppBadge(
-            child: StickerImportListener(
-              child: Scaffold(
-                backgroundColor: c.background,
-                body: NewTicketShortcut(
-                  child: Column(
-                    children: [
-                      TitleBar(assignedCount: assigned),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            const ZenTaoProfileStartup(),
-                            Row(
-                              children: [
-                                const AppNavRail(),
-                                if (editor == null && !miniAppOnScreen)
-                                  _ToolPane(nav: nav),
-                                const Expanded(child: Viewport()),
-                              ],
-                            ),
-                            NotificationsPanel(
-                              leftInset: AppNavRail.widthOf(context),
-                            ),
-                            const DetailOverlay(),
-                            const QuickSettingsSidePanel(
-                              generalSections: [LocalCacheQuickSettings()],
-                              chatSections: [
-                                ChatAppearanceSettings(),
-                                ChatAutoDownloadSettings(),
-                                ChatNotificationSettings(),
-                                ChatPrivacySettings(),
-                              ],
-                            ),
-                            const TalkerDebugOverlay(),
-                          ],
+    return AccountSyncAtLaunch(
+      child: BoardFilterKeepAlive(
+        child: TicketLinkHandler(
+          child: ChatNotificationListener(
+            child: ChatAppBadge(
+              child: StickerImportListener(
+                child: Scaffold(
+                  backgroundColor: c.background,
+                  body: NewTicketShortcut(
+                    child: Column(
+                      children: [
+                        TitleBar(assignedCount: assigned),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              const ZenTaoProfileStartup(),
+                              Row(
+                                children: [
+                                  const AppNavRail(),
+                                  if (editor == null && !miniAppOnScreen)
+                                    _ToolPane(nav: nav),
+                                  const Expanded(child: Viewport()),
+                                ],
+                              ),
+                              NotificationsPanel(
+                                leftInset: AppNavRail.widthOf(context),
+                              ),
+                              const DetailOverlay(),
+                              const QuickSettingsSidePanel(
+                                generalSections: [LocalCacheQuickSettings()],
+                                chatSections: [
+                                  ChatAppearanceSettings(),
+                                  ChatAutoDownloadSettings(),
+                                  ChatNotificationSettings(),
+                                  ChatPrivacySettings(),
+                                ],
+                              ),
+                              const TalkerDebugOverlay(),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

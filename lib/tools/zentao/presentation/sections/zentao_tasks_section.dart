@@ -17,6 +17,7 @@ import '../../../../shared/board/domain/value_objects/saved_view.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../providers/zentao_board_providers.dart';
+import '../util/keep_task_board_scope.dart';
 import '../widgets/zentao_status_filter_option.dart';
 import '../widgets/zentao_task_board_view.dart';
 import '../widgets/zentao_task_section_header.dart';
@@ -65,6 +66,7 @@ class ZentaoTasksSection extends ConsumerWidget {
     final s = context.spacing;
     final viewMode =
         location.viewModes[location.section] ?? const ViewModeId('list');
+    keepTaskBoardScope(context, ref, account, location);
 
     final Widget body;
     switch (viewMode.value) {

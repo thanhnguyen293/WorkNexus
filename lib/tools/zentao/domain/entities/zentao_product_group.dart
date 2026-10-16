@@ -31,7 +31,7 @@ class ZenTaoProductGroup {
 }
 
 /// The products as ZenTao groups them: [groups] in ZenTao's order, then the
-/// products in no program or line ([ungrouped]).
+/// products in no program or line ([ungrouped]), by name.
 class ZenTaoProductTree {
   const ZenTaoProductTree({required this.groups, required this.ungrouped});
 
@@ -88,7 +88,10 @@ class ZenTaoProductTree {
     }
     return ZenTaoProductTree(
       groups: [for (final f in folders.values) f.toGroup()],
-      ungrouped: ungrouped,
+      // Folders and their contents keep ZenTao's order; the loose products
+      // read best by name.
+      ungrouped: ungrouped
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
     );
   }
 }

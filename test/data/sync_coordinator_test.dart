@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -232,4 +234,26 @@ void main() {
       expect(projects.single.programName, 'VN Program');
     },
   );
+
+  // The launch sync and the Overview's can ask at once: one fetch serves both.
+  test('syncs of one account at once share a single fetch', () async {
+    final adapter = await coordinator.adapterFor('gl-acc') as _MockAdapter;
+    final reply = Completer<Result<TicketPage>>();
+    when(adapter.listAssignedTickets).thenAnswer((_) => reply.future);
+
+    final first = coordinator.syncAccount(_account);
+    final second = coordinator.syncAccount(_account);
+    reply.complete(const Ok(TicketPage(tickets: [])));
+
+    expect(await first, isA<Ok<int>>());
+    expect(await second, isA<Ok<int>>());
+    verify(adapter.listAssignedTickets).called(1);
+
+    // Once done, the next sync fetches again.
+    when(
+      adapter.listAssignedTickets,
+    ).thenAnswer((_) async => const Ok(TicketPage(tickets: [])));
+    await coordinator.syncAccount(_account);
+    verify(adapter.listAssignedTickets).called(1);
+  });
 }

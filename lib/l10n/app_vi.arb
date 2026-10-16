@@ -1611,5 +1611,6 @@
   "taskFormModeSimple": "Rút gọn",
   "taskFormModeFull": "Đầy đủ",
   "workspaceCreateFailed": "Không tạo được workspace: {error}",
-  "zentaoProductsGroup": "Product"
+  "zentaoProductsGroup": "Product",
+  "zentaoProjectsGroup": "Project"
 }

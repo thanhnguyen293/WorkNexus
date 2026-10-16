@@ -58,15 +58,20 @@ void main() {
         _p('1', 'VN_Wallet', '3', 'Mobile'),
         _p('2', 'HK_Chat', '9', 'Asia'),
         _p('3', 'VN_Chat', '3', 'Mobile'),
-        _p('4', 'Daily'),
+        _p('4', 'HK_Wallet'),
+        _p('5', 'Code Security Review'),
       ]);
 
       expect(tree.groups.map((g) => (g.id, g.name)), [
         ('program:3', 'Mobile'),
         ('program:9', 'Asia'),
       ]);
+      // Inside a folder: ZenTao's order. The loose ones: by name.
       expect(tree.groups.first.projects.map((p) => p.id), ['1', '3']);
-      expect(tree.ungrouped.map((p) => p.id), ['4']);
+      expect(tree.ungrouped.map((p) => p.name), [
+        'Code Security Review',
+        'HK_Wallet',
+      ]);
     });
 
     test('no folder is made up from a name prefix', () {

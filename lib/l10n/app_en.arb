@@ -2378,5 +2378,6 @@
       }
     }
   },
-  "zentaoProductsGroup": "Products"
+  "zentaoProductsGroup": "Products",
+  "zentaoProjectsGroup": "Projects"
 }

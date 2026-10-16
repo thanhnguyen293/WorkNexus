@@ -18,7 +18,7 @@ class ZenTaoProjectGroup {
 }
 
 /// The projects as ZenTao groups them: [groups] by program, in ZenTao's
-/// order, then the projects in no (named) program ([ungrouped]).
+/// order, then the projects in no (named) program ([ungrouped]), by name.
 class ZenTaoProjectTree {
   const ZenTaoProjectTree({required this.groups, required this.ungrouped});
 
@@ -59,7 +59,10 @@ class ZenTaoProjectTree {
         for (final MapEntry(:key, :value) in groups.entries)
           ZenTaoProjectGroup(id: key, name: value.name, projects: value.list),
       ],
-      ungrouped: ungrouped,
+      // Folders and their contents keep ZenTao's order; the loose projects
+      // read best by name.
+      ungrouped: ungrouped
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
     );
   }
 }
