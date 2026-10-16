@@ -5,7 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../core/widgets/app_context_menu.dart';
-import '../../../../core/widgets/app_rail_button.dart';
+import '../../../../core/widgets/app_rail_labeled_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/usecases/move_mini_app.dart';
@@ -53,9 +53,10 @@ class _MiniAppRailSectionState extends ConsumerState<MiniAppRailSection> {
         onReorderItem: (from, to) => _move(apps, from, to),
         proxyDecorator: (child, _, _) =>
             Material(type: MaterialType.transparency, child: child),
-        footer: AppRailButton(
-          icon: LucideIcons.plus300,
-          label: AppL10n.of(context).miniAppAdd,
+        footer: AppRailLabeledButton(
+          leading: const Icon(LucideIcons.plus300),
+          label: AppL10n.of(context).miniAppAddShort,
+          tooltip: AppL10n.of(context).miniAppAdd,
           selected: false,
           onTap: () => MiniAppDialog.show(context),
         ),
@@ -120,7 +121,7 @@ class _MiniAppRailButton extends ConsumerWidget {
           await _remove(context, ref);
         }
       },
-      child: AppRailButton(
+      child: AppRailLabeledButton(
         leading: MiniAppIcon(name: app.name, iconPath: app.iconPath),
         label: app.name,
         selected: selected,

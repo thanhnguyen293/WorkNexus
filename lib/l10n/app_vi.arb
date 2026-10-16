@@ -1290,6 +1290,7 @@
   "chatTypingTwo": "{first} và {second} đang nhập…",
   "chatTypingMany": "{name} và {count} người khác đang nhập…",
   "miniAppAdd": "Thêm mini app",
+  "miniAppAddShort": "Thêm",
   "miniAppUrlLabel": "Địa chỉ web",
   "miniAppUrlHint": "example.com",
   "miniAppNameLabel": "Tên (không bắt buộc)",
