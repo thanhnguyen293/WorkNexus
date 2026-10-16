@@ -574,6 +574,11 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    // Also on every open: a DB a parallel branch already numbered as current
+    // never runs [onUpgrade], yet may lack these tables.
+    beforeOpen: (details) async {
+      if (!details.wasCreated) await _ensureMiniAppTables(createMigrator());
+    },
     onUpgrade: (m, from, to) async {
       if (from < 33) await m.createTable(zenTaoProfiles);
       // from < 2: create the settings table at its *current* schema (which
@@ -849,14 +854,7 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(settings, settings.tableColumnWidthsJson);
         }
       }
-      if (from < 50) await m.createTable(miniApps);
-      if (from < 51 && !await _hasColumn('mini_apps', 'icon_path')) {
-        await m.addColumn(miniApps, miniApps.iconPath);
-      }
-      if (from < 52 && !await _hasColumn('mini_apps', 'last_url')) {
-        await m.addColumn(miniApps, miniApps.lastUrl);
-      }
-      if (from < 53) await m.createTable(miniAppPermissions);
+      await _ensureMiniAppTables(m);
       if (from < 54) {
         // Indexes for the columns the detail panel, the chat list and the
         // history pager filter on. Guarded like the first index above, and
@@ -885,6 +883,28 @@ class AppDatabase extends _$AppDatabase {
       }
     },
   );
+
+  /// Versions 50–54 were used on parallel branches too, so a DB can report a
+  /// later version while missing the mini-app tables or columns (e.g. a v54
+  /// DB with no `mini_app_permissions`). Checked rather than trusting the
+  /// version.
+  Future<void> _ensureMiniAppTables(Migrator m) async {
+    if (!await _hasTable('mini_apps')) {
+      await m.createTable(miniApps);
+    } else {
+      for (final (name, column) in [
+        ('icon_path', miniApps.iconPath),
+        ('last_url', miniApps.lastUrl),
+      ]) {
+        if (!await _hasColumn('mini_apps', name)) {
+          await m.addColumn(miniApps, column);
+        }
+      }
+    }
+    if (!await _hasTable('mini_app_permissions')) {
+      await m.createTable(miniAppPermissions);
+    }
+  }
 
   /// Rewrites ZenTao ticket ids from `account:6492` to `account:bug:6492`
   /// (see `zenTaoTicketId`), and the comments, activity and translations that

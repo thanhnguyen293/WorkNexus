@@ -9,19 +9,20 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/attachments_input.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../core/widgets/rich_text_editor.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/validate_ticket_draft.dart';
 import '../../domain/value_objects/zentao_choices.dart';
 import '../providers/task_editor_controller.dart';
 import '../providers/ticket_editor_state.dart';
 import 'editor_field.dart';
 import 'editor_inputs.dart';
-import 'option_multi_select.dart';
 import 'option_select.dart';
 import 'task_form_fields.dart';
 import 'task_form_mode_toggle.dart';
+import 'task_optional_fields.dart';
+import 'task_progress_fields.dart';
 
 /// Centered 2-column balanced form layout for creating and editing tasks.
 class TaskFormCentered extends ConsumerStatefulWidget {
@@ -31,6 +32,8 @@ class TaskFormCentered extends ConsumerStatefulWidget {
     required this.state,
     required this.desc,
     required this.onSave,
+    required this.next,
+    required this.onNextChanged,
     required this.onClose,
     this.saving = false,
   });
@@ -38,7 +41,13 @@ class TaskFormCentered extends ConsumerStatefulWidget {
   final TicketEditorRoute route;
   final TaskEditorState state;
   final HtmlEditingController desc;
+
   final VoidCallback onSave;
+
+  /// Where saving a new task goes next; the editor keeps the choice, so the
+  /// header's Save and the shortcut follow it too.
+  final TaskAfterSave next;
+  final ValueChanged<TaskAfterSave> onNextChanged;
   final VoidCallback onClose;
   final bool saving;
 
@@ -47,8 +56,9 @@ class TaskFormCentered extends ConsumerStatefulWidget {
 }
 
 class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
-  int _nextAction = 0;
-  bool _isLiteMode = false;
+  /// Simple mode: only what a task needs, as ZenTao's simple form; the
+  /// optional fields keep their values and are still saved.
+  bool _simple = false;
 
   double _parseHours(String v) => double.tryParse(v) ?? 0;
 
@@ -61,8 +71,13 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
     final options = widget.state.form.options;
     final missing = widget.state.missing;
     final isEditing = draft.id != null;
+    final l = AppL10n.of(context);
+    final full = !_simple;
 
-    final title = isEditing ? 'Edit Task #${draft.id}' : 'Create Task';
+    final title = switch (draft.id) {
+      final id? => l.editTaskTitle(id),
+      null => l.newTask,
+    };
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.lg),
@@ -79,7 +94,6 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Title & Mode Bar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -90,8 +104,8 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                       ),
                     ),
                     TaskFormModeToggle(
-                      isLite: _isLiteMode,
-                      onToggle: (lite) => setState(() => _isLiteMode = lite),
+                      isLite: _simple,
+                      onToggle: (simple) => setState(() => _simple = simple),
                     ),
                   ],
                 ),
@@ -99,13 +113,12 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                 Divider(color: c.border, height: 1),
                 SizedBox(height: s.xl),
 
-                // Row 1: Execution & Type
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: EditorField(
-                        label: 'Execution',
+                        label: l.fieldExecution,
                         required: true,
                         missing: missing.contains(DraftField.execution),
                         child: OptionSelect(
@@ -118,7 +131,7 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                     SizedBox(width: s.lg),
                     Expanded(
                       child: EditorField(
-                        label: 'Type',
+                        label: l.fieldTaskType,
                         required: true,
                         missing: missing.contains(DraftField.type),
                         child: OptionSelect(
@@ -132,29 +145,30 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                   ],
                 ),
 
-                // Row 2: Parent Task & AssignTo
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: EditorField(
-                        label: 'Parent Task',
-                        child: OptionSelect(
-                          options: [
-                            for (final o in options.parents)
-                              if (o.value != draft.id) o,
-                          ],
-                          value: draft.parent,
-                          noneValue: '0',
-                          onChanged: (v) =>
-                              controller.edit((d) => d.copyWith(parent: v)),
+                    if (full) ...[
+                      Expanded(
+                        child: EditorField(
+                          label: l.parentTask,
+                          child: OptionSelect(
+                            options: [
+                              for (final o in options.parents)
+                                if (o.value != draft.id) o,
+                            ],
+                            value: draft.parent,
+                            noneValue: '0',
+                            onChanged: (v) =>
+                                controller.edit((d) => d.copyWith(parent: v)),
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: s.lg),
+                      SizedBox(width: s.lg),
+                    ],
                     Expanded(
                       child: EditorField(
-                        label: 'AssignTo',
+                        label: l.fieldAssignTo,
                         child: OptionSelect(
                           options: options.users,
                           value: draft.assignedTo,
@@ -167,9 +181,8 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                   ],
                 ),
 
-                // Row 3: Name (Full width)
                 EditorField(
-                  label: 'Name',
+                  label: l.fieldName,
                   required: true,
                   missing: missing.contains(DraftField.name),
                   child: EditorTextInput(
@@ -180,13 +193,12 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                   ),
                 ),
 
-                // Row 4: Timeframe & Priority + Estimate
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: EditorField(
-                        label: 'Timeframe',
+                        label: '${l.fieldEstStarted} – ${l.fieldDeadline}',
                         child: TaskTimeframeInput(
                           estStarted: draft.estStarted,
                           deadline: draft.deadline,
@@ -200,7 +212,7 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                     SizedBox(width: s.lg),
                     Expanded(
                       child: EditorField(
-                        label: 'Priority & Est(Unit: h)',
+                        label: '${l.priority} · ${l.fieldEstimate}',
                         child: TaskPriorityEstimateInput(
                           priority: draft.pri,
                           estimate: draft.estimate,
@@ -215,9 +227,12 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                   ],
                 ),
 
-                // Row 5: Description (Full width)
+                // An existing task's status and hours (ZenTao's edit form).
+                if (isEditing)
+                  TaskProgressFields(route: widget.route, draft: draft),
+
                 EditorField(
-                  label: 'Description',
+                  label: l.description,
                   child: RichTextEditor(
                     controller: widget.desc,
                     minHeight: 200,
@@ -237,92 +252,22 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                   ),
                 ),
 
-                // Row 6: Next Action Radios
-                EditorField(
-                  label: 'Next',
-                  child: TaskNextActionSelector(
-                    action: _nextAction,
-                    onChanged: (val) => setState(() => _nextAction = val),
+                // Row 6: where saving a new task goes next
+                if (!isEditing)
+                  EditorField(
+                    label: l.taskFormNext,
+                    child: TaskNextActionSelector(
+                      action: widget.next,
+                      onChanged: widget.onNextChanged,
+                    ),
                   ),
-                ),
 
-                // Row 7: Module & Story
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: EditorField(
-                        label: 'Module',
-                        child: OptionSelect(
-                          options: options.modules,
-                          value: draft.module,
-                          noneValue: '0',
-                          onChanged: (v) =>
-                              controller.edit((d) => d.copyWith(module: v)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: s.lg),
-                    Expanded(
-                      child: EditorField(
-                        label: 'Story',
-                        child: OptionSelect(
-                          options: options.stories,
-                          value: draft.story,
-                          noneValue: '0',
-                          onChanged: (v) =>
-                              controller.edit((d) => d.copyWith(story: v)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Row 8: Attachments
-                EditorField(
-                  label: 'Files',
-                  child: AttachmentsInput(
-                    files: draft.files,
-                    newFiles: draft.newFiles,
-                    onFilesChanged: (v) =>
-                        controller.edit((d) => d.copyWith(files: v)),
-                    onNewFilesChanged: (v) =>
-                        controller.edit((d) => d.copyWith(newFiles: v)),
-                  ),
-                ),
-
-                // Row 9: Mailto & Tags
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: EditorField(
-                        label: 'Mailto',
-                        child: OptionMultiSelect(
-                          title: 'Mailto',
-                          options: options.users,
-                          values: draft.mailto,
-                          onChanged: (v) =>
-                              controller.edit((d) => d.copyWith(mailto: v)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: s.lg),
-                    Expanded(
-                      child: EditorField(
-                        label: 'Tags / Keywords',
-                        child: EditorTextInput(
-                          initial: draft.keywords,
-                          onChanged: (v) =>
-                              controller.edit((d) => d.copyWith(keywords: v)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Optional fields, which simple mode leaves out (their values
+                // stay, and are saved).
+                if (full)
+                  TaskOptionalFields(route: widget.route, state: widget.state),
                 SizedBox(height: s.xl),
 
-                // Centered Save & Back Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -334,12 +279,12 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Save'),
+                          : Text(l.save),
                     ),
                     SizedBox(width: s.md),
                     AppButton.textNeutral(
                       onPressed: widget.onClose,
-                      child: const Text('Back'),
+                      child: Text(l.back),
                     ),
                   ],
                 ),

@@ -13,6 +13,20 @@ void main() {
     expect(parse('text', '1'), const MessageContent.text('1', markdown: true));
   });
 
+  test('jammed mentions are split, handles and addresses are not', () {
+    expect(
+      parse('plain', '@An@Binh hi'),
+      const MessageContent.text('@An @Binh hi'),
+    );
+    for (final text in [
+      'ping @alice@mastodon.social',
+      'see https://mastodon.social/@alice@other.instance',
+      'mail me@example.com',
+    ]) {
+      expect(parse('plain', text), MessageContent.text(text), reason: text);
+    }
+  });
+
   test('image content as sent by the server', () {
     expect(
       parse(

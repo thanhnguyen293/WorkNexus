@@ -7,7 +7,7 @@ import '../../core/domain/entities/account.dart';
 import '../../core/domain/entities/provider_entity.dart';
 import '../../core/domain/entities/ticket.dart';
 import '../../core/domain/value_objects/provider_type.dart';
-import '../../core/navigation/app_nav_state.dart';
+import '../../core/navigation/navigation_providers.dart';
 import '../../core/tools/tool_module.dart';
 import '../../core/widgets/coming_soon_view.dart';
 import '../../l10n/app_localizations.dart';
@@ -16,6 +16,7 @@ import 'presentation/detail/github_pr_detail.dart';
 import 'presentation/detail/github_ticket_actions.dart';
 import 'presentation/nav/github_nav_pane.dart';
 import 'presentation/providers/github_metrics_providers.dart';
+import 'presentation/providers/github_scope.dart';
 import 'presentation/sections/github_issues_section.dart';
 import 'presentation/sections/github_pulls_section.dart';
 
@@ -151,4 +152,18 @@ class GithubModule extends ToolModule {
     }
     return null;
   }
+
+  @override
+  List<Ticket> scopeTickets(
+    Ref ref,
+    ToolLocation location,
+    List<Ticket> tickets,
+  ) => scopeGitHubTickets(
+    tickets,
+    accountId: switch (ref.watch(railTargetProvider)) {
+      AccountTarget(:final accountId) => accountId,
+      WorkspaceTarget() => null,
+    },
+    scopeId: location.scopeId,
+  );
 }

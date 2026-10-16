@@ -71,6 +71,9 @@ Ticket _makeMr({
       draft: draft,
       reviewers: reviewers,
       assignees: assignees,
+      // The sync stores assignee logins beside their display names; "mine"
+      // is matched on the login.
+      assigneeLogins: assignees,
     ),
   );
 }

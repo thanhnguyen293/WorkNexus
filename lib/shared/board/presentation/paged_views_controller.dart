@@ -36,11 +36,14 @@ abstract class PagedViewsController<V>
   });
 
   /// Starts [views] over, loading the first page of each of [opening] at once;
-  /// called from [build].
+  /// called from [build]. [finished]: there is nothing to page (no product or
+  /// execution picked), so the views open as having no more — no footer asks
+  /// for a page that could only fail.
   @protected
   Map<V, PagedViewState> open({
     required Iterable<V> views,
     Iterable<V> opening = const [],
+    bool finished = false,
   }) {
     _generation++;
     final cancel = _cancel = CancelSignal();
@@ -53,7 +56,12 @@ abstract class PagedViewsController<V>
         }
       });
     }
-    return {for (final view in views) view: const PagedViewState()};
+    return {
+      for (final view in views)
+        view: finished
+            ? const PagedViewState(hasMore: false)
+            : const PagedViewState(),
+    };
   }
 
   /// Loads the next pages of [view], unless it cannot load now. [visible] is

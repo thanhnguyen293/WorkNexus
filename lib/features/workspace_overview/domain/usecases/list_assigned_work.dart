@@ -63,23 +63,35 @@ class ListAssignedWork {
   }
 
   static DateTime? extractDue(Ticket t) {
-    if (t.providerEntity case final ZenTaoBugEntity bug) {
-      if (bug.deadline != null && bug.deadline!.isNotEmpty) {
-        final parsed = DateTime.tryParse(bug.deadline!);
-        if (parsed != null) return parsed;
-      }
+    if (t.providerEntity case ZenTaoBugEntity(:final deadline?)) {
+      if (_parseDue(deadline) case final due?) return due;
     }
     for (final l in t.labels) {
-      if (l.startsWith('deadline:')) {
-        final parsed = DateTime.tryParse(l.substring(9));
-        if (parsed != null) return parsed;
-      }
-      if (l.startsWith('due:')) {
-        final parsed = DateTime.tryParse(l.substring(4));
-        if (parsed != null) return parsed;
+      final raw = l.startsWith('deadline:')
+          ? l.substring(9)
+          : l.startsWith('due:')
+          ? l.substring(4)
+          : null;
+      if (raw != null) {
+        if (_parseDue(raw) case final due?) return due;
       }
     }
     return null;
+  }
+
+  /// [raw] as a due moment, or null for none. ZenTao writes "no deadline" as
+  /// `0000-00-00`, which [DateTime.tryParse] reads as a date in year -1 — so
+  /// always overdue. A bare date is due by the end of that day, not at its
+  /// first second.
+  static DateTime? _parseDue(String raw) {
+    final parsed = DateTime.tryParse(raw.trim());
+    if (parsed == null || parsed.year < 1) return null;
+    if (raw.contains(':')) return parsed;
+    return DateTime(
+      parsed.year,
+      parsed.month,
+      parsed.day + 1,
+    ).subtract(const Duration(seconds: 1));
   }
 
   List<AssignedWorkItem> call(ListAssignedWorkInput input) {
@@ -99,9 +111,12 @@ class ListAssignedWork {
       final isAssignee = ticket.assignee?.trim().toLowerCase() == handle;
 
       final isReviewer = switch (ticket.providerEntity) {
-        final GitHubItemEntity gh => gh.reviewers.any(
-          (r) => r.trim().toLowerCase() == handle,
-        ),
+        // Logins, as the account knows its user; items stored before they
+        // were kept only have the reviewers' display names.
+        final GitHubItemEntity gh =>
+          (gh.reviewerLogins.isNotEmpty ? gh.reviewerLogins : gh.reviewers).any(
+            (r) => r.trim().toLowerCase() == handle,
+          ),
         final GitLabItemEntity gl => gl.reviewers.any(
           (r) => r.trim().toLowerCase() == handle,
         ),

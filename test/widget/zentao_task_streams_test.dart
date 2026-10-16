@@ -95,6 +95,34 @@ void main() {
     return container;
   }
 
+  // A project scope (or none) has no execution to page: nothing loads, and
+  // no column footer can ask for (and fail on) a page.
+  test('with no execution picked, no view loads or fails', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.listen(zentaoTaskStreamsProvider, (_, _) {});
+    await pumpEventQueue();
+
+    final controller = container.read(zentaoTaskStreamsProvider.notifier);
+    for (final column in ZenTaoTaskColumn.values) {
+      await controller.loadMore(column);
+    }
+    for (final view in container.read(zentaoTaskStreamsProvider).values) {
+      expect(view.hasMore, isFalse);
+      expect(view.failure, isNull);
+    }
+    verifyNever(
+      () => sync.syncExecutionTasksPage(
+        accountId: any(named: 'accountId'),
+        executionId: any(named: 'executionId'),
+        browseType: any(named: 'browseType'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    );
+  });
+
   test(
     'opening an execution loads only the first page of each status',
     () async {

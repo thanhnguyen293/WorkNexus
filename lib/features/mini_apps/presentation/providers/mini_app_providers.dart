@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/service_locator.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/entities/mini_app_permission.dart';
@@ -54,9 +55,12 @@ final miniAppsProvider = StreamProvider<List<MiniApp>>(
   (ref) => ref.watch(miniAppRepositoryProvider).watchAll(),
 );
 
-/// Whether mini app [id] is the one on screen. Nothing shows mini apps in the
-/// tool-module shell yet, so none is.
-final miniAppShownProvider = Provider.family<bool, String>((ref, id) => false);
+/// Whether mini app [id] is the one on screen.
+final miniAppShownProvider = Provider.family<bool, String>(
+  (ref, id) =>
+      ref.watch(miniAppOnScreenProvider) &&
+      ref.watch(openMiniAppIdProvider) == id,
+);
 
 /// [app] as the database has it now — edited since it was handed over, say —
 /// or [app] itself when it is not there (yet).

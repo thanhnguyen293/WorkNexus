@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/di/providers.dart';
+import '../../core/domain/adapters/account_sync_service.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../features/connections/domain/entities/cache_section.dart';
 import '../../features/notifications/presentation/providers/notification_providers.dart';
 import '../../features/workspace_overview/presentation/providers/dashboard_providers.dart';
-import '../../shared/sync/data/sync_service.dart';
 import '../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 import '../di/service_locator.dart';
 
@@ -18,7 +18,7 @@ import '../di/service_locator.dart';
 void reloadAfterCacheClear(WidgetRef ref, Set<CacheSection> sections) {
   final accounts = ref.read(lookupsProvider).accounts.values.toList();
   if (sections.contains(CacheSection.tickets)) {
-    final sync = getIt<SyncService>();
+    final sync = getIt<AccountSyncService>();
     for (final account in accounts) {
       unawaited(sync.syncAccount(account));
     }

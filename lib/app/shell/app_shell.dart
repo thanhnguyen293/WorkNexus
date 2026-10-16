@@ -34,6 +34,25 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Opening an account of another workspace (a chat notification, a chat
+    // picked from the list) joins that workspace — otherwise the default
+    // selection below finds the account missing from the rail and jumps away.
+    ref.listen(railTargetProvider, (_, rail) {
+      // Before the workspaces load there is no workspace in effect yet, and
+      // the rail may briefly hold any workspace's first account.
+      if (rail is! AccountTarget || ref.read(activeWorkspaceProvider) == null) {
+        return;
+      }
+      final accounts = ref.read(accountsProvider).asData?.value ?? const [];
+      final workspaceId = accounts
+          .where((a) => a.id == rail.accountId)
+          .firstOrNull
+          ?.workspaceId;
+      if (workspaceId != null &&
+          workspaceId != ref.read(activeWorkspaceProvider)?.id) {
+        ref.read(activeWorkspaceIdProvider.notifier).state = workspaceId;
+      }
+    });
     ref.listen(sortedActiveAccountsProvider, (previous, next) {
       final registry = ref.read(toolRegistryProvider);
       ref
@@ -54,6 +73,8 @@ class AppShell extends ConsumerWidget {
     final assigned = ref.watch(ticketsProvider).asData?.value.length;
     final nav = ref.watch(appNavProvider);
     final editor = ref.watch(ticketEditorProvider);
+    // A mini app, like the editor, takes the whole area beside the rail.
+    final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
     return TicketLinkHandler(
       child: ChatNotificationListener(
@@ -72,7 +93,8 @@ class AppShell extends ConsumerWidget {
                           Row(
                             children: [
                               const AppNavRail(),
-                              if (editor == null) _ToolPane(nav: nav),
+                              if (editor == null && !miniAppOnScreen)
+                                _ToolPane(nav: nav),
                               const Expanded(child: Viewport()),
                             ],
                           ),

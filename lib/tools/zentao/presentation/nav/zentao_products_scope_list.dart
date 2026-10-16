@@ -94,6 +94,9 @@ class _ZentaoProductsScopeListState
         void selectProduct(ProviderProduct p) {
           ref.read(appNavProvider.notifier).selectScope(p.id);
           ref.read(selectedZenTaoProductProvider.notifier).select(p);
+          // An execution picked under another product would narrow this
+          // product's bugs to nothing.
+          ref.read(selectedZenTaoExecutionProvider.notifier).clear();
           ref
               .read(filterStateProvider.notifier)
               .openBoard(ref.read(boardKeyProvider));
@@ -109,23 +112,9 @@ class _ZentaoProductsScopeListState
             ),
             Expanded(
               child: ScopeListBody(
-                groupTitle: l.allProducts,
+                // No "all products" row: ZenTao lists bugs per product only.
+                groupTitle: l.zentaoProductsGroup,
                 quickScopeRows: [
-                  ScopeQuickRow(
-                    label: l.allProducts,
-                    icon: LucideIcons.layers300,
-                    selected:
-                        widget.location.scopeId == null &&
-                        widget.location.quickScope == QuickScope.all &&
-                        currentSelectedProduct == null,
-                    onTap: () {
-                      ref.read(appNavProvider.notifier).selectScope(null);
-                      ref
-                          .read(appNavProvider.notifier)
-                          .setQuickScope(QuickScope.all);
-                      ref.read(selectedZenTaoProductProvider.notifier).clear();
-                    },
-                  ),
                   ScopeQuickRow(
                     label: l.assignedToMe,
                     icon: LucideIcons.user300,

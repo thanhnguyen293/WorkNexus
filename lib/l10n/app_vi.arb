@@ -1485,7 +1485,6 @@
     }
   },
   "allProjects": "Tất cả project",
-  "allProducts": "Tất cả product",
   "allRepositories": "Tất cả kho lưu trữ",
   "sprintCurrent": "Bản thực thi: Hiện tại",
   "statusAny": "Trạng thái: Tất cả",
@@ -1604,5 +1603,13 @@
       }
     }
   },
-  "reauthenticate": "Đăng nhập lại"
+  "reauthenticate": "Đăng nhập lại",
+  "taskFormNext": "Sau khi lưu",
+  "taskAfterSaveOpen": "Mở task",
+  "taskAfterSaveContinue": "Thêm task khác",
+  "taskAfterSaveList": "Quay lại danh sách",
+  "taskFormModeSimple": "Rút gọn",
+  "taskFormModeFull": "Đầy đủ",
+  "workspaceCreateFailed": "Không tạo được workspace: {error}",
+  "zentaoProductsGroup": "Product"
 }

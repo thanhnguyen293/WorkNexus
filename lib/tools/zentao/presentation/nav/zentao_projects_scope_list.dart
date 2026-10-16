@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
+import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -19,6 +20,7 @@ import '../../../../shared/shell_pane/sidebar_tree_rows.dart';
 import '../../domain/entities/zentao_project_group.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_filter_providers.dart';
+import '../providers/zentao_scope_providers.dart';
 import '../util/open_execution_board.dart';
 import 'zentao_project_set_node.dart';
 import 'zentao_project_tree_node.dart';
@@ -68,14 +70,13 @@ class _ZentaoProjectsScopeListState
             .where(
               (t) =>
                   t.accountId == widget.account.id &&
-                  t.projectId == projectId &&
                   t.status != UnifiedStatus.done &&
-                  (t.externalType?.toLowerCase() == 'task' ||
-                      t.providerEntity is ZenTaoTaskEntity),
+                  zentaoTaskInProject(t, projectId),
             )
             .length;
 
-        String keyOf(ProviderProject p) => '${p.accountId}:${p.id}';
+        String keyOf(ProviderProject p) =>
+            zentaoProjectPinKey(p.accountId, p.id);
 
         final pinnedProjects = filtered
             .where((p) => pinned.contains(keyOf(p)))

@@ -18,6 +18,7 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/view_mode_tab_bar.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../providers/github_board_providers.dart';
+import '../util/watch_github_items.dart';
 import '../widgets/github_board_view.dart';
 
 /// The L5 Viewport section for GitHub Issues.
@@ -47,6 +48,7 @@ class GithubIssuesSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    watchGitHubItems(context, ref, GitHubItemKind.issue);
     final c = context.colors;
     final s = context.spacing;
     final viewMode =
@@ -75,7 +77,7 @@ class GithubIssuesSection extends ConsumerWidget {
 
     final Widget body;
     if (viewMode.value == 'board') {
-      body = const GitHubBoardView();
+      body = const GitHubBoardView(kind: GitHubItemKind.issue);
     } else {
       if (issues.isEmpty) {
         body = Center(

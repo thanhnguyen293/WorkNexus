@@ -14,6 +14,7 @@ import 'editor_header.dart';
 import 'editor_shortcuts.dart';
 import 'rich_text_draft_sync.dart';
 import 'task_form_centered.dart';
+import 'task_form_fields.dart';
 
 /// Adds or edits a task, full screen; saving opens the saved task.
 class TaskEditorView extends ConsumerStatefulWidget {
@@ -68,15 +69,47 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
     ref.read(appNavProvider.notifier).closeEditor();
   }
 
+  /// Where saving a new task goes next (the form's "After saving" choice);
+  /// by default the saved task, as before the form offered the choice.
+  TaskAfterSave _next = TaskAfterSave.openTask;
+
+  /// Bumped for each fresh form in this view, so its inputs start over.
+  int _form = 0;
+
+  /// Saves, then goes where [_next] says.
   Future<void> _save() async {
-    final controller = ref.read(taskEditorProvider(widget.route).notifier);
+    final next = _next;
+    final provider = taskEditorProvider(widget.route);
+    final controller = ref.read(provider.notifier);
+    final execution = ref.read(provider).asData?.value.draft.execution;
     pushRichText();
     final messenger = ScaffoldMessenger.of(context);
     final saved = AppL10n.of(context).formSaved;
     final ticketId = await controller.save();
     if (ticketId == null || !mounted) return;
     _close();
-    ref.read(appNavProvider.notifier).openTicket(ticketId);
+    final nav = ref.read(appNavProvider.notifier);
+    switch (next) {
+      case TaskAfterSave.openTask:
+        nav.openTicket(ticketId);
+      case TaskAfterSave.continueAdding:
+        final again = NewTaskRoute(
+          accountId: widget.route.accountId,
+          executionId: execution ?? '0',
+        );
+        nav.openEditor(again);
+        // The same route as the form just saved keeps this view (and its
+        // provider) alive: start both over empty, description included.
+        ref.invalidate(taskEditorProvider(again));
+        stopRichTextSync();
+        _desc?.dispose();
+        setState(() {
+          _desc = null;
+          _form++;
+        });
+      case TaskAfterSave.backToList:
+        break;
+    }
     showAppSnackOn(messenger, saved);
   }
 
@@ -123,10 +156,13 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
             child: switch (async) {
               AsyncData() when state != null && desc != null =>
                 TaskFormCentered(
+                  key: ValueKey(_form),
                   route: route,
                   state: state,
                   desc: desc,
                   onSave: _save,
+                  next: _next,
+                  onNextChanged: (v) => setState(() => _next = v),
                   onClose: _close,
                   saving: state.saving,
                 ),

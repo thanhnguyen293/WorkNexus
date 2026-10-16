@@ -87,6 +87,40 @@ void main() {
     return container;
   }
 
+  // Bugs are listed per product only: with none picked, nothing is paged
+  // and no column footer can ask for (and fail on) a page.
+  test('with no product picked, no view loads or fails', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.listen(zentaoBugStreamsProvider, (_, _) {});
+    await pumpEventQueue();
+
+    for (final column in ZenTaoBugColumn.values) {
+      final view = container.read(zentaoBugColumnStreamProvider(column));
+      expect(view.hasMore, isFalse, reason: column.name);
+      expect(view.failure, isNull, reason: column.name);
+    }
+    expect(container.read(zentaoBugHasMoreProvider), isFalse);
+    final controller = container.read(zentaoBugStreamsProvider.notifier);
+    for (final view in ZenTaoBugStream.values) {
+      await controller.loadMore(view);
+    }
+    expect(
+      container.read(zentaoBugStreamsProvider).values.map((v) => v.failure),
+      everyElement(isNull),
+    );
+    verifyNever(
+      () => sync.syncProductBugsPage(
+        accountId: any(named: 'accountId'),
+        productId: any(named: 'productId'),
+        browseType: any(named: 'browseType'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+        cancel: any(named: 'cancel'),
+      ),
+    );
+  });
+
   test(
     'opening a product loads the first page of every opening view',
     () async {
@@ -314,6 +348,8 @@ void main() {
     container
         .read(appNavProvider.notifier)
         .selectSection(const SectionId('zentao.bugs'));
+    // As the sidebar picks a product: its scope and the selection.
+    container.read(appNavProvider.notifier).selectScope(_product.id);
     container.read(selectedZenTaoProductProvider.notifier).select(_product);
     container
         .read(zentaoBugTabProvider.notifier)

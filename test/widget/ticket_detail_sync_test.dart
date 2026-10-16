@@ -10,9 +10,8 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/shared/detail/presentation/detail_providers.dart';
-import 'package:work_nexus/shared/sync/data/sync_service.dart';
 
-class _MockSyncService extends Mock implements SyncService {}
+class _MockSyncService extends Mock implements TicketDetailService {}
 
 const _ticket = Ticket(
   id: 'zentao:bug:4808',
@@ -37,7 +36,6 @@ void main() {
   setUp(() async {
     sync = _MockSyncService();
     await getIt.reset();
-    getIt.registerSingleton<SyncService>(sync);
     getIt.registerSingleton<TicketDetailService>(sync);
     when(
       () => sync.syncTicketDetail(any()),

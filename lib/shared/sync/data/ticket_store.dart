@@ -8,22 +8,7 @@ import '../../../core/domain/entities/activity_event.dart';
 import '../../../core/domain/entities/comment.dart';
 import '../../../core/domain/entities/project.dart';
 import '../../../core/domain/entities/ticket.dart';
-import '../../../core/util/synthetic_labels.dart';
-
-/// Merges a detail-fetch's [detailLabels] with the synthetic board-membership
-/// labels ([kSyntheticLabelPrefixes]) carried on the already-stored
-/// [existingLabels]. The detail endpoint omits those synthetic labels, so
-/// without this a detail refresh would silently drop the ticket from its board.
-List<String> mergeDetailLabels(
-  List<String> detailLabels,
-  List<String> existingLabels,
-) {
-  final preserved = existingLabels.where(
-    (l) =>
-        kSyntheticLabelPrefixes.any(l.startsWith) && !detailLabels.contains(l),
-  );
-  return [...detailLabels, ...preserved];
-}
+import 'merge_detail_labels.dart';
 
 /// Writes what a sync fetched into the ticket tables — only the rows that
 /// differ from what is stored. Every write re-runs the drift watches over its

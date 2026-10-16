@@ -11,6 +11,7 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/shell_pane/scope_filter_field.dart';
 import '../../../../shared/shell_pane/scope_list_body.dart';
 import '../../../../shared/shell_pane/scope_rows.dart';
@@ -67,6 +68,15 @@ class _GithubReposScopeListState extends ConsumerState<GithubReposScopeList> {
 
         String keyOf(ProviderProject r) => '${r.accountId}:${r.id}';
 
+        // Selecting the repo (not only the scope) is what syncs its items.
+        void selectRepo(ProviderProject r) {
+          ref.read(appNavProvider.notifier).selectScope(r.id);
+          ref.read(selectedGitHubRepoProvider.notifier).select(r);
+          ref
+              .read(filterStateProvider.notifier)
+              .openBoard(ref.read(boardKeyProvider));
+        }
+
         final pinnedRepos = filtered
             .where((r) => pinned.contains(keyOf(r)))
             .toList();
@@ -100,6 +110,7 @@ class _GithubReposScopeListState extends ConsumerState<GithubReposScopeList> {
                       ref
                           .read(appNavProvider.notifier)
                           .setQuickScope(QuickScope.all);
+                      ref.read(selectedGitHubRepoProvider.notifier).clear();
                     },
                   ),
                   ScopeQuickRow(
@@ -125,8 +136,7 @@ class _GithubReposScopeListState extends ConsumerState<GithubReposScopeList> {
                       onPinToggle: () => ref
                           .read(appSettingsProvider.notifier)
                           .togglePinnedProject(keyOf(r)),
-                      onTap: () =>
-                          ref.read(appNavProvider.notifier).selectScope(r.id),
+                      onTap: () => selectRepo(r),
                     ),
                 ],
                 recentRows: [
@@ -138,8 +148,7 @@ class _GithubReposScopeListState extends ConsumerState<GithubReposScopeList> {
                       onPinToggle: () => ref
                           .read(appSettingsProvider.notifier)
                           .togglePinnedProject(keyOf(r)),
-                      onTap: () =>
-                          ref.read(appNavProvider.notifier).selectScope(r.id),
+                      onTap: () => selectRepo(r),
                     ),
                 ],
                 allRows: [
@@ -152,8 +161,7 @@ class _GithubReposScopeListState extends ConsumerState<GithubReposScopeList> {
                       onPinToggle: () => ref
                           .read(appSettingsProvider.notifier)
                           .togglePinnedProject(keyOf(r)),
-                      onTap: () =>
-                          ref.read(appNavProvider.notifier).selectScope(r.id),
+                      onTap: () => selectRepo(r),
                     ),
                 ],
               ),

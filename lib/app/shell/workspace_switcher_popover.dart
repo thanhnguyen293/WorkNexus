@@ -75,7 +75,7 @@ class _WorkspaceSwitcherPopoverState
     final l = AppL10n.of(context);
     final workspaces =
         ref.watch(workspacesProvider).asData?.value ?? const <Workspace>[];
-    final activeId = ref.watch(activeWorkspaceIdProvider);
+    final activeId = ref.watch(activeWorkspaceProvider)?.id;
     final accounts = ref.watch(accountsProvider).asData?.value ?? const [];
 
     final query = _searchCtrl.text.trim().toLowerCase();

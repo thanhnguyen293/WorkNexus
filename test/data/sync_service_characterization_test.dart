@@ -16,10 +16,8 @@ import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
 import 'package:work_nexus/shared/sync/data/attachment_file_cache.dart';
 import 'package:work_nexus/shared/sync/data/sync_coordinator.dart';
-import 'package:work_nexus/shared/sync/data/sync_service.dart';
 import 'package:work_nexus/tools/github/data/services/github_pr_service_impl.dart';
 import 'package:work_nexus/tools/gitlab/data/services/gitlab_mr_service_impl.dart';
-import 'package:work_nexus/tools/zentao/data/services/zentao_ticket_service_impl.dart';
 import 'package:work_nexus/tools/zentao/data/services/zentao_workflow_actions.dart';
 
 class _MemoryCredentialStore extends CredentialStore {
@@ -42,12 +40,15 @@ class _FakeProviderAdapterRegistry implements ProviderAdapterRegistry {
 }
 
 void main() {
-  group('SyncService Characterization Tests', () {
+  group('Sync characterization tests', () {
     late AppDatabase db;
     late _MemoryCredentialStore credentials;
     late Directory tempCacheDir;
     late AttachmentFileCache attachmentCache;
-    late SyncService syncService;
+    late SyncCoordinator coordinator;
+    late GitLabMrServiceImpl gitlab;
+    late GitHubPrServiceImpl github;
+    late ZenTaoWorkflowActions workflow;
 
     setUp(() {
       db = AppDatabase(NativeDatabase.memory());
@@ -56,27 +57,15 @@ void main() {
         'sync_service_char_test_',
       );
       attachmentCache = AttachmentFileCache(root: tempCacheDir);
-      final coordinator = SyncCoordinator(
+      coordinator = SyncCoordinator(
         db,
         credentials,
         registry: _FakeProviderAdapterRegistry(),
         attachmentCache: attachmentCache,
       );
-      final zentao = ZenTaoTicketServiceImpl(coordinator: coordinator);
-      final gitlab = GitLabMrServiceImpl(coordinator);
-      final github = GitHubPrServiceImpl(coordinator);
-      final workflow = ZenTaoWorkflowActions(coordinator);
-
-      syncService = SyncService(
-        db,
-        credentials,
-        registry: _FakeProviderAdapterRegistry(),
-        attachmentCache: attachmentCache,
-        zentaoTicketService: zentao,
-        gitlabMrService: gitlab,
-        githubPrService: github,
-        workflowService: workflow,
-      );
+      gitlab = GitLabMrServiceImpl(coordinator);
+      github = GitHubPrServiceImpl(coordinator);
+      workflow = ZenTaoWorkflowActions(coordinator);
     });
 
     tearDown(() async {
@@ -98,7 +87,7 @@ void main() {
             baseUrl: 'http://zentao.local',
           );
 
-          final result = await syncService.syncAccount(account);
+          final result = await coordinator.syncAccount(account);
           expect(result, isA<Err<int>>());
           expect((result as Err<int>).failure, isA<AuthFailure>());
           expect(result.failure.message, contains('No stored credentials'));
@@ -117,7 +106,7 @@ void main() {
             credentialsRef: 'missing-key',
           );
 
-          final result = await syncService.syncAccount(account);
+          final result = await coordinator.syncAccount(account);
           expect(result, isA<Err<int>>());
           expect((result as Err<int>).failure, isA<AuthFailure>());
           expect(result.failure.message, contains('not found in keychain'));
@@ -144,7 +133,7 @@ void main() {
       test(
         'confirmBug fails gracefully with AuthFailure when account not configured',
         () async {
-          final result = await syncService.confirmBug(
+          final result = await workflow.confirmBug(
             zentaoTicket,
             assignee: 'user1',
             comment: 'Confirming bug',
@@ -157,7 +146,7 @@ void main() {
       test(
         'resolveBug fails gracefully with AuthFailure when account not configured',
         () async {
-          final result = await syncService.resolveBug(
+          final result = await workflow.resolveBug(
             zentaoTicket,
             resolution: 'bydesign',
             comment: 'Resolved',
@@ -170,7 +159,7 @@ void main() {
       test(
         'activateBug fails gracefully with AuthFailure when account not configured',
         () async {
-          final result = await syncService.activateBug(
+          final result = await workflow.activateBug(
             zentaoTicket,
             build: 'trunk',
             comment: 'Reopening bug',
@@ -200,7 +189,7 @@ void main() {
       test(
         'closeGitLabItem returns AuthFailure when account not found',
         () async {
-          final result = await syncService.closeGitLabItem(gitlabTicket);
+          final result = await gitlab.closeGitLabItem(gitlabTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -209,7 +198,7 @@ void main() {
       test(
         'reopenGitLabItem returns AuthFailure when account not found',
         () async {
-          final result = await syncService.reopenGitLabItem(gitlabTicket);
+          final result = await gitlab.reopenGitLabItem(gitlabTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -218,7 +207,7 @@ void main() {
       test(
         'mergeGitLabMr returns AuthFailure when account not found',
         () async {
-          final result = await syncService.mergeGitLabMr(gitlabTicket);
+          final result = await gitlab.mergeGitLabMr(gitlabTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -227,7 +216,7 @@ void main() {
       test(
         'approveGitLabMr returns AuthFailure when account not found',
         () async {
-          final result = await syncService.approveGitLabMr(gitlabTicket);
+          final result = await gitlab.approveGitLabMr(gitlabTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -253,7 +242,7 @@ void main() {
       test(
         'closeGitHubItem returns AuthFailure when account not found',
         () async {
-          final result = await syncService.closeGitHubItem(githubTicket);
+          final result = await github.closeGitHubItem(githubTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -262,7 +251,7 @@ void main() {
       test(
         'reopenGitHubItem returns AuthFailure when account not found',
         () async {
-          final result = await syncService.reopenGitHubItem(githubTicket);
+          final result = await github.reopenGitHubItem(githubTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -271,7 +260,7 @@ void main() {
       test(
         'mergeGitHubPr returns AuthFailure when account not found',
         () async {
-          final result = await syncService.mergeGitHubPr(githubTicket);
+          final result = await github.mergeGitHubPr(githubTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -280,7 +269,7 @@ void main() {
       test(
         'updateGitHubPrBranch returns AuthFailure when account not found',
         () async {
-          final result = await syncService.updateGitHubPrBranch(githubTicket);
+          final result = await github.updateGitHubPrBranch(githubTicket);
           expect(result, isA<Err<void>>());
           expect((result as Err<void>).failure, isA<AuthFailure>());
         },
@@ -310,13 +299,13 @@ void main() {
       );
 
       test('purgeAttachmentCache executes without error', () async {
-        await expectLater(syncService.purgeAttachmentCache(), completes);
+        await expectLater(coordinator.purgeAttachmentCache(), completes);
       });
 
       test(
         'cacheAttachment returns null when account has no credentials',
         () async {
-          final cachedPath = await syncService.cacheAttachment(
+          final cachedPath = await coordinator.cacheAttachment(
             ticket,
             attachment,
           );

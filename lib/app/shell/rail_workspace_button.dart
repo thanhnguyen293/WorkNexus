@@ -24,7 +24,8 @@ class RailWorkspaceButton extends ConsumerWidget {
     final l = AppL10n.of(context);
     final nav = ref.watch(appNavProvider);
 
-    final isSelected = nav.rail is WorkspaceTarget;
+    final isSelected =
+        nav.rail is WorkspaceTarget && !ref.watch(miniAppOnScreenProvider);
 
     return Semantics(
       button: true,

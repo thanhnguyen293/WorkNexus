@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'editor_date_input.dart';
 import 'editor_inputs.dart';
 import 'editor_level_input.dart';
@@ -99,7 +100,20 @@ class TaskPriorityEstimateInput extends StatelessWidget {
   }
 }
 
-/// Radio selector for post-save navigation choice matching ZenTao web format.
+/// Where saving a new task goes next — ZenTao's "after" choice on its create
+/// form, in the app's terms.
+enum TaskAfterSave {
+  /// The saved task, in the detail panel.
+  openTask,
+
+  /// A fresh form for another task in the same execution.
+  continueAdding,
+
+  /// Back to the list the editor was opened over.
+  backToList,
+}
+
+/// Radio choice of [TaskAfterSave].
 class TaskNextActionSelector extends StatelessWidget {
   const TaskNextActionSelector({
     super.key,
@@ -107,28 +121,28 @@ class TaskNextActionSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  final int
-  action; // 0 = Go to Task List, 1 = Go to Story List, 2 = Continue Adding Tasks
-  final ValueChanged<int> onChanged;
+  final TaskAfterSave action;
+  final ValueChanged<TaskAfterSave> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final s = context.spacing;
     final c = context.colors;
-
-    const options = [
-      'Go to Task List',
-      'Go to Story List',
-      'Continue Adding Tasks',
-    ];
+    final l = AppL10n.of(context);
+    final labels = {
+      TaskAfterSave.openTask: l.taskAfterSaveOpen,
+      TaskAfterSave.continueAdding: l.taskAfterSaveContinue,
+      TaskAfterSave.backToList: l.taskAfterSaveList,
+    };
 
     return Wrap(
       spacing: s.lg,
       runSpacing: s.xs,
       children: [
-        for (var i = 0; i < options.length; i++)
+        for (final MapEntry(key: option, value: label) in labels.entries)
           InkWell(
-            onTap: () => onChanged(i),
+            onTap: () => onChanged(option),
+            mouseCursor: WidgetStateMouseCursor.clickable,
             borderRadius: BorderRadius.circular(context.radii.sm),
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: s.xxs, horizontal: s.xxs),
@@ -141,16 +155,16 @@ class TaskNextActionSelector extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: action == i ? c.accent : c.borderStrong,
-                        width: action == i ? 5 : 1.5,
+                        color: action == option ? c.accent : c.borderStrong,
+                        width: action == option ? 5 : 1.5,
                       ),
                     ),
                   ),
                   SizedBox(width: s.sm),
                   Text(
-                    options[i],
+                    label,
                     style: context.typography.bodySm.copyWith(
-                      color: action == i ? c.textPrimary : c.textSecondary,
+                      color: action == option ? c.textPrimary : c.textSecondary,
                     ),
                   ),
                 ],

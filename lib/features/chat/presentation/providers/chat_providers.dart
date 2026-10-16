@@ -291,9 +291,10 @@ final chatThreadSearchQueryProvider =
 final chatThreadSearchIsOpenProvider =
     StateProvider.family<bool, ChatThreadKey>((ref, key) => false);
 
-/// Active match index (0-based) for the in-thread search bar.
+/// Active match index (0-based) for the in-thread search bar; -1 until the
+/// first step, so that step lands on the first match rather than the second.
 final chatThreadSearchActiveIndexProvider =
-    StateProvider.family<int, ChatThreadKey>((ref, key) => 0);
+    StateProvider.family<int, ChatThreadKey>((ref, key) => -1);
 
 /// Matching messages for the current thread.
 final chatThreadSearchMatchesProvider = FutureProvider.autoDispose

@@ -89,7 +89,10 @@ void main() {
         final container = ProviderContainer();
         addTearDown(container.dispose);
 
-        // Select parent product
+        // Select parent product, as the sidebar does (scope + selection)
+        container.read(appNavProvider.notifier)
+          ..selectAccount(accountId)
+          ..selectScope(productId);
         container
             .read(selectedZenTaoProductProvider.notifier)
             .select(
@@ -120,7 +123,10 @@ void main() {
         final container = ProviderContainer();
         addTearDown(container.dispose);
 
-        // Select parent product
+        // Select parent product, as the sidebar does (scope + selection)
+        container.read(appNavProvider.notifier)
+          ..selectAccount(accountId)
+          ..selectScope(productId);
         container
             .read(selectedZenTaoProductProvider.notifier)
             .select(
@@ -152,6 +158,32 @@ void main() {
         expect(scoped.first.id, 'zt1:bug:1');
       },
     );
+
+    test('a product picked on another account or scope is not applied', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final otherBug = bug3NoExec.copyWith(id: 'zt2:bug:9', accountId: 'zt2');
+
+      container
+          .read(selectedZenTaoProductProvider.notifier)
+          .select(
+            const ProviderProduct(
+              id: productId,
+              name: productName,
+              accountId: accountId,
+            ),
+          );
+      // The user then opens another ZenTao account's Bugs.
+      container.read(appNavProvider.notifier).selectAccount('zt2');
+
+      final scoped = container.read(
+        Provider((ref) => scopeZenTaoBugs(ref, [...allBugs, otherBug])),
+      );
+
+      // Bugs are listed per product: none of account A's product shows on
+      // account B (whose own product the section picks).
+      expect(scoped, isEmpty);
+    });
 
     test(
       'parent project scope in tasks loads all tasks across executions for that project',
@@ -214,5 +246,26 @@ void main() {
         expect(scoped.length, 2);
       },
     );
+
+    test('a task belongs to the numeric project the sidebar scopes by', () {
+      const task = Ticket(
+        id: 'zt1:task:9',
+        externalKey: '9',
+        externalType: 'task',
+        accountId: accountId,
+        projectId: '$accountId:Sprint 9',
+        providerType: ProviderType.zentao,
+        title: 't',
+        body: '',
+        status: UnifiedStatus.todo,
+        providerStatus: 'wait',
+        sourceHash: 'h',
+        priority: Priority.low,
+        providerEntity: TicketProviderEntity.zentaoTask(project: '77'),
+      );
+
+      expect(zentaoTaskInProject(task, '77'), isTrue);
+      expect(zentaoTaskInProject(task, '78'), isFalse);
+    });
   });
 }

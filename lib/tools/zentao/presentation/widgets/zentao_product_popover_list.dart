@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
@@ -10,7 +9,6 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_filter_providers.dart';
@@ -36,7 +34,6 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final l = AppL10n.of(context);
 
     final productsAsync = ref.watch(zentaoProductsProvider(account.id));
     final products = productsAsync.asData?.value ?? const <ProviderProduct>[];
@@ -93,44 +90,6 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
 
     return Column(
       children: [
-        // "All products" option at top
-        InkWell(
-          onTap: () {
-            ref.read(appNavProvider.notifier).selectScope(null);
-            ref.read(selectedZenTaoProductProvider.notifier).clear();
-            ref.read(selectedZenTaoExecutionProvider.notifier).clear();
-            ref
-                .read(filterStateProvider.notifier)
-                .openBoard(ref.read(boardKeyProvider));
-            onClose();
-          },
-          child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                Icon(
-                  selectedProduct == null
-                      ? LucideIcons.check300
-                      : LucideIcons.layers300,
-                  size: 14,
-                  color: selectedProduct == null ? c.accent : c.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l.allProducts,
-                  style: context.typography.bodySm.copyWith(
-                    fontWeight: selectedProduct == null
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                    color: selectedProduct == null ? c.accent : c.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
         Divider(height: 1, thickness: 1, color: c.border),
 
         // Filtered products list

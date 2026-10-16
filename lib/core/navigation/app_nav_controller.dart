@@ -16,10 +16,14 @@ class AppNavController extends Notifier<AppNavState> {
 
   /// Switches the rail to the workspace level and sets the active workspace section.
   void selectWorkspaceSection(WorkspaceSection section) {
+    // Going somewhere from the rail leaves the editor, which covers the
+    // whole area beside the rail — or the click would look dead.
     state = state.copyWith(
       rail: const RailTarget.workspace(),
       workspaceSection: section,
       userSelectedWorkspace: true,
+      editor: null,
+      miniAppId: null,
     );
   }
 
@@ -46,6 +50,8 @@ class AppNavController extends Notifier<AppNavState> {
       rail: RailTarget.account(id),
       locations: locations,
       userSelectedWorkspace: false,
+      editor: null,
+      miniAppId: null,
     );
   }
 
@@ -86,9 +92,13 @@ class AppNavController extends Notifier<AppNavState> {
   }) {
     state = state.copyWith(userSelectedWorkspace: false);
     if (newAccounts.isEmpty) {
+      // Counts as choosing the workspace: until the new workspace's (empty)
+      // account list arrives, the default selection must not pick an
+      // account of the workspace being left.
       state = state.copyWith(
         rail: const RailTarget.workspace(),
         workspaceSection: WorkspaceSection.overview,
+        userSelectedWorkspace: true,
       );
     } else {
       selectDefaultAppIfApplicable(
@@ -102,9 +112,11 @@ class AppNavController extends Notifier<AppNavState> {
   /// Changes the active section under the current account.
   /// If the new and old sections share the same [ScopeKind], the selected scope
   /// is preserved; otherwise it is reset to null ("All").
+  /// The tool's [sections] (or its [module]'s) tell the scope kinds apart.
   void selectSection(
     SectionId section, {
     ToolModule? module,
+    List<ToolSection>? sections,
     ScopeKind? newScopeKind,
     ScopeKind? oldScopeKind,
   }) {
@@ -112,13 +124,10 @@ class AppNavController extends Notifier<AppNavState> {
       final cur = state.locations[accountId] ?? ToolLocation(section: section);
 
       bool keepScope = false;
-      if (module != null) {
-        final oldSec = module.sections
-            .where((s) => s.id == cur.section)
-            .firstOrNull;
-        final newSec = module.sections
-            .where((s) => s.id == section)
-            .firstOrNull;
+      final known = sections ?? module?.sections;
+      if (known != null) {
+        final oldSec = known.where((s) => s.id == cur.section).firstOrNull;
+        final newSec = known.where((s) => s.id == section).firstOrNull;
         keepScope =
             oldSec != null &&
             newSec != null &&
@@ -225,14 +234,17 @@ class AppNavController extends Notifier<AppNavState> {
     }
   }
 
-  /// Restores navigation state from a persisted [NavLocationPayload].
-  void restoreLocation(NavLocationPayload payload) {
-    state = state.copyWith(
-      rail: payload.rail,
-      workspaceSection: payload.workspaceSection,
-      locations: payload.locations,
-    );
-  }
+  /// Shows the mini app [id] beside the rail, closing what covers it: the
+  /// editor, the notifications panel and the ticket detail.
+  void showMiniApp(String id) => state = state.copyWith(
+    miniAppId: id,
+    editor: null,
+    notificationsOpen: false,
+    ticketHistory: const [],
+  );
+
+  /// Leaves the mini app for the rail's workspace / account view.
+  void closeMiniApp() => state = state.copyWith(miniAppId: null);
 
   void toggleNotifications() =>
       state = state.copyWith(notificationsOpen: !state.notificationsOpen);

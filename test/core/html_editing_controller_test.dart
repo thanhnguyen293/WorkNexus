@@ -52,4 +52,64 @@ void main() {
 
     expect(controller.html, contains('width="240"'));
   });
+
+  test('an untouched table goes back exactly as it came', () {
+    const source =
+        '<table class="zt"><tr><th>A</th><th>B</th></tr>'
+        '<tr><td>1</td><td>2</td></tr></table>';
+    final controller = HtmlEditingController(html: source);
+    addTearDown(controller.dispose);
+
+    expect(controller.html, source);
+  });
+
+  test('an edited table keeps its cells, even one holding a pipe', () {
+    final controller = HtmlEditingController(
+      html:
+          '<p>intro</p><table><tr><th>A</th><th>B|x</th></tr>'
+          '<tr><td>1</td><td>2</td></tr></table><p>after</p>',
+    );
+    addTearDown(controller.dispose);
+
+    controller.quill.document.insert(0, 'New ');
+
+    final html = controller.html;
+    expect(html, contains('<tr><th>A</th><th>B|x</th></tr>'));
+    expect(html, contains('<tr><td>1</td><td>2</td></tr>'));
+    expect(html, contains('<p>New intro</p>'));
+    expect(html, contains('<p>after</p>'));
+    expect(html, isNot(contains('\u2063')));
+  });
+
+  test('a paragraph that merely holds pipes stays a paragraph', () {
+    final controller = HtmlEditingController(html: '<p>| note | x |</p>');
+    addTearDown(controller.dispose);
+
+    controller.quill.document.insert(0, 'A ');
+
+    expect(controller.html, isNot(contains('<table')));
+    expect(controller.html, contains('| note | x |'));
+  });
+
+  test('an edited table keeps a cell spanning several lines', () {
+    final controller = HtmlEditingController(
+      html:
+          '<table><tr><th>A</th><th>B</th></tr>'
+          '<tr><td>line1<br>line2</td><td><p>x</p><p>y</p></td></tr></table>',
+    );
+    addTearDown(controller.dispose);
+
+    controller.quill.document.insert(0, 'New ');
+
+    final html = controller.html;
+    expect(html, contains('<td>line1<br>line2</td><td>x<br>y</td>'));
+  });
+
+  test('untouched content the editor cannot show is kept', () {
+    const source = '<p><iframe src="https://z.example.com/v"></iframe></p>';
+    final controller = HtmlEditingController(html: source);
+    addTearDown(controller.dispose);
+
+    expect(controller.html, source);
+  });
 }

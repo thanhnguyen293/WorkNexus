@@ -13,7 +13,6 @@ import '../../core/data/repositories/local_activity_repository.dart';
 import '../../core/data/repositories/local_comment_repository.dart';
 import '../../core/data/repositories/local_ticket_repository.dart';
 import '../../core/data/repositories/local_workspace_repository.dart';
-import '../../core/data/repositories/settings_nav_location_store.dart';
 import '../../core/data/repositories/settings_sync_status_repository.dart';
 import '../../core/database/database.dart';
 import '../../core/debug/app_talker.dart';
@@ -38,7 +37,6 @@ import '../../core/platform/app_icon_badge.dart';
 import '../../core/platform/app_image.dart';
 import '../../core/platform/credential_store.dart';
 import '../../core/platform/desktop_notifier.dart';
-import '../../core/settings/nav_location_store.dart';
 import '../../features/app_update/data/datasources/appimage_update_installer.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
 import '../../features/app_update/data/datasources/linux_update_installer.dart';
@@ -121,9 +119,9 @@ import '../../shared/board/data/repositories/local_saved_filter_repository.dart'
 import '../../shared/board/domain/repositories/saved_filter_repository.dart';
 import '../../shared/sync/data/merge_request_link_fetcher.dart';
 import '../../shared/sync/data/sync_coordinator.dart';
-import '../../shared/sync/data/sync_service.dart';
 import '../../tools/github/data/services/github_pr_service_impl.dart';
 import '../../tools/gitlab/data/services/gitlab_mr_service_impl.dart';
+import '../../tools/zentao/data/datasources/zentao_client.dart';
 import '../../tools/zentao/data/repositories/local_zentao_profile_repository.dart';
 import '../../tools/zentao/data/services/zentao_ticket_editor_service.dart';
 import '../../tools/zentao/data/services/zentao_ticket_service_impl.dart';
@@ -235,7 +233,21 @@ abstract class ServiceModule {
   ZenTaoProfileRepository zenTaoProfileRepository(
     AppDatabase db,
     CredentialStore credentials,
-  ) => LocalZenTaoProfileRepository(db, credentials);
+    SyncCoordinator coordinator,
+  ) => LocalZenTaoProfileRepository(
+    db,
+    credentials,
+    // The sync's pooled client, so the profile refresh shares its session.
+    clientFactory: (account, password) =>
+        switch (coordinator.buildAdapter(account, password)?.rawClient) {
+          final ZenTaoClient pooled => pooled,
+          _ => ZenTaoClient(
+            baseUrl: account.baseUrl ?? '',
+            account: account.handle,
+            password: password,
+          ),
+        },
+  );
 
   @lazySingleton
   RefreshZenTaoProfile refreshZenTaoProfile(
@@ -382,7 +394,13 @@ abstract class ServiceModule {
     AppDatabase db,
     CredentialStore credentials,
     ProviderAdapterRegistry registry,
-  ) => SyncCoordinator(db, credentials, registry: registry);
+    SyncStatusRepository syncStatusRepository,
+  ) => SyncCoordinator(
+    db,
+    credentials,
+    registry: registry,
+    statusRepository: syncStatusRepository,
+  );
 
   @lazySingleton
   TicketDetailService ticketDetailService(SyncCoordinator coordinator) =>
@@ -428,44 +446,24 @@ abstract class ServiceModule {
   );
 
   @lazySingleton
-  SyncService syncService(
-    AppDatabase db,
-    CredentialStore credentials,
-    ProviderAdapterRegistry registry,
-    ZenTaoTicketService zenTaoTicketService,
-    GitLabMrService gitLabMrService,
-    GitHubPrService gitHubPrService,
-    ZenTaoWorkflowService zenTaoWorkflowService,
-    SyncStatusRepository syncStatusRepository,
-  ) => SyncService(
-    db,
-    credentials,
-    registry: registry,
-    zentaoTicketService: zenTaoTicketService,
-    gitlabMrService: gitLabMrService,
-    githubPrService: gitHubPrService,
-    workflowService: zenTaoWorkflowService,
-    statusRepository: syncStatusRepository,
-  );
-
-  @lazySingleton
   DashboardRepository dashboardRepository(
     AppDatabase db,
-    SyncService syncService,
+    ZenTaoTicketService zenTaoTicketService,
+    AccountSyncService accountSyncService,
   ) => ZenTaoDashboardRepository(
     local: DashboardLocalDatasource(db),
-    fetch: syncService.fetchZenTaoUserInfo,
-    syncAssigned: syncService.syncAccountById,
+    fetch: zenTaoTicketService.fetchZenTaoUserInfo,
+    syncAssigned: accountSyncService.syncAccountById,
   );
 
   @lazySingleton
   NotificationRepository notificationRepository(
     AppDatabase db,
-    SyncService syncService,
+    ZenTaoTicketService zenTaoTicketService,
   ) => ZenTaoNotificationRepository(
     local: NotificationLocalDatasource(db),
-    fetch: syncService.fetchZenTaoMessages,
-    run: syncService.zenTaoMessageAction,
+    fetch: zenTaoTicketService.fetchZenTaoMessages,
+    run: zenTaoTicketService.zenTaoMessageAction,
   );
 
   @lazySingleton
@@ -531,10 +529,6 @@ abstract class ServiceModule {
     CredentialStore credentials,
     ProviderAdapterRegistry registry,
   ) => MergeRequestLinkFetcher(db, credentials, registry);
-
-  @lazySingleton
-  NavLocationStore navLocationStore(AppDatabase db) =>
-      SettingsNavLocationStore(db);
 
   @lazySingleton
   SyncStatusRepository syncStatusRepository(AppDatabase db) =>

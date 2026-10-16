@@ -79,6 +79,22 @@ void main() {
       const text = '```\n__x__\n[id]: https://a\n```\n    __y__';
       expect(normalizeMarkdown(text), text);
     });
+
+    test('splits raw mentions jammed together', () {
+      expect(normalizeMarkdown('hi @User1@User2@Ba'), 'hi @User1 @User2 @Ba');
+      expect(normalizeMarkdown('@An@Bình.'), '@An @Bình.');
+    });
+
+    test('leaves package names and fediverse handles whole', () {
+      for (final text in [
+        'npm i @angular/core@17.0.0',
+        'add @types/node@20',
+        'follow @user@mastodon.social',
+        'mail me@example.com',
+      ]) {
+        expect(normalizeMarkdown(text), text, reason: text);
+      }
+    });
   });
 
   group('hasMarkdownSyntax', () {

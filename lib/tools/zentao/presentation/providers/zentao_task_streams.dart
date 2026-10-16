@@ -20,11 +20,13 @@ class ZenTaoTaskStreamsController
   Map<ZenTaoTaskColumn, PagedViewState> build() {
     // A new order starts every view over from its first page.
     ref.watch(zentaoTaskFetchSortProvider);
+    // Tasks are paged per execution: without one there is nothing to page
+    // (a project scope shows the cached tasks as they are).
+    final none = ref.watch(selectedZenTaoExecutionProvider) == null;
     return open(
       views: ZenTaoTaskColumn.values,
-      opening: ref.watch(selectedZenTaoExecutionProvider) == null
-          ? const []
-          : ZenTaoTaskColumn.values,
+      opening: none ? const [] : ZenTaoTaskColumn.values,
+      finished: none,
     );
   }
 

@@ -69,8 +69,9 @@ class ZentaoNavPane extends ConsumerWidget {
       tabStrip: FeatureTabStrip(
         sections: sections,
         selectedSectionId: location.section,
-        onSectionSelected: (id) =>
-            ref.read(appNavProvider.notifier).selectSection(id),
+        onSectionSelected: (id) => ref
+            .read(appNavProvider.notifier)
+            .selectSection(id, sections: sections),
       ),
       body: body,
     );

@@ -273,6 +273,10 @@ Ticket normalizeGitHubPull(
       deletions: e.deletions,
       changedFiles: e.changedFiles,
       reviewers: [for (final r in e.requestedReviewers) r.display],
+      reviewerLogins: [
+        for (final r in e.requestedReviewers)
+          if (r.login case final login? when login.isNotEmpty) login,
+      ],
       assignees: [for (final a in e.assignees) a.display],
       assigneeLogins: [
         for (final a in e.assignees)

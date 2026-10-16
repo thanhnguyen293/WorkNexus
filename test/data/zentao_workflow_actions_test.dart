@@ -7,10 +7,10 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/shared/sync/data/sync_service.dart';
+import 'package:work_nexus/shared/sync/data/sync_coordinator.dart';
 import 'package:work_nexus/tools/zentao/data/services/zentao_workflow_actions.dart';
 
-class _MockSync extends Mock implements SyncService {}
+class _MockSync extends Mock implements SyncCoordinator {}
 
 const _task = Ticket(
   id: 'zt:12',
@@ -96,5 +96,22 @@ void main() {
     final activated = shown();
     expect(activated.providerStatus, 'active');
     expect(activated.status, UnifiedStatus.todo);
+  });
+
+  test('resolving shows the bug awaiting verification, with its '
+      'resolution', () async {
+    final bug = _task.copyWith(
+      externalType: 'Bug',
+      providerStatus: 'active',
+      labels: const ['resolution:fixed', 'ui'],
+    );
+    await actions.resolveBug(bug, resolution: 'postponed');
+    final resolved = shown();
+    expect(resolved.providerStatus, 'resolved');
+    expect(resolved.status, UnifiedStatus.review);
+    expect(resolved.labels, ['ui', 'resolution:postponed']);
+
+    await actions.activateBug(resolved);
+    expect(shown().labels, ['ui']);
   });
 }

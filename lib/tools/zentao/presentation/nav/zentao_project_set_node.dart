@@ -7,6 +7,7 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
+import '../../../../core/settings/pinned_execution.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -56,7 +57,7 @@ class ZentaoProjectSetNode extends ConsumerWidget {
       appSettingsProvider.select((st) => st.pinnedProjects),
     );
 
-    String keyOf(ProviderProject p) => '${p.accountId}:${p.id}';
+    String keyOf(ProviderProject p) => zentaoProjectPinKey(p.accountId, p.id);
 
     return Padding(
       padding: EdgeInsets.only(bottom: s.xs),

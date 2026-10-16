@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -80,8 +81,15 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
         ),
       ),
     );
-    final bubble = GestureDetector(
-      onSecondaryTapDown: (d) => _openMenu(widget.actions, d.globalPosition),
+    // A raw pointer listener, not a tap recogniser: selectable message text
+    // takes part in the gesture arena (it has its own secondary tap) and
+    // would win a right-click on the text.
+    final bubble = Listener(
+      onPointerDown: (e) {
+        if (e.buttons & kSecondaryMouseButton != 0) {
+          _openMenu(widget.actions, e.position);
+        }
+      },
       child: widget.child,
     );
     return MouseRegion(

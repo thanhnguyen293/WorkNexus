@@ -17,6 +17,7 @@ import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../providers/zentao_board_providers.dart';
+import '../util/keep_bug_board_product.dart';
 import '../widgets/zentao_bug_board_view.dart';
 import '../widgets/zentao_bug_section_header.dart';
 import '../widgets/zentao_bug_table_view.dart';
@@ -58,19 +59,26 @@ class ZentaoBugsSection extends ConsumerWidget {
 
     final filter = ref.watch(filterStateProvider);
     final isMine = filter.savedView == SavedView.mine;
-
-    final prods = ref.watch(zentaoProductsProvider(account.id)).asData?.value;
-    if (location.scopeId != null &&
-        prods != null &&
-        ref.read(selectedZenTaoProductProvider)?.productId !=
-            location.scopeId) {
-      final p = prods.where((item) => item.id == location.scopeId).firstOrNull;
-      if (p != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(selectedZenTaoProductProvider.notifier).select(p);
-        });
-      }
+    // The chip lives in the per-board filter (a first visit defaults to
+    // "mine"); the bug views that load follow it, or "mine" would be shown
+    // over the unclosed views' first pages only.
+    final tab = ref.watch(zentaoBugTabProvider);
+    final wantTab = isMine
+        ? ZenTaoBugBrowseType.assignedToMe
+        : (tab == ZenTaoBugBrowseType.assignedToMe
+              ? ZenTaoBugBrowseType.unclosed
+              : tab);
+    // Only while on screen: the viewport keeps a few sections alive, and an
+    // off-screen one must not restart the views another board is loading.
+    if (wantTab != tab && TickerMode.valuesOf(context).enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          ref.read(zentaoBugTabProvider.notifier).set(wantTab);
+        }
+      });
     }
+
+    keepBugBoardProduct(context, ref, account, location);
 
     final Widget body;
     switch (viewMode.value) {

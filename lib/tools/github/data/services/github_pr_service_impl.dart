@@ -95,7 +95,16 @@ class GitHubPrServiceImpl implements GitHubPrService {
     required String accountId,
     required String repoId,
     required bool pullRequests,
-  }) async {
+  }) => _coordinator.trackSync(
+    accountId,
+    () => _syncRepoItems(accountId, repoId, pullRequests),
+  );
+
+  Future<Result<List<String>>> _syncRepoItems(
+    String accountId,
+    String repoId,
+    bool pullRequests,
+  ) async {
     final db = _coordinator.db;
     final accountRow = await (db.select(
       db.accounts,
@@ -123,7 +132,10 @@ class GitHubPrServiceImpl implements GitHubPrService {
   }
 
   @override
-  Future<Result<List<String>>> syncGitHubMine(String accountId) async {
+  Future<Result<List<String>>> syncGitHubMine(String accountId) =>
+      _coordinator.trackSync(accountId, () => _syncMine(accountId));
+
+  Future<Result<List<String>>> _syncMine(String accountId) async {
     final db = _coordinator.db;
     final accountRow = await (db.select(
       db.accounts,

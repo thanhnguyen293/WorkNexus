@@ -1,84 +1,15 @@
-import 'dart:convert';
-
-import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/core/data/repositories/settings_nav_location_store.dart';
-import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
+import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/tools/tool_module.dart';
 import 'package:work_nexus/tools/github/github_module.dart';
+import 'package:work_nexus/tools/gitlab/gitlab_module.dart';
 import 'package:work_nexus/tools/zentao/zentao_module.dart';
 
 void main() {
-  group('AppNavState & NavLocationPayload JSON serialization', () {
-    test('A JSON round-trip works', () {
-      const payload = NavLocationPayload(
-        rail: RailTarget.account('acc_1'),
-        workspaceSection: WorkspaceSection.integrations,
-        locations: {
-          'acc_1': ToolLocation(
-            section: SectionId('zentao.tasks'),
-            scopeId: 'project_42',
-            quickScope: QuickScope.assignedToMe,
-            viewModes: {SectionId('zentao.tasks'): ViewModeId('kanban')},
-            recentScopeIds: ['project_42', 'project_10'],
-          ),
-        },
-      );
-
-      final jsonMap = payload.toJson();
-      final jsonString = jsonEncode(jsonMap);
-      final decodedMap = jsonDecode(jsonString) as Map<String, dynamic>;
-      final restored = NavLocationPayload.fromJson(decodedMap);
-
-      expect(restored.version, equals(1));
-      expect(restored.rail, equals(const RailTarget.account('acc_1')));
-      expect(restored.workspaceSection, equals(WorkspaceSection.integrations));
-      expect(restored.locations.containsKey('acc_1'), isTrue);
-
-      final loc = restored.locations['acc_1']!;
-      expect(loc.section, equals(const SectionId('zentao.tasks')));
-      expect(loc.scopeId, equals('project_42'));
-      expect(loc.quickScope, equals(QuickScope.assignedToMe));
-      expect(
-        loc.viewModes[const SectionId('zentao.tasks')],
-        equals(const ViewModeId('kanban')),
-      );
-      expect(loc.recentScopeIds, equals(['project_42', 'project_10']));
-    });
-
-    test('a corrupt or old-version payload yields the default state', () {
-      // Version mismatch
-      final oldVersionJson = {
-        'version': 0,
-        'rail': {'kind': 'account', 'accountId': 'acc_1'},
-        'workspaceSection': 'settings',
-      };
-      final oldResult = NavLocationPayload.fromJson(oldVersionJson);
-      expect(oldResult.version, equals(NavLocationPayload.kNavLocationVersion));
-      expect(oldResult.rail, equals(const RailTarget.workspace()));
-      expect(oldResult.workspaceSection, equals(WorkspaceSection.overview));
-      expect(oldResult.locations, isEmpty);
-
-      // Future/unsupported version
-      final futureVersionJson = {
-        'version': 999,
-        'rail': {'kind': 'account', 'accountId': 'acc_1'},
-      };
-      final futureResult = NavLocationPayload.fromJson(futureVersionJson);
-      expect(futureResult.rail, equals(const RailTarget.workspace()));
-      expect(futureResult.workspaceSection, equals(WorkspaceSection.overview));
-
-      // Corrupt payload
-      final corruptResult = NavLocationPayload.fromJson({'invalid': true});
-      expect(corruptResult.rail, equals(const RailTarget.workspace()));
-      expect(corruptResult.workspaceSection, equals(WorkspaceSection.overview));
-    });
-  });
-
   group('AppNavController', () {
     late ProviderContainer container;
     late AppNavController controller;
@@ -91,6 +22,58 @@ void main() {
 
     tearDown(() {
       container.dispose();
+    });
+
+    test('the tab strip keeps the scope between sections of one kind', () {
+      const gitlab = GitlabModule();
+      controller
+        ..selectAccount('acc_gl', module: gitlab)
+        ..selectSection(
+          const SectionId('gitlab.mrs'),
+          sections: gitlab.sections,
+        )
+        ..selectScope('grp/web')
+        ..selectSection(
+          const SectionId('gitlab.issues'),
+          sections: gitlab.sections,
+        );
+
+      expect(controller.state.currentLocation?.scopeId, 'grp/web');
+    });
+
+    test('a mini app shows beside the rail until a place is picked', () {
+      controller
+        ..openTicket('t1')
+        ..showMiniApp('m1');
+      expect(controller.state.miniAppId, 'm1');
+      expect(controller.state.openTicketId, isNull);
+      expect(container.read(miniAppOnScreenProvider), isTrue);
+
+      // The editor covers it, and gives it back when it closes.
+      controller.openEditor(const NewTaskRoute(accountId: 'acc_zentao'));
+      expect(container.read(miniAppOnScreenProvider), isFalse);
+      controller.closeEditor();
+      expect(container.read(miniAppOnScreenProvider), isTrue);
+
+      controller.selectAccount('acc_zentao', module: zentaoModule);
+      expect(controller.state.miniAppId, isNull);
+
+      controller
+        ..showMiniApp('m1')
+        ..selectWorkspaceSection(WorkspaceSection.overview);
+      expect(controller.state.miniAppId, isNull);
+    });
+
+    test('going somewhere from the rail closes the editor', () {
+      controller
+        ..openEditor(const NewTaskRoute(accountId: 'acc_zentao'))
+        ..selectAccount('acc_zentao', module: zentaoModule);
+      expect(controller.state.editor, isNull);
+
+      controller
+        ..openEditor(const NewTaskRoute(accountId: 'acc_zentao'))
+        ..selectWorkspaceSection(WorkspaceSection.overview);
+      expect(controller.state.editor, isNull);
     });
 
     test('selectAccount seeds default section if none recorded', () {
@@ -336,78 +319,6 @@ void main() {
         sorted.map((a) => a.providerType).toList(),
         equals([ProviderType.zentao, ProviderType.github, ProviderType.gitlab]),
       );
-    });
-  });
-
-  group('SettingsNavLocationStore', () {
-    late AppDatabase db;
-    late SettingsNavLocationStore store;
-
-    setUp(() {
-      db = AppDatabase(NativeDatabase.memory());
-      store = SettingsNavLocationStore(db);
-    });
-
-    tearDown(() async {
-      store.dispose();
-      await db.close();
-    });
-
-    test('load returns null when no saved location exists', () async {
-      final loaded = await store.load();
-      expect(loaded, isNull);
-    });
-
-    test('save with flush persists and restores payload correctly', () async {
-      const payload = NavLocationPayload(
-        rail: RailTarget.account('acc_store_test'),
-        workspaceSection: WorkspaceSection.members,
-        locations: {
-          'acc_store_test': ToolLocation(
-            section: SectionId('zentao.tasks'),
-            scopeId: 'scope_100',
-            quickScope: QuickScope.reviewRequested,
-            viewModes: {SectionId('zentao.tasks'): ViewModeId('list')},
-            recentScopeIds: ['scope_100'],
-          ),
-        },
-      );
-
-      store.save(payload);
-      await store.flush();
-
-      final loaded = await store.load();
-      expect(loaded, isNotNull);
-      expect(loaded!.rail, equals(const RailTarget.account('acc_store_test')));
-      expect(loaded.workspaceSection, equals(WorkspaceSection.members));
-      final loc = loaded.locations['acc_store_test']!;
-      expect(loc.section, equals(const SectionId('zentao.tasks')));
-      expect(loc.scopeId, equals('scope_100'));
-      expect(loc.quickScope, equals(QuickScope.reviewRequested));
-      expect(
-        loc.viewModes[const SectionId('zentao.tasks')],
-        equals(const ViewModeId('list')),
-      );
-    });
-
-    test('load recovers with default state on corrupt database row', () async {
-      await db.customStatement('''
-        CREATE TABLE IF NOT EXISTS app_settings_kv (
-          key TEXT PRIMARY KEY,
-          value TEXT NOT NULL,
-          updated_at INTEGER NOT NULL
-        );
-      ''');
-      await db.customStatement('''
-        INSERT INTO app_settings_kv (key, value, updated_at)
-        VALUES ('nav.last_location.v1', '{corrupt json', 123456);
-      ''');
-
-      final loaded = await store.load();
-      expect(loaded, isNotNull);
-      expect(loaded!.rail, equals(const RailTarget.workspace()));
-      expect(loaded.workspaceSection, equals(WorkspaceSection.overview));
-      expect(loaded.locations, isEmpty);
     });
   });
 }

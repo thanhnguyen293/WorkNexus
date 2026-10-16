@@ -42,7 +42,14 @@ class _ZentaoTaskSectionHeaderState
     final c = context.colors;
     final s = context.spacing;
 
-    final execution = ref.watch(selectedZenTaoExecutionProvider);
+    // The selection is app-wide: it is this board's only while it matches
+    // this account and scope (as the board's own scoping requires).
+    final picked = ref.watch(selectedZenTaoExecutionProvider);
+    final execution =
+        picked?.accountId == widget.account.id &&
+            picked?.executionId == widget.location.scopeId
+        ? picked
+        : null;
     final projects = ref
         .watch(zentaoProjectsProvider(widget.account.id))
         .asData
@@ -139,7 +146,13 @@ class _ZentaoTaskSectionHeaderState
           FilledButton.icon(
             onPressed: () => ref
                 .read(appNavProvider.notifier)
-                .openEditor(NewTaskRoute(accountId: widget.account.id)),
+                .openEditor(
+                  NewTaskRoute(
+                    accountId: widget.account.id,
+                    // Filed into the open execution, not ZenTao's current one.
+                    executionId: execution?.executionId ?? '0',
+                  ),
+                ),
             icon: const Icon(LucideIcons.plus300, size: 16),
             label: Text(l.newTask),
             style: FilledButton.styleFrom(

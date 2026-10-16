@@ -12,7 +12,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/shell_pane/sidebar_primitives.dart';
 import '../../domain/entities/gitlab_project_tree.dart';
-import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
 
 /// A project leaf row in the hierarchical GitLab project tree.
@@ -57,9 +56,6 @@ class _GitLabProjectTreeNodeState extends ConsumerState<GitLabProjectTreeNode> {
           ref
               .read(selectedGitLabProjectProvider.notifier)
               .select(widget.project);
-          ref
-              .read(gitlabKindProvider.notifier)
-              .set(GitLabItemKind.mergeRequest);
           ref
               .read(filterStateProvider.notifier)
               .openBoard(ref.read(boardKeyProvider));

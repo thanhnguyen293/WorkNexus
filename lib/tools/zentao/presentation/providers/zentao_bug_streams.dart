@@ -33,11 +33,12 @@ class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
     ref.watch(zentaoBugFetchSortProvider);
     // So does moving to or from Assigned to me, which loads other views.
     final mine = ref.watch(zentaoBugMineProvider);
+    // Bugs are listed per product only: without one there is nothing to page.
+    final none = ref.watch(selectedZenTaoProductProvider) == null;
     return open(
       views: ZenTaoBugStream.values,
-      opening: ref.watch(selectedZenTaoProductProvider) == null
-          ? const []
-          : _openingStreams(mine: mine),
+      opening: none ? const [] : _openingStreams(mine: mine),
+      finished: none,
     );
   }
 

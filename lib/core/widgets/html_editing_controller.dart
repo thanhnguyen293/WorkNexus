@@ -36,15 +36,18 @@ class HtmlEditingController {
 
   /// The text as HTML; empty when nothing but whitespace was written.
   String get html {
-    if (quill.document.toDelta() == _initialDelta) {
-      return _initialHtml;
+    final delta = quill.document.toDelta();
+    // Untouched text goes back as it came, so markup the editor cannot
+    // represent (tables, classes, an iframe) isn't rewritten or dropped by
+    // just opening it — unless it holds nothing at all.
+    if (delta == _initialDelta) {
+      return _isBlankHtml(_initialHtml) ? '' : _widthsAsAttribute(_initialHtml);
     }
-    if (quill.document.toPlainText().trim().isEmpty &&
-        !_hasEmbeds(quill.document.toDelta())) {
+    if (quill.document.toPlainText().trim().isEmpty && !_hasEmbeds(delta)) {
       return '';
     }
     final raw = QuillDeltaToHtmlConverter(
-      _withImageWidths(quill.document.toDelta()),
+      _withImageWidths(delta),
       ConverterOptions(
         converterOptions: OpConverterOptions(
           inlineStylesFlag: true,
@@ -72,6 +75,17 @@ Document _document(String html) {
   return Document.fromDelta(delta);
 }
 
+/// Marks the cell borders `|` of a table flattened by [_preprocessTables].
+/// Invisible in the editor, and nothing a user types, so [_restoreTables]
+/// rebuilds only those tables — never a paragraph that merely holds pipes.
+const _cellMark = '\u2063|';
+
+/// Stands for a line break inside a flattened cell, which would otherwise
+/// end the row's line; shown as `↵` and turned back into `<br/>`.
+const _cellBreak = '\u2063\u21b5';
+final _cellLines = RegExp(r'<br\s*/?>|</p>\s*<p[^>]*>', caseSensitive: false);
+final _cellParagraph = RegExp(r'</?p[^>]*>', caseSensitive: false);
+
 /// Converts HTML tables into structured row paragraphs separated by `<br>` so
 /// that table rows and cells do not fuse together when converted into Quill.
 String _preprocessTables(String html) {
@@ -85,10 +99,13 @@ String _preprocessTables(String html) {
       final cells = tr.querySelectorAll('th, td');
       if (cells.isEmpty) continue;
       final cellTexts = cells.map((c) {
-        final inner = c.innerHtml.replaceAll('|', '&#124;').trim();
+        final inner = c.innerHtml
+            .trim()
+            .replaceAll(_cellLines, _cellBreak)
+            .replaceAll(_cellParagraph, '');
         return inner.isEmpty ? ' ' : inner;
       }).toList();
-      rows.add('| ${cellTexts.join(' | ')} |');
+      rows.add('$_cellMark ${cellTexts.join(' $_cellMark ')} $_cellMark');
     }
     if (rows.isNotEmpty) {
       table.replaceWith(
@@ -99,67 +116,71 @@ String _preprocessTables(String html) {
   return doc.outerHtml;
 }
 
-/// Restores markdown table rows back to clean HTML `<table>` elements.
+/// Rebuilds the `<table>`s [_preprocessTables] flattened into marked rows.
+/// The editor may have fused a row with the text around it onto one line, so
+/// whatever precedes the first mark or follows the last stays a paragraph.
 String _restoreTables(String html) {
+  if (!html.contains(_cellMark)) return html;
   final doc = html_parser.parseFragment(html);
-  var modified = false;
 
   for (final p in doc.querySelectorAll('p, div')) {
     final inner = p.innerHtml;
-    if (!inner.contains('|')) continue;
+    if (!inner.contains(_cellMark)) continue;
 
-    final parts = inner.split(RegExp(r'<br\s*/?>|\n'));
-    final beforeLines = <String>[];
-    final tableRows = <List<String>>[];
-    final afterLines = <String>[];
-
-    for (final line in parts) {
-      final trimmed = line.trim();
-      if (trimmed.startsWith('|') &&
-          trimmed.endsWith('|') &&
-          trimmed.length > 2) {
-        final cells = trimmed
-            .substring(1, trimmed.length - 1)
-            .split('|')
-            .map((c) => c.trim())
-            .toList();
-        tableRows.add(cells);
-      } else if (tableRows.isEmpty) {
-        if (trimmed.isNotEmpty) beforeLines.add(line);
-      } else {
-        if (trimmed.isNotEmpty) afterLines.add(line);
-      }
+    final buf = StringBuffer();
+    final text = <String>[];
+    final rows = <List<String>>[];
+    void flushText() {
+      if (text.isNotEmpty) buf.write('<p>${text.join('<br/>')}</p>');
+      text.clear();
     }
 
-    if (tableRows.length >= 2 ||
-        (tableRows.length == 1 && tableRows.first.length >= 2)) {
-      final buf = StringBuffer();
-      if (beforeLines.isNotEmpty) {
-        buf.write('<p>${beforeLines.join('<br/>')}</p>');
-      }
+    void flushTable() {
+      if (rows.isEmpty) return;
       buf.write(
         '<table border="1" cellpadding="4" cellspacing="0" '
         'style="border-collapse: collapse; width: 100%;"><tbody>',
       );
-      for (var r = 0; r < tableRows.length; r++) {
-        final row = tableRows[r];
-        buf.write('<tr>');
+      for (var r = 0; r < rows.length; r++) {
         final tag = r == 0 ? 'th' : 'td';
-        for (final cell in row) {
+        buf.write('<tr>');
+        for (final cell in rows[r]) {
           buf.write('<$tag>$cell</$tag>');
         }
         buf.write('</tr>');
       }
       buf.write('</tbody></table>');
-      if (afterLines.isNotEmpty) {
-        buf.write('<p>${afterLines.join('<br/>')}</p>');
-      }
-      p.replaceWith(html_parser.parseFragment(buf.toString()));
-      modified = true;
+      rows.clear();
     }
+
+    void addText(String line) {
+      final plain = line.replaceAll(_cellMark[0], '');
+      if (plain.trim().isEmpty) return;
+      flushTable();
+      text.add(plain);
+    }
+
+    for (final line in inner.split(RegExp(r'<br\s*/?>'))) {
+      final parts = line.split(_cellMark);
+      // A row needs a mark on both sides of at least one cell.
+      if (parts.length < 3) {
+        addText(line);
+        continue;
+      }
+      addText(parts.first);
+      flushText();
+      rows.add([
+        for (final cell in parts.sublist(1, parts.length - 1))
+          cell.trim().replaceAll(_cellBreak, '<br/>'),
+      ]);
+      addText(parts.last);
+    }
+    flushTable();
+    flushText();
+    p.replaceWith(html_parser.parseFragment(buf.toString()));
   }
 
-  return modified ? doc.outerHtml : html;
+  return doc.outerHtml;
 }
 
 /// ZenTao sizes images with `<img width>`, which [HtmlToDelta] ignores; it
@@ -173,6 +194,25 @@ String _widthsAsStyle(String html) {
     if (width == null || style.contains('width')) continue;
     final unit = RegExp(r'^\d+$').hasMatch(width) ? 'px' : '';
     img.attributes['style'] = 'width:$width$unit;$style';
+    changed = true;
+  }
+  return changed ? doc.outerHtml : html;
+}
+
+/// Copies an image's `style` width into the `width` attribute ZenTao reads,
+/// leaving the rest of the (untouched) HTML as it was.
+String _widthsAsAttribute(String html) {
+  if (!html.contains('<img')) return html;
+  final doc = html_parser.parseFragment(html);
+  var changed = false;
+  for (final img in doc.querySelectorAll('img')) {
+    if (img.attributes.containsKey('width')) continue;
+    final style = img.attributes['style'] ?? '';
+    final width = RegExp(
+      r'(?:^|;)\s*width:\s*(\d+)px',
+    ).firstMatch(style)?.group(1);
+    if (width == null) continue;
+    img.attributes['width'] = width;
     changed = true;
   }
   return changed ? doc.outerHtml : html;
@@ -199,3 +239,12 @@ List<Map<String, dynamic>> _withImageWidths(Delta delta) => [
 ];
 
 bool _hasEmbeds(Delta delta) => delta.toList().any((op) => op.data is Map);
+
+/// Whether [html] is only whitespace in empty paragraphs (`<p> </p>`).
+bool _isBlankHtml(String html) {
+  final doc = html_parser.parseFragment(html);
+  return doc.text?.trim().isEmpty != false &&
+      doc
+          .querySelectorAll('*')
+          .every((e) => const {'p', 'br', 'div', 'span'}.contains(e.localName));
+}

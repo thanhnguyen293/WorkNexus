@@ -12,15 +12,20 @@ import 'package:work_nexus/core/domain/value_objects/account_sync_status.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
+import 'package:work_nexus/core/platform/link_router.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/tools/tool_module.dart';
 import 'package:work_nexus/core/tools/tool_registry_provider.dart';
+import 'package:work_nexus/features/mini_apps/domain/entities/mini_app.dart';
+import 'package:work_nexus/features/mini_apps/presentation/widgets/mini_apps_host.dart';
 import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
 import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/pages/overview_page.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/providers/overview_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+
+import '../support/mini_app_overrides.dart';
 
 class _TestToolModule extends ToolModule {
   const _TestToolModule();
@@ -104,6 +109,7 @@ void main() {
       (tester) async {
         final container = ProviderContainer(
           overrides: [
+            ...miniAppShellOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -132,6 +138,7 @@ void main() {
       (tester) async {
         final container = ProviderContainer(
           overrides: [
+            ...miniAppShellOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -179,29 +186,134 @@ void main() {
         expect(stack.children.length, 3);
         expect(stack.index, 2);
 
-        // Section 4: Settings (exceeds max of 3 -> evicts oldest: overview)
+        // Section 4: Settings (exceeds max of 3 -> takes the slot of the
+        // least recently used: overview)
         nav.selectWorkspaceSection(WorkspaceSection.settings);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
         expect(stack.children.length, 3);
-        expect(stack.index, 2);
+        expect(stack.index, 0);
 
-        // Re-visit Integrations (already cached -> moves to newest in LRU, index updated)
+        // Re-visit Integrations (already cached -> keeps its slot)
         nav.selectWorkspaceSection(WorkspaceSection.integrations);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
         expect(stack.children.length, 3);
-        expect(stack.index, 2);
+        expect(stack.index, 1);
       },
     );
+
+    testWidgets('a mini app replaces the section, which stays alive', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          ...miniAppShellOverrides(),
+          activeWorkspaceProvider.overrideWithValue(_testWorkspace),
+          workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
+          accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
+          ticketsProvider.overrideWith((ref) => Stream.value(const <Ticket>[])),
+          toolRegistryProvider.overrideWithValue({
+            ProviderType.zentao: const _TestToolModule(),
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(buildApp(container: container));
+      await tester.pumpAndSettle();
+      expect(find.byType(MiniAppsHost), findsOneWidget);
+      final overview = tester.element(find.byType(OverviewPage));
+
+      container.read(appNavProvider.notifier).showMiniApp('m1');
+      await tester.pumpAndSettle();
+      expect(find.byType(OverviewPage), findsNothing, reason: 'offstage');
+      expect(
+        identical(
+          tester.element(find.byType(OverviewPage, skipOffstage: false)),
+          overview,
+        ),
+        isTrue,
+      );
+
+      container.read(appNavProvider.notifier).closeMiniApp();
+      await tester.pumpAndSettle();
+      expect(find.byType(OverviewPage), findsOneWidget);
+    });
+
+    testWidgets('a link to a mini app\'s site opens that mini app', (
+      tester,
+    ) async {
+      const app = MiniApp(
+        id: 'm1',
+        name: 'Chat',
+        url: 'https://chat.example.com',
+        position: 0,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          ...miniAppShellOverrides(apps: const [app]),
+          activeWorkspaceProvider.overrideWithValue(_testWorkspace),
+          workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
+          accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
+          ticketsProvider.overrideWith((ref) => Stream.value(const <Ticket>[])),
+          toolRegistryProvider.overrideWithValue({
+            ProviderType.zentao: const _TestToolModule(),
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(buildApp(container: container));
+      await tester.pumpAndSettle();
+
+      final opened = linkRouter.route('https://chat.example.com/room/1');
+      await tester.pumpAndSettle();
+
+      expect(opened, isTrue);
+      expect(container.read(openMiniAppIdProvider), 'm1');
+      expect(container.read(miniAppOnScreenProvider), isTrue);
+    });
+
+    testWidgets('a cached section survives switching away and back', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          ...miniAppShellOverrides(),
+          activeWorkspaceProvider.overrideWithValue(_testWorkspace),
+          workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
+          accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
+          ticketsProvider.overrideWith((ref) => Stream.value(const <Ticket>[])),
+          toolRegistryProvider.overrideWithValue({
+            ProviderType.zentao: const _TestToolModule(),
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(buildApp(container: container));
+      await tester.pumpAndSettle();
+      Element overview() =>
+          tester.element(find.byType(OverviewPage, skipOffstage: false));
+      final before = overview();
+
+      final nav = container.read(appNavProvider.notifier)
+        ..selectWorkspaceSection(WorkspaceSection.integrations);
+      await tester.pumpAndSettle();
+      nav.selectWorkspaceSection(WorkspaceSection.overview);
+      await tester.pumpAndSettle();
+
+      // The same element means the subtree was kept, not rebuilt.
+      expect(identical(overview(), before), isTrue);
+    });
 
     testWidgets('suspends offstage cached sections with TickerMode and Focus', (
       tester,
     ) async {
       final container = ProviderContainer(
         overrides: [
+          ...miniAppShellOverrides(),
           activeWorkspaceProvider.overrideWithValue(_testWorkspace),
           workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
           accountsProvider.overrideWith((ref) => Stream.value([_testAccount])),
@@ -234,6 +346,7 @@ void main() {
       (tester) async {
         final container = ProviderContainer(
           overrides: [
+            ...miniAppShellOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(
@@ -270,6 +383,7 @@ void main() {
       (tester) async {
         final container = ProviderContainer(
           overrides: [
+            ...miniAppShellOverrides(),
             activeWorkspaceProvider.overrideWithValue(_testWorkspace),
             workspaceAccountsProvider.overrideWith((ref) => [_testAccount]),
             accountsProvider.overrideWith(

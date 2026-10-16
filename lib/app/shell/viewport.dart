@@ -12,6 +12,8 @@ import '../../core/widgets/app_state_view.dart';
 import '../../features/app_update/presentation/widgets/update_settings_card.dart';
 import '../../features/connections/presentation/settings_page.dart';
 import '../../features/connections/presentation/widgets/local_cache_card.dart';
+import '../../features/mini_apps/presentation/widgets/mini_app_settings_card.dart';
+import '../../features/mini_apps/presentation/widgets/mini_apps_host.dart';
 import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart';
 import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import '../../features/workspace_overview/presentation/pages/integrations_page.dart';
@@ -31,25 +33,39 @@ class Viewport extends ConsumerStatefulWidget {
 }
 
 class _CachedSection {
-  _CachedSection({required this.key, required this.widget});
+  _CachedSection({
+    required this.key,
+    required this.widget,
+    required this.lastUsed,
+  });
   final String key;
   final Widget widget;
+  final int lastUsed;
 }
 
 class _ViewportState extends ConsumerState<Viewport> {
   static const int _maxCachedSections = 3;
   final List<_CachedSection> _cache = [];
 
+  int _uses = 0;
+
+  /// Each section keeps its slot until it is evicted: [IndexedStack] matches
+  /// its children by position (it wraps them, so keys do not help), and a
+  /// section moved to another slot would be rebuilt from scratch rather than
+  /// kept alive. The least recently used section's slot is the one reused.
   void _updateCache(String key, Widget widget) {
+    final entry = _CachedSection(key: key, widget: widget, lastUsed: ++_uses);
     final existingIndex = _cache.indexWhere((item) => item.key == key);
     if (existingIndex >= 0) {
-      _cache.removeAt(existingIndex);
-      _cache.add(_CachedSection(key: key, widget: widget));
+      _cache[existingIndex] = entry;
+    } else if (_cache.length < _maxCachedSections) {
+      _cache.add(entry);
     } else {
-      if (_cache.length >= _maxCachedSections) {
-        _cache.removeAt(0);
+      var oldest = 0;
+      for (var i = 1; i < _cache.length; i++) {
+        if (_cache[i].lastUsed < _cache[oldest].lastUsed) oldest = i;
       }
-      _cache.add(_CachedSection(key: key, widget: widget));
+      _cache[oldest] = entry;
     }
   }
 
@@ -59,39 +75,53 @@ class _ViewportState extends ConsumerState<Viewport> {
     final nav = ref.watch(appNavProvider);
     final editor = ref.watch(ticketEditorProvider);
 
+    final Widget content;
     if (editor != null) {
-      return ConstrainedBox(
+      content = ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 560),
         child: ColoredBox(
           color: c.background,
           child: TicketEditorPage(route: editor),
         ),
       );
+    } else {
+      final (key, sectionWidget) = _resolveActiveSection(context, ref, nav);
+      _updateCache(key, sectionWidget);
+      final currentIndex = _cache.indexWhere((item) => item.key == key);
+      content = ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 560),
+        child: ColoredBox(
+          color: c.background,
+          child: IndexedStack(
+            index: currentIndex >= 0 ? currentIndex : 0,
+            children: [
+              for (var i = 0; i < _cache.length; i++)
+                TickerMode(
+                  key: ValueKey(_cache[i].key),
+                  enabled: i == currentIndex,
+                  child: Focus(
+                    canRequestFocus: i == currentIndex,
+                    child: _cache[i].widget,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
     }
 
-    final (key, sectionWidget) = _resolveActiveSection(context, ref, nav);
-    _updateCache(key, sectionWidget);
-
-    final currentIndex = _cache.indexWhere((item) => item.key == key);
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 560),
-      child: ColoredBox(
-        color: c.background,
-        child: IndexedStack(
-          index: currentIndex >= 0 ? currentIndex : 0,
-          children: [
-            for (var i = 0; i < _cache.length; i++)
-              TickerMode(
-                enabled: i == currentIndex,
-                child: Focus(
-                  canRequestFocus: i == currentIndex,
-                  child: _cache[i].widget,
-                ),
-              ),
-          ],
+    // The mini apps stay mounted whatever is on screen: each is a running
+    // page (and the host routes their links and notification taps).
+    final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Offstage(
+          offstage: miniAppOnScreen,
+          child: TickerMode(enabled: !miniAppOnScreen, child: content),
         ),
-      ),
+        const MiniAppsHost(),
+      ],
     );
   }
 
@@ -128,6 +158,8 @@ class _ViewportState extends ConsumerState<Viewport> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const TranslationSettingsCard(),
+            SizedBox(height: context.spacing.xl4),
+            const MiniAppSettingsCard(),
             SizedBox(height: context.spacing.xl4),
             const UpdateSettingsCard(),
             SizedBox(height: context.spacing.xl4),

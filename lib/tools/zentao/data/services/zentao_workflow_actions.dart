@@ -48,6 +48,7 @@ class ZenTaoWorkflowActions implements ZenTaoWorkflowService {
       status: UnifiedStatus.todo,
       providerStatus: 'active',
       assignee: assignee ?? ticket.assignee,
+      labels: _withoutResolution(ticket.labels),
     );
     return _runBugAction(
       ticket,
@@ -69,10 +70,16 @@ class ZenTaoWorkflowActions implements ZenTaoWorkflowService {
     String? assignee,
     String? comment,
   }) {
+    // A resolved bug awaits verification (ZenTao's `resolved` maps to
+    // review), and its board column reads the resolution label.
     final optimistic = ticket.copyWith(
-      status: UnifiedStatus.done,
+      status: UnifiedStatus.review,
       providerStatus: 'resolved',
       assignee: assignee ?? ticket.assignee,
+      labels: [
+        ..._withoutResolution(ticket.labels),
+        'resolution:${resolution.toLowerCase()}',
+      ],
     );
     return _runBugAction(
       ticket,
@@ -86,6 +93,11 @@ class ZenTaoWorkflowActions implements ZenTaoWorkflowService {
       ),
     );
   }
+
+  static List<String> _withoutResolution(List<String> labels) => [
+    for (final label in labels)
+      if (!label.toLowerCase().startsWith('resolution:')) label,
+  ];
 
   Future<Result<void>> _runBugAction(
     Ticket ticket,

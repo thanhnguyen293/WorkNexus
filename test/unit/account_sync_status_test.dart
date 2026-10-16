@@ -9,22 +9,17 @@ import 'package:work_nexus/core/data/repositories/settings_sync_status_repositor
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/di/locator.dart';
 import 'package:work_nexus/core/di/providers.dart';
-import 'package:work_nexus/core/domain/adapters/github_pr_service.dart';
-import 'package:work_nexus/core/domain/adapters/gitlab_mr_service.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter_registry.dart';
-import 'package:work_nexus/core/domain/adapters/zentao_ticket_service.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/repositories/sync_status_repository.dart';
 import 'package:work_nexus/core/domain/value_objects/account_sync_status.dart';
+import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
-import 'package:work_nexus/shared/sync/data/sync_service.dart';
-
-class MockGitLabMrService extends Mock implements GitLabMrService {}
-
-class MockGitHubPrService extends Mock implements GitHubPrService {}
-
-class MockZenTaoTicketService extends Mock implements ZenTaoTicketService {}
+import 'package:work_nexus/shared/sync/data/sync_coordinator.dart';
+import 'package:work_nexus/tools/github/data/services/github_pr_service_impl.dart';
+import 'package:work_nexus/tools/gitlab/data/services/gitlab_mr_service_impl.dart';
 
 class MockCredentialStore extends Mock implements CredentialStore {}
 
@@ -73,6 +68,17 @@ void main() {
       },
     );
 
+    test('a status reported while the stored one is read wins', () async {
+      final pending = repository.getStatus('acc_3');
+      repository.report('acc_3', const AccountSyncStatus.authExpired());
+
+      expect(await pending, const AccountSyncStatus.authExpired());
+      expect(
+        await repository.getStatus('acc_3'),
+        const AccountSyncStatus.authExpired(),
+      );
+    });
+
     test(
       'watch emits initial state and subsequent reported statuses',
       () async {
@@ -106,15 +112,12 @@ void main() {
     );
   });
 
-  group('SyncService sync tracking with mock adapters', () {
+  group('SyncCoordinator sync tracking', () {
     late AppDatabase db;
     late MockCredentialStore credentials;
     late MockProviderAdapterRegistry registry;
-    late MockGitLabMrService gitlab;
-    late MockGitHubPrService github;
-    late MockZenTaoTicketService zentao;
     late MockSyncStatusRepository statusRepo;
-    late SyncService syncService;
+    late SyncCoordinator coordinator;
 
     setUpAll(() {
       registerFallbackValue(const AccountSyncStatus.idle());
@@ -124,18 +127,11 @@ void main() {
       db = AppDatabase(NativeDatabase.memory());
       credentials = MockCredentialStore();
       registry = MockProviderAdapterRegistry();
-      gitlab = MockGitLabMrService();
-      github = MockGitHubPrService();
-      zentao = MockZenTaoTicketService();
       statusRepo = MockSyncStatusRepository();
-
-      syncService = SyncService(
+      coordinator = SyncCoordinator(
         db,
         credentials,
         registry: registry,
-        gitlabMrService: gitlab,
-        githubPrService: github,
-        zentaoTicketService: zentao,
         statusRepository: statusRepo,
       );
     });
@@ -145,24 +141,12 @@ void main() {
     });
 
     test('a 401 AuthFailure reports syncing then authExpired', () async {
-      when(
-        () => gitlab.syncGitLabProjectItems(
-          accountId: 'gl_acc_1',
-          projectId: 'p_1',
-          mergeRequests: true,
-        ),
-      ).thenAnswer(
-        (_) async => const Err(AuthFailure('GitLab authentication failed')),
-      );
-
-      final result = await syncService.syncGitLabProjectItems(
-        accountId: 'gl_acc_1',
-        projectId: 'p_1',
-        mergeRequests: true,
+      final result = await coordinator.trackSync<Result<List<String>>>(
+        'gl_acc_1',
+        () async => const Err(AuthFailure('GitLab authentication failed')),
       );
 
       expect(result.isErr, isTrue);
-
       verifyInOrder([
         () => statusRepo.report('gl_acc_1', const AccountSyncStatus.syncing()),
         () => statusRepo.report(
@@ -173,14 +157,12 @@ void main() {
     });
 
     test('a NetworkFailure reports syncing then offline', () async {
-      when(() => gitlab.syncGitLabMine('gl_acc_1')).thenAnswer(
-        (_) async => const Err(NetworkFailure('Connection timed out')),
+      final result = await coordinator.trackSync<Result<List<String>>>(
+        'gl_acc_1',
+        () async => const Err(NetworkFailure('Connection timed out')),
       );
 
-      final result = await syncService.syncGitLabMine('gl_acc_1');
-
       expect(result.isErr, isTrue);
-
       verifyInOrder([
         () => statusRepo.report('gl_acc_1', const AccountSyncStatus.syncing()),
         () => statusRepo.report('gl_acc_1', const AccountSyncStatus.offline()),
@@ -190,12 +172,11 @@ void main() {
     test(
       'a SocketException reports syncing then offline and rethrows',
       () async {
-        when(
-          () => github.syncGitHubMine('gh_acc_1'),
-        ).thenThrow(const SocketException('Failed host lookup'));
-
         await expectLater(
-          syncService.syncGitHubMine('gh_acc_1'),
+          coordinator.trackSync<Result<List<String>>>(
+            'gh_acc_1',
+            () async => throw const SocketException('Failed host lookup'),
+          ),
           throwsA(isA<SocketException>()),
         );
 
@@ -209,32 +190,52 @@ void main() {
     );
 
     test('success reports syncing then idle with lastSyncedAt', () async {
-      when(
-        () => github.syncGitHubRepoItems(
-          accountId: 'gh_acc_1',
-          repoId: 'repo_1',
-          pullRequests: true,
-        ),
-      ).thenAnswer((_) async => const Ok(['pr_1', 'pr_2']));
-
-      final result = await syncService.syncGitHubRepoItems(
-        accountId: 'gh_acc_1',
-        repoId: 'repo_1',
-        pullRequests: true,
+      final result = await coordinator.trackSync<Result<List<String>>>(
+        'gh_acc_1',
+        () async => const Ok(['pr_1', 'pr_2']),
       );
 
       expect(result.isOk, isTrue);
-
-      verify(
-        () => statusRepo.report('gh_acc_1', const AccountSyncStatus.syncing()),
-      ).called(1);
       final captured = verify(
         () => statusRepo.report('gh_acc_1', captureAny()),
       ).captured;
-
+      expect(captured.first, const AccountSyncStatus.syncing());
       expect(captured.last, isA<SyncIdle>());
-      final idle = captured.last as SyncIdle;
-      expect(idle.lastSyncedAt, isNotNull);
+      expect((captured.last as SyncIdle).lastSyncedAt, isNotNull);
+    });
+
+    // The account-sync path (used by the connection flows and the account
+    // row) must report too, not only the dashboard's — otherwise the
+    // auth-expired banner never shows for it.
+    test('syncAccount reports its status', () async {
+      const account = Account(
+        id: 'zt_acc_1',
+        workspaceId: 'ws',
+        providerType: ProviderType.zentao,
+        handle: 'me',
+      );
+
+      await coordinator.syncAccount(account);
+
+      verifyInOrder([
+        () => statusRepo.report('zt_acc_1', const AccountSyncStatus.syncing()),
+        () => statusRepo.report(
+          'zt_acc_1',
+          const AccountSyncStatus.authExpired(),
+        ),
+      ]);
+    });
+
+    test('the GitLab and GitHub board syncs report their status', () async {
+      await GitLabMrServiceImpl(coordinator).syncGitLabMine('gl_acc_1');
+      await GitHubPrServiceImpl(coordinator).syncGitHubMine('gh_acc_1');
+
+      for (final id in ['gl_acc_1', 'gh_acc_1']) {
+        verifyInOrder([
+          () => statusRepo.report(id, const AccountSyncStatus.syncing()),
+          () => statusRepo.report(id, const AccountSyncStatus.authExpired()),
+        ]);
+      }
     });
   });
 

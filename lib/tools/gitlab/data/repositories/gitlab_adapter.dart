@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -133,6 +134,9 @@ class GitLabAdapter implements GitLabMrAdapter, RepoChangesAdapter {
 
   @override
   Future<Result<Ticket>> getTicket(Ticket ticket) async {
+    // A detail refresh starts here: drop notes kept from an earlier one, or
+    // the pooled adapter would serve them for the rest of the session.
+    _notesByTicket.remove(ticket.id)?.ignore();
     return _guard(() async {
       final ref = _projectRef(ticket);
       if (_kindOf(ticket) == GitLabKind.issue) {
@@ -706,23 +710,35 @@ class GitLabAdapter implements GitLabMrAdapter, RepoChangesAdapter {
 
   // ---- helpers ----
 
-  /// Issue/MR notes (comments + system activity) for a ticket. Fetched once
-  /// per adapter: a detail refresh asks for the comments and the activity,
-  /// which are the same paginated notes read two ways. A failed fetch is not
-  /// kept, so the next call asks again. Adapters are built per operation, so
-  /// this never serves notes from an earlier refresh.
+  /// Issue/MR notes (comments + system activity) for a ticket. Shared within
+  /// one detail refresh: it asks for the comments and the activity, which are
+  /// the same paginated notes read two ways. The adapter is pooled for the
+  /// session, so the reply is dropped shortly after it lands (and by
+  /// [getTicket]) — a later refresh fetches fresh notes. A failed fetch is not
+  /// kept, so the next call asks again.
   Future<List<GitLabNote>> _notes(Ticket ticket) {
-    final pending = _notesByTicket[ticket.id];
+    final key = ticket.id;
+    final pending = _notesByTicket[key];
     if (pending != null) return pending;
     final ref = _projectRef(ticket);
     final future = _kindOf(ticket) == GitLabKind.issue
         ? _client.issueNotes(ref, ticket.externalKey)
         : _client.mrNotes(ref, ticket.externalKey);
-    _notesByTicket[ticket.id] = future;
-    future.catchError((Object _) {
-      _notesByTicket.remove(ticket.id);
-      return const <GitLabNote>[];
-    });
+    _notesByTicket[key] = future;
+    future.then<void>(
+      (_) {
+        unawaited(
+          Future<void>.delayed(const Duration(seconds: 4), () {
+            if (identical(_notesByTicket[key], future)) {
+              _notesByTicket.remove(key);
+            }
+          }),
+        );
+      },
+      onError: (Object _) {
+        if (identical(_notesByTicket[key], future)) _notesByTicket.remove(key);
+      },
+    );
     return future;
   }
 

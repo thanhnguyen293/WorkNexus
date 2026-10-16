@@ -27,7 +27,7 @@ import 'core/settings/app_settings.dart';
 import 'core/tools/tool_registry_provider.dart';
 import 'features/chat/presentation/widgets/chat_person_chip.dart';
 import 'features/translation/domain/repositories/translation_api_config_repository.dart';
-import 'shared/sync/data/sync_service.dart';
+import 'shared/sync/data/sync_coordinator.dart';
 import 'tools/zentao/presentation/util/open_execution_board.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -60,7 +60,7 @@ Future<void> main(List<String> arguments) async {
   // session's downloaded repro videos/screenshots so temp doesn't accumulate.
   // Not awaited: a recursive delete of temp is nothing the first frame needs,
   // and no attachment is downloaded before a ticket is opened.
-  unawaited(getIt<SyncService>().purgeAttachmentCache());
+  unawaited(getIt<SyncCoordinator>().purgeAttachmentCache());
 
   // Restore persisted appearance/language settings (defaults on first run).
   final settingsRow = await db.getSettings();

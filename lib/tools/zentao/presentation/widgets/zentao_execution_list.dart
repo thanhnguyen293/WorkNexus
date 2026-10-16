@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
@@ -14,22 +13,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_filter_providers.dart';
+import '../providers/zentao_scope_providers.dart';
 
 import 'zentao_popover_tree_node.dart';
-
-/// Fallback demo projects when the account has no projects cached/synced yet.
-const _fallbackDemoProjects = <ProviderProject>[
-  ProviderProject(id: '12824', name: 'VN_Socialfi', accountId: 'default'),
-  ProviderProject(id: '12169', name: 'VN_Wallet', accountId: 'default'),
-  ProviderProject(id: '12167', name: 'VN_IM_Chat', accountId: 'default'),
-  ProviderProject(id: '12166', name: 'VN_Website', accountId: 'default'),
-  ProviderProject(
-    id: '13100',
-    name: 'HK_TBChat_Remastered',
-    accountId: 'default',
-  ),
-  ProviderProject(id: '13101', name: 'HK_Wallet', accountId: 'default'),
-];
 
 /// Scrollable list of ZenTao projects prioritized by user's department.
 class ZenTaoExecutionList extends ConsumerWidget {
@@ -63,13 +49,12 @@ class ZenTaoExecutionList extends ConsumerWidget {
           _ => null,
         };
 
-    final rawProjects = targetAccountId != null
-        ? ref.watch(zentaoProjectsProvider(targetAccountId)).asData?.value
-        : null;
-
-    final projectList = (rawProjects != null && rawProjects.isNotEmpty)
-        ? rawProjects
-        : _fallbackDemoProjects;
+    // No account, no projects — never stand-ins that would select ids of
+    // some other server.
+    if (targetAccountId == null) return const SizedBox.shrink();
+    final projectList =
+        ref.watch(zentaoProjectsProvider(targetAccountId)).asData?.value ??
+        const <ProviderProject>[];
 
     final tickets =
         ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
@@ -80,11 +65,9 @@ class ZenTaoExecutionList extends ConsumerWidget {
     int openCount(String projectId) => tickets
         .where(
           (t) =>
-              (account == null || t.accountId == account!.id) &&
-              t.projectId == projectId &&
+              t.accountId == targetAccountId &&
               t.status != UnifiedStatus.done &&
-              (t.externalType?.toLowerCase() == 'task' ||
-                  t.providerEntity is ZenTaoTaskEntity),
+              zentaoTaskInProject(t, projectId),
         )
         .length;
 
@@ -113,7 +96,7 @@ class ZenTaoExecutionList extends ConsumerWidget {
       return tickets.any(
         (t) =>
             t.accountId == account!.id &&
-            t.projectId == projectId &&
+            zentaoTaskInProject(t, projectId) &&
             isAssigned(t, account!),
       );
     }
@@ -194,7 +177,7 @@ class ZenTaoExecutionList extends ConsumerWidget {
 
         return ZenTaoPopoverProjectNode(
           key: ValueKey('popover_proj_${item.id}'),
-          targetAccountId: targetAccountId ?? 'default',
+          targetAccountId: targetAccountId,
           project: item,
           isFolderSelected: isFolderSelected,
           currentExec: currentExec,

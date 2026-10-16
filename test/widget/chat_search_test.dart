@@ -126,9 +126,13 @@ void main() {
       // Verify counter
       expect(find.text('1 of 2'), findsOneWidget);
 
-      // Step next
+      // The first step visits the first match, not the second.
       final nextBtn = find.byTooltip('Next');
       expect(nextBtn, findsOneWidget);
+      await tester.tap(nextBtn);
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 2'), findsOneWidget);
+
       await tester.tap(nextBtn);
       await tester.pumpAndSettle();
 

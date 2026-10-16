@@ -7,7 +7,10 @@ import 'package:work_nexus/features/chat/presentation/widgets/message_hover_acti
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 void main() {
-  Future<List<String>> pumpBubble(WidgetTester tester) async {
+  Future<List<String>> pumpBubble(
+    WidgetTester tester, {
+    Widget child = const Text('hello'),
+  }) async {
     final ran = <String>[];
     MessageAction action(String name, {bool destructive = false}) => (
       icon: Icons.circle,
@@ -34,7 +37,7 @@ void main() {
                 action('Copy'),
                 action('Retract', destructive: true),
               ],
-              child: const Text('hello'),
+              child: child,
             ),
           ),
         ),
@@ -72,5 +75,25 @@ void main() {
 
     expect(find.text('Reply'), findsNothing);
     expect(ran, isEmpty);
+  });
+
+  // Message text is selectable (it has its own secondary-tap handling): a
+  // right-click on it must still open the message's menu.
+  testWidgets('right-click on selectable text opens the menu', (tester) async {
+    final ran = await pumpBubble(
+      tester,
+      child: const SelectableText.rich(
+        TextSpan(text: 'hello'),
+        contextMenuBuilder: null,
+      ),
+    );
+
+    await tester.tap(find.text('hello'), buttons: kSecondaryMouseButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Copy'), findsOneWidget);
+
+    await tester.tap(find.text('Copy'));
+    await tester.pumpAndSettle();
+    expect(ran, ['Copy']);
   });
 }

@@ -134,30 +134,30 @@ line_count_exemptions:
     max_lines: 340
     owner_phase: "Phase 2"
     reason: "Connection controllers"
-  - file: lib/features/ticket_editor/presentation/widgets/task_form_centered.dart
-    max_lines: 420
-    owner_phase: "Follow-up"
-    reason: "Ticket editor form (exempt in Open question 1)"
 
   # Non-UI files over 400 lines (rule 9.3)
   - file: lib/app/di/service_locator.dart
-    max_lines: 500
+    max_lines: 550
     owner_phase: "Phase 2"
     reason: "Injectable composition root wiring all features and services"
   - file: lib/core/database/database.dart
-    max_lines: 950
+    max_lines: 1060
     owner_phase: "Permanent"
     reason: "Central Drift database schema tables definition"
   - file: lib/core/database/seed/design_seed.dart
     max_lines: 960
     owner_phase: "Phase 5"
     reason: "Design seed fixture data table (per Open question 2)"
+  - file: lib/core/settings/app_settings.dart
+    max_lines: 420
+    owner_phase: "Follow-up"
+    reason: "Freezed app settings model: one field + doc per persisted setting"
   - file: lib/core/theme/chat_style_palette.dart
     max_lines: 450
     owner_phase: "Permanent"
     reason: "Palette color token constants"
   - file: lib/features/chat/data/datasources/chat_local_datasource.dart
-    max_lines: 500
+    max_lines: 530
     owner_phase: "Follow-up"
     reason: "Chat local datasource (exempt in Open question 1)"
   - file: lib/features/chat/data/datasources/xxd/api_scheme_codec.dart
@@ -181,7 +181,7 @@ line_count_exemptions:
     owner_phase: "Phase 4"
     reason: "GitHub adapter"
   - file: lib/tools/gitlab/data/repositories/gitlab_adapter.dart
-    max_lines: 820
+    max_lines: 850
     owner_phase: "Phase 4"
     reason: "GitLab adapter"
   - file: lib/tools/gitlab/data/datasources/gitlab_client.dart

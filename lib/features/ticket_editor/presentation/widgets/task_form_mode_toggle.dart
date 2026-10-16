@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class TaskFormModeToggle extends StatelessWidget {
   const TaskFormModeToggle({
@@ -28,12 +29,12 @@ class TaskFormModeToggle extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _PillSegment(
-            label: 'Lite Mode',
+            label: AppL10n.of(context).taskFormModeSimple,
             selected: isLite,
             onTap: () => onToggle(true),
           ),
           _PillSegment(
-            label: 'Full Mode',
+            label: AppL10n.of(context).taskFormModeFull,
             selected: !isLite,
             onTap: () => onToggle(false),
           ),
@@ -59,6 +60,7 @@ class _PillSegment extends StatelessWidget {
     final c = context.colors;
     return InkWell(
       onTap: onTap,
+      mouseCursor: WidgetStateMouseCursor.clickable,
       borderRadius: BorderRadius.circular(context.radii.pill),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
