@@ -1,90 +1,110 @@
 import '../../../../core/domain/adapters/provider_adapter.dart';
 
-/// A logical group of ZenTao products based on department prefix or naming.
+/// A folder of the ZenTao products tree: a program (with its product lines
+/// as sub-folders) or a product line on its own — ZenTao's own grouping, as
+/// its products reply files each product ([ProviderProduct.programId],
+/// [ProviderProduct.lineId]).
 class ZenTaoProductGroup {
   const ZenTaoProductGroup({
     required this.id,
     required this.name,
     required this.products,
+    this.lines = const [],
   });
 
-  /// Group identifier (e.g. `pfx:VN`, `pfx:HK`, or `other`).
+  /// `program:<id>` or `line:<id>`.
   final String id;
 
-  /// Display name of the product group (e.g. `VN`, `HK`, `Code`).
   final String name;
 
-  /// Products belonging to this group.
+  /// The products filed directly here (a program's products outside a line).
   final List<ProviderProduct> products;
 
-  /// Groups a list of [ProviderProduct]s by common name prefix, prioritizing [prioritizeZone].
-  static List<ZenTaoProductGroup> group(
-    List<ProviderProduct> products, {
-    String? prioritizeZone,
-  }) {
-    if (products.isEmpty) return const [];
+  /// A program's product lines, each a folder of its products.
+  final List<ZenTaoProductGroup> lines;
 
-    final groups =
-        <String, ({String id, String name, List<ProviderProduct> list})>{};
-    final fallbackList = <ProviderProduct>[];
+  /// Every product in the folder, its lines' included.
+  Iterable<ProviderProduct> get allProducts => [
+    for (final line in lines) ...line.allProducts,
+    ...products,
+  ];
+}
 
-    final prefixRegex = RegExp(r'^([A-Za-z0-9]+)[_\-\s/]');
+/// The products as ZenTao groups them: [groups] in ZenTao's order, then the
+/// products in no program or line ([ungrouped]).
+class ZenTaoProductTree {
+  const ZenTaoProductTree({required this.groups, required this.ungrouped});
 
+  final List<ZenTaoProductGroup> groups;
+  final List<ProviderProduct> ungrouped;
+
+  /// Builds the tree from [products] in the order ZenTao listed them. When
+  /// none carries a program or line — an older server, or the plain list —
+  /// they stay one flat list, sorted by name: no folder is ever made up.
+  factory ZenTaoProductTree.of(List<ProviderProduct> products) {
+    final grouped = products.any(
+      (p) => p.programId != null || p.lineId != null,
+    );
+    if (!grouped) {
+      return ZenTaoProductTree(
+        groups: const [],
+        ungrouped: [
+          ...products,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+      );
+    }
+    final folders = <String, _Folder>{};
+    final ungrouped = <ProviderProduct>[];
     for (final p in products) {
-      final match = prefixRegex.firstMatch(p.name);
-      if (match != null) {
-        final prefix = match.group(1)!.toUpperCase();
-        final key = 'pfx_$prefix';
-        final existing = groups[key];
-        if (existing == null) {
-          groups[key] = (id: key, name: prefix, list: [p]);
+      final programId = p.programId;
+      final lineId = p.lineId;
+      if (programId != null) {
+        final program = folders.putIfAbsent(
+          'program:$programId',
+          () => _Folder('program:$programId', p.programName ?? programId),
+        );
+        if (lineId == null) {
+          program.products.add(p);
         } else {
-          existing.list.add(p);
+          program.lines
+              .putIfAbsent(
+                'line:$lineId',
+                () => _Folder('line:$lineId', p.lineName ?? lineId),
+              )
+              .products
+              .add(p);
         }
+      } else if (lineId != null) {
+        folders
+            .putIfAbsent(
+              'line:$lineId',
+              () => _Folder('line:$lineId', p.lineName ?? lineId),
+            )
+            .products
+            .add(p);
       } else {
-        fallbackList.add(p);
+        ungrouped.add(p);
       }
     }
-
-    final result = <ZenTaoProductGroup>[];
-    final sortedKeys = groups.keys.toList()
-      ..sort((a, b) {
-        final nameA = groups[a]!.name;
-        final nameB = groups[b]!.name;
-        if (prioritizeZone != null && prioritizeZone.trim().isNotEmpty) {
-          final zone = prioritizeZone.trim().toUpperCase();
-          final aMatch =
-              nameA.toUpperCase() == zone ||
-              nameA.toUpperCase().startsWith('${zone}_') ||
-              nameA.toUpperCase().startsWith('$zone-');
-          final bMatch =
-              nameB.toUpperCase() == zone ||
-              nameB.toUpperCase().startsWith('${zone}_') ||
-              nameB.toUpperCase().startsWith('$zone-');
-          if (aMatch != bMatch) {
-            return aMatch ? -1 : 1;
-          }
-        }
-        return nameA.toLowerCase().compareTo(nameB.toLowerCase());
-      });
-
-    for (final k in sortedKeys) {
-      final g = groups[k]!;
-      g.list.sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
-      result.add(ZenTaoProductGroup(id: g.id, name: g.name, products: g.list));
-    }
-
-    if (fallbackList.isNotEmpty) {
-      fallbackList.sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
-      result.add(
-        ZenTaoProductGroup(id: 'other', name: 'Other', products: fallbackList),
-      );
-    }
-
-    return result;
+    return ZenTaoProductTree(
+      groups: [for (final f in folders.values) f.toGroup()],
+      ungrouped: ungrouped,
+    );
   }
+}
+
+class _Folder {
+  _Folder(this.id, this.name);
+
+  final String id;
+  final String name;
+  final products = <ProviderProduct>[];
+  final lines = <String, _Folder>{};
+
+  ZenTaoProductGroup toGroup() => ZenTaoProductGroup(
+    id: id,
+    name: name,
+    products: products,
+    lines: [for (final l in lines.values) l.toGroup()],
+  );
 }

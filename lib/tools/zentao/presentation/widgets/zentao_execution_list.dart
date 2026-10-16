@@ -12,7 +12,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import '../providers/zentao_scope_providers.dart';
 
 import 'zentao_popover_tree_node.dart';
@@ -24,7 +23,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
     this.account,
     required this.search,
     required this.isMine,
-    required this.activeZone,
     required this.currentExec,
     required this.onSelectProject,
     required this.onSelectExecution,
@@ -33,7 +31,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
   final Account? account;
   final String search;
   final bool isMine;
-  final String? activeZone;
   final ZenTaoExecutionSelection? currentExec;
   final ValueChanged<ProviderProject> onSelectProject;
   final ValueChanged<ProviderExecution> onSelectExecution;
@@ -58,7 +55,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
 
     final tickets =
         ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
-    final userZone = ref.watch(userZoneProvider);
     final nav = ref.watch(appNavProvider);
     final currentScopeId = nav.currentLocation?.scopeId;
 
@@ -71,25 +67,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
         )
         .length;
 
-    bool matchesDept(ProviderProject p, String dept) {
-      if (dept.isEmpty) return false;
-      final d = dept.toUpperCase();
-      final name = p.name.toUpperCase();
-      if (name.startsWith('${d}_') ||
-          name.startsWith('$d-') ||
-          name.startsWith('$d ') ||
-          name.contains('_${d}_') ||
-          name.contains('[$d]') ||
-          name.startsWith(d)) {
-        return true;
-      }
-      final prog = p.programName?.toUpperCase();
-      if (prog != null && prog.contains(d)) {
-        return true;
-      }
-      return false;
-    }
-
     bool hasMyTickets(String projectId) {
       if (account == null) return false;
       const isAssigned = IsAssignedToMe();
@@ -101,8 +78,9 @@ class ZenTaoExecutionList extends ConsumerWidget {
       );
     }
 
-    bool isMineProject(ProviderProject p) =>
-        matchesDept(p, userZone) || hasMyTickets(p.id);
+    // Yours: where you have work. Not a "zone" guessed from name prefixes —
+    // ZenTao has no such thing, and it hid real projects.
+    bool isMineProject(ProviderProject p) => hasMyTickets(p.id);
 
     final filtered = projectList.where((p) {
       if (search.trim().isNotEmpty) {
@@ -110,10 +88,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
         final nameMatch = p.name.toLowerCase().contains(q);
         final progMatch = p.programName?.toLowerCase().contains(q) ?? false;
         if (!nameMatch && !progMatch) return false;
-      }
-
-      if (activeZone != null && !matchesDept(p, activeZone!)) {
-        return false;
       }
 
       if (isMine && !isMineProject(p)) {
@@ -127,11 +101,6 @@ class ZenTaoExecutionList extends ConsumerWidget {
     }).toList();
 
     filtered.sort((a, b) {
-      final aDept = matchesDept(a, userZone);
-      final bDept = matchesDept(b, userZone);
-      if (aDept != bDept) {
-        return aDept ? -1 : 1;
-      }
       final countA = openCount(a.id);
       final countB = openCount(b.id);
       if (countA != countB) {

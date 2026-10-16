@@ -110,12 +110,6 @@ import_edges:
     reason: "GitLab ticket card reads translation provider"
 
 
-  # ZenTao filter reading ZenTao profile provider in connections
-  - source: lib/tools/zentao/presentation/providers/zentao_filter_providers.dart
-    target: lib/features/connections/presentation/providers/zentao_profile_providers.dart
-    rule: "tool_isolation"
-    owner_phase: "Phase 4"
-    reason: "ZenTao filter reads profile provider"
 
 line_count_exemptions:
   - file: lib/features/chat/presentation/providers/chat_controller.dart
@@ -193,7 +187,7 @@ line_count_exemptions:
     owner_phase: "Phase 4"
     reason: "ZenTao adapter"
   - file: lib/tools/zentao/data/datasources/zentao_client.dart
-    max_lines: 750
+    max_lines: 770
     owner_phase: "Phase 4"
     reason: "ZenTao client"
   - file: lib/tools/zentao/data/mappers/zentao_normalize.dart

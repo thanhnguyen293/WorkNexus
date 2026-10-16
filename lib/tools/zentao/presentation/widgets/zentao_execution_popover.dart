@@ -11,7 +11,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_popup_card.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import '../util/open_execution_board.dart';
 import 'zentao_execution_list.dart';
 import 'zentao_popover_tab_button.dart';
@@ -37,7 +36,6 @@ class _ZenTaoExecutionPopoverState
   final TextEditingController _searchController = TextEditingController();
   String _search = '';
   int _tab = 0; // 0 = Mine, 1 = Others
-  String? _othersZone; // null = "All Zones" (default for Others)
 
   @override
   void dispose() {
@@ -49,9 +47,6 @@ class _ZenTaoExecutionPopoverState
   Widget build(BuildContext context) {
     final c = context.colors;
     final currentExec = ref.watch(selectedZenTaoExecutionProvider);
-    final activeZone = _tab == 0
-        ? ref.watch(activeZoneFilterProvider)
-        : _othersZone;
 
     return AppPopupCard(
       child: SizedBox(
@@ -112,7 +107,7 @@ class _ZenTaoExecutionPopoverState
               ),
             ),
 
-            // Tabs: Mine vs Others + Zone toggle badge
+            // Tabs: Mine (where you have work) vs Others
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
@@ -129,65 +124,7 @@ class _ZenTaoExecutionPopoverState
                   ZenTaoPopoverTabButton(
                     label: 'Others',
                     active: _tab == 1,
-                    onTap: () => setState(() {
-                      _tab = 1;
-                      _othersZone = null;
-                    }),
-                  ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      if (_tab == 0) {
-                        ref.read(activeZoneFilterProvider.notifier).toggleAll();
-                      } else {
-                        setState(() {
-                          _othersZone = (_othersZone == null)
-                              ? ref.read(userZoneProvider)
-                              : null;
-                        });
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(context.radii.xs),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: activeZone != null
-                            ? c.selectionFill
-                            : c.surfaceSubtle,
-                        borderRadius: BorderRadius.circular(context.radii.xs),
-                        border: Border.all(
-                          color: activeZone != null
-                              ? c.accent.withValues(alpha: 0.3)
-                              : c.border,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LucideIcons.building2300,
-                            size: 11,
-                            color: activeZone != null
-                                ? c.accent
-                                : c.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            activeZone ?? 'All Zones',
-                            style: context.typography.monoXs.copyWith(
-                              color: activeZone != null
-                                  ? c.accent
-                                  : c.textSecondary,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    onTap: () => setState(() => _tab = 1),
                   ),
                 ],
               ),
@@ -199,7 +136,6 @@ class _ZenTaoExecutionPopoverState
                 account: widget.account,
                 search: _search,
                 isMine: _tab == 0,
-                activeZone: activeZone,
                 currentExec: currentExec,
                 onSelectProject: _selectProject,
                 onSelectExecution: _selectExecution,

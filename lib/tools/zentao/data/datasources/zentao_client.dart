@@ -260,14 +260,20 @@ class ZenTaoClient {
     return updated;
   }
 
-  /// Product list used by the ZenTao Sources tab.
+  /// Product list used by the ZenTao Sources tab. [merged] asks for ZenTao's
+  /// program › line › product tree (`mergeChildren=1`).
   Future<ZenTaoProductsResponse> products({
     required int page,
     required int limit,
+    bool merged = false,
   }) async {
     final res = await _dio.get<dynamic>(
       '$_v1/products',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (merged) 'mergeChildren': 1,
+      },
     );
     return ZenTaoProductsResponse.fromJson(_responseMap(res.data));
   }
@@ -446,6 +452,18 @@ class ZenTaoClient {
       queryParameters: {'page': page, 'limit': limit},
     );
     return ZenTaoProjectsResponse.fromJson(_responseMap(res.data));
+  }
+
+  /// The account's programs (`GET /programs`), to name projects' programs.
+  Future<ZenTaoProgramsResponse> programs({
+    required int page,
+    required int limit,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '$_v1/programs',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return ZenTaoProgramsResponse.fromJson(_responseMap(res.data));
   }
 
   /// Full detail for one entity, e.g. `GET /bugs/4302`. Empty (no id) when

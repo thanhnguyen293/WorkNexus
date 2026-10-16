@@ -12,6 +12,7 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
+import 'package:work_nexus/shared/sync/data/source_list_cache.dart';
 import 'package:work_nexus/shared/sync/data/sync_coordinator.dart';
 
 class _MemoryCredentialStore extends CredentialStore {
@@ -201,4 +202,34 @@ void main() {
       ).called(2);
     });
   });
+
+  test(
+    'a project list fetched without program names keeps the last ones',
+    () async {
+      await SourceListCache(db).saveProjects('gl-acc', const [
+        ProviderProject(
+          id: '7',
+          name: 'Wallet',
+          accountId: 'gl-acc',
+          programId: '3',
+          programName: 'VN Program',
+        ),
+      ]);
+      final adapter = await coordinator.adapterFor('gl-acc') as _MockAdapter;
+      when(adapter.listProjects).thenAnswer(
+        (_) async => const Ok([
+          ProviderProject(
+            id: '7',
+            name: 'Wallet',
+            accountId: 'gl-acc',
+            programId: '3',
+          ),
+        ]),
+      );
+
+      final projects = (await coordinator.listProjects('gl-acc')).valueOrNull!;
+
+      expect(projects.single.programName, 'VN Program');
+    },
+  );
 }

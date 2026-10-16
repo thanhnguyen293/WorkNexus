@@ -9,9 +9,9 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
-import '../providers/zentao_filter_providers.dart';
 import 'zentao_popover_product_node.dart';
 
 /// Product list inside [ZenTaoProductPopover].
@@ -21,14 +21,12 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
     required this.account,
     required this.search,
     required this.tab,
-    required this.activeZone,
     required this.onClose,
   });
 
   final Account account;
   final String search;
   final int tab;
-  final String? activeZone;
   final VoidCallback onClose;
 
   @override
@@ -40,7 +38,6 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
     final tickets = ref.watch(ticketsProvider).asData?.value ?? const [];
     final selectedProduct = ref.watch(selectedZenTaoProductProvider);
     final currentExec = ref.watch(selectedZenTaoExecutionProvider);
-    final userZone = ref.watch(userZoneProvider);
 
     int openCount(String productId) => tickets
         .where(
@@ -52,36 +49,28 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
         )
         .length;
 
-    bool matchesDept(ProviderProduct p, String dept) {
-      if (dept.isEmpty) return false;
-      final d = dept.toUpperCase();
-      final name = p.name.toUpperCase();
-      return name.startsWith('${d}_') ||
-          name.startsWith('$d-') ||
-          name.startsWith('$d ') ||
-          name.contains('_${d}_') ||
-          name.contains('[$d]') ||
-          name.startsWith(d);
-    }
+    // Yours: products with bugs assigned to you — not a "zone" guessed from
+    // name prefixes, which ZenTao has no notion of.
+    bool isMineProduct(ProviderProduct p) => tickets.any(
+      (t) =>
+          t.accountId == account.id &&
+          t.providerEntity is ZenTaoBugEntity &&
+          (t.providerEntity as ZenTaoBugEntity).product == p.id &&
+          const IsAssignedToMe()(t, account),
+    );
 
     final filtered = products.where((p) {
       if (search.trim().isNotEmpty) {
         final q = search.trim().toLowerCase();
         if (!p.name.toLowerCase().contains(q)) return false;
       }
-      if (activeZone != null && !matchesDept(p, activeZone!)) {
-        return false;
-      }
-      final isMineProduct = matchesDept(p, userZone);
-      if (tab == 0 && !isMineProduct) return false;
-      if (tab == 1 && isMineProduct) return false;
+      final mine = isMineProduct(p);
+      if (tab == 0 && !mine) return false;
+      if (tab == 1 && mine) return false;
       return true;
     }).toList();
 
     filtered.sort((a, b) {
-      final aDept = matchesDept(a, userZone);
-      final bDept = matchesDept(b, userZone);
-      if (aDept != bDept) return aDept ? -1 : 1;
       final countA = openCount(a.id);
       final countB = openCount(b.id);
       if (countA != countB) return countB.compareTo(countA);
@@ -118,10 +107,8 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
 
                     return ZenTaoPopoverProductNode(
                       key: ValueKey('popover_prod_${p.id}'),
-                      targetAccountId: account.id,
                       product: p,
                       isFolderSelected: isSelected,
-                      currentExec: currentExec,
                       openCount: count,
                       onSelectProduct: (product) {
                         ref
@@ -133,21 +120,6 @@ class ZenTaoProductPopoverList extends ConsumerWidget {
                         ref
                             .read(selectedZenTaoExecutionProvider.notifier)
                             .clear();
-                        ref
-                            .read(filterStateProvider.notifier)
-                            .openBoard(ref.read(boardKeyProvider));
-                        onClose();
-                      },
-                      onSelectExecution: (product, exec) {
-                        ref
-                            .read(appNavProvider.notifier)
-                            .selectScope(product.id);
-                        ref
-                            .read(selectedZenTaoProductProvider.notifier)
-                            .select(product);
-                        ref
-                            .read(selectedZenTaoExecutionProvider.notifier)
-                            .select(exec);
                         ref
                             .read(filterStateProvider.notifier)
                             .openBoard(ref.read(boardKeyProvider));

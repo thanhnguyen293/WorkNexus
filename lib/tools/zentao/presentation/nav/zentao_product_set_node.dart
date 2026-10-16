@@ -4,7 +4,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/domain/entities/account.dart';
-import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -17,13 +16,14 @@ import '../../domain/entities/zentao_product_group.dart';
 import '../providers/zentao_board_providers.dart';
 import 'zentao_product_tree_node.dart';
 
-/// Level 1 node in the ZenTao Bugs navigation tree: represents a Product Group/Department (e.g. `VN`, `HK`).
+/// A folder of the ZenTao Bugs navigation tree: a program, holding its
+/// product lines as sub-folders (this same node, nested) and its other
+/// products, or a product line on its own (see [ZenTaoProductGroup]).
 class ZentaoProductSetNode extends ConsumerWidget {
   const ZentaoProductSetNode({
     super.key,
     required this.account,
     required this.group,
-    required this.tickets,
     required this.location,
     required this.openCountOf,
     required this.onSelectProduct,
@@ -31,7 +31,6 @@ class ZentaoProductSetNode extends ConsumerWidget {
 
   final Account account;
   final ZenTaoProductGroup group;
-  final List<Ticket> tickets;
   final ToolLocation location;
   final int Function(String productId) openCountOf;
   final ValueChanged<ProviderProduct> onSelectProduct;
@@ -48,7 +47,7 @@ class ZentaoProductSetNode extends ConsumerWidget {
       ),
     );
 
-    final totalCount = group.products.fold<int>(
+    final totalCount = group.allProducts.fold<int>(
       0,
       (sum, p) => sum + openCountOf(p.id),
     );
@@ -118,12 +117,20 @@ class ZentaoProductSetNode extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  for (final line in group.lines)
+                    ZentaoProductSetNode(
+                      key: ValueKey('zentao_prod_group_${line.id}'),
+                      account: account,
+                      group: line,
+                      location: location,
+                      openCountOf: openCountOf,
+                      onSelectProduct: onSelectProduct,
+                    ),
                   for (final p in group.products)
                     ZentaoProductTreeNode(
                       key: ValueKey('zentao_prod_${p.id}'),
                       account: account,
                       product: p,
-                      tickets: tickets,
                       location: location,
                       openCount: openCountOf(p.id),
                       isPinned: pinned.contains(keyOf(p)),
