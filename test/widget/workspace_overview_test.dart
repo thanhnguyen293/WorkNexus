@@ -148,8 +148,8 @@ void main() {
       },
     );
 
-    testWidgets('overview with a ZenTao account renders its section and '
-        'assigned work', (tester) async {
+    testWidgets('overview with a ZenTao account renders its card, its '
+        'section and assigned work', (tester) async {
       final ticket = _makeTicket(
         id: 'TASK-101',
         title: 'Build auth flow',
@@ -171,11 +171,13 @@ void main() {
         find.text('1 tool connected to Mobile App. Pick a tool to work in it.'),
         findsOneWidget,
       );
-      // ZenTao gets a full-width section instead of a compact card.
-      expect(find.byType(ToolCard), findsNothing);
+      // A compact card like every tool, plus its dashboard section.
+      expect(find.byType(ToolCard), findsOneWidget);
       expect(find.byType(ZenTaoOverviewSection), findsOneWidget);
       expect(find.text('ZenTao'), findsOneWidget);
-      expect(find.text('Open ZenTao →'), findsOneWidget);
+      expect(find.text('ZenTao · alice'), findsOneWidget);
+      // On the card and in the section's heading.
+      expect(find.text('Open ZenTao →'), findsNWidgets(2));
       expect(find.text('Assigned to you'), findsOneWidget);
       // In the assigned work and in the section's My tasks.
       expect(
@@ -188,7 +190,7 @@ void main() {
       expect(find.text('My tasks'), findsOneWidget);
     });
 
-    testWidgets('overview with 3 accounts renders 2 cards and a ZenTao '
+    testWidgets('overview with 3 accounts renders 3 cards and a ZenTao '
         'section', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
@@ -204,7 +206,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.byType(ToolCard), findsNWidgets(2));
+      expect(find.byType(ToolCard), findsNWidgets(3));
       expect(find.byType(ZenTaoOverviewSection), findsOneWidget);
       expect(find.text('ZenTao'), findsOneWidget);
       expect(find.text('GitHub'), findsOneWidget);

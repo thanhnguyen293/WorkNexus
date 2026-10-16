@@ -20,8 +20,8 @@ import '../widgets/zentao_overview_section.dart';
 import 'dashboard_work_page.dart';
 
 /// The Workspace Overview page (design §5, specs S6.1).
-/// Displays the connected tools — compact cards, then a full-width section
-/// per ZenTao account with its dashboard — and the open assigned work.
+/// Displays the connected tools as compact cards filling one row, then a
+/// dashboard section per ZenTao account, then the open assigned work.
 class OverviewPage extends ConsumerWidget {
   const OverviewPage({super.key, this.onConnect});
 
@@ -108,15 +108,11 @@ class OverviewPage extends ConsumerWidget {
       return DashboardWorkPage(account: targetAccount, kind: target.kind);
     }
 
-    // ZenTao accounts get a full-width section with their dashboard; the
-    // other tools stay compact cards above them.
+    // Every tool has a compact card in the top row; a ZenTao account also
+    // gets its dashboard as a section below the row.
     final zentao = [
       for (final a in accounts)
         if (a.providerType == ProviderType.zentao) a,
-    ];
-    final compact = [
-      for (final a in accounts)
-        if (a.providerType != ProviderType.zentao) a,
     ];
 
     return ColoredBox(
@@ -135,10 +131,8 @@ class OverviewPage extends ConsumerWidget {
                   workspaceName: wsName,
                 ),
                 SizedBox(height: s.xl4),
-                if (compact.isNotEmpty) ...[
-                  _ToolCardGrid(accounts: compact),
-                  SizedBox(height: s.xl4),
-                ],
+                _ToolCardGrid(accounts: accounts),
+                SizedBox(height: s.xl4),
                 for (final account in zentao) ...[
                   ZenTaoOverviewSection(account: account),
                   SizedBox(height: s.xl4),
@@ -216,11 +210,14 @@ class _ToolCardGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth;
-        final int columns = availableWidth >= 840
+        final int fits = availableWidth >= 840
             ? 3
             : availableWidth >= 560
             ? 2
             : 1;
+        // Fewer tools than columns: the cards share the row instead of
+        // leaving columns empty.
+        final columns = accounts.length.clamp(1, fits);
         final totalSpacing = s.lg * (columns - 1);
         final itemWidth = (availableWidth - totalSpacing) / columns;
 

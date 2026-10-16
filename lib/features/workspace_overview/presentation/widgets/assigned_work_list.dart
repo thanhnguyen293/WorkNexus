@@ -114,16 +114,35 @@ class _ListHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.lg),
       child: Row(
         children: [
-          Text(
-            l.assignedToYou,
-            style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
+          // The hint gives way first when the header is narrow.
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    l.assignedToYou,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.bodyStrong.copyWith(
+                      color: c.textPrimary,
+                    ),
+                  ),
+                ),
+                SizedBox(width: s.sm),
+                Flexible(
+                  child: Text(
+                    l.fromAllTools,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.typography.captionSm.copyWith(
+                      color: c.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(width: s.sm),
-          Text(
-            l.fromAllTools,
-            style: context.typography.captionSm.copyWith(color: c.textTertiary),
-          ),
-          const Spacer(),
           Container(
             padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xxs),
             decoration: BoxDecoration(

@@ -64,19 +64,26 @@ class DashboardCard extends StatelessWidget {
                     ),
                     SizedBox(width: s.md),
                   ],
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: t.bodyStrong.copyWith(color: c.textPrimary),
+                  // The title and count take the rest of the row, so the
+                  // action sits at the trailing edge.
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.bodyStrong.copyWith(color: c.textPrimary),
+                          ),
+                        ),
+                        if (count case final n?) ...[
+                          SizedBox(width: s.sm),
+                          AppCountBadge(n),
+                        ],
+                      ],
                     ),
                   ),
-                  if (count case final n?) ...[
-                    SizedBox(width: s.sm),
-                    AppCountBadge(n),
-                  ],
-                  const Spacer(),
                   ?action,
                 ],
               ),
