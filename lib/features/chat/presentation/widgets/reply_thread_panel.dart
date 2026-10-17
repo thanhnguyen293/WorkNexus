@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import 'chat_message_card.dart';
+import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
+import 'message_body.dart';
 import 'message_bubble.dart';
 
 /// Width of the thread panel beside the chat.
@@ -81,13 +86,19 @@ class ReplyThreadPanel extends ConsumerWidget {
                 else if (root == null)
                   AppInlineNote(text: l.chatReplyMissing)
                 else
-                  MessageBubble(
-                    chat: chat,
+                  ChatMessageCard(
                     message: root,
                     users: users,
-                    showQuote: false,
-                    onOpenThread: (_) {},
-                    onReply: reply,
+                    label: l.chatThread,
+                    labelIcon: LucideIcons.messagesSquare300,
+                    body: MessageBody(accountId: chat.accountId, message: root),
+                    onViewOriginal: () => jumpToChatMessage(ref, chat, rootId),
+                    trailing: AppIconButton(
+                      icon: LucideIcons.reply300,
+                      tooltip: l.chatReply,
+                      size: AppIconButtonSize.small,
+                      onPressed: () => reply(root),
+                    ),
                   ),
                 if (replies.isNotEmpty) ...[
                   Padding(

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -13,9 +14,11 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_layout.dart';
+import 'chat_message_card.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
-import 'message_bubble.dart';
+import 'chat_snack.dart';
+import 'pinned_card_preview.dart';
 
 /// Beside the chat: every pinned message, most recently pinned first.
 /// Pinned messages older than what is loaded are fetched from the server.
@@ -105,22 +108,11 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
               padding: EdgeInsets.all(context.spacing.xl3),
               children: [
                 for (final m in messages)
-                  MessageBubble(
+                  _PinnedCard(
                     key: ValueKey(m.gid),
-                    chat: t,
+                    thread: t,
                     message: m,
                     users: widget.users,
-                    onOpenThread: (id) => openReplyThread(ref, t, id),
-                    onReply: (m) =>
-                        ref
-                                .read(
-                                  chatReplyDraftProvider((
-                                    chat: t,
-                                    inThread: false,
-                                  )).notifier,
-                                )
-                                .state =
-                            m,
                   ),
                 if (_failed)
                   Padding(
@@ -146,6 +138,52 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
                   const AppInlineSpinner(),
               ],
             ),
+    );
+  }
+}
+
+/// One pinned message: a card with its preview, a jump to it in the chat
+/// and, for who may pin, an unpin button.
+class _PinnedCard extends ConsumerWidget {
+  const _PinnedCard({
+    super.key,
+    required this.thread,
+    required this.message,
+    required this.users,
+  });
+
+  final ChatThreadKey thread;
+  final ChatMessage message;
+  final Map<int, ChatUser> users;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
+    final serverId = message.serverId;
+    return ChatMessageCard(
+      message: message,
+      users: users,
+      label: l.chatPinnedLabel,
+      labelIcon: LucideIcons.messageSquareText300,
+      body: PinnedCardPreview(message: message),
+      onViewOriginal: serverId == null
+          ? null
+          : () => jumpToChatMessage(ref, thread, serverId),
+      trailing: ref.watch(chatCanPinProvider(thread))
+          ? AppIconButton(
+              icon: LucideIcons.pinOff300,
+              tooltip: l.chatUnpin,
+              size: AppIconButtonSize.small,
+              onPressed: () async {
+                final result = await ref
+                    .read(chatControllerProvider)
+                    .setPinned(message, pinned: false);
+                if (result case Err(:final failure)) {
+                  if (context.mounted) showChatFailure(context, failure);
+                }
+              },
+            )
+          : null,
     );
   }
 }
