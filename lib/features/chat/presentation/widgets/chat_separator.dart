@@ -10,7 +10,7 @@ import 'chat_style.dart';
 import 'chat_wallpaper.dart';
 
 /// A centered date or time separator in the chat style's look: a pill
-/// (Telegram, Zalo), plain text (Messenger, WeChat) or text between hairlines.
+/// (Telegram, Zalo), plain text (ZenTao, WeChat) or text between hairlines.
 /// Over a picture background (pattern or image) plain and hairline
 /// separators become a dark translucent pill, or they would not read.
 class ChatSeparator extends ConsumerWidget {

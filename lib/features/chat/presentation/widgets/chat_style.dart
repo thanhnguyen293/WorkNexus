@@ -14,7 +14,14 @@ import 'chat_style_specs.dart';
 enum ChatAvatarPlacement { firstOfRun, lastOfRun, everyMessage }
 
 /// Where the name of a group-chat sender goes.
-enum ChatNamePlacement { aboveBubble, insideBubble }
+enum ChatNamePlacement {
+  aboveBubble,
+  insideBubble,
+
+  /// A header over the first bubble of every run, for own messages and
+  /// one-to-one chats too, with the run's time beside the name (ZenTao).
+  header,
+}
 
 /// Where a message's time goes.
 enum ChatTimePlacement {
@@ -26,6 +33,9 @@ enum ChatTimePlacement {
 
   /// Not on messages: centered time separators after pauses instead.
   separators,
+
+  /// In the run's header, beside the name ([ChatNamePlacement.header]).
+  header,
 }
 
 /// Where a reply's quote of the original goes.
@@ -62,6 +72,7 @@ class ChatStyle {
     this.metaSize,
     this.threadInMeta = false,
     this.quoteInSenderColor = false,
+    this.ownOnLeft = false,
   });
 
   /// The style the user picked, rebuilt when it or its colours change.
@@ -92,11 +103,7 @@ class ChatStyle {
       return style;
     }
     return style.withPalette(
-      style.palette.withPrimaryBubbles(
-        context.colors,
-        solid: appearance == ChatAppearance.messenger,
-        dark: dark,
-      ),
+      style.palette.withPrimaryBubbles(context.colors, dark: dark),
     );
   }
 
@@ -126,6 +133,7 @@ class ChatStyle {
     metaSize: metaSize,
     threadInMeta: threadInMeta,
     quoteInSenderColor: quoteInSenderColor,
+    ownOnLeft: ownOnLeft,
   );
 
   final ChatStylePalette palette;
@@ -178,6 +186,13 @@ class ChatStyle {
   /// colour for its bar, tint and name (Telegram).
   final bool quoteInSenderColor;
 
+  /// Own messages sit on the left with the others', their avatar before them
+  /// (ZenTao); otherwise they are on the right.
+  final bool ownOnLeft;
+
+  /// Whether a message lines up with the right edge.
+  bool alignEnd({required bool mine}) => mine && !ownOnLeft;
+
   /// Colour for a sender's name.
   Color nameColor(int senderId) {
     final colors = palette.nameColors;
@@ -196,7 +211,7 @@ class ChatStyle {
     final p = palette;
     final bar = mine ? p.outgoingQuoteBar : p.incomingQuoteBar;
     final text = mine ? p.outgoingText : p.incomingText;
-    // Light ink on a dark or saturated bubble (Messenger's blue, night
+    // Light ink on a dark or saturated bubble (ZenTao's blue, night
     // themes) needs a stronger tint for quotes and tiles to read as a
     // separate area; dark ink on a pale bubble needs only a hint.
     final strong =

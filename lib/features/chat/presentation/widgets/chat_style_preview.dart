@@ -37,11 +37,17 @@ class ChatStylePreview extends StatelessWidget {
                 ],
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: style.ownOnLeft
+                    ? MainAxisAlignment.start
+                    : MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  if (style.ownAvatar && style.ownOnLeft) ...[
+                    _Avatar(style: style),
+                    SizedBox(width: s.sm),
+                  ],
                   _Bubble(style: style, mine: true, lines: const [0.8]),
-                  if (style.ownAvatar) ...[
+                  if (style.ownAvatar && !style.ownOnLeft) ...[
                     SizedBox(width: s.sm),
                     _Avatar(style: style),
                   ],

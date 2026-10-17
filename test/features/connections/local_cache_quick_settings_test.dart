@@ -47,7 +47,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Manage storage…'), 200);
+    // The panel's own scroll view: a text field in it has a scrollable too.
+    await tester.scrollUntilVisible(
+      find.text('Manage storage…'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Manage storage…'));
     await tester.pumpAndSettle();
 

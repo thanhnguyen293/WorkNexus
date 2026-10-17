@@ -27,7 +27,7 @@ final class ChatTimeMarker {
 /// The rows of a reversed message list, newest first: messages, a day
 /// divider after the oldest message of each day (so it sits above it on
 /// screen) and, for styles without per-message times, a time marker after a
-/// pause of [markerGap] (Messenger ~15 min, WeChat ~5 min).
+/// pause of [markerGap] (ZenTao ~15 min, WeChat ~5 min).
 List<Object> chatListItems(List<ChatMessage> messages, Duration? markerGap) {
   final items = <Object>[];
   for (var index = messages.length - 1; index >= 0; index--) {

@@ -6,9 +6,9 @@ import 'contrast.dart';
 /// Colour tokens of one chat style ([ChatAppearance]) in one brightness.
 ///
 /// Each starts from the real app's colours (Telegram Desktop's palette and
-/// night theme, WeChat's PC client, best matches for Messenger and Zalo) and
+/// night theme, WeChat's PC client, best matches for Zalo) and
 /// is then tuned for WCAG contrast against its bubble: message text ≥ 7:1
-/// (≥ 4.5:1 for white on Messenger's blue), and times, links, sender names,
+/// (≥ 4.5:1 for white on ZenTao's blue), and times, links, sender names,
 /// quote headers and separator labels ≥ 4.5:1.
 @immutable
 class ChatStylePalette {
@@ -72,14 +72,9 @@ class ChatStylePalette {
   }
 
   /// This palette with own bubbles in the app's accent [c] instead of the
-  /// messenger's colour. [solid] (Messenger) fills them with the accent and
-  /// light text; otherwise they get an accent tint over the incoming bubble
-  /// with normal text, so contrast stays as in the theme.
-  ChatStylePalette withPrimaryBubbles(
-    AppColors c, {
-    required bool solid,
-    required bool dark,
-  }) {
+  /// style's own colour: an accent tint over the incoming bubble with normal
+  /// text, so contrast stays as in the theme.
+  ChatStylePalette withPrimaryBubbles(AppColors c, {required bool dark}) {
     final tint = Color.alphaBlend(
       c.accent.withValues(alpha: dark ? 0.32 : 0.16),
       incomingBubble,
@@ -92,11 +87,11 @@ class ChatStylePalette {
       incomingLink: incomingLink,
       incomingQuoteBar: incomingQuoteBar,
       incomingBorder: incomingBorder,
-      outgoingBubble: solid ? _readableFill(c.accent, c.onAccent) : tint,
-      outgoingText: solid ? c.onAccent : incomingText,
-      outgoingMeta: solid ? c.onAccent.withValues(alpha: 0.85) : incomingMeta,
-      outgoingLink: solid ? c.onAccent : c.accent,
-      outgoingQuoteBar: solid ? c.onAccent : c.accent,
+      outgoingBubble: tint,
+      outgoingText: incomingText,
+      outgoingMeta: incomingMeta,
+      outgoingLink: c.accent,
+      outgoingQuoteBar: c.accent,
       outgoingBorder: outgoingBorder == null
           ? null
           : Color.alphaBlend(c.accent.withValues(alpha: 0.35), incomingBubble),
@@ -105,8 +100,8 @@ class ChatStylePalette {
       separatorText: separatorText,
       nameColors: nameColors,
       quoteFill: quoteFill,
-      // outgoingQuoteFill is left out: it suits the messenger's own bubble,
-      // not the accent one.
+      // outgoingQuoteFill is left out: it suits the style's own bubble, not
+      // the accent one.
       outsideQuoteFill: outsideQuoteFill,
       outsideQuoteText: outsideQuoteText,
     );
@@ -137,22 +132,6 @@ class ChatStylePalette {
     outsideQuoteFill: outsideQuoteFill,
     outsideQuoteText: outsideQuoteText,
   );
-
-  /// [fill] darkened just enough for [ink] to read at 4.5:1 (a dark theme's
-  /// light accent under white text would not).
-  static Color _readableFill(Color fill, Color ink) {
-    var out = fill;
-    for (
-      var shade = 0.08;
-      contrastRatio(ink, out) < 4.5 && shade <= 0.6;
-      shade += 0.08
-    ) {
-      out = Color.alphaBlend(_black.withValues(alpha: shade), fill);
-    }
-    return out;
-  }
-
-  static const _black = Color(0xFF000000);
 
   /// Chat area behind the messages.
   final Color background;
@@ -191,7 +170,7 @@ class ChatStylePalette {
   /// [quoteFill] (the default style: white on its tinted own bubbles).
   final Color? outgoingQuoteFill;
 
-  /// A reply quote shown outside the bubble (Messenger, WeChat): its box and
+  /// A reply quote shown outside the bubble (ZenTao, WeChat): its box and
   /// text; null = the incoming bubble colour and [incomingMeta].
   final Color? outsideQuoteFill;
   final Color? outsideQuoteText;
@@ -292,40 +271,38 @@ class ChatStylePalette {
     separatorText: Color(0xFFB8C2CE),
   );
 
-  static const messengerLight = ChatStylePalette(
+  /// ZenTao's chat as its own client draws it: a pale blue bubble for own
+  /// messages and a light grey one for the others, dark text, blue links.
+  static const zentaoLight = ChatStylePalette(
     background: Color(0xFFFFFFFF),
-    incomingBubble: Color(0xFFEBECEF),
-    incomingText: Color(0xFF050505),
-    incomingMeta: Color(0xFF65676B),
-    incomingLink: Color(0xFF005EF7),
-    incomingQuoteBar: Color(0xFF5E6064),
-    outgoingBubble: Color(0xFF0866FF),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFF5F8FF),
-    outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFFFFFFFF),
-    // A deep navy card on the blue own bubble: state colours (green, red,
-    // purple) then read without being washed out to white.
-    outgoingQuoteFill: Color(0x66001A4D),
-    separatorText: Color(0xFF65676B),
+    incomingBubble: Color(0xFFF0F1F3),
+    incomingText: Color(0xFF1F2430),
+    incomingMeta: Color(0xFF666E7A),
+    incomingLink: Color(0xFF1558C8),
+    incomingQuoteBar: Color(0xFF666E7A),
+    outgoingBubble: Color(0xFFD9E8FF),
+    outgoingText: Color(0xFF1F2430),
+    outgoingMeta: Color(0xFF4F5B6D),
+    outgoingLink: Color(0xFF1558C8),
+    outgoingQuoteBar: Color(0xFF1558C8),
+    separatorText: Color(0xFF5A6270),
+    nameColors: [Color(0xFF1F2430)],
   );
 
-  static const messengerDark = ChatStylePalette(
+  static const zentaoDark = ChatStylePalette(
     background: Color(0xFF000000),
-    incomingBubble: Color(0xFF303030),
-    incomingText: Color(0xFFE4E6EB),
-    incomingMeta: Color(0xFFB0B3B8),
-    incomingLink: Color(0xFF4599FF),
-    incomingQuoteBar: Color(0xFFB0B3B8),
-    outgoingBubble: Color(0xFF0866FF),
-    outgoingText: Color(0xFFFFFFFF),
-    outgoingMeta: Color(0xFFF5F8FF),
-    outgoingLink: Color(0xFFFFFFFF),
-    outgoingQuoteBar: Color(0xFFFFFFFF),
-    // A deep navy card on the blue own bubble: state colours (green, red,
-    // purple) then read without being washed out to white.
-    outgoingQuoteFill: Color(0x66001A4D),
-    separatorText: Color(0xFFB0B3B8),
+    incomingBubble: Color(0xFF2A2E35),
+    incomingText: Color(0xFFE6EBF2),
+    incomingMeta: Color(0xFFA7B3C4),
+    incomingLink: Color(0xFF8DB9FF),
+    incomingQuoteBar: Color(0xFFA7B3C4),
+    outgoingBubble: Color(0xFF1E3A5F),
+    outgoingText: Color(0xFFE6EBF2),
+    outgoingMeta: Color(0xFFB4C5DC),
+    outgoingLink: Color(0xFF8DB9FF),
+    outgoingQuoteBar: Color(0xFF8DB9FF),
+    separatorText: Color(0xFFA7B3C4),
+    nameColors: [Color(0xFFE6EBF2)],
   );
 
   static const wechatLight = ChatStylePalette(

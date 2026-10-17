@@ -18,15 +18,16 @@ const _users = {
   31: ChatUser(accountId: 'a', userId: 31, account: 'dyno', realname: 'Dyno'),
 };
 
-ChatMessage _message(MessageContent content) => ChatMessage(
-  accountId: 'a',
-  gid: 'g1',
-  chatGid: 'c1',
-  senderId: 31,
-  sentAt: DateTime(2026, 10, 13, 13, 42),
-  content: content,
-  isMine: false,
-);
+ChatMessage _message(MessageContent content, {bool mine = false}) =>
+    ChatMessage(
+      accountId: 'a',
+      gid: 'g1',
+      chatGid: 'c1',
+      senderId: 31,
+      sentAt: DateTime(2026, 10, 13, 13, 42),
+      content: content,
+      isMine: mine,
+    );
 
 void main() {
   late AppDatabase db;
@@ -39,6 +40,7 @@ void main() {
     WidgetTester tester,
     MessageContent content, {
     required ChatAppearance appearance,
+    bool mine = false,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -59,7 +61,7 @@ void main() {
           home: Scaffold(
             body: MessageBubble(
               chat: (accountId: 'a', chatGid: 'c1'),
-              message: _message(content),
+              message: _message(content, mine: mine),
               users: _users,
               onOpenThread: (_) {},
               onReply: (_) {},
@@ -100,6 +102,36 @@ void main() {
       find.ancestor(of: find.text('Dyno'), matching: find.byType(Tooltip)),
       findsNothing,
     );
+    await disposeTree(tester);
+  });
+
+  testWidgets('zentao: own messages sit on the left under a name and time '
+      'header', (tester) async {
+    await pump(
+      tester,
+      const MessageContent.text('hello'),
+      appearance: ChatAppearance.zentao,
+      mine: true,
+    );
+    expect(find.text('Dyno'), findsOneWidget);
+    expect(find.text('13:42'), findsOneWidget);
+    // The text starts at the left, after the avatar, not by the right edge.
+    final width = tester.getSize(find.byType(MaterialApp)).width;
+    expect(tester.getTopLeft(find.text('hello')).dx, lessThan(width / 2));
+    // The time is in the header, not under the bubble.
+    expect(find.text('13:42'), findsOneWidget);
+    await disposeTree(tester);
+  });
+
+  testWidgets('telegram: own messages stay on the right', (tester) async {
+    await pump(
+      tester,
+      const MessageContent.text('hello'),
+      appearance: ChatAppearance.telegram,
+      mine: true,
+    );
+    final width = tester.getSize(find.byType(MaterialApp)).width;
+    expect(tester.getTopRight(find.text('hello')).dx, greaterThan(width / 2));
     await disposeTree(tester);
   });
 }

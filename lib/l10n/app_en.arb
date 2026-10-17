@@ -1357,7 +1357,7 @@
   "chatAppearance": "Bubble style",
   "chatAppearanceDefault": "Default",
   "chatPrimaryBubbles": "Use the accent colour for my bubbles",
-  "chatPrimaryBubblesHint": "Telegram, Zalo, Messenger and WeChat use the app's accent colour for your messages. The default style always follows the app's colours.",
+  "chatPrimaryBubblesHint": "Telegram, Zalo, ZenTao and WeChat use the app's accent colour for your messages. The default style always follows the app's colours.",
   "chatWallpaper": "Wallpaper",
   "chatWallpaperDefault": "Default",
   "chatWallpaperColor": "Colour",

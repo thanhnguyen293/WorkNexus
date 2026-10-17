@@ -126,7 +126,7 @@ class AppSettings {
   final ChatAppearance chatAppearance;
 
   /// Send chat messages as Markdown (xxd `text`) instead of plain text.
-  /// Own bubbles in Telegram/Zalo/Messenger/WeChat styles use the accent.
+  /// Own bubbles in Telegram/Zalo/ZenTao/WeChat styles use the accent.
   final bool chatPrimaryBubbles;
 
   /// The chat background, shared by every chat style: '' or

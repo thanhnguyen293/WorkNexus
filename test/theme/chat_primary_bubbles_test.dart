@@ -20,41 +20,44 @@ AppColors _colors(AppThemeVariant variant) => buildAppTheme(
 
 void main() {
   final cases = [
-    (AppThemeVariant.light, ChatStylePalette.zaloLight, false),
-    (AppThemeVariant.light, ChatStylePalette.telegramDay, false),
-    (AppThemeVariant.light, ChatStylePalette.wechatLight, false),
-    (AppThemeVariant.light, ChatStylePalette.messengerLight, true),
-    (AppThemeVariant.light, ChatStylePalette.tbchatLight, false),
-    (AppThemeVariant.dark, ChatStylePalette.zaloDark, false),
-    (AppThemeVariant.dark, ChatStylePalette.telegramNight, false),
-    (AppThemeVariant.dark, ChatStylePalette.wechatDark, false),
-    (AppThemeVariant.dark, ChatStylePalette.messengerDark, true),
-    (AppThemeVariant.dark, ChatStylePalette.tbchatDark, false),
+    (AppThemeVariant.light, ChatStylePalette.zaloLight),
+    (AppThemeVariant.light, ChatStylePalette.telegramDay),
+    (AppThemeVariant.light, ChatStylePalette.wechatLight),
+    (AppThemeVariant.light, ChatStylePalette.zentaoLight),
+    (AppThemeVariant.light, ChatStylePalette.tbchatLight),
+    (AppThemeVariant.dark, ChatStylePalette.zaloDark),
+    (AppThemeVariant.dark, ChatStylePalette.telegramNight),
+    (AppThemeVariant.dark, ChatStylePalette.wechatDark),
+    (AppThemeVariant.dark, ChatStylePalette.zentaoDark),
+    (AppThemeVariant.dark, ChatStylePalette.tbchatDark),
   ];
 
   test('accent bubbles keep message text readable (≥ 4.5:1)', () {
-    for (final (variant, palette, solid) in cases) {
+    for (final (variant, palette) in cases) {
       final c = _colors(variant);
       final p = palette.withPrimaryBubbles(
         c,
-        solid: solid,
         dark: variant == AppThemeVariant.dark,
       );
       expect(
         _contrast(p.outgoingText, p.outgoingBubble),
         greaterThanOrEqualTo(4.5),
-        reason: '$variant solid=$solid',
+        reason: '$variant',
       );
     }
   });
 
   test('only own bubbles change', () {
     final c = _colors(AppThemeVariant.light);
-    const base = ChatStylePalette.messengerLight;
-    final p = base.withPrimaryBubbles(c, solid: true, dark: false);
-    // The light theme's accent already reads well under its ink.
-    expect(p.outgoingBubble, c.accent);
-    expect(p.outgoingText, c.onAccent);
+    const base = ChatStylePalette.zentaoLight;
+    final p = base.withPrimaryBubbles(c, dark: false);
+    // An accent tint over the incoming bubble, under the style's own ink.
+    expect(
+      p.outgoingBubble,
+      Color.alphaBlend(c.accent.withValues(alpha: 0.16), base.incomingBubble),
+    );
+    expect(p.outgoingText, base.incomingText);
+    expect(p.outgoingLink, c.accent);
     expect(p.incomingBubble, base.incomingBubble);
     expect(p.background, base.background);
   });

@@ -1019,7 +1019,7 @@
   "chatAppearance": "Kiểu bong bóng chat",
   "chatAppearanceDefault": "Mặc định",
   "chatPrimaryBubbles": "Dùng màu chủ đạo cho bong bóng chat",
-  "chatPrimaryBubblesHint": "Telegram, Zalo, Messenger và WeChat dùng màu chủ đạo của app cho tin nhắn của bạn. Kiểu Mặc định luôn theo màu của app.",
+  "chatPrimaryBubblesHint": "Telegram, Zalo, ZenTao và WeChat dùng màu chủ đạo của app cho tin nhắn của bạn. Kiểu Mặc định luôn theo màu của app.",
   "chatWallpaper": "Ảnh nền",
   "chatWallpaperDefault": "Mặc định",
   "chatWallpaperColor": "Màu",
