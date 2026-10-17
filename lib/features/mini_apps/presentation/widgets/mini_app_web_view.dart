@@ -17,6 +17,7 @@ import '../util/mini_app_login_capability.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
 import '../util/route_mini_app_window_link.dart';
+import 'mini_app_discarded_window.dart';
 import 'mini_app_popup.dart';
 
 /// The web page of a mini app, with the app's answers to what the page asks
@@ -114,7 +115,9 @@ class MiniAppWebView extends ConsumerWidget {
               url,
               currentAppId: app.id,
             )) {
-          return false;
+          // Claimed, not declined: declining loads the link in this page.
+          MiniAppDiscardedWindow.discard(context, action.windowId);
+          return true;
         }
         unawaited(MiniAppPopup.show(context, action.windowId));
         return true;

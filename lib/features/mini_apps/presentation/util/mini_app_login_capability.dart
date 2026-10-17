@@ -1,15 +1,18 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-import '../../../../core/di/providers.dart';
+import '../../../../core/debug/app_talker.dart';
+import '../../../../core/error/result.dart';
+import '../providers/mini_app_providers.dart';
 import 'mini_app_page_capability.dart';
 import 'mini_app_page_token.dart';
 
 /// Signs in a mini app that shows a ZenTao server the app has an account on,
 /// with that account's saved login — the web view remembers no passwords of
-/// its own. It fills the form when it is empty, and only for the server's own
-/// page: the script asks the app for the login, and the app answers when the
-/// main frame is that server. A call without the page's [token] (an iframe's)
-/// is ignored.
+/// its own. It fills ZenTao's login form when it is empty, and only on that
+/// server's login page: the script asks the app for the login, and the app
+/// answers when the main frame is that page. A call without the page's
+/// [token] (an iframe's) is ignored; the login page embeds no other site, so
+/// a token another page may have seen earlier finds no frame to use it from.
 ///
 /// The form is submitted once per page of the app that is open (this object
 /// lives as long as that view): a wrong password is not tried again and again
@@ -37,9 +40,13 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
       handlerName: 'miniAppLogin',
       callback: (args) async {
         if (args.isEmpty || args.first != token) return null;
-        final login = await page.ref.read(savedWebLoginProvider)(
+        final found = await page.ref.read(findSavedWebLoginProvider)(
           await controller.getUrl(),
         );
+        if (found case Err(:final failure)) {
+          appTalker.warning('Mini app login: ${failure.message}');
+        }
+        final login = found.valueOrNull;
         if (login == null) return null;
         final submit = !_submitted;
         _submitted = true;
@@ -52,12 +59,13 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
     );
   }
 
-  /// Watches for a visible, empty password field (the form may be drawn after
-  /// the page loads), asks once for the login, and puts it in that field and
-  /// the text field before it — as typed, so a framework's form sees it —
-  /// then signs in when the app says to: the form's submit button, else the
-  /// form itself, else Enter in the password field. Asks again only after the
-  /// field has gone and come back.
+  /// Watches for ZenTao's login form — a visible, empty `password` field with
+  /// the `account` field beside it; the form may be drawn after the page
+  /// loads — asks once for the login, and puts it in those two fields as
+  /// typed, so a framework's form sees it. Any other password field (one
+  /// confirming a change, say) is left alone. Then signs in when the app says
+  /// to: the form's submit button, else the form itself, else Enter in the
+  /// password field. Asks again only after the form has gone and come back.
   static const _script = r'''
 (function () {
   var asked = false;
@@ -71,18 +79,17 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
-  function userField(password) {
-    var root = password.form || document;
-    var named = root.querySelector('input[name=account], #account');
-    if (named && visible(named)) return named;
-    var fields = [].slice.call(root.querySelectorAll(
-      'input:not([type]), input[type=text], input[type=email], input[type=tel]'
-    )).filter(visible);
-    var before = fields.filter(function (f) {
-      return f.compareDocumentPosition(password) &
-        Node.DOCUMENT_POSITION_FOLLOWING;
-    });
-    return before.length ? before[before.length - 1] : null;
+  function loginForm() {
+    var passwords = [].slice.call(document.querySelectorAll(
+      'input[type=password][name=password]')).filter(visible);
+    for (var i = 0; i < passwords.length; i++) {
+      var root = passwords[i].form || document;
+      var account = root.querySelector('input[name=account], #account');
+      if (account && visible(account)) {
+        return { account: account, password: passwords[i] };
+      }
+    }
+    return null;
   }
   function submit(password) {
     var root = password.form || document;
@@ -99,18 +106,18 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
     });
   }
   function check() {
-    var password = [].slice.call(
-      document.querySelectorAll('input[type=password]')).filter(visible)[0];
-    if (!password) { asked = false; return; }
-    if (asked || password.value) return;
+    var form = loginForm();
+    if (!form) { asked = false; return; }
+    if (asked || form.password.value) return;
     asked = true;
     window.flutter_inappwebview.callHandler('miniAppLogin', '__TOKEN__')
       .then(function (login) {
-        if (!login || password.value) return;
-        var user = userField(password);
-        if (user && !user.value) set(user, login.account);
-        set(password, login.password);
-        if (login.submit) setTimeout(function () { submit(password); }, 150);
+        if (!login || form.password.value) return;
+        if (!form.account.value) set(form.account, login.account);
+        set(form.password, login.password);
+        if (login.submit) {
+          setTimeout(function () { submit(form.password); }, 150);
+        }
       });
   }
   new MutationObserver(check).observe(

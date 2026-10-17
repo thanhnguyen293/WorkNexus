@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/service_locator.dart';
+import '../../../../core/di/providers.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/platform/credential_store.dart';
 import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/entities/mini_app_permission.dart';
@@ -10,6 +12,7 @@ import '../../domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../domain/repositories/mini_app_permission_repository.dart';
 import '../../domain/repositories/mini_app_repository.dart';
 import '../../domain/usecases/add_mini_app.dart';
+import '../../domain/usecases/find_saved_web_login.dart';
 import '../../domain/usecases/move_mini_app.dart';
 import '../../domain/usecases/resolve_mini_app_permission.dart';
 import '../../domain/usecases/update_mini_app.dart';
@@ -48,6 +51,15 @@ final resolveMiniAppPermissionProvider = Provider<ResolveMiniAppPermission>(
 /// OS notifications, for what a mini app's page asks to show.
 final miniAppNotifierProvider = Provider<DesktopNotifier>(
   (ref) => getIt<DesktopNotifier>(),
+);
+
+/// The saved sign-in for the login page of a ZenTao server the app has an
+/// account on: what a mini app's login form is filled with.
+final findSavedWebLoginProvider = Provider<FindSavedWebLogin>(
+  (ref) => FindSavedWebLogin(
+    () => ref.read(lookupsProvider).accounts.values,
+    getIt<CredentialStore>().read,
+  ),
 );
 
 /// The user's mini apps in rail order, watched from the database.
