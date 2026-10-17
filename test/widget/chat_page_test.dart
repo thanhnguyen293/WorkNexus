@@ -23,6 +23,7 @@ import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dar
 import 'package:work_nexus/features/chat/domain/value_objects/chat_avatar_crop.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_timeline_extent.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
@@ -295,6 +296,16 @@ class _FakeChatRepository implements ChatRepository {
     String chatGid, {
     required DateTime before,
   }) async => const Ok(0);
+
+  @override
+  Future<Result<ChatTimelineExtent>> timelineExtent(
+    String a,
+    String chatGid,
+  ) async => const Ok(ChatTimelineExtent(count: 0));
+
+  @override
+  Future<Result<int>> messageCount(String a, String chatGid) async =>
+      const Ok(0);
 
   @override
   Future<Result<List<ChatMessage>>> searchMessages(

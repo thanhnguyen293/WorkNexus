@@ -14,8 +14,11 @@ import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_server_info.da
 import 'package:work_nexus/features/chat/data/repositories/xxd_chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
+import 'package:work_nexus/features/chat/domain/usecases/download_chat_history.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_history_progress.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_presence.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_timeline_extent.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 
 import 'support/fake_xxd_server.dart';
@@ -829,6 +832,50 @@ void main() {
 
     final all = await repo.watchMessages(_acc, 'g1', limit: 500).first;
     expect(all.map((m) => m.serverId), [for (var i = 1; i <= 120; i++) i]);
+  });
+
+  test('downloading a chat\'s history stores all of it for search, '
+      'past a reply parent stored on its own', () async {
+    history[5] = _msg(5, content: 'Đã gửi bản phát hành cũ');
+    await repo.connect(_acc);
+    await eventually(repo.watchConversations(_acc), (l) => l.length == 2);
+    expect((await repo.refreshMessages(_acc, 'g1')).isOk, isTrue);
+    // A reply parent far back: older than the timeline, not part of it.
+    expect((await repo.fetchMessages(_acc, 'g1', [3])).isOk, isTrue);
+    expect(
+      (await repo.timelineExtent(_acc, 'g1')).valueOrNull,
+      const ChatTimelineExtent(count: 50, oldestServerId: 71),
+    );
+    expect(
+      (await repo.searchMessages(_acc, query: 'phat hanh')).valueOrNull,
+      isEmpty,
+    );
+
+    final progress = [
+      for (final r in await DownloadChatHistory(repo)(
+        accountId: _acc,
+        chatGid: 'g1',
+      ).toList())
+        r.valueOrNull,
+    ];
+
+    expect(progress.first, const ChatHistoryProgress(stored: 50, total: 120));
+    expect(
+      progress.last,
+      const ChatHistoryProgress(stored: 120, total: 120, complete: true),
+    );
+    expect(
+      (await repo.timelineExtent(_acc, 'g1')).valueOrNull,
+      const ChatTimelineExtent(
+        count: 120,
+        oldestServerId: 1,
+        reachesStart: true,
+      ),
+    );
+    final all = await repo.watchMessages(_acc, 'g1', limit: 500).first;
+    expect(all.map((m) => m.serverId), [for (var i = 1; i <= 120; i++) i]);
+    final found = await repo.searchMessages(_acc, query: 'phat hanh');
+    expect(found.valueOrNull?.map((m) => m.serverId), [5]);
   });
 
   test('a reply parent fetched by id stays out of the timeline', () async {

@@ -84,6 +84,38 @@ class ChatTimelineDatasource {
     return joined ?? 0;
   }
 
+  /// How many server messages the timeline holds, its oldest one, and
+  /// whether that is the chat's first (index 1).
+  Future<({int count, int? oldestServerId, bool reachesStart})> extent(
+    String accountId,
+    String cgid,
+  ) async {
+    final m = _db.chatMessages;
+    Expression<bool> inTimeline(ChatMessages t) =>
+        t.accountId.equals(accountId) &
+        t.cgid.equals(cgid) &
+        t.detached.equals(false) &
+        t.serverId.isNotNull();
+    final count = m.gid.count();
+    final counted =
+        await (_db.selectOnly(m)
+              ..addColumns([count])
+              ..where(inTimeline(m)))
+            .getSingle();
+    final oldest =
+        await (_db.select(m)
+              ..where(inTimeline)
+              ..orderBy([(t) => OrderingTerm.asc(t.serverId)])
+              ..limit(1))
+            .getSingleOrNull();
+    final index = oldest?.messageIndex;
+    return (
+      count: counted.read(count) ?? 0,
+      oldestServerId: oldest?.serverId,
+      reachesStart: index != null && index <= 1,
+    );
+  }
+
   /// The stored messages with an index in [from]–[to] (a jump window,
   /// timeline or not), oldest first.
   Stream<List<ChatMessageRow>> watchMessagesInRange(

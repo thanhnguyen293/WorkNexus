@@ -1482,6 +1482,23 @@
   },
   "chatSearchHistory": "Tìm kiếm lịch sử chat",
   "chatSearchInThisChat": "Trong hội thoại này",
+  "chatHistoryOnlyStored": "Chỉ tìm trong các tin nhắn đã lưu trên máy này.",
+  "chatHistoryDownload": "Tìm cả tin nhắn cũ hơn của hội thoại này",
+  "chatHistoryDownloading": "Đang tải tin nhắn cũ…",
+  "chatHistoryDownloadProgress": "{stored} / {total}",
+  "@chatHistoryDownloadProgress": {
+    "placeholders": {
+      "stored": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "chatHistoryDownloadFailed": "Không tải được tin nhắn cũ",
   "reviewRequested": "Yêu cầu duyệt",
   "recent": "Gần đây",
   "showAll": "Xem tất cả…",

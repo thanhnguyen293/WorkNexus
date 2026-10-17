@@ -8,6 +8,7 @@ import '../entities/chat_user.dart';
 import '../value_objects/chat_avatar_crop.dart';
 import '../value_objects/chat_connection_status.dart';
 import '../value_objects/chat_presence.dart';
+import '../value_objects/chat_timeline_extent.dart';
 import '../value_objects/chat_typing_signal.dart';
 import '../value_objects/message_content.dart';
 
@@ -97,6 +98,15 @@ abstract class ChatRepository {
     String chatGid, {
     required DateTime before,
   });
+
+  /// How far back the stored timeline of [chatGid] goes.
+  Future<Result<ChatTimelineExtent>> timelineExtent(
+    String accountId,
+    String chatGid,
+  );
+
+  /// How many messages [chatGid] has on the server (`chatGetMessageInfo`).
+  Future<Result<int>> messageCount(String accountId, String chatGid);
 
   /// Stored text messages containing [query], newest first — of chat
   /// [chatGid] only when given, else of every chat of the account. Ignores
