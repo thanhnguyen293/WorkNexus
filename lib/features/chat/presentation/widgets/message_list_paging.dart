@@ -11,6 +11,7 @@ import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
 import 'message_jump.dart';
 import 'message_list.dart';
+import 'message_list_anchor.dart';
 
 /// [MessageList]'s paging: older pages at the top, newer ones at the bottom
 /// of a jump window, and jumps to a message — in place when it is loaded,
@@ -43,9 +44,9 @@ mixin MessageListPaging on ConsumerState<MessageList> {
   /// Older messages fetched while the mouse was held, shown on release.
   int _pendingRows = 0;
 
-  /// While newer rows are being added under the reader: their distance from
-  /// the top of the list, held once the rows are laid out.
-  double? _keepFromTop;
+  /// While newer rows are being added under the reader: the row they read,
+  /// put back in place once the rows are laid out.
+  MessageListAnchor? _anchor;
 
   ChatMessageWindow get window =>
       ref.read(chatMessageWindowProvider(widget.thread));
@@ -60,7 +61,7 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     newerExhausted = false;
     loadFailed = false;
     _pendingRows = 0;
-    _keepFromTop = null;
+    _anchor = null;
   }
 
   Future<void> loadOlder() async {
@@ -143,30 +144,21 @@ mixin MessageListPaging on ConsumerState<MessageList> {
   }
 
   /// Rows added at the bottom of a reversed list push the ones being read
-  /// up; [update] adds them, then the list scrolls by as much to hold them.
+  /// up; [update] adds them, then the row being read is put back in place.
   void _holdPlace(VoidCallback update) {
-    if (scroll.hasClients) {
-      final position = scroll.position;
-      _keepFromTop = position.maxScrollExtent - position.pixels;
-    }
+    _anchor = MessageListAnchor.capture(scroll, rows);
     update();
   }
 
   /// Called when the shown messages change: restores the place held by
-  /// [_holdPlace] once the new rows are laid out.
-  void onShownChanged() {
-    final keep = _keepFromTop;
-    if (keep == null) return;
-    _keepFromTop = null;
+  /// [_holdPlace] once the new rows are laid out. A reload that still shows
+  /// the same rows ([before] is [after]) has not brought them yet.
+  void onShownChanged(List<ChatMessage> before, List<ChatMessage> after) {
+    final anchor = _anchor;
+    if (anchor == null || identical(before, after)) return;
+    _anchor = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !scroll.hasClients) return;
-      final position = scroll.position;
-      scroll.jumpTo(
-        (position.maxScrollExtent - keep).clamp(
-          position.minScrollExtent,
-          position.maxScrollExtent,
-        ),
-      );
+      if (mounted) anchor.restore(scroll, rows);
     });
   }
 

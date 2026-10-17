@@ -94,6 +94,17 @@ abstract class ChatRepository {
     required int toIndex,
   });
 
+  /// How many messages of [chatGid] are stored right before per-chat index
+  /// [index] ([older]) or right after it, with none missing in between, at
+  /// most [limit]: how far a jump window can grow without the server.
+  Future<Result<int>> countAdjacentMessages(
+    String accountId,
+    String chatGid, {
+    required int index,
+    required bool older,
+    required int limit,
+  });
+
   /// How many messages of [chatGid] are stored locally from before [before].
   Future<Result<int>> countOlderMessages(
     String accountId,

@@ -452,6 +452,29 @@ class XxdChatRepository implements ChatRepository {
   }
 
   @override
+  Future<Result<int>> countAdjacentMessages(
+    String accountId,
+    String chatGid, {
+    required int index,
+    required bool older,
+    required int limit,
+  }) async {
+    try {
+      return Ok(
+        await _local.timeline.countAdjacent(
+          accountId,
+          chatGid,
+          index: index,
+          older: older,
+          limit: limit,
+        ),
+      );
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not read stored messages', cause: e));
+    }
+  }
+
+  @override
   Future<Result<ChatTimelineExtent>> timelineExtent(
     String accountId,
     String chatGid,

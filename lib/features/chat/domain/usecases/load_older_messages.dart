@@ -16,15 +16,37 @@ class LoadOlderMessages {
 
   final ChatRepository _repository;
 
+  /// How many stored messages a jump window grows by at most at once.
+  static const windowPage = 50;
+
   ///
-  /// In a jump window ([inWindow]) the server is always asked: stored
-  /// messages before it need not continue it.
+  /// In a jump window ([inWindow]) only the stored messages right before it
+  /// — none missing in between — continue it; without those the server is
+  /// asked.
   Future<Result<int>> call({
     required String accountId,
     required String chatGid,
     ChatMessage? oldestShown,
     bool inWindow = false,
   }) async {
+    final index = oldestShown?.index;
+    if (inWindow && index != null) {
+      final stored = await _repository.countAdjacentMessages(
+        accountId,
+        chatGid,
+        index: index,
+        older: true,
+        limit: windowPage,
+      );
+      switch (stored) {
+        case Ok(:final value) when value > 0:
+          return Ok(value);
+        case Err(:final failure):
+          return Err(failure);
+        case Ok():
+          break;
+      }
+    }
     if (oldestShown != null && !inWindow) {
       final stored = await _repository.countOlderMessages(
         accountId,

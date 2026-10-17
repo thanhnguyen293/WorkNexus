@@ -8,10 +8,15 @@ import '../repositories/chat_repository.dart';
 /// joined, the window stays as it is).
 typedef NewerMessages = ({int added, int? joined});
 
-/// Extends a jump window towards the newest message; once nothing newer is
-/// left, joins it to the timeline so the chat reads on as usual.
+/// Extends a jump window towards the newest message — with the stored
+/// messages right after it when there are, else from the server; once it
+/// reaches the timeline, or nothing newer is left, joins it to the timeline
+/// so the chat reads on as usual.
 class LoadNewerMessages {
   const LoadNewerMessages(this._repository);
+
+  /// How many stored messages the window grows by at most at once.
+  static const windowPage = 50;
 
   final ChatRepository _repository;
 
@@ -26,6 +31,31 @@ class LoadNewerMessages {
     if (serverId == null || index == null) {
       return const Ok((added: 0, joined: null));
     }
+    final stored = await _repository.countAdjacentMessages(
+      accountId,
+      chatGid,
+      index: index,
+      older: false,
+      limit: windowPage,
+    );
+    switch (stored) {
+      case Ok(:final value) when value > 0:
+        return Ok((added: value, joined: null));
+      case Err(:final failure):
+        return Err(failure);
+      case Ok():
+        break;
+    }
+    // Reaching the timeline — which runs up to the newest message — joins
+    // it without asking the server for anything newer.
+    switch (await _join(accountId, chatGid, windowFrom, index)) {
+      case Ok(value: (added: _, joined: int())) && final joined:
+        return joined;
+      case Err(:final failure):
+        return Err(failure);
+      case Ok():
+        break;
+    }
     final loaded = await _repository.loadNewerMessages(
       accountId,
       chatGid,
@@ -39,6 +69,15 @@ class LoadNewerMessages {
       case Ok():
         break;
     }
+    return _join(accountId, chatGid, windowFrom, index);
+  }
+
+  Future<Result<NewerMessages>> _join(
+    String accountId,
+    String chatGid,
+    int windowFrom,
+    int index,
+  ) async {
     final joined = await _repository.joinWindowToTimeline(
       accountId,
       chatGid,

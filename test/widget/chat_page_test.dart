@@ -298,6 +298,15 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
+  Future<Result<int>> countAdjacentMessages(
+    String a,
+    String chatGid, {
+    required int index,
+    required bool older,
+    required int limit,
+  }) async => const Ok(0);
+
+  @override
   Future<Result<int>> countOlderMessages(
     String a,
     String chatGid, {
