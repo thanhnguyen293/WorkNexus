@@ -1252,6 +1252,28 @@
   "chatNotificationsOff": "Turn on new message notifications",
   "chatInfo": "Chat info",
   "chatClosePanel": "Close",
+  "chatPinnedBarTitle": "Message",
+  "chatMorePins": "+{count} pinned",
+  "@chatMorePins": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatPinnedLabel": "Pinned message",
+  "chatViewOriginal": "View original message",
+  "chatDateAtTime": "{date} at {time}",
+  "@chatDateAtTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "chatPinnedMessages": "Pinned messages",
   "chatNoPinned": "No pinned messages",
   "chatMembersTitle": "Members",

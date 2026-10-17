@@ -2,21 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_context_menu.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
+import 'chat_snack.dart';
 
-/// Under the chat header: the most recently pinned message and how many are
-/// pinned. Tap lists them all beside the chat.
+/// Under the chat header: the most recently pinned message and how many
+/// others are pinned. Tap lists them all beside the chat, as cards.
 class PinnedMessageBar extends ConsumerStatefulWidget {
   const PinnedMessageBar({
     super.key,
@@ -57,37 +62,32 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
         ? null
         : '${chatUserName(context, widget.users, message.senderId)}: '
               '${message.deleted ? l.chatRetracted : chatPreview(context, message)}';
-    final count = widget.pinnedIds.length;
+    final others = widget.pinnedIds.length - 1;
+    void openPanel() => toggleChatSidePanel(
+      ref,
+      t,
+      ChatSidePanel.pinned,
+      infoRoom: ChatLayoutScope.of(context).infoRoom,
+    );
 
     return Material(
       color: c.surface,
       child: InkWell(
         mouseCursor: WidgetStateMouseCursor.clickable,
-        onTap: () => toggleChatSidePanel(
-          ref,
-          t,
-          ChatSidePanel.pinned,
-          infoRoom: ChatLayoutScope.of(context).infoRoom,
-        ),
+        onTap: openPanel,
         child: Container(
           height: kChatSubHeaderHeight,
-          padding: EdgeInsets.symmetric(horizontal: s.xl4),
+          padding: EdgeInsets.only(left: s.xl4, right: s.lg),
           decoration: BoxDecoration(
             border: Border(bottom: context.hairlineSide),
           ),
           child: Row(
             children: [
-              // A rounded accent bar as tall as the two lines beside it.
-              Container(
-                width: 3,
-                height: s.xl6 * 0.85,
-                decoration: BoxDecoration(
-                  color: c.accent,
-                  borderRadius: BorderRadius.circular(context.radii.pill),
-                ),
+              Icon(
+                LucideIcons.messageSquareText300,
+                size: s.xl4,
+                color: c.accent,
               ),
-              SizedBox(width: s.lg),
-              Icon(LucideIcons.pin500, size: s.xl3, color: c.accent),
               SizedBox(width: s.lg),
               Expanded(
                 child: Column(
@@ -95,11 +95,9 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      count > 1
-                          ? '${l.chatPinnedMessages} ($count)'
-                          : l.chatPinnedMessages,
-                      style: context.typography.captionStrong.copyWith(
-                        color: c.accent,
+                      l.chatPinnedBarTitle,
+                      style: context.typography.bodyStrong.copyWith(
+                        color: c.textPrimary,
                       ),
                     ),
                     Text(
@@ -107,21 +105,86 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.typography.bodySm.copyWith(
-                        color: c.textPrimary,
+                        color: c.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: s.md),
-              Icon(
-                LucideIcons.chevronRight300,
-                size: s.xl4,
-                color: c.textTertiary,
-              ),
+              if (others > 0) ...[
+                SizedBox(width: s.md),
+                AppButton.outlinedNeutral(
+                  size: AppButtonSize.small,
+                  onPressed: openPanel,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l.chatMorePins(others)),
+                      SizedBox(width: s.xs),
+                      Icon(LucideIcons.chevronDown300, size: s.xl2),
+                    ],
+                  ),
+                ),
+              ],
+              SizedBox(width: s.xs),
+              _PinnedBarMenu(thread: t, message: message),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The bar's "…": jump to the pinned message, or unpin it.
+class _PinnedBarMenu extends ConsumerWidget {
+  const _PinnedBarMenu({required this.thread, required this.message});
+
+  final ChatThreadKey thread;
+  final ChatMessage? message;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppL10n.of(context);
+    final m = message;
+    final serverId = m?.serverId;
+    final canPin = ref.watch(chatCanPinProvider(thread));
+    return Builder(
+      builder: (button) => AppIconButton(
+        icon: LucideIcons.ellipsis300,
+        tooltip: l.chatMoreActions,
+        onPressed: m == null || serverId == null
+            ? null
+            : () async {
+                final box = button.findRenderObject() as RenderBox?;
+                if (box == null) return;
+                final picked = await showAppContextMenu(
+                  button,
+                  at: box.localToGlobal(box.size.bottomLeft(Offset.zero)),
+                  entries: [
+                    AppMenuEntry(
+                      icon: LucideIcons.messageSquareShare300,
+                      label: l.chatViewOriginal,
+                    ),
+                    if (canPin)
+                      AppMenuEntry(
+                        icon: LucideIcons.pinOff300,
+                        label: l.chatUnpin,
+                        destructive: true,
+                      ),
+                  ],
+                );
+                if (picked == 0) {
+                  jumpToChatMessage(ref, thread, serverId);
+                } else if (picked == 1) {
+                  final result = await ref
+                      .read(chatControllerProvider)
+                      .setPinned(m, pinned: false);
+                  if (result case Err(:final failure)) {
+                    if (button.mounted) showChatFailure(button, failure);
+                  }
+                }
+              },
       ),
     );
   }

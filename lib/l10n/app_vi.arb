@@ -956,6 +956,28 @@
   "chatNotificationsOff": "Bật thông báo tin nhắn mới",
   "chatInfo": "Thông tin cuộc trò chuyện",
   "chatClosePanel": "Đóng",
+  "chatPinnedBarTitle": "Tin nhắn",
+  "chatMorePins": "+{count} ghim",
+  "@chatMorePins": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatPinnedLabel": "Tin ghim",
+  "chatViewOriginal": "Xem tin nhắn gốc",
+  "chatDateAtTime": "{date} lúc {time}",
+  "@chatDateAtTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "chatPinnedMessages": "Tin nhắn đã ghim",
   "chatNoPinned": "Chưa có tin nhắn nào được ghim",
   "chatMembersTitle": "Thành viên",
