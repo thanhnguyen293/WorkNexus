@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_search_providers.dart';
 import 'chat_composer.dart';
 import 'chat_emoji_side_panel.dart';
 import 'chat_file_send.dart';

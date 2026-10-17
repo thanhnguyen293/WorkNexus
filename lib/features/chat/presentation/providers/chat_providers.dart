@@ -283,52 +283,6 @@ final chatHighlightedMessageProvider =
 /// global chat history search panel across all conversations.
 enum ChatSidePanel { info, pinned, files, members, emoji, search }
 
-/// Search query for the active in-thread search bar.
-final chatThreadSearchQueryProvider =
-    StateProvider.family<String, ChatThreadKey>((ref, key) => '');
-
-/// Whether the in-thread search bar is open.
-final chatThreadSearchIsOpenProvider =
-    StateProvider.family<bool, ChatThreadKey>((ref, key) => false);
-
-/// Active match index (0-based) for the in-thread search bar; -1 until the
-/// first step, so that step lands on the first match rather than the second.
-final chatThreadSearchActiveIndexProvider =
-    StateProvider.family<int, ChatThreadKey>((ref, key) => -1);
-
-/// Matching messages for the current thread.
-final chatThreadSearchMatchesProvider = FutureProvider.autoDispose
-    .family<List<ChatMessage>, ChatThreadKey>((ref, key) async {
-      final query = ref.watch(chatThreadSearchQueryProvider(key)).trim();
-      if (query.isEmpty) return const [];
-      final result = await ref
-          .watch(chatRepositoryProvider)
-          .searchMessages(key.accountId, chatGid: key.chatGid, query: query);
-      return switch (result) {
-        Ok(:final value) => value,
-        Err() => const [],
-      };
-    });
-
-/// Query for searching across all chats of an account.
-final chatGlobalSearchQueryProvider = StateProvider.family<String, String>(
-  (ref, accountId) => '',
-);
-
-/// Matching messages across all chats of an account.
-final chatGlobalSearchResultsProvider = FutureProvider.autoDispose
-    .family<List<ChatMessage>, String>((ref, accountId) async {
-      final query = ref.watch(chatGlobalSearchQueryProvider(accountId)).trim();
-      if (query.isEmpty) return const [];
-      final result = await ref
-          .watch(chatRepositoryProvider)
-          .searchMessages(accountId, query: query, limit: 100);
-      return switch (result) {
-        Ok(:final value) => value,
-        Err() => const [],
-      };
-    });
-
 /// A chat's image and file messages stored locally, newest first.
 final chatAttachmentsProvider = StreamProvider.autoDispose
     .family<List<ChatMessage>, ChatThreadKey>(

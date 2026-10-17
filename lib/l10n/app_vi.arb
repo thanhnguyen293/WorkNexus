@@ -1430,6 +1430,34 @@
     }
   },
   "chatSearchNoMatches": "Không có kết quả",
+  "chatSearchMatchesMore": "{current} trên {total}+",
+  "@chatSearchMatchesMore": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchFailed": "Không tìm được tin nhắn",
+  "chatSearchResultCount": "{count} kết quả",
+  "@chatSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchResultCountMore": "Hơn {count} kết quả",
+  "@chatSearchResultCountMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatSearchHistory": "Tìm kiếm lịch sử chat",
   "chatSearchInThisChat": "Trong hội thoại này",
   "reviewRequested": "Yêu cầu duyệt",

@@ -301,7 +301,7 @@ class _FakeChatRepository implements ChatRepository {
     String accountId, {
     String? chatGid,
     required String query,
-    int limit = 50,
+    int? limit,
   }) async {
     calls.add('search $chatGid $query');
     final all = [

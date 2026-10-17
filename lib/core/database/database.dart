@@ -341,6 +341,11 @@ class ChatMessages extends Table {
   /// `broadcast`): members invited, the chat renamed, …
   BoolColumn get broadcast => boolean().withDefault(const Constant(false))();
 
+  /// [content] as message search compares it: plain text, lower case and
+  /// without diacritics. Null for a non-text message, and for a row stored
+  /// before the column existed until the datasource fills it in.
+  TextColumn get searchText => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {accountId, gid};
 }
@@ -569,7 +574,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 55;
+  int get schemaVersion => 56;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -880,6 +885,9 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(settings, column);
           }
         }
+      }
+      if (from < 56 && !await _hasColumn('chat_messages', 'search_text')) {
+        await m.addColumn(chatMessages, chatMessages.searchText);
       }
     },
   );
