@@ -19,10 +19,9 @@ class AppIconService {
   AppIconService({
     Future<Directory> Function()? folder,
     MethodChannel? channel,
-    Future<void> Function(String? iconPath)? setTrayIcon,
+    this._setTrayIcon,
   }) : _folder = folder ?? _supportFolder,
-       _channel = channel ?? const MethodChannel('worknexus/app_icon'),
-       _setTrayIcon = setTrayIcon;
+       _channel = channel ?? const MethodChannel('worknexus/app_icon');
 
   static bool get supported => !kIsWeb && Platform.isWindows;
 
@@ -50,28 +49,41 @@ class AppIconService {
   }
 
   /// Makes the image at [sourcePath] the app's icon. False when it is not an
-  /// image (nothing changes).
+  /// image or cannot be read or kept (nothing changes then, or the app is
+  /// left with its own icon).
   Future<bool> choose(String sourcePath) async {
-    final png = await compute(
-      squareAppIconPng,
-      await File(sourcePath).readAsBytes(),
-    );
-    if (png == null) return false;
-    final folder = await _folder();
-    await _clear(folder);
-    await folder.create(recursive: true);
-    final stamp = DateTime.now().millisecondsSinceEpoch;
-    await File('${folder.path}/$_prefix$stamp.png').writeAsBytes(png);
-    await File(
-      '${folder.path}/$_prefix$stamp.ico',
-    ).writeAsBytes(appIconIco(png));
+    try {
+      final png = await compute(
+        squareAppIconPng,
+        await File(sourcePath).readAsBytes(),
+      );
+      if (png == null) return false;
+      final folder = await _folder();
+      await _clear(folder);
+      await folder.create(recursive: true);
+      final stamp = DateTime.now().millisecondsSinceEpoch;
+      await File('${folder.path}/$_prefix$stamp.png').writeAsBytes(png);
+      await File(
+        '${folder.path}/$_prefix$stamp.ico',
+      ).writeAsBytes(appIconIco(png));
+    } on Object catch (error, stackTrace) {
+      // A corrupt image makes the decoder throw, not return null.
+      appTalker.handle(error, stackTrace, 'App icon: choose failed');
+      // What is left (if anything) goes on the window and the tray.
+      await apply();
+      return false;
+    }
     await apply();
     return true;
   }
 
   /// Gives the app its own icon back.
   Future<void> reset() async {
-    await _clear(await _folder());
+    try {
+      await _clear(await _folder());
+    } on Object catch (error, stackTrace) {
+      appTalker.handle(error, stackTrace, 'App icon: reset failed');
+    }
     await apply();
   }
 

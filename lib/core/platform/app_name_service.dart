@@ -15,11 +15,8 @@ import '../debug/app_talker.dart';
 /// the name on a system notification are fixed at build or install time, so
 /// they keep the default.
 class AppNameService {
-  AppNameService({
-    Future<File> Function()? file,
-    Future<void> Function(String? name)? setTrayToolTip,
-  }) : _file = file ?? _supportFile,
-       _setTrayToolTip = setTrayToolTip;
+  AppNameService({Future<File> Function()? file, this._setTrayToolTip})
+    : _file = file ?? _supportFile;
 
   static bool get supported =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
@@ -41,19 +38,26 @@ class AppNameService {
     return name.isEmpty ? null : name;
   }
 
-  /// Keeps [name] as the app's name (blank gives the own name back).
-  Future<void> rename(String name) async {
+  /// Keeps [name] as the app's name (blank gives the own name back). False
+  /// when it could not be kept; the name in use stays as it was.
+  Future<bool> rename(String name) async {
     final clean = name.trim();
-    final file = await _file();
-    if (clean.isEmpty) {
-      if (await file.exists()) await file.delete();
-    } else {
-      await file.parent.create(recursive: true);
-      await file.writeAsString(
-        clean.length > maxLength ? clean.substring(0, maxLength) : clean,
-      );
+    try {
+      final file = await _file();
+      if (clean.isEmpty) {
+        if (await file.exists()) await file.delete();
+      } else {
+        await file.parent.create(recursive: true);
+        await file.writeAsString(
+          clean.length > maxLength ? clean.substring(0, maxLength) : clean,
+        );
+      }
+    } on Object catch (error, stackTrace) {
+      appTalker.handle(error, stackTrace, 'App name: save failed');
+      return false;
     }
     await apply();
+    return true;
   }
 
   /// Puts the name in use on the window and the tray. Failing to is a

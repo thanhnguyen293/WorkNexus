@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../config/app_config.dart';
 import '../platform/app_name_providers.dart';
 import '../platform/app_name_service.dart';
 import '../theme/app_typography.dart';
 import 'app_input_decoration.dart';
+import 'app_snack.dart';
 
 /// The name the app goes by, typed in place; kept when the field is submitted
 /// or loses focus, and emptied to go back to the app's own name.
@@ -34,8 +38,16 @@ class _State extends ConsumerState<QuickSettingsAppNameControl> {
       }
     });
     _focus.addListener(() {
-      if (!_focus.hasFocus) _save();
+      if (!_focus.hasFocus) unawaited(_save());
     });
+  }
+
+  // The panel can close while the field still has focus; its focus change
+  // would then come after dispose, with no listener left to save the name.
+  @override
+  void deactivate() {
+    unawaited(_save());
+    super.deactivate();
   }
 
   @override
@@ -45,11 +57,17 @@ class _State extends ConsumerState<QuickSettingsAppNameControl> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final saved = ref.read(appNameProvider).asData?.value ?? '';
     final typed = _controller.text.trim();
-    if (typed != saved) {
-      ref.read(appNameProvider.notifier).rename(typed);
+    if (typed == saved) return;
+    final done = await ref.read(appNameProvider.notifier).rename(typed);
+    if (!done && mounted) {
+      showAppSnack(
+        context,
+        AppL10n.of(context).appNameSaveFailed,
+        isError: true,
+      );
     }
   }
 
@@ -62,7 +80,7 @@ class _State extends ConsumerState<QuickSettingsAppNameControl> {
       maxLengthEnforcement: MaxLengthEnforcement.enforced,
       style: context.typography.body,
       textInputAction: TextInputAction.done,
-      onSubmitted: (_) => _save(),
+      onSubmitted: (_) => unawaited(_save()),
       decoration: appInputDecoration(
         context,
         hint: AppConfig.appName,

@@ -632,6 +632,8 @@
   "appIconChoose": "Choose image…",
   "appIconReset": "Use the default icon",
   "appIconInvalid": "That file is not an image the app can read.",
+  "appIconImages": "Images",
+  "appNameSaveFailed": "The app name could not be saved.",
   "settingOff": "Off",
   "settingOn": "On",
   "font": "Font",

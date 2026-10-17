@@ -19,9 +19,11 @@ class AppNameController extends AsyncNotifier<String?> {
   @override
   Future<String?> build() => _service.current();
 
-  /// Keeps [name]; blank gives the app its own name back.
-  Future<void> rename(String name) async {
-    await _service.rename(name);
-    if (ref.mounted) state = AsyncData(await _service.current());
+  /// Keeps [name]; blank gives the app its own name back. False when it
+  /// could not be kept.
+  Future<bool> rename(String name) async {
+    final done = await _service.rename(name);
+    if (done && ref.mounted) state = AsyncData(await _service.current());
+    return done;
   }
 }
