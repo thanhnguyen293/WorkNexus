@@ -868,6 +868,14 @@ void main() {
       progress.last,
       const ChatHistoryProgress(stored: 120, total: 120, complete: true),
     );
+    // A download asks for 200 a page; scrolling still pages by 50.
+    expect(
+      {
+        for (final r in server.requests)
+          if (r['method'] == 'messagesync') (r['params']! as List)[3],
+      },
+      {50, 200},
+    );
     expect(
       // When it was sent is the fixture's: only how far back matters here.
       (await repo.timelineExtent(

@@ -17,6 +17,7 @@ void main() {
     any(),
     any(),
     beforeServerId: any(named: 'beforeServerId'),
+    pageSize: any(named: 'pageSize'),
   );
 
   setUp(() {
@@ -58,8 +59,8 @@ void main() {
       ChatHistoryProgress(stored: 120, total: 120, complete: true),
     ]);
     verifyInOrder([
-      () => repo.loadOlderMessages('a', 'g', beforeServerId: 71),
-      () => repo.loadOlderMessages('a', 'g', beforeServerId: 21),
+      () => repo.loadOlderMessages('a', 'g', beforeServerId: 71, pageSize: 200),
+      () => repo.loadOlderMessages('a', 'g', beforeServerId: 21, pageSize: 200),
     ]);
   });
 

@@ -58,12 +58,14 @@ abstract class ChatRepository {
 
   /// Fetches the page before the oldest stored message; returns how many
   /// messages arrived (0 = reached the beginning). [inWindow]: the page
-  /// extends a jump window rather than the timeline.
+  /// extends a jump window rather than the timeline. [pageSize] overrides
+  /// the usual page, for a bulk download.
   Future<Result<int>> loadOlderMessages(
     String accountId,
     String chatGid, {
     int? beforeServerId,
     bool inWindow = false,
+    int? pageSize,
   });
 
   /// Fetches the pages around server message [serverId] as a jump window;

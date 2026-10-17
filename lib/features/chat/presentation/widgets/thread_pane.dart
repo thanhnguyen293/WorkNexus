@@ -13,7 +13,6 @@ import 'chat_emoji_side_panel.dart';
 import 'chat_file_send.dart';
 import 'chat_files_panel.dart';
 import 'chat_floating_video.dart';
-import 'chat_global_search_panel.dart';
 import 'chat_info_panel.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
@@ -83,7 +82,6 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
     );
     final pinned = chat?.pinnedMessageIds ?? const <int>[];
     final searching = ref.watch(chatThreadSearchIsOpenProvider(t));
-    final searchPanelOpen = sidePanel == ChatSidePanel.search;
     // Files dropped anywhere on the conversation go through the same send
     // preview as picked ones.
     final canSend = ref.watch(chatCanSendProvider(t));
@@ -101,7 +99,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
           ChatThreadHeader(thread: t, chat: chat, users: users),
           if (searching) ChatThreadSearchBar(thread: t),
           // Searching, the pinned bar would only push the matches down.
-          if (pinned.isNotEmpty && !searching && !searchPanelOpen)
+          if (pinned.isNotEmpty && !searching)
             PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
           Expanded(
             // Sits over the persistent background while messages load
@@ -164,7 +162,6 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               users: users,
             ),
             ChatSidePanel.emoji => ChatEmojiSidePanel(thread: t),
-            ChatSidePanel.search => ChatGlobalSearchPanel(thread: t),
             null => null,
           };
     return ChatSidePanelHost(

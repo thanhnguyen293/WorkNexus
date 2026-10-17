@@ -13,41 +13,56 @@ import '../../domain/value_objects/chat_history_progress.dart';
 import '../providers/chat_history_download.dart';
 import '../providers/chat_providers.dart';
 
-/// Below the search results: search only sees messages stored on this
-/// device, so when every stored match is listed ([offer]) and older history
-/// is not stored yet, this offers to download it — then shows its progress
-/// until it is done, cancelled or failed.
+/// Below the search: search only sees messages stored on this device, so
+/// while a chat is [searching] and its stored history does not yet go back
+/// as far as the search period, this downloads the rest — at once, without
+/// asking — and shows its progress until it is done, stopped or failed.
 class ChatHistoryDownloadPrompt extends ConsumerWidget {
   const ChatHistoryDownloadPrompt({
     super.key,
     required this.thread,
-    required this.offer,
+    required this.searching,
   });
 
   final ChatThreadKey thread;
-  final bool offer;
+  final bool searching;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final download = ref.watch(chatHistoryDownloadProvider(thread));
     ChatHistoryDownloadController controller() =>
         ref.read(chatHistoryDownloadProvider(thread).notifier);
-    // Hidden until known: offering a download there is nothing to get for
-    // would only mislead.
-    final complete =
-        ref.watch(chatHistoryCompleteProvider(thread)).value ?? true;
+    // Only once known — and not the previous answer while another period
+    // is checked: unknown is not a reason to ask the server.
+    final completeAsync = ref.watch(chatHistoryCompleteProvider(thread));
+    final complete = completeAsync.isLoading ? null : completeAsync.value;
+    if (download is ChatHistoryIdle && searching && complete == false) {
+      // Not during build: starting changes provider state.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) controller().start();
+      });
+    }
     final Widget content;
     switch (download) {
-      case ChatHistoryIdle() when offer && !complete:
-        content = _Offer(onDownload: () => controller().start());
       case ChatHistoryRunning(:final progress):
         content = _Progress(
           progress: progress,
           onCancel: () => controller().cancel(),
         );
+      case ChatHistoryCancelled() when searching:
+        content = _Stopped(
+          message: AppL10n.of(context).chatHistoryDownloadStopped,
+          action: AppL10n.of(context).chatHistoryDownloadResume,
+          onAction: () => controller().start(),
+        );
       case ChatHistoryFailed():
-        content = _Failed(onRetry: () => controller().start());
-      case ChatHistoryIdle() || ChatHistoryDone():
+        content = _Stopped(
+          message: AppL10n.of(context).chatHistoryDownloadFailed,
+          action: AppL10n.of(context).retry,
+          onAction: () => controller().start(),
+          isError: true,
+        );
+      case ChatHistoryIdle() || ChatHistoryDone() || ChatHistoryCancelled():
         return const SizedBox.shrink();
     }
     final c = context.colors;
@@ -61,35 +76,6 @@ class ChatHistoryDownloadPrompt extends ConsumerWidget {
         ),
       ),
       child: content,
-    );
-  }
-}
-
-class _Offer extends StatelessWidget {
-  const _Offer({required this.onDownload});
-
-  final VoidCallback onDownload;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l.chatHistoryOnlyStored,
-          style: context.typography.secondary.copyWith(
-            color: context.colors.textTertiary,
-          ),
-        ),
-        SizedBox(height: context.spacing.xs),
-        AppButton.text(
-          size: AppButtonSize.small,
-          icon: LucideIcons.history300,
-          onPressed: onDownload,
-          child: Text(l.chatHistoryDownload),
-        ),
-      ],
     );
   }
 }
@@ -115,9 +101,11 @@ class _Progress extends StatelessWidget {
               Row(
                 children: [
                   Expanded(child: Text(l.chatHistoryDownloading, style: style)),
-                  if (p != null && p.total > 0)
+                  if (p != null)
                     Text(
-                      l.chatHistoryDownloadProgress(p.stored, p.total),
+                      p.total > 0
+                          ? l.chatHistoryDownloadProgress(p.stored, p.total)
+                          : l.chatHistoryDownloadedCount(p.stored),
                       style: style,
                     ),
                 ],
@@ -135,7 +123,8 @@ class _Progress extends StatelessWidget {
         AppIconButton(
           icon: LucideIcons.x300,
           size: AppIconButtonSize.small,
-          tooltip: l.chatCancel,
+          // Not "Cancel": beside the search bar's own close button.
+          tooltip: l.chatHistoryDownloadStop,
           onPressed: onCancel,
         ),
       ],
@@ -143,28 +132,37 @@ class _Progress extends StatelessWidget {
   }
 }
 
-class _Failed extends StatelessWidget {
-  const _Failed({required this.onRetry});
+/// Why the download is not running, and how to start it again.
+class _Stopped extends StatelessWidget {
+  const _Stopped({
+    required this.message,
+    required this.action,
+    required this.onAction,
+    this.isError = false,
+  });
 
-  final VoidCallback onRetry;
+  final String message;
+  final String action;
+  final VoidCallback onAction;
+  final bool isError;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
+    final c = context.colors;
     return Row(
       children: [
         Expanded(
           child: Text(
-            l.chatHistoryDownloadFailed,
+            message,
             style: context.typography.secondary.copyWith(
-              color: context.colors.error,
+              color: isError ? c.error : c.textSecondary,
             ),
           ),
         ),
         AppButton.text(
           size: AppButtonSize.small,
-          onPressed: onRetry,
-          child: Text(l.retry),
+          onPressed: onAction,
+          child: Text(action),
         ),
       ],
     );
