@@ -289,13 +289,14 @@ class ChatLocalDatasource {
             ..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid)))
           .write(ChatMessagesCompanion(sendState: Value(state.name)));
 
-  /// Stored text messages of [accountId] — of chat [cgid] only, when given —
-  /// whose text contains [query], newest first. Case and Vietnamese
+  /// Stored text messages of [accountId] — of chat [cgid] only, and sent
+  /// from [since] on, when given — whose text contains [query], newest first. Case and Vietnamese
   /// diacritics are ignored, as are mention and Markdown markup.
   Future<List<ChatMessageRow>> searchMessages(
     String accountId, {
     String? cgid,
     required String query,
+    DateTime? since,
     int? limit,
   }) async {
     final folded = _fold(query);
@@ -314,7 +315,10 @@ class ChatLocalDatasource {
             // Only text rows have one: an image/file row's content is its
             // JSON payload, which would match words like "name" or "png".
             t.searchText.like('%$escaped%', escapeChar: '\\') &
-            (cgid != null ? t.cgid.equals(cgid) : const Constant(true)),
+            (cgid != null ? t.cgid.equals(cgid) : const Constant(true)) &
+            (since != null
+                ? t.sentAt.isBiggerOrEqualValue(since)
+                : const Constant(true)),
       )
       ..orderBy([(t) => OrderingTerm.desc(t.sentAt)]);
     if (limit != null) stmt.limit(limit);

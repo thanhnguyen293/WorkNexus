@@ -84,12 +84,17 @@ class ChatTimelineDatasource {
     return joined ?? 0;
   }
 
-  /// How many server messages the timeline holds, its oldest one, and
-  /// whether that is the chat's first (index 1).
-  Future<({int count, int? oldestServerId, bool reachesStart})> extent(
-    String accountId,
-    String cgid,
-  ) async {
+  /// How many server messages the timeline holds, its oldest one (and when
+  /// it was sent), and whether that is the chat's first (index 1).
+  Future<
+    ({
+      int count,
+      int? oldestServerId,
+      DateTime? oldestSentAt,
+      bool reachesStart,
+    })
+  >
+  extent(String accountId, String cgid) async {
     final m = _db.chatMessages;
     Expression<bool> inTimeline(ChatMessages t) =>
         t.accountId.equals(accountId) &
@@ -112,6 +117,7 @@ class ChatTimelineDatasource {
     return (
       count: counted.read(count) ?? 0,
       oldestServerId: oldest?.serverId,
+      oldestSentAt: oldest?.sentAt,
       reachesStart: index != null && index <= 1,
     );
   }

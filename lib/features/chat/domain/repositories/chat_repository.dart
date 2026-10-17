@@ -109,12 +109,14 @@ abstract class ChatRepository {
   Future<Result<int>> messageCount(String accountId, String chatGid);
 
   /// Stored text messages containing [query], newest first — of chat
-  /// [chatGid] only when given, else of every chat of the account. Ignores
-  /// case and Vietnamese diacritics. At most [limit] when given.
+  /// [chatGid] only when given, else of every chat of the account; sent from
+  /// [since] on when given. Ignores case and Vietnamese diacritics. At most
+  /// [limit] when given.
   Future<Result<List<ChatMessage>>> searchMessages(
     String accountId, {
     String? chatGid,
     required String query,
+    DateTime? since,
     int? limit,
   });
 

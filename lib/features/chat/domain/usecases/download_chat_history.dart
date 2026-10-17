@@ -3,9 +3,9 @@ import '../repositories/chat_repository.dart';
 import '../value_objects/chat_history_progress.dart';
 import '../value_objects/chat_timeline_extent.dart';
 
-/// Stores a chat's whole history on this device, so that searching it — which
-/// only sees stored messages: the server cannot search them — finds old ones
-/// too.
+/// Stores a chat's history on this device — all of it, or back to `since` —
+/// so that searching it, which only sees stored messages (the server cannot
+/// search them), finds old ones too.
 ///
 /// Pages back from the oldest message of the stored timeline, not the oldest
 /// stored one: stored history may have gaps (pinned messages and reply
@@ -21,21 +21,24 @@ class DownloadChatHistory {
   Stream<Result<ChatHistoryProgress>> call({
     required String accountId,
     required String chatGid,
+    DateTime? since,
   }) async* {
     var extent = await _repository.timelineExtent(accountId, chatGid);
-    if (extent case Ok(
-      value: ChatTimelineExtent(reachesStart: true, :final count),
-    )) {
-      yield Ok(_complete(count, count));
+    if (extent case Ok(:final value) when value.reaches(since)) {
+      yield Ok(_complete(value.count, value.count));
       return;
     }
-    final int total;
-    switch (await _repository.messageCount(accountId, chatGid)) {
-      case Ok(:final value):
-        total = value;
-      case Err(:final failure):
-        yield Err(failure);
-        return;
+    // Back to a date, how many messages that is is unknown: the progress
+    // has no total then (the server only counts the whole chat).
+    var total = 0;
+    if (since == null) {
+      switch (await _repository.messageCount(accountId, chatGid)) {
+        case Ok(:final value):
+          total = value;
+        case Err(:final failure):
+          yield Err(failure);
+          return;
+      }
     }
     if (extent case Ok(value: ChatTimelineExtent(oldestServerId: null))) {
       // Nothing stored yet: start from the newest page.
@@ -56,7 +59,7 @@ class DownloadChatHistory {
           return;
       }
       final oldest = current.oldestServerId;
-      if (current.reachesStart || oldest == null) {
+      if (current.reaches(since) || oldest == null) {
         yield Ok(_complete(current.count, total));
         return;
       }

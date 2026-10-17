@@ -1451,6 +1451,12 @@
       }
     }
   },
+  "chatSearchPeriod": "Khoảng thời gian",
+  "chatSearchPeriodAll": "Mọi lúc",
+  "chatSearchPeriodWeek": "7 ngày qua",
+  "chatSearchPeriodMonth": "30 ngày qua",
+  "chatSearchPeriodQuarter": "3 tháng qua",
+  "chatSearchPeriodYear": "1 năm qua",
   "chatSearchNoMatches": "Không có kết quả",
   "chatSearchMatchesMore": "{current} trên {total}+",
   "@chatSearchMatchesMore": {

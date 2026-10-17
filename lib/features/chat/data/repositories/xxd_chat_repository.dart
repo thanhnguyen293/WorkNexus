@@ -460,6 +460,7 @@ class XxdChatRepository implements ChatRepository {
         ChatTimelineExtent(
           count: e.count,
           oldestServerId: e.oldestServerId,
+          oldestSentAt: e.oldestSentAt,
           reachesStart: e.reachesStart,
         ),
       );
@@ -477,6 +478,7 @@ class XxdChatRepository implements ChatRepository {
     String accountId, {
     String? chatGid,
     required String query,
+    DateTime? since,
     int? limit,
   }) async {
     try {
@@ -484,6 +486,7 @@ class XxdChatRepository implements ChatRepository {
         accountId,
         cgid: chatGid,
         query: query,
+        since: since,
         limit: limit,
       );
       if (rows.isEmpty) return const Ok([]);

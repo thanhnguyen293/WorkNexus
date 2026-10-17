@@ -103,4 +103,21 @@ void main() {
     final m5 = await local.message('acc', 'm5');
     expect(m5?.searchText, isNull);
   });
+
+  test('since leaves out what was sent before it', () async {
+    // _row(i) is sent i minutes after 2026-10-10 00:00.
+    final since = DateTime(2026, 10, 10).add(const Duration(minutes: 3));
+    final found = await local.searchMessages(
+      'acc',
+      query: 'coverage',
+      since: since,
+    );
+    expect(found.map((r) => r.gid), ['m4', 'm3']);
+    final later = await local.searchMessages(
+      'acc',
+      query: 'snake',
+      since: since,
+    );
+    expect(later, isEmpty);
+  });
 }

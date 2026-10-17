@@ -26,14 +26,16 @@ sealed class ChatHistoryDownload with _$ChatHistoryDownload {
   const factory ChatHistoryDownload.failed(Failure failure) = ChatHistoryFailed;
 }
 
-/// Whether the stored history of a chat already reaches its first message,
-/// so there is nothing older to download. Unknown counts as not.
+/// Whether the stored history of a chat already goes back as far as the
+/// search looks (its first message, or the start of the search period), so
+/// there is nothing older to download. Unknown counts as not.
 final chatHistoryCompleteProvider = FutureProvider.autoDispose
     .family<bool, ChatThreadKey>((ref, key) async {
+      final period = ref.watch(chatSearchPeriodProvider(key.accountId));
       final extent = await ref
           .watch(chatRepositoryProvider)
           .timelineExtent(key.accountId, key.chatGid);
-      return extent.valueOrNull?.reachesStart ?? false;
+      return extent.valueOrNull?.reaches(period.since(DateTime.now())) ?? false;
     });
 
 /// Downloads one chat's older history while the search shows it; leaving
@@ -51,7 +53,12 @@ class ChatHistoryDownloadController extends Notifier<ChatHistoryDownload> {
 
   @override
   ChatHistoryDownload build() {
-    ref.onDispose(() => _download?.cancel());
+    // Another period asks for another download: start over.
+    ref.watch(chatSearchPeriodProvider(thread.accountId));
+    ref.onDispose(() {
+      unawaited(_download?.cancel());
+      _download = null;
+    });
     return const ChatHistoryDownload.idle();
   }
 
@@ -62,6 +69,9 @@ class ChatHistoryDownloadController extends Notifier<ChatHistoryDownload> {
         DownloadChatHistory(ref.read(chatRepositoryProvider))(
           accountId: thread.accountId,
           chatGid: thread.chatGid,
+          since: ref
+              .read(chatSearchPeriodProvider(thread.accountId))
+              .since(DateTime.now()),
         ).listen(
           _onProgress,
           onError: (Object e) => _finish(

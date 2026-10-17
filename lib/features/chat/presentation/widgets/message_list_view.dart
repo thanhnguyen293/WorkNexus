@@ -71,8 +71,12 @@ class MessageListView extends StatelessWidget {
     };
     return Listener(
       onPointerDown: (e) {
+        // The user takes over: a jumped-to row stops being held centred.
+        jump.release();
         if (e.kind == PointerDeviceKind.mouse) onMouseDown();
       },
+      onPointerSignal: (_) => jump.release(),
+      onPointerPanZoomStart: (_) => jump.release(),
       onPointerUp: (_) => onMouseUp(),
       onPointerCancel: (_) => onMouseUp(),
       child: NotificationListener<ScrollMetricsNotification>(

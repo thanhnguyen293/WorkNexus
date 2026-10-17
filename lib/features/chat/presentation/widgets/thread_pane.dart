@@ -82,6 +82,8 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
       infoRoom: ChatLayoutScope.of(context).infoRoom,
     );
     final pinned = chat?.pinnedMessageIds ?? const <int>[];
+    final searching = ref.watch(chatThreadSearchIsOpenProvider(t));
+    final searchPanelOpen = sidePanel == ChatSidePanel.search;
     // Files dropped anywhere on the conversation go through the same send
     // preview as picked ones.
     final canSend = ref.watch(chatCanSendProvider(t));
@@ -97,9 +99,9 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
       child: Column(
         children: [
           ChatThreadHeader(thread: t, chat: chat, users: users),
-          if (ref.watch(chatThreadSearchIsOpenProvider(t)))
-            ChatThreadSearchBar(thread: t),
-          if (pinned.isNotEmpty)
+          if (searching) ChatThreadSearchBar(thread: t),
+          // Searching, the pinned bar would only push the matches down.
+          if (pinned.isNotEmpty && !searching && !searchPanelOpen)
             PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
           Expanded(
             // Sits over the persistent background while messages load
