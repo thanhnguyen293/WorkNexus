@@ -19,9 +19,10 @@ Thanks to everyone whose code has been merged into `main`. 🏆
 
 | | Contributor | Highlights |
 |:-:|---|---|
-| <a href="https://github.com/thanhnguyen293"><img src="https://github.com/thanhnguyen293.png" width="64" alt="thanhnguyen293"/></a> | **[Thanh Nguyen](https://github.com/thanhnguyen293)** | 🥇 Creator & maintainer — architecture, providers, board, task detail |
-| <a href="https://github.com/phungbuuquang"><img src="https://github.com/phungbuuquang.png" width="64" alt="phungbuuquang"/></a> | **[Michael (phungbuuquang)](https://github.com/phungbuuquang)** | 🥈 Desktop tray menus, window & profile polish (Windows/macOS) |
-| <a href="https://github.com/dyno-nexsoft"><img src="https://github.com/dyno-nexsoft.png" width="64" alt="dyno-nexsoft"/></a> | **[Dyno (dyno-nexsoft)](https://github.com/dyno-nexsoft)** | 🥉 In-app updater, API-key translation, env-driven build config, release CI & installers |
+| <a href="https://github.com/thanhnguyen293"><img src="https://github.com/thanhnguyen293.png" width="64" alt="thanhnguyen293"/></a> | **[Thanh Nguyen](https://github.com/thanhnguyen293)** | 🥇 Creator & maintainer — architecture, providers, board, task detail, ZenTao chat |
+| <a href="https://github.com/dyno-nexsoft"><img src="https://github.com/dyno-nexsoft.png" width="64" alt="dyno-nexsoft"/></a> | **[Dyno (dyno-nexsoft)](https://github.com/dyno-nexsoft)** | 🥈 In-app updater, API-key translation, release CI & installers (incl. Linux AppImage), Quill chat composer, paged ZenTao boards, mini apps, custom app name & icon |
+| <a href="https://github.com/phungbuuquang"><img src="https://github.com/phungbuuquang.png" width="64" alt="phungbuuquang"/></a> | **[Michael (phungbuuquang)](https://github.com/phungbuuquang)** | 🥉 Desktop tray menus, window & profile polish (Windows/macOS) |
+| <a href="https://github.com/baby-hero-404"><img src="https://github.com/baby-hero-404.png" width="64" alt="baby-hero-404"/></a> | **[baby-hero (baby-hero-404)](https://github.com/baby-hero-404)** | 🏅 Modular tool architecture (`ToolModule` registry) and the workspace shell rework — rail, nav panes, workspace overview |
 
 <a href="https://github.com/thanhnguyen293/WorkNexus/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=thanhnguyen293/WorkNexus" alt="Contributors"/>
@@ -49,86 +50,60 @@ preview, and machine translation without jumping between several browser tabs.
 
 ## UI Showcase & Navigation Architecture
 
-The workspace shell organizes multi-tool workflows into a unified 5-level hierarchy:  
-`Workspace (L1) → Account/Tool (L2) → Feature (L3) → Scope (L4) → Item (L5)`.
+The workspace shell organizes every tool into a 5-level hierarchy:
+`Workspace (L1) → Account (L2) → Section (L3) → Scope (L4) → Item (L5)`.
+The rail picks the workspace or one of its accounts, the nav pane picks a section and
+its scope (a project, product or repository), the viewport shows that section, and a
+ticket opens in the detail slide-over.
 
-<div align="center">
-  <img src="assets/screenshots/unified-workspace-shell-slideshow.gif" alt="WorkNexus Unified Workspace Shell Slideshow" width="100%" />
-  <p><em>Animated UI Tour: cycling through the 7 core workspace and provider views.</em></p>
-</div>
+> Screenshots of the current app are on their way; the earlier design mockups were
+> removed because they no longer matched it.
 
-### Desktop Window Anatomy & Layout Zones
+### Desktop window anatomy
 
-WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones designed for multi-tracker productivity:
+The workspace overview, as the app shows it (dark theme, macOS):
 
 ```text
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ [MW] MyWorkspace ▾ / Overview                  🔍 Search tickets, bugs, PRs, MRs... (Ctrl+K)    ⚙️  — □ ✕│ (56px Title Bar)
-├──────┬─────────────────────────────┬───────────────────────────────────────────────────────────────────┤
-│ (76) │ (300px Tool Nav Pane)       │ (Main Viewport Canvas - 0ms Switch via LRU Cache)                 │
-│ Rail │                             │                                                                   │
-│ [W]  │ Chat   |  Tasks  |  Bugs    │ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐       │
-│      │                             │ │ ZenTao (46 bugs)│ │ GitHub (12 PRs) │ │ GitLab (5 MRs)  │       │
-│ [Z]  │ ▾ Projects (Scopes):        │ └─────────────────┘ └─────────────────┘ └─────────────────┘       │
-│ [GH] │   ⭐ Core Platform           │ ───────────────────────────────────────────────────────────────── │
-│ [GL] │   • Mobile Client           │ 📋 Assigned to you across all connected tools:                    │
-│ [Fg] │   • Payment Gateway         │   • [BUG-2041] Login session timeout (ZenTao · Confirmed)         │
-│  +   │                             │   • [!312] Add biometric auth flow (GitLab MR · Review requested) │
-│      │ ⚙️ Connection Health: OK     │   • [#128] Migrate to Riverpod 3 (GitHub PR · Changes requested)  │
-└──────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────┘
-                                     │ ◄── [460px Slide-over Detail Inspector (Original / Translation / Comments)]
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ • • •  [W] MyWorkspace ▾ / Overview      [ Search tasks, bugs, PRs, MRs…  Cmd+K ]  [⚙] │
+├──────────┬───────────────────────────┬─────────────────────────────────────────────────┤
+│ Workspace│ WORKSPACE / MYWORKSPACE   │ Overview                   Manage integrations  │
+│ ──────── │ > Overview                │ ┌ GitHub ─────┐ ┌ ZenTao ─────┐ ┌ GitLab ─────┐ │
+│ ZenTao   │   Integrations         3  │ │ PRs  Issues │ │ Tasks  Bugs │ │ Projs  MRs  │ │
+│ GitHub   │   Members                 │ │ [Open →]    │ │ [Open →]    │ │ [Open →]    │ │
+│ GitLab   │   Settings                │ └─────────────┘ └─────────────┘ └─────────────┘ │
+│ ──────── │                           │ ┌ ZenTao · account ───────────────────────────┐ │
+│ Zentao   │                           │ │ My tasks              │ My bugs             │ │
+│ Trello   │                           │ │ Executions            │ Recent activity     │ │
+│ CI/CD    │                           │ └─────────────────────────────────────────────┘ │
+│ + Add    │                           │ ┌ Assigned to you · from all tools ───────────┐ │
+│ ──────── │                           │ │ BUG-…   …                         confirmed │ │
+│ Bell     │                           │ │ TASK-…  …                         wait      │ │
+│ Update   │                           │ └─────────────────────────────────────────────┘ │
+│ + Connect│                           │                                                 │
+└──────────┴───────────────────────────┴─────────────────────────────────────────────────┘
+  76px rail  300px nav pane                viewport   ◄── 460px detail slide-over (a ticket)
 ```
 
-| Zone | Dimensions | Purpose & User Experience |
+| Zone | Size | What it holds |
 |---|---|---|
-| **Title Bar (L1)** | `56px` height | Houses the **Workspace Switcher** dropdown, global **Contextual Search** (`Ctrl/Cmd+K`), quick settings, and window caption controls. |
-| **Account Rail (L2)** | `76px` fixed width | Vertical switcher showing one button per connected account with provider brand badges, unread chat counters, and `Ctrl/Cmd+1…9` shortcuts; below them, your **mini apps** (websites pinned to the rail, e.g. `[Fg]` Figma) and `+` to add one. |
-| **Tool Nav Pane (L3 & L4)** | `300px` fixed width | Displays feature tabs (*Chat*, *Tasks*, *Bugs*, *MRs*, *PRs*), real-time sync status indicators, and searchable scope lists (*Projects*, *Products*, *Repos*). |
-| **Main Viewport (L5)** | Flexible fluid width | Renders table lists, 6-column kanban boards, or chat feeds. Keeps the 3 most recent views alive in off-stage memory for instantaneous switching. |
-| **Detail Slide-over** | `460px` slide-out | Opens smoothly from the right edge when clicking any work item; provides tabbed inspection for original description, machine translation, and timeline comments. |
+| **Title bar** | `52pt` on macOS (traffic lights centred in it) · `56px` on Windows/Linux (with caption buttons) | Workspace switcher and breadcrumb (`Workspace ▾ / Account / Section / Scope`), **contextual search** (`Ctrl/Cmd+K`) whose placeholder follows where you are, and the **Quick settings** button. |
+| **Rail** | `76px` | **Workspace** (`Ctrl/Cmd+1`), then one button per connected account (`Ctrl/Cmd+2…9`) with unread chat badges; your **mini apps** with **+ Add**; and at the bottom **Notifications**, the **update** button (when a release is ready) and **+ Connect**. |
+| **Nav pane** | `300px` | In the workspace: *Overview*, *Integrations*, *Members*, *Settings*. In a tool: its section tabs and a scope list — filter, pinned and recent scopes, and the project/product trees (ZenTao) or repositories (GitHub/GitLab). Hidden while a mini app or the ticket editor fills the window. |
+| **Viewport** | flexible | The section itself, in its view modes; the last 3 sections stay alive (LRU) so switching back is instant. |
+| **Detail slide-over** | `460px` | Opens from the right when you open a ticket: header actions, description with **Original / Translation**, comments and timeline, plus a back history of the tickets opened. |
+| **Side panels** | overlay | **Notifications** slides out beside the rail; **Quick settings** (appearance, layout, chat, cache) from the right. |
 
-<details>
-<summary><b>Click to expand interactive slide-by-slide walkthrough (7 slides)</b></summary>
-<br/>
+### Sections per tool
 
-#### 1. Workspace › Overview (L1)
-> **Cross-tool metrics & unified Assigned to you queue**  
-> Displays aggregated health cards for every connected account (open tasks, bugs, PRs, MRs) along with a consolidated "Assigned to you" list combining action items from ZenTao, GitLab, and GitHub.
-<p align="center"><img src="assets/screenshots/slides/01-workspace-overview.png" alt="Workspace Overview" width="96%"/></p>
+| Tool | Sections (L3) | Scopes (L4) | View modes |
+|---|---|---|---|
+| **Workspace** | Overview · Integrations · Members · Settings | — | Overview: tool cards, the ZenTao section (*My tasks*, *My bugs*, *Executions*, *Recent activity*) and **Assigned to you** from all tools |
+| **ZenTao** | Chat · Tasks · Bugs (Docs, Executions: listed, not built yet) | conversations · projects/executions · products | Tasks: List, Kanban (Calendar and Gantt placeholders) · Bugs: Board, List |
+| **GitHub** | Pull requests · Issues (Actions: not built yet) | repositories | PRs: Open, Merged, Closed, Board · Issues: List, Board |
+| **GitLab** | Merge requests · Issues (Pipelines: not built yet) | projects | MRs: Open, Merged, Closed, Board · Issues: List, Board |
 
-#### 2. ZenTao › Chat (L3)
-> **Real-time team messaging embedded directly within ZenTao**  
-> Instant messaging integrated natively inside the ZenTao workspace tool, supporting conversation switching, rich media previews, and member presence without context switching.
-<p align="center"><img src="assets/screenshots/slides/04-zentao-chat.png" alt="ZenTao Chat" width="96%"/></p>
-
-#### 3. ZenTao › Tasks (L3)
-> **Project task management with Sprint switcher & real-time filters**  
-> Complete project task tracking in both table and kanban modes, sprint execution switcher, and quick filter chips (*All*, *Assigned to me*, *Due this week*, *Status*).
-<p align="center"><img src="assets/screenshots/slides/02-zentao-tasks.png" alt="ZenTao Tasks" width="96%"/></p>
-
-#### 4. ZenTao › Bugs (L3)
-> **Native 6-stage workflow board & slide-over detail panel**  
-> Provider-native bug lifecycle columns (Unconfirmed → Confirmed → Resolved → Closed) with inline workflow transitions and a comprehensive 460px tabbed detail inspector.
-<p align="center"><img src="assets/screenshots/slides/03-zentao-bugs.png" alt="ZenTao Bugs" width="96%"/></p>
-
-#### 5. GitHub › Pull Requests (L3)
-> **Repository scopes, status tabs & pull request triage**  
-> Filter PRs across repositories by state (*Open*, *Merged*, *Closed*, *Board*) with reviewer status pills and assignees.
-<p align="center"><img src="assets/screenshots/slides/05-github-pull-requests.png" alt="GitHub Pull Requests" width="96%"/></p>
-
-#### 6. GitLab › Merge Requests (L3)
-> **MR review table, scope groups & filter chips**  
-> Fast MR triage table displaying pipeline status, draft state, approvals, and quick scope filtering (*Pinned*, *Recent*, *All projects*).
-<p align="center"><img src="assets/screenshots/slides/06-gitlab-merge-requests.png" alt="GitLab Merge Requests" width="96%"/></p>
-
-#### 7. Workspace › Integrations (L1)
-> **Multi-account management, connection health & sync status**  
-> Connect multiple accounts per provider, inspect real-time sync status, monitor authentication tokens, and configure account credentials.
-<p align="center"><img src="assets/screenshots/slides/07-workspace-integrations.png" alt="Workspace Integrations" width="96%"/></p>
-
-</details>
-
-Not in the slides yet:
+Also in the shell:
 
 - **Mini apps** — any website pinned to the rail and shown inside the app, with
   links from chat, tickets and other pages routed to it (see [Mini apps](#mini-apps)).
