@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/value_objects/chat_search_period.dart';
 import 'chat_providers.dart';
 
 /// How many search results one page brings; scrolling or stepping past the
@@ -13,6 +14,12 @@ const chatSearchPageSize = 100;
 typedef ChatSearchResults = ({List<ChatMessage> messages, bool hasMore});
 
 const _noResults = (messages: <ChatMessage>[], hasMore: false);
+
+/// How far back searches of an account look — in a chat and across chats
+/// alike.
+final chatSearchPeriodProvider = StateProvider.family<ChatSearchPeriod, String>(
+  (ref, accountId) => ChatSearchPeriod.all,
+);
 
 /// Search query for the active in-thread search bar.
 final chatThreadSearchQueryProvider =
@@ -33,6 +40,7 @@ final chatThreadSearchLimitProvider = StateProvider.family<int, ChatThreadKey>((
   key,
 ) {
   ref.watch(chatThreadSearchQueryProvider(key));
+  ref.watch(chatSearchPeriodProvider(key.accountId));
   return chatSearchPageSize;
 });
 
@@ -56,6 +64,7 @@ final chatGlobalSearchLimitProvider = StateProvider.family<int, String>((
   accountId,
 ) {
   ref.watch(chatGlobalSearchQueryProvider(accountId));
+  ref.watch(chatSearchPeriodProvider(accountId));
   return chatSearchPageSize;
 });
 
@@ -77,12 +86,14 @@ Future<ChatSearchResults> _search(
   int limit,
 ) async {
   if (query.trim().isEmpty) return _noResults;
+  final period = ref.watch(chatSearchPeriodProvider(accountId));
   final result = await ref
       .watch(chatRepositoryProvider)
       .searchMessages(
         accountId,
         chatGid: chatGid,
         query: query,
+        since: period.since(DateTime.now()),
         limit: limit + 1,
       );
   return switch (result) {

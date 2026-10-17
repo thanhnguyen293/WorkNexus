@@ -2211,6 +2211,12 @@
       }
     }
   },
+  "chatSearchPeriod": "Time range",
+  "chatSearchPeriodAll": "Any time",
+  "chatSearchPeriodWeek": "Past 7 days",
+  "chatSearchPeriodMonth": "Past 30 days",
+  "chatSearchPeriodQuarter": "Past 3 months",
+  "chatSearchPeriodYear": "Past year",
   "chatSearchNoMatches": "No results",
   "chatSearchMatchesMore": "{current} of {total}+",
   "@chatSearchMatchesMore": {

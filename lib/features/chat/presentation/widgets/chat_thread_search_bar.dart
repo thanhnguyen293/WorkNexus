@@ -11,8 +11,10 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
+import 'chat_history_download_prompt.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_search_period_button.dart';
 import 'chat_search_status.dart';
 
 /// Compact floating/docked in-thread search bar for chatting.
@@ -142,116 +144,133 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
       chatThreadSearchActiveIndexProvider(widget.thread),
     );
 
-    return Focus(
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.escape) {
-            _close();
-            return KeyEventResult.handled;
-          }
-          if (event.logicalKey == LogicalKeyboardKey.enter ||
-              event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-            final isShift = HardwareKeyboard.instance.isShiftPressed;
-            _stepMatch(results, isShift ? -1 : 1);
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      },
-      child: Container(
-        height: 44,
-        padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-        decoration: BoxDecoration(
-          color: c.surface,
-          border: Border(
-            bottom: BorderSide(
-              color: c.border,
-              width: context.borders.hairline,
+    // Search sees only stored messages: under the bar, once every stored
+    // match is in, offer to download the chat's older history.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Focus(
+          onKeyEvent: (node, event) {
+            if (event is KeyDownEvent) {
+              if (event.logicalKey == LogicalKeyboardKey.escape) {
+                _close();
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+                final isShift = HardwareKeyboard.instance.isShiftPressed;
+                _stepMatch(results, isShift ? -1 : 1);
+                return KeyEventResult.handled;
+              }
+            }
+            return KeyEventResult.ignored;
+          },
+          child: Container(
+            height: 44,
+            padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+            decoration: BoxDecoration(
+              color: c.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: c.border,
+                  width: context.borders.hairline,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.search300, size: 16, color: c.textSecondary),
+                SizedBox(width: context.spacing.xs),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    textInputAction: TextInputAction.none,
+                    onEditingComplete: () {},
+                    style: context.typography.body.copyWith(
+                      fontSize: 13,
+                      color: c.textPrimary,
+                    ),
+                    decoration: InputDecoration.collapsed(
+                      hintText: l.chatSearchMessages,
+                      hintStyle: context.typography.body.copyWith(
+                        fontSize: 13,
+                        color: c.textTertiary,
+                      ),
+                    ),
+                    onChanged: _onQueryChanged,
+                    onSubmitted: (_) {
+                      final isShift = HardwareKeyboard.instance.isShiftPressed;
+                      _stepMatch(results, isShift ? -1 : 1);
+                    },
+                  ),
+                ),
+                ChatSearchPeriodButton(accountId: widget.thread.accountId),
+                if (query.isNotEmpty) ...[
+                  if (matchesAsync.hasError)
+                    ChatSearchFailedLabel(message: l.chatSearchFailed)
+                  else if (matchesAsync.isLoading && !matchesAsync.hasValue)
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.xs,
+                      ),
+                      child: SizedBox.square(
+                        dimension: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: c.accent,
+                        ),
+                      ),
+                    )
+                  else
+                    ChatSearchCounter(
+                      count: matches.length,
+                      hasMore: results.hasMore,
+                      activeIndex: activeIndex,
+                    ),
+                  SizedBox(width: context.spacing.xxs),
+                  AppIconButton(
+                    icon: LucideIcons.chevronUp300,
+                    tooltip: l.chatPrevious,
+                    size: AppIconButtonSize.small,
+                    onPressed: matches.isNotEmpty
+                        ? () => _stepMatch(results, -1)
+                        : null,
+                  ),
+                  AppIconButton(
+                    icon: LucideIcons.chevronDown300,
+                    tooltip: l.chatNext,
+                    size: AppIconButtonSize.small,
+                    onPressed: matches.isNotEmpty
+                        ? () => _stepMatch(results, 1)
+                        : null,
+                  ),
+                  SizedBox(width: context.spacing.xxs),
+                  AppIconButton(
+                    icon: LucideIcons.folderSearch300,
+                    tooltip: l.chatSearchAllChats,
+                    size: AppIconButtonSize.small,
+                    onPressed: () => _openGlobalSearch(context),
+                  ),
+                ],
+                AppIconButton(
+                  icon: LucideIcons.x300,
+                  tooltip: l.chatCancel,
+                  size: AppIconButtonSize.small,
+                  onPressed: _close,
+                ),
+              ],
             ),
           ),
         ),
-        child: Row(
-          children: [
-            Icon(LucideIcons.search300, size: 16, color: c.textSecondary),
-            SizedBox(width: context.spacing.xs),
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                textInputAction: TextInputAction.none,
-                onEditingComplete: () {},
-                style: context.typography.body.copyWith(
-                  fontSize: 13,
-                  color: c.textPrimary,
-                ),
-                decoration: InputDecoration.collapsed(
-                  hintText: l.chatSearchMessages,
-                  hintStyle: context.typography.body.copyWith(
-                    fontSize: 13,
-                    color: c.textTertiary,
-                  ),
-                ),
-                onChanged: _onQueryChanged,
-                onSubmitted: (_) {
-                  final isShift = HardwareKeyboard.instance.isShiftPressed;
-                  _stepMatch(results, isShift ? -1 : 1);
-                },
-              ),
-            ),
-            if (query.isNotEmpty) ...[
-              if (matchesAsync.hasError)
-                ChatSearchFailedLabel(message: l.chatSearchFailed)
-              else if (matchesAsync.isLoading && !matchesAsync.hasValue)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
-                  child: SizedBox.square(
-                    dimension: 12,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      color: c.accent,
-                    ),
-                  ),
-                )
-              else
-                ChatSearchCounter(
-                  count: matches.length,
-                  hasMore: results.hasMore,
-                  activeIndex: activeIndex,
-                ),
-              SizedBox(width: context.spacing.xxs),
-              AppIconButton(
-                icon: LucideIcons.chevronUp300,
-                tooltip: l.chatPrevious,
-                size: AppIconButtonSize.small,
-                onPressed: matches.isNotEmpty
-                    ? () => _stepMatch(results, -1)
-                    : null,
-              ),
-              AppIconButton(
-                icon: LucideIcons.chevronDown300,
-                tooltip: l.chatNext,
-                size: AppIconButtonSize.small,
-                onPressed: matches.isNotEmpty
-                    ? () => _stepMatch(results, 1)
-                    : null,
-              ),
-              SizedBox(width: context.spacing.xxs),
-              AppIconButton(
-                icon: LucideIcons.folderSearch300,
-                tooltip: l.chatSearchAllChats,
-                size: AppIconButtonSize.small,
-                onPressed: () => _openGlobalSearch(context),
-              ),
-            ],
-            AppIconButton(
-              icon: LucideIcons.x300,
-              tooltip: l.chatCancel,
-              size: AppIconButtonSize.small,
-              onPressed: _close,
-            ),
-          ],
+        ChatHistoryDownloadPrompt(
+          thread: widget.thread,
+          offer:
+              query.trim().isNotEmpty &&
+              matchesAsync is AsyncData &&
+              !results.hasMore,
         ),
-      ),
+      ],
     );
   }
 }

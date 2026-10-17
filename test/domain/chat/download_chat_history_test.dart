@@ -139,4 +139,52 @@ void main() {
 
     verifyNever(loadOlder);
   });
+
+  group('back to a date', () {
+    final since = DateTime(2026, 10, 2);
+
+    Future<List<Result<ChatHistoryProgress>>> runSince() => DownloadChatHistory(
+      repo,
+    )(accountId: 'a', chatGid: 'g', since: since).toList();
+
+    test('stops once the stored history reaches the date', () async {
+      extents = [
+        ChatTimelineExtent(
+          count: 50,
+          oldestServerId: 71,
+          oldestSentAt: DateTime(2026, 10, 9),
+        ),
+        ChatTimelineExtent(
+          count: 100,
+          oldestServerId: 21,
+          oldestSentAt: DateTime(2026, 9, 28),
+        ),
+      ];
+
+      final results = await runSince();
+
+      expect(values(results), const [
+        ChatHistoryProgress(stored: 50, total: 0),
+        ChatHistoryProgress(stored: 100, total: 100, complete: true),
+      ]);
+      verify(loadOlder).called(1);
+      // The server counts the whole chat, not back to a date.
+      verifyNever(() => repo.messageCount(any(), any()));
+    });
+
+    test('asks the server nothing when the date is already stored', () async {
+      extents = [
+        ChatTimelineExtent(
+          count: 80,
+          oldestServerId: 30,
+          oldestSentAt: DateTime(2026, 9, 2),
+        ),
+      ];
+
+      expect(values(await runSince()), const [
+        ChatHistoryProgress(stored: 80, total: 80, complete: true),
+      ]);
+      verifyNever(loadOlder);
+    });
+  });
 }

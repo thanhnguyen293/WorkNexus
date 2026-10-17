@@ -843,7 +843,11 @@ void main() {
     // A reply parent far back: older than the timeline, not part of it.
     expect((await repo.fetchMessages(_acc, 'g1', [3])).isOk, isTrue);
     expect(
-      (await repo.timelineExtent(_acc, 'g1')).valueOrNull,
+      // When it was sent is the fixture's: only how far back matters here.
+      (await repo.timelineExtent(
+        _acc,
+        'g1',
+      )).valueOrNull?.copyWith(oldestSentAt: null),
       const ChatTimelineExtent(count: 50, oldestServerId: 71),
     );
     expect(
@@ -865,7 +869,11 @@ void main() {
       const ChatHistoryProgress(stored: 120, total: 120, complete: true),
     );
     expect(
-      (await repo.timelineExtent(_acc, 'g1')).valueOrNull,
+      // When it was sent is the fixture's: only how far back matters here.
+      (await repo.timelineExtent(
+        _acc,
+        'g1',
+      )).valueOrNull?.copyWith(oldestSentAt: null),
       const ChatTimelineExtent(
         count: 120,
         oldestServerId: 1,

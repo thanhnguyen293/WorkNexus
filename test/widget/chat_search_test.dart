@@ -13,6 +13,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart'
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_search_period.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_timeline_extent.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
@@ -221,6 +222,33 @@ void main() {
     sentAt: DateTime(2026, 10, 12),
   );
 
+  testWidgets('the time range is picked from the bar for every search', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildSearchHarness(
+        child: const ChatThreadSearchBar(thread: thread),
+        matches: sampleMessages,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Any time'), findsOneWidget);
+
+    await tester.tap(find.text('Any time'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Past 7 days'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Past 7 days'), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatThreadSearchBar)),
+    );
+    expect(
+      container.read(chatSearchPeriodProvider('acc1')),
+      ChatSearchPeriod.week,
+    );
+  });
+
   testWidgets('stepping past the last loaded match loads the next page', (
     tester,
   ) async {
@@ -380,6 +408,22 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(find.text('Downloading older messages…'), findsOneWidget);
+    });
+
+    testWidgets('the in-chat search bar offers it when nothing matches', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSearchHarness(
+          child: const ChatThreadSearchBar(thread: thread),
+          repository: repo,
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'not stored yet');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No results'), findsOneWidget);
+      expect(find.text(offer), findsOneWidget);
     });
   });
 }

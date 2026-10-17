@@ -18,8 +18,10 @@ import 'chat_history_download_prompt.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_scope_filter_chip.dart';
+import 'chat_search_period_button.dart';
 import 'chat_search_result_list.dart';
 import 'chat_search_result_tile.dart';
+import 'chat_search_status.dart';
 import 'chat_side_panel_frame.dart';
 
 enum _SearchScope { thread, all }
@@ -206,6 +208,7 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
                         onTap: () =>
                             setState(() => _scope = _SearchScope.thread),
                       ),
+                      ChatSearchPeriodButton(accountId: accountId),
                     ],
                   ),
                   if (query.trim().isNotEmpty && matches.isNotEmpty) ...[
@@ -234,7 +237,7 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
             ),
             Expanded(
               child: matchesAsync.hasError
-                  ? _CenteredNote(l.chatSearchFailed, color: c.error)
+                  ? ChatSearchNote(l.chatSearchFailed, color: c.error)
                   : matchesAsync.isLoading && !matchesAsync.hasValue
                   ? Center(
                       child: CircularProgressIndicator(
@@ -243,9 +246,9 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
                       ),
                     )
                   : query.trim().isEmpty
-                  ? _CenteredNote(l.chatSearchMessages)
+                  ? ChatSearchNote(l.chatSearchMessages)
                   : matches.isEmpty
-                  ? _CenteredNote(l.chatSearchNoMatches)
+                  ? ChatSearchNote(l.chatSearchNoMatches)
                   : ChatSearchResultList(
                       messages: matches,
                       hasMore: results.hasMore,
@@ -278,22 +281,4 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
       ),
     );
   }
-}
-
-/// A line of text centred in the results area, in place of results.
-class _CenteredNote extends StatelessWidget {
-  const _CenteredNote(this.text, {this.color});
-
-  final String text;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Text(
-      text,
-      style: context.typography.secondary.copyWith(
-        color: color ?? context.colors.textTertiary,
-      ),
-    ),
-  );
 }

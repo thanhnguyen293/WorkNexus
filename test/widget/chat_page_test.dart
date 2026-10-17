@@ -35,10 +35,12 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.d
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/pinned_message_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -48,6 +50,9 @@ class _FakeChatRepository implements ChatRepository {
     selfUserId: 40,
   );
   final calls = <String>[];
+
+  /// Pinned in the team chat.
+  List<int> pinned = const [];
 
   static final _at = DateTime(2026, 10, 8, 9, 30);
 
@@ -198,6 +203,7 @@ class _FakeChatRepository implements ChatRepository {
           unreadCount: 3,
           lastActiveAt: _at,
           lastMessage: _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502),
+          pinnedMessageIds: pinned,
         ),
         ChatConversation(
           accountId: 'acc',
@@ -312,6 +318,7 @@ class _FakeChatRepository implements ChatRepository {
     String accountId, {
     String? chatGid,
     required String query,
+    DateTime? since,
     int? limit,
   }) async {
     calls.add('search $chatGid $query');
@@ -558,6 +565,22 @@ void main() {
       RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
       SystemMouseCursors.click,
     );
+  });
+
+  testWidgets('searching hides the pinned message bar', (tester) async {
+    repo.pinned = const [502];
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    expect(find.byType(PinnedMessageBar), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Search in conversation…'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatThreadSearchBar), findsOneWidget);
+    expect(find.byType(PinnedMessageBar), findsNothing);
+
+    await tester.tap(find.byTooltip('Search in conversation…'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PinnedMessageBar), findsOneWidget);
   });
 
   testWidgets('search narrows the list', (tester) async {
