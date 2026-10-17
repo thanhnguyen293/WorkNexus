@@ -2242,6 +2242,23 @@
   },
   "chatSearchHistory": "Search chat history",
   "chatSearchInThisChat": "In this chat",
+  "chatHistoryOnlyStored": "Only messages stored on this device are searched.",
+  "chatHistoryDownload": "Search older messages in this chat too",
+  "chatHistoryDownloading": "Downloading older messages…",
+  "chatHistoryDownloadProgress": "{stored} of {total}",
+  "@chatHistoryDownloadProgress": {
+    "placeholders": {
+      "stored": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "chatHistoryDownloadFailed": "Couldn't download older messages",
   "reviewRequested": "Review requested",
   "recent": "Recent",
   "showAll": "Show all…",

@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/error/failure.dart';
+import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/value_objects/chat_timeline_extent.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_search_providers.dart';
@@ -15,6 +21,8 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_global_search
 import 'package:work_nexus/features/chat/presentation/widgets/chat_layout.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+
+class _Repo extends Mock implements ChatRepository {}
 
 void main() {
   const thread = (accountId: 'acc1', chatGid: 'g1');
@@ -52,15 +60,20 @@ void main() {
     required Widget child,
     List<ChatMessage> matches = const [],
     Future<ChatSearchResults> Function(Ref ref)? threadMatches,
+    ChatRepository? repository,
+    VoidCallback? onGlobalSearch,
   }) {
     return ProviderScope(
       overrides: [
+        if (repository != null)
+          chatRepositoryProvider.overrideWithValue(repository),
         chatThreadSearchMatchesProvider(thread).overrideWith(
           threadMatches ?? (ref) async => (messages: matches, hasMore: false),
         ),
-        chatGlobalSearchResultsProvider(
-          'acc1',
-        ).overrideWith((ref) async => (messages: matches, hasMore: false)),
+        chatGlobalSearchResultsProvider('acc1').overrideWith((ref) async {
+          onGlobalSearch?.call();
+          return (messages: matches, hasMore: false);
+        }),
         chatConversationsProvider('acc1').overrideWith(
           (ref) => Stream.value([
             ChatConversation(
@@ -251,5 +264,122 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Couldn't search messages"), findsOneWidget);
     expect(find.text('No results'), findsNothing);
+  });
+
+  group('older history', () {
+    late _Repo repo;
+    late Completer<Result<int>> page;
+
+    setUp(() {
+      repo = _Repo();
+      when(() => repo.timelineExtent(any(), any())).thenAnswer(
+        (_) async =>
+            const Ok(ChatTimelineExtent(count: 2, oldestServerId: 1001)),
+      );
+      when(
+        () => repo.messageCount(any(), any()),
+      ).thenAnswer((_) async => const Ok(120));
+      when(
+        () => repo.loadOlderMessages(
+          any(),
+          any(),
+          beforeServerId: any(named: 'beforeServerId'),
+        ),
+      ).thenAnswer((_) => page.future);
+    });
+
+    Future<void> searchPanel(
+      WidgetTester tester, {
+      VoidCallback? onGlobalSearch,
+    }) async {
+      // Made in the test's zone: one made in setUp would complete outside
+      // the fake clock the test pumps.
+      page = Completer();
+      await tester.pumpWidget(
+        buildSearchHarness(
+          child: const SizedBox(
+            width: 340,
+            child: ChatGlobalSearchPanel(thread: thread),
+          ),
+          matches: sampleMessages,
+          repository: repo,
+          onGlobalSearch: onGlobalSearch,
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'documentation');
+      await tester.pumpAndSettle();
+    }
+
+    const offer = 'Search older messages in this chat too';
+
+    testWidgets('is offered once every stored match is listed', (tester) async {
+      await searchPanel(tester);
+      expect(
+        find.text('Only messages stored on this device are searched.'),
+        findsOneWidget,
+      );
+      expect(find.text(offer), findsOneWidget);
+    });
+
+    testWidgets('is not offered when the history is already stored', (
+      tester,
+    ) async {
+      when(() => repo.timelineExtent(any(), any())).thenAnswer(
+        (_) async => const Ok(
+          ChatTimelineExtent(count: 2, oldestServerId: 1, reachesStart: true),
+        ),
+      );
+      await searchPanel(tester);
+      expect(find.text(offer), findsNothing);
+    });
+
+    testWidgets('downloading shows progress and can be cancelled', (
+      tester,
+    ) async {
+      await searchPanel(tester);
+      await tester.tap(find.text(offer));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Downloading older messages…'), findsOneWidget);
+      expect(find.text('2 of 120'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Downloading older messages…'), findsNothing);
+      expect(find.text(offer), findsOneWidget);
+    });
+
+    testWidgets('once downloaded the search runs again and the offer goes', (
+      tester,
+    ) async {
+      var searches = 0;
+      await searchPanel(tester, onGlobalSearch: () => searches++);
+      final before = searches;
+      await tester.tap(find.text(offer));
+      await tester.pump();
+      page.complete(const Ok(0)); // nothing older: the start
+      await tester.pumpAndSettle();
+
+      expect(searches, greaterThan(before));
+      expect(find.text(offer), findsNothing);
+      expect(find.text('Downloading older messages…'), findsNothing);
+    });
+
+    testWidgets('a failed download says so and can be retried', (tester) async {
+      await searchPanel(tester);
+      await tester.tap(find.text(offer));
+      await tester.pump();
+      page.complete(const Err(NetworkFailure('Chat is offline')));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't download older messages"), findsOneWidget);
+      page = Completer();
+      await tester.tap(find.text('Retry'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Downloading older messages…'), findsOneWidget);
+    });
   });
 }

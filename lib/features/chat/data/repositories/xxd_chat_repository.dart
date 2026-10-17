@@ -20,6 +20,7 @@ import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_avatar_crop.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_timeline_extent.dart';
 import '../../domain/value_objects/chat_typing_signal.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
@@ -447,6 +448,29 @@ class XxdChatRepository implements ChatRepository {
       return Err(StorageFailure('Could not read stored messages', cause: e));
     }
   }
+
+  @override
+  Future<Result<ChatTimelineExtent>> timelineExtent(
+    String accountId,
+    String chatGid,
+  ) async {
+    try {
+      final e = await _local.timeline.extent(accountId, chatGid);
+      return Ok(
+        ChatTimelineExtent(
+          count: e.count,
+          oldestServerId: e.oldestServerId,
+          reachesStart: e.reachesStart,
+        ),
+      );
+    } on Exception catch (e) {
+      return Err(StorageFailure('Could not read stored messages', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<int>> messageCount(String accountId, String chatGid) =>
+      _history.messageCount(_sessions[accountId], chatGid);
 
   @override
   Future<Result<List<ChatMessage>>> searchMessages(

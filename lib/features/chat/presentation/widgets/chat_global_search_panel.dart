@@ -14,6 +14,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
+import 'chat_history_download_prompt.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_scope_filter_chip.dart';
@@ -264,6 +265,13 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
                         );
                       },
                     ),
+            ),
+            ChatHistoryDownloadPrompt(
+              thread: widget.thread,
+              offer:
+                  query.trim().isNotEmpty &&
+                  matchesAsync is AsyncData &&
+                  !results.hasMore,
             ),
           ],
         ),

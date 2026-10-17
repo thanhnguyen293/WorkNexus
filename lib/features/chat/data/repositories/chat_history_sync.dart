@@ -58,6 +58,21 @@ class ChatHistorySync {
     }
   }
 
+  /// How many messages [chatGid] has on the server.
+  Future<Result<int>> messageCount(ChatSession? session, String chatGid) async {
+    if (session == null) return const Err(NetworkFailure('Chat is offline'));
+    final info = await session.connection.request(
+      XxdRequest('chatGetMessageInfo', params: [chatGid]),
+    );
+    return switch (info) {
+      Ok(:final value) => Ok(switch (value.data) {
+        {'messageCount': final num count} => count.toInt(),
+        _ => 0,
+      }),
+      Err(:final failure) => Err(failure),
+    };
+  }
+
   /// Fetches the page before server message [before] (default: the oldest
   /// stored one); returns how many older messages arrived. Pass the oldest
   /// message *shown*: stored messages need not be contiguous (pinned ones and
