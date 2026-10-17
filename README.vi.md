@@ -74,7 +74,7 @@ WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, 
 │ [Z]  │ ▾ Dự án (Phạm vi):          │ └─────────────────┘ └─────────────────┘ └─────────────────┘       │
 │ [GH] │   ⭐ Nền tảng cốt lõi        │ ───────────────────────────────────────────────────────────────── │
 │ [GL] │   • Ứng dụng Mobile         │ 📋 Danh sách việc được giao trên tất cả công cụ:                  │
-│      │   • Cổng thanh toán         │   • [BUG-2041] Hết hạn phiên đăng nhập (ZenTao · Đã xác nhận)     │
+│ [Fg] │   • Cổng thanh toán         │   • [BUG-2041] Hết hạn phiên đăng nhập (ZenTao · Đã xác nhận)     │
 │  +   │                             │   • [!312] Thêm luồng xác thực sinh trắc (GitLab MR · Cần review) │
 │      │ ⚙️ Trạng thái sync: OK       │   • [#128] Nâng cấp lên Riverpod 3 (GitHub PR · Yêu cầu chỉnh sửa)│
 └──────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────┘
@@ -84,7 +84,7 @@ WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, 
 | Phân vùng | Kích thước | Mục đích & Trải nghiệm người dùng |
 |---|---|---|
 | **Thanh tiêu đề (Title Bar - L1)** | Cao `56px` | Chứa menu chuyển đổi **Workspace**, ô **Tìm kiếm theo ngữ cảnh** (`Ctrl/Cmd+K`), cài đặt nhanh và cụm nút điều khiển cửa sổ. |
-| **Thanh Rail tài khoản (L2)** | Rộng cố định `76px` | Hiển thị biểu tượng nhận diện từng tài khoản kết nối (ZenTao, GitHub, GitLab), số tin nhắn chưa đọc và phím tắt `Ctrl/Cmd+1…9`. |
+| **Thanh Rail tài khoản (L2)** | Rộng cố định `76px` | Hiển thị biểu tượng nhận diện từng tài khoản kết nối (ZenTao, GitHub, GitLab), số tin nhắn chưa đọc và phím tắt `Ctrl/Cmd+1…9`; bên dưới là các **mini app** (website ghim vào rail, ví dụ `[Fg]` Figma) và nút `+` để thêm. |
 | **Cột Pane công cụ (L3 & L4)** | Rộng cố định `300px` | Gom các tab tính năng (*Chat*, *Tasks*, *Bugs*, *MRs*, *PRs*), trạng thái kết nối sync và danh sách phạm vi (*Dự án*, *Product*, *Repository*). |
 | **Vùng Viewport chính (L5)** | Độ rộng linh hoạt | Hiển thị bảng danh sách, kanban 6 cột hoặc luồng chat. Duy trì 3 view gần nhất trong bộ nhớ ẩn để chuyển đổi tức thì không cần tải lại mạng. |
 | **Panel trượt chi tiết (Detail)** | Rộng trượt `460px` | Mở êm ái từ mép phải khi click vào bất kỳ ticket nào; hỗ trợ các tab xem mô tả gốc, dịch máy OpenCode và lịch sử bình luận. |
@@ -130,6 +130,14 @@ WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, 
 
 </details>
 
+Chưa có trong slide:
+
+- **Mini app** — website bất kỳ ghim vào rail và hiển thị ngay trong app; link
+  từ chat, ticket và các trang khác được chuyển tới đúng mini app (xem
+  [Mini app](#mini-app)).
+- **Tên và biểu tượng riêng** — tiêu đề cửa sổ, taskbar/Alt-Tab và khay hệ
+  thống dùng tên và (trên Windows) ảnh bạn chọn trong Cài đặt nhanh › Giao diện.
+
 ---
 
 ## Tính năng
@@ -165,6 +173,10 @@ WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, 
   provider, account, người phụ trách, trạng thái, độ ưu tiên, label và tìm kiếm.
 - Mỗi tab/project/repo dùng dữ liệu từ server nhưng có fallback offline: nếu
   không refresh được, app vẫn render ticket đã cache từ CSDL cục bộ.
+- Cột phân trang dọn ticket cache mà server không còn liệt kê khi các trang
+  tải về, nhưng giữ lại ticket của cột mà các trang đã tải chưa chạm tới
+  (Postponed và Non-Fix dùng chung view `toclosed` của ZenTao với Resolved),
+  nên thẻ của chúng không biến mất sau khi refresh.
 
 ### Kết nối nhiều provider
 
@@ -177,6 +189,29 @@ WorkNexus phân chia cửa sổ desktop thành 5 phân vùng công thái học, 
 GitLab hỗ trợ cả `gitlab.com` và instance self-hosted. GitHub hỗ trợ
 `github.com` và GitHub Enterprise Server. Jira hiện mới là placeholder trong UI
 và asset; chưa có adapter Jira.
+
+### Mini app
+
+- Ghim website bất kỳ vào rail thành **mini app** — Figma, Trello, giao diện web
+  ZenTao, công cụ nội bộ — với icon của trang hoặc ảnh tự chọn, và tên tùy ý.
+- Mỗi mini app là một web view nhúng (WebView2 trên Windows, WKWebView trên
+  macOS) có back/forward, reload, stop, mở bằng trình duyệt và các phím tắt
+  quen thuộc; cửa sổ pop-up của trang (cửa sổ đăng nhập) mở đè lên ngay trong
+  app.
+- Hỏi quyền theo từng trang — thông báo, camera, micro, vị trí, clipboard,
+  autoplay, tải nhiều file, font cục bộ — được nhớ theo từng mini app và chỉnh
+  lại được trong cài đặt. Thông báo của trang thành thông báo hệ điều hành, bấm
+  vào sẽ quay lại đúng trang đó.
+- **Link đi theo một thứ tự chung:** link bấm trong chat, trong ticket, hay do
+  trang mở (`target=_blank`, `window.open`) được app nhận trước (ticket ZenTao
+  mở trong panel chi tiết), sau đó tới mini app của trang đó (link Figma từ
+  Trello đưa mini app Figma lên), cuối cùng mới tới trình duyệt hoặc pop-up của
+  trang. Link tới chính trang của mini app vẫn ở trong cửa sổ của nó.
+- **Đăng nhập ZenTao:** mini app trỏ tới server ZenTao đã kết nối sẽ tự đăng
+  nhập bằng tài khoản đã lưu. Mật khẩu chỉ được đưa cho trang đăng nhập của
+  chính server đó (cùng scheme, host và port) và chỉ điền vào form
+  account/password; form chỉ được gửi một lần mỗi lần mở trang — sai mật khẩu
+  thì không thử lại, và vẫn đăng xuất được.
 
 ### Chi tiết ticket và màn hình review
 
@@ -212,6 +247,13 @@ và asset; chưa có adapter Jira.
 - Font đi kèm: **Space Grotesk** và **Space Mono**; có thêm font hệ thống và
   **Geist Mono** để chọn.
 - Độ rộng sidebar kéo chỉnh được và được lưu lại trong drift.
+- **Tên và biểu tượng app:** đặt tên riêng cho app (tiêu đề cửa sổ, khi rê
+  chuột trên taskbar, Alt-Tab, tooltip ở khay hệ thống) và, trên Windows, chọn
+  ảnh bất kỳ — hoặc khung lớn nhất của file `.ico` nhiều kích thước — làm
+  biểu tượng cửa sổ, taskbar và khay. Cả hai được giữ qua các lần mở app và có
+  thể đặt lại mặc định. Biểu tượng và tên của chính file `.exe` (Explorer,
+  Start menu, Task Manager, shortcut đã ghim) và tên trên thông báo hệ thống
+  được cố định lúc build.
 
 ### Gửi ticket cho coding-agent (thử nghiệm)
 
