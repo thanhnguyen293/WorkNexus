@@ -122,6 +122,42 @@ class ChatTimelineDatasource {
     );
   }
 
+  /// How many messages are stored right before [index] ([older]) or right
+  /// after it with no index missing, at most [limit] — timeline or not.
+  Future<int> countAdjacent(
+    String accountId,
+    String cgid, {
+    required int index,
+    required bool older,
+    required int limit,
+  }) async {
+    final m = _db.chatMessages;
+    final step = older ? -1 : 1;
+    final rows =
+        await (_db.selectOnly(m, distinct: true)
+              ..addColumns([m.messageIndex])
+              ..where(
+                m.accountId.equals(accountId) &
+                    m.cgid.equals(cgid) &
+                    (older
+                        ? m.messageIndex.isBetweenValues(
+                            index - limit,
+                            index - 1,
+                          )
+                        : m.messageIndex.isBetweenValues(
+                            index + 1,
+                            index + limit,
+                          )),
+              ))
+            .get();
+    final stored = {for (final r in rows) r.read(m.messageIndex)};
+    var count = 0;
+    while (count < limit && stored.contains(index + step * (count + 1))) {
+      count++;
+    }
+    return count;
+  }
+
   /// The stored messages with an index in [from]–[to] (a jump window,
   /// timeline or not), oldest first.
   Stream<List<ChatMessageRow>> watchMessagesInRange(

@@ -41,9 +41,21 @@ void main() {
     ),
   ).thenAnswer((_) async => result);
 
+  void adjacent(Result<int> result) => when(
+    () => repo.countAdjacentMessages(
+      any(),
+      any(),
+      index: any(named: 'index'),
+      older: any(named: 'older'),
+      limit: any(named: 'limit'),
+    ),
+  ).thenAnswer((_) async => result);
+
   setUp(() {
     repo = _Repo();
     loadNewer = LoadNewerMessages(repo);
+    adjacent(const Ok(0));
+    join(const Ok(null));
   });
 
   Future<Result<NewerMessages>> run() => loadNewer(
@@ -53,27 +65,37 @@ void main() {
     windowFrom: 1,
   );
 
-  test('newer messages extend the window', () async {
-    newer(const Ok(50));
+  test('stored messages right after it extend the window locally', () async {
+    adjacent(const Ok(50));
 
     final result = await run();
 
     expect(result.valueOrNull, (added: 50, joined: null));
     verify(
-      () => repo.loadNewerMessages('a', 'g', afterServerId: 9050),
+      () => repo.countAdjacentMessages(
+        'a',
+        'g',
+        index: 50,
+        older: false,
+        limit: LoadNewerMessages.windowPage,
+      ),
     ).called(1);
     verifyNever(
-      () => repo.joinWindowToTimeline(
+      () => repo.loadNewerMessages(
         any(),
         any(),
-        fromIndex: any(named: 'fromIndex'),
-        toIndex: any(named: 'toIndex'),
+        afterServerId: any(named: 'afterServerId'),
       ),
     );
   });
 
-  test('with nothing newer the window joins the timeline', () async {
-    newer(const Ok(0));
+  test('a failed read of the stored messages is reported', () async {
+    adjacent(const Err(StorageFailure('disk')));
+
+    expect(await run(), isA<Err<NewerMessages>>());
+  });
+
+  test('a window reaching the timeline joins it without the server', () async {
     join(const Ok(120));
 
     final result = await run();
@@ -82,6 +104,44 @@ void main() {
     verify(
       () => repo.joinWindowToTimeline('a', 'g', fromIndex: 1, toIndex: 50),
     ).called(1);
+    verifyNever(
+      () => repo.loadNewerMessages(
+        any(),
+        any(),
+        afterServerId: any(named: 'afterServerId'),
+      ),
+    );
+  });
+
+  test('newer messages from the server extend the window', () async {
+    newer(const Ok(50));
+
+    final result = await run();
+
+    expect(result.valueOrNull, (added: 50, joined: null));
+    verify(
+      () => repo.loadNewerMessages('a', 'g', afterServerId: 9050),
+    ).called(1);
+  });
+
+  test('with nothing newer the window joins the timeline', () async {
+    newer(const Ok(0));
+    var calls = 0;
+    when(
+      () => repo.joinWindowToTimeline(
+        any(),
+        any(),
+        fromIndex: any(named: 'fromIndex'),
+        toIndex: any(named: 'toIndex'),
+      ),
+    ).thenAnswer((_) async => ++calls == 1 ? const Ok(null) : const Ok(120));
+
+    final result = await run();
+
+    expect(result.valueOrNull, (added: 0, joined: 120));
+    verify(
+      () => repo.joinWindowToTimeline('a', 'g', fromIndex: 1, toIndex: 50),
+    ).called(2);
   });
 
   test('a window that cannot join stays apart', () async {

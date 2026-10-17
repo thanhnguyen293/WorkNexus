@@ -109,6 +109,29 @@ void main() {
     expect(await timeline(), [6, 7, 8]);
   });
 
+  test('a jump window counts the stored run right next to it', () async {
+    // 10–20 and 25–30 stored; 21–24 never fetched.
+    await local.upsertMessages(_rows(25, 30), link: MessageLink.linked);
+    await local.upsertMessages(_rows(10, 20), link: MessageLink.detached);
+
+    Future<int> adjacent(int index, {required bool older, int limit = 50}) =>
+        local.timeline.countAdjacent(
+          'acc',
+          'g1',
+          index: index,
+          older: older,
+          limit: limit,
+        );
+
+    expect(await adjacent(15, older: true), 5);
+    expect(await adjacent(15, older: false), 5);
+    expect(await adjacent(15, older: false, limit: 3), 3);
+    // Across the gap nothing continues it, timeline or not.
+    expect(await adjacent(25, older: true), 0);
+    expect(await adjacent(20, older: false), 0);
+    expect(await adjacent(10, older: true), 0);
+  });
+
   test('a jump window shows its stretch, timeline or not', () async {
     await local.upsertMessages(_rows(1, 3), link: MessageLink.detached);
     await local.upsertMessages(_rows(8, 10), link: MessageLink.linked);

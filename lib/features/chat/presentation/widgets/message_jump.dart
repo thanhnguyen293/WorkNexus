@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/debug/app_talker.dart';
 import '../../domain/entities/chat_message.dart';
+import 'message_list_anchor.dart';
 
 /// Brings a row of a lazily built, reversed message list into view. Rows far
 /// from the viewport are not built, so it first jumps to the row's estimated
@@ -104,7 +105,7 @@ class MessageJump {
   /// the furthest laid-out row on its side brought to the near edge. Null
   /// when the list has no laid-out rows to step from.
   static double? _stepTowards(ScrollController scroll, int index) {
-    final sliver = _sliverOf(scroll);
+    final sliver = messageListSliver(scroll);
     final first = sliver?.firstChild;
     final last = sliver?.lastChild;
     if (sliver == null || first == null || last == null) return null;
@@ -119,23 +120,6 @@ class MessageJump {
       return offset + first.size.height - viewport;
     }
     return null;
-  }
-
-  /// The list's sliver, holding its laid-out rows and their offsets.
-  static RenderSliverMultiBoxAdaptor? _sliverOf(ScrollController scroll) {
-    RenderSliverMultiBoxAdaptor? found;
-    void visit(RenderObject child) {
-      if (found != null) return;
-      if (child is RenderSliverMultiBoxAdaptor) {
-        found = child;
-      } else {
-        child.visitChildren(visit);
-      }
-    }
-
-    final root = scroll.position.context.storageContext.findRenderObject();
-    if (root != null) visit(root);
-    return found;
   }
 
   /// The user scrolled or pressed in the list: a row being held centred is

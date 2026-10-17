@@ -70,30 +70,103 @@ void main() {
     verify(() => repo.loadOlderMessages('a', 'g', beforeServerId: 71));
   });
 
-  test('in a jump window the server is asked, stored ones or not', () async {
-    when(
-      () => repo.loadOlderMessages(
+  group('in a jump window', () {
+    final inWindow = oldest.copyWith(index: 300);
+
+    void adjacent(Result<int> result) => when(
+      () => repo.countAdjacentMessages(
         any(),
         any(),
-        beforeServerId: any(named: 'beforeServerId'),
-        inWindow: any(named: 'inWindow'),
+        index: any(named: 'index'),
+        older: any(named: 'older'),
+        limit: any(named: 'limit'),
       ),
-    ).thenAnswer((_) async => const Ok(50));
+    ).thenAnswer((_) async => result);
 
-    final result = await LoadOlderMessages(repo)(
-      accountId: 'a',
-      chatGid: 'g',
-      oldestShown: oldest,
-      inWindow: true,
+    setUp(
+      () => when(
+        () => repo.loadOlderMessages(
+          any(),
+          any(),
+          beforeServerId: any(named: 'beforeServerId'),
+          inWindow: any(named: 'inWindow'),
+        ),
+      ).thenAnswer((_) async => const Ok(50)),
     );
 
-    expect(result.valueOrNull, 50);
-    verifyNever(
-      () => repo.countOlderMessages(any(), any(), before: any(named: 'before')),
-    );
-    verify(
-      () =>
-          repo.loadOlderMessages('a', 'g', beforeServerId: 71, inWindow: true),
-    ).called(1);
+    test('stored messages right before it extend it locally', () async {
+      adjacent(const Ok(50));
+
+      final result = await LoadOlderMessages(repo)(
+        accountId: 'a',
+        chatGid: 'g',
+        oldestShown: inWindow,
+        inWindow: true,
+      );
+
+      expect(result.valueOrNull, 50);
+      verify(
+        () => repo.countAdjacentMessages(
+          'a',
+          'g',
+          index: 300,
+          older: true,
+          limit: LoadOlderMessages.windowPage,
+        ),
+      ).called(1);
+      verifyNever(
+        () => repo.loadOlderMessages(
+          any(),
+          any(),
+          beforeServerId: any(named: 'beforeServerId'),
+          inWindow: any(named: 'inWindow'),
+        ),
+      );
+    });
+
+    test('with none stored right before it the server is asked', () async {
+      adjacent(const Ok(0));
+
+      final result = await LoadOlderMessages(repo)(
+        accountId: 'a',
+        chatGid: 'g',
+        oldestShown: inWindow,
+        inWindow: true,
+      );
+
+      expect(result.valueOrNull, 50);
+      verifyNever(
+        () =>
+            repo.countOlderMessages(any(), any(), before: any(named: 'before')),
+      );
+      verify(
+        () => repo.loadOlderMessages(
+          'a',
+          'g',
+          beforeServerId: 71,
+          inWindow: true,
+        ),
+      ).called(1);
+    });
+
+    test('a message without an index is paged from the server', () async {
+      final result = await LoadOlderMessages(repo)(
+        accountId: 'a',
+        chatGid: 'g',
+        oldestShown: oldest,
+        inWindow: true,
+      );
+
+      expect(result.valueOrNull, 50);
+      verifyNever(
+        () => repo.countAdjacentMessages(
+          any(),
+          any(),
+          index: any(named: 'index'),
+          older: any(named: 'older'),
+          limit: any(named: 'limit'),
+        ),
+      );
+    });
   });
 }

@@ -169,7 +169,7 @@ class _MessageListState extends ConsumerState<MessageList>
   /// ones, or follow them down when the user sent one (from any device).
   /// Not in a jump window: rows it adds at the bottom are older history.
   void _onMessages(List<ChatMessage> before, List<ChatMessage> after) {
-    onShownChanged();
+    onShownChanged(before, after);
     // Scroll events seen while these were loading were ignored; with rows
     // that may not change the list's height (a jump window replacing the
     // newest page), none may follow — so look at where the list is now.
