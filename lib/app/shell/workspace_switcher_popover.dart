@@ -12,6 +12,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../core/widgets/app_popup_card.dart';
+import '../../features/connections/presentation/widgets/workspace_editor_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/board/presentation/providers/board_providers.dart';
 import 'workspace_switcher_footer.dart';
@@ -66,6 +67,17 @@ class _WorkspaceSwitcherPopoverState
         .onWorkspaceSwitched(newAccounts: newAccounts, registry: registry);
 
     _close();
+  }
+
+  /// Edits [ws] (name, badge, colour, icon) in the editor dialog; the list
+  /// follows the database, so the popover stays as it is.
+  Future<void> _editWorkspace(Workspace ws) async {
+    final updated = await showDialog<Workspace>(
+      context: context,
+      builder: (_) => WorkspaceEditorDialog(workspace: ws),
+    );
+    if (updated == null) return;
+    await ref.read(workspaceRepositoryProvider).updateWorkspace(updated);
   }
 
   @override
@@ -171,6 +183,7 @@ class _WorkspaceSwitcherPopoverState
                       isSelected: isSelected,
                       isHighlighted: isHighlighted,
                       onTap: () => _selectWorkspace(ws),
+                      onEdit: () => _editWorkspace(ws),
                     );
                   },
                 ),

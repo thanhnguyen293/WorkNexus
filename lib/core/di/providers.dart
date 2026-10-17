@@ -85,6 +85,12 @@ final lookupsProvider = Provider<Lookups>((ref) {
   );
 });
 
+/// Reads and changes workspaces (rename, style) without the UI holding the
+/// implementation.
+final workspaceRepositoryProvider = Provider<WorkspaceRepository>(
+  (ref) => getIt<WorkspaceRepository>(),
+);
+
 /// Whether translations go through the user's own API key rather than the
 /// OpenCode CLI — in which case OpenCode needs no linking first.
 /// Overridden in `main.dart` with the actual repository check.

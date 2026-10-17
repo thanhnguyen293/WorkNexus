@@ -2,21 +2,21 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
+import '../../../../core/domain/usecases/rename_workspace.dart';
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
-import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/badges.dart';
-import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'workspace_editor_parts.dart';
 
 class WorkspaceEditorDialog extends StatefulWidget {
   const WorkspaceEditorDialog({super.key, required this.workspace});
@@ -33,6 +33,39 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
   late int _colorValue = widget.workspace.colorValue;
   late String _iconKey = widget.workspace.iconKey;
   String? _iconFileName;
+  late final _name = TextEditingController(text: widget.workspace.name);
+  late final _code = TextEditingController(text: widget.workspace.shortCode);
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _code.dispose();
+    super.dispose();
+  }
+
+  /// Whether there is a name to save (the personal workspace has none to
+  /// edit).
+  bool get _canSave =>
+      widget.workspace.isPersonal || _name.text.trim().isNotEmpty;
+
+  void _save() {
+    final renamed = const RenameWorkspace()(
+      WorkspaceRename(
+        workspace: widget.workspace.copyWith(
+          colorValue: _colorValue,
+          iconKey: _iconKey,
+        ),
+        name: _name.text,
+        shortCode: _code.text,
+      ),
+    );
+    switch (renamed) {
+      case Ok(:final value):
+        Navigator.of(context).pop(value);
+      case Err(:final failure):
+        showAppSnack(context, failure.message, isError: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +76,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
       color: c.textSecondary,
     );
     return AppDialogFrame(
-      title: l.connectionsWorkspaceStyle,
+      title: l.workspaceEditTitle,
       maxWidth: context.sizes.dialogMd,
       actions: [
         const Spacer(),
@@ -54,12 +87,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
         ),
         AppButton.filled(
           size: AppButtonSize.small,
-          onPressed: () => Navigator.of(context).pop(
-            widget.workspace.copyWith(
-              colorValue: _colorValue,
-              iconKey: _iconKey,
-            ),
-          ),
+          onPressed: _canSave ? _save : null,
           child: Text(l.save),
         ),
       ],
@@ -71,24 +99,59 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
           children: [
             Row(
               children: [
-                WorkspaceBadge(
-                  Color(_colorValue),
-                  widget.workspace.shortCode,
-                  big: true,
-                  iconKey: _iconKey,
+                ListenableBuilder(
+                  listenable: _code,
+                  builder: (_, _) => WorkspaceBadge(
+                    Color(_colorValue),
+                    _code.text.trim().isEmpty
+                        ? RenameWorkspace.shortCodeOf(_name.text)
+                        : _code.text.trim().toUpperCase(),
+                    big: true,
+                    iconKey: _iconKey,
+                  ),
                 ),
                 SizedBox(width: s.md),
                 Expanded(
-                  child: Text(
-                    widget.workspace.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typography.bodyStrong.copyWith(
-                      color: c.textPrimary,
-                    ),
-                  ),
+                  child: widget.workspace.isPersonal
+                      ? Text(
+                          l.personal,
+                          style: context.typography.bodyStrong.copyWith(
+                            color: c.textPrimary,
+                          ),
+                        )
+                      : TextField(
+                          controller: _name,
+                          autofocus: true,
+                          maxLength: RenameWorkspace.maxNameLength,
+                          style: context.typography.body,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (_) => setState(() {}),
+                          decoration: appInputDecoration(
+                            context,
+                            hint: l.workspaceNameLabel,
+                            errorText: _name.text.trim().isEmpty
+                                ? l.workspaceNameRequired
+                                : null,
+                          ).copyWith(counterText: ''),
+                        ),
                 ),
               ],
+            ),
+            if (!widget.workspace.isPersonal) SizedBox(height: s.xl2),
+            Text(l.workspaceCodeLabel, style: fieldLabel),
+            SizedBox(height: s.sm),
+            SizedBox(
+              width: context.sizes.controlLg * 3,
+              child: TextField(
+                controller: _code,
+                maxLength: RenameWorkspace.maxCodeLength,
+                textCapitalization: TextCapitalization.characters,
+                style: context.typography.body,
+                decoration: appInputDecoration(
+                  context,
+                  hint: RenameWorkspace.shortCodeOf(_name.text),
+                ).copyWith(counterText: ''),
+              ),
             ),
             SizedBox(height: s.xl2),
             Text(l.connectionsColor, style: fieldLabel),
@@ -98,7 +161,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
               runSpacing: s.sm,
               children: [
                 for (final value in workspaceColorChoices)
-                  _ColorChoice(
+                  WorkspaceColorChoice(
                     value: value,
                     selected: value == _colorValue,
                     onTap: () => setState(() => _colorValue = value),
@@ -108,7 +171,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
             SizedBox(height: s.xl2),
             Text(l.connectionsIcon, style: fieldLabel),
             SizedBox(height: s.sm),
-            _IconFilePicker(
+            WorkspaceIconFilePicker(
               colorValue: _colorValue,
               shortCode: widget.workspace.shortCode,
               iconKey: _iconKey,
@@ -157,114 +220,5 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
     if (lower.endsWith('.webp')) return 'image/webp';
     if (lower.endsWith('.gif')) return 'image/gif';
     return 'image/png';
-  }
-}
-
-class _ColorChoice extends StatelessWidget {
-  const _ColorChoice({
-    required this.value,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final int value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return HoverSurface(
-      onTap: onTap,
-      width: context.sizes.controlSm + context.spacing.sm,
-      height: context.sizes.controlSm,
-      semanticLabel: '#${value.toRadixString(16).padLeft(8, '0').substring(2)}',
-      selected: selected,
-      color: Color(value),
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      // The outline answers hover, not a tint: a tint would shift the colour.
-      tintOnHover: false,
-      border: Border.all(
-        color: selected ? c.textPrimary : c.border,
-        width: selected ? 2 : 1,
-      ),
-      hoverBorder: Border.all(
-        color: selected ? c.textPrimary : c.borderStrong,
-        width: selected ? 2 : 1,
-      ),
-    );
-  }
-}
-
-class _IconFilePicker extends StatelessWidget {
-  const _IconFilePicker({
-    required this.colorValue,
-    required this.shortCode,
-    required this.iconKey,
-    required this.fileName,
-    required this.onPick,
-    required this.onClear,
-  });
-
-  final int colorValue;
-  final String shortCode;
-  final String iconKey;
-  final String? fileName;
-  final VoidCallback onPick;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final hasImage = workspaceIconImageBytes(iconKey) != null;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(context.radii.md),
-        border: Border.all(color: c.border),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.md),
-        child: Row(
-          children: [
-            WorkspaceBadge(
-              Color(colorValue),
-              shortCode,
-              big: true,
-              iconKey: iconKey,
-            ),
-            SizedBox(width: context.spacing.md),
-            Expanded(
-              child: Text(
-                hasImage
-                    ? (fileName ?? l.connectionsCustomIconSelected)
-                    : l.connectionsNoFileSelected,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.secondary.copyWith(
-                  color: hasImage ? c.textPrimary : c.textTertiary,
-                ),
-              ),
-            ),
-            SizedBox(width: context.spacing.md),
-            AppButton.outlinedNeutral(
-              size: AppButtonSize.small,
-              onPressed: onPick,
-              child: Text(l.connectionsChooseFile),
-            ),
-            if (onClear != null) ...[
-              SizedBox(width: context.spacing.sm),
-              AppIconButton(
-                icon: LucideIcons.x300,
-                tooltip: l.connectionsRemoveCustomIcon,
-                size: AppIconButtonSize.small,
-                onPressed: onClear,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }
