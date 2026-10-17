@@ -53,15 +53,35 @@ void main() {
     );
   });
 
-  test('a view with pages left keeps its cached tickets it did not load', () {
+  test('a view with pages left prunes the columns its pages reach', () {
     expect(
       ids({
         'wait': const PagedViewState(page: 1, ids: {'1'}),
         'pause': const PagedViewState(page: 1, ids: {'3'}, hasMore: false),
         'done': const PagedViewState(page: 1, ids: {'4'}, hasMore: false),
       }),
-      ['1', '2', '3', '4'],
+      ['1', '3', '4'],
     );
+  });
+
+  test('a shared view with pages left keeps the cached tickets of a column '
+      'its pages have not reached', () {
+    final shared = [
+      _t('r1', 'resolved'),
+      _t('r2', 'resolved'), // dropped from the server's view
+      _t('n1', 'nonfix'), // further on, past the loaded page
+    ];
+    final shown = scope(
+      PagedViewScopeQuery(
+        tickets: shared,
+        loads: PagedViewLoads.of({
+          'toclosed': const PagedViewState(page: 1, ids: {'r1'}),
+        }),
+        viewOf: (_) => 'toclosed',
+        columnOf: (t) => t.providerStatus,
+      ),
+    );
+    expect([for (final t in shown) t.id], ['r1', 'n1']);
   });
 
   test('a view that failed or has not loaded keeps its cached tickets', () {
