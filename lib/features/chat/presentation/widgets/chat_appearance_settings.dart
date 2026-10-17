@@ -23,7 +23,7 @@ String chatAppearanceLabel(AppL10n l, ChatAppearance a) => switch (a) {
   ChatAppearance.worknexus => l.chatAppearanceDefault,
   ChatAppearance.telegram => 'Telegram',
   ChatAppearance.zalo => 'Zalo',
-  ChatAppearance.messenger => 'Messenger',
+  ChatAppearance.zentao => 'ZenTao',
   ChatAppearance.wechat => 'WeChat',
   ChatAppearance.tbchat => 'TBChat',
 };

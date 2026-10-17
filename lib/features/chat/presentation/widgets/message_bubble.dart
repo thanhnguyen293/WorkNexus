@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -22,6 +21,7 @@ import 'message_bubble_box.dart';
 import 'message_bubble_content.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
+import 'message_sender_name.dart';
 import 'reply_quote.dart';
 import 'thread_chip.dart';
 
@@ -80,26 +80,25 @@ class MessageBubble extends ConsumerWidget {
     final name = mine && !users.containsKey(message.senderId)
         ? AppL10n.of(context).chatYou
         : chatUserName(context, users, message.senderId);
-    final showName = !mine && showSender && firstOfRun;
-    final nameText = ChatProfileTap(
+    final headed = style.name == ChatNamePlacement.header;
+    // A header names every run, own and in one-to-one chats too.
+    final showName = firstOfRun && (headed || (!mine && showSender));
+    final alignEnd = style.alignEnd(mine: mine);
+    final nameText = MessageSenderName(
       accountId: chat.accountId,
       userId: message.senderId,
       name: name,
-      showName: false,
-      child: Text(
-        name,
-        style: context.typography.captionStrong.copyWith(
-          color: style.nameColor(message.senderId),
-          fontSize: style.labelSize,
-          fontWeight: style.labelSize == null ? null : FontWeight.w600,
-        ),
-      ),
+      color: style.nameColor(message.senderId),
+      labelSize: style.labelSize,
+      time: headed ? message.sentAt : null,
+      timeColor: ink.meta,
+      timeSize: style.metaSize,
     );
     final showFooter = switch (style.time) {
       _ when message.sendState != SendState.sent => true,
       ChatTimePlacement.belowContent => lastOfRun,
       ChatTimePlacement.insideEnd => true,
-      ChatTimePlacement.separators => false,
+      ChatTimePlacement.separators || ChatTimePlacement.header => false,
     };
     final repliesInMeta = style.threadInMeta && message.serverId != null;
     final footer = showFooter
@@ -138,8 +137,8 @@ class MessageBubble extends ConsumerWidget {
     final gutter = style.tail == null
         ? EdgeInsets.zero
         : EdgeInsets.only(
-            left: mine ? 0 : BubbleTail.width,
-            right: mine ? BubbleTail.width : 0,
+            left: alignEnd ? 0 : BubbleTail.width,
+            right: alignEnd ? BubbleTail.width : 0,
           );
 
     final Widget bubble;
@@ -149,7 +148,7 @@ class MessageBubble extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: _kMaxMediaWidth),
           child: Column(
-            crossAxisAlignment: mine
+            crossAxisAlignment: alignEnd
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
@@ -200,13 +199,13 @@ class MessageBubble extends ConsumerWidget {
     }
 
     final column = Column(
-      crossAxisAlignment: mine
+      crossAxisAlignment: alignEnd
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
         // Media has no bubble to hold the name, so it goes above it in every
         // style.
-        if (showName && (style.name == ChatNamePlacement.aboveBubble || media))
+        if (showName && (style.name != ChatNamePlacement.insideBubble || media))
           Padding(
             padding: EdgeInsets.only(left: s.xs, right: s.xs, bottom: s.xs),
             child: nameText,
@@ -220,7 +219,7 @@ class MessageBubble extends ConsumerWidget {
             ),
           ),
         MessageHoverActions(
-          alignEnd: mine,
+          alignEnd: alignEnd,
           // Reply, and "open thread" for a message in one, as own buttons.
           buttons: _inThread ? 2 : 1,
           actions: messageActions(
@@ -281,16 +280,16 @@ class MessageBubble extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.only(top: firstOfRun ? style.groupGap : style.runGap),
       child: Row(
-        mainAxisAlignment: mine
+        mainAxisAlignment: alignEnd
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         crossAxisAlignment: style.avatar == ChatAvatarPlacement.lastOfRun
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
-          if (hasSlot && !mine) ...[slot, SizedBox(width: s.md)],
+          if (hasSlot && !alignEnd) ...[slot, SizedBox(width: s.md)],
           Flexible(child: column),
-          if (hasSlot && mine) ...[SizedBox(width: s.md), slot],
+          if (hasSlot && alignEnd) ...[SizedBox(width: s.md), slot],
         ],
       ),
     );

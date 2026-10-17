@@ -235,7 +235,8 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   tableColumnWidths: decodeColumnWidths(r.tableColumnWidthsJson),
   chatAppearance: _enumByName(
     ChatAppearance.values,
-    r.chatAppearance,
+    // The Messenger style became ZenTao's, with the same layout.
+    r.chatAppearance == 'messenger' ? 'zentao' : r.chatAppearance,
     ChatAppearance.zalo,
   ),
   chatPrimaryBubbles: r.chatPrimaryBubbles,

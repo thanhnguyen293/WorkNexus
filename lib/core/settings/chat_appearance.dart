@@ -11,8 +11,10 @@ enum ChatAppearance {
   /// Zalo: bordered cards, avatar on the first message, name and time inside.
   zalo,
 
-  /// Messenger: solid accent own bubbles, very round, no per-message time.
-  messenger,
+  /// ZenTao: modelled on ZenTao's own chat client — everyone's messages on
+  /// the left with an avatar at the top of a run, a header with name and time
+  /// over it, small-cornered pale blue (own) and grey bubbles.
+  zentao,
 
   /// WeChat: avatar beside every message on both sides, square bubbles,
   /// centered time stamps.
