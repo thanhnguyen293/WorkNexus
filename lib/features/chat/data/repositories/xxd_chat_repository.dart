@@ -388,12 +388,14 @@ class XxdChatRepository implements ChatRepository {
     String chatGid, {
     int? beforeServerId,
     bool inWindow = false,
+    int? pageSize,
   }) => _history.loadOlder(
     _sessions[accountId],
     accountId,
     chatGid,
     before: beforeServerId,
     inWindow: inWindow,
+    pageSize: pageSize,
   );
 
   @override

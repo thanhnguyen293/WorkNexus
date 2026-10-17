@@ -87,6 +87,7 @@ class ChatHistorySync {
     String chatGid, {
     int? before,
     bool inWindow = false,
+    int? pageSize,
   }) async {
     if (session == null) return const Err(NetworkFailure('Chat is offline'));
     final oldest = before ?? await _local.oldestServerId(accountId, chatGid);
@@ -104,6 +105,7 @@ class ChatHistorySync {
       chatGid,
       from: oldest - 1,
       link: inWindow ? MessageLink.detached : MessageLink.linked,
+      limit: pageSize,
     );
     return switch (page) {
       Ok(:final value) => Ok(
@@ -209,11 +211,12 @@ class ChatHistorySync {
     required int from,
     required MessageLink link,
     bool reverse = true,
+    int? limit,
   }) async {
     final reply = await session.connection.request(
       XxdRequest(
         'messageSync',
-        params: [chatGid, from, reverse, pageSize, false],
+        params: [chatGid, from, reverse, limit ?? pageSize, false],
       ),
     );
     switch (reply) {

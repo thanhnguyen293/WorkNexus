@@ -258,6 +258,7 @@ class _FakeChatRepository implements ChatRepository {
     String chatGid, {
     int? beforeServerId,
     bool inWindow = false,
+    int? pageSize,
   }) async => const Ok(0);
 
   @override

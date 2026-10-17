@@ -12,7 +12,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
 import 'chat_history_download_prompt.dart';
-import 'chat_layout.dart';
 import 'chat_panels.dart';
 import 'chat_search_period_button.dart';
 import 'chat_search_status.dart';
@@ -107,30 +106,13 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
         -1;
   }
 
-  void _openGlobalSearch(BuildContext context) {
-    final query = _controller.text.trim();
-    if (query.isNotEmpty) {
-      ref
-              .read(
-                chatGlobalSearchQueryProvider(widget.thread.accountId).notifier,
-              )
-              .state =
-          query;
-    }
-    toggleChatSidePanel(
-      ref,
-      widget.thread,
-      ChatSidePanel.search,
-      infoRoom: ChatLayoutScope.of(context).infoRoom,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
     final query = ref.watch(chatThreadSearchQueryProvider(widget.thread));
-    // The global search panel writes the same query: keep the field in step.
+    // Anything else setting the query (closing the bar clears it): keep the
+    // field in step.
     ref.listen(chatThreadSearchQueryProvider(widget.thread), (_, next) {
       if (_controller.text != next) _controller.text = next;
     });
@@ -144,8 +126,8 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
       chatThreadSearchActiveIndexProvider(widget.thread),
     );
 
-    // Search sees only stored messages: under the bar, once every stored
-    // match is in, offer to download the chat's older history.
+    // Search sees only stored messages: under the bar, the chat's older
+    // history downloads while it is searched.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -245,13 +227,6 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
                         ? () => _stepMatch(results, 1)
                         : null,
                   ),
-                  SizedBox(width: context.spacing.xxs),
-                  AppIconButton(
-                    icon: LucideIcons.folderSearch300,
-                    tooltip: l.chatSearchAllChats,
-                    size: AppIconButtonSize.small,
-                    onPressed: () => _openGlobalSearch(context),
-                  ),
                 ],
                 AppIconButton(
                   icon: LucideIcons.x300,
@@ -265,10 +240,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
         ),
         ChatHistoryDownloadPrompt(
           thread: widget.thread,
-          offer:
-              query.trim().isNotEmpty &&
-              matchesAsync is AsyncData &&
-              !results.hasMore,
+          searching: query.trim().isNotEmpty,
         ),
       ],
     );

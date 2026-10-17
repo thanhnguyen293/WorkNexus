@@ -64,21 +64,3 @@ class ChatSearchFailedLabel extends StatelessWidget {
     ),
   );
 }
-
-/// A line of text centred in the results area, in place of results.
-class ChatSearchNote extends StatelessWidget {
-  const ChatSearchNote(this.text, {super.key, this.color});
-
-  final String text;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Text(
-      text,
-      style: context.typography.secondary.copyWith(
-        color: color ?? context.colors.textTertiary,
-      ),
-    ),
-  );
-}

@@ -1439,7 +1439,6 @@
   "copyMarkdownLink": "Sao chép liên kết Markdown",
   "markdownLinkCopied": "Đã sao chép liên kết Markdown",
   "chatSearchMessages": "Tìm trong hội thoại…",
-  "chatSearchAllChats": "Tìm trong tất cả hội thoại",
   "chatSearchMatches": "{current} trên {total}",
   "@chatSearchMatches": {
     "placeholders": {
@@ -1470,26 +1469,17 @@
     }
   },
   "chatSearchFailed": "Không tìm được tin nhắn",
-  "chatSearchResultCount": "{count} kết quả",
-  "@chatSearchResultCount": {
+  "chatHistoryDownloadedCount": "Đã tải {count} tin nhắn cũ…",
+  "@chatHistoryDownloadedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "chatSearchResultCountMore": "Hơn {count} kết quả",
-  "@chatSearchResultCountMore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "chatSearchHistory": "Tìm kiếm lịch sử chat",
-  "chatSearchInThisChat": "Trong hội thoại này",
-  "chatHistoryOnlyStored": "Chỉ tìm trong các tin nhắn đã lưu trên máy này.",
-  "chatHistoryDownload": "Tìm cả tin nhắn cũ hơn của hội thoại này",
+  "chatHistoryDownloadStop": "Dừng tải tin nhắn cũ",
+  "chatHistoryDownloadStopped": "Đã dừng tải tin nhắn cũ",
+  "chatHistoryDownloadResume": "Tiếp tục",
   "chatHistoryDownloading": "Đang tải tin nhắn cũ…",
   "chatHistoryDownloadProgress": "{stored} / {total}",
   "@chatHistoryDownloadProgress": {

@@ -2199,7 +2199,6 @@
   "copyMarkdownLink": "Copy Markdown link",
   "markdownLinkCopied": "Markdown link copied",
   "chatSearchMessages": "Search in conversation…",
-  "chatSearchAllChats": "Search all chats",
   "chatSearchMatches": "{current} of {total}",
   "@chatSearchMatches": {
     "placeholders": {
@@ -2230,26 +2229,17 @@
     }
   },
   "chatSearchFailed": "Couldn't search messages",
-  "chatSearchResultCount": "{count, plural, =1{1 match} other{{count} matches}}",
-  "@chatSearchResultCount": {
+  "chatHistoryDownloadedCount": "Loaded {count} older messages…",
+  "@chatHistoryDownloadedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "chatSearchResultCountMore": "{count}+ matches",
-  "@chatSearchResultCountMore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "chatSearchHistory": "Search chat history",
-  "chatSearchInThisChat": "In this chat",
-  "chatHistoryOnlyStored": "Only messages stored on this device are searched.",
-  "chatHistoryDownload": "Search older messages in this chat too",
+  "chatHistoryDownloadStop": "Stop loading older messages",
+  "chatHistoryDownloadStopped": "Stopped loading older messages",
+  "chatHistoryDownloadResume": "Resume",
   "chatHistoryDownloading": "Downloading older messages…",
   "chatHistoryDownloadProgress": "{stored} of {total}",
   "@chatHistoryDownloadProgress": {

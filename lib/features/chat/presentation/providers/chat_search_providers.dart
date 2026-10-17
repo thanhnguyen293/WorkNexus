@@ -15,8 +15,7 @@ typedef ChatSearchResults = ({List<ChatMessage> messages, bool hasMore});
 
 const _noResults = (messages: <ChatMessage>[], hasMore: false);
 
-/// How far back searches of an account look — in a chat and across chats
-/// alike.
+/// How far back searches of an account look, in whichever chat.
 final chatSearchPeriodProvider = StateProvider.family<ChatSearchPeriod, String>(
   (ref, accountId) => ChatSearchPeriod.all,
 );
@@ -50,30 +49,6 @@ final chatThreadSearchMatchesProvider = FutureProvider.autoDispose
       final query = ref.watch(chatThreadSearchQueryProvider(key));
       final limit = ref.watch(chatThreadSearchLimitProvider(key));
       return _search(ref, key.accountId, key.chatGid, query, limit);
-    });
-
-/// Query for searching across all chats of an account.
-final chatGlobalSearchQueryProvider = StateProvider.family<String, String>(
-  (ref, accountId) => '',
-);
-
-/// How many matches across all chats to load; back to one page for a new
-/// query.
-final chatGlobalSearchLimitProvider = StateProvider.family<int, String>((
-  ref,
-  accountId,
-) {
-  ref.watch(chatGlobalSearchQueryProvider(accountId));
-  ref.watch(chatSearchPeriodProvider(accountId));
-  return chatSearchPageSize;
-});
-
-/// Matching messages across all chats of an account.
-final chatGlobalSearchResultsProvider = FutureProvider.autoDispose
-    .family<ChatSearchResults, String>((ref, accountId) {
-      final query = ref.watch(chatGlobalSearchQueryProvider(accountId));
-      final limit = ref.watch(chatGlobalSearchLimitProvider(accountId));
-      return _search(ref, accountId, null, query, limit);
     });
 
 /// One more than [limit] is asked for, to know whether more are stored.

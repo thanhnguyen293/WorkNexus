@@ -279,9 +279,8 @@ final chatHighlightedMessageProvider =
     StateProvider.family<int?, ChatThreadKey>((ref, key) => null);
 
 /// Panels that can open beside a chat instead of a reply thread. [emoji] is
-/// the emoji and sticker picker, expanded out of its popup; [search] is the
-/// global chat history search panel across all conversations.
-enum ChatSidePanel { info, pinned, files, members, emoji, search }
+/// the emoji and sticker picker, expanded out of its popup.
+enum ChatSidePanel { info, pinned, files, members, emoji }
 
 /// A chat's image and file messages stored locally, newest first.
 final chatAttachmentsProvider = StreamProvider.autoDispose

@@ -16,6 +16,10 @@ import '../value_objects/chat_timeline_extent.dart';
 class DownloadChatHistory {
   const DownloadChatHistory(this._repository);
 
+  /// Messages per request: larger than a scroll page, as a download wants
+  /// few round trips.
+  static const pageSize = 200;
+
   final ChatRepository _repository;
 
   Stream<Result<ChatHistoryProgress>> call({
@@ -68,6 +72,7 @@ class DownloadChatHistory {
         accountId,
         chatGid,
         beforeServerId: oldest,
+        pageSize: pageSize,
       );
       switch (page) {
         case Err(:final failure):

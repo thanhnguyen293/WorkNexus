@@ -23,6 +23,9 @@ sealed class ChatHistoryDownload with _$ChatHistoryDownload {
 
   const factory ChatHistoryDownload.done() = ChatHistoryDone;
 
+  /// Stopped by the user: not started again until they resume it.
+  const factory ChatHistoryDownload.cancelled() = ChatHistoryCancelled;
+
   const factory ChatHistoryDownload.failed(Failure failure) = ChatHistoryFailed;
 }
 
@@ -38,8 +41,9 @@ final chatHistoryCompleteProvider = FutureProvider.autoDispose
       return extent.valueOrNull?.reaches(period.since(DateTime.now())) ?? false;
     });
 
-/// Downloads one chat's older history while the search shows it; leaving
-/// the search stops it, as does [ChatHistoryDownloadController.cancel].
+/// Downloads one chat's older history — back to the start of the search
+/// period — while a search of it runs; leaving the search stops it, as does
+/// [ChatHistoryDownloadController.cancel].
 final chatHistoryDownloadProvider = NotifierProvider.autoDispose
     .family<ChatHistoryDownloadController, ChatHistoryDownload, ChatThreadKey>(
       ChatHistoryDownloadController.new,
@@ -86,7 +90,7 @@ class ChatHistoryDownloadController extends Notifier<ChatHistoryDownload> {
   /// Stops after the page in flight; what arrived so far stays stored.
   void cancel() {
     if (_download == null) return;
-    _finish(const ChatHistoryDownload.idle());
+    _finish(const ChatHistoryDownload.cancelled());
   }
 
   void _onProgress(Result<ChatHistoryProgress> result) {
@@ -112,6 +116,5 @@ class ChatHistoryDownloadController extends Notifier<ChatHistoryDownload> {
   /// Searches read the stored messages once: each page may bring matches.
   void _searchAgain() {
     ref.invalidate(chatThreadSearchMatchesProvider(thread));
-    ref.invalidate(chatGlobalSearchResultsProvider(thread.accountId));
   }
 }
