@@ -133,6 +133,7 @@ List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
       ),
       loads: PagedViewLoads.of(streams),
       viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t), mine: mine),
+      columnOf: zentaoBugColumnFor,
     ),
   );
 }
