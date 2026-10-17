@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -62,7 +63,7 @@ class _MiniAppRailSectionState extends ConsumerState<MiniAppRailSection> {
         ),
         children: [
           for (final (i, app) in apps.indexed)
-            ReorderableDragStartListener(
+            _HoldToDragListener(
               key: ValueKey(app.id),
               index: i,
               child: _MiniAppRailButton(app: app, selected: app.id == openId),
@@ -71,6 +72,26 @@ class _MiniAppRailSectionState extends ConsumerState<MiniAppRailSection> {
       ),
     );
   }
+}
+
+/// Starts a reorder only after the pointer is held still for a moment. The
+/// immediate listener starts one on a mouse moving a single pixel while
+/// clicked: the click that opens the app is lost, and the list is left
+/// mid-drag while the viewport swaps to the mini app, which can wedge an item
+/// in its dragging state (it then fails to build and the rail shows an error).
+class _HoldToDragListener extends ReorderableDragStartListener {
+  const _HoldToDragListener({
+    super.key,
+    required super.index,
+    required super.child,
+  });
+
+  /// Shorter than a long press: a deliberate hold, not a wait.
+  static const _hold = Duration(milliseconds: 200);
+
+  @override
+  MultiDragGestureRecognizer createRecognizer() =>
+      DelayedMultiDragGestureRecognizer(delay: _hold, debugOwner: this);
 }
 
 class _MiniAppRailButton extends ConsumerWidget {
