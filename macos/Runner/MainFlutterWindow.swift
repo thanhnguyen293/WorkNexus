@@ -11,19 +11,6 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
-    // An empty unified toolbar makes the title bar 52pt tall with the traffic
-    // lights centred in it, so they line up with the Flutter title bar drawn
-    // under it (TitleBar, AppSizes.macTitleBarHeight). With the default 28pt
-    // title bar they sat above the bar's content.
-    let toolbar = NSToolbar(identifier: "WorkNexusTitleBar")
-    self.toolbar = toolbar
-    if #available(macOS 11.0, *) {
-      self.toolbarStyle = .unified
-      self.titlebarSeparatorStyle = .none
-    } else {
-      toolbar.showsBaselineSeparator = false
-    }
-
     // The unread count on the Dock icon (lib/core/platform/app_icon_badge.dart).
     FlutterMethodChannel(
       name: "worknexus/app_icon_badge",
@@ -39,6 +26,49 @@ class MainFlutterWindow: NSWindow {
     }
 
     super.awakeFromNib()
+  }
+
+  // The Flutter title bar (TitleBar, AppSizes.macTitleBarHeight) is 52pt
+  // tall; the traffic lights are centred in it, 19pt in from the left and
+  // top — where a unified toolbar puts them. An empty toolbar did that, but
+  // since macOS 26 it also rounds the window's corners to 26pt instead of
+  // the 16pt of a window without one, so the lights are placed by hand.
+  private static let titleBarHeight: CGFloat = 52
+  private static let trafficLightInset: CGFloat = 19
+  private static let trafficLightSpacing: CGFloat = 23
+  private static let trafficLights: [NSWindow.ButtonType] = [
+    .closeButton, .miniaturizeButton, .zoomButton,
+  ]
+
+  // AppKit puts the traffic lights back in its own title bar whenever it lays
+  // the window out (resizing, style changes); they are moved after each
+  // pass, before it is drawn.
+  override func layoutIfNeeded() {
+    super.layoutIfNeeded()
+    placeTrafficLights()
+  }
+
+  private func placeTrafficLights() {
+    // Full screen shows the system's own title bar on hover.
+    guard !styleMask.contains(.fullScreen),
+      let titleBar = standardWindowButton(.closeButton)?.superview,
+      let container = titleBar.superview
+    else { return }
+    let height = Self.titleBarHeight
+    var bar = container.frame
+    if bar.height != height || bar.minY != frame.height - height {
+      bar.size.height = height
+      bar.origin.y = frame.height - height
+      container.frame = bar
+    }
+    for (i, type) in Self.trafficLights.enumerated() {
+      guard let button = standardWindowButton(type) else { continue }
+      let origin = NSPoint(
+        x: Self.trafficLightInset + CGFloat(i) * Self.trafficLightSpacing,
+        y: ((titleBar.frame.height - button.frame.height) / 2).rounded()
+      )
+      if button.frame.origin != origin { button.setFrameOrigin(origin) }
+    }
   }
 
   // Keeps the window hidden until Dart has applied the window options (the
