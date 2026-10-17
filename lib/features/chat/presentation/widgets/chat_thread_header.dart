@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_search_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_info_dialog.dart';
 import 'chat_labels.dart';

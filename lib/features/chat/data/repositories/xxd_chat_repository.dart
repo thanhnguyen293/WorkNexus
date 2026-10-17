@@ -453,18 +453,17 @@ class XxdChatRepository implements ChatRepository {
     String accountId, {
     String? chatGid,
     required String query,
-    int limit = 50,
+    int? limit,
   }) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) return const Ok([]);
     try {
-      final self = await _local.selfUserId(accountId);
       final rows = await _local.searchMessages(
         accountId,
         cgid: chatGid,
-        query: trimmed,
+        query: query,
         limit: limit,
       );
+      if (rows.isEmpty) return const Ok([]);
+      final self = await _local.selfUserId(accountId);
       final messages = [
         for (final r in rows)
           messageFromRow(r, selfUserId: self, parse: _parse),

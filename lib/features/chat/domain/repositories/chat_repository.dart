@@ -98,13 +98,14 @@ abstract class ChatRepository {
     required DateTime before,
   });
 
-  /// Searches stored messages matching [query]. If [chatGid] is provided, searches
-  /// only that chat; otherwise searches across all chats for the account.
+  /// Stored text messages containing [query], newest first — of chat
+  /// [chatGid] only when given, else of every chat of the account. Ignores
+  /// case and Vietnamese diacritics. At most [limit] when given.
   Future<Result<List<ChatMessage>>> searchMessages(
     String accountId, {
     String? chatGid,
     required String query,
-    int limit = 50,
+    int? limit,
   });
 
   /// Shows the message immediately as pending, then sends it — as a reply to

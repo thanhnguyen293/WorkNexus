@@ -48,4 +48,59 @@ void main() {
     expect(await search('png'), ['m6']);
     expect(await search('size'), isEmpty);
   });
+
+  test('ignores case and Vietnamese diacritics', () async {
+    await local.upsertMessages([
+      _row(7, 'Đã Gửi Báo Cáo'),
+    ], link: MessageLink.linked);
+    expect(await search('da gui bao cao'), ['m7']);
+    expect(await search('ĐÃ GỬI'), ['m7']);
+  });
+
+  test(
+    'matches a mention by name and a Markdown message by its text',
+    () async {
+      await local.upsertMessages([
+        _row(7, 'hỏi [@Thành](@#40) giúp'),
+        _row(8, '**deploy** xong', type: 'text'),
+      ], link: MessageLink.linked);
+      expect(await search('@thanh giup'), ['m7']);
+      expect(await search('@#40'), isEmpty);
+      expect(await search('deploy xong'), ['m8']);
+    },
+  );
+
+  test('a pending upload replaced by its file leaves the search', () async {
+    await local.upsertMessages([
+      _row(7, 'uploading report'),
+    ], link: MessageLink.linked);
+    await local.setContent(
+      'acc',
+      'm7',
+      contentType: 'file',
+      content: '{"name":"report.pdf"}',
+    );
+    expect(await search('report'), isEmpty);
+  });
+
+  test('without a limit every match comes back, newest first', () async {
+    await local.upsertMessages([
+      for (var i = 10; i < 160; i++) _row(i, 'release $i'),
+    ], link: MessageLink.linked);
+    final all = await search('release');
+    expect(all, hasLength(150));
+    expect(all.first, 'm159');
+    final page = await local.searchMessages('acc', query: 'release', limit: 5);
+    expect(page.map((r) => r.gid), ['m159', 'm158', 'm157', 'm156', 'm155']);
+  });
+
+  test('rows stored before search_text existed are filled in', () async {
+    // As a database upgraded from schema 55 has them: no search text.
+    await db.customStatement('UPDATE chat_messages SET search_text = NULL');
+    expect(await search('snake_case'), ['m1']);
+    final m6 = await local.message('acc', 'm6');
+    expect(m6?.searchText, 'the png export works');
+    final m5 = await local.message('acc', 'm5');
+    expect(m5?.searchText, isNull);
+  });
 }

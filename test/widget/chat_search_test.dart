@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
@@ -9,6 +10,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_search_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_global_search_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_layout.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
@@ -49,15 +51,16 @@ void main() {
   Widget buildSearchHarness({
     required Widget child,
     List<ChatMessage> matches = const [],
+    Future<ChatSearchResults> Function(Ref ref)? threadMatches,
   }) {
     return ProviderScope(
       overrides: [
-        chatThreadSearchMatchesProvider(
-          thread,
-        ).overrideWith((ref) async => matches),
+        chatThreadSearchMatchesProvider(thread).overrideWith(
+          threadMatches ?? (ref) async => (messages: matches, hasMore: false),
+        ),
         chatGlobalSearchResultsProvider(
           'acc1',
-        ).overrideWith((ref) async => matches),
+        ).overrideWith((ref) async => (messages: matches, hasMore: false)),
         chatConversationsProvider('acc1').overrideWith(
           (ref) => Stream.value([
             ChatConversation(
@@ -181,7 +184,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify result list contains the messages and match count
-    expect(find.text('2 matches found'), findsOneWidget);
+    expect(find.text('2 matches'), findsOneWidget);
     expect(
       find.textContaining('Please check the latest documentation release'),
       findsOneWidget,
@@ -196,5 +199,57 @@ void main() {
       find.textContaining('Please check the latest documentation release'),
     );
     await tester.pumpAndSettle();
+  });
+
+  ChatMessage olderMatch() => sampleMessages.first.copyWith(
+    gid: 'msg-0',
+    serverId: 1000,
+    index: 0,
+    sentAt: DateTime(2026, 10, 12),
+  );
+
+  testWidgets('stepping past the last loaded match loads the next page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildSearchHarness(
+        child: const ChatThreadSearchBar(thread: thread),
+        threadMatches: (ref) async {
+          final limit = ref.watch(chatThreadSearchLimitProvider(thread));
+          return limit > chatSearchPageSize
+              ? (messages: [...sampleMessages, olderMatch()], hasMore: false)
+              : (messages: sampleMessages, hasMore: true);
+        },
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'doc');
+    await tester.pumpAndSettle();
+    expect(find.text('1 of 2+'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 2+'), findsOneWidget);
+
+    // Past the second: the next page comes in instead of wrapping around.
+    await tester.tap(find.byTooltip('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 of 3'), findsOneWidget);
+  });
+
+  testWidgets('a failed search says so rather than "No results"', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildSearchHarness(
+        child: const ChatThreadSearchBar(thread: thread),
+        threadMatches: (ref) async => throw const StorageFailure('disk'),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), 'doc');
+    await tester.pumpAndSettle();
+    expect(find.text("Couldn't search messages"), findsOneWidget);
+    expect(find.text('No results'), findsNothing);
   });
 }

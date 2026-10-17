@@ -13,9 +13,11 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_search_providers.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_scope_filter_chip.dart';
+import 'chat_search_result_list.dart';
 import 'chat_search_result_tile.dart';
 import 'chat_side_panel_frame.dart';
 
@@ -72,6 +74,13 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
         -1;
   }
 
+  void _loadMore() {
+    final limit = _scope == _SearchScope.all
+        ? chatGlobalSearchLimitProvider(widget.thread.accountId)
+        : chatThreadSearchLimitProvider(widget.thread);
+    ref.read(limit.notifier).state += chatSearchPageSize;
+  }
+
   void _selectMessage(ChatMessage message) {
     setState(() => _selectedGid = message.gid);
     final targetThread = (
@@ -114,7 +123,9 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
     final matchesAsync = _scope == _SearchScope.all
         ? globalMatches
         : threadMatches;
-    final matches = matchesAsync.asData?.value ?? const <ChatMessage>[];
+    // While the next page loads, the results so far stay listed.
+    final results = matchesAsync.value ?? (messages: const [], hasMore: false);
+    final matches = results.messages;
 
     return ChatSidePanelFrame(
       title: l.chatSearchHistory,
@@ -201,7 +212,9 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        '${matches.length} ${matches.length == 1 ? "match" : "matches"} found',
+                        results.hasMore
+                            ? l.chatSearchResultCountMore(matches.length)
+                            : l.chatSearchResultCount(matches.length),
                         style: context.typography.secondary.copyWith(
                           fontSize: 11,
                           color: c.textTertiary,
@@ -219,7 +232,9 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
               color: c.border,
             ),
             Expanded(
-              child: matchesAsync.isLoading
+              child: matchesAsync.hasError
+                  ? _CenteredNote(l.chatSearchFailed, color: c.error)
+                  : matchesAsync.isLoading && !matchesAsync.hasValue
                   ? Center(
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
@@ -227,52 +242,22 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
                       ),
                     )
                   : query.trim().isEmpty
-                  ? Center(
-                      child: Text(
-                        l.chatSearchMessages,
-                        style: context.typography.secondary.copyWith(
-                          color: c.textTertiary,
-                        ),
-                      ),
-                    )
+                  ? _CenteredNote(l.chatSearchMessages)
                   : matches.isEmpty
-                  ? Center(
-                      child: Text(
-                        l.chatSearchNoMatches,
-                        style: context.typography.secondary.copyWith(
-                          color: c.textTertiary,
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.symmetric(
-                        vertical: context.spacing.xs,
-                      ),
-                      itemCount: matches.length,
-                      separatorBuilder: (context, _) => Divider(
-                        height: 1,
-                        thickness: context.borders.hairline,
-                        color: c.border,
-                      ),
-                      itemBuilder: (context, index) {
-                        final msg = matches[index];
+                  ? _CenteredNote(l.chatSearchNoMatches)
+                  : ChatSearchResultList(
+                      messages: matches,
+                      hasMore: results.hasMore,
+                      onLoadMore: _loadMore,
+                      itemBuilder: (context, msg) {
                         final chat = chatsMap[msg.chatGid];
-                        final chatName = chat != null
-                            ? chatTitle(context, chat, users)
-                            : msg.chatGid;
-                        final sender = chatUserName(
-                          context,
-                          users,
-                          msg.senderId,
-                        );
-                        final time = chatListTime(context, msg.sentAt);
-                        final preview = chatPreview(context, msg);
-
                         return ChatSearchResultTile(
-                          chatName: chatName,
-                          sender: sender,
-                          time: time,
-                          preview: preview,
+                          chatName: chat != null
+                              ? chatTitle(context, chat, users)
+                              : msg.chatGid,
+                          sender: chatUserName(context, users, msg.senderId),
+                          time: chatListTime(context, msg.sentAt),
+                          preview: chatPreview(context, msg),
                           query: query,
                           isActive: msg.gid == _selectedGid,
                           onTap: () => _selectMessage(msg),
@@ -285,4 +270,22 @@ class _ChatGlobalSearchPanelState extends ConsumerState<ChatGlobalSearchPanel> {
       ),
     );
   }
+}
+
+/// A line of text centred in the results area, in place of results.
+class _CenteredNote extends StatelessWidget {
+  const _CenteredNote(this.text, {this.color});
+
+  final String text;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Text(
+      text,
+      style: context.typography.secondary.copyWith(
+        color: color ?? context.colors.textTertiary,
+      ),
+    ),
+  );
 }

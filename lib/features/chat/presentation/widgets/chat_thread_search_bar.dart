@@ -5,15 +5,15 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/chat_message.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_search_providers.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_search_status.dart';
 
 /// Compact floating/docked in-thread search bar for chatting.
 /// Allows stepping through matching messages with Prev/Next buttons
@@ -56,23 +56,41 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
         -1;
   }
 
-  void _stepMatch(List<ChatMessage> matches, int delta) {
+  /// Steps [delta] matches older (positive) or newer, wrapping around.
+  /// Stepping past the oldest match loaded asks for the next page first,
+  /// when more are stored, rather than wrapping back to the newest.
+  Future<void> _stepMatch(ChatSearchResults results, int delta) async {
+    var matches = results.messages;
     if (matches.isEmpty) return;
     final currentIndex = ref.read(
       chatThreadSearchActiveIndexProvider(widget.thread),
     );
-    // Nothing visited yet (or the matches shrank): start at an end.
-    final nextIndex = currentIndex < 0 || currentIndex >= matches.length
-        ? (delta > 0 ? 0 : matches.length - 1)
-        : (currentIndex + delta + matches.length) % matches.length;
+    final int nextIndex;
+    if (currentIndex < 0 || currentIndex >= matches.length) {
+      // Nothing visited yet (or the matches shrank): start at an end.
+      nextIndex = delta > 0 ? 0 : matches.length - 1;
+    } else if (currentIndex + delta >= matches.length && results.hasMore) {
+      nextIndex = currentIndex + delta;
+      ref.read(chatThreadSearchLimitProvider(widget.thread).notifier).state +=
+          chatSearchPageSize;
+      try {
+        matches = (await ref.read(
+          chatThreadSearchMatchesProvider(widget.thread).future,
+        )).messages;
+      } on Exception {
+        return; // The bar shows the failure.
+      }
+      if (!mounted || nextIndex >= matches.length) return;
+    } else {
+      nextIndex = (currentIndex + delta + matches.length) % matches.length;
+    }
     ref
             .read(chatThreadSearchActiveIndexProvider(widget.thread).notifier)
             .state =
         nextIndex;
 
-    final targetMsg = matches[nextIndex];
-    if (targetMsg.serverId != null) {
-      jumpToChatMessage(ref, widget.thread, targetMsg.serverId!);
+    if (matches[nextIndex].serverId case final serverId?) {
+      jumpToChatMessage(ref, widget.thread, serverId);
     }
     _focusNode.requestFocus();
   }
@@ -117,7 +135,9 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
     final matchesAsync = ref.watch(
       chatThreadSearchMatchesProvider(widget.thread),
     );
-    final matches = matchesAsync.asData?.value ?? const <ChatMessage>[];
+    // While the next page loads, the matches so far stay listed.
+    final results = matchesAsync.value ?? (messages: const [], hasMore: false);
+    final matches = results.messages;
     final activeIndex = ref.watch(
       chatThreadSearchActiveIndexProvider(widget.thread),
     );
@@ -132,7 +152,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
           if (event.logicalKey == LogicalKeyboardKey.enter ||
               event.logicalKey == LogicalKeyboardKey.numpadEnter) {
             final isShift = HardwareKeyboard.instance.isShiftPressed;
-            _stepMatch(matches, isShift ? -1 : 1);
+            _stepMatch(results, isShift ? -1 : 1);
             return KeyEventResult.handled;
           }
         }
@@ -174,12 +194,14 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
                 onChanged: _onQueryChanged,
                 onSubmitted: (_) {
                   final isShift = HardwareKeyboard.instance.isShiftPressed;
-                  _stepMatch(matches, isShift ? -1 : 1);
+                  _stepMatch(results, isShift ? -1 : 1);
                 },
               ),
             ),
             if (query.isNotEmpty) ...[
-              if (matchesAsync.isLoading)
+              if (matchesAsync.hasError)
+                ChatSearchFailedLabel(message: l.chatSearchFailed)
+              else if (matchesAsync.isLoading && !matchesAsync.hasValue)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: context.spacing.xs),
                   child: SizedBox.square(
@@ -191,8 +213,9 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
                   ),
                 )
               else
-                _MatchCounterBadge(
+                ChatSearchCounter(
                   count: matches.length,
+                  hasMore: results.hasMore,
                   activeIndex: activeIndex,
                 ),
               SizedBox(width: context.spacing.xxs),
@@ -201,7 +224,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
                 tooltip: l.chatPrevious,
                 size: AppIconButtonSize.small,
                 onPressed: matches.isNotEmpty
-                    ? () => _stepMatch(matches, -1)
+                    ? () => _stepMatch(results, -1)
                     : null,
               ),
               AppIconButton(
@@ -209,7 +232,7 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
                 tooltip: l.chatNext,
                 size: AppIconButtonSize.small,
                 onPressed: matches.isNotEmpty
-                    ? () => _stepMatch(matches, 1)
+                    ? () => _stepMatch(results, 1)
                     : null,
               ),
               SizedBox(width: context.spacing.xxs),
@@ -227,39 +250,6 @@ class _ChatThreadSearchBarState extends ConsumerState<ChatThreadSearchBar> {
               onPressed: _close,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MatchCounterBadge extends StatelessWidget {
-  const _MatchCounterBadge({required this.count, required this.activeIndex});
-
-  final int count;
-  final int activeIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l = AppL10n.of(context);
-    final text = count == 0
-        ? l.chatSearchNoMatches
-        : l.chatSearchMatches(activeIndex.clamp(0, count - 1) + 1, count);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        color: count == 0 ? c.surfaceSubtle : c.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(context.radii.sm),
-      ),
-      child: Text(
-        text,
-        style: context.typography.secondary.copyWith(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: count == 0 ? c.textTertiary : c.accent,
         ),
       ),
     );

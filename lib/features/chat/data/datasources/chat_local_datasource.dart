@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/database/database.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/usecases/fold_search_text.dart';
 import 'chat_timeline_datasource.dart';
 
 export 'chat_timeline_datasource.dart' show MessageLink;
@@ -24,6 +25,11 @@ class ChatLocalDatasource {
 
   /// Queries over a chat's timeline and jump windows.
   late final timeline = ChatTimelineDatasource(_db);
+
+  static const _fold = FoldSearchText();
+
+  /// Accounts whose rows from before `search_text` existed are filled in.
+  final _searchTextReady = <String>{};
 
   // ---- accounts --------------------------------------------------------------
 
@@ -239,25 +245,39 @@ class ChatLocalDatasource {
   Future<void> upsertMessages(
     List<ChatMessagesCompanion> rows, {
     MessageLink link = MessageLink.keep,
-  }) => _db.batch((b) {
-    switch (link) {
-      case MessageLink.keep:
-        b.insertAllOnConflictUpdate(_db.chatMessages, rows);
-      case MessageLink.linked:
-        b.insertAllOnConflictUpdate(_db.chatMessages, [
-          for (final r in rows) r.copyWith(detached: const Value(false)),
-        ]);
-      case MessageLink.detached:
-        // New rows start detached; one already in the timeline stays there.
-        b.insertAll(_db.chatMessages, [
-          for (final r in rows) r.copyWith(detached: const Value(true)),
-        ], mode: InsertMode.insertOrIgnore);
-        b.insertAllOnConflictUpdate(_db.chatMessages, rows);
-    }
-  });
+  }) {
+    rows = [for (final r in rows) _withSearchText(r)];
+    return _db.batch((b) {
+      switch (link) {
+        case MessageLink.keep:
+          b.insertAllOnConflictUpdate(_db.chatMessages, rows);
+        case MessageLink.linked:
+          b.insertAllOnConflictUpdate(_db.chatMessages, [
+            for (final r in rows) r.copyWith(detached: const Value(false)),
+          ]);
+        case MessageLink.detached:
+          // New rows start detached; one already in the timeline stays there.
+          b.insertAll(_db.chatMessages, [
+            for (final r in rows) r.copyWith(detached: const Value(true)),
+          ], mode: InsertMode.insertOrIgnore);
+          b.insertAllOnConflictUpdate(_db.chatMessages, rows);
+      }
+    });
+  }
 
   Future<void> insertMessage(ChatMessagesCompanion row) =>
-      _db.into(_db.chatMessages).insert(row);
+      _db.into(_db.chatMessages).insert(_withSearchText(row));
+
+  /// [row] with `search_text` derived from its content, when it carries one.
+  ChatMessagesCompanion _withSearchText(ChatMessagesCompanion row) =>
+      switch ((row.contentType, row.content)) {
+        (
+          Value(present: true, value: final type),
+          Value(present: true, value: final content),
+        ) =>
+          row.copyWith(searchText: Value(_fold.ofMessage(type, content))),
+        _ => row,
+      };
 
   Future<ChatMessageRow?> message(String accountId, String gid) =>
       (_db.select(_db.chatMessages)
@@ -269,34 +289,70 @@ class ChatLocalDatasource {
             ..where((m) => m.accountId.equals(accountId) & m.gid.equals(gid)))
           .write(ChatMessagesCompanion(sendState: Value(state.name)));
 
-  /// Searches stored messages by query text within an account and optionally
-  /// filtered by chat ([cgid]). Ordered newest first.
+  /// Stored text messages of [accountId] — of chat [cgid] only, when given —
+  /// whose text contains [query], newest first. Case and Vietnamese
+  /// diacritics are ignored, as are mention and Markdown markup.
   Future<List<ChatMessageRow>> searchMessages(
     String accountId, {
     String? cgid,
     required String query,
-    int limit = 50,
-  }) {
+    int? limit,
+  }) async {
+    final folded = _fold(query);
+    if (folded.isEmpty) return const [];
+    await _fillSearchText(accountId);
     // Typed text matches literally: LIKE's own wildcards are escaped.
-    final escaped = query.replaceAllMapped(
+    final escaped = folded.replaceAllMapped(
       RegExp(r'[\\%_]'),
       (m) => '\\${m[0]}',
     );
-    final m = _db.chatMessages;
-    final stmt = _db.select(m)
+    final stmt = _db.select(_db.chatMessages)
       ..where(
         (t) =>
             t.accountId.equals(accountId) &
             t.deleted.equals(false) &
-            // Only text messages: an image/file row's content is its JSON
-            // payload, which would match words like "name" or "png".
-            t.contentType.isIn(const ['plain', 'text']) &
-            t.content.like('%$escaped%', escapeChar: '\\') &
+            // Only text rows have one: an image/file row's content is its
+            // JSON payload, which would match words like "name" or "png".
+            t.searchText.like('%$escaped%', escapeChar: '\\') &
             (cgid != null ? t.cgid.equals(cgid) : const Constant(true)),
       )
-      ..orderBy([(t) => OrderingTerm.desc(t.sentAt)])
-      ..limit(limit);
+      ..orderBy([(t) => OrderingTerm.desc(t.sentAt)]);
+    if (limit != null) stmt.limit(limit);
     return stmt.get();
+  }
+
+  /// Fills `search_text` of [accountId]'s text rows stored before the column
+  /// existed. Once per account per run: every write since sets it.
+  Future<void> _fillSearchText(String accountId) async {
+    if (_searchTextReady.contains(accountId)) return;
+    const page = 500;
+    final m = _db.chatMessages;
+    while (true) {
+      final rows =
+          await (_db.select(m)
+                ..where(
+                  (t) =>
+                      t.accountId.equals(accountId) &
+                      t.searchText.isNull() &
+                      t.contentType.isIn(const ['plain', 'text']),
+                )
+                ..limit(page))
+              .get();
+      if (rows.isEmpty) break;
+      await _db.batch((b) {
+        for (final r in rows) {
+          b.update(
+            m,
+            ChatMessagesCompanion(
+              searchText: Value(_fold.ofMessage(r.contentType, r.content)),
+            ),
+            where: (t) => t.accountId.equals(accountId) & t.gid.equals(r.gid),
+          );
+        }
+      });
+      if (rows.length < page) break;
+    }
+    _searchTextReady.add(accountId);
   }
 
   Future<int?> selfUserId(String accountId) async => (await (_db.select(
@@ -346,6 +402,7 @@ class ChatLocalDatasource {
         ChatMessagesCompanion(
           contentType: Value(contentType),
           content: Value(content),
+          searchText: Value(_fold.ofMessage(contentType, content)),
         ),
       );
 

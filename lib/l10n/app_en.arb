@@ -2190,6 +2190,34 @@
     }
   },
   "chatSearchNoMatches": "No results",
+  "chatSearchMatchesMore": "{current} of {total}+",
+  "@chatSearchMatchesMore": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchFailed": "Couldn't search messages",
+  "chatSearchResultCount": "{count, plural, =1{1 match} other{{count} matches}}",
+  "@chatSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearchResultCountMore": "{count}+ matches",
+  "@chatSearchResultCountMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatSearchHistory": "Search chat history",
   "chatSearchInThisChat": "In this chat",
   "reviewRequested": "Review requested",
