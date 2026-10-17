@@ -14,10 +14,8 @@ import '../domain/entities/workspace.dart';
 import '../domain/repositories/sync_status_repository.dart';
 import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
-import '../domain/usecases/find_saved_web_login.dart';
 import '../domain/usecases/resolve_zentao_ticket.dart';
 import '../domain/value_objects/account_sync_status.dart';
-import '../platform/credential_store.dart';
 import 'locator.dart';
 
 // Reactive Riverpod state only. The object graph (databases, repositories,
@@ -86,15 +84,6 @@ final lookupsProvider = Provider<Lookups>((ref) {
     projects: {for (final p in projects) p.id: p},
   );
 });
-
-/// The saved sign-in for a page of a ZenTao server the app has an account on
-/// (what a mini app's login form is filled with); null for any other page.
-final savedWebLoginProvider = Provider<FindSavedWebLogin>(
-  (ref) => FindSavedWebLogin(
-    () => ref.read(lookupsProvider).accounts.values,
-    getIt<CredentialStore>().read,
-  ),
-);
 
 /// Whether translations go through the user's own API key rather than the
 /// OpenCode CLI — in which case OpenCode needs no linking first.
