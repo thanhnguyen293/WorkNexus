@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/app_icon_button.dart';
 import '../../core/widgets/hover_surface.dart';
 import '../../core/widgets/workspace_badge.dart';
 import '../../l10n/app_localizations.dart';
@@ -21,6 +22,7 @@ class WorkspaceSwitcherRow extends StatelessWidget {
     required this.isSelected,
     required this.isHighlighted,
     required this.onTap,
+    this.onEdit,
   });
 
   final Workspace workspace;
@@ -28,6 +30,9 @@ class WorkspaceSwitcherRow extends StatelessWidget {
   final bool isSelected;
   final bool isHighlighted;
   final VoidCallback onTap;
+
+  /// Opens the workspace's editor (name, badge); no button when null.
+  final VoidCallback? onEdit;
 
   /// Builds the subtitle string listing connected tools or empty message.
   static String formatToolsSubtitle(
@@ -104,6 +109,15 @@ class WorkspaceSwitcherRow extends StatelessWidget {
               ],
             ),
           ),
+          if (onEdit != null) ...[
+            SizedBox(width: s.xs),
+            AppIconButton(
+              icon: LucideIcons.pencil300,
+              tooltip: l.workspaceEditTitle,
+              size: AppIconButtonSize.small,
+              onPressed: onEdit,
+            ),
+          ],
           if (isSelected) ...[
             SizedBox(width: s.sm),
             Icon(LucideIcons.check300, size: 14, color: c.accent),

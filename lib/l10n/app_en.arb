@@ -1751,6 +1751,10 @@
     }
   },
   "connectionsWorkspaceStyle": "Workspace style",
+  "workspaceEditTitle": "Edit workspace",
+  "workspaceNameLabel": "Name",
+  "workspaceCodeLabel": "Badge letters",
+  "workspaceNameRequired": "Enter a name",
   "connectionsColor": "Color",
   "connectionsIcon": "Icon",
   "connectionsIconTooLarge": "Icon file must be 256 KB or smaller.",
