@@ -72,7 +72,7 @@ WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones desig
 │ [Z]  │ ▾ Projects (Scopes):        │ └─────────────────┘ └─────────────────┘ └─────────────────┘       │
 │ [GH] │   ⭐ Core Platform           │ ───────────────────────────────────────────────────────────────── │
 │ [GL] │   • Mobile Client           │ 📋 Assigned to you across all connected tools:                    │
-│      │   • Payment Gateway         │   • [BUG-2041] Login session timeout (ZenTao · Confirmed)         │
+│ [Fg] │   • Payment Gateway         │   • [BUG-2041] Login session timeout (ZenTao · Confirmed)         │
 │  +   │                             │   • [!312] Add biometric auth flow (GitLab MR · Review requested) │
 │      │ ⚙️ Connection Health: OK     │   • [#128] Migrate to Riverpod 3 (GitHub PR · Changes requested)  │
 └──────┴─────────────────────────────┴───────────────────────────────────────────────────────────────────┘
@@ -82,7 +82,7 @@ WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones desig
 | Zone | Dimensions | Purpose & User Experience |
 |---|---|---|
 | **Title Bar (L1)** | `56px` height | Houses the **Workspace Switcher** dropdown, global **Contextual Search** (`Ctrl/Cmd+K`), quick settings, and window caption controls. |
-| **Account Rail (L2)** | `76px` fixed width | Vertical switcher showing one button per connected account with provider brand badges, unread chat counters, and `Ctrl/Cmd+1…9` shortcuts. |
+| **Account Rail (L2)** | `76px` fixed width | Vertical switcher showing one button per connected account with provider brand badges, unread chat counters, and `Ctrl/Cmd+1…9` shortcuts; below them, your **mini apps** (websites pinned to the rail, e.g. `[Fg]` Figma) and `+` to add one. |
 | **Tool Nav Pane (L3 & L4)** | `300px` fixed width | Displays feature tabs (*Chat*, *Tasks*, *Bugs*, *MRs*, *PRs*), real-time sync status indicators, and searchable scope lists (*Projects*, *Products*, *Repos*). |
 | **Main Viewport (L5)** | Flexible fluid width | Renders table lists, 6-column kanban boards, or chat feeds. Keeps the 3 most recent views alive in off-stage memory for instantaneous switching. |
 | **Detail Slide-over** | `460px` slide-out | Opens smoothly from the right edge when clicking any work item; provides tabbed inspection for original description, machine translation, and timeline comments. |
@@ -128,6 +128,13 @@ WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones desig
 
 </details>
 
+Not in the slides yet:
+
+- **Mini apps** — any website pinned to the rail and shown inside the app, with
+  links from chat, tickets and other pages routed to it (see [Mini apps](#mini-apps)).
+- **Your own name and icon** — the window title, taskbar/Alt-Tab and tray carry
+  the name and (on Windows) the image you choose in Quick settings › Appearance.
+
 ---
 
 ## Features
@@ -164,6 +171,10 @@ WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones desig
 - Server-side slices with offline fallback: when a selected tab/project/repo —
   or a single paged column — cannot refresh, cached tickets still render from
   the local database.
+- Paged columns prune cached tickets the server no longer lists as their pages
+  load, but keep those of a column the loaded pages have not reached yet
+  (Postponed and Non-Fix share ZenTao's `toclosed` view with Resolved), so
+  their cards survive a refresh.
 
 ### Multi-provider connections
 
@@ -176,6 +187,30 @@ WorkNexus divides the desktop window into 5 purpose-built, ergonomic zones desig
 GitLab works with `gitlab.com` and self-hosted instances. GitHub works with
 `github.com` and GitHub Enterprise Server. Jira is currently a UI/asset
 placeholder; no Jira adapter is implemented yet.
+
+### Mini apps
+
+- Pin any website to the rail as a **mini app** — Figma, Trello, a ZenTao web
+  UI, an internal tool — with the site's icon or an image you pick, and a name
+  of your own.
+- Each one is an embedded web view (WebView2 on Windows, WKWebView on macOS)
+  with back/forward, reload, stop, open-in-browser and the browser's usual
+  shortcuts; a page's own pop-ups (sign-in windows) open over it, inside the app.
+- Per-site permission prompts — notifications, camera, microphone, location,
+  clipboard, autoplay, downloads, local fonts — are remembered per mini app and
+  can be changed in settings. A page's notifications become OS notifications
+  that bring you back to it.
+- **Links follow one order everywhere:** a link tapped in chat, in a ticket, or
+  opened by a page (`target=_blank`, `window.open`) goes to the app first (a
+  ZenTao ticket opens in its detail panel), then to the mini app of that site (a
+  Figma link from Trello brings the Figma mini app forward), and only then to
+  the browser or the page's pop-up. A mini app's links to its own site stay in
+  its window.
+- **ZenTao sign-in:** a mini app on a ZenTao server you have connected signs in
+  with that account's saved login. The password goes only to that server's own
+  login page (same scheme, host and port) and only into its account/password
+  form, and the form is submitted once per opened page — a wrong password is
+  not retried, and signing out still works.
 
 ### Task detail and review views
 
@@ -212,6 +247,12 @@ placeholder; no Jira adapter is implemented yet.
 - Bundled fonts: **Space Grotesk** and **Space Mono**; optional system fonts and
   **Geist Mono** are selectable.
 - Resizable sidebar width is persisted in drift.
+- **App name and icon:** give the app your own name (window title, taskbar
+  hover, Alt-Tab, tray tooltip) and, on Windows, any image — or the largest
+  frame of a multi-size `.ico` — as its window, taskbar and tray icon. Both
+  survive restarts and can be reset to the defaults. The executable's own icon
+  and name (Explorer, Start menu, Task Manager, pinned shortcuts) and the name
+  on system notifications are fixed at build time.
 
 ### Experimental coding-agent dispatch
 
