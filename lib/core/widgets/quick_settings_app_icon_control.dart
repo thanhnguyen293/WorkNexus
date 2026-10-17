@@ -17,13 +17,22 @@ import 'app_snack.dart';
 class QuickSettingsAppIconControl extends ConsumerWidget {
   const QuickSettingsAppIconControl({super.key});
 
-  static const _images = XTypeGroup(
-    label: 'Images',
-    extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'ico'],
-  );
+  static const _imageExtensions = [
+    'png',
+    'jpg',
+    'jpeg',
+    'webp',
+    'gif',
+    'bmp',
+    'ico',
+  ];
 
   Future<void> _choose(BuildContext context, WidgetRef ref) async {
-    final file = await openFile(acceptedTypeGroups: const [_images]);
+    final images = XTypeGroup(
+      label: AppL10n.of(context).appIconImages,
+      extensions: _imageExtensions,
+    );
+    final file = await openFile(acceptedTypeGroups: [images]);
     if (file == null) return;
     final done = await ref.read(appIconProvider.notifier).choose(file.path);
     if (!done && context.mounted) {

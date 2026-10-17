@@ -519,6 +519,8 @@
   "appIconChoose": "Chọn ảnh…",
   "appIconReset": "Dùng biểu tượng mặc định",
   "appIconInvalid": "Tệp này không phải ảnh mà ứng dụng đọc được.",
+  "appIconImages": "Ảnh",
+  "appNameSaveFailed": "Không lưu được tên ứng dụng.",
   "settingOff": "Tắt",
   "settingOn": "Bật",
   "font": "Phông chữ",

@@ -39,4 +39,11 @@ void main() {
     await service.rename('x' * 100);
     expect((await service.current())!.length, AppNameService.maxLength);
   });
+
+  test('a name that cannot be kept reports it and changes nothing', () async {
+    // A file where the name's folder should be: the folder cannot be made.
+    File('${dir.path}/sub').writeAsStringSync('');
+    expect(await service.rename('Acme'), isFalse);
+    expect(toolTips, isEmpty);
+  });
 }
