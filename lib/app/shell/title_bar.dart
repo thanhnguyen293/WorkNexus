@@ -23,8 +23,8 @@ class TitleBar extends ConsumerWidget {
 
   final int? assignedCount;
 
-  /// Room macOS keeps for its traffic-light buttons on the left; in a unified
-  /// toolbar they sit further in than in a plain title bar.
+  /// Room for the macOS traffic-light buttons on the left, placed 19pt in
+  /// by macos/Runner/MainFlutterWindow.swift.
   static const _macTrafficLightsWidth = 80.0;
 
   @override
@@ -33,8 +33,8 @@ class TitleBar extends ConsumerWidget {
     final s = context.spacing;
     final drawsCaption = DesktopWindowService.drawsCaptionButtons;
     final isDesktop = DesktopWindowService.isDesktop;
-    // macOS draws its own traffic lights, centred in a native title bar of
-    // this height; the bar's content has to share that centre line.
+    // macOS draws its own traffic lights, centred in a bar of this height
+    // (MainFlutterWindow.swift); the bar's content has to share that line.
     final isMac = isDesktop && !drawsCaption;
 
     return Container(
