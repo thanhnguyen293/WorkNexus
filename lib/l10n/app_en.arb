@@ -2175,6 +2175,29 @@
       }
     }
   },
+  "certPromptTitle": "This site's certificate isn't valid",
+  "certPromptMessage": "{origin}\n\nIts certificate {reason}.\n\nIf you trust this site, for example your own company's server, the app remembers it and stops asking. Anyone able to intercept your connection to it could then read what you send.",
+  "@certPromptMessage": {
+    "placeholders": {
+      "origin": {"type": "String"},
+      "reason": {"type": "String"}
+    }
+  },
+  "certReasonDates": "has expired, or is not valid yet",
+  "certReasonName": "was issued for a different site name",
+  "certReasonAuthority": "was not issued by an authority this computer trusts (it may be self-signed)",
+  "certReasonOther": "is not valid ({error})",
+  "@certReasonOther": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "certTrust": "Trust this site",
+  "miniAppTrustedCertsSection": "Trusted certificates",
+  "miniAppTrustedCertsHint": "Sites whose invalid certificate you chose to trust. They load without asking again, until you forget them here. Windows only.",
+  "miniAppTrustedCertsEmpty": "No site is trusted.",
+  "miniAppTrustedCertForget": "Forget",
+  "miniAppTrustedCertsForgetAll": "Forget all",
   "miniAppDataSection": "Browsing data",
   "miniAppDataHint": "Cache, cookies and what sites keep on this device.",
   "miniAppSettingsAppsHint": "Edit a mini app, or clear one site's data.",

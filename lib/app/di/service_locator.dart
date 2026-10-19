@@ -79,12 +79,14 @@ import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
 import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/web_profile_datasource.dart';
+import '../../features/mini_apps/data/repositories/file_trusted_certificate_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
+import '../../features/mini_apps/domain/repositories/trusted_certificate_repository.dart';
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
@@ -194,6 +196,14 @@ abstract class ServiceModule {
   AutoUpdatePreference autoUpdatePreference() => FileAutoUpdatePreference(
     file: () async => File(
       '${(await getApplicationSupportDirectory()).path}/auto_update.txt',
+    ),
+  );
+
+  @lazySingleton
+  TrustedCertificateRepository
+  trustedCertificateRepository() => FileTrustedCertificateRepository(
+    file: () async => File(
+      '${(await getApplicationSupportDirectory()).path}/trusted_certificates.json',
     ),
   );
 
