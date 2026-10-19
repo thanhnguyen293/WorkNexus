@@ -14,6 +14,7 @@ import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/ask_mini_app_permission.dart';
 import '../util/mini_app_certificate_guard.dart';
+import '../util/mini_app_flutter_web_focus_capability.dart';
 import '../util/mini_app_login_capability.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
@@ -33,7 +34,14 @@ class MiniAppWebView extends ConsumerStatefulWidget {
     List<MiniAppPageCapability>? capabilities,
   }) : capabilities =
            capabilities ??
-           [MiniAppNotificationCapability(), MiniAppLoginCapability()];
+           [
+             MiniAppNotificationCapability(),
+             MiniAppLoginCapability(),
+             // The Windows web view's focus flicker on a click (see the
+             // capability); the other web views do not have it.
+             if (defaultTargetPlatform == TargetPlatform.windows)
+               MiniAppFlutterWebFocusCapability(),
+           ];
 
   final MiniApp app;
   final List<MiniAppPageCapability> capabilities;
