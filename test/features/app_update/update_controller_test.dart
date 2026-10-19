@@ -53,6 +53,7 @@ void main() {
 
   ProviderContainer makeContainer({
     Duration checkEvery = const Duration(hours: 1),
+    Future<bool> Function()? autoUpdateEnabled,
   }) {
     final container = ProviderContainer(
       overrides: [
@@ -62,6 +63,7 @@ void main() {
             downloadUpdate: DownloadUpdate(repository),
             installUpdate: InstallUpdate(repository),
             checkEvery: checkEvery,
+            autoUpdateEnabled: autoUpdateEnabled,
           ),
         ),
       ],
@@ -92,6 +94,12 @@ void main() {
   );
 
   test('a manual check shares the one already running', () async {
+    // The lookup takes a moment, as a real one does, so the check the
+    // controller starts on its own meets the manual one still in flight.
+    when(() => repository.fetchLatestStableRelease()).thenAnswer((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      return const Ok(_release);
+    });
     final container = makeContainer();
     final notifier = container.read(updateControllerProvider.notifier);
 
@@ -207,5 +215,34 @@ void main() {
 
     // The periodic timer must be gone before the test binding checks for it.
     container.dispose();
+  });
+
+  group('with automatic updates off', () {
+    test('it neither checks nor downloads on its own', () async {
+      final container = makeContainer(
+        checkEvery: const Duration(milliseconds: 5),
+        autoUpdateEnabled: () async => false,
+      );
+
+      container.read(updateControllerProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+
+      expect(container.read(updateControllerProvider), isA<UpdateIdle>());
+      verifyNever(() => repository.fetchLatestStableRelease());
+      verifyNever(
+        () => repository.download(any(), onProgress: any(named: 'onProgress')),
+      );
+    });
+
+    test('a check the user asks for still looks', () async {
+      final container = makeContainer(autoUpdateEnabled: () async => false);
+
+      final result = await container
+          .read(updateControllerProvider.notifier)
+          .check();
+
+      expect(result, isA<Ok<AvailableUpdate?>>());
+      verify(() => repository.fetchLatestStableRelease()).called(1);
+    });
   });
 }

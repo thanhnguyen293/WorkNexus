@@ -39,6 +39,8 @@
   "appUpdatesTitle": "App updates",
   "appUpdatesSubtitle": "Stable updates are checked every hour and downloaded in the background. Once one is ready, the button above Integrations restarts into it. You can also check now.",
   "checkForUpdates": "Check for updates",
+  "autoUpdateLabel": "Update automatically",
+  "autoUpdateHint": "Look for new stable versions every hour and download them in the background. Off, the app only looks when you press Check for updates. It never installs without you restarting into it.",
   "latestVersionInstalled": "You're using the latest stable version.",
   "updateCheckFailed": "Couldn't check for updates. Check your connection and try again.",
   "board": "Board",

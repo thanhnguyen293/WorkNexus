@@ -67,4 +67,26 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('the switch for automatic updates turns them off and on', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      updateTestApp(
+        repository: repository,
+        home: const Scaffold(body: UpdateSettingsCard()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Update automatically'), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+  });
 }

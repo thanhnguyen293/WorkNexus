@@ -39,6 +39,8 @@
   "appUpdatesTitle": "Cập nhật ứng dụng",
   "appUpdatesSubtitle": "Ứng dụng tự kiểm tra bản stable mỗi giờ và tải sẵn về. Khi đã sẵn sàng, nút phía trên Kết nối sẽ khởi động lại với phiên bản mới. Bạn cũng có thể kiểm tra ngay.",
   "checkForUpdates": "Kiểm tra cập nhật",
+  "autoUpdateLabel": "Tự động cập nhật",
+  "autoUpdateHint": "Mỗi giờ kiểm tra bản stable mới và tải sẵn ở nền. Khi tắt, ứng dụng chỉ kiểm tra khi bạn bấm Kiểm tra cập nhật. Nó không bao giờ tự cài khi bạn chưa khởi động lại vào bản mới.",
   "latestVersionInstalled": "Bạn đang dùng phiên bản stable mới nhất.",
   "updateCheckFailed": "Không kiểm tra được cập nhật. Hãy kiểm tra kết nối rồi thử lại.",
   "board": "Bảng",
