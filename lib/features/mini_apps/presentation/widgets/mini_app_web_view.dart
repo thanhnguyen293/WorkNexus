@@ -13,6 +13,7 @@ import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/ask_mini_app_permission.dart';
+import '../util/mini_app_certificate_guard.dart';
 import '../util/mini_app_login_capability.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
@@ -25,7 +26,7 @@ import 'mini_app_popup.dart';
 /// [capabilities] the app lends it (notifications), and its own windows
 /// (opened over the app). What the page does is reported to the app's
 /// [MiniAppBrowserController].
-class MiniAppWebView extends ConsumerWidget {
+class MiniAppWebView extends ConsumerStatefulWidget {
   MiniAppWebView({
     super.key,
     required this.app,
@@ -38,7 +39,27 @@ class MiniAppWebView extends ConsumerWidget {
   final List<MiniAppPageCapability> capabilities;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MiniAppWebView> createState() => _MiniAppWebViewState();
+}
+
+class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
+  /// What to do when the site's certificate is refused (Windows only).
+  late final _certificates = MiniAppCertificateGuard(
+    context: () => context,
+    ref: ref,
+  );
+
+  MiniApp get app => widget.app;
+  List<MiniAppPageCapability> get capabilities => widget.capabilities;
+
+  @override
+  void dispose() {
+    _certificates.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final name = app.name;
     final browser = ref.read(miniAppBrowserProvider(app.id).notifier);
     return InAppWebView(
@@ -70,14 +91,19 @@ class MiniAppWebView extends ConsumerWidget {
         currentMiniApp(ref, app),
         request,
       ),
-      onLoadStart: (_, url) {
+      onLoadStart: (controller, url) {
         appTalker.info('Mini app $name: loading $url');
+        unawaited(_certificates.onLoadStart(controller, url));
         browser.onLoadStart();
       },
+      onLoadStop: (_, _) => _certificates.onLoadStop(),
       onUpdateVisitedHistory: (_, url, _) {
         if (url != null) unawaited(browser.onVisited(url));
       },
-      onProgressChanged: (_, percent) => browser.onProgress(percent / 100),
+      onProgressChanged: (controller, percent) {
+        _certificates.onProgress(controller, percent);
+        browser.onProgress(percent / 100);
+      },
       onReceivedError: (_, request, error) {
         appTalker.error(
           'Mini app $name: ${request.url} → ${error.description}',

@@ -1415,6 +1415,18 @@
       }
     }
   },
+  "certPromptTitle": "Chứng chỉ của trang này không hợp lệ",
+  "certPromptMessage": "{origin}\n\nChứng chỉ của trang {reason}.\n\nNếu bạn tin trang này, ví dụ máy chủ của chính công ty bạn, ứng dụng sẽ nhớ và không hỏi nữa. Ai chặn được kết nối của bạn tới trang đó khi ấy có thể đọc những gì bạn gửi.",
+  "certReasonDates": "đã hết hạn hoặc chưa có hiệu lực",
+  "certReasonName": "được cấp cho một tên trang khác",
+  "certReasonAuthority": "không do một tổ chức mà máy tính này tin cậy cấp (có thể là tự ký)",
+  "certReasonOther": "không hợp lệ ({error})",
+  "certTrust": "Tin cậy trang này",
+  "miniAppTrustedCertsSection": "Chứng chỉ đã tin cậy",
+  "miniAppTrustedCertsHint": "Các trang mà bạn đã chọn tin cậy dù chứng chỉ không hợp lệ. Chúng tải mà không hỏi lại cho tới khi bạn quên chúng ở đây. Chỉ Windows.",
+  "miniAppTrustedCertsEmpty": "Chưa tin cậy trang nào.",
+  "miniAppTrustedCertForget": "Quên",
+  "miniAppTrustedCertsForgetAll": "Quên tất cả",
   "miniAppDataSection": "Dữ liệu duyệt web",
   "miniAppDataHint": "Cache, cookie và dữ liệu các trang lưu trên máy này.",
   "miniAppSettingsAppsHint": "Sửa mini app hoặc xoá dữ liệu riêng của từng trang.",
