@@ -66,9 +66,23 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
   /// confirming a change, say) is left alone. Then signs in when the app says
   /// to: the form's submit button, else the form itself, else Enter in the
   /// password field. Asks again only after the form has gone and come back.
+  ///
+  /// The script is in every page of every mini app, so it does nothing on a
+  /// page that is not ZenTao's login page (the address says so: no search of
+  /// the page for fields), and even there it looks at most every 50 ms, not
+  /// once per change to the page.
   static const _script = r'''
 (function () {
   var asked = false;
+  var pending = false;
+  // ZenTao's login page, in either URL style: user-login[-<referer>].html or
+  // index.php?m=user&f=login.
+  function onLoginPage() {
+    var last = location.pathname.split('/').pop() || '';
+    if (last.indexOf('user-login') === 0) return true;
+    var q = new URLSearchParams(location.search);
+    return q.get('m') === 'user' && q.get('f') === 'login';
+  }
   function visible(el) {
     return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
   }
@@ -106,6 +120,7 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
     });
   }
   function check() {
+    if (!onLoginPage()) { asked = false; return; }
     var form = loginForm();
     if (!form) { asked = false; return; }
     if (asked || form.password.value) return;
@@ -120,7 +135,15 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
         }
       });
   }
-  new MutationObserver(check).observe(
+  function schedule() {
+    if (pending) return;
+    pending = true;
+    setTimeout(function () {
+      pending = false;
+      check();
+    }, 50);
+  }
+  new MutationObserver(schedule).observe(
     document.documentElement, { childList: true, subtree: true });
   check();
 })();
