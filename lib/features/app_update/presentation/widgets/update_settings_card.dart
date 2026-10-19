@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/build_issue_report_url.dart';
+import '../providers/auto_update_controller.dart';
 import '../providers/update_controller.dart';
 import '../providers/update_provider.dart';
 import 'update_dialog.dart';
@@ -78,6 +79,8 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
                 ],
               ),
               SizedBox(height: context.spacing.lg),
+              const _AutoUpdateRow(),
+              SizedBox(height: context.spacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -125,5 +128,47 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
         builder: (_) => UpdateDialog(update: update),
       );
     }, (_) => showAppSnack(context, l.updateCheckFailed, isError: true));
+  }
+}
+
+/// The switch for background updates, with what it does underneath.
+class _AutoUpdateRow extends ConsumerWidget {
+  const _AutoUpdateRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
+    final l = AppL10n.of(context);
+    // On until the saved choice is read: that is what a build that never
+    // saved one does.
+    final on = ref.watch(autoUpdateProvider).asData?.value ?? true;
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.autoUpdateLabel,
+                style: context.typography.body.copyWith(color: c.textPrimary),
+              ),
+              SizedBox(height: context.spacing.xxs),
+              Text(
+                l.autoUpdateHint,
+                style: context.typography.paragraph.copyWith(
+                  color: c.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: context.spacing.lg),
+        Switch(
+          value: on,
+          onChanged: (value) =>
+              ref.read(autoUpdateProvider.notifier).set(value),
+        ),
+      ],
+    );
   }
 }

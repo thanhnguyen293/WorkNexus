@@ -42,7 +42,9 @@ import '../../features/app_update/data/datasources/github_release_datasource.dar
 import '../../features/app_update/data/datasources/linux_update_installer.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
 import '../../features/app_update/data/datasources/windows_update_installer.dart';
+import '../../features/app_update/data/repositories/file_auto_update_preference.dart';
 import '../../features/app_update/data/repositories/github_update_repository.dart';
+import '../../features/app_update/domain/repositories/auto_update_preference.dart';
 import '../../features/app_update/domain/repositories/update_repository.dart';
 import '../../features/app_update/domain/usecases/check_for_update.dart';
 import '../../features/app_update/domain/usecases/download_update.dart';
@@ -185,6 +187,13 @@ abstract class ServiceModule {
         : null,
     stagingRoot: () async => Directory(
       '${(await getTemporaryDirectory()).path}/${AppConfig.databaseName}-update',
+    ),
+  );
+
+  @lazySingleton
+  AutoUpdatePreference autoUpdatePreference() => FileAutoUpdatePreference(
+    file: () async => File(
+      '${(await getApplicationSupportDirectory()).path}/auto_update.txt',
     ),
   );
 

@@ -6,6 +6,7 @@ import '../../../../app/di/service_locator.dart';
 import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/available_update.dart';
+import '../../domain/repositories/auto_update_preference.dart';
 import '../../domain/usecases/check_for_update.dart';
 import '../../domain/usecases/download_update.dart';
 import '../../domain/usecases/install_update.dart';
@@ -14,28 +15,38 @@ import 'update_state.dart';
 /// Keeps the app current in the background: looks for a newer stable release
 /// when created and every [checkEvery], downloads and verifies it on its own,
 /// then holds it in [UpdateReady] until the user asks to restart into it.
+/// With automatic updates off ([autoUpdateEnabled]) it does none of that by
+/// itself — only [check], which the user asks for, looks.
 class UpdateController extends Notifier<UpdateState> {
   UpdateController({
     required this._checkForUpdate,
     required this._downloadUpdate,
     required this._installUpdate,
     this.checkEvery = const Duration(hours: 1),
-  });
+    Future<bool> Function()? autoUpdateEnabled,
+  }) : _autoUpdateEnabled = autoUpdateEnabled ?? (() async => true);
 
   final CheckForUpdate _checkForUpdate;
   final DownloadUpdate _downloadUpdate;
   final InstallUpdate _installUpdate;
   final Duration checkEvery;
+  final Future<bool> Function() _autoUpdateEnabled;
 
   Future<Result<AvailableUpdate?>>? _inFlight;
 
   @override
   UpdateState build() {
-    final timer = Timer.periodic(checkEvery, (_) => check());
+    final timer = Timer.periodic(checkEvery, (_) => checkInBackground());
     ref.onDispose(timer.cancel);
     // The first check follows right behind; state must not change in build.
-    scheduleMicrotask(check);
+    scheduleMicrotask(checkInBackground);
     return const UpdateIdle();
+  }
+
+  /// [check], unless the user turned automatic updates off.
+  Future<void> checkInBackground() async {
+    if (!await _autoUpdateEnabled()) return;
+    await check();
   }
 
   /// Looks for a newer stable release and, when it has a build for this
@@ -127,5 +138,6 @@ final updateControllerProvider =
         checkForUpdate: getIt<CheckForUpdate>(),
         downloadUpdate: getIt<DownloadUpdate>(),
         installUpdate: getIt<InstallUpdate>(),
+        autoUpdateEnabled: getIt<AutoUpdatePreference>().isEnabled,
       ),
     );

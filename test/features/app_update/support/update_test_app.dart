@@ -9,6 +9,7 @@ import 'package:work_nexus/features/app_update/domain/repositories/update_reposi
 import 'package:work_nexus/features/app_update/domain/usecases/check_for_update.dart';
 import 'package:work_nexus/features/app_update/domain/usecases/download_update.dart';
 import 'package:work_nexus/features/app_update/domain/usecases/install_update.dart';
+import 'package:work_nexus/features/app_update/presentation/providers/auto_update_controller.dart';
 import 'package:work_nexus/features/app_update/presentation/providers/update_controller.dart';
 import 'package:work_nexus/features/app_update/presentation/providers/update_provider.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -54,11 +55,26 @@ MockUpdateRepository mockUpdateRepository() {
   return repository;
 }
 
+/// The automatic-update choice kept in memory, not in a file.
+class FakeAutoUpdateController extends AutoUpdateController {
+  FakeAutoUpdateController(this.initial);
+
+  final bool initial;
+
+  @override
+  Future<bool> build() async => initial;
+
+  @override
+  Future<void> set(bool enabled) async => state = AsyncData(enabled);
+}
+
 /// [home] under a themed, localized app whose update controller runs on
-/// [repository] and reports version 1.4.1.
+/// [repository] and reports version 1.4.1; automatic updates start as
+/// [autoUpdate].
 Widget updateTestApp({
   required UpdateRepository repository,
   required Widget home,
+  bool autoUpdate = true,
 }) {
   return ProviderScope(
     overrides: [
@@ -70,6 +86,9 @@ Widget updateTestApp({
         ),
       ),
       appVersionProvider.overrideWith((ref) async => '1.4.1'),
+      autoUpdateProvider.overrideWith(
+        () => FakeAutoUpdateController(autoUpdate),
+      ),
     ],
     child: MaterialApp(
       theme: buildAppTheme(
