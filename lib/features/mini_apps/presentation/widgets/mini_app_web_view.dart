@@ -140,7 +140,8 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
         if (!context.mounted) return false;
         // Where any other tapped link goes: the app if it shows that link
         // itself, else the mini app of that site (never this very app, whose
-        // own links stay in its window), else the pop-up below.
+        // own links stay in its window), else the pop-up below. A sign-in is
+        // always the pop-up: the page waits on it for the answer.
         final url = action.request.url?.toString();
         if (url != null &&
             routeMiniAppWindowLink(
@@ -148,6 +149,8 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
               ref.read(miniAppLinkTargetsProvider),
               url,
               currentAppId: app.id,
+              windowWidth: action.windowFeatures?.width,
+              windowHeight: action.windowFeatures?.height,
             )) {
           // Claimed, not declined: declining loads the link in this page.
           MiniAppDiscardedWindow.discard(context, action.windowId);
