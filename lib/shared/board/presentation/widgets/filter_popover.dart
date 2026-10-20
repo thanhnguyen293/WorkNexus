@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/usecases/derive_board_facets.dart';
 import '../providers/board_providers.dart';
 import 'filter_facet_groups.dart';
 import 'filter_generic_groups.dart';
@@ -22,10 +23,23 @@ import 'saved_filters_section.dart';
 /// data-derived facet groups, the generic board/list show the cross-provider
 /// groups (provider/account/project/status/priority).
 class FilterPopover extends ConsumerWidget {
-  const FilterPopover({super.key, this.statusOption});
+  const FilterPopover({
+    super.key,
+    this.statusOption,
+    this.catalog,
+    this.onPick,
+  });
 
   /// How a facet status option is drawn (see [FacetFilterGroups.statusOption]).
   final FacetStatusOption? statusOption;
+
+  /// Every choice of each dimension, from the tool that owns the board (see
+  /// [BoardFacetCatalog]); without it the options are what the tickets carry.
+  final BoardFacetCatalog? catalog;
+
+  /// Called after each option the user picks or drops — the owning board
+  /// moves to its All view, so a filter applies to every ticket.
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,7 +58,11 @@ class FilterPopover extends ConsumerWidget {
           SizedBox(height: context.spacing.lg),
           const SavedFiltersSection(),
           if (usesFacetFilters)
-            FacetFilterGroups(statusOption: statusOption)
+            FacetFilterGroups(
+              statusOption: statusOption,
+              catalog: catalog,
+              onPick: onPick,
+            )
           else
             const GenericFilterGroups(),
         ],

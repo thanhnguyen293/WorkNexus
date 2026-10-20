@@ -9,6 +9,7 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
+import '../providers/zentao_facet_catalog_provider.dart';
 import 'zentao_board_refresh_button.dart';
 import 'zentao_status_filter_option.dart';
 
@@ -26,6 +27,8 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
 
   /// The bug board, else the task board.
   final bool bugs;
+
+  /// What to show, the All view first.
   final List<AppSegmentedTab> scopes;
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
@@ -47,6 +50,9 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
             AppSegmentedTabs(tabs: scopes),
             FiltersButton(
               statusOption: zentaoStatusFilterOption(bugBoard: bugs),
+              catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
+              // Picking a filter shows it over every ticket: the All view.
+              onPick: scopes.first.active ? null : scopes.first.onTap,
             ),
             const Spacer(),
             ZenTaoBoardRefreshButton(bugs: bugs),

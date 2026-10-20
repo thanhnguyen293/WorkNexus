@@ -69,6 +69,22 @@ class ZenTaoTicketForms {
     return payload;
   }
 
+  // ---- people ----
+
+  /// Product [productId]'s members — the people its new bug form lets a bug
+  /// go to (the teams of the product's projects and executions).
+  Future<List<FormOption>> productMembers(String productId) async {
+    final page = await _page('bug-create-$productId-0-');
+    final bug = page['bug'] is Map ? page['bug'] as Map : const {};
+    return zentaoOptions(
+      page['productMembers'] ?? page['assignedToList'] ?? bug['productMembers'],
+    );
+  }
+
+  /// Execution [executionId]'s team, as its new task form lists it.
+  Future<List<FormOption>> executionMembers(String executionId) async =>
+      zentaoOptions((await _page('task-create-$executionId-0-0'))['members']);
+
   // ---- bugs ----
 
   /// A new bug's form in product [productId] (`'0'`: ZenTao picks its current

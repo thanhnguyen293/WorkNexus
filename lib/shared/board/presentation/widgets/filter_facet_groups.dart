@@ -12,18 +12,32 @@ import '../../domain/entities/filter_state.dart';
 import '../../domain/usecases/derive_board_facets.dart';
 import '../providers/board_providers.dart';
 import 'filter_option_group.dart';
+import 'filter_people_block.dart';
 
 /// Data-derived facet groups for the active ZenTao / GitLab-MR board.
 ///
-/// Every group is searchable: assignee and reviewer lists in particular are as
-/// long as the team, and [SearchableFilterGroup] only shows the box once a group
-/// is big enough to need one.
+/// With the owning tool's [catalog] every choice is listed, carried by a loaded
+/// ticket or not; without it, what the tickets carry. A group as long as a
+/// team (assignees, reviewers) turns into a dropdown ([FilterOptionsGroup]).
 class FacetFilterGroups extends ConsumerWidget {
-  const FacetFilterGroups({super.key, this.statusOption});
+  const FacetFilterGroups({
+    super.key,
+    this.statusOption,
+    this.catalog,
+    this.onPick,
+  });
 
   /// Draws a status option the way its tool names and colours that status (a
   /// board column); without it a status shows as its plain name.
   final FacetStatusOption? statusOption;
+
+  /// Every choice of each dimension, from the tool that owns the board (see
+  /// [BoardFacetCatalog]); without it the options are what the tickets carry.
+  final BoardFacetCatalog? catalog;
+
+  /// Called after each option the user picks or drops — the owning board
+  /// moves to its All view, so a filter applies to every ticket.
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +45,7 @@ class FacetFilterGroups extends ConsumerWidget {
     final l = AppL10n.of(context);
     final f = ref.watch(filterStateProvider);
     final ctrl = ref.read(filterStateProvider.notifier);
-    final facets = ref.watch(boardFacetsProvider);
+    final facets = ref.watch(boardFacetsProvider(catalog));
 
     if (facets.groups.isEmpty) {
       return Text(
@@ -39,35 +53,67 @@ class FacetFilterGroups extends ConsumerWidget {
         style: context.typography.meta.copyWith(color: c.textTertiary),
       );
     }
+    List<FilterChipOption> optionsOf(BoardFacetGroup g) => [
+      for (final o in g.options)
+        if (g.kind == BoardFacetKind.status && statusOption != null)
+          statusOption!(
+            context,
+            o,
+            active: f.zentaoStatuses.contains(o.value),
+            onTap: () {
+              ctrl.toggleZenTaoStatus(o.value);
+              onPick?.call();
+            },
+          )
+        else
+          FilterChipOption(
+            label: o.label ?? _facetLabel(l, g.kind, o.value),
+            count: o.count > 0 ? o.count : null,
+            active: _facetActive(f, g.kind, o.value),
+            dotColor: _facetDot(c, g.kind, o.value),
+            onTap: () {
+              _facetToggle(ctrl, g.kind, o.value);
+              onPick?.call();
+            },
+          ),
+    ];
+    final people = [
+      for (final g in facets.groups)
+        if (_people.contains(g.kind)) g,
+    ];
+    // Two or more people groups are one question (any of them matching), so
+    // they share a box where the first of them stood.
+    final together = people.length > 1;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final g in facets.groups)
-          SearchableFilterGroup(
-            label: _facetHeader(l, g.kind),
-            options: [
-              for (final o in g.options)
-                if (g.kind == BoardFacetKind.status && statusOption != null)
-                  statusOption!(
-                    context,
-                    o,
-                    active: f.zentaoStatuses.contains(o.value),
-                    onTap: () => ctrl.toggleZenTaoStatus(o.value),
-                  )
-                else
-                  FilterChipOption(
-                    label: _facetLabel(l, g.kind, o.value),
-                    count: o.count,
-                    active: _facetActive(f, g.kind, o.value),
-                    dotColor: _facetDot(c, g.kind, o.value),
-                    onTap: () => _facetToggle(ctrl, g.kind, o.value),
-                  ),
-            ],
-          ),
+          if (together && identical(g, people.first))
+            FilterPeopleBlock(
+              groups: [
+                for (final p in people)
+                  (label: _facetHeader(l, p.kind), options: optionsOf(p)),
+              ],
+            )
+          else if (!together || !people.contains(g))
+            FilterOptionsGroup(
+              label: _facetHeader(l, g.kind),
+              // A person is found by name: a dropdown however few there are.
+              dropdownThreshold: _people.contains(g.kind) ? 0 : 8,
+              options: optionsOf(g),
+            ),
       ],
     );
   }
 }
+
+/// The groups that pick people; a ticket passes them when any one matches (see
+/// `FilterTickets`).
+const _people = {
+  BoardFacetKind.assignee,
+  BoardFacetKind.resolvedBy,
+  BoardFacetKind.openedBy,
+};
 
 /// Builds a status facet option as the tool that owns the board shows it: named
 /// and coloured like its board column (the table's Status cell).

@@ -131,7 +131,7 @@ line_count_exemptions:
 
   # Non-UI files over 400 lines (rule 9.3)
   - file: lib/app/di/service_locator.dart
-    max_lines: 560
+    max_lines: 570
     owner_phase: "Phase 2"
     reason: "Injectable composition root wiring all features and services"
   - file: lib/core/database/database.dart

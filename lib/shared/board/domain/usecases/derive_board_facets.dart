@@ -23,12 +23,38 @@ enum BoardFacetKind {
 }
 
 /// One option within a facet group: its canonical [value] (the exact string/int
-/// stored in `FilterState`) and how many scoped tickets carry it.
+/// stored in `FilterState`), how many scoped tickets carry it, and — when the
+/// [BoardFacetCatalog] names it — the [label] to show.
 class BoardFacetOption {
-  const BoardFacetOption({required this.value, required this.count});
+  const BoardFacetOption({
+    required this.value,
+    required this.count,
+    this.label,
+  });
 
   final String value;
   final int count;
+  final String? label;
+}
+
+/// A choice a board can be filtered by whether or not a loaded ticket carries
+/// it yet: its canonical [value] and, when the value is not readable itself
+/// (a login), the [label] to show.
+class BoardFacetChoice {
+  const BoardFacetChoice(this.value, {this.label});
+
+  final String value;
+  final String? label;
+}
+
+/// Every choice of each dimension, as the tool that owns the board knows them
+/// (all of a ZenTao product's members, all its severities), so a filter can
+/// name one no loaded ticket has yet. A dimension it leaves out is derived from
+/// the tickets alone.
+class BoardFacetCatalog {
+  const BoardFacetCatalog(this.choices);
+
+  final Map<BoardFacetKind, List<BoardFacetChoice>> choices;
 }
 
 /// A facet dimension plus its options, ordered by descending count.
@@ -48,18 +74,29 @@ class BoardFacets {
   static const empty = BoardFacets(groups: []);
 }
 
-/// Input for [DeriveBoardFacets]: the board-scoped tickets and the board kind.
+/// Input for [DeriveBoardFacets]: the board-scoped tickets, the board kind and
+/// the tool's [catalog] of every choice, if it has one.
 class BoardFacetsInput {
-  const BoardFacetsInput({required this.tickets, required this.scope});
+  const BoardFacetsInput({
+    required this.tickets,
+    required this.scope,
+    this.catalog,
+  });
 
   final List<Ticket> tickets;
   final BoardFacetScope scope;
+  final BoardFacetCatalog? catalog;
 }
 
-/// Derives the filter facets present in a board's tickets. Assignee stores `''`
-/// for unassigned; severity stores the int as a string; priority stores the
-/// [Priority] name; bugType/resolution store the lowercased ZenTao code. A group
-/// with fewer than two distinct options is dropped (it cannot narrow anything).
+/// Derives the filter facets of a board. Assignee stores `''` for unassigned;
+/// severity stores the int as a string; priority stores the [Priority] name;
+/// bugType/resolution store the lowercased ZenTao code.
+///
+/// A dimension in the [BoardFacetsInput.catalog] lists every choice there, in
+/// the catalog's order (with the count of tickets that carry it, 0 for none),
+/// then any value the tickets carry that the catalog lacks. Any other
+/// dimension lists what the tickets carry, and is dropped when that is fewer
+/// than two values (it cannot narrow anything).
 class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
   const DeriveBoardFacets();
 
@@ -100,18 +137,30 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
           counts[value] = (counts[value] ?? 0) + 1;
         }
       }
-      if (counts.length < 2) continue;
-      final options =
-          counts.entries
-              .map((e) => BoardFacetOption(value: e.key, count: e.value))
-              .toList()
-            ..sort(
-              kind == BoardFacetKind.status
-                  // Statuses read in the board's column order.
-                  ? (a, b) =>
-                        _statusOrder(a.value).compareTo(_statusOrder(b.value))
-                  : (a, b) => b.count.compareTo(a.count),
-            );
+      final known = input.catalog?.choices[kind];
+      if (known == null && counts.length < 2) continue;
+      final derived =
+          [
+            for (final e in counts.entries)
+              if (known == null || !known.any((c) => c.value == e.key))
+                BoardFacetOption(value: e.key, count: e.value),
+          ]..sort(
+            kind == BoardFacetKind.status
+                // Statuses read in the board's column order.
+                ? (a, b) =>
+                      _statusOrder(a.value).compareTo(_statusOrder(b.value))
+                : (a, b) => b.count.compareTo(a.count),
+          );
+      final options = [
+        for (final c in known ?? const <BoardFacetChoice>[])
+          BoardFacetOption(
+            value: c.value,
+            count: counts[c.value] ?? 0,
+            label: c.label,
+          ),
+        ...derived,
+      ];
+      if (options.isEmpty) continue;
       groups.add(BoardFacetGroup(kind: kind, options: options));
     }
     return BoardFacets(groups: groups);
