@@ -25,7 +25,6 @@ class FiltersButton extends ConsumerWidget {
     this.statusOption,
     this.catalog,
     this.onPick,
-    this.enabled = true,
   });
 
   /// Leaves the label off (a narrow toolbar).
@@ -42,19 +41,9 @@ class FiltersButton extends ConsumerWidget {
   /// moves to its All view, so a filter applies to every ticket.
   final VoidCallback? onPick;
 
-  /// Off where the board's view is a filter of its own (Related to me): the
-  /// button is greyed out and the popover closes.
-  final bool enabled;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(filterHasGroupsProvider)) return const SizedBox.shrink();
-    if (!enabled && ref.watch(advFilterOpenProvider)) {
-      // Outside the build phase: providers must not change while widgets build.
-      Future.microtask(
-        () => ref.read(advFilterOpenProvider.notifier).state = false,
-      );
-    }
     final count = ref.watch(
       filterStateProvider.select((f) => f.activeTokenCount),
     );
@@ -65,9 +54,7 @@ class FiltersButton extends ConsumerWidget {
       child: _FiltersButtonFace(
         count: count,
         compact: compact,
-        onTap: enabled
-            ? () => ref.read(advFilterOpenProvider.notifier).update((v) => !v)
-            : null,
+        onTap: () => ref.read(advFilterOpenProvider.notifier).update((v) => !v),
       ),
     );
   }
@@ -81,9 +68,7 @@ class _FiltersButtonFace extends StatelessWidget {
   });
 
   final int count;
-
-  /// Null greys the button out.
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
   final bool compact;
 
   @override
@@ -92,15 +77,9 @@ class _FiltersButtonFace extends StatelessWidget {
     final s = context.spacing;
     final l = AppL10n.of(context);
     final active = count > 0;
-    final enabled = onTap != null;
-    final color = !enabled
-        ? c.textTertiary
-        : active
-        ? c.accent
-        : c.textSecondary;
+    final color = active ? c.accent : c.textSecondary;
     return HoverSurface(
       onTap: onTap,
-      enabled: enabled,
       height: context.sizes.controlMd,
       padding: EdgeInsets.symmetric(horizontal: compact ? s.md : s.lg),
       color: active ? c.selectionFill : c.surface,
