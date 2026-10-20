@@ -151,13 +151,20 @@ final filterHasGroupsProvider = Provider<bool>((ref) {
   return ref.watch(genericFilterScopeProvider).projectIds.length >= 2;
 });
 
-final boardFacetsProvider = Provider<BoardFacets>((ref) {
-  final scope = ref.watch(boardFacetScopeProvider);
-  if (scope == BoardFacetScope.none) return BoardFacets.empty;
-  return const DeriveBoardFacets()(
-    BoardFacetsInput(tickets: ref.watch(scopedTicketsProvider), scope: scope),
-  );
-});
+/// The facets of the board on screen, completed by its tool's catalog of
+/// every choice when it has one (see [BoardFacetCatalog]).
+final boardFacetsProvider = Provider.autoDispose
+    .family<BoardFacets, BoardFacetCatalog?>((ref, catalog) {
+      final scope = ref.watch(boardFacetScopeProvider);
+      if (scope == BoardFacetScope.none) return BoardFacets.empty;
+      return const DeriveBoardFacets()(
+        BoardFacetsInput(
+          tickets: ref.watch(scopedTicketsProvider),
+          scope: scope,
+          catalog: catalog,
+        ),
+      );
+    });
 
 final boardProvider = Provider<BoardModel>(
   (ref) => const BuildBoard()(ref.watch(boardQueryProvider)),

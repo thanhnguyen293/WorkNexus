@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_count_badge.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/usecases/derive_board_facets.dart';
 import '../providers/board_providers.dart';
 import 'filter_facet_groups.dart';
 import 'filter_popover_anchor.dart';
@@ -18,13 +19,27 @@ import 'filter_popover_anchor.dart';
 /// The toolbar's Filters button with its advanced-filter popover; renders
 /// nothing when the board has nothing to filter by.
 class FiltersButton extends ConsumerWidget {
-  const FiltersButton({super.key, this.compact = false, this.statusOption});
+  const FiltersButton({
+    super.key,
+    this.compact = false,
+    this.statusOption,
+    this.catalog,
+    this.onPick,
+  });
 
   /// Leaves the label off (a narrow toolbar).
   final bool compact;
 
   /// How a facet status option is drawn (see [FacetFilterGroups.statusOption]).
   final FacetStatusOption? statusOption;
+
+  /// Every choice of each dimension, from the tool that owns the board (see
+  /// [BoardFacetCatalog]); without it the options are what the tickets carry.
+  final BoardFacetCatalog? catalog;
+
+  /// Called after each option the user picks or drops — the owning board
+  /// moves to its All view, so a filter applies to every ticket.
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,6 +49,8 @@ class FiltersButton extends ConsumerWidget {
     );
     return FilterPopoverAnchor(
       statusOption: statusOption,
+      catalog: catalog,
+      onPick: onPick,
       child: _FiltersButtonFace(
         count: count,
         compact: compact,

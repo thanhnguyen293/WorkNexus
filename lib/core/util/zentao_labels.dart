@@ -29,6 +29,9 @@ const _bugTypes = <String, String>{
   'others': 'Others',
 };
 
+/// The stock ZenTao bug type codes, in ZenTao's own order.
+Iterable<String> get zentaoBugTypeCodes => _bugTypes.keys;
+
 /// ZenTao `type` code (e.g. `codeerror`) → readable label; unknown codes are
 /// returned capitalized.
 String? zentaoBugTypeLabel(String? type) {
@@ -69,6 +72,9 @@ const _resolutions = <String, String>{
   'postponed': 'Postponed',
   'tostory': 'Converted to story',
 };
+
+/// The stock ZenTao bug resolution codes, in ZenTao's own order.
+Iterable<String> get zentaoResolutionCodes => _resolutions.keys;
 
 /// ZenTao bug `resolution` code (e.g. `fixed`) → readable label. Unknown codes
 /// are returned as-is; null/empty → null.

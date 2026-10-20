@@ -48,8 +48,8 @@ class GenericFilterGroups extends ConsumerWidget {
           ],
         ),
         // Accounts and projects are the long lists here (a workspace can hold
-        // dozens), so both get a search box once they grow.
-        SearchableFilterGroup(
+        // dozens), so both turn into a searchable dropdown once they grow.
+        FilterOptionsGroup(
           label: l.account,
           options: [
             for (final a in lookups.accounts.values)
@@ -65,7 +65,7 @@ class GenericFilterGroups extends ConsumerWidget {
                 ),
           ],
         ),
-        SearchableFilterGroup(
+        FilterOptionsGroup(
           label: l.project,
           options: [
             for (final p in lookups.projects.values)

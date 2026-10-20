@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/usecases/derive_board_facets.dart';
 import 'filter_facet_groups.dart';
 import 'filter_popover.dart';
 
@@ -23,12 +24,22 @@ class FilterPopoverAnchor extends ConsumerStatefulWidget {
     super.key,
     required this.child,
     this.statusOption,
+    this.catalog,
+    this.onPick,
   });
 
   final Widget child;
 
   /// How a facet status option is drawn (see [FacetFilterGroups.statusOption]).
   final FacetStatusOption? statusOption;
+
+  /// Every choice of each dimension, from the tool that owns the board (see
+  /// [BoardFacetCatalog]); without it the options are what the tickets carry.
+  final BoardFacetCatalog? catalog;
+
+  /// Called after each option the user picks or drops — the owning board
+  /// moves to its All view, so a filter applies to every ticket.
+  final VoidCallback? onPick;
 
   @override
   ConsumerState<FilterPopoverAnchor> createState() =>
@@ -104,7 +115,11 @@ class _FilterPopoverAnchorState extends ConsumerState<FilterPopoverAnchor> {
                 },
                 child: Focus(
                   focusNode: _focus,
-                  child: FilterPopover(statusOption: widget.statusOption),
+                  child: FilterPopover(
+                    statusOption: widget.statusOption,
+                    catalog: widget.catalog,
+                    onPick: widget.onPick,
+                  ),
                 ),
               ),
             ),

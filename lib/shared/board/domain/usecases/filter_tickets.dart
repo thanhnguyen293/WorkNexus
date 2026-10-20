@@ -144,9 +144,20 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           !(t.severity != null && f.severities.contains(t.severity))) {
         return false;
       }
-      if (f.assignees.isNotEmpty &&
-          !_anySelected(f.assignees, _assigneeValues(t))) {
-        return false;
+      // The people filters ask one question — is one of these people on the
+      // ticket, in the role they were picked for — so a ticket passes when
+      // any of them matches (its assignee, or who resolved it, or who opened
+      // it), not only when all do.
+      if (f.assignees.isNotEmpty ||
+          f.resolvers.isNotEmpty ||
+          f.reporters.isNotEmpty) {
+        final entity = t.providerEntity;
+        final bug = entity is ZenTaoBugEntity ? entity : null;
+        final matches =
+            _anySelected(f.assignees, _assigneeValues(t)) ||
+            (bug != null && f.resolvers.contains(bug.resolvedBy ?? '')) ||
+            (bug != null && f.reporters.contains(bug.openedBy ?? ''));
+        if (!matches) return false;
       }
       if (f.reviewers.isNotEmpty &&
           !_anySelected(f.reviewers, _reviewerValues(t))) {
@@ -171,20 +182,9 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           !f.zentaoStatuses.contains(zentaoStatusOf(t))) {
         return false;
       }
-      if (f.resolvers.isNotEmpty ||
-          f.reporters.isNotEmpty ||
-          f.confirmations.isNotEmpty) {
+      if (f.confirmations.isNotEmpty) {
         final entity = t.providerEntity;
-        if (entity is! ZenTaoBugEntity) return false;
-        if (f.resolvers.isNotEmpty &&
-            !f.resolvers.contains(entity.resolvedBy ?? '')) {
-          return false;
-        }
-        if (f.reporters.isNotEmpty &&
-            !f.reporters.contains(entity.openedBy ?? '')) {
-          return false;
-        }
-        if (f.confirmations.isNotEmpty &&
+        if (entity is! ZenTaoBugEntity ||
             !f.confirmations.contains('${entity.confirmed ?? 0}')) {
           return false;
         }

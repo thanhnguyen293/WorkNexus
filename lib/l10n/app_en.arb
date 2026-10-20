@@ -833,6 +833,13 @@
   "noSavedFiltersYet": "No presets yet — set up a filter, then save it.",
   "filterSearchHint": "Search…",
   "filterNoMatches": "No option matches",
+  "filterAnyOption": "Any",
+  "filterPeople": "People",
+  "filterOr": "OR",
+  "filterPeopleAnyHint": "A ticket shows when any one of these matches",
+  "@filterAnyOption": {
+    "description": "A filter dropdown with nothing picked: every option passes."
+  },
   "savedFiltersLoadFailed": "Couldn't read your saved filters",
   "retry": "Retry",
   "machineTranslationNote": "Machine translation · review before relying on it",

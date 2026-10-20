@@ -341,6 +341,44 @@ void main() {
       );
     });
 
+    test('assignee, resolver and reporter pass a ticket when any matches', () {
+      Ticket bug(String id, {String? to, String? by, String? opened}) =>
+          _ztBug(id: id, providerStatus: 'active').copyWith(
+            assignee: to,
+            providerEntity: TicketProviderEntity.zentaoBug(
+              resolvedBy: by,
+              openedBy: opened,
+            ),
+          );
+      final tickets = [
+        bug('x', to: 'thanh', opened: 'Ryan'),
+        bug('y', by: 'Luci', opened: 'Cat'),
+        bug('z', to: 'bob', opened: 'Cat'),
+      ];
+      List<String> ids(FilterState f) =>
+          filter(_q(tickets, f)).map((t) => t.id).toList();
+      expect(
+        ids(const FilterState(assignees: {'thanh'}, resolvers: {'Luci'})),
+        ['x', 'y'],
+      );
+      expect(ids(const FilterState(assignees: {'thanh'}, reporters: {'Cat'})), [
+        'x',
+        'y',
+        'z',
+      ]);
+      // Other filters still narrow what the people let through.
+      expect(
+        ids(
+          const FilterState(
+            assignees: {'thanh'},
+            reporters: {'Cat'},
+            search: 'nothing-matches-this',
+          ),
+        ),
+        isEmpty,
+      );
+    });
+
     test('saved view: mine = todo + inprogress', () {
       final tickets = [
         _t(id: 'a'),

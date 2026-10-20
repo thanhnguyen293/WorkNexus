@@ -279,4 +279,73 @@ void main() {
     );
     expect(f.groups, isEmpty);
   });
+
+  group('with a catalog', () {
+    const derive = DeriveBoardFacets();
+    BoardFacets facets(List<Ticket> tickets, BoardFacetCatalog catalog) =>
+        derive(
+          BoardFacetsInput(
+            tickets: tickets,
+            scope: BoardFacetScope.bug,
+            catalog: catalog,
+          ),
+        );
+    BoardFacetGroup group(BoardFacets f, BoardFacetKind kind) =>
+        f.groups.firstWhere((g) => g.kind == kind);
+
+    test('lists every choice, with 0 for those no ticket carries', () {
+      final f = facets(
+        [_bug(id: '1', severity: 2), _bug(id: '2', severity: 2)],
+        const BoardFacetCatalog({
+          BoardFacetKind.severity: [
+            BoardFacetChoice('1'),
+            BoardFacetChoice('2'),
+            BoardFacetChoice('3'),
+          ],
+        }),
+      );
+      final severity = group(f, BoardFacetKind.severity);
+      expect(severity.options.map((o) => o.value), ['1', '2', '3']);
+      expect(severity.options.map((o) => o.count), [0, 2, 0]);
+    });
+
+    test('keeps a dimension whose tickets all carry one value', () {
+      final f = facets(
+        [_bug(id: '1', assignee: 'thanh')],
+        const BoardFacetCatalog({
+          BoardFacetKind.assignee: [
+            BoardFacetChoice('thanh', label: 'Thanh Nguyen'),
+            BoardFacetChoice('an', label: 'An Le'),
+          ],
+        }),
+      );
+      final assignee = group(f, BoardFacetKind.assignee);
+      expect(assignee.options.map((o) => o.label), ['Thanh Nguyen', 'An Le']);
+      expect(assignee.options.first.count, 1);
+    });
+
+    test('adds what the tickets carry that the catalog lacks, after it', () {
+      final f = facets(
+        [_bug(id: '1', assignee: 'guest'), _bug(id: '2', assignee: 'thanh')],
+        const BoardFacetCatalog({
+          BoardFacetKind.assignee: [BoardFacetChoice('thanh')],
+        }),
+      );
+      expect(group(f, BoardFacetKind.assignee).options.map((o) => o.value), [
+        'thanh',
+        'guest',
+      ]);
+    });
+
+    test('leaves a dimension it does not name to the tickets', () {
+      final f = facets(
+        [_bug(id: '1', severity: 1)],
+        const BoardFacetCatalog({
+          BoardFacetKind.assignee: [BoardFacetChoice('thanh')],
+        }),
+      );
+      // One severity cannot narrow anything, and the catalog adds none.
+      expect(f.groups.any((g) => g.kind == BoardFacetKind.severity), isFalse);
+    });
+  });
 }
