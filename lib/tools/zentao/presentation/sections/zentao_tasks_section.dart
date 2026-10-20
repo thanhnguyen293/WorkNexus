@@ -79,6 +79,7 @@ class ZentaoTasksSection extends ConsumerWidget {
           bugs: false,
           modes: modes,
           viewMode: viewMode,
+          filtering: !isRelated,
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
@@ -94,9 +95,10 @@ class ZentaoTasksSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated && !dueThisWeek,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.related);
+                // Related to me is a filter of its own: no others on it.
+                ref.read(filterStateProvider.notifier)
+                  ..clearAll()
+                  ..setSavedView(SavedView.related);
                 ref.read(zentaoTaskDueThisWeekProvider.notifier).set(false);
               },
             ),

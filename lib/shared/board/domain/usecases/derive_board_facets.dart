@@ -104,21 +104,23 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
   BoardFacets call(BoardFacetsInput input) {
     if (input.scope == BoardFacetScope.none) return BoardFacets.empty;
     final kinds = switch (input.scope) {
-      // Status first: a table has no columns to tell them apart.
+      // The ones picked most first: the people (one OR box), then the
+      // status (a table has no columns to tell them apart), then what the
+      // bug is.
       BoardFacetScope.bug => const [
-        BoardFacetKind.status,
         BoardFacetKind.assignee,
         BoardFacetKind.resolvedBy,
         BoardFacetKind.openedBy,
-        BoardFacetKind.confirmed,
+        BoardFacetKind.status,
         BoardFacetKind.severity,
         BoardFacetKind.priority,
         BoardFacetKind.bugType,
         BoardFacetKind.resolution,
+        BoardFacetKind.confirmed,
       ],
       BoardFacetScope.task => const [
-        BoardFacetKind.status,
         BoardFacetKind.assignee,
+        BoardFacetKind.status,
         BoardFacetKind.priority,
       ],
       BoardFacetScope.gitlabMergeRequest => const [

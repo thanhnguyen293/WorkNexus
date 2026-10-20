@@ -91,6 +91,7 @@ class ZentaoBugsSection extends ConsumerWidget {
           bugs: true,
           modes: modes,
           viewMode: viewMode,
+          filtering: !isRelated,
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
@@ -108,9 +109,10 @@ class ZentaoBugsSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.related);
+                // Related to me is a filter of its own: no others on it.
+                ref.read(filterStateProvider.notifier)
+                  ..clearAll()
+                  ..setSavedView(SavedView.related);
                 ref
                     .read(zentaoBugTabProvider.notifier)
                     .set(ZenTaoBugBrowseType.relatedToMe);
