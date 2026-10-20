@@ -8,15 +8,14 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/hover_surface.dart';
-import '../../../../core/widgets/view_mode_tab_bar.dart';
 import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
+import '../../../../shared/board/presentation/widgets/board_toolbar.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
 import '../providers/gitlab_scope.dart';
@@ -105,32 +104,16 @@ class GitlabIssuesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Viewport toolbar
-        Container(
-          decoration: BoxDecoration(
-            color: c.surface,
-            border: Border(bottom: context.hairlineSide),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.xs),
-          child: Row(
-            children: [
-              const Spacer(),
-              ViewModeTabBar(
-                modes: modes,
-                selectedModeId: viewMode,
-                onModeSelected: (m) {
-                  if (m.value == 'board') {
-                    ref
-                        .read(gitlabKindProvider.notifier)
-                        .set(GitLabItemKind.issue);
-                  }
-                  ref.read(appNavProvider.notifier).setViewMode(m);
-                },
-              ),
-              SizedBox(width: s.sm),
-              const GitLabBoardRefreshButton(),
-            ],
-          ),
+        BoardToolbar(
+          refresh: const GitLabBoardRefreshButton(),
+          modes: modes,
+          viewMode: viewMode,
+          onViewMode: (m) {
+            if (m.value == 'board') {
+              ref.read(gitlabKindProvider.notifier).set(GitLabItemKind.issue);
+            }
+            ref.read(appNavProvider.notifier).setViewMode(m);
+          },
         ),
         Expanded(child: body),
       ],
