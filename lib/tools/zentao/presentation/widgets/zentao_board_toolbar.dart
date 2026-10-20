@@ -23,6 +23,7 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
     required this.scopes,
     required this.modes,
     required this.viewMode,
+    this.filtering = true,
   });
 
   /// The bug board, else the task board.
@@ -32,6 +33,9 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
   final List<AppSegmentedTab> scopes;
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
+
+  /// Off on a view that is a filter of its own (Related to me).
+  final bool filtering;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,6 +57,7 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
               catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
               // Picking a filter shows it over every ticket: the All view.
               onPick: scopes.first.active ? null : scopes.first.onTap,
+              enabled: filtering,
             ),
             const Spacer(),
             ZenTaoBoardRefreshButton(bugs: bugs),

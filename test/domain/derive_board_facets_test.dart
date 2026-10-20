@@ -249,9 +249,10 @@ void main() {
     expect(
       f.groups.map((g) => g.kind),
       containsAllInOrder([
-        BoardFacetKind.status,
+        // People first, then the status; confirmation last.
         BoardFacetKind.resolvedBy,
         BoardFacetKind.openedBy,
+        BoardFacetKind.status,
         BoardFacetKind.confirmed,
       ]),
     );

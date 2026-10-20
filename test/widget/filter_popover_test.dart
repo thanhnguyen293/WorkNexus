@@ -26,7 +26,10 @@ void main() {
     await resetTestLocator(db);
   });
 
-  Future<ProviderContainer> pump(WidgetTester tester) async {
+  Future<ProviderContainer> pump(
+    WidgetTester tester, {
+    bool enabled = true,
+  }) async {
     tester.view.physicalSize = const Size(1400, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -46,11 +49,14 @@ void main() {
             surface: SurfaceStyle.outline,
             density: AppDensity.comfortable,
           ),
-          home: const Scaffold(
+          home: Scaffold(
             body: Column(
               children: [
-                Align(alignment: Alignment.centerLeft, child: FiltersButton()),
-                Expanded(child: SizedBox.expand(key: _outside)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FiltersButton(enabled: enabled),
+                ),
+                const Expanded(child: SizedBox.expand(key: _outside)),
               ],
             ),
           ),
@@ -77,6 +83,34 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(clearAll(), findsNothing);
+    expect(container.read(advFilterOpenProvider), isFalse);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('a disabled Filters button opens nothing', (tester) async {
+    final container = await pump(tester, enabled: false);
+
+    await tester.tap(find.byIcon(LucideIcons.funnel300));
+    await tester.pumpAndSettle();
+
+    expect(clearAll(), findsNothing);
+    expect(container.read(advFilterOpenProvider), isFalse);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('disabling the Filters button closes its popover', (
+    tester,
+  ) async {
+    final container = await pump(tester);
+    container.read(advFilterOpenProvider.notifier).state = true;
+    await tester.pumpAndSettle();
+    expect(clearAll(), findsOneWidget);
+
+    await pump(tester, enabled: false);
+    await tester.pumpAndSettle();
+
     expect(container.read(advFilterOpenProvider), isFalse);
 
     await disposeTree(tester);
