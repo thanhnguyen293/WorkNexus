@@ -1539,6 +1539,12 @@
   "notificationsRefreshFailed": "Couldn't refresh — showing the last saved notifications",
   "notificationsActionFailed": "Couldn't update the notification on ZenTao",
   "notificationsOpenFailed": "Couldn't open this item",
+  "notificationsNewCount": "{count} new ZenTao notifications",
+  "@notificationsNewCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "notificationsUndated": "Undated",
   "dashboardWorkSyncFailed": "Couldn't sync from ZenTao — showing the last saved list",
   "dashboardTasksTab": "Tasks",
