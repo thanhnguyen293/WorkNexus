@@ -35,28 +35,25 @@ class MiniAppLoginCapability implements MiniAppPageCapability {
   );
 
   @override
-  void attach(InAppWebViewController controller, MiniAppPageContext page) {
-    controller.addJavaScriptHandler(
-      handlerName: 'miniAppLogin',
-      callback: (args) async {
-        if (args.isEmpty || args.first != token) return null;
-        final found = await page.ref.read(findSavedWebLoginProvider)(
-          await controller.getUrl(),
-        );
-        if (found case Err(:final failure)) {
-          appTalker.warning('Mini app login: ${failure.message}');
-        }
-        final login = found.valueOrNull;
-        if (login == null) return null;
-        final submit = !_submitted;
-        _submitted = true;
-        return {
-          'account': login.account,
-          'password': login.password,
-          'submit': submit,
-        };
-      },
-    );
+  void attach(MiniAppPageBridge bridge, MiniAppPageContext page) {
+    bridge.addHandler('miniAppLogin', (args) async {
+      if (args.isEmpty || args.first != token) return null;
+      final found = await page.ref.read(findSavedWebLoginProvider)(
+        await bridge.currentUrl(),
+      );
+      if (found case Err(:final failure)) {
+        appTalker.warning('Mini app login: ${failure.message}');
+      }
+      final login = found.valueOrNull;
+      if (login == null) return null;
+      final submit = !_submitted;
+      _submitted = true;
+      return {
+        'account': login.account,
+        'password': login.password,
+        'submit': submit,
+      };
+    });
   }
 
   /// Watches for ZenTao's login form — a visible, empty `password` field with

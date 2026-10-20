@@ -31,7 +31,7 @@ String? miniAppIdOfNotificationPayload(String payload) =>
 /// another site than the app's is always denied.
 ///
 /// The web view's JavaScript bridge is open to every frame (macOS injects it
-/// into iframes too), and [InAppWebViewController.getUrl] names the main
+/// into iframes too), and [MiniAppPageBridge.currentUrl] names the main
 /// frame, not the caller. So each call carries a [token] that only the
 /// main-frame script knows — a cross-origin iframe cannot read it — and a
 /// call without it is ignored.
@@ -55,65 +55,56 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
   bool isOwnCall(List<dynamic> args) => args.isNotEmpty && args.first == token;
 
   @override
-  void attach(InAppWebViewController controller, MiniAppPageContext page) {
+  void attach(MiniAppPageBridge bridge, MiniAppPageContext page) {
     final ref = page.ref;
     final permissions = ref.read(miniAppPermissionControllerProvider.notifier);
     Future<bool> onAppSite() async =>
-        const IsMiniAppOrigin()(page.app().url, await controller.getUrl());
+        const IsMiniAppOrigin()(page.app().url, await bridge.currentUrl());
 
-    controller.addJavaScriptHandler(
-      handlerName: 'miniAppNotificationState',
-      callback: (args) async {
-        if (!isOwnCall(args) || !await onAppSite()) return 'denied';
-        return switch (await permissions.remembered(page.app().id, _kinds)) {
-          MiniAppPermissionDecision.allow => 'granted',
-          MiniAppPermissionDecision.block => 'denied',
-          null => 'default',
-        };
-      },
-    );
+    bridge.addHandler('miniAppNotificationState', (args) async {
+      if (!isOwnCall(args) || !await onAppSite()) return 'denied';
+      return switch (await permissions.remembered(page.app().id, _kinds)) {
+        MiniAppPermissionDecision.allow => 'granted',
+        MiniAppPermissionDecision.block => 'denied',
+        null => 'default',
+      };
+    });
 
-    controller.addJavaScriptHandler(
-      handlerName: 'miniAppNotificationPermission',
-      callback: (args) async {
-        if (!isOwnCall(args)) return 'denied';
-        final at = await controller.getUrl();
-        if (!page.context.mounted) return 'denied';
-        final answer = await askMiniAppPermission(
-          page.context,
-          ref,
-          page.app(),
-          _kinds,
-          origin: at,
-        );
-        return answer == MiniAppPermissionDecision.allow ? 'granted' : 'denied';
-      },
-    );
+    bridge.addHandler('miniAppNotificationPermission', (args) async {
+      if (!isOwnCall(args)) return 'denied';
+      final at = await bridge.currentUrl();
+      if (!page.context.mounted) return 'denied';
+      final answer = await askMiniAppPermission(
+        page.context,
+        ref,
+        page.app(),
+        _kinds,
+        origin: at,
+      );
+      return answer == MiniAppPermissionDecision.allow ? 'granted' : 'denied';
+    });
 
-    controller.addJavaScriptHandler(
-      handlerName: 'miniAppNotify',
-      callback: (args) async {
-        if (args.length < 2 || !isOwnCall(args) || !await onAppSite()) return;
-        final app = page.app();
-        final allowed = await permissions.remembered(app.id, _kinds);
-        if (allowed != MiniAppPermissionDecision.allow) return;
-        final title = '${args[1]}';
-        final body = args.length > 2 ? '${args[2]}' : '';
-        final tag = args.length > 3 ? '${args[3]}' : '';
-        // The user is looking at this very page: it needs no pop-up.
-        final showing = ref.read(miniAppShownProvider(app.id));
-        if (showing && await const DesktopWindowService().isFocused()) return;
-        await ref
-            .read(miniAppNotifierProvider)
-            .show(
-              // One per tag, so a page updating a notification replaces it.
-              id: Object.hash(app.id, tag.isEmpty ? title : tag) & 0x7fffffff,
-              title: title,
-              body: body,
-              payload: miniAppNotificationPayload(app.id),
-            );
-      },
-    );
+    bridge.addHandler('miniAppNotify', (args) async {
+      if (args.length < 2 || !isOwnCall(args) || !await onAppSite()) return;
+      final app = page.app();
+      final allowed = await permissions.remembered(app.id, _kinds);
+      if (allowed != MiniAppPermissionDecision.allow) return;
+      final title = '${args[1]}';
+      final body = args.length > 2 ? '${args[2]}' : '';
+      final tag = args.length > 3 ? '${args[3]}' : '';
+      // The user is looking at this very page: it needs no pop-up.
+      final showing = ref.read(miniAppShownProvider(app.id));
+      if (showing && await const DesktopWindowService().isFocused()) return;
+      await ref
+          .read(miniAppNotifierProvider)
+          .show(
+            // One per tag, so a page updating a notification replaces it.
+            id: Object.hash(app.id, tag.isEmpty ? title : tag) & 0x7fffffff,
+            title: title,
+            body: body,
+            payload: miniAppNotificationPayload(app.id),
+          );
+    });
   }
 
   static const _script = r'''

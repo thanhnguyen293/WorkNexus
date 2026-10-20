@@ -12,14 +12,15 @@ import '../../domain/usecases/normalize_mini_app_url.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/mini_app_shortcuts.dart';
+import 'mini_app_linux_web_view.dart';
 import 'mini_app_load_error.dart';
 import 'mini_app_toolbar.dart';
 import 'mini_app_unsupported.dart';
 import 'mini_app_web_view.dart';
 
-/// One mini app: a browser-style bar over the web page. Windows and macOS
-/// embed the page; elsewhere (Linux has no web view backend) the page opens in
-/// the system browser instead. What the page is doing lives in the app's
+/// One mini app: a browser-style bar over the web page. Windows, macOS and
+/// Linux embed the page (Linux in its own web view, [MiniAppLinuxWebView]);
+/// elsewhere the page opens in the system browser instead. What the page is doing lives in the app's
 /// [MiniAppBrowserController]; this only draws it and keeps the address field.
 class MiniAppView extends ConsumerStatefulWidget {
   const MiniAppView({super.key, required this.app, this.active = true});
@@ -32,7 +33,8 @@ class MiniAppView extends ConsumerStatefulWidget {
 
   static bool get embedded =>
       defaultTargetPlatform == TargetPlatform.windows ||
-      defaultTargetPlatform == TargetPlatform.macOS;
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
 
   @override
   ConsumerState<MiniAppView> createState() => _MiniAppViewState();
@@ -44,7 +46,12 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
 
   /// Kept while the app is unchanged: the same widget instance is not rebuilt,
   /// so the page is left alone on every progress tick of the bar above it.
-  late MiniAppWebView _webView = MiniAppWebView(app: widget.app);
+  late Widget _webView = _webViewOf(widget.app);
+
+  static Widget _webViewOf(MiniApp app) =>
+      defaultTargetPlatform == TargetPlatform.linux
+      ? MiniAppLinuxWebView(app: app)
+      : MiniAppWebView(app: app);
 
   @override
   void initState() {
@@ -77,7 +84,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
   void didUpdateWidget(MiniAppView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.app != widget.app) {
-      _webView = MiniAppWebView(app: widget.app);
+      _webView = _webViewOf(widget.app);
     }
     if (oldWidget.active != widget.active) _syncActivity();
   }
