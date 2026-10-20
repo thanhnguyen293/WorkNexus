@@ -76,9 +76,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify "Assigned to me" and "All tasks" exist
+    // Verify "Assigned to me" and "All" exist
     expect(find.text('Assigned to me'), findsOneWidget);
-    expect(find.text('All tasks'), findsOneWidget);
+    expect(find.text('All'), findsOneWidget);
   });
 }
 
