@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_table_providers.dart';
@@ -79,7 +80,7 @@ class _ZentaoBugSectionHeaderState
 
     return Container(
       color: c.surface,
-      padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, s.xs),
+      padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.md),
       child: Row(
         children: [
           MenuAnchor(
@@ -151,7 +152,9 @@ class _ZentaoBugSectionHeaderState
             style: context.typography.body.copyWith(color: c.textTertiary),
           ),
           const Spacer(),
-          FilledButton.icon(
+          AppButton.filled(
+            size: AppButtonSize.small,
+            icon: LucideIcons.plus300,
             onPressed: () => ref
                 .read(appNavProvider.notifier)
                 .openEditor(
@@ -160,16 +163,7 @@ class _ZentaoBugSectionHeaderState
                     productId: selectedProduct?.productId ?? '0',
                   ),
                 ),
-            icon: const Icon(LucideIcons.plus300, size: 16),
-            label: Text(l.newBug),
-            style: FilledButton.styleFrom(
-              backgroundColor: c.accent,
-              foregroundColor: c.onAccent,
-              padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.xs),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(context.radii.sm),
-              ),
-            ),
+            child: Text(l.newBug),
           ),
         ],
       ),
