@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/providers.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -40,7 +41,7 @@ class _NotificationAlertsState extends ConsumerState<NotificationAlerts> {
   @override
   void initState() {
     super.initState();
-    _taps = ref.read(notificationDesktopNotifierProvider).taps.listen(_onTap);
+    _taps = ref.read(desktopNotifierProvider).taps.listen(_onTap);
     ref.listenManual<AsyncValue<List<ZenTaoNotification>>>(
       notificationsProvider,
       (_, next) {
@@ -65,7 +66,7 @@ class _NotificationAlertsState extends ConsumerState<NotificationAlerts> {
     if (!mounted) return;
     if (focused && ref.read(notificationsPanelOpenProvider)) return;
     final l = AppL10n.of(context);
-    final notifier = ref.read(notificationDesktopNotifierProvider);
+    final notifier = ref.read(desktopNotifierProvider);
     if (fresh.length > _maxEach) {
       await notifier.show(
         id: _countId,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/adapters/provider_adapter.dart';
+import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/zentao_bug_column.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
@@ -56,21 +57,50 @@ class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
     }
     final pages = ref.read(zentaoViewPagesProvider);
     final sort = ref.read(zentaoBugFetchSortProvider);
-    // A view made of several (Related to me) fetches the same page of each.
+    Future<Result<ViewPage>> fetch(String code, int page) =>
+        pages.syncProductBugsPage(
+          accountId: product.accountId,
+          productId: product.productId,
+          browseType: code,
+          page: page,
+          limit: limit,
+          sort: sort,
+          cancel: cancel,
+        );
+    if (view.also.isEmpty) return fetch(view.code, page);
+    // A view made of several (Related to me) is read whole, each of its views
+    // to its own end, as one page. Paged together, page N of each would not
+    // be the top of their merged order (a later page of one can sort before
+    // an earlier page of another), and a view that ran out would be fetched
+    // again: ZenTao answers a page past the end with its first.
     return const MergeViewPages()(
       await Future.wait([
-        for (final code in view.codes)
-          pages.syncProductBugsPage(
-            accountId: product.accountId,
-            productId: product.productId,
-            browseType: code,
-            page: page,
-            limit: limit,
-            sort: sort,
-            cancel: cancel,
-          ),
+        for (final code in view.codes) _wholeView((p) => fetch(code, p)),
       ]),
     );
+  }
+
+  /// Every page of one view, one after another, as a single last page.
+  static Future<Result<ViewPage>> _wholeView(
+    Future<Result<ViewPage>> Function(int page) fetch,
+  ) async {
+    final tickets = <Ticket>[];
+    for (var page = 1; ; page++) {
+      final res = await fetch(page);
+      switch (res) {
+        case Err():
+          return res;
+        case Ok(:final value):
+          tickets.addAll(value.tickets);
+          // An empty page ends it too: a view that claims more but sends
+          // nothing must not be asked forever.
+          if (!value.hasMore || value.tickets.isEmpty) {
+            return Ok(
+              ViewPage(tickets: tickets, total: value.total, hasMore: false),
+            );
+          }
+      }
+    }
   }
 }
 

@@ -53,6 +53,15 @@ void main() {
         );
       },
     );
+
+    // "Assigned to me" gave way to "Related to me" on the ZenTao boards; a
+    // preset saved before must not filter by a view no tab shows.
+    test('a preset saved on Assigned to me opens on Related to me', () {
+      expect(
+        decodeFilterState('{"savedView":"mine"}').savedView,
+        SavedView.related,
+      );
+    });
   });
 
   group('LocalSavedFilterRepository', () {

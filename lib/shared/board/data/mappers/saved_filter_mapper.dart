@@ -43,7 +43,7 @@ FilterState decodeFilterState(String json) {
     return const FilterState();
   }
   return FilterState(
-    savedView: _enumByName(SavedView.values, map['savedView']) ?? SavedView.all,
+    savedView: _savedView(map['savedView']),
     providers: _enumSet(ProviderType.values, map['providers']),
     accountIds: _stringSet(map['accountIds']),
     projectIds: _stringSet(map['projectIds']),
@@ -61,6 +61,17 @@ FilterState decodeFilterState(String json) {
     search: map['search']?.toString() ?? '',
   );
 }
+
+/// The saved view named [name]. "mine" (Assigned to me), the ZenTao boards'
+/// view before "Related to me" took its place, is still in presets saved then:
+/// it opens as Related to me, or the board would filter by a view none of its
+/// tabs shows.
+SavedView _savedView(Object? name) =>
+    switch (_enumByName(SavedView.values, name)) {
+      null => SavedView.all,
+      SavedView.mine => SavedView.related,
+      final view => view,
+    };
 
 SavedFilter savedFilterFromRow(SavedFilterRow r) => SavedFilter(
   id: r.id,

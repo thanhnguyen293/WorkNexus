@@ -1,5 +1,6 @@
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
+import '../../../../core/di/providers.dart';
 import '../../../../core/platform/desktop_window_service.dart';
 import '../../domain/entities/mini_app_permission.dart';
 import '../../domain/usecases/is_mini_app_origin.dart';
@@ -96,7 +97,7 @@ class MiniAppNotificationCapability implements MiniAppPageCapability {
       final showing = ref.read(miniAppShownProvider(app.id));
       if (showing && await const DesktopWindowService().isFocused()) return;
       await ref
-          .read(miniAppNotifierProvider)
+          .read(desktopNotifierProvider)
           .show(
             // One per tag, so a page updating a notification replaces it.
             id: Object.hash(app.id, tag.isEmpty ? title : tag) & 0x7fffffff,

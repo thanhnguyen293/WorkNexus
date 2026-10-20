@@ -16,6 +16,7 @@ import '../domain/repositories/ticket_repository.dart';
 import '../domain/repositories/workspace_repository.dart';
 import '../domain/usecases/resolve_zentao_ticket.dart';
 import '../domain/value_objects/account_sync_status.dart';
+import '../platform/desktop_notifier.dart';
 import 'locator.dart';
 
 // Reactive Riverpod state only. The object graph (databases, repositories,
@@ -24,6 +25,12 @@ import 'locator.dart';
 // reactive reads and derived state layered on top of those services.
 
 // ---- Shared reactive reads (drift streams via the service locator) ----
+
+/// OS notifications, one notifier for every feature that raises them (mini
+/// apps, the ZenTao bell, …), so a test silences them all in one override.
+final desktopNotifierProvider = Provider<DesktopNotifier>(
+  (ref) => getIt<DesktopNotifier>(),
+);
 
 final ticketsProvider = StreamProvider<List<Ticket>>(
   (ref) => getIt<TicketRepository>().watchTickets(),

@@ -40,8 +40,38 @@ void main() {
   });
 
   test('tells accounts apart', () {
-    final r = find((seen: {'zt:1'}, current: [_n('1', account: 'other')]));
+    final r = find((
+      seen: {'zt:1', 'other:9'},
+      current: [_n('1', account: 'other')],
+    ));
     expect(r.fresh.single.accountId, 'other');
+  });
+
+  // The first list is the local database: empty on a fresh install (or for
+  // an account just added) until the first fetch fills it.
+  test("an account's first notifications are its backlog, not news", () {
+    final empty = find((seen: null, current: const []));
+    final fetched = find((seen: empty.seen, current: [_n('1'), _n('2')]));
+    expect(fetched.fresh, isEmpty);
+    final added = find((
+      seen: fetched.seen,
+      current: [
+        _n('1'),
+        _n('2'),
+        _n('7', account: 'new'),
+      ],
+    ));
+    expect(added.fresh, isEmpty);
+    final later = find((
+      seen: added.seen,
+      current: [
+        _n('1'),
+        _n('2'),
+        _n('7', account: 'new'),
+        _n('3'),
+      ],
+    ));
+    expect(later.fresh.single.id, '3');
   });
 
   test('one that dropped off the list and came back is not news', () {

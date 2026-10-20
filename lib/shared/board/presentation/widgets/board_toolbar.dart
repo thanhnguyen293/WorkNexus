@@ -7,13 +7,14 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// The bar over a GitLab or GitHub board, one row of controls at one height,
-/// laid out like the ZenTao boards' toolbar: the quick [filters] on the left;
+/// The bar over a board, one row of controls at one height: the quick
+/// [filters] (and the board's [filtersButton], if it has one) on the left;
 /// [refresh] and the view [modes] on the right.
 class BoardToolbar extends StatelessWidget {
   const BoardToolbar({
     super.key,
     this.filters = const [],
+    this.filtersButton,
     required this.refresh,
     required this.modes,
     required this.viewMode,
@@ -22,6 +23,9 @@ class BoardToolbar extends StatelessWidget {
 
   /// Left out when empty.
   final List<AppSegmentedTab> filters;
+
+  /// The advanced filters, after the quick ones.
+  final Widget? filtersButton;
   final Widget refresh;
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
@@ -42,6 +46,7 @@ class BoardToolbar extends StatelessWidget {
           spacing: s.sm,
           children: [
             if (filters.isNotEmpty) AppSegmentedTabs(tabs: filters),
+            ?filtersButton,
             const Spacer(),
             refresh,
             AppSegmentedTabs(

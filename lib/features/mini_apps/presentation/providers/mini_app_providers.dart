@@ -5,7 +5,6 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/credential_store.dart';
-import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/mini_app.dart';
 import '../../domain/entities/mini_app_permission.dart';
 import '../../domain/repositories/mini_app_browsing_data_repository.dart';
@@ -46,11 +45,6 @@ final moveMiniAppProvider = Provider<MoveMiniApp>(
 
 final resolveMiniAppPermissionProvider = Provider<ResolveMiniAppPermission>(
   (ref) => getIt<ResolveMiniAppPermission>(),
-);
-
-/// OS notifications, for what a mini app's page asks to show.
-final miniAppNotifierProvider = Provider<DesktopNotifier>(
-  (ref) => getIt<DesktopNotifier>(),
 );
 
 /// The saved sign-in for the login page of a ZenTao server the app has an
