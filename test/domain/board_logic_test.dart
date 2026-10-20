@@ -562,9 +562,13 @@ void main() {
       expect(board.total, 0);
     });
 
-    test('on Assigned to me every column draws on its one view', () {
+    test('on Related to me every column draws on its one merged view', () {
       for (final c in ZenTaoBugColumn.values) {
-        expect(ZenTaoBugStream.of(c, mine: true).code, 'assigntome');
+        expect(ZenTaoBugStream.of(c, related: true).codes, [
+          'assigntome',
+          'openedbyme',
+          'resolvedbyme',
+        ]);
       }
     });
 

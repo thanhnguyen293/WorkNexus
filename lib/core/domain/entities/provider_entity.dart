@@ -84,6 +84,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     String? openedBy,
     DateTime? openedDate,
     String? finishedBy,
+    // Who finished it (login handle), for "related to me" (see
+    // `IsRelatedToMe`); [finishedBy] is the name shown.
+    String? finishedByHandle,
     DateTime? finishedDate,
     String? closedBy,
     DateTime? closedDate,

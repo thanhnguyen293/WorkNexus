@@ -80,10 +80,10 @@ final zentaoBugTabProvider =
       ZenTaoBugTabController.new,
     );
 
-/// Whether the bug board is on the Assigned-to-me tab, whose one server view
+/// Whether the bug board is on the Related-to-me tab, whose one merged view
 /// feeds every column (see [ZenTaoBugStream.of]).
-final zentaoBugMineProvider = Provider<bool>(
-  (ref) => ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.assignedToMe,
+final zentaoBugRelatedProvider = Provider<bool>(
+  (ref) => ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.relatedToMe,
 );
 
 class ZenTaoExecutionSelection {

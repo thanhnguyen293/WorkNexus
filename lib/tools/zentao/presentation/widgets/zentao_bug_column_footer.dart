@@ -19,15 +19,17 @@ class ZenTaoBugColumnFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(zentaoBugStreamsProvider.notifier);
-    final mine = ref.watch(zentaoBugMineProvider);
-    final view = ZenTaoBugStream.of(column, mine: mine);
+    final related = ref.watch(zentaoBugRelatedProvider);
+    final view = ZenTaoBugStream.of(column, related: related);
     // One view feeds several columns (To close → Resolved, Postponed,
     // Non-fix; Assigned to me → all of them): what it has turned up is the
     // cards across all of them.
     final visible = ref.watch(
       zentaoBugBoardProvider.select(
         (board) => board.columns
-            .where((c) => ZenTaoBugStream.of(c.column, mine: mine) == view)
+            .where(
+              (c) => ZenTaoBugStream.of(c.column, related: related) == view,
+            )
             .fold(0, (sum, c) => sum + c.count),
       ),
     );

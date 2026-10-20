@@ -93,6 +93,7 @@
   "unassigned": "Unassigned",
   "noBoardFilters": "No filters for this board",
   "assignedToMe": "Assigned to me",
+  "relatedToMe": "Related to me",
   "resolvedByMe": "Resolved by me",
   "bugTabAll": "All",
   "bugTabUnclosed": "Unclosed",

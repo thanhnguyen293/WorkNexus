@@ -274,6 +274,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       openedBy: accountName(e.openedBy),
       openedDate: parseZenTaoDate(e.openedDate),
       finishedBy: accountName(e.finishedBy),
+      finishedByHandle: accountHandle(e.finishedBy),
       finishedDate: parseZenTaoDate(e.finishedDate),
       closedBy: accountName(e.closedBy),
       closedDate: parseZenTaoDate(e.closedDate),

@@ -11,25 +11,26 @@ class IsAssignedToMe {
   const IsAssignedToMe();
 
   bool call(Ticket ticket, Account account) {
-    final me = account.handle.trim().toLowerCase();
-    if (me.isEmpty) return false;
-    bool isMe(String? name) {
-      if (name == null || name.trim().isEmpty) return false;
-      final n = name.trim().toLowerCase();
-      if (n == me) return true;
-      final cleanN = n.replaceAll(RegExp(r'[\._\s\-]'), '');
-      final cleanMe = me.replaceAll(RegExp(r'[\._\s\-]'), '');
-      // Separators may differ (`thanh.nguyen` / `thanh_nguyen`); a mere
-      // prefix is someone else (`thanh` is not `thanhle`).
-      return cleanN.isNotEmpty && cleanN == cleanMe;
-    }
-
+    bool isMe(String? name) => isHandleOf(name, account);
     return switch (ticket.providerType) {
       ProviderType.zentao => isMe(ticket.assignee),
       ProviderType.gitlab || ProviderType.github =>
         isMe(ticket.assignee) || _logins(ticket.providerEntity).any(isMe),
       _ => false,
     };
+  }
+
+  /// Whether [name] is [account]'s own handle. Separators may differ
+  /// (`thanh.nguyen` / `thanh_nguyen`); a mere prefix is someone else
+  /// (`thanh` is not `thanhle`).
+  static bool isHandleOf(String? name, Account account) {
+    final me = account.handle.trim().toLowerCase();
+    if (me.isEmpty || name == null || name.trim().isEmpty) return false;
+    final n = name.trim().toLowerCase();
+    if (n == me) return true;
+    final cleanN = n.replaceAll(RegExp(r'[\._\s\-]'), '');
+    final cleanMe = me.replaceAll(RegExp(r'[\._\s\-]'), '');
+    return cleanN.isNotEmpty && cleanN == cleanMe;
   }
 
   static List<String> _logins(TicketProviderEntity? entity) => switch (entity) {

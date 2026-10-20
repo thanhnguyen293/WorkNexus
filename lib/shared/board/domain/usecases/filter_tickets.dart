@@ -9,6 +9,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../entities/filter_state.dart';
 import '../value_objects/saved_view.dart';
 import 'is_assigned_to_me.dart';
+import 'is_related_to_me.dart';
 
 /// Everything needed to filter/group tickets, kept as plain data so the logic is
 /// pure and unit-testable with no Flutter/IO.
@@ -93,6 +94,16 @@ bool savedViewMatches(
         return false;
       }
       return const IsAssignedToMe()(t, account);
+    case SavedView.related:
+      if (account == null) {
+        return t.status == UnifiedStatus.todo ||
+            t.status == UnifiedStatus.inprogress;
+      }
+      if (t.status == UnifiedStatus.done ||
+          t.providerStatus.trim().toLowerCase() == 'closed') {
+        return false;
+      }
+      return const IsRelatedToMe()(t, account);
     case SavedView.review:
       return t.status == UnifiedStatus.review;
     case SavedView.blocked:

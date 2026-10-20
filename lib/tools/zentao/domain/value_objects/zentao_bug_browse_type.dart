@@ -12,7 +12,10 @@ enum ZenTaoBugBrowseType {
   all('all'),
   unclosed('unclosed'),
   reportedByMe('openedbyme'),
-  assignedToMe('assigntome'),
+
+  /// The app's own tab rather than one ZenTao view: bugs assigned to,
+  /// opened by or resolved by me, loaded as [ZenTaoBugStream.relatedToMe].
+  relatedToMe('assigntome'),
   resolvedByMe('resolvedbyme'),
   assignedByMe('assignedbyme');
 

@@ -8,7 +8,7 @@ import '../../../../core/domain/value_objects/zentao_board_status.dart';
 import '../../../../core/domain/value_objects/zentao_task_column.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/util/synthetic_labels.dart';
-import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
+import '../../../../shared/board/domain/usecases/is_related_to_me.dart';
 import '../../../../shared/board/domain/usecases/scope_paged_view_tickets.dart';
 import '../../../../shared/board/domain/usecases/scope_provider_tickets.dart';
 import '../../../../shared/board/domain/value_objects/paged_view_loads.dart';
@@ -91,19 +91,19 @@ List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
   final execution = pickedExecution?.accountId == product.accountId
       ? pickedExecution
       : null;
-  final mine = ref.watch(zentaoBugMineProvider);
+  final related = ref.watch(zentaoBugRelatedProvider);
   final streams = ref.watch(zentaoBugStreamsProvider);
   final account = ref.watch(
     lookupsProvider.select((l) => l.accounts[product.accountId]),
   );
-  // Until Assigned to me's view loads, its cached bugs are those assigned to
+  // Until Related to me's view loads, its cached bugs are those that concern
   // the user locally; once it loads, the server's list decides.
-  if (mine &&
+  if (related &&
       account != null &&
-      !(streams[ZenTaoBugStream.assignedToMe]?.started ?? false)) {
+      !(streams[ZenTaoBugStream.relatedToMe]?.started ?? false)) {
     tickets = [
       for (final t in tickets)
-        if (const IsAssignedToMe()(t, account)) t,
+        if (const IsRelatedToMe()(t, account)) t,
     ];
   }
 
@@ -132,7 +132,8 @@ List<Ticket> scopeZenTaoBugs(Ref ref, List<Ticket> tickets) {
         slice: null,
       ),
       loads: PagedViewLoads.of(streams),
-      viewOf: (t) => ZenTaoBugStream.of(zentaoBugColumnFor(t), mine: mine),
+      viewOf: (t) =>
+          ZenTaoBugStream.of(zentaoBugColumnFor(t), related: related),
       columnOf: zentaoBugColumnFor,
     ),
   );

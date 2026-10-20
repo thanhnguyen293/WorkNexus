@@ -50,14 +50,14 @@ class ZentaoBugsSection extends ConsumerWidget {
         location.viewModes[location.section] ?? const ViewModeId('board');
 
     final filter = ref.watch(filterStateProvider);
-    final isMine = filter.savedView == SavedView.mine;
+    final isRelated = filter.savedView == SavedView.related;
     // The chip lives in the per-board filter (a first visit defaults to
-    // "mine"); the bug views that load follow it, or "mine" would be shown
-    // over the unclosed views' first pages only.
+    // "related to me"); the bug views that load follow it, or it would be
+    // shown over the unclosed views' first pages only.
     final tab = ref.watch(zentaoBugTabProvider);
-    final wantTab = isMine
-        ? ZenTaoBugBrowseType.assignedToMe
-        : (tab == ZenTaoBugBrowseType.assignedToMe
+    final wantTab = isRelated
+        ? ZenTaoBugBrowseType.relatedToMe
+        : (tab == ZenTaoBugBrowseType.relatedToMe
               ? ZenTaoBugBrowseType.unclosed
               : tab);
     // Only while on screen: the viewport keeps a few sections alive, and an
@@ -94,7 +94,7 @@ class ZentaoBugsSection extends ConsumerWidget {
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
-              active: !isMine,
+              active: !isRelated,
               onTap: () {
                 ref
                     .read(filterStateProvider.notifier)
@@ -105,15 +105,15 @@ class ZentaoBugsSection extends ConsumerWidget {
               },
             ),
             AppSegmentedTab(
-              label: l.assignedToMe,
-              active: isMine,
+              label: l.relatedToMe,
+              active: isRelated,
               onTap: () {
                 ref
                     .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.mine);
+                    .setSavedView(SavedView.related);
                 ref
                     .read(zentaoBugTabProvider.notifier)
-                    .set(ZenTaoBugBrowseType.assignedToMe);
+                    .set(ZenTaoBugBrowseType.relatedToMe);
               },
             ),
           ],

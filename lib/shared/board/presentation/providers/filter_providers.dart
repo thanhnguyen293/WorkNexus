@@ -82,7 +82,7 @@ class FilterController extends Notifier<FilterState> {
         key == 'zentao.bugs' ||
         key.startsWith('zentao.');
     final base = current != null ? _cleared(current) : const FilterState();
-    return isZenTao ? base.copyWith(savedView: SavedView.mine) : base;
+    return isZenTao ? base.copyWith(savedView: SavedView.related) : base;
   }
 
   void setWorkspace(String id) {

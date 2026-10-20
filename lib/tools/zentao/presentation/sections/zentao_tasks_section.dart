@@ -100,7 +100,7 @@ class ZentaoTasksSection extends ConsumerWidget {
     }
 
     final filter = ref.watch(filterStateProvider);
-    final isMine = filter.savedView == SavedView.mine;
+    final isRelated = filter.savedView == SavedView.related;
     final dueThisWeek = ref.watch(zentaoTaskDueThisWeekProvider);
 
     return Column(
@@ -116,7 +116,7 @@ class ZentaoTasksSection extends ConsumerWidget {
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
-              active: !isMine && !dueThisWeek,
+              active: !isRelated && !dueThisWeek,
               onTap: () {
                 ref
                     .read(filterStateProvider.notifier)
@@ -125,12 +125,12 @@ class ZentaoTasksSection extends ConsumerWidget {
               },
             ),
             AppSegmentedTab(
-              label: l.assignedToMe,
-              active: isMine && !dueThisWeek,
+              label: l.relatedToMe,
+              active: isRelated && !dueThisWeek,
               onTap: () {
                 ref
                     .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.mine);
+                    .setSavedView(SavedView.related);
                 ref.read(zentaoTaskDueThisWeekProvider.notifier).set(false);
               },
             ),

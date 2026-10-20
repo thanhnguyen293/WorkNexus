@@ -29,7 +29,7 @@ class ZenTaoBugTableView extends ConsumerWidget {
     final s = context.spacing;
     final table = ref.watch(zentaoBugTableProvider);
     final pending = table.pending;
-    final mine = ref.watch(zentaoBugMineProvider);
+    final related = ref.watch(zentaoBugRelatedProvider);
     final currentSort = ref.watch(zentaoBugTableSortProvider);
     final rows = table.rows;
 
@@ -117,7 +117,8 @@ class ZenTaoBugTableView extends ConsumerWidget {
                         return ZenTaoBugColumnFooter(
                           column: ZenTaoBugColumn.values.firstWhere(
                             (col) =>
-                                ZenTaoBugStream.of(col, mine: mine) == pending,
+                                ZenTaoBugStream.of(col, related: related) ==
+                                pending,
                           ),
                         );
                       },

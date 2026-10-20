@@ -4,6 +4,10 @@ enum SavedView {
   all,
   today,
   mine,
+
+  /// Mine in any role: assigned to me, or opened, resolved or finished by me
+  /// (the ZenTao boards' "Related to me").
+  related,
   review,
   blocked;
 
