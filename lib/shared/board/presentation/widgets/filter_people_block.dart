@@ -37,13 +37,7 @@ class FilterPeopleBlock extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                spacing: s.sm,
-                children: [
-                  AppSectionHeader(title: l.filterPeople),
-                  const _OrTag(),
-                ],
-              ),
+              AppSectionHeader(title: l.filterPeople, trailing: const _OrTag()),
               SizedBox(height: s.xxs),
               Text(
                 l.filterPeopleAnyHint,
