@@ -21,6 +21,7 @@ import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
 import '../providers/gitlab_scope.dart';
 import '../util/watch_gitlab_items.dart';
+import '../widgets/gitlab_board_refresh_button.dart';
 import '../widgets/gitlab_board_view.dart';
 
 /// The L5 Viewport section for GitLab Issues.
@@ -126,6 +127,8 @@ class GitlabIssuesSection extends ConsumerWidget {
                   ref.read(appNavProvider.notifier).setViewMode(m);
                 },
               ),
+              SizedBox(width: s.sm),
+              const GitLabBoardRefreshButton(),
             ],
           ),
         ),

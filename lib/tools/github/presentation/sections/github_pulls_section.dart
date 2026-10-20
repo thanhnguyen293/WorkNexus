@@ -21,6 +21,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../providers/github_board_providers.dart';
 import '../util/watch_github_items.dart';
+import '../widgets/github_board_refresh_button.dart';
 import '../widgets/github_board_view.dart';
 import '../widgets/github_pr_row.dart';
 
@@ -196,6 +197,8 @@ class GithubPullsSection extends ConsumerWidget {
                   ref.read(appNavProvider.notifier).setViewMode(m);
                 },
               ),
+              SizedBox(width: s.sm),
+              const GitHubBoardRefreshButton(),
             ],
           ),
         ),
