@@ -1,9 +1,11 @@
 /// A run of raw mentions jammed together (`@User1@User2`). Only plain names,
 /// standing alone: a package (`@types/node@20`), a fediverse handle
 /// (`@user@mastodon.social`) or an e-mail continues with `/`, `.domain` or
-/// a word before the `@`, and is left be.
+/// a word before the `@`, and is left be. A name may hold inner hyphens
+/// (`@Gabriel-Martin-Dev`).
 final _adjacentAt = RegExp(
-  r'(?<![\w./@])@[\p{L}\p{N}_]+(?:@[\p{L}\p{N}_]+)+'
+  r'(?<![\w./@])@[\p{L}\p{N}_]+(?:-[\p{L}\p{N}_]+)*'
+  r'(?:@[\p{L}\p{N}_]+(?:-[\p{L}\p{N}_]+)*)+'
   r'(?=$|[^\p{L}\p{N}_./@-]|\.(?!\w))',
   unicode: true,
 );
