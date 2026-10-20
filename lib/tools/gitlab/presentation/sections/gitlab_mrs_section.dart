@@ -9,16 +9,11 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/tools/tool_module.dart';
-import '../../../../core/widgets/hover_surface.dart';
-import '../../../../core/widgets/view_mode_tab_bar.dart';
+import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/domain/usecases/is_assigned_to_me.dart';
+import '../../../../shared/board/presentation/widgets/board_toolbar.dart';
 import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
 import '../providers/gitlab_scope.dart';
@@ -81,8 +76,6 @@ class GitlabMrsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     watchGitLabItems(context, ref, GitLabItemKind.mergeRequest);
     final l = AppL10n.of(context);
-    final c = context.colors;
-    final s = context.spacing;
     final viewMode =
         location.viewModes[location.section] ?? const ViewModeId('open');
 
@@ -160,99 +153,35 @@ class GitlabMrsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Viewport toolbar
-        Container(
-          decoration: BoxDecoration(
-            color: c.surface,
-            border: Border(bottom: context.hairlineSide),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.xs),
-          child: Row(
-            children: [
-              _FilterChip(
-                label: l.allOpen,
-                selected: activeChip == GitLabMrChip.allOpen,
-                onTap: () => ref
-                    .read(gitlabMrChipFilterProvider.notifier)
-                    .set(GitLabMrChip.allOpen),
+        BoardToolbar(
+          filters: [
+            for (final (chip, label) in [
+              (GitLabMrChip.allOpen, l.allOpen),
+              (GitLabMrChip.draft, l.draft),
+              (GitLabMrChip.inReview, l.inReview),
+              (GitLabMrChip.assignedToMe, l.assignedToMe),
+            ])
+              AppSegmentedTab(
+                label: label,
+                active: activeChip == chip,
+                onTap: () =>
+                    ref.read(gitlabMrChipFilterProvider.notifier).set(chip),
               ),
-              SizedBox(width: s.xs),
-              _FilterChip(
-                label: l.draft,
-                selected: activeChip == GitLabMrChip.draft,
-                onTap: () => ref
-                    .read(gitlabMrChipFilterProvider.notifier)
-                    .set(GitLabMrChip.draft),
-              ),
-              SizedBox(width: s.xs),
-              _FilterChip(
-                label: l.inReview,
-                selected: activeChip == GitLabMrChip.inReview,
-                onTap: () => ref
-                    .read(gitlabMrChipFilterProvider.notifier)
-                    .set(GitLabMrChip.inReview),
-              ),
-              SizedBox(width: s.xs),
-              _FilterChip(
-                label: l.assignedToMe,
-                selected: activeChip == GitLabMrChip.assignedToMe,
-                onTap: () => ref
-                    .read(gitlabMrChipFilterProvider.notifier)
-                    .set(GitLabMrChip.assignedToMe),
-              ),
-              const Spacer(),
-              ViewModeTabBar(
-                modes: modes,
-                selectedModeId: viewMode,
-                onModeSelected: (m) {
-                  if (m.value == 'board') {
-                    ref
-                        .read(gitlabKindProvider.notifier)
-                        .set(GitLabItemKind.mergeRequest);
-                  }
-                  ref.read(appNavProvider.notifier).setViewMode(m);
-                },
-              ),
-              SizedBox(width: s.sm),
-              const GitLabBoardRefreshButton(),
-            ],
-          ),
+          ],
+          refresh: const GitLabBoardRefreshButton(),
+          modes: modes,
+          viewMode: viewMode,
+          onViewMode: (m) {
+            if (m.value == 'board') {
+              ref
+                  .read(gitlabKindProvider.notifier)
+                  .set(GitLabItemKind.mergeRequest);
+            }
+            ref.read(appNavProvider.notifier).setViewMode(m);
+          },
         ),
         Expanded(child: body),
       ],
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-
-    return HoverSurface(
-      onTap: onTap,
-      selected: selected,
-      borderRadius: BorderRadius.circular(context.radii.sm),
-      color: selected ? c.selectionFill : c.surfaceSubtle,
-      padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xxs),
-      child: Text(
-        label,
-        style: context.typography.caption.copyWith(
-          color: selected ? c.accent : c.textSecondary,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-        ),
-      ),
     );
   }
 }
