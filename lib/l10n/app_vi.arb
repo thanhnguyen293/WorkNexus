@@ -1129,6 +1129,7 @@
   "notificationsRefreshFailed": "Không làm mới được — đang hiển thị thông báo đã lưu",
   "notificationsActionFailed": "Không cập nhật được thông báo trên ZenTao",
   "notificationsOpenFailed": "Không mở được mục này",
+  "notificationsNewCount": "{count} thông báo ZenTao mới",
   "notificationsUndated": "Không rõ ngày",
   "dashboardWorkSyncFailed": "Không đồng bộ được từ ZenTao — đang hiển thị danh sách đã lưu",
   "dashboardTasksTab": "Task",
