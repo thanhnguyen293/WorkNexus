@@ -23,6 +23,7 @@ import '../../domain/value_objects/gitlab_item_kind.dart';
 import '../providers/gitlab_board_providers.dart';
 import '../providers/gitlab_scope.dart';
 import '../util/watch_gitlab_items.dart';
+import '../widgets/gitlab_board_refresh_button.dart';
 import '../widgets/gitlab_board_view.dart';
 import '../widgets/gitlab_mr_table.dart';
 
@@ -212,6 +213,8 @@ class GitlabMrsSection extends ConsumerWidget {
                   ref.read(appNavProvider.notifier).setViewMode(m);
                 },
               ),
+              SizedBox(width: s.sm),
+              const GitLabBoardRefreshButton(),
             ],
           ),
         ),

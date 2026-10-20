@@ -19,6 +19,7 @@ import '../../../../core/widgets/view_mode_tab_bar.dart';
 import '../../domain/value_objects/github_item_kind.dart';
 import '../providers/github_board_providers.dart';
 import '../util/watch_github_items.dart';
+import '../widgets/github_board_refresh_button.dart';
 import '../widgets/github_board_view.dart';
 
 /// The L5 Viewport section for GitHub Issues.
@@ -121,6 +122,8 @@ class GithubIssuesSection extends ConsumerWidget {
                   ref.read(appNavProvider.notifier).setViewMode(m);
                 },
               ),
+              SizedBox(width: s.sm),
+              const GitHubBoardRefreshButton(),
             ],
           ),
         ),

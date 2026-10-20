@@ -18,6 +18,7 @@ import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../providers/zentao_board_providers.dart';
 import '../util/keep_bug_board_product.dart';
+import '../widgets/zentao_board_refresh_button.dart';
 import '../widgets/zentao_bug_board_view.dart';
 import '../widgets/zentao_bug_section_header.dart';
 import '../widgets/zentao_bug_table_view.dart';
@@ -156,6 +157,8 @@ class ZentaoBugsSection extends ConsumerWidget {
                 FiltersButton(
                   statusOption: zentaoStatusFilterOption(bugBoard: true),
                 ),
+                const Spacer(),
+                const ZenTaoBoardRefreshButton(bugs: true),
               ],
             ),
           ),

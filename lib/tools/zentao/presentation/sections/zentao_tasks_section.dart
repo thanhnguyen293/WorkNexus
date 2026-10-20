@@ -19,6 +19,7 @@ import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../providers/zentao_board_providers.dart';
 import '../util/keep_task_board_scope.dart';
+import '../widgets/zentao_board_refresh_button.dart';
 import '../widgets/zentao_status_filter_option.dart';
 import '../widgets/zentao_task_board_view.dart';
 import '../widgets/zentao_task_section_header.dart';
@@ -185,6 +186,8 @@ class ZentaoTasksSection extends ConsumerWidget {
                 FiltersButton(
                   statusOption: zentaoStatusFilterOption(bugBoard: false),
                 ),
+                const Spacer(),
+                const ZenTaoBoardRefreshButton(bugs: false),
               ],
             ),
           ),
