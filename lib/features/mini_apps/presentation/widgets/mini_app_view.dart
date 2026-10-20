@@ -133,6 +133,9 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
     }
   }
 
+  /// Back to the address the mini app was set up with.
+  void _goHome() => _browser.load(widget.app.url);
+
   void _onPointerDown(PointerDownEvent event) {
     if (event.buttons & kBackMouseButton != 0) {
       _browser.goBack();
@@ -160,6 +163,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
               hardReload: _browser.hardReload,
               back: _browser.goBack,
               forward: _browser.goForward,
+              home: _goHome,
               focusAddress: _focusAddress,
               devTools: _browser.openDevTools,
             )
@@ -175,6 +179,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
             onForward: state.canGoForward ? _browser.goForward : null,
             onReload: _browser.reload,
             onStop: _browser.stop,
+            onHome: _goHome,
             onDevTools: embedded ? _browser.openDevTools : null,
             onSubmitted: _go,
             onOpenExternal: () => _openExternal(

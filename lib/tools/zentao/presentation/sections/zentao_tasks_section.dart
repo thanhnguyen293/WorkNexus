@@ -7,7 +7,6 @@ import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../core/widgets/app_state_view.dart';
-import '../../../../core/widgets/coming_soon_view.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/domain/value_objects/saved_view.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
@@ -31,26 +30,17 @@ class ZentaoTasksSection extends ConsumerWidget {
   final Account account;
   final ToolLocation location;
 
+  /// The bug board's modes, in its order, so both boards read alike.
   static List<ToolViewMode> get modes => [
+    ToolViewMode(
+      id: const ViewModeId('board'),
+      label: (l) => l.viewBoard,
+      icon: LucideIcons.kanban300,
+    ),
     ToolViewMode(
       id: const ViewModeId('list'),
       label: (l) => l.viewList,
       icon: LucideIcons.list300,
-    ),
-    ToolViewMode(
-      id: const ViewModeId('kanban'),
-      label: (l) => l.viewKanban,
-      icon: LucideIcons.kanban300,
-    ),
-    ToolViewMode(
-      id: const ViewModeId('calendar'),
-      label: (l) => l.viewCalendar,
-      icon: LucideIcons.calendar300,
-    ),
-    ToolViewMode(
-      id: const ViewModeId('gantt'),
-      label: (l) => l.viewGantt,
-      icon: LucideIcons.chartGantt300,
     ),
   ];
 
@@ -58,7 +48,7 @@ class ZentaoTasksSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final viewMode =
-        location.viewModes[location.section] ?? const ViewModeId('list');
+        location.viewModes[location.section] ?? const ViewModeId('board');
     keepTaskBoardScope(context, ref, account, location);
 
     final Widget body;
@@ -70,33 +60,9 @@ class ZentaoTasksSection extends ConsumerWidget {
         title: l.zentaoPickExecution,
       );
     } else {
-      switch (viewMode.value) {
-        case 'kanban':
-          body = const ZenTaoTaskBoardView();
-        case 'calendar':
-          body = ComingSoonView(
-            icon: LucideIcons.calendar300,
-            title: l.viewCalendar,
-            body: 'Calendar view for ZenTao tasks is coming soon.',
-            actionLabel: l.switchToView(l.viewList),
-            onAction: () => ref
-                .read(appNavProvider.notifier)
-                .setViewMode(const ViewModeId('list')),
-          );
-        case 'gantt':
-          body = ComingSoonView(
-            icon: LucideIcons.chartGantt300,
-            title: l.viewGantt,
-            body: 'Gantt chart view for ZenTao tasks is coming soon.',
-            actionLabel: l.switchToView(l.viewKanban),
-            onAction: () => ref
-                .read(appNavProvider.notifier)
-                .setViewMode(const ViewModeId('kanban')),
-          );
-        case 'list':
-        default:
-          body = const ZenTaoTaskTableView();
-      }
+      body = viewMode.value == 'list'
+          ? const ZenTaoTaskTableView()
+          : const ZenTaoTaskBoardView();
     }
 
     final filter = ref.watch(filterStateProvider);
@@ -147,7 +113,7 @@ class ZentaoTasksSection extends ConsumerWidget {
           ],
         ),
 
-        // Section Body (Table, Kanban, or ComingSoon)
+        // Section Body (Board or Table)
         Expanded(child: body),
       ],
     );

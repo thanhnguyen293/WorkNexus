@@ -93,16 +93,11 @@ import_edges:
     rule: "5.1"
     owner_phase: "Phase 2"
   # Tools reading features/translation
-  - source: lib/tools/zentao/presentation/widgets/zentao_bug_card.dart
+  - source: lib/tools/zentao/presentation/widgets/zentao_ticket_card.dart
     target: lib/features/translation/presentation/translation_providers.dart
     rule: "tool_isolation"
     owner_phase: "Phase 4"
-    reason: "ZenTao bug card reads translation provider"
-  - source: lib/tools/zentao/presentation/widgets/zentao_task_card.dart
-    target: lib/features/translation/presentation/translation_providers.dart
-    rule: "tool_isolation"
-    owner_phase: "Phase 4"
-    reason: "ZenTao task card reads translation provider"
+    reason: "ZenTao bug and task card reads translation provider"
   - source: lib/tools/gitlab/presentation/widgets/gitlab_ticket_card.dart
     target: lib/features/translation/presentation/translation_providers.dart
     rule: "tool_isolation"

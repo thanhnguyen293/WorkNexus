@@ -9,7 +9,6 @@ import '../../core/domain/entities/ticket.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/navigation/app_nav_state.dart';
 import '../../core/tools/tool_module.dart';
-import '../../core/widgets/coming_soon_view.dart';
 import '../../l10n/app_localizations.dart';
 import 'presentation/detail/bug_attachments.dart';
 import 'presentation/detail/bug_detail_sections.dart';
@@ -68,20 +67,6 @@ class ZentaoModule extends ToolModule {
       scopeKind: ScopeKind.product,
       viewModes: ZentaoBugsSection.modes,
     ),
-    ToolSection(
-      id: const SectionId('zentao.docs'),
-      label: (l) => l.docs,
-      icon: LucideIcons.bookOpen300,
-      scopeKind: ScopeKind.library,
-      available: false,
-    ),
-    ToolSection(
-      id: const SectionId('zentao.sprints'),
-      label: (l) => l.sprints,
-      icon: LucideIcons.timer300,
-      scopeKind: ScopeKind.none,
-      available: false,
-    ),
   ];
 
   @override
@@ -111,18 +96,6 @@ class ZentaoModule extends ToolModule {
         return ZentaoBugsSection(account: account, location: location);
       case 'zentao.chat':
         return chatSection?.call(context) ?? const SizedBox.shrink();
-      case 'zentao.sprints':
-        return ComingSoonView(
-          icon: LucideIcons.timer300,
-          title: AppL10n.of(context).sprints,
-          body: '',
-        );
-      case 'zentao.docs':
-        return ComingSoonView(
-          icon: LucideIcons.bookOpen300,
-          title: AppL10n.of(context).docs,
-          body: '',
-        );
       default:
         return const SizedBox.shrink();
     }

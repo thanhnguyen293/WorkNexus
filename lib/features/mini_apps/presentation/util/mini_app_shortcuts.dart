@@ -9,6 +9,7 @@ Map<ShortcutActivator, VoidCallback> miniAppShortcuts({
   required VoidCallback hardReload,
   required VoidCallback back,
   required VoidCallback forward,
+  required VoidCallback home,
   required VoidCallback focusAddress,
   required VoidCallback devTools,
 }) => {
@@ -36,4 +37,5 @@ Map<ShortcutActivator, VoidCallback> miniAppShortcuts({
   const SingleActivator(LogicalKeyboardKey.f12): devTools,
   const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): back,
   const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true): forward,
+  const SingleActivator(LogicalKeyboardKey.home, alt: true): home,
 };

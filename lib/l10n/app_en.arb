@@ -145,6 +145,8 @@
     }
   },
   "task": "Task",
+  "cardKindBug": "Bug",
+  "cardKindTask": "Task",
   "summary": "Summary",
   "updated": "Updated",
   "priorityUrgent": "Urgent",
@@ -2115,6 +2117,7 @@
   "miniAppRemoveMessage": "It only leaves the rail. The website itself is not affected.",
   "miniAppOpenInBrowser": "Open in browser",
   "miniAppReload": "Reload",
+  "miniAppHome": "Home",
   "miniAppUnsupported": "Web pages can't be shown inside the app on this system.",
   "miniAppEdit": "Edit mini app",
   "miniAppIcon": "Icon",
