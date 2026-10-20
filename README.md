@@ -168,9 +168,12 @@ placeholder; no Jira adapter is implemented yet.
 - Pin any website to the rail as a **mini app** — Figma, Trello, a ZenTao web
   UI, an internal tool — with the site's icon or an image you pick, and a name
   of your own.
-- Each one is an embedded web view (WebView2 on Windows, WKWebView on macOS)
-  with back/forward, reload, stop, open-in-browser and the browser's usual
-  shortcuts; a page's own pop-ups (sign-in windows) open over it, inside the app.
+- Each one is an embedded web view (WebView2 on Windows, WKWebView on macOS,
+  WebKitGTK on Linux) with back/forward, reload, stop, open-in-browser and the
+  browser's usual shortcuts; a page's own pop-ups (sign-in windows) open over
+  it, inside the app. On Linux a pop-up loads in the page itself, only camera
+  and microphone are asked for, and the page hides while a dialog or panel of
+  the app is over it.
 - Per-site permission prompts — notifications, camera, microphone, location,
   clipboard, autoplay, downloads, local fonts — are remembered per mini app and
   can be changed in settings. A page's notifications become OS notifications

@@ -5,13 +5,14 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/mini_app_links.dart';
-import '../util/web_view_frame_rate.dart';
+import '../util/mini_app_page_driver.dart';
 import 'mini_app_browser_state.dart';
 import 'mini_app_providers.dart';
 
 /// The browsing of one mini app's page: what the toolbar and the cover show
 /// ([MiniAppBrowserState]) and the commands that drive the web view. The view
-/// only draws it, and hands the web view over once it exists ([attach]).
+/// only draws it, and hands the page over once its web view exists
+/// ([attach]).
 ///
 /// It also decides where the page starts — the link that opened the app, else
 /// the page it was last on, else its own address — and follows later links
@@ -21,7 +22,7 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
 
   final String appId;
 
-  InAppWebViewController? _web;
+  MiniAppPageDriver? _web;
   int _handledSeq = 0;
 
   /// The page to reopen next time, not kept yet: single-page sites move on
@@ -69,7 +70,7 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
     });
   }
 
-  void attach(InAppWebViewController web) {
+  void attach(MiniAppPageDriver web) {
     _web = web;
     unawaited(_applyActivity());
     unawaited(_applyBrightness());
@@ -100,17 +101,7 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
       return;
     }
     _appliedBrightness = brightness;
-    await web.callDevToolsProtocolMethod(
-      methodName: 'Emulation.setEmulatedMedia',
-      parameters: {
-        'features': [
-          {
-            'name': 'prefers-color-scheme',
-            'value': brightness == Brightness.dark ? 'dark' : 'light',
-          },
-        ],
-      },
-    );
+    await web.setColorScheme(brightness);
   }
 
   // ---- Off screen ----
@@ -138,41 +129,22 @@ class MiniAppBrowserController extends Notifier<MiniAppBrowserState> {
     final throttle = !_active && _keepRunning;
     if (pause != _paused) {
       _paused = pause;
-      await (pause ? web.pause() : web.resume());
+      await web.setSuspended(pause);
     }
     if (throttle != _throttled) {
       _throttled = throttle;
-      await setWebViewFrameRateLimit(web, throttle ? 1 : 0);
+      await web.setFrameRateLimit(throttle ? 1 : 0);
     }
   }
 
-  void load(String url) =>
-      _web?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+  void load(String url) => _web?.load(url);
 
   void reload() => _web?.reload();
 
-  /// A reload that skips the cache. Each web view offers it its own way, and
-  /// calling the other one's throws: WebView2 (Windows) through the DevTools
-  /// protocol, WKWebView (macOS) as a reload from the origin.
-  void hardReload() {
-    final web = _web;
-    if (web == null) return;
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.windows:
-        unawaited(
-          web.callDevToolsProtocolMethod(
-            methodName: 'Page.reload',
-            parameters: {'ignoreCache': true},
-          ),
-        );
-      case TargetPlatform.macOS:
-        unawaited(web.reloadFromOrigin());
-      default:
-        unawaited(web.reload());
-    }
-  }
+  /// A reload that skips the cache.
+  void hardReload() => _web?.hardReload();
 
-  void stop() => _web?.stopLoading();
+  void stop() => _web?.stop();
 
   void goBack() {
     if (state.canGoBack) _web?.goBack();

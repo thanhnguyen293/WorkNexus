@@ -170,9 +170,11 @@ và asset; chưa có adapter Jira.
 - Ghim website bất kỳ vào rail thành **mini app** — Figma, Trello, giao diện web
   ZenTao, công cụ nội bộ — với icon của trang hoặc ảnh tự chọn, và tên tùy ý.
 - Mỗi mini app là một web view nhúng (WebView2 trên Windows, WKWebView trên
-  macOS) có back/forward, reload, stop, mở bằng trình duyệt và các phím tắt
-  quen thuộc; cửa sổ pop-up của trang (cửa sổ đăng nhập) mở đè lên ngay trong
-  app.
+  macOS, WebKitGTK trên Linux) có back/forward, reload, stop, mở bằng trình
+  duyệt và các phím tắt quen thuộc; cửa sổ pop-up của trang (cửa sổ đăng nhập)
+  mở đè lên ngay trong app. Trên Linux pop-up mở ngay trong trang, chỉ hỏi
+  quyền camera và micro, và trang tạm ẩn khi có dialog hay panel của app đè
+  lên.
 - Hỏi quyền theo từng trang — thông báo, camera, micro, vị trí, clipboard,
   autoplay, tải nhiều file, font cục bộ — được nhớ theo từng mini app và chỉnh
   lại được trong cài đặt. Thông báo của trang thành thông báo hệ điều hành, bấm

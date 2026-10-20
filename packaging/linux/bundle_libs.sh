@@ -2,8 +2,9 @@
 # Copies the tray plugin's native libraries into the release bundle, so the app
 # starts on a distro that lacks them: tray_manager links ayatana-appindicator,
 # which few distros besides Ubuntu install by default (the loader refuses to
-# start the app without it). GTK, GLib and libsecret stay with the system:
-# every desktop has them, and a bundled GTK would clash with the system's.
+# start the app without it). GTK, GLib, libsecret and WebKitGTK (mini apps)
+# stay with the system: every desktop has them, a bundled GTK would clash with
+# the system's, and the system keeps WebKitGTK patched.
 #   packaging/linux/bundle_libs.sh <bundle dir>
 #
 # The bundled libraries and the plugin get a RUNPATH of $ORIGIN: the binary's

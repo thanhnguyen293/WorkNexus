@@ -14,6 +14,7 @@ import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../providers/trusted_certificates_controller.dart';
 import '../util/ask_mini_app_permission.dart';
+import '../util/in_app_web_view_page.dart';
 import '../util/mini_app_certificate_guard.dart';
 import '../util/mini_app_flutter_web_focus_capability.dart';
 import '../util/mini_app_login_capability.dart';
@@ -106,10 +107,11 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
           ref: ref,
           app: () => currentMiniApp(ref, app),
         );
+        final web = InAppWebViewMiniAppPage(controller);
         for (final capability in capabilities) {
-          capability.attach(controller, page);
+          capability.attach(web, page);
         }
-        browser.attach(controller);
+        browser.attach(web);
         _certificates.attach(controller);
       },
       onPermissionRequest: (_, request) => answerMiniAppPermission(

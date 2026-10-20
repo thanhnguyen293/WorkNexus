@@ -25,7 +25,7 @@ class MiniAppFlutterWebFocusCapability implements MiniAppPageCapability {
   );
 
   @override
-  void attach(InAppWebViewController controller, MiniAppPageContext page) {}
+  void attach(MiniAppPageBridge bridge, MiniAppPageContext page) {}
 
   /// The script, also run by tests and tools that want to see it work.
   static const script = r'''

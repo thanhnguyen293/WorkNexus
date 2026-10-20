@@ -125,9 +125,12 @@ dependencies:
   dbus: 0.7.15
   package_info_plus: 10.2.2
   # Mini apps: a web page the user added, shown inside the shell. Windows
-  # (WebView2) and macOS (WKWebView); Linux has no backend, so the page opens
-  # in the system browser there.
+  # (WebView2) and macOS (WKWebView) through flutter_inappwebview, which has no
+  # stable Linux backend; Linux (WebKitGTK, which the system ships) through
+  # webview_all_linux, used on its own without the rest of webview_all.
   flutter_inappwebview: 6.1.5
+  webview_all_linux: 1.4.4
+  webview_platform_interface: 1.4.4
   url_launcher: 6.3.3
 
 dev_dependencies:

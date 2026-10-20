@@ -44,7 +44,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: WorkNexus
-Depends: libgtk-3-0, libsecret-1-0
+Depends: libgtk-3-0, libsecret-1-0, libwebkit2gtk-4.1-0
 Installed-Size: $(du -sk "$root/opt" | cut -f1)
 Description: WorkNexus desktop app
 EOF
