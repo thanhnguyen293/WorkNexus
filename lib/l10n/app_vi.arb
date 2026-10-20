@@ -117,6 +117,8 @@
     }
   },
   "task": "Công việc",
+  "cardKindBug": "Bug",
+  "cardKindTask": "Task",
   "summary": "Nội dung",
   "updated": "Cập nhật",
   "priorityUrgent": "Khẩn",
@@ -1353,6 +1355,7 @@
   "miniAppRemoveMessage": "Chỉ gỡ khỏi thanh bên, trang web không bị ảnh hưởng.",
   "miniAppOpenInBrowser": "Mở bằng trình duyệt",
   "miniAppReload": "Tải lại",
+  "miniAppHome": "Về trang chủ",
   "miniAppUnsupported": "Hệ điều hành này không hiển thị được trang web trong ứng dụng.",
   "miniAppEdit": "Sửa mini app",
   "miniAppIcon": "Biểu tượng",

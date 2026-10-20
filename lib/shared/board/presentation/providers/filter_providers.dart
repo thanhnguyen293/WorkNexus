@@ -76,13 +76,13 @@ class FilterController extends Notifier<FilterState> {
     return _initialFor(initialKey);
   }
 
+  /// A board's first filter: the chips cleared. The ZenTao boards open on
+  /// their All view, whatever view the board before was on.
   FilterState _initialFor(String key, [FilterState? current]) {
-    final isZenTao =
-        key == 'zentao.tasks' ||
-        key == 'zentao.bugs' ||
-        key.startsWith('zentao.');
     final base = current != null ? _cleared(current) : const FilterState();
-    return isZenTao ? base.copyWith(savedView: SavedView.related) : base;
+    return key.startsWith('zentao.')
+        ? base.copyWith(savedView: SavedView.all)
+        : base;
   }
 
   void setWorkspace(String id) {

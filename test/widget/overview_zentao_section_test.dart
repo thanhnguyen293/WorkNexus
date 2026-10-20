@@ -203,8 +203,8 @@ void main() {
   });
 
   testWidgets('executions and activity are capped, side by side at one '
-      'height; "Show all" opens the Executions tab', (tester) async {
-    final container = await pump(tester, accounts: [_zentao]);
+      'height; with no Executions tab, no "Show all"', (tester) async {
+    await pump(tester, accounts: [_zentao]);
 
     // Running and ending soonest first: 3 of the 6.
     expect(find.text('Sprint 1'), findsOneWidget);
@@ -218,13 +218,11 @@ void main() {
       tester.getSize(card('Recent activity')).height,
     );
 
-    await tester.tap(
+    // ZenTao has no Executions tab yet, so there is nothing to show all in.
+    expect(
       find.descendant(of: card('Executions'), matching: find.text('Show all')),
+      findsNothing,
     );
-    await tester.pump();
-    final nav = container.read(appNavProvider);
-    expect(nav.rail, const RailTarget.account('zt-1'));
-    expect(nav.locations['zt-1']?.section.value, 'zentao.sprints');
   });
 
   testWidgets('without a ZenTao account there is no section', (tester) async {

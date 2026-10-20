@@ -45,18 +45,6 @@ class ZentaoNavPane extends ConsumerWidget {
               title: l.chat,
               body: '',
             );
-      case 'zentao.sprints':
-        body = ComingSoonView(
-          icon: LucideIcons.timer300,
-          title: l.sprints,
-          body: '',
-        );
-      case 'zentao.docs':
-        body = ComingSoonView(
-          icon: LucideIcons.bookOpen300,
-          title: l.docs,
-          body: '',
-        );
       default:
         body = const SizedBox.shrink();
     }

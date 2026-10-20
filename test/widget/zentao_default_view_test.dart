@@ -20,7 +20,7 @@ const _testAccount = Account(
 
 void main() {
   test(
-    'FilterController defaults to SavedView.related for zentao.tasks and zentao.bugs',
+    'FilterController defaults to SavedView.all for zentao.tasks and zentao.bugs',
     () {
       final container = ProviderContainer(
         overrides: [
@@ -29,15 +29,15 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      expect(container.read(filterStateProvider).savedView, SavedView.related);
+      expect(container.read(filterStateProvider).savedView, SavedView.all);
 
       // Switch to zentao.bugs
       container.read(filterStateProvider.notifier).openBoard('zentao.bugs');
-      expect(container.read(filterStateProvider).savedView, SavedView.related);
+      expect(container.read(filterStateProvider).savedView, SavedView.all);
     },
   );
 
-  testWidgets('ZentaoTasksSection defaults to Related to me selected', (
+  testWidgets('ZentaoTasksSection opens on All, with Related to me beside it', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1400, 900);

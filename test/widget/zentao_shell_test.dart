@@ -11,7 +11,6 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
-import 'package:work_nexus/core/widgets/coming_soon_view.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
 import 'package:work_nexus/tools/zentao/presentation/nav/zentao_nav_pane.dart';
@@ -146,7 +145,7 @@ void main() {
   const zentaoModule = ZentaoModule();
 
   group('ZenTao Tasks Section View Modes', () {
-    testWidgets('toggles between List and Kanban mode', (tester) async {
+    testWidgets('toggles between List and Board mode', (tester) async {
       tester.view.physicalSize = const Size(1400, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -175,11 +174,11 @@ void main() {
       expect(find.byType(ZenTaoTaskTableView), findsOneWidget);
       expect(find.byType(ZenTaoTaskBoardView), findsNothing);
 
-      // Tap Kanban tab
-      await tester.tap(find.text('Kanban'));
+      // Tap Board tab
+      await tester.tap(find.text('Board'));
       await tester.pumpAndSettle();
 
-      // Now in Kanban mode
+      // Now in Board mode
       expect(find.byType(ZenTaoTaskBoardView), findsOneWidget);
       expect(find.byType(ZenTaoTaskTableView), findsNothing);
 
@@ -190,91 +189,36 @@ void main() {
       expect(find.byType(ZenTaoTaskTableView), findsOneWidget);
     });
 
-    testWidgets(
-      'Calendar mode shows ComingSoonView with working Switch to List action',
-      (tester) async {
-        tester.view.physicalSize = const Size(1400, 900);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets('offers Board and List only; a calendar view left from '
+        'before shows the board', (tester) async {
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
 
-        const initialNav = AppNavState(
-          rail: RailTarget.account('acc-zt'),
-          locations: {
-            'acc-zt': ToolLocation(
-              section: SectionId('zentao.tasks'),
-              scopeId: 'exec-1',
-              viewModes: {SectionId('zentao.tasks'): ViewModeId('calendar')},
-            ),
-          },
-        );
-
-        await tester.pumpWidget(
-          _buildHarness(
-            initialNav: initialNav,
-            builder: (loc) =>
-                ZentaoTasksSection(account: _testAccount, location: loc),
+      const initialNav = AppNavState(
+        rail: RailTarget.account('acc-zt'),
+        locations: {
+          'acc-zt': ToolLocation(
+            section: SectionId('zentao.tasks'),
+            scopeId: 'exec-1',
+            viewModes: {SectionId('zentao.tasks'): ViewModeId('calendar')},
           ),
-        );
-        await tester.pumpAndSettle();
+        },
+      );
 
-        expect(find.byType(ComingSoonView), findsOneWidget);
-        expect(
-          find.text('Calendar view for ZenTao tasks is coming soon.'),
-          findsOneWidget,
-        );
+      await tester.pumpWidget(
+        _buildHarness(
+          initialNav: initialNav,
+          builder: (loc) =>
+              ZentaoTasksSection(account: _testAccount, location: loc),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        // Tap action button "Switch to List"
-        await tester.tap(find.text('Switch to List'));
-        await tester.pumpAndSettle();
-
-        // Should have switched to List mode
-        expect(find.byType(ZenTaoTaskTableView), findsOneWidget);
-        expect(find.byType(ComingSoonView), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'Gantt mode shows ComingSoonView with working Switch to Kanban action',
-      (tester) async {
-        tester.view.physicalSize = const Size(1400, 900);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
-
-        const initialNav = AppNavState(
-          rail: RailTarget.account('acc-zt'),
-          locations: {
-            'acc-zt': ToolLocation(
-              section: SectionId('zentao.tasks'),
-              scopeId: 'exec-1',
-              viewModes: {SectionId('zentao.tasks'): ViewModeId('gantt')},
-            ),
-          },
-        );
-
-        await tester.pumpWidget(
-          _buildHarness(
-            initialNav: initialNav,
-            builder: (loc) =>
-                ZentaoTasksSection(account: _testAccount, location: loc),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ComingSoonView), findsOneWidget);
-        expect(
-          find.text('Gantt chart view for ZenTao tasks is coming soon.'),
-          findsOneWidget,
-        );
-
-        // Tap action button "Switch to Kanban"
-        await tester.tap(find.text('Switch to Kanban'));
-        await tester.pumpAndSettle();
-
-        // Should have switched to Kanban mode
-        expect(find.byType(ZenTaoTaskBoardView), findsOneWidget);
-        expect(find.byType(ComingSoonView), findsNothing);
-      },
-    );
+      expect(find.byType(ZenTaoTaskBoardView), findsOneWidget);
+      expect(find.text('Calendar'), findsNothing);
+      expect(find.text('Gantt'), findsNothing);
+    });
   });
 
   group('ZenTao Bugs Section View Modes', () {

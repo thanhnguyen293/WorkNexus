@@ -9,7 +9,8 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// A mini app's browser-style bar: back, forward, reload / stop, the address
+/// A mini app's browser-style bar: back, forward, reload / stop, home (the
+/// address the mini app was set up with), the address
 /// of the page (type another and press Enter to go there) and "open in the
 /// browser". Without a web view (no [onBack] and the rest) only the address
 /// and the browser button remain.
@@ -25,6 +26,7 @@ class MiniAppToolbar extends StatelessWidget {
     this.onForward,
     this.onReload,
     this.onStop,
+    this.onHome,
     this.onDevTools,
     this.showNavigation = true,
   });
@@ -42,6 +44,9 @@ class MiniAppToolbar extends StatelessWidget {
   final VoidCallback? onForward;
   final VoidCallback? onReload;
   final VoidCallback? onStop;
+
+  /// Goes back to the mini app's own address.
+  final VoidCallback? onHome;
 
   /// Opens the page's developer tools; null hides the button.
   final VoidCallback? onDevTools;
@@ -76,6 +81,11 @@ class MiniAppToolbar extends StatelessWidget {
               icon: loading ? LucideIcons.x300 : LucideIcons.refreshCw300,
               tooltip: loading ? l.miniAppStop : l.miniAppReload,
               onPressed: loading ? onStop : onReload,
+            ),
+            AppIconButton(
+              icon: LucideIcons.house300,
+              tooltip: l.miniAppHome,
+              onPressed: onHome,
             ),
           ],
           Expanded(
