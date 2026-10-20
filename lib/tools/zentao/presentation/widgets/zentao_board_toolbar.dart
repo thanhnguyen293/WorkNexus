@@ -34,7 +34,8 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
 
-  /// Off on a view that is a filter of its own (Related to me).
+  /// Off on a view that is a filter of its own (Related to me): no Filters
+  /// button there.
   final bool filtering;
 
   @override
@@ -52,13 +53,13 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
           spacing: s.sm,
           children: [
             AppSegmentedTabs(tabs: scopes),
-            FiltersButton(
-              statusOption: zentaoStatusFilterOption(bugBoard: bugs),
-              catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
-              // Picking a filter shows it over every ticket: the All view.
-              onPick: scopes.first.active ? null : scopes.first.onTap,
-              enabled: filtering,
-            ),
+            if (filtering)
+              FiltersButton(
+                statusOption: zentaoStatusFilterOption(bugBoard: bugs),
+                catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
+                // Picking a filter shows it over every ticket: the All view.
+                onPick: scopes.first.active ? null : scopes.first.onTap,
+              ),
             const Spacer(),
             ZenTaoBoardRefreshButton(bugs: bugs),
             AppSegmentedTabs(
