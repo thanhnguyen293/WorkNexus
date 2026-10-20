@@ -27,7 +27,7 @@ class ZenTaoBugTabs extends ConsumerWidget {
         for (final tab in const [
           ZenTaoBugBrowseType.all,
           ZenTaoBugBrowseType.unclosed,
-          ZenTaoBugBrowseType.assignedToMe,
+          ZenTaoBugBrowseType.relatedToMe,
         ])
           AppSegmentedTab(
             label: _label(l, tab),
@@ -44,7 +44,7 @@ String _label(AppL10n l, ZenTaoBugBrowseType tab) => switch (tab) {
   ZenTaoBugBrowseType.all => l.bugTabAll,
   ZenTaoBugBrowseType.unclosed => l.bugTabUnclosed,
   ZenTaoBugBrowseType.reportedByMe => l.bugTabReportedByMe,
-  ZenTaoBugBrowseType.assignedToMe => l.assignedToMe,
+  ZenTaoBugBrowseType.relatedToMe => l.relatedToMe,
   ZenTaoBugBrowseType.resolvedByMe => l.resolvedByMe,
   ZenTaoBugBrowseType.assignedByMe => l.bugTabAssignedByMe,
 };

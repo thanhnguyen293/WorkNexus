@@ -6,6 +6,7 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/util/cancel_signal.dart';
 import '../../../../shared/board/domain/entities/paged_view_state.dart';
+import '../../../../shared/board/domain/usecases/merge_view_pages.dart';
 import '../../../../shared/board/presentation/paged_views_controller.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../../domain/value_objects/zentao_bug_stream.dart';
@@ -15,9 +16,9 @@ import 'zentao_table_sort.dart';
 
 /// The views loaded as soon as a product's bug board opens. [ZenTaoBugStream.all]
 /// only feeds the Closed column, so it waits until that column is shown; on
-/// the Assigned-to-me tab ([mine]) one view feeds every column.
-List<ZenTaoBugStream> _openingStreams({required bool mine}) => mine
-    ? const [ZenTaoBugStream.assignedToMe]
+/// the Related-to-me tab ([related]) one merged view feeds every column.
+List<ZenTaoBugStream> _openingStreams({required bool related}) => related
+    ? const [ZenTaoBugStream.relatedToMe]
     : const [
         ZenTaoBugStream.unconfirmed,
         ZenTaoBugStream.unresolved,
@@ -32,12 +33,12 @@ class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
     // A new order starts every view over from its first page.
     ref.watch(zentaoBugFetchSortProvider);
     // So does moving to or from Assigned to me, which loads other views.
-    final mine = ref.watch(zentaoBugMineProvider);
+    final related = ref.watch(zentaoBugRelatedProvider);
     // Bugs are listed per product only: without one there is nothing to page.
     final none = ref.watch(selectedZenTaoProductProvider) == null;
     return open(
       views: ZenTaoBugStream.values,
-      opening: none ? const [] : _openingStreams(mine: mine),
+      opening: none ? const [] : _openingStreams(related: related),
       finished: none,
     );
   }
@@ -53,17 +54,23 @@ class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
     if (product == null) {
       return const Err(CancelledFailure('No product is selected'));
     }
-    return ref
-        .read(zentaoViewPagesProvider)
-        .syncProductBugsPage(
-          accountId: product.accountId,
-          productId: product.productId,
-          browseType: view.code,
-          page: page,
-          limit: limit,
-          sort: ref.read(zentaoBugFetchSortProvider),
-          cancel: cancel,
-        );
+    final pages = ref.read(zentaoViewPagesProvider);
+    final sort = ref.read(zentaoBugFetchSortProvider);
+    // A view made of several (Related to me) fetches the same page of each.
+    return const MergeViewPages()(
+      await Future.wait([
+        for (final code in view.codes)
+          pages.syncProductBugsPage(
+            accountId: product.accountId,
+            productId: product.productId,
+            browseType: code,
+            page: page,
+            limit: limit,
+            sort: sort,
+            cancel: cancel,
+          ),
+      ]),
+    );
   }
 }
 
@@ -79,7 +86,7 @@ final zentaoBugColumnStreamProvider = Provider.autoDispose
       (ref, column) =>
           ref.watch(zentaoBugStreamsProvider)[ZenTaoBugStream.of(
             column,
-            mine: ref.watch(zentaoBugMineProvider),
+            related: ref.watch(zentaoBugRelatedProvider),
           )] ??
           const PagedViewState(),
     );
@@ -95,7 +102,9 @@ final zentaoBugSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
   }
   final streams = ref.watch(zentaoBugStreamsProvider);
   final opening = [
-    for (final s in _openingStreams(mine: ref.watch(zentaoBugMineProvider)))
+    for (final s in _openingStreams(
+      related: ref.watch(zentaoBugRelatedProvider),
+    ))
       ?streams[s],
   ];
   if (opening.every((s) => s.failure != null)) {
@@ -114,7 +123,7 @@ final zentaoBugSliceProvider = Provider.autoDispose<AsyncValue<Set<String>>>((
 /// failed one shows its Retry.
 final zentaoBugHasMoreProvider = Provider.autoDispose<bool>((ref) {
   final streams = ref.watch(zentaoBugStreamsProvider);
-  final mine = ref.watch(zentaoBugMineProvider);
+  final related = ref.watch(zentaoBugRelatedProvider);
   final closedShown =
       ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all;
   // Only the views the columns on screen draw on: one not loaded yet counts
@@ -122,7 +131,7 @@ final zentaoBugHasMoreProvider = Provider.autoDispose<bool>((ref) {
   final shown = {
     for (final column in ZenTaoBugColumn.values)
       if (closedShown || column != ZenTaoBugColumn.closed)
-        ZenTaoBugStream.of(column, mine: mine),
+        ZenTaoBugStream.of(column, related: related),
   };
   return shown.any((view) => streams[view]?.hasMore ?? false);
 });

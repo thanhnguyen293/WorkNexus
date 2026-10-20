@@ -18,20 +18,28 @@ enum ZenTaoBugStream {
   /// Every bug; ZenTao has no closed-only view, so Closed keeps the closed ones.
   all('all'),
 
-  /// The bugs assigned to the signed-in user, whatever their status: on the
-  /// Assigned-to-me tab this one view feeds every column. ZenTao assigns a
-  /// closed bug to "Closed", so none of them are closed.
-  assignedToMe('assigntome');
+  /// The bugs that concern the signed-in user, whatever their status: those
+  /// assigned to, opened by and resolved by them — three ZenTao views paged
+  /// together as one. On the Related-to-me tab this one view feeds every
+  /// column.
+  relatedToMe('assigntome', also: ['openedbyme', 'resolvedbyme']);
 
-  const ZenTaoBugStream(this.code);
+  const ZenTaoBugStream(this.code, {this.also = const []});
 
   /// The literal browse type ZenTao's bug-list API expects.
   final String code;
 
-  /// The view [column] draws its bugs from — [assignedToMe] for every
-  /// column on the Assigned-to-me tab ([mine]).
-  static ZenTaoBugStream of(ZenTaoBugColumn column, {bool mine = false}) => mine
-      ? assignedToMe
+  /// Further browse types fetched alongside [code] and merged into this view.
+  final List<String> also;
+
+  /// Every browse type this view is made of.
+  List<String> get codes => [code, ...also];
+
+  /// The view [column] draws its bugs from — [relatedToMe] for every column
+  /// on the Related-to-me tab ([related]).
+  static ZenTaoBugStream of(ZenTaoBugColumn column, {bool related = false}) =>
+      related
+      ? relatedToMe
       : switch (column) {
           ZenTaoBugColumn.newUnconfirmed => unconfirmed,
           ZenTaoBugColumn.confirmedToFix => unresolved,

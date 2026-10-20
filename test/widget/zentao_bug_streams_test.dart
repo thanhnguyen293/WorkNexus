@@ -254,17 +254,20 @@ void main() {
     expect(container.read(zentaoBugHasMoreProvider), isTrue);
   });
 
-  test('Assigned to me loads one view that feeds every column', () async {
+  test('Related to me loads one merged view that feeds every column', () async {
+    // Assigned to, opened by and resolved by me, paged together.
     serve('assigntome', total: 2);
+    serve('openedbyme', total: 1);
+    serve('resolvedbyme', total: 1);
     final container = open();
     container.listen(zentaoBugHasMoreProvider, (_, _) {});
     container
         .read(zentaoBugTabProvider.notifier)
-        .set(ZenTaoBugBrowseType.assignedToMe);
+        .set(ZenTaoBugBrowseType.relatedToMe);
     await pumpEventQueue();
 
     final streams = container.read(zentaoBugStreamsProvider);
-    expect(streams[ZenTaoBugStream.assignedToMe]?.page, 1);
+    expect(streams[ZenTaoBugStream.relatedToMe]?.page, 1);
     // The per-column views stay unloaded.
     for (final view in [
       ZenTaoBugStream.unconfirmed,
@@ -281,23 +284,26 @@ void main() {
         reason: column.name,
       );
     }
-    expect(container.read(zentaoBugSliceProvider).value, hasLength(1));
-    // Only its own view counts toward loading more.
+    // One bug from each view; 'assigntome' and 'openedbyme' happen to list
+    // the same one, which is shown once.
+    expect(container.read(zentaoBugSliceProvider).value, hasLength(2));
+    // Only its own view counts toward loading more: one of its three has
+    // another page.
     expect(container.read(zentaoBugHasMoreProvider), isTrue);
     await container
         .read(zentaoBugStreamsProvider.notifier)
-        .loadMore(ZenTaoBugStream.assignedToMe);
+        .loadMore(ZenTaoBugStream.relatedToMe);
     expect(container.read(zentaoBugHasMoreProvider), isFalse);
   });
 
-  test('leaving Assigned to me loads the column views again', () async {
+  test('leaving Related to me loads the column views again', () async {
     serve('assigntome');
     for (final v in ['unconfirmed', 'unresolved', 'toclosed']) {
       serve(v);
     }
     final container = open();
     final tab = container.read(zentaoBugTabProvider.notifier);
-    tab.set(ZenTaoBugBrowseType.assignedToMe);
+    tab.set(ZenTaoBugBrowseType.relatedToMe);
     await pumpEventQueue();
 
     tab.set(ZenTaoBugBrowseType.unclosed);
@@ -305,7 +311,7 @@ void main() {
 
     final streams = container.read(zentaoBugStreamsProvider);
     expect(streams[ZenTaoBugStream.unresolved]?.page, 1);
-    expect(streams[ZenTaoBugStream.assignedToMe]?.started, isFalse);
+    expect(streams[ZenTaoBugStream.relatedToMe]?.started, isFalse);
   });
 
   test('until Assigned to me loads, the board keeps the cached bugs '
@@ -353,7 +359,7 @@ void main() {
     container.read(selectedZenTaoProductProvider.notifier).select(_product);
     container
         .read(zentaoBugTabProvider.notifier)
-        .set(ZenTaoBugBrowseType.assignedToMe);
+        .set(ZenTaoBugBrowseType.relatedToMe);
     container.listen(zentaoBugBoardProvider, (_, _) {});
     await pumpEventQueue();
 
