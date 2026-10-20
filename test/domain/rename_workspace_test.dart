@@ -54,6 +54,22 @@ void main() {
     expect(run('Acme', 'TOOLONG'), isA<Err<Workspace>>());
   });
 
+  test('a refusal names the field and why, for the UI to word it', () {
+    Map<String, String> fields(String name, [String code = 'AC']) =>
+        ((rename(WorkspaceRename(workspace: _acme, name: name, shortCode: code))
+                        as Err<Workspace>)
+                    .failure
+                as ValidationFailure)
+            .fields;
+    expect(fields(' '), {RenameWorkspace.nameField: RenameWorkspace.missing});
+    expect(fields('x' * (RenameWorkspace.maxNameLength + 1)), {
+      RenameWorkspace.nameField: RenameWorkspace.tooLong,
+    });
+    expect(fields('Acme', 'TOOLONG'), {
+      RenameWorkspace.codeField: RenameWorkspace.tooLong,
+    });
+  });
+
   test('the personal workspace keeps its name but can change its letters', () {
     const personal = Workspace(
       id: 'p',

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/domain/entities/workspace.dart';
 import '../../../../core/domain/usecases/rename_workspace.dart';
+import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -48,6 +49,14 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
   bool get _canSave =>
       widget.workspace.isPersonal || _name.text.trim().isNotEmpty;
 
+  /// The letters both badges show: the typed ones, else those of the name.
+  String get _badgeCode {
+    final typed = _code.text.trim();
+    return typed.isEmpty
+        ? RenameWorkspace.shortCodeOf(_name.text)
+        : typed.toUpperCase();
+  }
+
   void _save() {
     final renamed = const RenameWorkspace()(
       WorkspaceRename(
@@ -63,8 +72,24 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
       case Ok(:final value):
         Navigator.of(context).pop(value);
       case Err(:final failure):
-        showAppSnack(context, failure.message, isError: true);
+        showAppSnack(
+          context,
+          _refusal(AppL10n.of(context), failure),
+          isError: true,
+        );
     }
+  }
+
+  /// Why [RenameWorkspace] refused, in the user's language.
+  static String _refusal(AppL10n l, Failure failure) {
+    final fields = failure is ValidationFailure ? failure.fields : const {};
+    if (fields[RenameWorkspace.codeField] == RenameWorkspace.tooLong) {
+      return l.workspaceCodeTooLong(RenameWorkspace.maxCodeLength);
+    }
+    if (fields[RenameWorkspace.nameField] == RenameWorkspace.tooLong) {
+      return l.workspaceNameTooLong(RenameWorkspace.maxNameLength);
+    }
+    return l.workspaceNameRequired;
   }
 
   @override
@@ -99,16 +124,11 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
           children: [
             Row(
               children: [
-                ListenableBuilder(
-                  listenable: _code,
-                  builder: (_, _) => WorkspaceBadge(
-                    Color(_colorValue),
-                    _code.text.trim().isEmpty
-                        ? RenameWorkspace.shortCodeOf(_name.text)
-                        : _code.text.trim().toUpperCase(),
-                    big: true,
-                    iconKey: _iconKey,
-                  ),
+                WorkspaceBadge(
+                  Color(_colorValue),
+                  _badgeCode,
+                  big: true,
+                  iconKey: _iconKey,
                 ),
                 SizedBox(width: s.md),
                 Expanded(
@@ -147,6 +167,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
                 maxLength: RenameWorkspace.maxCodeLength,
                 textCapitalization: TextCapitalization.characters,
                 style: context.typography.body,
+                onChanged: (_) => setState(() {}),
                 decoration: appInputDecoration(
                   context,
                   hint: RenameWorkspace.shortCodeOf(_name.text),
@@ -173,7 +194,7 @@ class _WorkspaceEditorDialogState extends State<WorkspaceEditorDialog> {
             SizedBox(height: s.sm),
             WorkspaceIconFilePicker(
               colorValue: _colorValue,
-              shortCode: widget.workspace.shortCode,
+              shortCode: _badgeCode,
               iconKey: _iconKey,
               fileName: _iconFileName,
               onPick: _pickIconFile,

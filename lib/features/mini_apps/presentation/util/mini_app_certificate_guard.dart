@@ -6,6 +6,10 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/error/result.dart';
+import '../../../../core/widgets/app_snack.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/trusted_certificate.dart';
 import '../../domain/value_objects/certificate_problem.dart';
 import '../providers/trusted_certificates_controller.dart';
 import 'mini_app_certificate_prompt.dart';
@@ -26,8 +30,11 @@ import 'mini_app_certificate_prompt.dart';
 /// trusted site's, the web view ignores certificate errors of every kind
 /// (the page's own requests, such as the blocks a dashboard fills in after
 /// loading, meet the same certificate and would fail otherwise). That covers
-/// the other sites the page itself calls, too. It stops when the web view goes
-/// to a site that is not trusted; forgetting a site in Settings undoes it.
+/// the other sites the page itself calls, too. Whether errors are ignored is
+/// settled in [beforeRequest], which holds every main-frame document request
+/// (a redirect too) until it is: a site that is not trusted never goes out
+/// while errors are still ignored for the one before. Forgetting the site
+/// shown stops it at once ([onTrustChanged]).
 ///
 /// One per web view: it holds that page's own state.
 class MiniAppCertificateGuard {
@@ -46,37 +53,67 @@ class MiniAppCertificateGuard {
   /// shows the warning after that has another problem.
   static const maxReloads = 2;
 
+  InAppWebViewController? _web;
   Timer? _settle;
   bool _asking = false;
   bool _ignoring = false;
   int _reloads = 0;
 
-  /// A new load starts for [url]: the page that was about to be looked at is
-  /// gone, and certificate errors are ignored only if the site is a trusted
-  /// one — before its first request, if the call gets there in time (else the
-  /// warning page appears and [onProgress] sorts it out).
-  Future<void> onLoadStart(InAppWebViewController web, Uri? url) async {
-    _settle?.cancel();
-    if (!supported) return;
+  /// The origin of the page the web view shows or is going to.
+  String? _origin;
+
+  void attach(InAppWebViewController web) => _web = web;
+
+  /// A document request of the page is about to leave (the web view waits for
+  /// the answer). For the main frame, certificate errors are ignored from now
+  /// on only if [action]'s site is trusted, and that is in place before the
+  /// request is let go. Frames inside the page keep what their page has.
+  Future<NavigationActionPolicy> beforeRequest(NavigationAction action) async {
+    final web = _web;
+    if (!supported || web == null || !action.isForMainFrame) {
+      return NavigationActionPolicy.ALLOW;
+    }
+    final origin = originOf(action.request.url);
+    _origin = origin;
+    final trusted = origin != null && await _isTrusted(origin);
+    if (trusted == _ignoring) return NavigationActionPolicy.ALLOW;
     try {
-      final origin = originOf(url);
-      final trusted =
-          origin != null &&
-          await ref
-              .read(trustedCertificatesProvider.notifier)
-              .isOriginTrusted(origin);
-      if (trusted == _ignoring) return;
-      _ignoring = trusted;
       await _ignoreErrors(web, ignore: trusted);
+      _ignoring = trusted;
+      return NavigationActionPolicy.ALLOW;
+    } on Object catch (e, st) {
+      appTalker.handle(e, st, 'Mini app certificate setting failed');
+      // Errors still ignored for a site that is not trusted: better not to go
+      // than to go unchecked.
+      return trusted
+          ? NavigationActionPolicy.ALLOW
+          : NavigationActionPolicy.CANCEL;
+    }
+  }
+
+  /// The list of trusted sites changed: if the site shown is no longer on it,
+  /// its certificate errors stop being ignored now, not at the next page.
+  Future<void> onTrustChanged(List<TrustedCertificate> trusted) async {
+    final web = _web;
+    final origin = _origin;
+    if (!_ignoring || web == null) return;
+    if (origin != null && trusted.any((item) => item.origin == origin)) return;
+    try {
+      await _ignoreErrors(web, ignore: false);
+      _ignoring = false;
     } on Object catch (e, st) {
       appTalker.handle(e, st, 'Mini app certificate setting failed');
     }
   }
 
+  /// A new page starts loading: the one that was about to be looked at is gone.
+  void onLoadStart() => _settle?.cancel();
+
   /// The page reports its progress; at 100 with no load-finished following, it
   /// is looked at.
-  void onProgress(InAppWebViewController web, int percent) {
-    if (!supported || percent < 100) return;
+  void onProgress(int percent) {
+    final web = _web;
+    if (!supported || web == null || percent < 100) return;
     _settle?.cancel();
     _settle = Timer(settleDelay, () => unawaited(_look(web)));
   }
@@ -90,6 +127,18 @@ class MiniAppCertificateGuard {
 
   void dispose() => _settle?.cancel();
 
+  Future<bool> _isTrusted(String origin) async {
+    try {
+      return await ref
+          .read(trustedCertificatesProvider.notifier)
+          .isTrusted(origin);
+    } on Object catch (e, st) {
+      // The list could not be read: nothing counts as trusted.
+      appTalker.handle(e, st, 'Reading trusted certificates failed');
+      return false;
+    }
+  }
+
   Future<void> _look(InAppWebViewController web) async {
     try {
       final error = await _warningError(web);
@@ -98,8 +147,7 @@ class MiniAppCertificateGuard {
       }
       final origin = originOf(await web.getUrl());
       if (origin == null) return;
-      final trusted = ref.read(trustedCertificatesProvider.notifier);
-      if (await trusted.isOriginTrusted(origin)) {
+      if (await _isTrusted(origin)) {
         await _allowAndReload(web);
         return;
       }
@@ -115,7 +163,21 @@ class MiniAppCertificateGuard {
           error: error,
         );
         if (!yes) return;
-        await trusted.trust(origin, error);
+        final saved = await ref
+            .read(trustedCertificatesProvider.notifier)
+            .trust(origin, error);
+        if (saved case Err(:final failure)) {
+          appTalker.warning('Trusting $origin failed: ${failure.message}');
+          final after = context();
+          if (after.mounted) {
+            showAppSnack(
+              after,
+              AppL10n.of(after).certTrustSaveFailed,
+              isError: true,
+            );
+          }
+          return;
+        }
         await _allowAndReload(web);
       } finally {
         _asking = false;
@@ -135,12 +197,12 @@ class MiniAppCertificateGuard {
   }
 
   /// Ignore certificate errors from now on (until the web view leaves the
-  /// site, see [onLoadStart]) and load the page again.
+  /// site, see [beforeRequest]) and load the page again.
   Future<void> _allowAndReload(InAppWebViewController web) async {
     if (_reloads >= maxReloads) return;
     _reloads++;
-    _ignoring = true;
     await _ignoreErrors(web, ignore: true);
+    _ignoring = true;
     await web.reload();
   }
 

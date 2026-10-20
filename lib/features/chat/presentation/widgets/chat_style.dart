@@ -211,9 +211,9 @@ class ChatStyle {
     final p = palette;
     final bar = mine ? p.outgoingQuoteBar : p.incomingQuoteBar;
     final text = mine ? p.outgoingText : p.incomingText;
-    // Light ink on a dark or saturated bubble (ZenTao's blue, night
-    // themes) needs a stronger tint for quotes and tiles to read as a
-    // separate area; dark ink on a pale bubble needs only a hint.
+    // Light ink on a dark or saturated bubble (night themes) needs a
+    // stronger tint for quotes and tiles to read as a separate area; dark
+    // ink on a pale bubble needs only a hint.
     final strong =
         Color.alphaBlend(
           bubbleFill(mine: mine),
