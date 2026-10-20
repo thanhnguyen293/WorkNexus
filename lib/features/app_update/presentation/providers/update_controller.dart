@@ -34,6 +34,11 @@ class UpdateController extends Notifier<UpdateState> {
 
   Future<Result<AvailableUpdate?>>? _inFlight;
 
+  /// Whether the user asked for the check in flight (it may have joined one
+  /// started in the background): what it finds is then downloaded whatever
+  /// the setting says.
+  bool _userAsked = false;
+
   @override
   UpdateState build() {
     final timer = Timer.periodic(checkEvery, (_) => checkInBackground());
@@ -46,20 +51,30 @@ class UpdateController extends Notifier<UpdateState> {
   /// [check], unless the user turned automatic updates off.
   Future<void> checkInBackground() async {
     if (!await _autoUpdateEnabled()) return;
-    await check();
+    await _shared();
   }
 
   /// Looks for a newer stable release and, when it has a build for this
   /// platform, starts downloading it. Returns what was found so a manual
   /// check can tell the user; a check already running is shared, not repeated.
-  Future<Result<AvailableUpdate?>> check() =>
-      _inFlight ??= _run().whenComplete(() => _inFlight = null);
+  Future<Result<AvailableUpdate?>> check() {
+    _userAsked = true;
+    return _shared();
+  }
+
+  Future<Result<AvailableUpdate?>> _shared() =>
+      _inFlight ??= _run().whenComplete(() {
+        _inFlight = null;
+        _userAsked = false;
+      });
 
   Future<Result<AvailableUpdate?>> _run() async {
     final result = await _checkForUpdate();
     switch (result) {
       case Ok(value: final update?):
-        _stage(update);
+        // Automatic updates turned off while a background check ran: what it
+        // found waits for the user to ask.
+        if (_userAsked || await _autoUpdateEnabled()) _stage(update);
       case Ok():
         break;
       case Err(:final failure):
@@ -138,6 +153,9 @@ final updateControllerProvider =
         checkForUpdate: getIt<CheckForUpdate>(),
         downloadUpdate: getIt<DownloadUpdate>(),
         installUpdate: getIt<InstallUpdate>(),
-        autoUpdateEnabled: getIt<AutoUpdatePreference>().isEnabled,
+        // Unreadable, the choice is the default: on.
+        autoUpdateEnabled: () async =>
+            (await getIt<AutoUpdatePreference>().isEnabled()).valueOrNull ??
+            true,
       ),
     );

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/domain/entities/workspace.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/workspace_badge.dart';
 import 'package:work_nexus/features/connections/presentation/widgets/workspace_editor_dialog.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -92,6 +93,20 @@ void main() {
     expect(saved?.name, 'Globex Corp');
     expect(saved?.shortCode, 'GC');
     expect(saved?.id, 'workspace');
+  });
+
+  testWidgets('both badges show the letters being typed', (tester) async {
+    await _open(tester, _nexsoft);
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.widgetWithText(TextField, 'N'), 'gx');
+    await tester.pump();
+
+    final shown = tester
+        .widgetList<WorkspaceBadge>(find.byType(WorkspaceBadge))
+        .map((badge) => badge.short);
+    expect(shown, ['GX', 'GX']);
   });
 
   testWidgets('an empty name cannot be saved', (tester) async {

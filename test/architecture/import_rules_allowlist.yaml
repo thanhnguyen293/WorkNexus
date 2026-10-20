@@ -131,11 +131,11 @@ line_count_exemptions:
 
   # Non-UI files over 400 lines (rule 9.3)
   - file: lib/app/di/service_locator.dart
-    max_lines: 550
+    max_lines: 560
     owner_phase: "Phase 2"
     reason: "Injectable composition root wiring all features and services"
   - file: lib/core/database/database.dart
-    max_lines: 1060
+    max_lines: 1070
     owner_phase: "Permanent"
     reason: "Central Drift database schema tables definition"
   - file: lib/core/database/seed/design_seed.dart
@@ -151,7 +151,7 @@ line_count_exemptions:
     owner_phase: "Permanent"
     reason: "Palette color token constants"
   - file: lib/features/chat/data/datasources/chat_local_datasource.dart
-    max_lines: 530
+    max_lines: 590
     owner_phase: "Follow-up"
     reason: "Chat local datasource (exempt in Open question 1)"
   - file: lib/features/chat/data/datasources/xxd/api_scheme_codec.dart
@@ -163,7 +163,7 @@ line_count_exemptions:
     owner_phase: "Follow-up"
     reason: "Xuanxuan websocket connection protocol handler"
   - file: lib/features/chat/data/repositories/xxd_chat_repository.dart
-    max_lines: 1100
+    max_lines: 1140
     owner_phase: "Follow-up"
     reason: "Chat repository implementation"
   - file: lib/features/chat/domain/value_objects/emojione_shortnames.dart

@@ -165,8 +165,15 @@ class _AutoUpdateRow extends ConsumerWidget {
         SizedBox(width: context.spacing.lg),
         Switch(
           value: on,
-          onChanged: (value) =>
-              ref.read(autoUpdateProvider.notifier).set(value),
+          onChanged: (value) async {
+            final messenger = ScaffoldMessenger.of(context);
+            final saved = await ref
+                .read(autoUpdateProvider.notifier)
+                .set(value);
+            if (saved.isErr) {
+              showAppSnackOn(messenger, l.autoUpdateSaveFailed, isError: true);
+            }
+          },
         ),
       ],
     );

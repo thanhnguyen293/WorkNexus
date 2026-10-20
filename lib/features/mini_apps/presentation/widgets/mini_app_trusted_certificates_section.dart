@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/certificate_problem.dart';
 import '../providers/trusted_certificates_controller.dart';
@@ -58,7 +60,7 @@ class MiniAppTrustedCertificatesSection extends ConsumerWidget {
               AppButton.outlinedNeutral(
                 size: AppButtonSize.small,
                 icon: LucideIcons.x300,
-                onPressed: () => controller.forget(item),
+                onPressed: () => _report(context, l, controller.forget(item)),
                 child: Text(l.miniAppTrustedCertForget),
               ),
             ],
@@ -67,11 +69,23 @@ class MiniAppTrustedCertificatesSection extends ConsumerWidget {
           AppButton.error(
             size: AppButtonSize.small,
             icon: LucideIcons.trash2300,
-            onPressed: controller.forgetAll,
+            onPressed: () => _report(context, l, controller.forgetAll()),
             child: Text(l.miniAppTrustedCertsForgetAll),
           ),
       ],
     );
+  }
+
+  /// Says so when [change] could not be saved; the list then stays as it was.
+  static Future<void> _report(
+    BuildContext context,
+    AppL10n l,
+    Future<Result<void>> change,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    if ((await change).isErr) {
+      showAppSnackOn(messenger, l.miniAppTrustedCertsSaveFailed, isError: true);
+    }
   }
 
   /// The problem in a few words: the same ones the prompt used.

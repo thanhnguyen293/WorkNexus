@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Ink for the content of one bubble. Chat styles colour bubbles their own
-/// way (Telegram's green outgoing bubble, ZenTao's blue one, …), so text,
+/// way (Telegram's green outgoing bubble, ZenTao's pale blue one, …), so text,
 /// time, links and quotes inside must follow the bubble, not the app theme.
 class ChatBubbleInk {
   const ChatBubbleInk({

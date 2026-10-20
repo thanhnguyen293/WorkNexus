@@ -23,23 +23,43 @@ class WorkspaceRename {
 /// upper-cased, at most [maxCodeLength], and drawn from the name when left
 /// blank. The personal workspace keeps its name (it is shown in the app's own
 /// words, whatever language) and may only change its letters.
+///
+/// A refusal is a [ValidationFailure] whose `fields` say what is wrong
+/// ([nameField] or [codeField] → [missing] or [tooLong]), so the UI can say it
+/// in the user's language.
 class RenameWorkspace extends UseCase<Result<Workspace>, WorkspaceRename> {
   const RenameWorkspace();
 
   static const maxNameLength = 40;
   static const maxCodeLength = 4;
 
+  static const nameField = 'name';
+  static const codeField = 'shortCode';
+  static const missing = 'missing';
+  static const tooLong = 'tooLong';
+
   @override
   Result<Workspace> call(WorkspaceRename r) {
     final workspace = r.workspace;
     final name = workspace.isPersonal ? workspace.name : r.name.trim();
-    if (name.isEmpty) return const Err(ValidationFailure('Name is required'));
+    if (name.isEmpty) {
+      return const Err(
+        ValidationFailure('Name is required', fields: {nameField: missing}),
+      );
+    }
     if (name.length > maxNameLength) {
-      return const Err(ValidationFailure('Name is too long'));
+      return const Err(
+        ValidationFailure('Name is too long', fields: {nameField: tooLong}),
+      );
     }
     final typed = r.shortCode.trim().toUpperCase();
     if (typed.length > maxCodeLength) {
-      return const Err(ValidationFailure('Badge letters are too long'));
+      return const Err(
+        ValidationFailure(
+          'Badge letters are too long',
+          fields: {codeField: tooLong},
+        ),
+      );
     }
     return Ok(
       workspace.copyWith(

@@ -6,10 +6,9 @@ import 'contrast.dart';
 /// Colour tokens of one chat style ([ChatAppearance]) in one brightness.
 ///
 /// Each starts from the real app's colours (Telegram Desktop's palette and
-/// night theme, WeChat's PC client, best matches for Zalo) and
-/// is then tuned for WCAG contrast against its bubble: message text ≥ 7:1
-/// (≥ 4.5:1 for white on ZenTao's blue), and times, links, sender names,
-/// quote headers and separator labels ≥ 4.5:1.
+/// night theme, WeChat's PC client, best matches for Zalo and ZenTao) and is
+/// then tuned for WCAG contrast against its bubble: message text ≥ 7:1, and
+/// times, links, sender names, quote headers and separator labels ≥ 4.5:1.
 @immutable
 class ChatStylePalette {
   const ChatStylePalette({
@@ -170,7 +169,7 @@ class ChatStylePalette {
   /// [quoteFill] (the default style: white on its tinted own bubbles).
   final Color? outgoingQuoteFill;
 
-  /// A reply quote shown outside the bubble (ZenTao, WeChat): its box and
+  /// A reply quote shown outside the bubble (WeChat): its box and
   /// text; null = the incoming bubble colour and [incomingMeta].
   final Color? outsideQuoteFill;
   final Color? outsideQuoteText;

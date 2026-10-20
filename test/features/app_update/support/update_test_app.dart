@@ -65,7 +65,10 @@ class FakeAutoUpdateController extends AutoUpdateController {
   Future<bool> build() async => initial;
 
   @override
-  Future<void> set(bool enabled) async => state = AsyncData(enabled);
+  Future<Result<void>> set(bool enabled) async {
+    state = AsyncData(enabled);
+    return const Ok(null);
+  }
 }
 
 /// [home] under a themed, localized app whose update controller runs on

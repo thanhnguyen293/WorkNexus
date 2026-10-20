@@ -38,12 +38,13 @@ import '../../core/platform/app_image.dart';
 import '../../core/platform/credential_store.dart';
 import '../../core/platform/desktop_notifier.dart';
 import '../../features/app_update/data/datasources/appimage_update_installer.dart';
+import '../../features/app_update/data/datasources/auto_update_marker_file.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
 import '../../features/app_update/data/datasources/linux_update_installer.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
 import '../../features/app_update/data/datasources/windows_update_installer.dart';
-import '../../features/app_update/data/repositories/file_auto_update_preference.dart';
 import '../../features/app_update/data/repositories/github_update_repository.dart';
+import '../../features/app_update/data/repositories/local_auto_update_preference.dart';
 import '../../features/app_update/domain/repositories/auto_update_preference.dart';
 import '../../features/app_update/domain/repositories/update_repository.dart';
 import '../../features/app_update/domain/usecases/check_for_update.dart';
@@ -78,11 +79,12 @@ import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
 import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
 import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
+import '../../features/mini_apps/data/datasources/trusted_certificate_store.dart';
 import '../../features/mini_apps/data/datasources/web_profile_datasource.dart';
-import '../../features/mini_apps/data/repositories/file_trusted_certificate_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
+import '../../features/mini_apps/data/repositories/local_trusted_certificate_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
@@ -154,6 +156,10 @@ Future<void> configureDependencies(String environment) async =>
 /// (e.g. [AppDatabase]) and injectable supplies it; no member locates a
 /// dependency itself. The database is environment-split so tests get an
 /// in-memory instance without touching the production wiring.
+/// The path of [name] in the app's support folder.
+Future<String> _support(String name) async =>
+    '${(await getApplicationSupportDirectory()).path}/$name';
+
 @module
 abstract class ServiceModule {
   @lazySingleton
@@ -193,19 +199,19 @@ abstract class ServiceModule {
   );
 
   @lazySingleton
-  AutoUpdatePreference autoUpdatePreference() => FileAutoUpdatePreference(
-    file: () async => File(
-      '${(await getApplicationSupportDirectory()).path}/auto_update.txt',
+  AutoUpdatePreference autoUpdatePreference() => LocalAutoUpdatePreference(
+    AutoUpdateMarkerFile(
+      file: () async => File(await _support('auto_update.txt')),
     ),
   );
 
   @lazySingleton
-  TrustedCertificateRepository
-  trustedCertificateRepository() => FileTrustedCertificateRepository(
-    file: () async => File(
-      '${(await getApplicationSupportDirectory()).path}/trusted_certificates.json',
-    ),
-  );
+  TrustedCertificateRepository trustedCertificateRepository() =>
+      LocalTrustedCertificateRepository(
+        TrustedCertificateStore(
+          file: () async => File(await _support('trusted_certificates.json')),
+        ),
+      );
 
   @lazySingleton
   CheckForUpdate checkForUpdate(UpdateRepository repository) =>
@@ -331,9 +337,7 @@ abstract class ServiceModule {
   StickerRepository stickerRepository(StickerConverter converter) =>
       LocalStickerRepository(
         bundle: rootBundle,
-        directory: () async => Directory(
-          '${(await getApplicationSupportDirectory()).path}/stickers',
-        ),
+        directory: () async => Directory(await _support('stickers')),
         converter: converter,
       );
 
@@ -349,9 +353,7 @@ abstract class ServiceModule {
 
   @lazySingleton
   WallpaperRepository get wallpaperRepository => LocalWallpaperRepository(
-    directory: () async => Directory(
-      '${(await getApplicationSupportDirectory()).path}/wallpapers',
-    ),
+    directory: () async => Directory(await _support('wallpapers')),
   );
 
   @lazySingleton
@@ -493,11 +495,7 @@ abstract class ServiceModule {
   @lazySingleton
   MiniAppRepository miniAppRepository(AppDatabase db) => LocalMiniAppRepository(
     MiniAppLocalDatasource(db),
-    MiniAppIconStorage(
-      () async => Directory(
-        '${(await getApplicationSupportDirectory()).path}/mini_app_icons',
-      ),
-    ),
+    MiniAppIconStorage(() async => Directory(await _support('mini_app_icons'))),
     FaviconFetcher(),
   );
 

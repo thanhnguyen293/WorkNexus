@@ -1,18 +1,18 @@
+import '../../../../core/error/result.dart';
 import '../entities/trusted_certificate.dart';
 
 /// The sites whose invalid certificate the user chose to accept, one entry per
-/// site.
+/// site. Each change answers with the list as it now is.
 abstract class TrustedCertificateRepository {
-  Future<List<TrustedCertificate>> all();
-
-  /// Whether the user trusted [origin]'s certificate, for whatever problem.
-  Future<bool> isOriginTrusted(String origin);
+  Future<Result<List<TrustedCertificate>>> all();
 
   /// Trusts [origin], which was refused with [error]; a site already trusted
   /// keeps one entry, with the latest error.
-  Future<void> trust(String origin, String error);
+  Future<Result<List<TrustedCertificate>>> trust(String origin, String error);
 
-  Future<void> forget(TrustedCertificate certificate);
+  Future<Result<List<TrustedCertificate>>> forget(
+    TrustedCertificate certificate,
+  );
 
-  Future<void> forgetAll();
+  Future<Result<List<TrustedCertificate>>> forgetAll();
 }

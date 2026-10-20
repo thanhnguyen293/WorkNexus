@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/debug/app_talker.dart';
 import '../../core/di/providers.dart';
 import '../../core/domain/entities/workspace.dart';
 import '../../core/navigation/navigation_providers.dart';
@@ -12,6 +13,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../core/widgets/app_popup_card.dart';
+import '../../core/widgets/app_snack.dart';
 import '../../features/connections/presentation/widgets/workspace_editor_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/board/presentation/providers/board_providers.dart';
@@ -72,12 +74,21 @@ class _WorkspaceSwitcherPopoverState
   /// Edits [ws] (name, badge, colour, icon) in the editor dialog; the list
   /// follows the database, so the popover stays as it is.
   Future<void> _editWorkspace(Workspace ws) async {
+    // Taken before the dialog: the popover may be gone when it closes.
+    final repository = ref.read(workspaceRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppL10n.of(context).workspaceSaveFailed;
     final updated = await showDialog<Workspace>(
       context: context,
       builder: (_) => WorkspaceEditorDialog(workspace: ws),
     );
     if (updated == null) return;
-    await ref.read(workspaceRepositoryProvider).updateWorkspace(updated);
+    try {
+      await repository.updateWorkspace(updated);
+    } on Exception catch (e, st) {
+      appTalker.handle(e, st, 'Saving workspace ${ws.id} failed');
+      showAppSnackOn(messenger, failed, isError: true);
+    }
   }
 
   @override

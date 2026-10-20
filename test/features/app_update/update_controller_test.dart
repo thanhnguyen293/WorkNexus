@@ -234,6 +234,30 @@ void main() {
       );
     });
 
+    test(
+      'turned off while a background check runs, nothing downloads',
+      () async {
+        when(() => repository.fetchLatestStableRelease()).thenAnswer((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          return const Ok(_release);
+        });
+        var enabled = true;
+        final container = makeContainer(autoUpdateEnabled: () async => enabled);
+
+        container.read(updateControllerProvider);
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        enabled = false;
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+
+        verify(() => repository.fetchLatestStableRelease()).called(1);
+        verifyNever(
+          () =>
+              repository.download(any(), onProgress: any(named: 'onProgress')),
+        );
+        expect(container.read(updateControllerProvider), isA<UpdateIdle>());
+      },
+    );
+
     test('a check the user asks for still looks', () async {
       final container = makeContainer(autoUpdateEnabled: () async => false);
 

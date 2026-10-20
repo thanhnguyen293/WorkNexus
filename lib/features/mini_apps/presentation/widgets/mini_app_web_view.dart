@@ -12,6 +12,7 @@ import '../../../../core/platform/link_router.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
+import '../providers/trusted_certificates_controller.dart';
 import '../util/ask_mini_app_permission.dart';
 import '../util/mini_app_certificate_guard.dart';
 import '../util/mini_app_flutter_web_focus_capability.dart';
@@ -61,6 +62,18 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
   List<MiniAppPageCapability> get capabilities => widget.capabilities;
 
   @override
+  void initState() {
+    super.initState();
+    if (MiniAppCertificateGuard.supported) {
+      ref.listenManual(trustedCertificatesProvider, (_, next) {
+        if (next.value case final trusted?) {
+          unawaited(_certificates.onTrustChanged(trusted));
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _certificates.dispose();
     super.dispose();
@@ -81,7 +94,12 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
         javaScriptCanOpenWindowsAutomatically: true,
         supportMultipleWindows: true,
         isInspectable: kDebugMode,
+        // Lets the certificate guard settle each page's request first.
+        useShouldOverrideUrlLoading: MiniAppCertificateGuard.supported,
       ),
+      shouldOverrideUrlLoading: MiniAppCertificateGuard.supported
+          ? (_, action) => _certificates.beforeRequest(action)
+          : null,
       onWebViewCreated: (controller) {
         final page = MiniAppPageContext(
           context: context,
@@ -92,6 +110,7 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
           capability.attach(controller, page);
         }
         browser.attach(controller);
+        _certificates.attach(controller);
       },
       onPermissionRequest: (_, request) => answerMiniAppPermission(
         context,
@@ -99,17 +118,17 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
         currentMiniApp(ref, app),
         request,
       ),
-      onLoadStart: (controller, url) {
+      onLoadStart: (_, url) {
         appTalker.info('Mini app $name: loading $url');
-        unawaited(_certificates.onLoadStart(controller, url));
+        _certificates.onLoadStart();
         browser.onLoadStart();
       },
       onLoadStop: (_, _) => _certificates.onLoadStop(),
       onUpdateVisitedHistory: (_, url, _) {
         if (url != null) unawaited(browser.onVisited(url));
       },
-      onProgressChanged: (controller, percent) {
-        _certificates.onProgress(controller, percent);
+      onProgressChanged: (_, percent) {
+        _certificates.onProgress(percent);
         browser.onProgress(percent / 100);
       },
       onReceivedError: (_, request, error) {
