@@ -9,7 +9,6 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/platform/desktop_notifier.dart';
 import '../../domain/entities/zentao_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../../domain/usecases/filter_self_notifications.dart';
@@ -18,11 +17,6 @@ import '../../domain/usecases/refresh_notifications.dart';
 
 final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => getIt<NotificationRepository>(),
-);
-
-/// OS notifications for the ZenTao notifications a refresh brings in.
-final notificationDesktopNotifierProvider = Provider<DesktopNotifier>(
-  (ref) => getIt<DesktopNotifier>(),
 );
 
 final refreshNotificationsProvider = Provider<RefreshNotifications>(

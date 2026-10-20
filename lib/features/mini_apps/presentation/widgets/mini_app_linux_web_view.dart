@@ -86,10 +86,15 @@ class _MiniAppLinuxWebViewState extends ConsumerState<MiniAppLinuxWebView> {
       appTalker.error('Mini app $name: ${error.url} → ${error.description}');
       if (error.isForMainFrame ?? true) browser.onError(error.description);
     });
+    // Each step checks the view is still up: leaving the app at once disposes
+    // the controller, and a call on it then would throw unawaited.
+    if (!mounted) return;
     await _web.setPlatformNavigationDelegate(delegate);
+    if (!mounted) return;
     await _web.setOnPlatformPermissionRequest(
       (request) => unawaited(_answerPermission(request)),
     );
+    if (!mounted) return;
     await _page.install();
     if (!mounted) return;
     final page = MiniAppPageContext(
@@ -100,6 +105,7 @@ class _MiniAppLinuxWebViewState extends ConsumerState<MiniAppLinuxWebView> {
     for (final capability in _capabilities) {
       if (capability.userScript case final script?) {
         await _page.addScript(script);
+        if (!mounted) return;
       }
       capability.attach(_page, page);
     }

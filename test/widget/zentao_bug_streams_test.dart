@@ -284,16 +284,27 @@ void main() {
         reason: column.name,
       );
     }
-    // One bug from each view; 'assigntome' and 'openedbyme' happen to list
-    // the same one, which is shown once.
-    expect(container.read(zentaoBugSliceProvider).value, hasLength(2));
-    // Only its own view counts toward loading more: one of its three has
-    // another page.
-    expect(container.read(zentaoBugHasMoreProvider), isTrue);
-    await container
-        .read(zentaoBugStreamsProvider.notifier)
-        .loadMore(ZenTaoBugStream.relatedToMe);
+    // Each view read to its end: both pages of 'assigntome', one of each
+    // other. 'assigntome' and 'openedbyme' happen to list the same first bug,
+    // which is shown once.
+    expect(container.read(zentaoBugSliceProvider).value, hasLength(3));
+    // Read whole, so nothing is left to load: paging the three together
+    // would show rows that are not the top of their merged order.
     expect(container.read(zentaoBugHasMoreProvider), isFalse);
+    // A view that ran out is not asked again (ZenTao would answer its first
+    // page).
+    for (final view in ['openedbyme', 'resolvedbyme']) {
+      verifyNever(
+        () => sync.syncProductBugsPage(
+          accountId: any(named: 'accountId'),
+          productId: any(named: 'productId'),
+          browseType: view,
+          page: 2,
+          limit: any(named: 'limit'),
+          cancel: any(named: 'cancel'),
+        ),
+      );
+    }
   });
 
   test('leaving Related to me loads the column views again', () async {

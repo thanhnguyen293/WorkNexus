@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/providers.dart';
 import '../../../../core/navigation/mini_app_links.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/platform/desktop_window_service.dart';
@@ -43,7 +44,7 @@ class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
   void initState() {
     super.initState();
     linkRouter.register(LinkStage.miniApp, this);
-    _taps = ref.read(miniAppNotifierProvider).taps.listen(_onNotificationTap);
+    _taps = ref.read(desktopNotifierProvider).taps.listen(_onNotificationTap);
     ref.listenManual<AsyncValue<List<MiniApp>>>(
       miniAppsProvider,
       (_, apps) => _publishTargets(apps.asData?.value ?? const []),

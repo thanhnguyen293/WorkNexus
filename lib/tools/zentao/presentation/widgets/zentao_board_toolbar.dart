@@ -1,21 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/presentation/widgets/board_toolbar.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../providers/zentao_facet_catalog_provider.dart';
 import 'zentao_board_refresh_button.dart';
 import 'zentao_status_filter_option.dart';
 
-/// The bar under a ZenTao board's header, one row of the toolbar's controls
-/// at one height: what to show ([scopes]: all, assigned to me…) and the
-/// filters on the left; refresh and the view modes on the right.
+/// The bar under a ZenTao board's header: the shared [BoardToolbar], with
+/// what to show ([scopes]: all, related to me…) and the Filters button.
 class ZenTaoBoardToolbar extends ConsumerWidget {
   const ZenTaoBoardToolbar({
     super.key,
@@ -39,44 +35,19 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
   final bool filtering;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppL10n.of(context);
-    final s = context.spacing;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        border: Border(bottom: context.hairlineSide),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.sm),
-        child: Row(
-          spacing: s.sm,
-          children: [
-            AppSegmentedTabs(tabs: scopes),
-            if (filtering)
-              FiltersButton(
-                statusOption: zentaoStatusFilterOption(bugBoard: bugs),
-                catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
-                // Picking a filter shows it over every ticket: the All view.
-                onPick: scopes.first.active ? null : scopes.first.onTap,
-              ),
-            const Spacer(),
-            ZenTaoBoardRefreshButton(bugs: bugs),
-            AppSegmentedTabs(
-              tabs: [
-                for (final m in modes)
-                  AppSegmentedTab(
-                    label: m.label(l),
-                    icon: m.icon,
-                    active: m.id == viewMode,
-                    onTap: () =>
-                        ref.read(appNavProvider.notifier).setViewMode(m.id),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) => BoardToolbar(
+    filters: scopes,
+    filtersButton: filtering
+        ? FiltersButton(
+            statusOption: zentaoStatusFilterOption(bugBoard: bugs),
+            catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
+            // Picking a filter shows it over every ticket: the All view.
+            onPick: scopes.first.active ? null : scopes.first.onTap,
+          )
+        : null,
+    refresh: ZenTaoBoardRefreshButton(bugs: bugs),
+    modes: modes,
+    viewMode: viewMode,
+    onViewMode: (id) => ref.read(appNavProvider.notifier).setViewMode(id),
+  );
 }

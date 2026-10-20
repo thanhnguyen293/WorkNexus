@@ -3,10 +3,10 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/usecase/usecase.dart';
 
-/// The same page of several server views as one page of one view (the
-/// ZenTao bug board's "Related to me": assigned to, opened by and resolved by
-/// me). A ticket in more than one of them is listed once, where it first
-/// appears; there are more pages while any view has more. [ViewPage.total]
+/// Pages of several server views as one page of one view (the ZenTao bug
+/// board's "Related to me": assigned to, opened by and resolved by me, each
+/// read whole). A ticket in more than one of them is listed once, where it
+/// first appears; there are more pages while any view has more. [ViewPage.total]
 /// adds the views' totals, so it counts such a ticket more than once.
 ///
 /// One view failing fails the page: its retry fetches them all again, and a

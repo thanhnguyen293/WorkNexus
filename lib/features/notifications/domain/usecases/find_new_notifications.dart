@@ -15,7 +15,11 @@ typedef NewNotificationsInput = ({
 
 /// The unread notifications a refresh brought in, to raise on the desktop. The
 /// first list is the backlog, not news: it only becomes what has been seen.
-/// A notification read elsewhere before it was seen here is not raised.
+/// So is the first list of an account none of whose notifications has been
+/// seen yet: the first list comes from the local database, which a fresh
+/// install, a cleared cache or an account just added does not fill until the
+/// first fetch. A notification read elsewhere before it was seen here is not
+/// raised.
 class FindNewNotifications
     extends UseCase<NewNotifications, NewNotificationsInput> {
   const FindNewNotifications();
@@ -28,14 +32,22 @@ class FindNewNotifications
     final seen = {for (final n in input.current) keyOf(n)};
     final before = input.seen;
     if (before == null) return (fresh: const [], seen: seen);
+    final known = {for (final key in before) _accountOf(key)};
     final fresh = [
       for (final n in input.current)
-        if (!n.read && !before.contains(keyOf(n))) n,
+        if (!n.read &&
+            !before.contains(keyOf(n)) &&
+            known.contains(n.accountId))
+          n,
     ]..sort((a, b) => _time(b).compareTo(_time(a)));
     // Kept once seen: a notification that drops off the list and comes back
     // (a refresh that briefly failed) is not news either.
     return (fresh: fresh, seen: {...before, ...seen});
   }
+
+  /// The account of a [keyOf] key; notification ids hold no colon.
+  static String _accountOf(String key) =>
+      key.substring(0, key.lastIndexOf(':'));
 
   static DateTime _time(ZenTaoNotification n) =>
       n.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);

@@ -19,9 +19,9 @@ enum ZenTaoBugStream {
   all('all'),
 
   /// The bugs that concern the signed-in user, whatever their status: those
-  /// assigned to, opened by and resolved by them — three ZenTao views paged
-  /// together as one. On the Related-to-me tab this one view feeds every
-  /// column.
+  /// assigned to, opened by and resolved by them — three ZenTao views, each
+  /// read to its end, merged as one. On the Related-to-me tab this one view
+  /// feeds every column.
   relatedToMe('assigntome', also: ['openedbyme', 'resolvedbyme']);
 
   const ZenTaoBugStream(this.code, {this.also = const []});

@@ -66,27 +66,31 @@ $source
       _handlers[name] = handler;
 
   Future<void> _onMessage(JavaScriptMessage message) async {
-    final int id;
+    final String id;
     final String name;
     final List<dynamic> args;
     try {
       final call = jsonDecode(message.message) as Map<String, dynamic>;
-      id = call['id'] as int;
+      id = call['id'] as String;
       name = call['name'] as String;
       args = call['args'] as List<dynamic>;
     } on Object catch (e) {
       appTalker.warning('Mini app bridge: unreadable call ($e)');
       return;
     }
-    Object? answer;
+    // `error, value`: a failed handler (or an answer JSON cannot carry)
+    // rejects the call, as flutter_inappwebview does, so the page's await
+    // ends either way.
+    String outcome;
     try {
-      answer = await _handlers[name]?.call(args);
+      outcome = 'null, ${jsonEncode(await _handlers[name]?.call(args))}';
     } on Object catch (e, st) {
       appTalker.error('Mini app bridge: $name failed', e, st);
+      outcome = '${jsonEncode('$name failed')}, null';
     }
     try {
       await web.runJavaScript(
-        'window.__workNexusBridgeSettle($id, ${jsonEncode(answer)});',
+        'window.__workNexusBridgeSettle(${jsonEncode(id)}, $outcome);',
       );
     } on Object catch (e) {
       // The page moved on meanwhile; its promise went with it.
@@ -100,20 +104,26 @@ $source
   if (window.flutter_inappwebview) return;
   var pending = new Map();
   var next = 0;
+  // Ids no other frame can guess: the message handler takes messages from
+  // every frame, and each answer settles this frame's call of its id.
+  var nonce = Array.prototype.map.call(
+    crypto.getRandomValues(new Uint32Array(4)),
+    function (n) { return n.toString(36); }).join('');
   Object.defineProperty(window, '__workNexusBridgeSettle', {
-    value: function (id, value) {
-      var settle = pending.get(id);
-      if (!settle) return;
+    value: function (id, error, value) {
+      var call = pending.get(id);
+      if (!call) return;
       pending.delete(id);
-      settle(value);
+      if (error === null) call.resolve(value);
+      else call.reject(new Error(error));
     },
   });
   window.flutter_inappwebview = {
     callHandler: function (name) {
       var args = Array.prototype.slice.call(arguments, 1);
-      return new Promise(function (resolve) {
-        var id = ++next;
-        pending.set(id, resolve);
+      return new Promise(function (resolve, reject) {
+        var id = nonce + ':' + ++next;
+        pending.set(id, { resolve: resolve, reject: reject });
         window.webkit.messageHandlers.$_channel.postMessage(
           JSON.stringify({ id: id, name: name, args: args }));
       });
