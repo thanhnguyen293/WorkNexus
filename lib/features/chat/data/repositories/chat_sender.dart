@@ -68,12 +68,14 @@ class ChatSender {
   Future<Result<void>> sendEmoji(
     String accountId,
     String chatGid,
-    String code,
-  ) => _sendInline(
+    String code, {
+    int? replyToId,
+  }) => _sendInline(
     accountId,
     chatGid,
     contentType: 'image',
     content: jsonEncode({'type': 'emoji', 'content': code}),
+    replyToId: replyToId,
   );
 
   /// The official client's code message: `{lang, code, name}`, key for key

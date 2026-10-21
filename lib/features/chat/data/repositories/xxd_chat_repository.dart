@@ -15,6 +15,7 @@ import '../../domain/entities/chat_cache_usage.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/entities/message_reaction.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_avatar_crop.dart';
@@ -40,6 +41,7 @@ import 'chat_cache_manager.dart';
 import 'chat_credentials_resolver.dart';
 import 'chat_history_sync.dart';
 import 'chat_packet_ingestor.dart';
+import 'chat_reactions_watcher.dart';
 import 'chat_saved_copies.dart';
 import 'chat_sender.dart';
 import 'chat_session.dart';
@@ -319,7 +321,7 @@ class XxdChatRepository implements ChatRepository {
   }) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.watchMessages(accountId, chatGid, limit: limit),
-    (rows, self) => [for (final r in rows) _rows.message(r, selfUserId: self)],
+    (rows, self) => _rows.timeline(rows, selfUserId: self),
   ).distinct(const ListEquality<ChatMessage>().equals);
 
   @override
@@ -342,6 +344,10 @@ class XxdChatRepository implements ChatRepository {
           for (final r in rows) _rows.message(r, selfUserId: self),
         ],
       ).distinct(const ListEquality<ChatMessage>().equals);
+
+  @override
+  Stream<Map<int, List<MessageReaction>>> watchReactions(String a, String c) =>
+      const ChatReactionsWatcher()(watchReplies(a, c));
 
   @override
   Stream<List<ChatMessage>> watchAttachments(
@@ -379,7 +385,7 @@ class XxdChatRepository implements ChatRepository {
       from: fromIndex,
       to: toIndex,
     ),
-    (rows, self) => [for (final r in rows) _rows.message(r, selfUserId: self)],
+    (rows, self) => _rows.timeline(rows, selfUserId: self),
   );
 
   @override
@@ -594,8 +600,9 @@ class XxdChatRepository implements ChatRepository {
   Future<Result<void>> sendEmoji(
     String accountId,
     String chatGid,
-    String code,
-  ) => _sender.sendEmoji(accountId, chatGid, code);
+    String code, {
+    int? replyToId,
+  }) => _sender.sendEmoji(accountId, chatGid, code, replyToId: replyToId);
 
   @override
   Future<Result<void>> sendCode(

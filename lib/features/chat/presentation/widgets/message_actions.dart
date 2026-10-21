@@ -7,6 +7,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/entities/chat_message_reaction.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import '../providers/message_translation_controller.dart';
@@ -14,6 +15,7 @@ import 'chat_labels.dart';
 import 'chat_snack.dart';
 import 'forward_message_dialog.dart';
 import 'message_hover_actions.dart';
+import 'reaction_picker.dart';
 import 'save_sticker_action.dart';
 
 /// The hover actions a message offers: reply, open its thread, forward, copy text, save an image as a
@@ -55,6 +57,7 @@ List<MessageAction> messageActions(
         ),
       ) ||
       (storedTranslation?.visible ?? false);
+  final canReact = messageCanBeReactedTo(message);
   final text = switch (message.content) {
     TextContent(:final text) when !message.deleted => text,
     _ => null,
@@ -72,6 +75,13 @@ List<MessageAction> messageActions(
         tooltip: l.chatReply,
         destructive: false,
         onTap: () => onReply(message),
+      ),
+    if (canReact)
+      (
+        icon: LucideIcons.smilePlus300,
+        tooltip: l.chatReact,
+        destructive: false,
+        onTap: () => reactToMessage(context, ref, message),
       ),
     if (onOpenThread != null && serverId != null)
       (
@@ -169,3 +179,8 @@ List<MessageAction> messageActions(
       ),
   ];
 }
+
+/// Whether the hover actions offer a reaction to [message]: one that is
+/// stored, not retracted and not itself a reaction.
+bool messageCanBeReactedTo(ChatMessage message) =>
+    message.serverId != null && !message.deleted && !message.isReaction;
