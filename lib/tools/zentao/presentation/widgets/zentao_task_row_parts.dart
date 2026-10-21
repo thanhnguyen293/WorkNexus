@@ -48,7 +48,7 @@ class ZenTaoDueTag extends StatelessWidget {
       );
     }
 
-    final d = deadline!;
+    final d = deadline!.toLocal();
     final c = context.colors;
     final l = AppL10n.of(context);
     final now = DateTime.now();

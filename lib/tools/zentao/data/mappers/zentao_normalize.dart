@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/util/content_hash.dart';
 import '../../../../core/util/html_entities.dart';
+import '../../../../core/util/synthetic_labels.dart';
 import '../../../../core/util/zentao_labels.dart';
 import '../datasources/zentao_form_parsing.dart';
 import '../models/zentao_models.dart';
@@ -83,13 +84,70 @@ String stripHtml(String html) {
       .trim();
 }
 
+/// ZenTao server's timezone offset, defaulting to GMT+8 (Asia/Shanghai)
+/// which is the standard timezone for ZenTao PMS installations.
+/// Updated dynamically whenever a ZenTao date with explicit offset is parsed.
+Duration zenTaoServerOffset = const Duration(hours: 8);
+
+/// Converts a user's local [DateTime] to ZenTao server's wall-clock [DateTime].
+DateTime toZenTaoServerTime(DateTime localTime) {
+  final serverInstant = localTime.toUtc().add(zenTaoServerOffset);
+  return DateTime(
+    serverInstant.year,
+    serverInstant.month,
+    serverInstant.day,
+    serverInstant.hour,
+    serverInstant.minute,
+    serverInstant.second,
+  );
+}
+
 /// Parses ZenTao dates (ISO-8601 or `YYYY-MM-DD HH:MM:SS`); `0000-00-00` → null.
+/// Bare dates without timezone offset are interpreted in ZenTao server timezone
+/// ([zenTaoServerOffset]) and converted to UTC.
 DateTime? parseZenTaoDate(Object? value) {
   if (value == null) return null;
   final s = value.toString().trim();
   if (s.isEmpty || s.startsWith('0000-00-00')) return null;
-  return DateTime.tryParse(s.replaceFirst(' ', 'T'));
+
+  final offsetMatch = RegExp(r'([+-])(\d{2}):(\d{2})$').firstMatch(s);
+  if (offsetMatch != null) {
+    final sign = offsetMatch.group(1) == '-' ? -1 : 1;
+    final h = int.parse(offsetMatch.group(2)!);
+    final m = int.parse(offsetMatch.group(3)!);
+    zenTaoServerOffset = Duration(hours: sign * h, minutes: sign * m);
+    return DateTime.tryParse(s.replaceFirst(' ', 'T'))?.toUtc();
+  }
+
+  if (s.endsWith('Z') || s.endsWith('z')) {
+    return DateTime.tryParse(s.replaceFirst(' ', 'T'))?.toUtc();
+  }
+
+  final match = RegExp(
+    r'^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?',
+  ).firstMatch(s);
+  if (match == null) {
+    return DateTime.tryParse(s.replaceFirst(' ', 'T'))?.toUtc();
+  }
+
+  final year = int.parse(match[1]!);
+  final month = int.parse(match[2]!);
+  final day = int.parse(match[3]!);
+  final hour = int.parse(match[4]!);
+  final minute = int.parse(match[5]!);
+  final second = match[6] != null ? int.parse(match[6]!) : 0;
+  return DateTime.utc(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+  ).subtract(zenTaoServerOffset);
 }
+
+/// Alias for [parseZenTaoDate].
+DateTime? parseZenTaoWallClockDate(Object? value) => parseZenTaoDate(value);
 
 /// Human-readable phrase for a ZenTao action/history record, rendered after the
 /// actor's name (e.g. "assigned to Thanh", "resolved · resolution: Fixed").
@@ -215,6 +273,17 @@ Ticket normalizeZenTao(
   if (type == ZenTaoType.bug && resolution.isNotEmpty) {
     labels.add('resolution:$resolution');
   }
+  if (type == ZenTaoType.task) {
+    final exec = _executionId(e.execution);
+    if (exec != null && exec.isNotEmpty && exec != '0') {
+      labels.add(zentaoExecutionLabel(exec));
+    }
+  } else if (type == ZenTaoType.bug) {
+    final prod = _executionId(e.product);
+    if (prod != null && prod.isNotEmpty && prod != '0') {
+      labels.add(zentaoProductLabel(prod));
+    }
+  }
 
   final scopeName = e.scopeName;
   final projectId = '$accountId:${scopeName.isEmpty ? type.label : scopeName}';
@@ -262,7 +331,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       estimate: e.estimate,
       consumed: e.consumed,
       left: e.left,
-      realStarted: parseZenTaoDate(e.realStarted),
+      realStarted: parseZenTaoWallClockDate(e.realStarted),
       openedByHandle: accountHandle(e.openedBy),
       taskType: _text(e.type),
       executionName: _text(e.executionName),
@@ -275,7 +344,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       openedDate: parseZenTaoDate(e.openedDate),
       finishedBy: accountName(e.finishedBy),
       finishedByHandle: accountHandle(e.finishedBy),
-      finishedDate: parseZenTaoDate(e.finishedDate),
+      finishedDate: parseZenTaoWallClockDate(e.finishedDate),
       closedBy: accountName(e.closedBy),
       closedDate: parseZenTaoDate(e.closedDate),
       lastEditedDate: parseZenTaoDate(e.lastEditedDate),

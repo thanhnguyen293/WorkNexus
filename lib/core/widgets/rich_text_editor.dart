@@ -1,6 +1,7 @@
 // Quill marks its clipboard toolbar buttons experimental (hidden here).
 // ignore_for_file: experimental_member_use
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
@@ -15,6 +16,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../util/dropped_files.dart';
 import 'editor_image_embed.dart';
+import 'editor_table_embed.dart';
 import 'editor_toolbar_buttons.dart';
 import 'file_drop_target.dart';
 import 'html_editing_controller.dart';
@@ -114,6 +116,30 @@ class _RichTextEditorState extends State<RichTextEditor> {
     quill.replaceText(at, 0, BlockEmbed.image(url), null);
   }
 
+  /// Inserts an interactive 3x3 table embed at the current cursor position.
+  void _insertTable() {
+    final quill = widget.controller.quill;
+    final at = quill.selection.baseOffset < 0
+        ? quill.document.length - 1
+        : quill.selection.baseOffset;
+    final tableId = 'table_${DateTime.now().microsecondsSinceEpoch}';
+    const initialRows = [
+      ['Header 1', 'Header 2', 'Header 3'],
+      ['Value 1', 'Value 2', 'Value 3'],
+      ['Value 4', 'Value 5', 'Value 6'],
+    ];
+    TableDataStore.set(tableId, initialRows);
+    quill.replaceText(
+      at,
+      0,
+      BlockEmbed(
+        EditorTableEmbedBuilder.tableType,
+        jsonEncode({'id': tableId, 'rows': initialRows}),
+      ),
+      null,
+    );
+  }
+
   /// Images go inline (when they can be uploaded); the rest to [onDropFiles].
   Future<void> _drop(List<DroppedFile> files) async {
     final canUpload = widget.onUploadImage != null;
@@ -175,6 +201,11 @@ class _RichTextEditorState extends State<RichTextEditor> {
                             : Icon(LucideIcons.image300, size: s.xl2),
                         onPressed: _uploading ? null : _pickImage,
                       ),
+                    QuillToolbarCustomButtonOptions(
+                      tooltip: l.insertTable,
+                      icon: Icon(LucideIcons.table300, size: s.xl2),
+                      onPressed: _insertTable,
+                    ),
                   ],
                 ),
               ),
@@ -195,6 +226,7 @@ class _RichTextEditorState extends State<RichTextEditor> {
                     customStyles: _bodyStyles(context),
                     embedBuilders: [
                       EditorImageEmbedBuilder(loader: widget.imageLoader),
+                      const EditorTableEmbedBuilder(),
                     ],
                   ),
                 ),

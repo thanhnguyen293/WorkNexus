@@ -62,6 +62,12 @@
   "relatedBugs": "Bug liên quan",
   "relatedBugsLoadFailed": "Không tải được bug liên quan từ ZenTao.",
   "insertImage": "Chèn ảnh",
+  "insertTable": "Chèn bảng",
+  "addRow": "Thêm hàng",
+  "addColumn": "Thêm cột",
+  "removeRow": "Xóa hàng",
+  "removeColumn": "Xóa cột",
+  "deleteTable": "Xóa bảng",
   "imageUploadFailed": "Không tải ảnh lên được",
   "newBug": "Thêm bug",
   "newTask": "Thêm task",
@@ -1709,5 +1715,8 @@
   "workspaceCreateFailed": "Không tạo được workspace: {error}",
   "zentaoProductsGroup": "Product",
   "zentaoProjectsGroup": "Project",
-  "zentaoPickExecution": "Chọn một bản thực thi để xem task"
+  "zentaoPickExecution": "Chọn một bản thực thi để xem task",
+  "deleteTask": "Xóa task",
+  "deleteTaskConfirm": "Bạn có chắc chắn muốn xóa task #{id} không?",
+  "taskDeleted": "Đã xóa task thành công"
 }

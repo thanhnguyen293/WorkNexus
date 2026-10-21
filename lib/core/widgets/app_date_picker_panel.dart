@@ -20,6 +20,7 @@ class AppDatePickerPanel extends StatelessWidget {
     required this.onQuickPick,
     this.quickPicks = const [],
     this.footer,
+    this.sideWidget,
   });
 
   final DateTime? picked;
@@ -30,18 +31,71 @@ class AppDatePickerPanel extends StatelessWidget {
   final List<AppDateQuickPick> quickPicks;
   final Widget? footer;
 
+  /// Optional side-by-side widget (e.g. [AppDateTimeColumns] for time picking).
+  final Widget? sideWidget;
+
   @override
   Widget build(BuildContext context) {
     final s = context.spacing;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final picked = this.picked;
+    final picked = this.picked?.toLocal();
     final day = picked == null
         ? null
         : DateTime(picked.year, picked.month, picked.day);
     // Wide enough to reach the picked day even when it is far back.
     final from = math.min(day?.year ?? now.year, now.year) - 10;
     final footer = this.footer;
+    final side = sideWidget;
+
+    final calendar = _ThemedCalendar(
+      key: ValueKey(day),
+      initialDate: day ?? today,
+      firstDate: DateTime(from),
+      lastDate: DateTime(now.year + 10),
+      onDateChanged: onPickDay,
+    );
+
+    if (side != null) {
+      return SizedBox(
+        height: 380,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: s.xl6 * 7.5,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  calendar,
+                  if (quickPicks.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(s.md, 0, s.md, s.sm),
+                      child: Center(
+                        child: Wrap(
+                          spacing: s.sm,
+                          children: [
+                            for (final pick in quickPicks)
+                              _QuickPick(
+                                label: pick.label,
+                                selected: picked == pick.value,
+                                onTap: () => onQuickPick(pick.value),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            side,
+          ],
+        ),
+      );
+    }
+
     return SizedBox(
       width: s.xl6 * 8,
       child: Column(
@@ -63,14 +117,7 @@ class AppDatePickerPanel extends StatelessWidget {
                 ],
               ),
             ),
-          _ThemedCalendar(
-            // A pick made outside the calendar (a quick pick) moves it.
-            key: ValueKey(day),
-            initialDate: day ?? today,
-            firstDate: DateTime(from),
-            lastDate: DateTime(now.year + 10),
-            onDateChanged: onPickDay,
-          ),
+          calendar,
           if (footer != null)
             Padding(
               padding: EdgeInsets.fromLTRB(s.xl, 0, s.xl, s.xl),

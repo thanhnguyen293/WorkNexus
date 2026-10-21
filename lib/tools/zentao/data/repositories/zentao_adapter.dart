@@ -508,9 +508,12 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
     });
   }
 
-  Ticket _executionTask(Ticket ticket, String executionId) => ticket.copyWith(
-    labels: [...ticket.labels, zentaoExecutionLabel(executionId)],
-  );
+  Ticket _executionTask(Ticket ticket, String executionId) {
+    final label = zentaoExecutionLabel(executionId);
+    return ticket.labels.contains(label)
+        ? ticket
+        : ticket.copyWith(labels: [...ticket.labels, label]);
+  }
 
   @override
   Future<Result<bool>> assignTicket(

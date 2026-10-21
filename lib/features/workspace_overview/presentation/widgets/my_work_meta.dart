@@ -63,13 +63,14 @@ class MyWorkDueFact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final overdue = due.isBefore(DateTime(now.year, now.month, now.day));
+    final localDue = due.toLocal();
+    final overdue = localDue.isBefore(DateTime(now.year, now.month, now.day));
     final locale = Localizations.localeOf(context).toString();
     return MyWorkFact(
       icon: LucideIcons.calendar300,
       text: AppL10n.of(
         context,
-      ).dashboardDue(DateFormat.MMMd(locale).format(due)),
+      ).dashboardDue(DateFormat.MMMd(locale).format(localDue)),
       color: overdue ? context.colors.error : null,
     );
   }

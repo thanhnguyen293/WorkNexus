@@ -31,6 +31,7 @@ void ensureZenTaoActionOk(Response<dynamic> resp, String action) {
 bool _refused(Map<String, dynamic> reply) =>
     reply['result']?.toString() == 'fail' ||
     const {'fail', 'failed'}.contains(reply['status']?.toString()) ||
+    reply.containsKey('error') ||
     // 18.x answers a signed-out request by sending the client to log in.
     (reply['locate']?.toString().contains('user-login') ?? false);
 

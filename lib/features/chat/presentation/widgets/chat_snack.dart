@@ -5,11 +5,16 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Reports a failed chat command next to where it happened.
-void showChatFailure(BuildContext context, Failure failure) {
+void showChatFailure(
+  BuildContext context,
+  Failure failure, {
+  VoidCallback? onReconnect,
+}) {
   if (!context.mounted) return;
+  final l = AppL10n.of(context);
   showAppSnack(
     context,
-    AppL10n.of(context).chatActionFailed(failure.message),
+    l.chatActionFailed(failure.message),
     isError: true,
   );
 }

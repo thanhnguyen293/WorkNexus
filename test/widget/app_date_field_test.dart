@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_date_field.dart';
+import 'package:work_nexus/core/widgets/app_date_time_columns.dart';
 import 'package:work_nexus/core/widgets/app_time_input.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -102,7 +103,12 @@ void main() {
     );
     await open(tester);
 
-    await tester.tap(find.text('20'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(CalendarDatePicker),
+        matching: find.text('20'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(changes.last, DateTime(2026, 10, 20, 9, 30));
     expect(isOpen(), isTrue, reason: 'the time may follow');
@@ -115,6 +121,35 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
     await tester.pump();
     expect(changes.last, DateTime(2026, 10, 20, 14, 6));
+  });
+
+  testWidgets('tapping hour and minute columns updates the picked time', (
+    tester,
+  ) async {
+    final changes = await pump(
+      tester,
+      initial: DateTime(2026, 10, 13, 9, 30),
+      withTime: true,
+    );
+    await open(tester);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppDateTimeColumns),
+        matching: find.text('11'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(changes.last, DateTime(2026, 10, 13, 11, 30));
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppDateTimeColumns),
+        matching: find.text('35'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(changes.last, DateTime(2026, 10, 13, 11, 35));
   });
 
   testWidgets('a half-typed time is not reported', (tester) async {

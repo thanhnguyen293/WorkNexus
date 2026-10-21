@@ -11,8 +11,8 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../util/relative_time.dart';
 import 'app_date_picker_panel.dart';
+import 'app_date_time_columns.dart';
 import 'app_icon_button.dart';
-import 'app_time_input.dart';
 import 'hover_surface.dart';
 
 /// The app's date field: a calendar drops down under it, in the app's
@@ -57,7 +57,7 @@ class _AppDateFieldState extends State<AppDateField> {
   /// A calendar day, keeping the time already picked (or now's).
   void _pickDay(DateTime day) {
     if (!widget.withTime) return _set(day, close: true);
-    final time = widget.value ?? DateTime.now();
+    final time = widget.value?.toLocal() ?? DateTime.now();
     _set(
       DateTime(day.year, day.month, day.day, time.hour, time.minute),
       close: false,
@@ -65,7 +65,7 @@ class _AppDateFieldState extends State<AppDateField> {
   }
 
   void _pickTime(TimeOfDay time) {
-    final day = widget.value ?? DateTime.now();
+    final day = widget.value?.toLocal() ?? DateTime.now();
     _set(
       DateTime(day.year, day.month, day.day, time.hour, time.minute),
       close: false,
@@ -123,9 +123,11 @@ class _AppDateFieldState extends State<AppDateField> {
               onPickDay: _pickDay,
               onQuickPick: (v) => _set(v, close: true),
               quickPicks: _quickPicks(l),
-              footer: widget.withTime
-                  ? _TimeRow(
-                      value: TimeOfDay.fromDateTime(value ?? DateTime.now()),
+              sideWidget: widget.withTime
+                  ? AppDateTimeColumns(
+                      time: TimeOfDay.fromDateTime(
+                        (value?.toLocal()) ?? DateTime.now(),
+                      ),
                       onChanged: _pickTime,
                     )
                   : null,
@@ -211,36 +213,6 @@ class _DateButton extends ConsumerWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-/// Under the calendar when a time is picked too.
-class _TimeRow extends StatelessWidget {
-  const _TimeRow({required this.value, required this.onChanged});
-
-  final TimeOfDay value;
-  final ValueChanged<TimeOfDay> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Row(
-      children: [
-        Icon(
-          LucideIcons.clock300,
-          size: context.sizes.iconMd,
-          color: c.textTertiary,
-        ),
-        SizedBox(width: context.spacing.md),
-        Expanded(
-          child: Text(
-            AppL10n.of(context).dateTime,
-            style: context.typography.bodySm.copyWith(color: c.textSecondary),
-          ),
-        ),
-        AppTimeInput(value: value, onChanged: onChanged),
-      ],
     );
   }
 }

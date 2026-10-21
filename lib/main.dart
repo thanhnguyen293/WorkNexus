@@ -18,6 +18,7 @@ import 'core/di/providers.dart';
 import 'core/navigation/open_storage.dart';
 import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
+import 'core/platform/app_http_overrides.dart';
 import 'core/platform/app_icon_providers.dart';
 import 'core/platform/app_icon_service.dart';
 import 'core/platform/app_name_providers.dart';
@@ -35,6 +36,7 @@ import 'shared/sync/data/sync_coordinator.dart';
 import 'tools/zentao/presentation/util/open_execution_board.dart';
 
 Future<void> main(List<String> arguments) async {
+  HttpOverrides.global = AppHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
   const window = DesktopWindowService();
   await const DesktopSingleInstanceService().initialize(arguments, window);

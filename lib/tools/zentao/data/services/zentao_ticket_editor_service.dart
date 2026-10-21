@@ -56,7 +56,12 @@ class ZenTaoTicketEditorService implements ZenTaoTicketEditor {
   ) async {
     final client = await _client(accountId);
     final host = Uri.tryParse(client?.baseUrl ?? '')?.host ?? '';
-    return _ticketService.fetchZenTaoTicket(host: host, type: type, id: id);
+    return _ticketService.fetchZenTaoTicket(
+      accountId: accountId,
+      host: host,
+      type: type,
+      id: id,
+    );
   }
 
   @override

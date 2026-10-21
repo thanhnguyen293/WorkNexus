@@ -8,6 +8,7 @@ import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/domain/value_objects/zentao_task_action_input.dart';
 import '../datasources/zentao_client.dart';
 import '../datasources/zentao_form_parsing.dart';
+import '../mappers/zentao_normalize.dart';
 import 'zentao_action_result.dart';
 
 /// Hours as ZenTao's forms take them: `2`, `2.5`.
@@ -16,9 +17,10 @@ String zentaoHours(double hours) {
   return rounded == rounded.roundToDouble() ? '${rounded.toInt()}' : '$rounded';
 }
 
-/// A date-time as ZenTao's forms take it (server-local `yyyy-MM-dd HH:mm:ss`).
+/// A date-time as ZenTao's forms take it (server-local `yyyy-MM-dd HH:mm:ss`),
+/// converting from user local time to ZenTao server's timezone.
 String zentaoDateTime(DateTime time) =>
-    DateFormat('yyyy-MM-dd HH:mm:ss').format(time.toLocal());
+    DateFormat('yyyy-MM-dd HH:mm:ss').format(toZenTaoServerTime(time));
 
 /// ZenTao's bug and task status actions, through its classic web actions
 /// (`bug-close-{id}`, `task-start-{id}`…) with the fields its own forms send.
@@ -156,6 +158,12 @@ class ZenTaoWorkflow {
       ZenTaoTaskAction.close ||
       ZenTaoTaskAction.cancel => {'comment': ?comment},
     };
+  }
+
+  /// Deletes task [taskId].
+  Future<void> deleteTask(String taskId) async {
+    final resp = await _client.deleteTask(taskId);
+    ensureZenTaoActionOk(resp, 'delete');
   }
 }
 

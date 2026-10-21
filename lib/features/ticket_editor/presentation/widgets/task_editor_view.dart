@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/task_editor_controller.dart';
 import 'confirm_discard_draft.dart';
 import 'draft_picker_button.dart';
@@ -88,6 +89,7 @@ class _TaskEditorViewState extends ConsumerState<TaskEditorView>
     final ticketId = await controller.save();
     if (ticketId == null || !mounted) return;
     _close();
+    ref.read(boardRefreshTriggerProvider.notifier).trigger();
     final nav = ref.read(appNavProvider.notifier);
     switch (next) {
       case TaskAfterSave.openTask:

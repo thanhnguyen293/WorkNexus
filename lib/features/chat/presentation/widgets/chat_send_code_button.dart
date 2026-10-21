@@ -40,7 +40,14 @@ class ChatSendCodeButton extends ConsumerWidget {
           replyToId: replyToId,
         );
     if (result case Err(:final failure)) {
-      if (context.mounted) showChatFailure(context, failure);
+      if (context.mounted) {
+        showChatFailure(
+          context,
+          failure,
+          onReconnect: () =>
+              ref.read(chatControllerProvider).connect(t.accountId),
+        );
+      }
     }
   }
 

@@ -19,7 +19,7 @@ class ChatStatusBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(chatStatusProvider(accountId)).asData?.value;
+    final status = ref.watch(chatStatusProvider(accountId)).value;
     final l = AppL10n.of(context);
     final c = context.colors;
     final connect = AppButton.outlinedNeutral(
@@ -33,7 +33,7 @@ class ChatStatusBanner extends ConsumerWidget {
       ChatReconnecting(:final retryIn) => (
         l.chatReconnecting(retryIn.inSeconds),
         c.warning,
-        null,
+        connect,
       ),
       ChatOffline() => (l.chatConnectionOffline, c.textSecondary, connect),
       // The chat view itself is the prompt then (see ChatTrustGate).
@@ -62,7 +62,10 @@ class ChatStatusBanner extends ConsumerWidget {
               style: context.typography.secondary.copyWith(color: tone),
             ),
           ),
-          ?action,
+          if (action != null) ...[
+            SizedBox(width: context.spacing.sm),
+            action,
+          ],
         ],
       ),
     );

@@ -137,7 +137,7 @@ class XxdChatRepository implements ChatRepository {
 
   Future<Result<void>> _connectOnce(String accountId) async {
     final existing = _sessions[accountId];
-    if (existing != null && existing.isActive) return const Ok(null);
+    if (existing != null && existing.isOnline) return const Ok(null);
     await _closeSession(accountId);
 
     final credentials = await _resolver.resolve(accountId);

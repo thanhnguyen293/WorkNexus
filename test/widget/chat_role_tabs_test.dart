@@ -38,15 +38,15 @@ void main() {
     expect(find.text('All'), findsOneWidget);
     expect(find.text('4'), findsOneWidget);
     expect(find.text('Senior Manager'), findsOneWidget);
-    expect(find.text('Developẻ'), findsOneWidget);
+    expect(find.text('Developer'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     expect(find.text('No role'), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('Senior Manager')).dx,
-      lessThan(tester.getTopLeft(find.text('Developẻ')).dx),
+      lessThan(tester.getTopLeft(find.text('Developer')).dx),
     );
 
-    await tester.tap(find.text('Developẻ'));
+    await tester.tap(find.text('Developer'));
     expect(picked, 'dev');
     expect(chatRoleMatches('dev', ' dev'), isTrue);
     expect(chatRoleMatches('', null), isTrue);
@@ -71,7 +71,7 @@ void main() {
       },
     );
     expect(find.text('Designer'), findsOneWidget);
-    expect(find.text('Developẻ'), findsOneWidget);
+    expect(find.text('Developer'), findsOneWidget);
     expect(find.text('Quality Control'), findsOneWidget);
     // Not named anywhere: the code itself.
     expect(find.text('zz'), findsOneWidget);

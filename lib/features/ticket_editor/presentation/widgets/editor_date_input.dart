@@ -19,7 +19,8 @@ class EditorDateInput extends StatelessWidget {
   Widget build(BuildContext context) => AppDateField(
     value: DateTime.tryParse(value),
     clearable: true,
-    onChanged: (day) =>
-        onChanged(day == null ? '' : DateFormat('yyyy-MM-dd').format(day)),
+    onChanged: (day) => onChanged(
+      day == null ? '' : DateFormat('yyyy-MM-dd').format(day.toLocal()),
+    ),
   );
 }

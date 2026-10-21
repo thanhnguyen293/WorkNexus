@@ -105,7 +105,7 @@ void main() {
     expect(task.id, '881');
     expect(task.title, 'Build dashboard');
     expect(task.priority, 2);
-    expect(task.deadline, DateTime(2026, 10, 12));
+    expect(task.deadline, DateTime(2026, 10, 12).toUtc());
     expect(task.context, 'Sprint 42');
 
     final bug = d.bugs.single;

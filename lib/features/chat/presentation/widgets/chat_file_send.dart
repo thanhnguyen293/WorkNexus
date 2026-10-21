@@ -33,7 +33,13 @@ Future<void> previewAndSendChatFiles(
       replyToId: replyToId,
     );
     if (result case Err(:final failure)) {
-      if (context.mounted) showChatFailure(context, failure);
+      if (context.mounted) {
+        showChatFailure(
+          context,
+          failure,
+          onReconnect: () => controller.connect(t.accountId),
+        );
+      }
     }
   }
 }

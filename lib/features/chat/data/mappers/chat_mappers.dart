@@ -285,9 +285,12 @@ ChatType _chatType(String type) =>
 int? _int(Object? v) =>
     v is num ? v.toInt() : (v is String ? int.tryParse(v) : null);
 
-/// xxd sends Unix seconds; 0 means "never".
+/// xxd sends Unix seconds; 0 means "never". Internal storage is normalized to UTC.
 DateTime? _date(Object? v) {
   final n = _int(v);
   if (n == null || n <= 0) return null;
-  return DateTime.fromMillisecondsSinceEpoch(n < 100000000000 ? n * 1000 : n);
+  return DateTime.fromMillisecondsSinceEpoch(
+    n < 100000000000 ? n * 1000 : n,
+    isUtc: true,
+  );
 }

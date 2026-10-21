@@ -2,12 +2,18 @@
 // text depends on them.
 // ignore_for_file: experimental_member_use
 
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
+
+import 'editor_table_embed.dart';
+import 'html_table_parser.dart';
 
 /// Holds rich text being edited, read from and written back as HTML — the
 /// format ZenTao's own editor stores descriptions in.
@@ -37,16 +43,15 @@ class HtmlEditingController {
   /// The text as HTML; empty when nothing but whitespace was written.
   String get html {
     final delta = quill.document.toDelta();
-    // Untouched text goes back as it came, so markup the editor cannot
-    // represent (tables, classes, an iframe) isn't rewritten or dropped by
-    // just opening it — unless it holds nothing at all.
-    if (delta == _initialDelta) {
-      return _isBlankHtml(_initialHtml) ? '' : _widthsAsAttribute(_initialHtml);
+    if (delta == _initialDelta && !TableDataStore.hasAnyChanges()) {
+      return _isBlankHtml(_initialHtml)
+          ? ''
+          : _sanitizeInitialHtml(_widthsAsAttribute(_initialHtml));
     }
     if (quill.document.toPlainText().trim().isEmpty && !_hasEmbeds(delta)) {
       return '';
     }
-    final raw = QuillDeltaToHtmlConverter(
+    final converter = QuillDeltaToHtmlConverter(
       _withImageWidths(delta),
       ConverterOptions(
         converterOptions: OpConverterOptions(
@@ -54,8 +59,27 @@ class HtmlEditingController {
           linkTarget: '',
         ),
       ),
-    ).convert();
-    return _restoreTables(raw);
+    );
+    converter.renderCustomWith = (customOp, contextOp) {
+      if (customOp.insert.type == EditorTableEmbedBuilder.tableType) {
+        final val = customOp.insert.value;
+        final tableId = parseTableId(val);
+        final rows = (tableId != null ? TableDataStore.get(tableId) : null) ??
+            parseTableRows(val);
+        if (rows.isNotEmpty) {
+          return '</p>${buildTableHtml(rows)}<p>';
+        }
+      }
+      return '';
+    };
+    final raw = converter.convert();
+    final cleaned = raw
+        .replaceAll(
+          RegExp(r'<p>\s*(<table[^>]*>.*?</table>)\s*</p>', dotAll: true),
+          r'$1',
+        )
+        .replaceAll(RegExp(r'<p>\s*</p>'), '');
+    return restoreTables(cleaned);
   }
 
   void dispose() => quill.dispose();
@@ -64,124 +88,115 @@ class HtmlEditingController {
 Document _document(String html) {
   final source = html.trim();
   if (source.isEmpty) return Document();
-  final preprocessed = _preprocessTables(_widthsAsStyle(source));
-  final delta = HtmlToDelta().convert(preprocessed);
+  final extracted = _extractTables(_widthsAsStyle(source));
+  final delta = HtmlToDelta().convert(extracted.html);
+  final replaced = _replaceTablePlaceholders(delta, extracted.tables);
   // A document must end with a line break.
-  if (delta.isEmpty ||
-      !(delta.last.data is String &&
-          (delta.last.data! as String).endsWith('\n'))) {
-    delta.insert('\n');
+  if (replaced.isEmpty ||
+      !(replaced.last.data is String &&
+          (replaced.last.data! as String).endsWith('\n'))) {
+    replaced.insert('\n');
   }
-  return Document.fromDelta(delta);
+  return Document.fromDelta(replaced);
 }
 
-/// Marks the cell borders `|` of a table flattened by [_preprocessTables].
-/// Invisible in the editor, and nothing a user types, so [_restoreTables]
-/// rebuilds only those tables — never a paragraph that merely holds pipes.
-const _cellMark = '\u2063|';
-
-/// Stands for a line break inside a flattened cell, which would otherwise
-/// end the row's line; shown as `↵` and turned back into `<br/>`.
-const _cellBreak = '\u2063\u21b5';
-final _cellLines = RegExp(r'<br\s*/?>|</p>\s*<p[^>]*>', caseSensitive: false);
-final _cellParagraph = RegExp(r'</?p[^>]*>', caseSensitive: false);
-
-/// Converts HTML tables into structured row paragraphs separated by `<br>` so
-/// that table rows and cells do not fuse together when converted into Quill.
-String _preprocessTables(String html) {
+({String html, List<List<List<String>>> tables}) _extractTables(String html) {
   final doc = html_parser.parseFragment(html);
   final tables = doc.querySelectorAll('table');
-  if (tables.isEmpty) return html;
+  if (tables.isEmpty) return (html: html, tables: const []);
 
+  final tableList = <List<List<String>>>[];
   for (final table in tables) {
-    final rows = <String>[];
+    final rows = <List<String>>[];
     for (final tr in table.querySelectorAll('tr')) {
       final cells = tr.querySelectorAll('th, td');
       if (cells.isEmpty) continue;
-      final cellTexts = cells.map((c) {
-        final inner = c.innerHtml
-            .trim()
-            .replaceAll(_cellLines, _cellBreak)
-            .replaceAll(_cellParagraph, '');
-        return inner.isEmpty ? ' ' : inner;
-      }).toList();
-      rows.add('$_cellMark ${cellTexts.join(' $_cellMark ')} $_cellMark');
+      rows.add(cells.map(_cleanTableCell).toList());
     }
     if (rows.isNotEmpty) {
-      table.replaceWith(
-        html_parser.parseFragment('<p>${rows.join('<br>')}</p>'),
-      );
-    }
-  }
-  return doc.outerHtml;
-}
-
-/// Rebuilds the `<table>`s [_preprocessTables] flattened into marked rows.
-/// The editor may have fused a row with the text around it onto one line, so
-/// whatever precedes the first mark or follows the last stays a paragraph.
-String _restoreTables(String html) {
-  if (!html.contains(_cellMark)) return html;
-  final doc = html_parser.parseFragment(html);
-
-  for (final p in doc.querySelectorAll('p, div')) {
-    final inner = p.innerHtml;
-    if (!inner.contains(_cellMark)) continue;
-
-    final buf = StringBuffer();
-    final text = <String>[];
-    final rows = <List<String>>[];
-    void flushText() {
-      if (text.isNotEmpty) buf.write('<p>${text.join('<br/>')}</p>');
-      text.clear();
-    }
-
-    void flushTable() {
-      if (rows.isEmpty) return;
-      buf.write(
-        '<table border="1" cellpadding="4" cellspacing="0" '
-        'style="border-collapse: collapse; width: 100%;"><tbody>',
-      );
-      for (var r = 0; r < rows.length; r++) {
-        final tag = r == 0 ? 'th' : 'td';
-        buf.write('<tr>');
-        for (final cell in rows[r]) {
-          buf.write('<$tag>$cell</$tag>');
+      final maxCols =
+          rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+      for (var i = 0; i < rows.length; i++) {
+        while (rows[i].length < maxCols) {
+          rows[i].add('');
         }
-        buf.write('</tr>');
       }
-      buf.write('</tbody></table>');
-      rows.clear();
+      final idx = tableList.length;
+      tableList.add(rows);
+      table.replaceWith(
+        html_parser.parseFragment('<p>WORKNEXUS_TABLE_$idx</p>'),
+      );
     }
-
-    void addText(String line) {
-      final plain = line.replaceAll(_cellMark[0], '');
-      if (plain.trim().isEmpty) return;
-      flushTable();
-      text.add(plain);
-    }
-
-    for (final line in inner.split(RegExp(r'<br\s*/?>'))) {
-      final parts = line.split(_cellMark);
-      // A row needs a mark on both sides of at least one cell.
-      if (parts.length < 3) {
-        addText(line);
-        continue;
-      }
-      addText(parts.first);
-      flushText();
-      rows.add([
-        for (final cell in parts.sublist(1, parts.length - 1))
-          cell.trim().replaceAll(_cellBreak, '<br/>'),
-      ]);
-      addText(parts.last);
-    }
-    flushTable();
-    flushText();
-    p.replaceWith(html_parser.parseFragment(buf.toString()));
   }
-
-  return doc.outerHtml;
+  return (html: doc.outerHtml, tables: tableList);
 }
+
+String _cleanTableCell(dom.Element cell) {
+  for (final br in cell.querySelectorAll('br')) {
+    br.replaceWith(dom.Text('\n'));
+  }
+  for (final block in cell.querySelectorAll('p, div')) {
+    block.append(dom.Text('\n'));
+  }
+  return cell.text
+      .replaceAll('\r\n', '\n')
+      .replaceAll('\r', '\n')
+      .replaceAll(
+        RegExp(r'[\uFFFC\uFFFD\uFEFF\u200B-\u200D\u0000-\u0008\u000B\u000C\u000E-\u001F]'),
+        '',
+      )
+      .replaceAll('\u00A0', ' ')
+      .trim();
+}
+
+String _sanitizeInitialHtml(String html) => html.replaceAll(
+      RegExp(r'[\uFFFC\uFFFD\uFEFF\u200B-\u200D\u0000-\u0008\u000B\u000C\u000E-\u001F]'),
+      '',
+    );
+
+Delta _replaceTablePlaceholders(
+  Delta delta,
+  List<List<List<String>>> tables,
+) {
+  if (tables.isEmpty) return delta;
+  final newDelta = Delta();
+  for (final op in delta.toList()) {
+    if (op.data is String) {
+      final text = op.data as String;
+      final regex = RegExp(r'WORKNEXUS_TABLE_(\d+)');
+      final matches = regex.allMatches(text);
+      if (matches.isEmpty) {
+        newDelta.insert(op.data, op.attributes);
+      } else {
+        var lastEnd = 0;
+        for (final m in matches) {
+          if (m.start > lastEnd) {
+            newDelta.insert(text.substring(lastEnd, m.start), op.attributes);
+          }
+          final idx = int.tryParse(m.group(1) ?? '');
+          if (idx != null && idx < tables.length) {
+            final tableId =
+                'table_${DateTime.now().microsecondsSinceEpoch}_$idx';
+            TableDataStore.registerInitial(tableId, tables[idx]);
+            newDelta.insert({
+              EditorTableEmbedBuilder.tableType:
+                  jsonEncode({'id': tableId, 'rows': tables[idx]}),
+            });
+          }
+          lastEnd = m.end;
+        }
+        if (lastEnd < text.length) {
+          newDelta.insert(text.substring(lastEnd), op.attributes);
+        }
+      }
+    } else {
+      newDelta.insert(op.data, op.attributes);
+    }
+  }
+  return newDelta;
+}
+
+
 
 /// ZenTao sizes images with `<img width>`, which [HtmlToDelta] ignores; it
 /// only reads `style`. Copies the attribute into the style so it survives.
@@ -194,25 +209,6 @@ String _widthsAsStyle(String html) {
     if (width == null || style.contains('width')) continue;
     final unit = RegExp(r'^\d+$').hasMatch(width) ? 'px' : '';
     img.attributes['style'] = 'width:$width$unit;$style';
-    changed = true;
-  }
-  return changed ? doc.outerHtml : html;
-}
-
-/// Copies an image's `style` width into the `width` attribute ZenTao reads,
-/// leaving the rest of the (untouched) HTML as it was.
-String _widthsAsAttribute(String html) {
-  if (!html.contains('<img')) return html;
-  final doc = html_parser.parseFragment(html);
-  var changed = false;
-  for (final img in doc.querySelectorAll('img')) {
-    if (img.attributes.containsKey('width')) continue;
-    final style = img.attributes['style'] ?? '';
-    final width = RegExp(
-      r'(?:^|;)\s*width:\s*(\d+)px',
-    ).firstMatch(style)?.group(1);
-    if (width == null) continue;
-    img.attributes['width'] = width;
     changed = true;
   }
   return changed ? doc.outerHtml : html;
@@ -239,6 +235,25 @@ List<Map<String, dynamic>> _withImageWidths(Delta delta) => [
 ];
 
 bool _hasEmbeds(Delta delta) => delta.toList().any((op) => op.data is Map);
+
+/// Copies an image's `style` width into the `width` attribute ZenTao reads,
+/// leaving the rest of the (untouched) HTML as it was.
+String _widthsAsAttribute(String html) {
+  if (!html.contains('<img')) return html;
+  final doc = html_parser.parseFragment(html);
+  var changed = false;
+  for (final img in doc.querySelectorAll('img')) {
+    if (img.attributes.containsKey('width')) continue;
+    final style = img.attributes['style'] ?? '';
+    final width = RegExp(
+      r'(?:^|;)\s*width:\s*(\d+)px',
+    ).firstMatch(style)?.group(1);
+    if (width == null) continue;
+    img.attributes['width'] = width;
+    changed = true;
+  }
+  return changed ? doc.outerHtml : html;
+}
 
 /// Whether [html] is only whitespace in empty paragraphs (`<p> </p>`).
 bool _isBlankHtml(String html) {

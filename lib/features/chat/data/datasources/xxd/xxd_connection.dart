@@ -139,8 +139,8 @@ class XxdConnection {
   Future<void> stop() async {
     _stopRequested = true;
     _reconnectTimer?.cancel();
-    await _teardown(const NetworkFailure('Chat connection closed'));
     _setState(const XxdDisconnected());
+    await _teardown(const NetworkFailure('Chat connection closed'));
   }
 
   Future<void> dispose() async {
@@ -380,8 +380,8 @@ class XxdConnection {
       'Signed out: the account logged in elsewhere'
       '${reason == null ? '' : ' ($reason)'}',
     );
-    await _teardown(failure);
     _setState(XxdStopped(failure, kicked: true));
+    await _teardown(failure);
   }
 
   // ---- keep-alive & reconnect -------------------------------------------------
@@ -443,8 +443,10 @@ class XxdConnection {
     _socket = null;
     if (socket != null) {
       try {
-        await socket.close(1000, 'bye');
-      } on Exception {
+        await socket
+            .close(1000, 'bye')
+            .timeout(const Duration(milliseconds: 500), onTimeout: () {});
+      } catch (_) {
         // Already closed or broken; nothing left to release.
       }
     }

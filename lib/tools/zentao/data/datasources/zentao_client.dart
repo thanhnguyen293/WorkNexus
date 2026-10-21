@@ -753,4 +753,37 @@ class ZenTaoClient {
     }
     return result.isEmpty ? null : result;
   }
+
+  /// Deletes task [taskId].
+  ///
+  /// Sends `DELETE /api.php/v1/tasks/{id}` via the REST v1 channel. If the
+  /// server does not support the REST endpoint (e.g. 404 or 405), falls back
+  /// to the classic action with `confirm=yes`.
+  Future<Response<dynamic>> deleteTask(String taskId) async {
+    try {
+      final res = await _dio.delete<dynamic>('$_v1/tasks/$taskId');
+      if ((res.statusCode ?? 0) < 400) {
+        final data = res.data;
+        if (data is Map && data['error'] != null) {
+          throw DioException(
+            requestOptions: res.requestOptions,
+            response: res,
+            message: data['error'].toString(),
+          );
+        }
+        return res;
+      }
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code != 404 && code != 405) rethrow;
+    }
+
+    final token = await _ensureToken();
+    return _dio.get<dynamic>(
+      '$baseUrl/task-delete-$taskId-yes.json',
+      queryParameters: {'zentaosid': token, 'confirm': 'yes'},
+      options: Options(headers: _classicHeaders(token)),
+    );
+  }
 }
+

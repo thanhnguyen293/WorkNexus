@@ -8,7 +8,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_state_view.dart';
-import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -121,18 +120,6 @@ class ConversationListPane extends ConsumerWidget {
             SizedBox(height: context.spacing.sm),
             const _SectionDivider(),
           ],
-          // The list stays when a refresh fails; the failure shows above it.
-          if (chatsAsync.hasError && chatsAsync.hasValue && !compact)
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.xl3,
-                vertical: context.spacing.sm,
-              ),
-              child: AppInlineNote(
-                text: l.chatConnectionOffline,
-                isError: true,
-              ),
-            ),
           Expanded(
             child: switch (chatsAsync) {
               // Collapsed to avatars: too narrow for a message, so only Retry.
@@ -143,16 +130,20 @@ class ConversationListPane extends ConsumerWidget {
                     icon: LucideIcons.refreshCw300,
                     tooltip: l.retry,
                     color: c.error,
-                    onPressed: () =>
-                        ref.invalidate(chatConversationsProvider(accountId)),
+                    onPressed: () {
+                      ref.read(chatControllerProvider).connect(accountId);
+                      ref.invalidate(chatConversationsProvider(accountId));
+                    },
                   ),
                 ),
               _ when chatsAsync.hasError && !chatsAsync.hasValue =>
                 AppStateView.error(
                   compact: true,
                   message: l.chatConnectionOffline,
-                  onRetry: () =>
-                      ref.invalidate(chatConversationsProvider(accountId)),
+                  onRetry: () {
+                    ref.read(chatControllerProvider).connect(accountId);
+                    ref.invalidate(chatConversationsProvider(accountId));
+                  },
                 ),
               _ when !chatsAsync.hasValue => const AppStateView.loading(
                 compact: true,

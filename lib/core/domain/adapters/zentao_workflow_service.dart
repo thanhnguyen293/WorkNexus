@@ -40,4 +40,7 @@ abstract interface class ZenTaoWorkflowService {
     ZenTaoTaskAction action,
     ZenTaoTaskActionInput input,
   );
+
+  /// Deletes a task.
+  Future<Result<void>> deleteTask(Ticket ticket);
 }

@@ -75,6 +75,15 @@ class _DetailOverlayState extends ConsumerState<DetailOverlay>
       }
     });
 
+    final openId = ref.watch(openTicketIdProvider);
+    if (openId != null && ref.watch(ticketByIdProvider(openId)) == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && ref.read(openTicketIdProvider) == openId) {
+          _close();
+        }
+      });
+    }
+
     final id = _current;
     if (id == null && _c.isDismissed) return const SizedBox.shrink();
 

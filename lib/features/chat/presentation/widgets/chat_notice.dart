@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -8,6 +7,7 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/util/relative_time.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/wallpaper_providers.dart';
@@ -58,7 +58,7 @@ class ChatNotice extends ConsumerWidget {
         ),
         SizedBox(width: s.sm),
         Text(
-          DateFormat('HH:mm').format(message.sentAt),
+          formatTime(message.sentAt),
           style: caption.copyWith(color: ink, height: 1.45),
         ),
         SizedBox(width: s.sm),

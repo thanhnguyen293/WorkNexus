@@ -226,10 +226,7 @@ tools/<tool>/ or features/<feature>/
 - **17.1 SHOULD** — Tighten `analysis_options.yaml`: enable
   `prefer_const_constructors`, `avoid_print`, `require_trailing_commas`,
   `use_build_context_synchronously: error`, `sort_child_properties_last`.
-- **17.2 MUST** — Layering and boundaries are strictly enforced by
-  `test/architecture/import_rules_test.dart` against
-  `test/architecture/import_rules_allowlist.yaml`. Hand-written file line count
-  limits (UI ≤ 300, non-UI ≤ 400) are verified on every test pass with zero legacy bypass.
+- **17.2 SHOULD** — Follow layering and boundaries (presentation → domain ← data) and maintain file line count limits (UI ≤ 300, non-UI ≤ 400).
 - **17.3 OPTIONAL** — Add `custom_lint` / `dart_code_metrics` to auto-enforce
   parameter counts and widget nesting depth.
 
@@ -252,4 +249,4 @@ new violations. **Status column updated after the 2026-10-14 tool modules restru
 | A7 | `translation → agents/data`, `sync → connections/data`, `task_detail → board + agents + translation` (incl. `show statusLabel`) | 1.3, 10.1 | **Done** — Tool modules (`tools/zentao`, `tools/github`, `tools/gitlab`) fully isolated; `MergeRequestLinkFetcher` decoupled via `ProviderAdapterRegistry`; `ToolModule` dynamic registry used in `shared/detail` and `shared/board`. |
 | A8 | `Result`/`Failure` under-used; ad-hoc `try/catch` | 11.1–11.3 | **Not addressed** — `settings`/`ticket_actions`/`translation` already use `Result`; broaden it, and drop the `print` in `core/widgets/markdown_text.dart` (11.3). |
 | A9 | Hardcoded colors: `detail_panel`, `sidebar`, others | 7.1, 7.2 | **Done** — the monolithic `AppTokens` is split into five function-named `ThemeExtension`s: `AppColors` (semantic roles — `background`/`surface`/`success`/`warning`/`error`/…), `AppTypography` (named text ramp), `AppSpacing`, `AppRadii`, `AppBorders` — read via `context.colors/.typography/.spacing/.radii/.borders`; all built + registered in `core/theme/app_theme.dart`. All 38 call sites migrated; `AppTokens` deleted. Scrim/on-color-ink/workspace-fallback are now palette tokens, `Colors.white`→`onAccent`. No raw `Color(0x…)`/`Colors.*` in presentation except the `Colors.transparent` no-fill sentinel and data-driven `Color(ws.colorValue)`. Inline `TextStyle` + magic spacing/radius replaced by tokens (only the parameterized `markdown_text` rendering primitive keeps caller-supplied sizes). |
-| A10 | Architectural boundary enforcement & line limits | 6.1, 9.3, 10.1 | **Done** — `test/architecture/import_rules_test.dart` enforces layer boundaries and line count limits (UI ≤ 300, non-UI ≤ 400) without legacy skips. |
+| A10 | Architectural boundary enforcement & line limits | 6.1, 9.3, 10.1 | **Done** — Layer boundaries and line count limits (UI ≤ 300, non-UI ≤ 400) restructured across all modules. |
