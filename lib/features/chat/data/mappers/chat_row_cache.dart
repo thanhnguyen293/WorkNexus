@@ -1,6 +1,7 @@
 import '../../../../core/database/database.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/entities/chat_message_reaction.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import 'chat_mappers.dart';
 
@@ -42,6 +43,13 @@ class ChatRowCache {
     _trim(_messages);
     return message;
   }
+
+  /// [rows] as the messages of a chat's timeline: the reactions are left
+  /// out, they show under the message they answer.
+  List<ChatMessage> timeline(List<ChatMessageRow> rows, {int? selfUserId}) => [
+    for (final r in rows)
+      if (message(r, selfUserId: selfUserId) case final m when !m.isReaction) m,
+  ];
 
   ChatConversation conversation(
     ChatConversationRow row, {

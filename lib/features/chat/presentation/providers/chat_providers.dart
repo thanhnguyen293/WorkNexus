@@ -16,6 +16,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/entities/link_preview.dart';
+import '../../domain/entities/message_reaction.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/repositories/link_preview_repository.dart';
 import '../../domain/usecases/build_reply_thread.dart';
@@ -246,6 +247,15 @@ final chatThreadSummariesProvider = Provider.autoDispose
       if (replies == null) return const {};
       return ref.watch(chatControllerProvider).threadSummaries(replies);
     });
+
+/// The reactions of a chat's messages, by the server id of the message each
+/// answers.
+final chatReactionsProvider = StreamProvider.autoDispose
+    .family<Map<int, List<MessageReaction>>, ChatThreadKey>(
+      (ref, key) => ref
+          .watch(chatRepositoryProvider)
+          .watchReactions(key.accountId, key.chatGid),
+    );
 
 /// Reply count per thread root of a chat.
 final chatReplyCountsProvider = Provider.autoDispose

@@ -22,8 +22,9 @@ import 'message_bubble_content.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
 import 'message_sender_name.dart';
+import 'message_under_bubble.dart';
+import 'reaction_picker.dart';
 import 'reply_quote.dart';
-import 'thread_chip.dart';
 
 /// Widest an image or video is shown inline.
 const double _kMaxMediaWidth = 360;
@@ -222,6 +223,9 @@ class MessageBubble extends ConsumerWidget {
           alignEnd: alignEnd,
           // Reply, and "open thread" for a message in one, as own buttons.
           buttons: _inThread ? 2 : 1,
+          onReact: messageCanBeReactedTo(message)
+              ? (at) => reactToMessage(context, ref, message, anchor: at)
+              : null,
           actions: messageActions(
             context,
             ref,
@@ -239,16 +243,14 @@ class MessageBubble extends ConsumerWidget {
               child: quote,
             ),
           ),
-        if (thread case final summary?
-            when message.serverId != null && !style.threadInMeta)
-          Padding(
-            padding: EdgeInsets.only(top: s.sm),
-            child: ThreadChip(
-              summary: summary,
-              users: users,
-              onTap: () => onOpenThread(message.serverId!),
-            ),
-          ),
+        MessageUnderBubble(
+          chat: chat,
+          message: message,
+          users: users,
+          alignEnd: alignEnd,
+          thread: style.threadInMeta ? null : thread,
+          onOpenThread: onOpenThread,
+        ),
       ],
     );
 

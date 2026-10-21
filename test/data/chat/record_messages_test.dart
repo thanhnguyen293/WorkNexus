@@ -6,11 +6,17 @@ import 'package:work_nexus/features/chat/data/datasources/chat_local_datasource.
 
 final _day = DateTime(2026, 10, 10);
 
-RecordedMessage _m(int index, {bool fromSelf = false, int? serverId}) => (
+RecordedMessage _m(
+  int index, {
+  bool fromSelf = false,
+  bool reaction = false,
+  int? serverId,
+}) => (
   serverId: serverId ?? 1000 + index,
   index: index,
   sentAt: _day.add(Duration(minutes: index)),
   fromSelf: fromSelf,
+  reaction: reaction,
 );
 
 void main() {
@@ -56,6 +62,26 @@ void main() {
     expect(row.lastReadIndex, 5);
     expect(row.lastMessageIndex, 6);
   });
+
+  test('a reaction moves the last message but not the unread count', () async {
+    // The chat is read up to its newest message (index 3).
+    await local.setLastReadIndex('acc', 'g1', 3);
+    await local.recordMessages('acc', 'g1', [_m(4, reaction: true)]);
+    final row = await chat();
+    expect(row.lastMessageId, 1004, reason: 'the chat list previews it');
+    expect(row.lastMessageIndex, 4);
+    expect(row.lastReadIndex, 4, reason: 'a read chat stays read');
+  });
+
+  test(
+    'a reaction in a chat with unread messages leaves them unread',
+    () async {
+      await local.recordMessages('acc', 'g1', [_m(4, reaction: true)]);
+      final row = await chat();
+      expect(row.lastReadIndex, 2);
+      expect(row.lastMessageIndex, 4);
+    },
+  );
 
   test('a page already recorded leaves the chat untouched', () async {
     final before = await chat();

@@ -7,6 +7,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/entities/chat_message_reaction.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import '../providers/message_translation_controller.dart';
@@ -169,3 +170,8 @@ List<MessageAction> messageActions(
       ),
   ];
 }
+
+/// Whether the hover actions offer a reaction to [message]: one that is
+/// stored, not retracted and not itself a reaction.
+bool messageCanBeReactedTo(ChatMessage message) =>
+    message.serverId != null && !message.deleted && !message.isReaction;

@@ -29,6 +29,7 @@ class MessageHoverActions extends StatefulWidget {
     required this.actions,
     required this.alignEnd,
     this.buttons = 1,
+    this.onReact,
   });
 
   final Widget child;
@@ -40,6 +41,11 @@ class MessageHoverActions extends StatefulWidget {
 
   /// Own messages (right side) get the buttons on their left.
   final bool alignEnd;
+
+  /// Reacts to the message: a "React" entry in the menus, given where the
+  /// menu opened (global) so the choice of emoji opens right there. Null: the
+  /// message cannot be reacted to.
+  final void Function(Offset anchor)? onReact;
 
   @override
   State<MessageHoverActions> createState() => _MessageHoverActionsState();
@@ -72,7 +78,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
                 if (i > 0) SizedBox(width: s.sm),
                 _RoundButton(icon: a.icon, tooltip: a.tooltip, onTap: a.onTap),
               ],
-              if (rest.isNotEmpty) ...[
+              if (rest.isNotEmpty || widget.onReact != null) ...[
                 SizedBox(width: s.sm),
                 _MoreButton(onOpen: (at) => _openMenu(rest, at)),
               ],
@@ -87,7 +93,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final bubble = Listener(
       onPointerDown: (e) {
         if (e.buttons & kSecondaryMouseButton != 0) {
-          _openMenu(widget.actions, e.position);
+          _openMenu(widget.actions, e.position, reactAt: 1);
         }
       },
       child: widget.child,
@@ -106,9 +112,25 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
   }
 
   /// Keeps the hover buttons up while a menu of [actions] is open at [at].
-  Future<void> _openMenu(List<MessageAction> actions, Offset at) async {
+  Future<void> _openMenu(
+    List<MessageAction> actions,
+    Offset at, {
+    int reactAt = 0,
+  }) async {
     setState(() => _menuOpen = true);
-    await showMessageContextMenu(context, actions: actions, at: at);
+    final react = widget.onReact;
+    final withReact = [
+      ...actions.take(reactAt),
+      if (react != null)
+        (
+          icon: LucideIcons.smilePlus300,
+          tooltip: AppL10n.of(context).chatReact,
+          destructive: false,
+          onTap: () => react(at),
+        ),
+      ...actions.skip(reactAt),
+    ];
+    await showMessageContextMenu(context, actions: withReact, at: at);
     if (mounted) setState(() => _menuOpen = false);
   }
 }
