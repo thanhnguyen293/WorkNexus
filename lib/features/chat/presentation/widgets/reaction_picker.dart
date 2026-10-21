@@ -16,11 +16,13 @@ import 'chat_snack.dart';
 /// The emoji offered for a quick reaction.
 const kQuickReactions = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
-/// Opens a row of [kQuickReactions] above [anchor] (global: the message's top
-/// edge) and resolves to the emoji picked, or null when dismissed.
+/// Opens a row of [kQuickReactions] centred over [anchor] (global: the top
+/// centre of the button that opened it), the ones in [selected] marked, and
+/// resolves to the emoji picked, or null when dismissed.
 Future<String?> showReactionPicker(
   BuildContext context, {
   required Offset anchor,
+  Set<String> selected = const {},
 }) => showGeneralDialog<String>(
   context: context,
   barrierDismissible: true,
@@ -28,15 +30,23 @@ Future<String?> showReactionPicker(
   barrierColor: Colors.transparent,
   transitionDuration: const Duration(milliseconds: 120),
   pageBuilder: (context, _, _) => CustomSingleChildLayout(
-    delegate: _AboveAnchor(anchor, margin: context.spacing.md),
-    child: const _QuickReactionRow(),
+    delegate: _OverAnchor(anchor, margin: context.spacing.md),
+    child: _QuickReactionRow(selected: selected),
   ),
-  transitionBuilder: (context, animation, _, child) =>
-      FadeTransition(opacity: animation, child: child),
+  transitionBuilder: (context, animation, _, child) => FadeTransition(
+    opacity: animation,
+    child: ScaleTransition(
+      scale: Tween<double>(begin: 0.9, end: 1).animate(animation),
+      alignment: Alignment.bottomCenter,
+      child: child,
+    ),
+  ),
 );
 
 class _QuickReactionRow extends StatelessWidget {
-  const _QuickReactionRow();
+  const _QuickReactionRow({required this.selected});
+
+  final Set<String> selected;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +59,7 @@ class _QuickReactionRow extends StatelessWidget {
           for (final emoji in kQuickReactions)
             _EmojiButton(
               emoji: emoji,
+              selected: selected.contains(emoji),
               onTap: () => Navigator.of(context).pop(emoji),
             ),
         ],
@@ -58,31 +69,48 @@ class _QuickReactionRow extends StatelessWidget {
 }
 
 class _EmojiButton extends StatelessWidget {
-  const _EmojiButton({required this.emoji, required this.onTap});
+  const _EmojiButton({
+    required this.emoji,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String emoji;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final s = context.spacing;
-    return InkWell(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      hoverColor: context.colors.hoverFill,
-      borderRadius: BorderRadius.circular(context.radii.md),
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.all(s.md),
-        child: Text(emoji, style: context.typography.titleLg),
+    final radius = BorderRadius.circular(context.radii.md);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: s.xxs),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: selected ? c.selectionFill : null,
+          borderRadius: radius,
+          border: selected ? Border.all(color: c.selectionBorder) : null,
+        ),
+        child: InkWell(
+          mouseCursor: WidgetStateMouseCursor.clickable,
+          hoverColor: c.hoverFill,
+          borderRadius: radius,
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.all(s.md),
+            child: Text(emoji, style: context.typography.titleLg),
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Puts the row just above the anchor (below it when there is no room), kept
-/// on screen.
-class _AboveAnchor extends SingleChildLayoutDelegate {
-  _AboveAnchor(this.anchor, {required this.margin});
+/// Centres the row over the anchor with a small gap (below it when there is
+/// no room above), kept on screen.
+class _OverAnchor extends SingleChildLayoutDelegate {
+  _OverAnchor(this.anchor, {required this.margin});
 
   final Offset anchor;
   final double margin;
@@ -93,41 +121,48 @@ class _AboveAnchor extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    final above = anchor.dy - childSize.height - margin;
-    final y = above < margin ? anchor.dy + margin : above;
+    final gap = margin / 2;
+    final above = anchor.dy - childSize.height - gap;
+    final y = above < margin ? anchor.dy + 3 * margin + gap : above;
     return Offset(
-      anchor.dx.clamp(margin, size.width - childSize.width - margin),
+      (anchor.dx - childSize.width / 2).clamp(
+        margin,
+        size.width - childSize.width - margin,
+      ),
       y.clamp(margin, size.height - childSize.height - margin),
     );
   }
 
   @override
-  bool shouldRelayout(_AboveAnchor old) =>
+  bool shouldRelayout(_OverAnchor old) =>
       old.anchor != anchor || old.margin != margin;
 }
 
-/// Asks which emoji to react to [message] with (above it, as [context]'s
-/// widget is) and sends it; one the user already reacted with is taken back.
+/// Asks which emoji to react to [message] with, over [anchor], and sends it;
+/// one the user already reacted with is taken back.
 Future<void> reactToMessage(
   BuildContext context,
   WidgetRef ref,
-  ChatMessage message,
-) async {
-  final box = context.findRenderObject() as RenderBox?;
-  if (box == null) return;
-  final emoji = await showReactionPicker(
-    context,
-    anchor: box.localToGlobal(Offset.zero),
-  );
-  if (emoji == null) return;
+  ChatMessage message, {
+  required Offset anchor,
+}) async {
   final serverId = message.serverId;
   final chat = (accountId: message.accountId, chatGid: message.chatGid);
-  final reactions = serverId == null
-      ? const <MessageReaction>[]
+  List<MessageReaction> reactionsNow() => serverId == null
+      ? const []
       : ref.read(chatReactionsProvider(chat)).value?[serverId] ?? const [];
+  final emoji = await showReactionPicker(
+    context,
+    anchor: anchor,
+    selected: {
+      for (final r in reactionsNow())
+        if (r.mine != null) r.emoji,
+    },
+  );
+  if (emoji == null) return;
   final result = await ref
       .read(reactionControllerProvider)
-      .toggle(message, emoji, reactions: reactions);
+      .toggle(message, emoji, reactions: reactionsNow());
   if (result case Err(:final failure)) {
     if (context.mounted) showChatFailure(context, failure);
   }

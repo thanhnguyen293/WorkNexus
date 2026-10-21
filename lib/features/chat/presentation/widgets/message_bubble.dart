@@ -23,6 +23,7 @@ import 'message_footer.dart';
 import 'message_hover_actions.dart';
 import 'message_sender_name.dart';
 import 'message_under_bubble.dart';
+import 'reaction_picker.dart';
 import 'reply_quote.dart';
 
 /// Widest an image or video is shown inline.
@@ -220,10 +221,11 @@ class MessageBubble extends ConsumerWidget {
           ),
         MessageHoverActions(
           alignEnd: alignEnd,
-          // Reply, react, and "open thread" for a message in one, as own
-          // buttons.
-          buttons:
-              (_inThread ? 2 : 1) + (messageCanBeReactedTo(message) ? 1 : 0),
+          // Reply, and "open thread" for a message in one, as own buttons.
+          buttons: _inThread ? 2 : 1,
+          onReact: messageCanBeReactedTo(message)
+              ? (at) => reactToMessage(context, ref, message, anchor: at)
+              : null,
           actions: messageActions(
             context,
             ref,

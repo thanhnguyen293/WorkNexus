@@ -29,6 +29,7 @@ class MessageHoverActions extends StatefulWidget {
     required this.actions,
     required this.alignEnd,
     this.buttons = 1,
+    this.onReact,
   });
 
   final Widget child;
@@ -40,6 +41,11 @@ class MessageHoverActions extends StatefulWidget {
 
   /// Own messages (right side) get the buttons on their left.
   final bool alignEnd;
+
+  /// Reacts to the message: a button of its own after the first one, given
+  /// where it is (global, its top centre) so the choice opens right over it.
+  /// Null: the message cannot be reacted to.
+  final void Function(Offset anchor)? onReact;
 
   @override
   State<MessageHoverActions> createState() => _MessageHoverActionsState();
@@ -71,6 +77,10 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
               for (final (i, a) in own.indexed) ...[
                 if (i > 0) SizedBox(width: s.sm),
                 _RoundButton(icon: a.icon, tooltip: a.tooltip, onTap: a.onTap),
+                if (i == 0 && widget.onReact != null) ...[
+                  SizedBox(width: s.sm),
+                  _ReactButton(onReact: widget.onReact!),
+                ],
               ],
               if (rest.isNotEmpty) ...[
                 SizedBox(width: s.sm),
@@ -147,6 +157,26 @@ class _RoundButton extends StatelessWidget {
     );
     final message = tooltip;
     return message == null ? button : Tooltip(message: message, child: button);
+  }
+}
+
+/// Opens the choice of an emoji to react with, over the button.
+class _ReactButton extends StatelessWidget {
+  const _ReactButton({required this.onReact});
+
+  final void Function(Offset anchor) onReact;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RoundButton(
+      icon: LucideIcons.smilePlus300,
+      tooltip: AppL10n.of(context).chatReact,
+      onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        onReact(box.localToGlobal(Offset(box.size.width / 2, 0)));
+      },
+    );
   }
 }
 
