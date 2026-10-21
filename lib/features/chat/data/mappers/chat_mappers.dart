@@ -7,6 +7,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/parse_message_content.dart';
+import '../../domain/value_objects/message_content.dart';
 
 // ---- xxd packet data → drift ---------------------------------------------------
 
@@ -255,7 +256,9 @@ ChatMessage messageFromRow(
   chatGid: row.cgid,
   senderId: row.senderId,
   sentAt: row.sentAt,
-  content: parse(row.contentType, row.content),
+  content: _isRetractedReaction(row)
+      ? const MessageContent.emoji('')
+      : parse(row.contentType, row.content),
   isMine: selfUserId != null && row.senderId == selfUserId,
   sendState: SendState.values.asNameMap()[row.sendState] ?? SendState.sent,
   serverId: row.serverId,
@@ -264,6 +267,16 @@ ChatMessage messageFromRow(
   deleted: row.deleted,
   isNotice: row.broadcast,
 );
+
+/// The server sends a retracted message back without its content, so a
+/// retracted reaction (an emoji reply, stored as an image) is an empty image
+/// reply: read as a reaction without its emoji, so it stays out of threads.
+/// A retracted image reply looks the same and is treated alike.
+bool _isRetractedReaction(ChatMessageRow row) =>
+    row.deleted &&
+    row.replyToId != null &&
+    row.contentType == 'image' &&
+    row.content.isEmpty;
 
 ChatUser userFromRow(ChatUserRow row) => ChatUser(
   accountId: row.accountId,

@@ -19,6 +19,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_cache_usage.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
+import 'package:work_nexus/features/chat/domain/entities/message_reaction.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_avatar_crop.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
@@ -389,6 +390,10 @@ class _FakeChatRepository implements ChatRepository {
       Stream.value(const []);
 
   @override
+  Stream<Map<int, List<MessageReaction>>> watchReactions(String a, String c) =>
+      Stream.value(const {});
+
+  @override
   Future<Result<void>> fetchMessages(String a, String c, List<int> ids) async =>
       const Ok(null);
 
@@ -437,7 +442,12 @@ class _FakeChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> sendEmoji(String a, String c, String code) async {
+  Future<Result<void>> sendEmoji(
+    String a,
+    String c,
+    String code, {
+    int? replyToId,
+  }) async {
     calls.add('emoji $c $code');
     return const Ok(null);
   }

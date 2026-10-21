@@ -5,6 +5,7 @@ import '../entities/chat_cache_usage.dart';
 import '../entities/chat_conversation.dart';
 import '../entities/chat_message.dart';
 import '../entities/chat_user.dart';
+import '../entities/message_reaction.dart';
 import '../value_objects/chat_avatar_crop.dart';
 import '../value_objects/chat_connection_status.dart';
 import '../value_objects/chat_presence.dart';
@@ -154,6 +155,14 @@ abstract class ChatRepository {
   /// Every reply stored for a chat, oldest first.
   Stream<List<ChatMessage>> watchReplies(String accountId, String chatGid);
 
+  /// The reactions to a chat's messages, by the server id of the message each
+  /// answers: ready to show, so no reaction needs sorting out from the
+  /// replies. See `ChatMessageReaction`.
+  Stream<Map<int, List<MessageReaction>>> watchReactions(
+    String accountId,
+    String chatGid,
+  );
+
   /// Fetches specific messages (e.g. the parent of a reply) from the server.
   Future<Result<void>> fetchMessages(
     String accountId,
@@ -161,8 +170,14 @@ abstract class ChatRepository {
     List<int> serverIds,
   );
 
-  /// Sends one emoji shown large; [code] is its wire form (`:thumbsup:`).
-  Future<Result<void>> sendEmoji(String accountId, String chatGid, String code);
+  /// Sends one emoji shown large; [code] is its wire form (`:thumbsup:`). With
+  /// [replyToId] it is a reply to that message: a reaction.
+  Future<Result<void>> sendEmoji(
+    String accountId,
+    String chatGid,
+    String code, {
+    int? replyToId,
+  });
 
   /// Sends a code snippet in [language], with an optional file [name] —
   /// as a reply to [replyToId] when given.

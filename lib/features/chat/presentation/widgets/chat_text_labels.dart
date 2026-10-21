@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
+import '../../domain/entities/chat_message_reaction.dart';
 import '../../domain/value_objects/message_content.dart';
 
 /// Text helpers for chat: mentions, web addresses, Markdown detection and
@@ -44,6 +45,7 @@ String chatPreview(BuildContext context, ChatMessage message) {
   final l = AppL10n.of(context);
   // A retracted message keeps no content; say so rather than show nothing.
   if (message.deleted) return l.chatRetracted;
+  if (message.reactionEmoji case final emoji?) return l.chatReacted(emoji);
   return switch (message.content) {
     TextContent(:final text, :final markdown) =>
       (markdown ? _stripMarkdown(text) : text)

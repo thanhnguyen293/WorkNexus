@@ -1260,6 +1260,21 @@
   "chatReply": "Reply",
   "chatRetract": "Retract",
   "chatRetracted": "Message retracted",
+  "chatReact": "React",
+  "chatReacted": "Reacted {emoji}",
+  "@chatReacted": {
+    "placeholders": {
+      "emoji": {"type": "String"}
+    }
+  },
+  "chatReactionBy": "{names} reacted with {emoji}",
+  "@chatReactionBy": {
+    "placeholders": {
+      "names": {"type": "String"},
+      "emoji": {"type": "String"}
+    }
+  },
+  "chatReactionRemoveExpired": "A reaction can only be taken back within 2 minutes",
   "chatThread": "Thread",
   "chatOpenThread": "Open thread",
   "chatJumpNotFound": "Original message not found",

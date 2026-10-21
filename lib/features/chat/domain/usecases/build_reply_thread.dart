@@ -1,4 +1,5 @@
 import '../entities/chat_message.dart';
+import '../entities/chat_message_reaction.dart';
 
 /// A reply thread: the message everything replies to, and its replies.
 typedef ReplyThread = ({int rootId, List<ChatMessage> replies});
@@ -15,7 +16,9 @@ typedef ThreadSummary = ({
 ///
 /// xxd stores only "replies to message N", and a reply can itself be replied
 /// to, so a thread is everything whose parent chain leads to the same root —
-/// the first message in the chain that is not itself a known reply.
+/// the first message in the chain that is not itself a known reply. Reactions
+/// (see `ChatMessageReaction`) are replies in xxd's eyes but not part of any
+/// thread.
 class BuildReplyThread {
   const BuildReplyThread();
 
@@ -44,7 +47,10 @@ class BuildReplyThread {
     final root = rootOf(messageId, replies);
     final inThread = [
       for (final r in replies)
-        if (r.replyToId != null && rootOf(r.replyToId!, replies) == root) r,
+        if (r.replyToId != null &&
+            !r.isReaction &&
+            rootOf(r.replyToId!, replies) == root)
+          r,
     ]..sort((a, b) => a.sentAt.compareTo(b.sentAt));
     return (rootId: root, replies: inThread);
   }
@@ -54,7 +60,7 @@ class BuildReplyThread {
     final counts = <int, int>{};
     for (final r in replies) {
       final parent = r.replyToId;
-      if (parent == null) continue;
+      if (parent == null || r.isReaction) continue;
       final root = rootOf(parent, replies);
       counts[root] = (counts[root] ?? 0) + 1;
     }
@@ -66,7 +72,7 @@ class BuildReplyThread {
     final byRoot = <int, List<ChatMessage>>{};
     for (final r in replies) {
       final parent = r.replyToId;
-      if (parent == null) continue;
+      if (parent == null || r.isReaction) continue;
       byRoot.putIfAbsent(rootOf(parent, replies), () => []).add(r);
     }
     return {

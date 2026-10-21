@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import '../../../../core/database/database.dart';
+import '../../domain/usecases/parse_message_content.dart';
+import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_local_datasource.dart';
 import '../datasources/xxd/xxd_packet.dart';
 import '../mappers/chat_mappers.dart';
@@ -193,6 +195,7 @@ class ChatPacketIngestor {
         index: row.messageIndex.value,
         sentAt: row.sentAt.value,
         fromSelf: row.senderId.value == selfUserId,
+        reaction: _isReaction(row),
       ));
     }
     final unknownChats = <String>{};
@@ -213,6 +216,11 @@ class ChatPacketIngestor {
       }),
     );
   }
+
+  static bool _isReaction(ChatMessagesCompanion row) =>
+      row.replyToId.value != null &&
+      const ParseMessageContent()(row.contentType.value, row.content.value)
+          is EmojiContent;
 
   Future<void> _storeChats(
     String accountId,

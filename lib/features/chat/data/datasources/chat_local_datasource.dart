@@ -15,6 +15,7 @@ typedef RecordedMessage = ({
   int? index,
   DateTime sentAt,
   bool fromSelf,
+  bool reaction, // an emoji reply: moves the last message, is not unread
 });
 
 /// Drift access for chat (CLAUDE.md 3.4: SQL stays in `datasources/`).
@@ -87,6 +88,7 @@ class ChatLocalDatasource {
   /// chat read up to there. One read and at most one write per chat, and
   /// nothing is written when the chat already stands where the messages
   /// leave it — a re-fetched page must not re-emit the chat list.
+  /// A reaction never turns a read chat unread.
   Future<void> recordMessages(
     String accountId,
     String cgid,
@@ -100,13 +102,16 @@ class ChatLocalDatasource {
     var lastActive = row.lastActiveAt;
     for (final m in messages) {
       final serverId = m.serverId;
+      final wasRead = lastRead >= lastIndex;
       if (serverId != null && serverId > (lastId ?? 0)) {
         lastId = serverId;
         lastActive = m.sentAt;
       }
       final index = m.index;
       if (index != null && index > lastIndex) lastIndex = index;
-      if (m.fromSelf && index != null) lastRead = lastIndex;
+      if (index != null && (m.fromSelf || (m.reaction && wasRead))) {
+        lastRead = lastIndex;
+      }
     }
     if (lastId == row.lastMessageId &&
         lastIndex == row.lastMessageIndex &&
