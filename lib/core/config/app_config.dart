@@ -96,6 +96,14 @@ abstract final class AppConfig {
     defaultValue: 'WorkNexus-linux-x64.AppImage',
   );
 
+  /// Release asset holding the Linux build as a Debian package, which an app
+  /// installed from the .deb updates from: its bundle in /opt is root-owned
+  /// and dpkg-managed, so it is reinstalled through the package manager.
+  static const updateAssetDeb = String.fromEnvironment(
+    'UPDATE_ASSET_DEB',
+    defaultValue: 'WorkNexus-linux-x64.deb',
+  );
+
   /// Release asset listing `sha256  filename` lines the updater verifies
   /// a download against.
   static const updateChecksumsAsset = String.fromEnvironment(

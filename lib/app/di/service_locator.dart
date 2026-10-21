@@ -39,6 +39,7 @@ import '../../core/platform/credential_store.dart';
 import '../../core/platform/desktop_notifier.dart';
 import '../../features/app_update/data/datasources/appimage_update_installer.dart';
 import '../../features/app_update/data/datasources/auto_update_marker_file.dart';
+import '../../features/app_update/data/datasources/deb_update_installer.dart';
 import '../../features/app_update/data/datasources/github_release_datasource.dart';
 import '../../features/app_update/data/datasources/linux_update_installer.dart';
 import '../../features/app_update/data/datasources/macos_update_installer.dart';
@@ -192,6 +193,8 @@ abstract class ServiceModule {
         : Platform.isLinux
         ? switch (runningAppImage()) {
             final appImage? => AppImageUpdateInstaller(appImage),
+            null when DebUpdateInstaller.installedFromDeb() =>
+              const DebUpdateInstaller(),
             null => const LinuxUpdateInstaller(),
           }
         : null,
