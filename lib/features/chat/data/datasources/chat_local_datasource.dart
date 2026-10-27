@@ -100,7 +100,11 @@ class ChatLocalDatasource {
     var lastIndex = row.lastMessageIndex;
     var lastRead = row.lastReadIndex;
     var lastActive = row.lastActiveAt;
-    for (final m in messages) {
+    // By index, whatever order a page came in: whether the chat was read is
+    // decided message by message, oldest first.
+    final ordered = [...messages]
+      ..sort((a, b) => (a.index ?? 1 << 30).compareTo(b.index ?? 1 << 30));
+    for (final m in ordered) {
       final serverId = m.serverId;
       final wasRead = lastRead >= lastIndex;
       if (serverId != null && serverId > (lastId ?? 0)) {
@@ -456,7 +460,10 @@ class ChatLocalDatasource {
     return row.read(count) ?? 0;
   }
 
-  /// The newest [limit] messages of a chat, oldest first.
+  /// The newest [limit] messages of a chat, oldest first, not counting
+  /// reactions: they are left out in the query so the limit is a count of
+  /// what the timeline shows (the same rows `IsReactionRow` names, but for an
+  /// emoji whose shortname the app cannot show, which this leaves out too).
   Stream<List<ChatMessageRow>> watchMessages(
     String accountId,
     String cgid, {
@@ -467,12 +474,21 @@ class ChatLocalDatasource {
         (m) =>
             m.accountId.equals(accountId) &
             m.cgid.equals(cgid) &
-            m.detached.equals(false),
+            m.detached.equals(false) &
+            _isReaction(m).not(),
       )
       ..orderBy([(m) => OrderingTerm.desc(m.sentAt)])
       ..limit(limit);
     return query.watch().map((rows) => rows.reversed.toList());
   }
+
+  static Expression<bool> _isReaction($ChatMessagesTable m) =>
+      m.replyToId.isNotNull() &
+      (m.contentType.equals('emotion') |
+          (m.contentType.equals('image') &
+              (m.content.like('%"type":"emoji"%') |
+                  m.content.like('%"type": "emoji"%') |
+                  (m.deleted.equals(true) & m.content.equals('')))));
 
   /// One message by its server id (null until it is stored locally).
   Stream<ChatMessageRow?> watchMessageByServerId(

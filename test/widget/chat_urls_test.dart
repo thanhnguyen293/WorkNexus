@@ -37,4 +37,12 @@ void main() {
       'https://b.com/y',
     ]);
   });
+
+  test('brackets inside an address stay, the one closing a link text goes', () {
+    expect(chatUrls('https://g.com/issues?label_name[]=bug'), [
+      'https://g.com/issues?label_name[]=bug',
+    ]);
+    expect(chatUrls('see http://[::1]:8080/ now'), ['http://[::1]:8080/']);
+    expect(chatUrls('[https://a.com/x](https://a.com/x)'), ['https://a.com/x']);
+  });
 }

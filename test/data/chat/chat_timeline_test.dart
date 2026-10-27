@@ -40,6 +40,24 @@ void main() {
       r.messageIndex,
   ];
 
+  test('the limit counts messages, not the reactions among them', () async {
+    ChatMessagesCompanion reaction(int index, {String type = 'image'}) =>
+        _row(index).copyWith(
+          contentType: Value(type),
+          content: const Value('{"type":"emoji","content":":thumbsup:"}'),
+          replyToId: const Value(1001),
+        );
+    await local.upsertMessages([
+      _row(1),
+      _row(2),
+      _row(3),
+      reaction(4),
+      reaction(5),
+      reaction(6, type: 'emotion'),
+    ]);
+    expect(await timeline(limit: 2), [2, 3]);
+  });
+
   test('a reply parent fetched on its own stays out of the timeline', () async {
     // The newest page (96–100) and the parent of #100's reply (#1).
     await local.upsertMessages(_rows(96, 100), link: MessageLink.linked);

@@ -7,6 +7,10 @@ import '../../../../l10n/app_localizations.dart';
 /// Reports a failed chat command next to where it happened.
 void showChatFailure(BuildContext context, Failure failure) {
   if (!context.mounted) return;
+  if (failure is ExpiredFailure) {
+    showAppSnack(context, AppL10n.of(context).chatReactionRemoveExpired);
+    return;
+  }
   showAppSnack(
     context,
     AppL10n.of(context).chatActionFailed(failure.message),

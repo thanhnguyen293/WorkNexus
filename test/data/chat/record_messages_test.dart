@@ -83,6 +83,18 @@ void main() {
     },
   );
 
+  test('a page read newest first still leaves its messages unread', () async {
+    await local.setLastReadIndex('acc', 'g1', 3);
+    await local.recordMessages('acc', 'g1', [
+      _m(6, reaction: true),
+      _m(4),
+      _m(5),
+    ]);
+    final row = await chat();
+    expect(row.lastReadIndex, 3);
+    expect(row.lastMessageIndex, 6);
+  });
+
   test('a page already recorded leaves the chat untouched', () async {
     final before = await chat();
     var emissions = 0;

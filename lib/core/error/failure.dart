@@ -67,6 +67,12 @@ class CancelledFailure extends Failure {
   const CancelledFailure(super.message, {super.cause});
 }
 
+/// The time allowed for the action has passed (xxd lets a message be
+/// retracted for a couple of minutes only).
+class ExpiredFailure extends Failure {
+  const ExpiredFailure(super.message, {super.cause});
+}
+
 /// Anything not otherwise classified.
 /// The provider refused what was sent: [fields] maps each rejected field (as
 /// the provider names it) to why.

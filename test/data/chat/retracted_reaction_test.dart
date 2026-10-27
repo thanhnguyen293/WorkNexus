@@ -33,6 +33,13 @@ void main() {
     expect(message.deleted, isTrue);
   });
 
+  test('a retracted emotion reply is one too', () {
+    expect(
+      messageFromRow(_row(type: 'emotion', content: '')).isReaction,
+      isTrue,
+    );
+  });
+
   test('a retracted ordinary reply is not one', () {
     expect(
       messageFromRow(_row(type: 'plain', content: '')).isReaction,
