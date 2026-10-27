@@ -24,9 +24,10 @@ int? chatMentionUserId(String url) {
 }
 
 /// A web address, without trailing punctuation that ends the sentence and
-/// without the brackets of Markdown (`[text](url)`, `[url](url)`).
+/// without the `]` closing a Markdown link text (`[url](url)`); brackets
+/// inside an address (`?label[]=bug`, `http://[::1]/`) stay.
 const _urlPattern =
-    r'https?://[^\s<>()\[\]]+[^\s<>()\[\].,;:!?'
+    r'https?://[^\s<>()]+[^\s<>()\[\].,;:!?'
     "'"
     r'"]';
 

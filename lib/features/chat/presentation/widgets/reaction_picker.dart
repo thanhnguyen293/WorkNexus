@@ -159,7 +159,7 @@ Future<void> reactToMessage(
         if (r.mine != null) r.emoji,
     },
   );
-  if (emoji == null) return;
+  if (emoji == null || !context.mounted) return;
   final result = await ref
       .read(reactionControllerProvider)
       .toggle(message, emoji, reactions: reactionsNow());

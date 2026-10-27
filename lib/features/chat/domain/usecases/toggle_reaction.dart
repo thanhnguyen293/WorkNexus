@@ -34,7 +34,12 @@ class ToggleReaction {
     }
     final existing = reactions.where((r) => r.emoji == emoji).firstOrNull;
     final mine = existing?.mine;
-    if (mine != null) return _retract(mine);
+    if (existing != null && mine != null) {
+      if (!canRemove(existing)) {
+        return const Err(ExpiredFailure('Reaction can no longer be removed'));
+      }
+      return _retract(mine);
+    }
     final code = const EncodeEmoji()(emoji.trim());
     if (code.isEmpty) {
       return const Err(UnexpectedFailure('No emoji to send'));

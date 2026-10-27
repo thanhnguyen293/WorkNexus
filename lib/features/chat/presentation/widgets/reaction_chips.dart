@@ -37,17 +37,9 @@ class ReactionChips extends ConsumerWidget {
     List<MessageReaction> reactions,
     MessageReaction reaction,
   ) async {
-    final controller = ref.read(reactionControllerProvider);
-    final l = AppL10n.of(context);
-    if (reaction.mine != null && !controller.canRemove(reaction)) {
-      showChatSnack(context, l.chatReactionRemoveExpired);
-      return;
-    }
-    final result = await controller.toggle(
-      message,
-      reaction.emoji,
-      reactions: reactions,
-    );
+    final result = await ref
+        .read(reactionControllerProvider)
+        .toggle(message, reaction.emoji, reactions: reactions);
     if (result case Err(:final failure)) {
       if (context.mounted) showChatFailure(context, failure);
     }

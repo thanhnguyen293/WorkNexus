@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message_reaction.dart';
@@ -66,6 +67,22 @@ void main() {
         ],
       );
       expect(map[2]!.single.count, 1);
+    });
+
+    test('a failed reaction was never made; a repeated one is the newest', () {
+      final failed = _msg(
+        10,
+        replyTo: 1,
+        emoji: '👍',
+        sender: 5,
+      ).copyWith(sendState: SendState.failed);
+      expect(build([failed]), isEmpty);
+      final map = build([
+        _msg(11, replyTo: 1, emoji: '❤️', sender: 9, mine: true),
+        _msg(12, replyTo: 1, emoji: '❤️', sender: 9, mine: true, minutes: 10),
+      ]);
+      expect(map[1]!.single.count, 1);
+      expect(map[1]!.single.mine!.serverId, 12);
     });
 
     test('drops retracted reactions and counts one person once', () {
@@ -168,7 +185,15 @@ void main() {
         _msg(10, replyTo: 1, emoji: '👍', sender: 9, mine: true),
       ])[1]!;
       expect(late.canRemove(reactions.single), isFalse);
-      expect(await late(target, '👍', reactions: reactions), isA<Err<void>>());
+      final result = await late(target, '👍', reactions: reactions);
+      expect(
+        result,
+        isA<Err<void>>().having(
+          (e) => e.failure,
+          'failure',
+          isA<ExpiredFailure>(),
+        ),
+      );
     });
 
     test('does not react to a message the server has not stored', () async {

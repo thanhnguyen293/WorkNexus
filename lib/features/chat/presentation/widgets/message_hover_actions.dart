@@ -93,7 +93,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final bubble = Listener(
       onPointerDown: (e) {
         if (e.buttons & kSecondaryMouseButton != 0) {
-          _openMenu(widget.actions, e.position, reactAt: 1);
+          _openMenu(widget.actions, e.position);
         }
       },
       child: widget.child,
@@ -112,15 +112,10 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
   }
 
   /// Keeps the hover buttons up while a menu of [actions] is open at [at].
-  Future<void> _openMenu(
-    List<MessageAction> actions,
-    Offset at, {
-    int reactAt = 0,
-  }) async {
+  Future<void> _openMenu(List<MessageAction> actions, Offset at) async {
     setState(() => _menuOpen = true);
     final react = widget.onReact;
     final withReact = [
-      ...actions.take(reactAt),
       if (react != null)
         (
           icon: LucideIcons.smilePlus300,
@@ -128,7 +123,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
           destructive: false,
           onTap: () => react(at),
         ),
-      ...actions.skip(reactAt),
+      ...actions,
     ];
     await showMessageContextMenu(context, actions: withReact, at: at);
     if (mounted) setState(() => _menuOpen = false);
