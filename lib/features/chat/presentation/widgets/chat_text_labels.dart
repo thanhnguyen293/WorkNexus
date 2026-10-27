@@ -23,18 +23,36 @@ int? chatMentionUserId(String url) {
   return m == null ? null : int.parse(m[1]!);
 }
 
-/// A web address, without trailing punctuation that ends the sentence.
+/// A web address, without trailing punctuation that ends the sentence and
+/// without the brackets of Markdown (`[text](url)`, `[url](url)`).
 const _urlPattern =
-    r'https?://[^\s<>()]+[^\s<>().,;:!?'
+    r'https?://[^\s<>()\[\]]+[^\s<>()\[\].,;:!?'
     "'"
     r'"]';
 
 /// First web address in a text, for a link preview.
 String? chatFirstUrl(String text) => _url.firstMatch(text)?[0];
 
-/// Every web address in [text], in order, without repeats.
-List<String> chatUrls(String text) =>
-    {for (final m in _url.allMatches(text)) m[0]!}.toList();
+/// Every web address in [text], in order, without repeats: one written twice
+/// (as plain text and as a Markdown link, say) is one address, also when only
+/// a trailing slash or a `#fragment` tells the two apart.
+List<String> chatUrls(String text) {
+  final seen = <String>{};
+  return [
+    for (final m in _url.allMatches(text))
+      if (seen.add(_sameAddress(m[0]!))) m[0]!,
+  ];
+}
+
+String _sameAddress(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null) return url;
+  final path = uri.path.endsWith('/') && uri.path.length > 1
+      ? uri.path.substring(0, uri.path.length - 1)
+      : uri.path;
+  return '${uri.scheme}://${uri.authority.toLowerCase()}$path'
+      '${uri.hasQuery ? '?${uri.query}' : ''}';
+}
 
 /// Whether plain text is evidently Markdown — people paste it into `plain`
 /// messages too — so it can be rendered formatted.
