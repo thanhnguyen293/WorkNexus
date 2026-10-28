@@ -961,6 +961,7 @@
   "chatReply": "Trả lời",
   "chatRetract": "Thu hồi",
   "chatRetracted": "Tin nhắn đã được thu hồi",
+  "chatReactMore": "Thêm emoji",
   "chatReact": "Thả cảm xúc",
   "chatReacted": "Đã thả {emoji}",
   "chatReactionBy": "{names} đã thả {emoji}",

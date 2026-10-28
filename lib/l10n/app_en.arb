@@ -1260,6 +1260,7 @@
   "chatReply": "Reply",
   "chatRetract": "Retract",
   "chatRetracted": "Message retracted",
+  "chatReactMore": "More emoji",
   "chatReact": "React",
   "chatReacted": "Reacted {emoji}",
   "@chatReacted": {
