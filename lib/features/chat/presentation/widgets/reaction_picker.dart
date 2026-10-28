@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_popup_card.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/message_reaction.dart';
 import '../providers/chat_providers.dart';
 import '../providers/reaction_controller.dart';
+import 'chat_emoji_panel.dart';
 import 'chat_snack.dart';
+
+/// Rows of the full emoji grid shown for "more".
+const _kMoreRows = 6;
 
 /// The emoji offered for a quick reaction.
 const kQuickReactions = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -31,7 +38,7 @@ Future<String?> showReactionPicker(
   transitionDuration: const Duration(milliseconds: 120),
   pageBuilder: (context, _, _) => CustomSingleChildLayout(
     delegate: _OverAnchor(anchor, margin: context.spacing.md),
-    child: _QuickReactionRow(selected: selected),
+    child: _ReactionPopup(selected: selected),
   ),
   transitionBuilder: (context, animation, _, child) => FadeTransition(
     opacity: animation,
@@ -43,14 +50,32 @@ Future<String?> showReactionPicker(
   ),
 );
 
-class _QuickReactionRow extends StatelessWidget {
-  const _QuickReactionRow({required this.selected});
+/// The quick row, ending in a button that swaps it for every emoji.
+class _ReactionPopup extends StatefulWidget {
+  const _ReactionPopup({required this.selected});
 
   final Set<String> selected;
 
   @override
+  State<_ReactionPopup> createState() => _ReactionPopupState();
+}
+
+class _ReactionPopupState extends State<_ReactionPopup> {
+  bool _all = false;
+
+  @override
   Widget build(BuildContext context) {
     final s = context.spacing;
+    void pick(String emoji) => Navigator.of(context).pop(emoji);
+    if (_all) {
+      return AppPopupCard(
+        child: SizedBox(
+          width: ChatEmojiGrid.widthOf(context),
+          height: s.xl6 * _kMoreRows,
+          child: ChatEmojiGrid(onPick: pick),
+        ),
+      );
+    }
     return AppPopupCard(
       padding: EdgeInsets.all(s.xs),
       child: Row(
@@ -59,9 +84,17 @@ class _QuickReactionRow extends StatelessWidget {
           for (final emoji in kQuickReactions)
             _EmojiButton(
               emoji: emoji,
-              selected: selected.contains(emoji),
-              onTap: () => Navigator.of(context).pop(emoji),
+              selected: widget.selected.contains(emoji),
+              onTap: () => pick(emoji),
             ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: s.xxs),
+            child: AppIconButton(
+              icon: LucideIcons.plus300,
+              tooltip: AppL10n.of(context).chatReactMore,
+              onPressed: () => setState(() => _all = true),
+            ),
+          ),
         ],
       ),
     );

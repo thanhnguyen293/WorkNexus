@@ -143,7 +143,7 @@ class ChatEmojiTabs extends ConsumerWidget {
             child: TabBarView(
               children: [
                 stickerTab,
-                _EmojiGrid(onPick: onInsert),
+                ChatEmojiGrid(onPick: onInsert),
               ],
             ),
           ),
@@ -153,8 +153,13 @@ class ChatEmojiTabs extends ConsumerWidget {
   }
 }
 
-class _EmojiGrid extends StatelessWidget {
-  const _EmojiGrid({required this.onPick});
+/// Every emoji the chat can send, to pick one; it scrolls within its box.
+class ChatEmojiGrid extends StatelessWidget {
+  const ChatEmojiGrid({super.key, required this.onPick});
+
+  /// Width of a box that shows [_kEmojiColumns] emoji across.
+  static double widthOf(BuildContext context) =>
+      context.spacing.xl6 * _kEmojiColumns + context.spacing.md * 2;
 
   final ValueChanged<String> onPick;
 
