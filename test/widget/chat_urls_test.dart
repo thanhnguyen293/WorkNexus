@@ -43,6 +43,8 @@ void main() {
       'https://g.com/issues?label_name[]=bug',
     ]);
     expect(chatUrls('see http://[::1]:8080/ now'), ['http://[::1]:8080/']);
+    expect(chatUrls('see http://[::1] now'), ['http://[::1]']);
+    expect(chatUrls('https://a.com/?filter[]'), ['https://a.com/?filter[]']);
     expect(chatUrls('[https://a.com/x](https://a.com/x)'), ['https://a.com/x']);
   });
 }

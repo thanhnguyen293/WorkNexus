@@ -35,6 +35,8 @@ class ToggleReaction {
     final existing = reactions.where((r) => r.emoji == emoji).firstOrNull;
     final mine = existing?.mine;
     if (existing != null && mine != null) {
+      // Still on its way: nothing to take back yet, and none to add again.
+      if (mine.sendState == SendState.pending) return const Ok(null);
       if (!canRemove(existing)) {
         return const Err(ExpiredFailure('Reaction can no longer be removed'));
       }

@@ -26,10 +26,19 @@ ChatMessageRow _row({
 );
 
 void main() {
-  test('a retracted reaction (an empty image reply) is still a reaction', () {
-    // How the server sends one back: no emoji, the reply kept.
-    final message = messageFromRow(_row(type: 'image', content: ''));
+  test('a retracted reaction whose emoji was kept is still a reaction', () {
+    final message = messageFromRow(
+      _row(type: 'image', content: '{"type":"emoji","content":":thumbsup:"}'),
+    );
     expect(message.isReaction, isTrue);
+    expect(message.deleted, isTrue);
+  });
+
+  test('an empty retracted image reply may have been a picture', () {
+    // How the server sends any retracted image back: nothing says it was an
+    // emoji, so it shows as retracted rather than vanishing.
+    final message = messageFromRow(_row(type: 'image', content: ''));
+    expect(message.isReaction, isFalse);
     expect(message.deleted, isTrue);
   });
 

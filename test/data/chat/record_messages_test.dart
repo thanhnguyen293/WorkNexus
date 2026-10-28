@@ -73,15 +73,30 @@ void main() {
     expect(row.lastReadIndex, 4, reason: 'a read chat stays read');
   });
 
-  test(
-    'a reaction in a chat with unread messages leaves them unread',
-    () async {
-      await local.recordMessages('acc', 'g1', [_m(4, reaction: true)]);
-      final row = await chat();
-      expect(row.lastReadIndex, 2);
-      expect(row.lastMessageIndex, 4);
-    },
-  );
+  test('a reaction in a chat with unread messages adds none to them', () async {
+    await local.recordMessages('acc', 'g1', [_m(4, reaction: true)]);
+    final row = await chat();
+    expect(row.lastMessageIndex, 4);
+    expect(row.lastMessageIndex - row.lastReadIndex, 1, reason: 'only #3');
+  });
+
+  test('the server listing the chat again keeps a reaction read', () async {
+    await local.setLastReadIndex('acc', 'g1', 3);
+    await local.recordMessages('acc', 'g1', [_m(4, reaction: true)]);
+    // The server never heard of the reaction being read: its mark is older.
+    await local.upsertConversations([
+      const ChatConversationsCompanion(
+        accountId: Value('acc'),
+        gid: Value('g1'),
+        type: Value('group'),
+        name: Value('Team'),
+        lastMessageId: Value(1004),
+        lastMessageIndex: Value(4),
+        lastReadIndex: Value(3),
+      ),
+    ]);
+    expect((await chat()).lastReadIndex, 4);
+  });
 
   test('a page read newest first still leaves its messages unread', () async {
     await local.setLastReadIndex('acc', 'g1', 3);
@@ -91,8 +106,8 @@ void main() {
       _m(5),
     ]);
     final row = await chat();
-    expect(row.lastReadIndex, 3);
     expect(row.lastMessageIndex, 6);
+    expect(row.lastMessageIndex - row.lastReadIndex, 2, reason: '#4 and #5');
   });
 
   test('a page already recorded leaves the chat untouched', () async {
