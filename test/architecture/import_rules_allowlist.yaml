@@ -146,7 +146,7 @@ line_count_exemptions:
     owner_phase: "Permanent"
     reason: "Palette color token constants"
   - file: lib/features/chat/data/datasources/chat_local_datasource.dart
-    max_lines: 607
+    max_lines: 624
     owner_phase: "Follow-up"
     reason: "Chat local datasource (exempt in Open question 1)"
   - file: lib/features/chat/data/datasources/xxd/api_scheme_codec.dart

@@ -60,8 +60,29 @@ class ChatLocalDatasource {
 
   // ---- conversations ---------------------------------------------------------
 
-  Future<void> upsertConversations(List<ChatConversationsCompanion> rows) => _db
-      .batch((b) => b.insertAllOnConflictUpdate(_db.chatConversations, rows));
+  /// Stores conversations as the server lists them, but never moves a read
+  /// marker back: a reaction is read here only (see [recordMessages]), and
+  /// the server's older mark must not make it unread again.
+  Future<void> upsertConversations(
+    List<ChatConversationsCompanion> rows,
+  ) => _db.transaction(() async {
+    final query = _db.select(_db.chatConversations)
+      ..where((c) => c.gid.isIn([for (final r in rows) r.gid.value]));
+    final read = {
+      for (final c in await query.get()) (c.accountId, c.gid): c.lastReadIndex,
+    };
+    await _db.batch(
+      (b) => b.insertAllOnConflictUpdate(_db.chatConversations, [
+        for (final r in rows)
+          switch (read[(r.accountId.value, r.gid.value)]) {
+            final local?
+                when r.lastReadIndex.present && r.lastReadIndex.value < local =>
+              r.copyWith(lastReadIndex: Value(local)),
+            _ => r,
+          },
+      ]),
+    );
+  });
 
   /// Conversations and their last messages in one transaction, so watchers
   /// never see a chat without its preview.
@@ -88,7 +109,8 @@ class ChatLocalDatasource {
   /// chat read up to there. One read and at most one write per chat, and
   /// nothing is written when the chat already stands where the messages
   /// leave it — a re-fetched page must not re-emit the chat list.
-  /// A reaction never turns a read chat unread.
+  /// A reaction never counts as unread: it moves the read marker along with
+  /// the last message.
   Future<void> recordMessages(
     String accountId,
     String cgid,
@@ -100,21 +122,25 @@ class ChatLocalDatasource {
     var lastIndex = row.lastMessageIndex;
     var lastRead = row.lastReadIndex;
     var lastActive = row.lastActiveAt;
-    // By index, whatever order a page came in: whether the chat was read is
-    // decided message by message, oldest first.
+    // By index, whatever order a page came in: what each message adds to
+    // the unread count is decided message by message, oldest first.
     final ordered = [...messages]
       ..sort((a, b) => (a.index ?? 1 << 30).compareTo(b.index ?? 1 << 30));
     for (final m in ordered) {
       final serverId = m.serverId;
-      final wasRead = lastRead >= lastIndex;
       if (serverId != null && serverId > (lastId ?? 0)) {
         lastId = serverId;
         lastActive = m.sentAt;
       }
       final index = m.index;
+      final before = lastIndex;
       if (index != null && index > lastIndex) lastIndex = index;
-      if (index != null && (m.fromSelf || (m.reaction && wasRead))) {
+      if (index != null && m.fromSelf) {
         lastRead = lastIndex;
+      } else if (m.reaction) {
+        // Unread = last message - read marker: moving both by the same step
+        // leaves the count as it was, read or not.
+        lastRead += lastIndex - before;
       }
     }
     if (lastId == row.lastMessageId &&
@@ -460,10 +486,9 @@ class ChatLocalDatasource {
     return row.read(count) ?? 0;
   }
 
-  /// The newest [limit] messages of a chat, oldest first, not counting
-  /// reactions: they are left out in the query so the limit is a count of
-  /// what the timeline shows (the same rows `IsReactionRow` names, but for an
-  /// emoji whose shortname the app cannot show, which this leaves out too).
+  /// The newest [limit] messages of a chat, oldest first. Reactions among
+  /// them are left out by the mapper, which alone knows which replies are
+  /// (`IsReactionRow`), so the timeline and the reactions never disagree.
   Stream<List<ChatMessageRow>> watchMessages(
     String accountId,
     String cgid, {
@@ -474,21 +499,12 @@ class ChatLocalDatasource {
         (m) =>
             m.accountId.equals(accountId) &
             m.cgid.equals(cgid) &
-            m.detached.equals(false) &
-            _isReaction(m).not(),
+            m.detached.equals(false),
       )
       ..orderBy([(m) => OrderingTerm.desc(m.sentAt)])
       ..limit(limit);
     return query.watch().map((rows) => rows.reversed.toList());
   }
-
-  static Expression<bool> _isReaction($ChatMessagesTable m) =>
-      m.replyToId.isNotNull() &
-      (m.contentType.equals('emotion') |
-          (m.contentType.equals('image') &
-              (m.content.like('%"type":"emoji"%') |
-                  m.content.like('%"type": "emoji"%') |
-                  (m.deleted.equals(true) & m.content.equals('')))));
 
   /// One message by its server id (null until it is stored locally).
   Stream<ChatMessageRow?> watchMessageByServerId(

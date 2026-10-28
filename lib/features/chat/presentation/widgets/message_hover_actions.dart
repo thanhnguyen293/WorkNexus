@@ -19,7 +19,8 @@ typedef MessageAction = ({
 
 /// Zalo-style message actions: round buttons beside the bubble, level with
 /// its bottom edge, shown while the pointer is over the message — the
-/// first actions (reply, open thread) as buttons, the rest under "…". They sit in
+/// first actions (reply, open thread) and React as buttons, the rest under
+/// "…". They sit in
 /// the bubble's row (outside the bubble, so they are clickable), keeping
 /// their space while hidden so nothing shifts on hover.
 class MessageHoverActions extends StatefulWidget {
@@ -42,9 +43,9 @@ class MessageHoverActions extends StatefulWidget {
   /// Own messages (right side) get the buttons on their left.
   final bool alignEnd;
 
-  /// Reacts to the message: a "React" entry in the menus, given where the
-  /// menu opened (global) so the choice of emoji opens right there. Null: the
-  /// message cannot be reacted to.
+  /// Reacts to the message: a "React" button after the own buttons and an
+  /// entry in the menus, given where it was asked (global) so the choice of
+  /// emoji opens right there. Null: the message cannot be reacted to.
   final void Function(Offset anchor)? onReact;
 
   @override
@@ -60,7 +61,8 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
   @override
   Widget build(BuildContext context) {
     final actions = widget.actions;
-    if (actions.isEmpty) return widget.child;
+    final react = widget.onReact;
+    if (actions.isEmpty && react == null) return widget.child;
     final s = context.spacing;
     final own = actions.take(widget.buttons).toList();
     final rest = actions.skip(widget.buttons).toList();
@@ -78,7 +80,11 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
                 if (i > 0) SizedBox(width: s.sm),
                 _RoundButton(icon: a.icon, tooltip: a.tooltip, onTap: a.onTap),
               ],
-              if (rest.isNotEmpty || widget.onReact != null) ...[
+              if (react != null) ...[
+                if (own.isNotEmpty) SizedBox(width: s.sm),
+                _ReactButton(onReact: react),
+              ],
+              if (rest.isNotEmpty) ...[
                 SizedBox(width: s.sm),
                 _MoreButton(onOpen: (at) => _openMenu(rest, at)),
               ],
@@ -164,6 +170,26 @@ class _RoundButton extends StatelessWidget {
     );
     final message = tooltip;
     return message == null ? button : Tooltip(message: message, child: button);
+  }
+}
+
+/// "React": asks for the emoji over the button's top centre.
+class _ReactButton extends StatelessWidget {
+  const _ReactButton({required this.onReact});
+
+  final void Function(Offset anchor) onReact;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RoundButton(
+      icon: LucideIcons.smilePlus300,
+      tooltip: AppL10n.of(context).chatReact,
+      onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
+        if (box == null) return;
+        onReact(box.localToGlobal(Offset(box.size.width / 2, 0)));
+      },
+    );
   }
 }
 

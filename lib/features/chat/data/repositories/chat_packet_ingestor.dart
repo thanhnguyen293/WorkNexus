@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
+
 import '../../../../core/database/database.dart';
 import '../../domain/usecases/is_reaction_row.dart';
 import '../datasources/chat_local_datasource.dart';
@@ -183,7 +185,10 @@ class ChatPacketIngestor {
         if (m['gid'] is String && m['cgid'] is String) m,
     ];
     if (valid.isEmpty) return const IngestFollowUp();
-    final rows = [for (final m in valid) messageFromXxd(accountId, m)];
+    final rows = [
+      for (final m in valid)
+        await _keepReactionContent(accountId, messageFromXxd(accountId, m)),
+    ];
     // Per chat, so a 50-message page is one batch, one read and one write
     // per chat inside one transaction — not a hundred round trips, each
     // re-running every open watch.
@@ -213,6 +218,35 @@ class ChatPacketIngestor {
       userIds: await _unknownUsers(accountId, {
         for (final r in rows) r.senderId.value,
       }),
+    );
+  }
+
+  /// The server sends a retracted message back without its content. A
+  /// retracted reaction keeps its emoji here, so it stays known as one (and
+  /// out of the timeline); any other retracted reply loses its content as
+  /// the server wants, and shows as retracted.
+  Future<ChatMessagesCompanion> _keepReactionContent(
+    String accountId,
+    ChatMessagesCompanion row,
+  ) async {
+    if (!row.deleted.value ||
+        row.content.value.isNotEmpty ||
+        row.replyToId.value == null) {
+      return row;
+    }
+    final stored = await _local.message(accountId, row.gid.value);
+    if (stored == null ||
+        !const IsReactionRow()(
+          replyToId: stored.replyToId,
+          deleted: stored.deleted,
+          contentType: stored.contentType,
+          content: stored.content,
+        )) {
+      return row;
+    }
+    return row.copyWith(
+      contentType: Value(stored.contentType),
+      content: Value(stored.content),
     );
   }
 

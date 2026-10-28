@@ -9,10 +9,10 @@ class IsReactionRow {
 
   final ParseMessageContent _parse;
 
-  /// The server sends a retracted message back without its content, so a
-  /// retracted reaction is an empty reply of the emoji's content type
-  /// (`image` for the wire form, `emotion` for newer clients). A retracted
-  /// image reply looks the same and is treated alike.
+  /// The server sends a retracted message back without its content. An empty
+  /// retracted `emotion` reply can only have been an emoji; an empty `image`
+  /// one may have been a picture, so it counts only when the content was kept
+  /// (the ingestor keeps a retracted reaction's emoji it already stored).
   bool retracted({
     required int? replyToId,
     required bool deleted,
@@ -22,7 +22,7 @@ class IsReactionRow {
       deleted &&
       replyToId != null &&
       content.isEmpty &&
-      (contentType == 'image' || contentType == 'emotion');
+      contentType == 'emotion';
 
   bool call({
     required int? replyToId,

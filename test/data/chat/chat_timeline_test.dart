@@ -40,7 +40,7 @@ void main() {
       r.messageIndex,
   ];
 
-  test('the limit counts messages, not the reactions among them', () async {
+  test('reactions stay in the query, for the mapper to sort out', () async {
     ChatMessagesCompanion reaction(int index, {String type = 'image'}) =>
         _row(index).copyWith(
           contentType: Value(type),
@@ -55,7 +55,9 @@ void main() {
       reaction(5),
       reaction(6, type: 'emotion'),
     ]);
-    expect(await timeline(limit: 2), [2, 3]);
+    // Even one whose shortname the app cannot show: only the mapper can
+    // tell it from a reaction, so the query must not drop it.
+    expect(await timeline(limit: 2), [5, 6]);
   });
 
   test('a reply parent fetched on its own stays out of the timeline', () async {

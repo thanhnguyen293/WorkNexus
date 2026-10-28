@@ -25,11 +25,12 @@ int? chatMentionUserId(String url) {
 
 /// A web address, without trailing punctuation that ends the sentence and
 /// without the `]` closing a Markdown link text (`[url](url)`); brackets
-/// inside an address (`?label[]=bug`, `http://[::1]/`) stay.
+/// inside an address come in pairs (`?label[]=bug`, `http://[::1]`) and stay.
 const _urlPattern =
-    r'https?://[^\s<>()]+[^\s<>()\[\].,;:!?'
+    r'https?://(?:\[[^\s<>()\[\]]*\]|[^\s<>()\[\]])*'
+    r'(?:\[[^\s<>()\[\]]*\]|[^\s<>()\[\].,;:!?'
     "'"
-    r'"]';
+    r'"])';
 
 /// First web address in a text, for a link preview.
 String? chatFirstUrl(String text) => _url.firstMatch(text)?[0];

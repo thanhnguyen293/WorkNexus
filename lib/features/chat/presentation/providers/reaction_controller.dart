@@ -14,6 +14,10 @@ class ReactionController {
 
   final ToggleReaction _toggle;
 
+  /// Toggles still being sent, by message and emoji: a second tap before the
+  /// first one shows up would otherwise send the reaction twice.
+  final _inFlight = <(String, String)>{};
+
   /// Whether the user's own [reaction] can still be taken back.
   bool canRemove(MessageReaction reaction) => _toggle.canRemove(reaction);
 
@@ -23,9 +27,20 @@ class ReactionController {
     ChatMessage message,
     String emoji, {
     required List<MessageReaction> reactions,
-  }) => _toggle(message, emoji, reactions: reactions);
+  }) async {
+    final key = (message.gid, emoji);
+    if (!_inFlight.add(key)) return const Ok(null);
+    try {
+      return await _toggle(message, emoji, reactions: reactions);
+    } finally {
+      _inFlight.remove(key);
+    }
+  }
 }
 
+/// Kept alive on purpose: it is only read from tap handlers, so with
+/// autoDispose each tap would get a new controller and the in-flight guard
+/// would never see the tap before it.
 final reactionControllerProvider = Provider<ReactionController>(
   (ref) => ReactionController(ref.watch(chatRepositoryProvider)),
 );

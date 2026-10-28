@@ -196,6 +196,33 @@ void main() {
       );
     });
 
+    test(
+      'a tap while its own reaction is still sending does nothing',
+      () async {
+        final sending = _msg(
+          10,
+          replyTo: 1,
+          emoji: '👍',
+          sender: 9,
+          mine: true,
+        ).copyWith(serverId: null, sendState: SendState.pending);
+        final reactions = const BuildReactions()([sending])[1]!;
+        expect(
+          await toggle(target, '👍', reactions: reactions),
+          isA<Ok<void>>(),
+        );
+        verifyNever(() => repo.retract(any(), any()));
+        verifyNever(
+          () => repo.sendEmoji(
+            any(),
+            any(),
+            any(),
+            replyToId: any(named: 'replyToId'),
+          ),
+        );
+      },
+    );
+
     test('does not react to a message the server has not stored', () async {
       final pending = _msg(1).copyWith(serverId: null);
       expect(
