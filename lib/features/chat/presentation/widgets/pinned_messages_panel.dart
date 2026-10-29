@@ -168,7 +168,14 @@ class _PinnedCard extends ConsumerWidget {
       body: PinnedCardPreview(message: message),
       onViewOriginal: serverId == null
           ? null
-          : () => jumpToChatMessage(ref, thread, serverId),
+          : () {
+              // Slid over the messages, the panel would hide the one
+              // jumped to: make way for it.
+              if (!ChatLayoutScope.of(context).infoRoom) {
+                closeChatSidePanel(ref, thread);
+              }
+              jumpToChatMessage(ref, thread, serverId);
+            },
       trailing: ref.watch(chatCanPinProvider(thread))
           ? AppIconButton(
               icon: LucideIcons.pinOff300,

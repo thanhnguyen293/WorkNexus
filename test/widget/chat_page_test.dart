@@ -42,6 +42,7 @@ import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/pinned_message_bar.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/pinned_messages_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -382,8 +383,9 @@ class _FakeChatRepository implements ChatRepository {
 
   // Members added after these tests were written; not exercised here yet.
   @override
-  Stream<ChatMessage?> watchMessage(String a, String c, int id) =>
-      Stream.value(null);
+  Stream<ChatMessage?> watchMessage(String a, String c, int id) => Stream.value(
+    id == 502 ? _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502) : null,
+  );
 
   @override
   Stream<List<ChatMessage>> watchReplies(String a, String c) =>
@@ -728,6 +730,61 @@ void main() {
     await tester.tapAt(const Offset(500, 400));
     await tester.pumpAndSettle();
     expect(find.byType(ChatFilesPanel), findsNothing);
+  });
+
+  testWidgets('without room, opening and closing a panel keeps the message '
+      'list (its scroll and jumps)', (tester) async {
+    await pumpChat(tester, size: const Size(1000, 700));
+    await openTeamChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    final list = tester.state(find.byType(MessageList));
+
+    container
+        .read(chatSidePanelProvider((accountId: 'acc', chatGid: 'g1')).notifier)
+        .state = ChatSidePanel
+        .files;
+    await tester.pumpAndSettle();
+    expect(tester.state(find.byType(MessageList)), same(list));
+
+    await tester.tapAt(const Offset(500, 400));
+    await tester.pumpAndSettle();
+    expect(tester.state(find.byType(MessageList)), same(list));
+  });
+
+  testWidgets('without room, "View original" on a pin closes the pinned '
+      'panel and jumps to the message', (tester) async {
+    repo.pinned = const [502];
+    await pumpChat(tester, size: const Size(1000, 700));
+    await openTeamChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const thread = (accountId: 'acc', chatGid: 'g1');
+    final highlighted = <int?>[];
+    container.listen(
+      chatHighlightedMessageProvider(thread),
+      (_, id) => highlighted.add(id),
+    );
+    container.read(chatSidePanelProvider(thread).notifier).state =
+        ChatSidePanel.pinned;
+    await tester.pumpAndSettle();
+    final list = tester.state(find.byType(MessageList));
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(PinnedMessagesPanel),
+        matching: find.text('View original message'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byType(PinnedMessagesPanel), findsNothing);
+    expect(tester.state(find.byType(MessageList)), same(list));
+    expect(highlighted, contains(502));
+    await tester.pumpAndSettle(const Duration(seconds: 3));
   });
 
   testWidgets('members open as their own panel from the chat info', (
