@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/app/shell/title_bar.dart';
+import 'package:work_nexus/app/shell/workspace_settings_page.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/debug/talker_debug_overlay.dart';
 import 'package:work_nexus/core/error/result.dart';
@@ -16,7 +17,6 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/theme/fonts.dart';
 import 'package:work_nexus/core/widgets/quick_settings_font_control.dart';
 import 'package:work_nexus/core/widgets/quick_settings_side_panel.dart';
-import 'package:work_nexus/features/connections/presentation/settings_page.dart';
 import 'package:work_nexus/features/translation/presentation/translation_api_providers.dart';
 import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -469,7 +469,7 @@ void main() {
     expect(find.text('Theme'), findsNothing);
   });
 
-  testWidgets('Integrations page no longer contains appearance settings', (
+  testWidgets('the Settings page no longer contains appearance settings', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 900);
@@ -491,12 +491,12 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const _SettingsHarness(child: SettingsPage()),
+        child: const _SettingsHarness(child: WorkspaceSettingsPage()),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Connected accounts'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
     expect(find.text('APPEARANCE'), findsNothing);
   });
 }

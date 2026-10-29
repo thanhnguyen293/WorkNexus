@@ -61,15 +61,8 @@ class WorkspaceNavPane extends ConsumerWidget {
                       .read(appNavProvider.notifier)
                       .selectWorkspaceSection(WorkspaceSection.integrations),
                 ),
-                SizedBox(height: s.xxs),
-                _WorkspaceNavRow(
-                  label: l.members,
-                  icon: LucideIcons.users300,
-                  selected: nav.workspaceSection == WorkspaceSection.members,
-                  onTap: () => ref
-                      .read(appNavProvider.notifier)
-                      .selectWorkspaceSection(WorkspaceSection.members),
-                ),
+                // Members stays out of the menu until the feature exists:
+                // for now its page only says it is coming.
                 SizedBox(height: s.xxs),
                 _WorkspaceNavRow(
                   label: l.settings,

@@ -32,6 +32,7 @@ class AppSizes extends ThemeExtension<AppSizes> {
   double get sidePanel => 400; // slide-over panels (notifications, threads)
   double get boardColumn => 272; // one kanban column
   double get stateMessage => 360; // max line length of an empty / error message
+  double get pageMaxWidth => 1000; // content of a full page (workspace pages)
 
   // ---- Shell layout (unified workspace shell) ----
   double get railWidth => 76;

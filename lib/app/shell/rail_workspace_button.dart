@@ -6,8 +6,9 @@ import '../../core/navigation/navigation_providers.dart';
 import '../../core/widgets/app_rail_labeled_button.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The top workspace button in the navigation rail (design §8, specs S3.1).
-/// Selects the workspace-level view (Overview, Integrations, Members, Settings).
+/// The top workspace button in the navigation rail (design §8, specs S3.1),
+/// labelled "Dashboard": selects the workspace-level view (Overview,
+/// Integrations, Settings).
 class RailWorkspaceButton extends ConsumerWidget {
   const RailWorkspaceButton({super.key});
 
@@ -22,7 +23,7 @@ class RailWorkspaceButton extends ConsumerWidget {
     return AppRailLabeledButton(
       key: const ValueKey('rail-workspace-button'),
       leading: const Icon(LucideIcons.layoutGrid300),
-      label: l.workspace,
+      label: l.dashboard,
       selected: isSelected,
       onTap: () => ref
           .read(appNavProvider.notifier)

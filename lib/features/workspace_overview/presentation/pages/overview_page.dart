@@ -11,6 +11,7 @@ import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_page.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/overview_providers.dart';
@@ -115,84 +116,19 @@ class OverviewPage extends ConsumerWidget {
         if (a.providerType == ProviderType.zentao) a,
     ];
 
-    return ColoredBox(
-      color: c.background,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(s.xl5, s.xl4, s.xl5, s.xl5),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _OverviewHeader(
-                  accountCount: accounts.length,
-                  workspaceName: wsName,
-                ),
-                SizedBox(height: s.xl4),
-                _ToolCardGrid(accounts: accounts),
-                SizedBox(height: s.xl4),
-                for (final account in zentao) ...[
-                  ZenTaoOverviewSection(account: account),
-                  SizedBox(height: s.xl4),
-                ],
-                const AssignedWorkList(),
-              ],
-            ),
-          ),
-        ),
+    return AppPage(
+      title: l.overview,
+      subtitle: l.overviewSubtitle(accounts.length, wsName),
+      trailing: AppButton.text(
+        onPressed: () => ref
+            .read(appNavProvider.notifier)
+            .selectWorkspaceSection(WorkspaceSection.integrations),
+        child: Text(l.manageIntegrations),
       ),
-    );
-  }
-}
-
-class _OverviewHeader extends ConsumerWidget {
-  const _OverviewHeader({
-    required this.accountCount,
-    required this.workspaceName,
-  });
-
-  final int accountCount;
-  final String workspaceName;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.colors;
-    final s = context.spacing;
-    final l = AppL10n.of(context);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.overview,
-                style: context.typography.display.copyWith(
-                  color: c.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: s.xs),
-              Text(
-                l.overviewSubtitle(accountCount, workspaceName),
-                style: context.typography.bodySm.copyWith(
-                  color: c.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(width: s.lg),
-        AppButton.text(
-          onPressed: () => ref
-              .read(appNavProvider.notifier)
-              .selectWorkspaceSection(WorkspaceSection.integrations),
-          child: Text(l.manageIntegrations),
-        ),
+        _ToolCardGrid(accounts: accounts),
+        for (final account in zentao) ZenTaoOverviewSection(account: account),
+        const AssignedWorkList(),
       ],
     );
   }
