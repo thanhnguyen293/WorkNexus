@@ -84,7 +84,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ? ChatTrustGate(accountId: accountId, request: status)
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      final layout = ChatLayout.of(constraints.maxWidth);
+                      final layout = ChatLayout.of(
+                        constraints.maxWidth,
+                        withList: widget.showConversationList,
+                      );
                       return ChatLayoutScope(
                         layout: layout,
                         child: Row(
