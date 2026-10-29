@@ -6,7 +6,6 @@ import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/entities/workspace.dart';
-import 'package:work_nexus/core/domain/value_objects/account_sync_status.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
@@ -19,7 +18,6 @@ import 'package:work_nexus/features/workspace_overview/presentation/pages/integr
 import 'package:work_nexus/features/workspace_overview/presentation/pages/members_page.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/pages/overview_page.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/assigned_work_list.dart';
-import 'package:work_nexus/features/workspace_overview/presentation/widgets/integration_row.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/tool_card.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/zentao_overview_section.dart';
@@ -176,8 +174,8 @@ void main() {
       expect(find.byType(ZenTaoOverviewSection), findsOneWidget);
       expect(find.text('ZenTao'), findsOneWidget);
       expect(find.text('ZenTao · alice'), findsOneWidget);
-      // On the card and in the section's heading.
-      expect(find.text('Open ZenTao →'), findsNWidgets(2));
+      // On the card only: the section's heading does not repeat it.
+      expect(find.text('Open ZenTao →'), findsOneWidget);
       expect(find.text('Assigned to you'), findsOneWidget);
       // In the assigned work and in the section's My tasks.
       expect(
@@ -245,28 +243,10 @@ void main() {
   });
 
   group('Workspace Integrations', () {
-    testWidgets('integration row displays authExpired health pill', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildTestApp(
-          child: const IntegrationRow(
-            account: _accountGitlab,
-            syncStatusOverride: AccountSyncStatus.authExpired(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('GitLab'), findsOneWidget);
-      expect(find.text('Auth expired'), findsOneWidget);
-      expect(find.text('Manage'), findsOneWidget);
-    });
-
     testWidgets('info box has text only and no checkbox', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
-          child: const IntegrationsPage(),
+          child: const IntegrationsPage(accounts: SizedBox.shrink()),
           accounts: [_accountZentao],
         ),
       );
@@ -298,7 +278,7 @@ void main() {
     });
 
     testWidgets(
-      'workspace nav pane displays header, 4 rows, account count, and switches section',
+      'workspace nav pane displays header, 3 rows (no Members yet), account count, and switches section',
       (tester) async {
         final navNotifier = _TestNavController();
 
@@ -314,7 +294,7 @@ void main() {
         expect(find.text('WORKSPACE / MOBILE APP'), findsOneWidget);
         expect(find.text('Overview'), findsOneWidget);
         expect(find.text('Integrations'), findsOneWidget);
-        expect(find.text('Members'), findsOneWidget);
+        expect(find.text('Members'), findsNothing);
         expect(find.text('Settings'), findsOneWidget);
         expect(
           find.text('2'),

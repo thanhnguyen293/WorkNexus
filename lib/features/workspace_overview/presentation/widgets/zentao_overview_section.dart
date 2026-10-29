@@ -7,18 +7,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/tools/tool_module.dart';
 import '../../../../core/tools/tool_registry_provider.dart';
 import '../../../../core/widgets/badges.dart';
 import '../providers/dashboard_providers.dart';
 import 'dashboard_body.dart';
 import 'dashboard_sync_status.dart';
-import 'tool_card_parts.dart';
 
 /// A ZenTao account's dashboard on the Overview, as one inset panel: a
-/// heading (logo, "ZenTao · account", sync status, "Open ZenTao →") over My
-/// tasks / My bugs, then executions / recent activity. The account-wide
-/// numbers stay on its compact card in the row above. Shows what is stored at
+/// heading (logo, "ZenTao · account", sync status) over My tasks / My bugs,
+/// then executions / recent activity. The account-wide numbers and the
+/// "Open ZenTao →" button stay on its compact card in the row above. Shows what is stored at
 /// once; the assigned work syncs once per session in the background and the
 /// dashboard refetches only when stale.
 class ZenTaoOverviewSection extends ConsumerWidget {
@@ -46,7 +44,7 @@ class ZenTaoOverviewSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Heading(account: account, module: module),
+            _Heading(account: account),
             SizedBox(height: s.xl),
             DashboardBody(account: account),
           ],
@@ -56,23 +54,18 @@ class ZenTaoOverviewSection extends ConsumerWidget {
   }
 }
 
-/// Logo and "ZenTao · account" leading; sync status and "Open ZenTao →" at
-/// the trailing edge, or on a line of their own when narrow.
+/// Logo and "ZenTao · account" leading, sync status at the trailing edge.
 class _Heading extends ConsumerWidget {
-  const _Heading({required this.account, required this.module});
-
-  /// Below this width the actions move under the title.
-  static const double _inlineActionsWidth = 560;
+  const _Heading({required this.account});
 
   final Account account;
-  final ToolModule module;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
     final fetchedAt = ref.watch(dashboardProvider(account.id)).value?.fetchedAt;
-    final title = Row(
+    return Row(
       children: [
         ProviderBadge(account.providerType, big: true),
         SizedBox(width: s.md),
@@ -84,39 +77,9 @@ class _Heading extends ConsumerWidget {
             style: context.typography.titleSm.copyWith(color: c.textPrimary),
           ),
         ),
+        SizedBox(width: s.lg),
+        DashboardSyncStatus(account: account, fetchedAt: fetchedAt),
       ],
-    );
-    // Right-aligned in the space left, so it sits by the open button.
-    final trailingStatus = Align(
-      alignment: AlignmentDirectional.centerEnd,
-      child: DashboardSyncStatus(account: account, fetchedAt: fetchedAt),
-    );
-    final open = ToolOpenButton(account: account, module: module);
-    return LayoutBuilder(
-      builder: (context, box) => box.maxWidth >= _inlineActionsWidth
-          ? Row(
-              children: [
-                Expanded(child: title),
-                SizedBox(width: s.lg),
-                Expanded(child: trailingStatus),
-                SizedBox(width: s.md),
-                open,
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                title,
-                SizedBox(height: s.md),
-                Row(
-                  children: [
-                    open,
-                    SizedBox(width: s.md),
-                    Expanded(child: trailingStatus),
-                  ],
-                ),
-              ],
-            ),
     );
   }
 }

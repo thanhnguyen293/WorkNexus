@@ -85,24 +85,26 @@ class WorkspaceAccounts extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: s.md),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: c.surface,
-              borderRadius: BorderRadius.circular(context.radii.lg),
-              border: Border.all(color: c.border),
+          if (accounts.isNotEmpty) ...[
+            SizedBox(height: s.md),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(context.radii.lg),
+                border: Border.all(color: c.border),
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < accounts.length; i++)
+                    AccountRow(
+                      account: accounts[i],
+                      lookups: lookups,
+                      first: i == 0,
+                    ),
+                ],
+              ),
             ),
-            child: Column(
-              children: [
-                for (var i = 0; i < accounts.length; i++)
-                  AccountRow(
-                    account: accounts[i],
-                    lookups: lookups,
-                    first: i == 0,
-                  ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );

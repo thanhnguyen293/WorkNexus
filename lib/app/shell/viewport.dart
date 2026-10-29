@@ -6,21 +6,18 @@ import '../../core/domain/entities/account.dart';
 import '../../core/domain/value_objects/account_sync_status.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../core/widgets/app_state_view.dart';
-import '../../features/app_update/presentation/widgets/update_settings_card.dart';
-import '../../features/connections/presentation/settings_page.dart';
-import '../../features/connections/presentation/widgets/local_cache_card.dart';
-import '../../features/mini_apps/presentation/widgets/mini_app_settings_card.dart';
+import '../../features/connections/presentation/connect_account_dialog.dart';
+import '../../features/connections/presentation/widgets/active_workspace_accounts.dart';
 import '../../features/mini_apps/presentation/widgets/mini_apps_host.dart';
 import '../../features/ticket_editor/presentation/pages/ticket_editor_page.dart';
-import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import '../../features/workspace_overview/presentation/pages/integrations_page.dart';
 import '../../features/workspace_overview/presentation/pages/members_page.dart';
 import '../../features/workspace_overview/presentation/pages/overview_page.dart';
 import 'auth_expired_banner.dart';
 import 'section_error_boundary.dart';
+import 'workspace_settings_page.dart';
 
 /// Main viewport hosting workspace views, tool sections, or ticket editor (specs S5, S6).
 /// Keys sections by `(accountId, sectionId)` and keeps the last 3 alive with
@@ -151,22 +148,12 @@ class _ViewportState extends ConsumerState<Viewport> {
     final key = 'workspace:${section.name}';
     final Widget page = switch (section) {
       WorkspaceSection.overview => const OverviewPage(),
-      WorkspaceSection.integrations => const IntegrationsPage(),
-      WorkspaceSection.members => const MembersPage(),
-      WorkspaceSection.settings => SettingsPage(
-        footer: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const TranslationSettingsCard(),
-            SizedBox(height: context.spacing.xl4),
-            const MiniAppSettingsCard(),
-            SizedBox(height: context.spacing.xl4),
-            const UpdateSettingsCard(),
-            SizedBox(height: context.spacing.xl4),
-            const LocalCacheCard(),
-          ],
-        ),
+      WorkspaceSection.integrations => IntegrationsPage(
+        accounts: const ActiveWorkspaceAccounts(),
+        onConnect: () => ConnectAccountDialog.show(context),
       ),
+      WorkspaceSection.members => const MembersPage(),
+      WorkspaceSection.settings => const WorkspaceSettingsPage(),
     };
 
     return (key, SectionErrorBoundary(key: ValueKey(key), child: page));
