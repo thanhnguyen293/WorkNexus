@@ -7,10 +7,19 @@ import '../../core/theme/app_sizes.dart';
 /// The 300px column hosting a tool's navigation pane (L3/L4).
 /// Composed of an optional [tabStrip] and a scrollable [body].
 class ToolPaneScaffold extends StatelessWidget {
-  const ToolPaneScaffold({super.key, this.tabStrip, required this.body});
+  const ToolPaneScaffold({
+    super.key,
+    this.tabStrip,
+    required this.body,
+    this.width,
+  });
 
   final Widget? tabStrip;
   final Widget body;
+
+  /// Overrides the standard tool pane width (e.g. collapsed in a narrow
+  /// window).
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +27,7 @@ class ToolPaneScaffold extends StatelessWidget {
     final tabStrip = this.tabStrip;
 
     return SizedBox(
-      width: context.sizes.toolPaneWidth,
+      width: width ?? context.sizes.toolPaneWidth,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: c.surface,
