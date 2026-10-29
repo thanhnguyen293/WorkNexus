@@ -25,11 +25,20 @@ import 'presentation/sections/zentao_bugs_section.dart';
 import 'presentation/sections/zentao_tasks_section.dart';
 
 class ZentaoModule extends ToolModule {
-  const ZentaoModule({this.chatSection, this.chatPane, this.chatUnread});
+  const ZentaoModule({
+    this.chatSection,
+    this.chatPane,
+    this.chatUnread,
+    this.chatMessagesMinWidth = 0,
+  });
 
   final WidgetBuilder? chatSection;
-  final WidgetBuilder? chatPane;
+  final ChatPaneBuilder? chatPane;
   final ProviderListenable<int>? chatUnread;
+
+  /// Narrowest the chat's message column may get: below it, the chat pane
+  /// collapses to avatars.
+  final double chatMessagesMinWidth;
 
   @override
   ProviderType get providerType => ProviderType.zentao;
@@ -80,6 +89,7 @@ class ZentaoModule extends ToolModule {
       location: location,
       sections: sections,
       chatPane: chatPane,
+      chatMessagesMinWidth: chatMessagesMinWidth,
     );
   }
 
