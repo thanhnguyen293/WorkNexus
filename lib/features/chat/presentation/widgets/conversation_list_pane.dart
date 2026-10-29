@@ -20,7 +20,6 @@ import 'chat_list_tabs.dart';
 import 'chat_panels.dart';
 import 'chat_search_field.dart';
 import 'chat_self_avatar_button.dart';
-import 'chat_side_panel_frame.dart';
 import 'chat_text_scale.dart';
 import 'conversation_row.dart';
 import 'new_chat_dialog.dart';
@@ -75,11 +74,11 @@ class ConversationListPane extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // With the divider under it, as tall as the chat header beside it
-          // (whose border is inside its height): the two bottom lines meet.
+          // Sized by its controls: under the tool pane's tabs, its bottom
+          // line could never meet the chat header's beside it anyway.
           if (compact)
-            SizedBox(
-              height: kChatHeaderHeight - context.borders.hairline,
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
               child: Center(
                 child: AppIconButton(
                   icon: LucideIcons.squarePen300,
@@ -90,11 +89,12 @@ class ConversationListPane extends ConsumerWidget {
             )
           else ...[
             const ChatAccountPicker(),
-            Container(
-              height: kChatHeaderHeight - context.borders.hairline,
+            Padding(
               // The rows' own margin, so the avatars line up in one column.
-              padding: EdgeInsets.symmetric(horizontal: context.spacing.xl3),
-              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.xl3,
+                vertical: context.spacing.lg,
+              ),
               child: Row(
                 children: [
                   ChatSelfAvatarButton(
