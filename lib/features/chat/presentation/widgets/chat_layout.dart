@@ -20,14 +20,15 @@ const double kChatPanelRoom = 380;
 class ChatLayout {
   const ChatLayout({required this.infoRoom, required this.compactList});
 
-  /// Lays out [width].
-  factory ChatLayout.of(double width) {
-    final infoRoom =
-        width - kChatListWidth - kChatPanelRoom >= kChatMessagesMinWidth;
+  /// Lays out [width], which holds the chat list too when [withList] (in
+  /// the app shell the list sits in the tool pane, outside it).
+  factory ChatLayout.of(double width, {bool withList = true}) {
+    final list = withList ? kChatListWidth : 0;
+    final infoRoom = width - list - kChatPanelRoom >= kChatMessagesMinWidth;
     final panel = infoRoom ? kChatPanelRoom : 0;
     return ChatLayout(
       infoRoom: infoRoom,
-      compactList: width - kChatListWidth - panel < kChatMessagesMinWidth,
+      compactList: width - list - panel < kChatMessagesMinWidth,
     );
   }
 
