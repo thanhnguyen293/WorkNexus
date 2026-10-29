@@ -66,6 +66,10 @@ static void my_application_activate(GApplication* application) {
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
+  // The window's minimum size (DesktopWindowService.windowOptionsFor): set by
+  // window_manager on the GdkWindow only, it is dropped once GTK shows the
+  // window and recomputes its hints; a size request on the view holds.
+  gtk_widget_set_size_request(GTK_WIDGET(view), 680, 480);
 
   // Show the window when Flutter renders.
   // Requires the view to be realized so we can start rendering.
