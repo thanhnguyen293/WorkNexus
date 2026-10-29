@@ -129,6 +129,7 @@ class DesktopWindowService {
       // Narrow enough to sit beside other windows: the chat collapses its
       // list to avatars (nav rail + list + its 520px message column) and
       // the board scrolls sideways.
+      // Linux holds it in linux/runner/my_application.cc too: keep in sync.
       minimumSize: const Size(680, 480),
       center: true,
       backgroundColor: const Color(0x00000000),
