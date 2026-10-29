@@ -7,6 +7,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/util/cancel_signal.dart';
 import '../../../../shared/board/domain/entities/paged_view_state.dart';
 import '../../../../shared/board/presentation/paged_views_controller.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import 'zentao_board_providers.dart';
 import 'zentao_data_providers.dart';
 import 'zentao_table_sort.dart';
@@ -18,6 +19,7 @@ class ZenTaoTaskStreamsController
     extends PagedViewsController<ZenTaoTaskColumn> {
   @override
   Map<ZenTaoTaskColumn, PagedViewState> build() {
+    ref.watch(boardRefreshTriggerProvider);
     // A new order starts every view over from its first page.
     ref.watch(zentaoTaskFetchSortProvider);
     // Tasks are paged per execution: without one there is nothing to page

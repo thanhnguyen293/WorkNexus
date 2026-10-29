@@ -99,28 +99,30 @@ void main() {
     final sent = _sent(fake, 'task-start-12');
     expect(sent['consumed'], '3.5');
     expect(sent['left'], '4');
-    expect(sent['realStarted'], '2026-10-09 15:30:00');
+    expect(sent['realStarted'], zentaoDateTime(_now));
     expect(sent['assignedTo'], 'lan');
     expect(sent.containsKey('comment'), isFalse);
   });
 
   test('continuing keeps when the task really started', () async {
     final (workflow, fake) = _workflow();
+    final began = DateTime(2026, 10, 1, 9);
     await workflow.runTaskAction(
-      _task(realStarted: DateTime(2026, 10, 1, 9)),
+      _task(realStarted: began),
       ZenTaoTaskAction.restart,
       const ZenTaoTaskActionInput(left: 2, assignee: 'an'),
     );
 
     final sent = _sent(fake, 'task-restart-12');
-    expect(sent['realStarted'], '2026-10-01 09:00:00');
+    expect(sent['realStarted'], zentaoDateTime(began));
     expect(sent['assignedTo'], 'an');
   });
 
   test('finishing sends this time and the total, dated now', () async {
     final (workflow, fake) = _workflow();
+    final began = DateTime(2026, 10, 8, 10);
     await workflow.runTaskAction(
-      _task(consumed: 3, realStarted: DateTime(2026, 10, 8, 10)),
+      _task(consumed: 3, realStarted: began),
       ZenTaoTaskAction.finish,
       const ZenTaoTaskActionInput(spent: 2, comment: 'done'),
     );
@@ -128,8 +130,8 @@ void main() {
     final sent = _sent(fake, 'task-finish-12');
     expect(sent['currentConsumed'], '2');
     expect(sent['consumed'], '5');
-    expect(sent['realStarted'], '2026-10-08 10:00:00');
-    expect(sent['finishedDate'], '2026-10-09 15:30:00');
+    expect(sent['realStarted'], zentaoDateTime(began));
+    expect(sent['finishedDate'], zentaoDateTime(_now));
     expect(sent['comment'], 'done');
     // Left out, ZenTao hands the task back to its creator.
     expect(sent.containsKey('assignedTo'), isFalse);
@@ -138,25 +140,28 @@ void main() {
 
   test('starting sends the begin picked in the form', () async {
     final (workflow, fake) = _workflow();
+    final began = DateTime(2026, 10, 9, 8, 15);
     await workflow.runTaskAction(
       _task(),
       ZenTaoTaskAction.start,
-      ZenTaoTaskActionInput(left: 4, began: DateTime(2026, 10, 9, 8, 15)),
+      ZenTaoTaskActionInput(left: 4, began: began),
     );
 
-    expect(_sent(fake, 'task-start-12')['realStarted'], '2026-10-09 08:15:00');
+    expect(_sent(fake, 'task-start-12')['realStarted'], zentaoDateTime(began));
   });
 
   test('finishing sends the picked begin and end, with its files', () async {
     final (workflow, fake) = _workflow();
+    final began = DateTime(2026, 10, 13, 17, 48);
+    final ended = DateTime(2026, 10, 13, 18, 49);
     await workflow.runTaskAction(
       _task(),
       ZenTaoTaskAction.finish,
       ZenTaoTaskActionInput(
         spent: 1,
         assignee: 'evan',
-        began: DateTime(2026, 10, 13, 17, 48),
-        ended: DateTime(2026, 10, 13, 18, 49),
+        began: began,
+        ended: ended,
         files: [
           DraftFile(name: 'log.txt', bytes: Uint8List.fromList([1])),
         ],
@@ -167,8 +172,8 @@ void main() {
         fake.requests.lastWhere((r) => r.path.contains('task-finish-12')).data
             as FormData;
     final fields = Map.fromEntries(form.fields);
-    expect(fields['realStarted'], '2026-10-13 17:48:00');
-    expect(fields['finishedDate'], '2026-10-13 18:49:00');
+    expect(fields['realStarted'], zentaoDateTime(began));
+    expect(fields['finishedDate'], zentaoDateTime(ended));
     expect(fields['assignedTo'], 'evan');
     expect(fields['labels[]'], 'log.txt');
     expect(form.files.single.key, 'files[]');
@@ -271,5 +276,35 @@ void main() {
     expect(zentaoHours(2), '2');
     expect(zentaoHours(2.5), '2.5');
     expect(zentaoHours(0.1 + 0.2), '0.3');
+  });
+
+  test('deleting a task sends DELETE to /tasks/{id}', () async {
+    final (workflow, fake) = _workflow((_) => {'message': 'success'});
+
+    await workflow.deleteTask('12');
+
+    final req = fake.requests.lastWhere((r) => r.path.contains('/tasks/12'));
+    expect(req.method, 'DELETE');
+  });
+
+  test('deleting a task falls back to classic GET on 404', () async {
+    final (workflow, fake) = _workflow((options) {
+      if (options.method == 'DELETE') {
+        throw DioException.badResponse(
+          statusCode: 404,
+          requestOptions: options,
+          response: Response(statusCode: 404, requestOptions: options),
+        );
+      }
+      return {'result': 'success'};
+    });
+
+    await workflow.deleteTask('12');
+
+    final req = fake.requests.lastWhere(
+      (r) => r.path.contains('task-delete-12-yes'),
+    );
+    expect(req.method, 'GET');
+    expect(req.queryParameters['confirm'], 'yes');
   });
 }

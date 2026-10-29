@@ -54,7 +54,14 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
     ref.invalidate(chatMemberCountProvider(t));
     final refreshed = await controller.refresh(t.accountId, t.chatGid);
     if (refreshed case Err(:final failure)) {
-      if (mounted) showChatFailure(context, failure);
+      if (mounted) {
+        showChatFailure(
+          context,
+          failure,
+          onReconnect: () =>
+              ref.read(chatControllerProvider).connect(t.accountId),
+        );
+      }
       return;
     }
     await controller.markRead(t.accountId, t.chatGid);

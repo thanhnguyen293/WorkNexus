@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
@@ -100,19 +101,15 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       _cancelReply();
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.keyX &&
-        keys.isShiftPressed &&
-        (keys.isMetaPressed || keys.isControlPressed)) {
-      final settings = ref.read(appSettingsProvider.notifier);
-      settings.setChatSendMarkdown(
-        !ref.read(appSettingsProvider).chatSendMarkdown,
-      );
+    final cmd = keys.isMetaPressed || keys.isControlPressed;
+    if (key == LogicalKeyboardKey.keyX && keys.isShiftPressed && cmd) {
+      final s = ref.read(appSettingsProvider);
+      ref
+          .read(appSettingsProvider.notifier)
+          .setChatSendMarkdown(!s.chatSendMarkdown);
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.keyV &&
-        (keys.isMetaPressed || keys.isControlPressed)) {
-      // The clipboard can only be inspected asynchronously, so paste is taken
-      // over: attachments are sent, plain text is inserted by hand.
+    if (key == LogicalKeyboardKey.keyV && cmd) {
       _paste();
       return KeyEventResult.handled;
     }
@@ -150,13 +147,10 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   /// Types "@" at the cursor (after a space if needed): starts a mention.
   void _startMention() {
-    final value = _text.value;
-    final at = value.selection.isValid
-        ? value.selection.start
-        : value.text.length;
-    final before = value.text.substring(0, at);
-    final spaced =
-        before.isEmpty || before.endsWith(' ') || before.endsWith('\n');
+    final v = _text.value;
+    final at = v.selection.isValid ? v.selection.start : v.text.length;
+    final b = v.text.substring(0, at);
+    final spaced = b.isEmpty || b.endsWith(' ') || b.endsWith('\n');
     _text.insertText(spaced ? '@' : ' @');
     _focus.requestFocus();
   }
@@ -181,18 +175,24 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     return true;
   }
 
-  /// Sends [emoji] the way the official client does: shown large, not in a
-  /// text bubble. A large emoji can't answer a message, so while replying
-  /// (or in a thread) it goes as text with the reply instead.
+  void _handleFailure(Failure failure) {
+    if (!mounted) return;
+    showChatFailure(
+      context,
+      failure,
+      onReconnect: () =>
+          ref.read(chatControllerProvider).connect(widget.thread.accountId),
+    );
+  }
+
+  /// Sends [emoji] large without a text bubble.
   Future<void> _sendLargeEmoji(String emoji) async {
     if (_replyToId != null) return _deliver(emoji);
     final t = widget.thread;
     final result = await ref
         .read(chatControllerProvider)
         .sendLargeEmoji(t.accountId, t.chatGid, emoji);
-    if (result case Err(:final failure)) {
-      if (mounted) showChatFailure(context, failure);
-    }
+    if (result case Err(:final failure)) _handleFailure(failure);
   }
 
   /// Sends the input; a lone emoji goes large.
@@ -222,9 +222,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
           replyToId: replyToId,
           markdown: ref.read(appSettingsProvider).chatSendMarkdown,
         );
-    if (result case Err(:final failure)) {
-      if (mounted) showChatFailure(context, failure);
-    }
+    if (result case Err(:final failure)) _handleFailure(failure);
   }
 
   @override

@@ -368,6 +368,10 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   Future<void> rollbackTicket(Ticket ticket) =>
       optimisticallyUpdateTicket(ticket);
 
+  Future<void> deleteLocalTicket(String ticketId) async {
+    await (_db.delete(_db.tickets)..where((t) => t.id.equals(ticketId))).go();
+  }
+
   Future<Object?> rawClientFor(String accountId) async {
     final adapter = await adapterFor(accountId);
     return adapter?.rawClient;

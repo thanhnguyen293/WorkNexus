@@ -76,13 +76,40 @@ void main() {
     });
 
     test('calcDelayText computes overdue days accurately', () {
-      final pastDate = DateTime.now().subtract(const Duration(days: 5));
-      final delayText = ZenTaoFormatters.calcDelayText(pastDate);
-      expect(delayText, startsWith('Delay'));
-      expect(delayText, contains('days'));
+      final now = DateTime(2026, 10, 29, 14, 30);
 
-      final futureDate = DateTime.now().add(const Duration(days: 5));
-      expect(ZenTaoFormatters.calcDelayText(futureDate), isNull);
+      // Deadline today is not delayed
+      final todayDeadline = DateTime(2026, 10, 29);
+      expect(ZenTaoFormatters.calcDelayText(todayDeadline, now: now), isNull);
+
+      // Deadline tomorrow is not delayed
+      final futureDate = DateTime(2026, 10, 30);
+      expect(ZenTaoFormatters.calcDelayText(futureDate, now: now), isNull);
+
+      // Deadline yesterday is delayed by 1 day
+      final yesterdayDeadline = DateTime(2026, 10, 28);
+      expect(
+        ZenTaoFormatters.calcDelayText(yesterdayDeadline, now: now),
+        'Delay 1 day',
+      );
+
+      // Deadline 5 days ago is delayed by 5 days
+      final pastDate = DateTime(2026, 10, 24);
+      expect(
+        ZenTaoFormatters.calcDelayText(pastDate, now: now),
+        'Delay 5 days',
+      );
+
+      // Completed ticket (status: done) does not show delay
+      expect(
+        ZenTaoFormatters.calcDelayText(
+          yesterdayDeadline,
+          status: UnifiedStatus.done,
+          now: now,
+        ),
+        isNull,
+      );
+
       expect(ZenTaoFormatters.calcDelayText(null), isNull);
     });
   });

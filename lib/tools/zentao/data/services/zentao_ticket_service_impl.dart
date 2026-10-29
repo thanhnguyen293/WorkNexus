@@ -25,6 +25,7 @@ class ZenTaoTicketServiceImpl
 
   @override
   Future<Result<String>> fetchZenTaoTicket({
+    String? accountId,
     required String host,
     required String type,
     required String id,
@@ -35,7 +36,11 @@ class ZenTaoTicketServiceImpl
     )..where((a) => a.providerType.equals(ProviderType.zentao.name))).get();
     final account = rows
         .map(accountFromRow)
-        .where((a) => Uri.tryParse(a.baseUrl ?? '')?.host == host)
+        .where(
+          (a) =>
+              (accountId != null && a.id == accountId) ||
+              Uri.tryParse(a.baseUrl ?? '')?.host == host,
+        )
         .firstOrNull;
     final credRef = account?.credentialsRef;
     if (account == null || credRef == null) {

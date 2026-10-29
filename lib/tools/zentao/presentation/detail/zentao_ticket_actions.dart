@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/zentao_action.dart';
+import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/detail/presentation/widgets/assign_dialog.dart';
 import '../../../../shared/detail/presentation/widgets/detail_action_button.dart';
 import '../../domain/usecases/list_zentao_bug_actions.dart';
@@ -41,7 +46,7 @@ class ZenTaoActions extends ConsumerWidget {
     final task = kind == 'task' ? const ListZenTaoTaskActions()(ticket) : null;
     final canAssign = bug?.canAssign ?? task?.canAssign ?? true;
 
-    _ZenTaoItem bugItem(ZenTaoBugAction action) => (
+    _ZenTaoItem bugItem(ZenTaoBugAction action) => _ZenTaoItem(
       look: zenTaoBugActionLook(l, action),
       run: () => _open(
         context,
@@ -50,7 +55,7 @@ class ZenTaoActions extends ConsumerWidget {
             : ZenTaoBugActionDialog(ticket: ticket, action: action),
       ),
     );
-    _ZenTaoItem taskItem(ZenTaoTaskAction action) => (
+    _ZenTaoItem taskItem(ZenTaoTaskAction action) => _ZenTaoItem(
       look: zenTaoTaskActionLook(l, action),
       run: () => _open(
         context,
@@ -69,12 +74,18 @@ class ZenTaoActions extends ConsumerWidget {
       for (final a in task?.actions ?? const <ZenTaoTaskAction>[])
         if (a != task?.primary) taskItem(a),
       for (final action in const ListZenTaoCreateActions()(ticket))
-        (
+        _ZenTaoItem(
           look: zenTaoCreateActionLook(l, action),
           // The editor takes the screen; the new one opens on save.
           run: () => ref
               .read(appNavProvider.notifier)
               .openEditor(_editorRoute(action, ticket)),
+        ),
+      if (kind == 'task')
+        _ZenTaoItem(
+          look: (label: l.deleteTask, icon: LucideIcons.trash2300),
+          destructive: true,
+          run: () => _deleteTask(context, ref, ticket),
         ),
     ];
 
@@ -111,7 +122,17 @@ class ZenTaoActions extends ConsumerWidget {
 }
 
 /// One ZenTao action: how it shows and what it does.
-typedef _ZenTaoItem = ({ZenTaoActionLook look, VoidCallback run});
+class _ZenTaoItem {
+  const _ZenTaoItem({
+    required this.look,
+    required this.run,
+    this.destructive = false,
+  });
+
+  final ZenTaoActionLook look;
+  final VoidCallback run;
+  final bool destructive;
+}
 
 /// The "⋯" button holding the actions that are not the main one.
 class _MoreActionsButton extends StatelessWidget {
@@ -139,7 +160,11 @@ class _MoreActionsButton extends StatelessWidget {
       at: at,
       entries: [
         for (final item in items)
-          AppMenuEntry(icon: item.look.icon, label: item.look.label),
+          AppMenuEntry(
+            icon: item.look.icon,
+            label: item.look.label,
+            destructive: item.destructive,
+          ),
       ],
     );
     if (picked != null && context.mounted) items[picked].run();
@@ -180,4 +205,37 @@ TicketEditorRoute _editorRoute(ZenTaoCreateAction action, Ticket ticket) {
       taskId: ticket.externalKey,
     ),
   };
+}
+
+Future<void> _deleteTask(
+  BuildContext context,
+  WidgetRef ref,
+  Ticket ticket,
+) async {
+  final l = AppL10n.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final nav = ref.read(appNavProvider.notifier);
+  final workflowService = ref.read(zenTaoWorkflowServiceProvider);
+  final boardRefresh = ref.read(boardRefreshTriggerProvider.notifier);
+
+  final confirmed = await AppConfirmDialog.show(
+    context,
+    title: l.deleteTask,
+    message: l.deleteTaskConfirm(ticket.externalKey),
+    destructive: true,
+  );
+  if (!confirmed) return;
+
+  // Close the detail overlay immediately so the scrim and sliding panel animate away,
+  // preventing a stuck darkened backdrop while deletion is being processed.
+  nav.closeTicket();
+
+  final res = await workflowService.deleteTask(ticket);
+  switch (res) {
+    case Ok():
+      boardRefresh.trigger();
+      showAppSnackOn(messenger, l.taskDeleted);
+    case Err(:final failure):
+      showAppSnackOn(messenger, l.actionFailed(failure.message), isError: true);
+  }
 }

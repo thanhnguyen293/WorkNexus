@@ -36,13 +36,15 @@ class ZenTaoClient {
       ..receiveTimeout = const Duration(seconds: 30)
       ..validateStatus = (s) => s != null && s < 500;
     // Self-hosted ZenTao often uses a self-signed / untrusted TLS cert on a
-    // custom port. Accept it for the user's own server. (Only when we own the
+    // custom port. Accept it only for the user's own server. (Only when we own the
     // Dio instance — tests inject their own adapter.)
     if (dio == null) {
+      final targetHost = Uri.tryParse(_baseUrl)?.host;
       _dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
           final client = HttpClient();
-          client.badCertificateCallback = (cert, host, port) => true;
+          client.badCertificateCallback = (cert, host, port) =>
+              targetHost != null && host == targetHost;
           return client;
         },
       );
@@ -752,5 +754,37 @@ class ZenTaoClient {
       result['actions'] = payload['actions'];
     }
     return result.isEmpty ? null : result;
+  }
+
+  /// Deletes task [taskId].
+  ///
+  /// Sends `DELETE /api.php/v1/tasks/{id}` via the REST v1 channel. If the
+  /// server does not support the REST endpoint (e.g. 404 or 405), falls back
+  /// to the classic action with `confirm=yes`.
+  Future<Response<dynamic>> deleteTask(String taskId) async {
+    try {
+      final res = await _dio.delete<dynamic>('$_v1/tasks/$taskId');
+      if ((res.statusCode ?? 0) < 400) {
+        final data = res.data;
+        if (data is Map && data['error'] != null) {
+          throw DioException(
+            requestOptions: res.requestOptions,
+            response: res,
+            message: data['error'].toString(),
+          );
+        }
+        return res;
+      }
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code != 404 && code != 405) rethrow;
+    }
+
+    final token = await _ensureToken();
+    return _dio.get<dynamic>(
+      '$baseUrl/task-delete-$taskId-yes.json',
+      queryParameters: {'zentaosid': token, 'confirm': 'yes'},
+      options: Options(headers: _classicHeaders(token)),
+    );
   }
 }

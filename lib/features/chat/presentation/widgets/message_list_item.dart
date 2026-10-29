@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/util/relative_time.dart';
 
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -35,11 +35,14 @@ List<Object> chatListItems(List<ChatMessage> messages, Duration? markerGap) {
     items.add(message);
     final previous = index > 0 ? messages[index - 1] : null;
     if (previous == null ||
-        !DateUtils.isSameDay(previous.sentAt, message.sentAt)) {
-      items.add(DateUtils.dateOnly(message.sentAt));
+        !DateUtils.isSameDay(
+          previous.sentAt.toLocal(),
+          message.sentAt.toLocal(),
+        )) {
+      items.add(DateUtils.dateOnly(message.sentAt.toLocal()));
     } else if (markerGap != null &&
         message.sentAt.difference(previous.sentAt) >= markerGap) {
-      items.add(ChatTimeMarker(message.sentAt));
+      items.add(ChatTimeMarker(message.sentAt.toLocal()));
     }
   }
   return items;
@@ -91,7 +94,7 @@ class MessageListItem extends ConsumerWidget {
           style: style,
           label: item is DateTime
               ? chatDayLabel(context, item)
-              : DateFormat('HH:mm').format((item as ChatTimeMarker).at),
+              : formatTime((item as ChatTimeMarker).at),
         ),
       );
     }

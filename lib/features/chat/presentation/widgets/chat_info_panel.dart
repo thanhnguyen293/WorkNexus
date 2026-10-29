@@ -122,7 +122,7 @@ class ChatInfoPanel extends ConsumerWidget {
           label: l.chatCreatedOn,
           value: DateFormat.yMMMd(
             Localizations.localeOf(context).toString(),
-          ).format(created),
+          ).format(created.toLocal()),
           spaced: false,
         ),
     ];

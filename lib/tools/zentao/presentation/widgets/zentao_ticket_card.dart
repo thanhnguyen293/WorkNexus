@@ -57,7 +57,10 @@ class ZenTaoTicketCard extends ConsumerWidget {
         : null;
 
     final deadline = ZenTaoFormatters.extractDeadline(ticket);
-    final delayText = ZenTaoFormatters.calcDelayText(deadline);
+    final delayText = ZenTaoFormatters.calcDelayText(
+      deadline,
+      status: ticket.status,
+    );
     final (cleanTitle, moduleTag) = ZenTaoFormatters.extractModule(
       ticket.title,
     );

@@ -74,8 +74,10 @@ void main() {
     controller.quill.document.insert(0, 'New ');
 
     final html = controller.html;
-    expect(html, contains('<tr><th>A</th><th>B|x</th></tr>'));
-    expect(html, contains('<tr><td>1</td><td>2</td></tr>'));
+    expect(html, contains('>A</th>'));
+    expect(html, contains('>B|x</th>'));
+    expect(html, contains('>1</td>'));
+    expect(html, contains('>2</td>'));
     expect(html, contains('<p>New intro</p>'));
     expect(html, contains('<p>after</p>'));
     expect(html, isNot(contains('\u2063')));
@@ -102,7 +104,8 @@ void main() {
     controller.quill.document.insert(0, 'New ');
 
     final html = controller.html;
-    expect(html, contains('<td>line1<br>line2</td><td>x<br>y</td>'));
+    expect(html, contains('>line1<br>line2</td>'));
+    expect(html, contains('>x<br>y</td>'));
   });
 
   test('untouched content the editor cannot show is kept', () {

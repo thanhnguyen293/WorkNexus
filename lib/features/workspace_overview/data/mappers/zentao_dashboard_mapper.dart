@@ -180,5 +180,5 @@ DateTime? _date(Object? v) {
   if (s == null || s.startsWith('0000') || s.startsWith('2030-01-01')) {
     return null;
   }
-  return DateTime.tryParse(s);
+  return DateTime.tryParse(s)?.toUtc();
 }

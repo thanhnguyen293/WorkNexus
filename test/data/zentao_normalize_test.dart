@@ -4,6 +4,7 @@ import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/util/html_to_markdown.dart';
+import 'package:work_nexus/core/util/synthetic_labels.dart';
 import 'package:work_nexus/tools/zentao/data/mappers/zentao_normalize.dart';
 import 'package:work_nexus/tools/zentao/data/models/zentao_models.dart';
 
@@ -464,4 +465,35 @@ void main() {
       ),
     ]);
   });
+
+  test(
+    'attaches execution synthetic label to task and product label to bug',
+    () {
+      final taskTicket = normalizeZenTao(
+        ZenTaoEntity.fromJson({
+          'id': 12,
+          'name': 'My Task',
+          'execution': 42,
+          'status': 'wait',
+        }),
+        type: ZenTaoType.task,
+        accountId: 'ztB',
+        baseUrl: 'https://z',
+      );
+      expect(taskTicket.labels, contains(zentaoExecutionLabel('42')));
+
+      final bugTicket = normalizeZenTao(
+        ZenTaoEntity.fromJson({
+          'id': 15,
+          'title': 'My Bug',
+          'product': 99,
+          'status': 'active',
+        }),
+        type: ZenTaoType.bug,
+        accountId: 'ztB',
+        baseUrl: 'https://z',
+      );
+      expect(bugTicket.labels, contains(zentaoProductLabel('99')));
+    },
+  );
 }

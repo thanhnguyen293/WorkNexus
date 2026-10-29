@@ -81,7 +81,7 @@ String projectPathFrom(String? full, String marker, int projectId) {
 
 DateTime? parseGitLabDate(String? value) {
   if (value == null || value.isEmpty) return null;
-  return DateTime.tryParse(value);
+  return DateTime.tryParse(value)?.toUtc();
 }
 
 /// Normalizes a GitLab issue into a unified [Ticket].

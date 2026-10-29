@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/html_editing_controller.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/bug_editor_controller.dart';
 import 'bug_main_fields.dart';
 import 'bug_side_fields.dart';
@@ -78,6 +79,7 @@ class _BugEditorViewState extends ConsumerState<BugEditorView>
     final ticketId = await controller.save();
     if (ticketId == null || !mounted) return;
     _close();
+    ref.read(boardRefreshTriggerProvider.notifier).trigger();
     ref.read(appNavProvider.notifier).openTicket(ticketId);
     showAppSnackOn(messenger, saved);
   }

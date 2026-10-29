@@ -147,6 +147,28 @@ class ZenTaoWorkflowActions implements ZenTaoWorkflowService {
     );
   }
 
+  @override
+  Future<Result<void>> deleteTask(Ticket ticket) async {
+    await _coordinator.deleteLocalTicket(ticket.id);
+    try {
+      final client = await _coordinator.rawClientFor(ticket.accountId);
+      if (client is! ZenTaoClient) {
+        await _coordinator.rollbackTicket(ticket);
+        return const Err(AuthFailure('ZenTao account is not signed in'));
+      }
+      await ZenTaoWorkflow(client).deleteTask(ticket.externalKey);
+      return const Ok(null);
+    } on DioException catch (e) {
+      await _coordinator.rollbackTicket(ticket);
+      return Err(_failureOf(e));
+    } catch (e) {
+      await _coordinator.rollbackTicket(ticket);
+      return Err(
+        UnexpectedFailure('ZenTao task deletion failed: $e', cause: e),
+      );
+    }
+  }
+
   Future<Result<void>> _run(
     Ticket ticket,
     Ticket optimistic,
@@ -170,7 +192,16 @@ class ZenTaoWorkflowActions implements ZenTaoWorkflowService {
 
   Failure _failureOf(DioException e) {
     final code = e.response?.statusCode ?? 0;
-    final message = e.message ?? 'ZenTao request failed';
+    String? apiMessage;
+    final data = e.response?.data;
+    if (data is Map) {
+      apiMessage = (data['error'] ?? data['message'])?.toString();
+    } else if (data is String &&
+        data.trim().isNotEmpty &&
+        !data.contains('<html')) {
+      apiMessage = data.trim();
+    }
+    final message = apiMessage ?? e.message ?? 'ZenTao request failed';
     if (code == 401 || code == 403) return AuthFailure(message, cause: e);
     // ZenTao answered but refused the action (a field it wants, a state it
     // no longer allows).

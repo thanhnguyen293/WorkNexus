@@ -9,6 +9,7 @@ import '../../../../core/util/cancel_signal.dart';
 import '../../../../shared/board/domain/entities/paged_view_state.dart';
 import '../../../../shared/board/domain/usecases/merge_view_pages.dart';
 import '../../../../shared/board/presentation/paged_views_controller.dart';
+import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../../domain/value_objects/zentao_bug_stream.dart';
 import 'zentao_board_providers.dart';
@@ -31,6 +32,7 @@ List<ZenTaoBugStream> _openingStreams({required bool related}) => related
 class ZenTaoBugStreamsController extends PagedViewsController<ZenTaoBugStream> {
   @override
   Map<ZenTaoBugStream, PagedViewState> build() {
+    ref.watch(boardRefreshTriggerProvider);
     // A new order starts every view over from its first page.
     ref.watch(zentaoBugFetchSortProvider);
     // So does moving to or from Assigned to me, which loads other views.

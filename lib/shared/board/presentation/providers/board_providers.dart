@@ -83,6 +83,18 @@ final usesFacetFiltersProvider =
       UsesFacetFiltersController.new,
     );
 
+/// Incremented to signal that the active board streams/slices should refresh.
+class BoardRefreshTrigger extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void trigger() => state++;
+}
+
+final boardRefreshTriggerProvider = NotifierProvider<BoardRefreshTrigger, int>(
+  BoardRefreshTrigger.new,
+);
+
 /// Tickets scoped to the active board, before the user's chip filters.
 final scopedTicketsProvider = Provider<List<Ticket>>((ref) {
   final override = ref.watch(scopedTicketsOverrideProvider);

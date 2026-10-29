@@ -39,7 +39,10 @@ class _ZenTaoTaskTableRowState extends ConsumerState<ZenTaoTaskTableRow> {
     final isSelectedTicket = ref.watch(openTicketIdProvider) == t.id;
 
     final deadline = ZenTaoFormatters.extractDeadline(t);
-    final delayText = ZenTaoFormatters.calcDelayText(deadline);
+    final delayText = ZenTaoFormatters.calcDelayText(
+      deadline,
+      status: t.status,
+    );
     final (cleanTitle, moduleTag) = ZenTaoFormatters.extractModule(t.title);
 
     final rowBg = isSelectedTicket

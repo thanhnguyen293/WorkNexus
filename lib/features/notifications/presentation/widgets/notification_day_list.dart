@@ -49,7 +49,8 @@ class _DayHeading extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final label = switch (day) {
+    final localDay = day?.toLocal();
+    final label = switch (localDay) {
       null => l.notificationsUndated,
       final d when today.difference(d).inDays == 0 => l.notificationsToday,
       final d when today.difference(d).inDays == 1 => l.notificationsYesterday,

@@ -182,13 +182,13 @@ line_count_exemptions:
     owner_phase: "Phase 4"
     reason: "ZenTao adapter"
   - file: lib/tools/zentao/data/datasources/zentao_client.dart
-    max_lines: 770
+    max_lines: 795
     owner_phase: "Phase 4"
-    reason: "ZenTao client"
+    reason: "ZenTao client with deleteTask endpoint"
   - file: lib/tools/zentao/data/mappers/zentao_normalize.dart
-    max_lines: 430
+    max_lines: 440
     owner_phase: "Phase 4"
-    reason: "ZenTao mapper normalize functions"
+    reason: "ZenTao mapper normalize functions with synthetic labels"
   - file: lib/tools/zentao/data/models/zentao_models.dart
     max_lines: 560
     owner_phase: "Phase 4"

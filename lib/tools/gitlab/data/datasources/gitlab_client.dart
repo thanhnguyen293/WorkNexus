@@ -35,7 +35,7 @@ class GitLabClient {
         createHttpClient: () {
           final client = HttpClient();
           client.badCertificateCallback = (cert, host, port) =>
-              host != 'gitlab.com';
+              host == _host && host != 'gitlab.com';
           return client;
         },
       );

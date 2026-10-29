@@ -390,7 +390,6 @@ quick settings, provider badge, dialog kết nối, detail view cho MR/PR, xếp
 make test
 make test TEST=test/core/app_nav_controller_test.dart
 make test TEST=test/widget/shell_integration_test.dart
-make test TEST=test/architecture/import_rules_test.dart
 ```
 
 ---

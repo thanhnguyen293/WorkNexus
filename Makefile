@@ -17,7 +17,7 @@ TEST ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup setup-linux-deps install doctor get outdated codegen l10n watch format analyze test verify run run-linux dev-linux build-linux build-macos build-macos-release build-windows-release build-linux-release clean reset
+.PHONY: help setup setup-linux-deps install install-linux doctor get outdated codegen l10n watch format analyze test verify run run-linux dev-linux build-linux build-macos build-macos-release build-windows-release build-linux-release clean reset
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nWorkNexus targets:\n"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -34,7 +34,7 @@ endif
 setup-linux-deps: ## Install Linux desktop system dependencies (Debian/Ubuntu).
 	@echo "Checking Linux system dependencies..."
 	@which apt-get >/dev/null 2>&1 || (echo "Not a Debian/Ubuntu system, skipping apt."; exit 0)
-	@dpkg -s libayatana-appindicator3-dev >/dev/null 2>&1 && echo "  ✓ libayatana-appindicator3-dev is installed." || (echo "  Installing libayatana-appindicator3-dev & build tools..." && sudo apt-get update && sudo apt-get install -y libayatana-appindicator3-dev clang cmake ninja-build pkg-config libgtk-3-dev)
+	@dpkg -s libayatana-appindicator3-dev libwebkit2gtk-4.1-dev >/dev/null 2>&1 && echo "  ✓ Linux system dependencies are installed." || (echo "  Installing Linux system dependencies & build tools..." && sudo apt-get update && sudo apt-get install -y libayatana-appindicator3-dev libwebkit2gtk-4.1-dev clang cmake ninja-build pkg-config libgtk-3-dev)
 
 install: setup ## Standard alias for setup.
 
@@ -90,6 +90,11 @@ build-windows-release: ## Build the Windows release app.
 
 build-linux-release: ## Build the Linux release app.
 	$(FLUTTER) build linux --release
+
+install-linux: build-linux-release ## Build and update installed app in ~/.local/share/worknexus.
+	@mkdir -p ~/.local/share/worknexus
+	@cp -r build/linux/x64/release/bundle/* ~/.local/share/worknexus/
+	@echo "✓ WorkNexus updated successfully in ~/.local/share/worknexus"
 
 clean: ## Clean Flutter build output.
 	$(FLUTTER) clean

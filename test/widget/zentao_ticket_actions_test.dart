@@ -315,4 +315,50 @@ void main() {
       const NewTaskRoute(accountId: 'zt', executionId: '31', copyOf: '12'),
     );
   });
+
+  testWidgets('a task offers Delete task in more menu and confirms deletion', (
+    tester,
+  ) async {
+    final task = _ticket(
+      'Task',
+      'doing',
+      entity: const TicketProviderEntity.zentaoTask(execution: '31'),
+    );
+    when(
+      () => workflow.deleteTask(any()),
+    ).thenAnswer((_) async => const Ok(null));
+
+    await pump(tester, task);
+
+    await openMore(tester);
+    expect(find.text('Delete task'), findsOneWidget);
+
+    await tester.tap(find.text('Delete task'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Are you sure you want to delete task #12?'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    verify(() => workflow.deleteTask(task)).called(1);
+    expect(find.text('Task deleted successfully'), findsOneWidget);
+  });
+
+  testWidgets('a bug does not offer Delete task in more menu', (tester) async {
+    await pump(
+      tester,
+      _ticket(
+        'Bug',
+        'active',
+        entity: const TicketProviderEntity.zentaoBug(product: '4'),
+      ),
+    );
+
+    await openMore(tester);
+    expect(find.text('Delete task'), findsNothing);
+  });
 }

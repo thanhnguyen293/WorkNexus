@@ -391,7 +391,6 @@ MR/PR detail views, search ranking, and translation state.
 make test
 make test TEST=test/core/app_nav_controller_test.dart
 make test TEST=test/widget/shell_integration_test.dart
-make test TEST=test/architecture/import_rules_test.dart
 ```
 
 ---

@@ -6,6 +6,7 @@ import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/domain/value_objects/zentao_ticket_id.dart';
 import '../../../../core/util/content_hash.dart';
 import '../../../../core/util/html_entities.dart';
+import '../../../../core/util/synthetic_labels.dart';
 import '../../../../core/util/zentao_labels.dart';
 import '../datasources/zentao_form_parsing.dart';
 import '../models/zentao_models.dart';
@@ -214,6 +215,17 @@ Ticket normalizeZenTao(
   final resolution = e.resolution?.toString().trim().toLowerCase() ?? '';
   if (type == ZenTaoType.bug && resolution.isNotEmpty) {
     labels.add('resolution:$resolution');
+  }
+  if (type == ZenTaoType.task) {
+    final exec = _executionId(e.execution);
+    if (exec != null && exec.isNotEmpty && exec != '0') {
+      labels.add(zentaoExecutionLabel(exec));
+    }
+  } else if (type == ZenTaoType.bug) {
+    final prod = _executionId(e.product);
+    if (prod != null && prod.isNotEmpty && prod != '0') {
+      labels.add(zentaoProductLabel(prod));
+    }
   }
 
   final scopeName = e.scopeName;

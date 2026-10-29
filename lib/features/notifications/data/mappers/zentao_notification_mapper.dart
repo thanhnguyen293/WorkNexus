@@ -68,7 +68,7 @@ ZenTaoNotification? _notification(Map<String, dynamic> m, String accountId) {
     objectTitle: ref?.group(2)?.trim() ?? linkText,
     url: url,
     read: m['status']?.toString() == 'read',
-    createdAt: DateTime.tryParse(m['createdDate']?.toString() ?? ''),
+    createdAt: DateTime.tryParse(m['createdDate']?.toString() ?? '')?.toUtc(),
   );
 }
 
@@ -86,7 +86,7 @@ ZenTaoNotification zenTaoNotificationFromRow(ZenTaoNotificationRow r) =>
       objectTitle: r.objectTitle,
       url: r.url,
       read: r.read,
-      createdAt: r.createdAt,
+      createdAt: r.createdAt?.toUtc(),
     );
 
 ZenTaoNotificationsCompanion zenTaoNotificationToCompanion(

@@ -45,7 +45,7 @@ void main() {
     expect(n.objectTitle, '[Discover] Feed: video & autoplay');
     expect(n.url, 'https://zt.example/zentao/bug-view-6492.html');
     expect(n.read, isFalse);
-    expect(n.createdAt, DateTime(2026, 10, 9, 11, 6, 12));
+    expect(n.createdAt, DateTime(2026, 10, 9, 11, 6, 12).toUtc());
   });
 
   test('reads the object from a query-style link and the read status', () {

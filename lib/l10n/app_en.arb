@@ -62,6 +62,20 @@
   "relatedBugs": "Related bugs",
   "relatedBugsLoadFailed": "Couldn't load the related bugs from ZenTao.",
   "insertImage": "Insert image",
+  "insertTable": "Insert table",
+  "addRow": "Add row",
+  "addColumn": "Add column",
+  "removeRow": "Remove row",
+  "removeColumn": "Remove column",
+  "deleteTable": "Delete table",
+  "tableColumnHeader": "Header {index}",
+  "@tableColumnHeader": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "imageUploadFailed": "Couldn't upload the image",
   "newBug": "New bug",
   "newTask": "New task",
@@ -2513,5 +2527,15 @@
   },
   "zentaoProductsGroup": "Products",
   "zentaoProjectsGroup": "Projects",
-  "zentaoPickExecution": "Pick an execution to see its tasks"
+  "zentaoPickExecution": "Pick an execution to see its tasks",
+  "deleteTask": "Delete task",
+  "deleteTaskConfirm": "Are you sure you want to delete task #{id}?",
+  "@deleteTaskConfirm": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "taskDeleted": "Task deleted successfully"
 }

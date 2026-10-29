@@ -157,6 +157,12 @@ class ZenTaoWorkflow {
       ZenTaoTaskAction.cancel => {'comment': ?comment},
     };
   }
+
+  /// Deletes task [taskId].
+  Future<void> deleteTask(String taskId) async {
+    final resp = await _client.deleteTask(taskId);
+    ensureZenTaoActionOk(resp, 'delete');
+  }
 }
 
 String? _text(String? value) {

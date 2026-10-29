@@ -57,7 +57,9 @@ class GitHubClient {
         createHttpClient: () {
           final client = HttpClient();
           client.badCertificateCallback = (cert, host, port) =>
-              host != 'github.com' && host != 'api.github.com';
+              (host == _apiHost || host == _webHost) &&
+              host != 'github.com' &&
+              host != 'api.github.com';
           return client;
         },
       );

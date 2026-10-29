@@ -6,6 +6,7 @@ abstract interface class ZenTaoTicketService {
   /// Fetches bug/task/story [id] of type [type] from the connected ZenTao
   /// account on [host], stores it and returns its WorkNexus ticket id.
   Future<Result<String>> fetchZenTaoTicket({
+    String? accountId,
     required String host,
     required String type,
     required String id,
