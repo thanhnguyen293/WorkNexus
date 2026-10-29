@@ -10,6 +10,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/usecases/build_reply_thread.dart';
 import '../providers/chat_providers.dart';
 import 'chat_message_card.dart';
 import 'chat_panels.dart';
@@ -42,10 +43,11 @@ class ReplyThreadPanel extends ConsumerWidget {
     final allReplies =
         ref.watch(chatRepliesProvider(chat)).asData?.value ??
         const <ChatMessage>[];
-    final replies = ref
-        .watch(chatControllerProvider)
-        .thread(rootId, allReplies)
-        .replies;
+    final replies = const BuildReplyThread()(
+      rootId,
+      allReplies,
+      reactions: ref.watch(chatReactionsOnProvider),
+    ).replies;
     void close() {
       ref.read(openReplyThreadProvider(chat).notifier).state = null;
       ref

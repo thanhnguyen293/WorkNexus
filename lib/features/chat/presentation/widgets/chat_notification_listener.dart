@@ -78,6 +78,7 @@ class _ChatNotificationListenerState
               ? (accountId: shownAccount, chatGid: shownGid)
               : null,
           conversation: chat,
+          reactions: settings.chatReactions,
         );
     appTalker.debug(
       'Notifications: message ${message.gid} in ${message.chatGid} '

@@ -223,7 +223,7 @@ class MessageBubble extends ConsumerWidget {
           alignEnd: alignEnd,
           // Reply, and "open thread" for a message in one, as own buttons.
           buttons: _inThread ? 2 : 1,
-          onReact: messageCanBeReactedTo(message)
+          onReact: messageCanBeReactedTo(ref, message)
               ? (at) => reactToMessage(context, ref, message, anchor: at)
               : null,
           actions: messageActions(
