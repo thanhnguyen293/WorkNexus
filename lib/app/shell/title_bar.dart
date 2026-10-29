@@ -11,13 +11,13 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/quick_settings_button.dart';
 import '../../features/chat/presentation/widgets/chat_trust_debug_button.dart';
 import '../../features/chat/presentation/widgets/chat_typing_debug_button.dart';
-import 'contextual_search_field.dart';
 import 'desktop_window_buttons.dart';
+import 'title_bar_search.dart';
 import 'workspace_breadcrumb.dart';
 
 /// The window title bar for the unified workspace shell (design §2, §8):
-/// draggable, hosts [WorkspaceBreadcrumb] on the left, [ContextualSearchField]
-/// in the center, and settings/window caption buttons on the right.
+/// draggable, hosts [WorkspaceBreadcrumb] on the left, [TitleBarSearch] in
+/// the center, and settings/window caption buttons on the right.
 class TitleBar extends ConsumerWidget {
   const TitleBar({super.key, this.assignedCount});
 
@@ -53,10 +53,8 @@ class TitleBar extends ConsumerWidget {
           SizedBox(width: s.md),
           Expanded(
             child: isDesktop
-                ? const DragToMoveArea(
-                    child: Center(child: ContextualSearchField()),
-                  )
-                : const Center(child: ContextualSearchField()),
+                ? const DragToMoveArea(child: Center(child: TitleBarSearch()))
+                : const Center(child: TitleBarSearch()),
           ),
           SizedBox(width: s.md),
           const DebugCelebrateButton(),
