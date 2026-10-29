@@ -27,13 +27,15 @@ class ChatSidePanelHost extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final panel = this.panel;
-    if (panel == null) return messages;
     final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    // [messages] stays the first child whether or not a panel is open: moved
+    // in the tree, the message list would be rebuilt from scratch — losing
+    // its scroll position and any jump it is making.
     if (infoRoom) {
       return Row(
         children: [
           Expanded(child: messages),
-          panel,
+          ?panel,
         ],
       );
     }
@@ -41,26 +43,28 @@ class ChatSidePanelHost extends StatelessWidget {
     return Stack(
       children: [
         messages,
-        Positioned.fill(
-          child: ModalBarrier(
-            color: c.scrim.withValues(alpha: _kScrimAlpha),
-            onDismiss: onDismiss,
-          ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: c.scrim.withValues(alpha: _kScrimAlpha),
-                  blurRadius: 24,
-                ),
-              ],
+        if (panel != null) ...[
+          Positioned.fill(
+            child: ModalBarrier(
+              color: c.scrim.withValues(alpha: _kScrimAlpha),
+              onDismiss: onDismiss,
             ),
-            child: panel,
           ),
-        ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: c.scrim.withValues(alpha: _kScrimAlpha),
+                    blurRadius: 24,
+                  ),
+                ],
+              ),
+              child: panel,
+            ),
+          ),
+        ],
       ],
     );
   }
