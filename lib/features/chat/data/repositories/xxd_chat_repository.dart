@@ -72,7 +72,6 @@ class XxdChatRepository implements ChatRepository {
        _parse = parse,
        _ingestor = ChatPacketIngestor(local),
        _resolver = ChatCredentialsResolver(local, credentials),
-       _history = ChatHistorySync(local, ChatPacketIngestor(local)),
        _files = files ?? ChatFileCache.appDefault() {
     _attachments = ChatAttachmentLoader(http, _files);
     _cache = ChatCacheManager(local, _files, _attachments, parse);
@@ -93,7 +92,7 @@ class XxdChatRepository implements ChatRepository {
   final DateTime Function() _now;
   final ChatPacketIngestor _ingestor;
   final ChatCredentialsResolver _resolver;
-  final ChatHistorySync _history;
+  late final ChatHistorySync _history = ChatHistorySync(_local, _ingestor);
   final ChatFileCache _files;
   late final ChatAttachmentLoader _attachments;
   late final ChatCacheManager _cache;
@@ -318,10 +317,11 @@ class XxdChatRepository implements ChatRepository {
     String accountId,
     String chatGid, {
     int limit = pageSize,
+    bool reactions = true,
   }) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.watchMessages(accountId, chatGid, limit: limit),
-    (rows, self) => _rows.timeline(rows, selfUserId: self),
+    (rows, self) => _rows.timeline(rows, self, reactions: reactions),
   ).distinct(const ListEquality<ChatMessage>().equals);
 
   @override
@@ -377,6 +377,7 @@ class XxdChatRepository implements ChatRepository {
     String chatGid, {
     required int fromIndex,
     required int toIndex,
+    bool reactions = true,
   }) => withSelfUserId(
     _local.watchSelfUserId(accountId),
     _local.timeline.watchMessagesInRange(
@@ -385,7 +386,7 @@ class XxdChatRepository implements ChatRepository {
       from: fromIndex,
       to: toIndex,
     ),
-    (rows, self) => _rows.timeline(rows, selfUserId: self),
+    (rows, self) => _rows.timeline(rows, self, reactions: reactions),
   );
 
   @override
@@ -827,6 +828,9 @@ class XxdChatRepository implements ChatRepository {
 
   @override
   void setCacheLimit(int bytes) => _cache.setLimit(bytes);
+
+  @override
+  void setReactions(bool on) => _ingestor.reactions = on;
 
   @override
   Stream<double> watchDownloadProgress(

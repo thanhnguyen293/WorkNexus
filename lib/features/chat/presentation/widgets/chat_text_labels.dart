@@ -60,12 +60,19 @@ String _sameAddress(String url) {
 /// messages too — so it can be rendered formatted.
 bool chatLooksLikeMarkdown(String text) => _markdownSignal.hasMatch(text);
 
-/// One-line preview of a message for the chat list.
-String chatPreview(BuildContext context, ChatMessage message) {
+/// One-line preview of a message for the chat list. With [reactions] on, an
+/// emoji reply previews as "Reacted 👍"; off, as the emoji it is.
+String chatPreview(
+  BuildContext context,
+  ChatMessage message, {
+  bool reactions = false,
+}) {
   final l = AppL10n.of(context);
   // A retracted message keeps no content; say so rather than show nothing.
   if (message.deleted) return l.chatRetracted;
-  if (message.reactionEmoji case final emoji?) return l.chatReacted(emoji);
+  if (message.reactionEmoji case final emoji? when reactions) {
+    return l.chatReacted(emoji);
+  }
   return switch (message.content) {
     TextContent(:final text, :final markdown) =>
       (markdown ? _stripMarkdown(text) : text)

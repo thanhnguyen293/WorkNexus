@@ -88,6 +88,7 @@ final selectedChatAccountIdProvider = Provider<String?>((ref) {
 /// wraps the app shell, so unread counts are live before the chat view opens.
 final chatAutoConnectProvider = Provider<void>((ref) {
   final controller = ref.watch(chatControllerProvider);
+  controller.setReactions(ref.watch(chatReactionsOnProvider));
   // Also applies the attachment cache and video auto-download limits from
   // settings (here because this runs at launch, before the chat view is
   // opened).
@@ -194,17 +195,20 @@ final chatMessageWindowProvider = StateProvider.autoDispose
 final chatMessagesProvider = StreamProvider.autoDispose
     .family<List<ChatMessage>, ChatThreadKey>((ref, key) {
       final repository = ref.watch(chatRepositoryProvider);
+      final reactions = ref.watch(chatReactionsOnProvider);
       return switch (ref.watch(chatMessageWindowProvider(key))) {
         LiveWindow(:final limit) => repository.watchMessages(
           key.accountId,
           key.chatGid,
           limit: limit,
+          reactions: reactions,
         ),
         AroundWindow(:final from, :final to) => repository.watchMessagesInRange(
           key.accountId,
           key.chatGid,
           fromIndex: from,
           toIndex: to,
+          reactions: reactions,
         ),
       };
     });
@@ -245,16 +249,29 @@ final chatThreadSummariesProvider = Provider.autoDispose
     .family<Map<int, ThreadSummary>, ChatThreadKey>((ref, key) {
       final replies = ref.watch(chatRepliesProvider(key)).asData?.value;
       if (replies == null) return const {};
-      return ref.watch(chatControllerProvider).threadSummaries(replies);
+      return const BuildReplyThread().summariesByRoot(
+        replies,
+        reactions: ref.watch(chatReactionsOnProvider),
+      );
     });
 
+/// Whether a reply that is just an emoji reads as a reaction (the user's
+/// setting, off by default): a chip under the message it answers, a React
+/// action, and none of a message's weight (unread, notification, thread).
+/// Off, such a reply is a message like any other.
+final chatReactionsOnProvider = Provider<bool>(
+  (ref) => ref.watch(appSettingsProvider.select((s) => s.chatReactions)),
+);
+
 /// The reactions of a chat's messages, by the server id of the message each
-/// answers.
+/// answers; none while reactions are off.
 final chatReactionsProvider = StreamProvider.autoDispose
     .family<Map<int, List<MessageReaction>>, ChatThreadKey>(
-      (ref, key) => ref
-          .watch(chatRepositoryProvider)
-          .watchReactions(key.accountId, key.chatGid),
+      (ref, key) => ref.watch(chatReactionsOnProvider)
+          ? ref
+                .watch(chatRepositoryProvider)
+                .watchReactions(key.accountId, key.chatGid)
+          : Stream.value(const {}),
     );
 
 /// Reply count per thread root of a chat.
@@ -262,7 +279,10 @@ final chatReplyCountsProvider = Provider.autoDispose
     .family<Map<int, int>, ChatThreadKey>((ref, key) {
       final replies = ref.watch(chatRepliesProvider(key)).asData?.value;
       if (replies == null) return const {};
-      return ref.watch(chatControllerProvider).replyCounts(replies);
+      return const BuildReplyThread().countsByRoot(
+        replies,
+        reactions: ref.watch(chatReactionsOnProvider),
+      );
     });
 
 /// One message by server id (e.g. the original of a reply).

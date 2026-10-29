@@ -158,7 +158,7 @@ line_count_exemptions:
     owner_phase: "Follow-up"
     reason: "Xuanxuan websocket connection protocol handler"
   - file: lib/features/chat/data/repositories/xxd_chat_repository.dart
-    max_lines: 1145
+    max_lines: 1148
     owner_phase: "Follow-up"
     reason: "Chat repository implementation"
   - file: lib/features/chat/domain/value_objects/emojione_shortnames.dart

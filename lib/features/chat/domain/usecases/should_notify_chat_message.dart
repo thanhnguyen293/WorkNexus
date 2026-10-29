@@ -5,7 +5,9 @@ import '../entities/chat_message_reaction.dart';
 /// Whether a newly arrived message deserves a desktop notification: someone
 /// else's live message, notifications on, and the user is not already
 /// looking at that chat (window focused with that conversation open) —
-/// unless [whileViewing] asks to be told even then. A reaction never is one.
+/// unless [whileViewing] asks to be told even then. A reaction never is one
+/// while [reactions] are on; off, an emoji reply is a message like any
+/// other.
 class ShouldNotifyChatMessage {
   const ShouldNotifyChatMessage();
 
@@ -16,8 +18,12 @@ class ShouldNotifyChatMessage {
     required ({String accountId, String chatGid})? visibleChat,
     ChatConversation? conversation,
     bool whileViewing = false,
+    bool reactions = true,
   }) {
-    if (!enabled || message.isMine || message.deleted || message.isReaction) {
+    if (!enabled ||
+        message.isMine ||
+        message.deleted ||
+        (reactions && message.isReaction)) {
       return false;
     }
     if (conversation != null &&

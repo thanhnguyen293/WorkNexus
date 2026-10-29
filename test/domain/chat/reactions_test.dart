@@ -127,6 +127,35 @@ void main() {
     );
   });
 
+  group('with reactions off', () {
+    test('an emoji reply is part of its thread like any reply', () {
+      final replies = [
+        _msg(10, replyTo: 1, emoji: '👍', minutes: 1),
+        _msg(11, replyTo: 1, minutes: 2),
+      ];
+      const threads = BuildReplyThread();
+      expect(threads.countsByRoot(replies, reactions: false), {1: 2});
+      expect(threads.summariesByRoot(replies, reactions: false)[1]!.count, 2);
+      expect(
+        threads(1, replies, reactions: false).replies.map((r) => r.serverId),
+        [10, 11],
+      );
+    });
+
+    test('an emoji reply raises a notification like any message', () {
+      expect(
+        const ShouldNotifyChatMessage()(
+          _msg(10, replyTo: 1, emoji: '👍'),
+          enabled: true,
+          appFocused: false,
+          visibleChat: null,
+          reactions: false,
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('ToggleReaction', () {
     late _Repo repo;
     late ToggleReaction toggle;
