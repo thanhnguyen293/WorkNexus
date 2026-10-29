@@ -2090,6 +2090,8 @@
   "chatPrivacy": "Privacy",
   "chatSendTypingStatus": "Show when I'm typing",
   "chatSendTypingStatusHint": "People in one-to-one and group chats see when you are typing a message.",
+  "chatReactions": "Reactions",
+  "chatReactionsHint": "Show a reply that is just an emoji as a reaction under the message it answers, and react to messages. ZenTao's own client shows a reaction as an emoji reply.",
   "chatTyping": "typing…",
   "chatTypingOne": "{name} is typing…",
   "@chatTypingOne": {

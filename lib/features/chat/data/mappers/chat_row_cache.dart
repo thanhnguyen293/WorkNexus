@@ -44,11 +44,18 @@ class ChatRowCache {
     return message;
   }
 
-  /// [rows] as the messages of a chat's timeline: the reactions are left
-  /// out, they show under the message they answer.
-  List<ChatMessage> timeline(List<ChatMessageRow> rows, {int? selfUserId}) => [
+  /// [rows] as the messages of a chat's timeline. With [reactions] they are
+  /// left out, as they show under the message they answer; without, an
+  /// emoji reply stays in the timeline like any other message.
+  List<ChatMessage> timeline(
+    List<ChatMessageRow> rows,
+    int? selfUserId, {
+    bool reactions = true,
+  }) => [
     for (final r in rows)
-      if (message(r, selfUserId: selfUserId) case final m when !m.isReaction) m,
+      if (message(r, selfUserId: selfUserId) case final m
+          when !reactions || !m.isReaction)
+        m,
   ];
 
   ChatConversation conversation(

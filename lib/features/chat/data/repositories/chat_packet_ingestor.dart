@@ -22,12 +22,16 @@ final class IngestFollowUp {
 }
 
 /// Writes xxd packets into the local DB (local-first: the UI only reads the
-/// DB). Stateless apart from the datasource; callers serialise calls per
-/// account so packets apply in arrival order.
+/// DB). Stateless apart from the datasource and the [reactions] setting;
+/// callers serialise calls per account so packets apply in arrival order.
 class ChatPacketIngestor {
   ChatPacketIngestor(this._local);
 
   final ChatLocalDatasource _local;
+
+  /// Whether an emoji reply is a reaction, which never counts as unread.
+  /// Off, it is a message like any other.
+  bool reactions = false;
 
   /// Applies [packet]; returns what should be fetched next.
   Future<IngestFollowUp> ingest(
@@ -199,7 +203,7 @@ class ChatPacketIngestor {
         index: row.messageIndex.value,
         sentAt: row.sentAt.value,
         fromSelf: row.senderId.value == selfUserId,
-        reaction: _isReaction(row),
+        reaction: reactions && _isReaction(row),
       ));
     }
     final unknownChats = <String>{};

@@ -1339,6 +1339,8 @@
   "chatPrivacy": "Quyền riêng tư",
   "chatSendTypingStatus": "Cho biết khi tôi đang nhập",
   "chatSendTypingStatusHint": "Người trong chat 1-1 và nhóm thấy khi bạn đang nhập tin nhắn.",
+  "chatReactions": "Reaction",
+  "chatReactionsHint": "Hiện tin trả lời chỉ có một emoji thành reaction dưới tin được trả lời, và cho thả reaction. Client ZenTao chính thức hiện reaction là một tin trả lời bằng emoji.",
   "chatTyping": "đang nhập…",
   "chatTypingOne": "{name} đang nhập…",
   "chatTypingTwo": "{first} và {second} đang nhập…",

@@ -161,6 +161,9 @@ class _FakeChatRepository implements ChatRepository {
   void setCacheLimit(int bytes) {}
 
   @override
+  void setReactions(bool on) {}
+
+  @override
   Stream<double> watchDownloadProgress(String a, MessageContent c) =>
       const Stream.empty();
 
@@ -227,6 +230,7 @@ class _FakeChatRepository implements ChatRepository {
     String accountId,
     String chatGid, {
     int limit = 50,
+    bool reactions = true,
   }) => Stream.value([
     _msg('m1', 40, 'xin chào'),
     _msg('m2', 31, 'hi [@Thanh](@#40)', serverId: 502),
@@ -269,6 +273,7 @@ class _FakeChatRepository implements ChatRepository {
     String chatGid, {
     required int fromIndex,
     required int toIndex,
+    bool reactions = true,
   }) => Stream.value([
     _msg('old1', 31, 'the very first message', serverId: 1).copyWith(index: 1),
     _msg('old2', 40, 'the second one', serverId: 2).copyWith(index: 2),

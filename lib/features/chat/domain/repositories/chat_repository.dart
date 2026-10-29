@@ -12,11 +12,12 @@ import '../value_objects/chat_presence.dart';
 import '../value_objects/chat_timeline_extent.dart';
 import '../value_objects/chat_typing_signal.dart';
 import '../value_objects/message_content.dart';
+import 'chat_runtime_settings.dart';
 
 /// ZenTao chat for a connected ZenTao account ([accountId] is the WorkNexus
 /// account id). Local-first: everything received is written to the local DB
 /// and the `watch*` streams read from it.
-abstract class ChatRepository {
+abstract class ChatRepository implements ChatRuntimeSettings {
   Stream<ChatConnectionStatus> watchStatus(String accountId);
 
   /// Logs in with the account's saved ZenTao password. Safe to call again.
@@ -36,11 +37,13 @@ abstract class ChatRepository {
 
   /// The newest [limit] messages of a chat's timeline, oldest first —
   /// without messages stored on their own (reply parents, pinned ones, jump
-  /// windows) that no page has joined to it yet.
+  /// windows) that no page has joined to it yet. With [reactions], the
+  /// reactions are left out (they show under the message they answer).
   Stream<List<ChatMessage>> watchMessages(
     String accountId,
     String chatGid, {
     int limit = 50,
+    bool reactions = true,
   });
 
   Stream<List<ChatUser>> watchUsers(String accountId);
@@ -49,12 +52,13 @@ abstract class ChatRepository {
   Future<Result<void>> refreshMessages(String accountId, String chatGid);
 
   /// The stored messages with an index in [fromIndex]–[toIndex] (a jump
-  /// window), oldest first.
+  /// window), oldest first; [reactions] as in [watchMessages].
   Stream<List<ChatMessage>> watchMessagesInRange(
     String accountId,
     String chatGid, {
     required int fromIndex,
     required int toIndex,
+    bool reactions = true,
   });
 
   /// Fetches the page before the oldest stored message; returns how many
@@ -354,13 +358,6 @@ abstract class ChatRepository {
   /// Deletes downloaded attachments: of one chat, or all of them when
   /// [chatGid] is null. Messages are kept; files download again on demand.
   Future<Result<void>> clearCache({String? accountId, String? chatGid});
-
-  /// The most disk space attachments may use; older ones are dropped first.
-  void setCacheLimit(int bytes);
-
-  /// Largest video (bytes) downloaded on its own for its preview frame; 0
-  /// downloads none until clicked.
-  void setVideoAutoDownloadLimit(int bytes);
 
   /// User ids of a group's members (unknown users are fetched in the
   /// background and show up through [watchUsers]).

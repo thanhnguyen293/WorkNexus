@@ -16,9 +16,10 @@ typedef ThreadSummary = ({
 ///
 /// xxd stores only "replies to message N", and a reply can itself be replied
 /// to, so a thread is everything whose parent chain leads to the same root —
-/// the first message in the chain that is not itself a known reply. Reactions
-/// (see `ChatMessageReaction`) are replies in xxd's eyes but not part of any
-/// thread.
+/// the first message in the chain that is not itself a known reply. With
+/// reactions on, they (see `ChatMessageReaction`) are replies in xxd's eyes
+/// but not part of any thread; off, an emoji reply is a reply like any
+/// other.
 class BuildReplyThread {
   const BuildReplyThread();
 
@@ -43,12 +44,16 @@ class BuildReplyThread {
   }
 
   /// The thread rooted at the root of [messageId], replies oldest first.
-  ReplyThread call(int messageId, List<ChatMessage> replies) {
+  ReplyThread call(
+    int messageId,
+    List<ChatMessage> replies, {
+    bool reactions = true,
+  }) {
     final root = rootOf(messageId, replies);
     final inThread = [
       for (final r in replies)
         if (r.replyToId != null &&
-            !r.isReaction &&
+            !(reactions && r.isReaction) &&
             rootOf(r.replyToId!, replies) == root)
           r,
     ]..sort((a, b) => a.sentAt.compareTo(b.sentAt));
@@ -56,11 +61,14 @@ class BuildReplyThread {
   }
 
   /// Reply counts per thread root, for "N replies" labels.
-  Map<int, int> countsByRoot(List<ChatMessage> replies) {
+  Map<int, int> countsByRoot(
+    List<ChatMessage> replies, {
+    bool reactions = true,
+  }) {
     final counts = <int, int>{};
     for (final r in replies) {
       final parent = r.replyToId;
-      if (parent == null || r.isReaction) continue;
+      if (parent == null || (reactions && r.isReaction)) continue;
       final root = rootOf(parent, replies);
       counts[root] = (counts[root] ?? 0) + 1;
     }
@@ -68,11 +76,14 @@ class BuildReplyThread {
   }
 
   /// Summaries per thread root, for the thread chip under a root message.
-  Map<int, ThreadSummary> summariesByRoot(List<ChatMessage> replies) {
+  Map<int, ThreadSummary> summariesByRoot(
+    List<ChatMessage> replies, {
+    bool reactions = true,
+  }) {
     final byRoot = <int, List<ChatMessage>>{};
     for (final r in replies) {
       final parent = r.replyToId;
-      if (parent == null || r.isReaction) continue;
+      if (parent == null || (reactions && r.isReaction)) continue;
       byRoot.putIfAbsent(rootOf(parent, replies), () => []).add(r);
     }
     return {

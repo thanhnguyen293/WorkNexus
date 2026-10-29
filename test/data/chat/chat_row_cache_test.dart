@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/features/chat/data/mappers/chat_row_cache.dart';
@@ -85,5 +86,21 @@ void main() {
     expect(first.pinnedMessageIds, [7]);
     final renamed = cache.conversation(_chat(name: 'Crew'), lastMessage: last);
     expect(renamed.name, 'Crew');
+  });
+
+  test('reactions on leave emoji replies out of the timeline; off keep '
+      'them as messages', () {
+    final rows = [
+      _message('m1'),
+      _message(
+        'r1',
+        content: '{"type":"emoji","content":":thumbsup:"}',
+      ).copyWith(contentType: 'image', replyToId: const Value(5)),
+    ];
+    expect(cache.timeline(rows, null).map((m) => m.gid), ['m1']);
+    expect(cache.timeline(rows, null, reactions: false).map((m) => m.gid), [
+      'm1',
+      'r1',
+    ]);
   });
 }

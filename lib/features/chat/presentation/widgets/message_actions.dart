@@ -171,7 +171,11 @@ List<MessageAction> messageActions(
   ];
 }
 
-/// Whether the hover actions offer a reaction to [message]: one that is
-/// stored, not retracted and not itself a reaction.
-bool messageCanBeReactedTo(ChatMessage message) =>
-    message.serverId != null && !message.deleted && !message.isReaction;
+/// Whether the hover actions offer a reaction to [message]: reactions are on,
+/// and it is stored, not retracted and not itself a reaction. Called from a
+/// build, so it follows the setting.
+bool messageCanBeReactedTo(WidgetRef ref, ChatMessage message) =>
+    ref.watch(chatReactionsOnProvider) &&
+    message.serverId != null &&
+    !message.deleted &&
+    !message.isReaction;

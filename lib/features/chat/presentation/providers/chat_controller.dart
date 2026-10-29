@@ -167,6 +167,7 @@ class ChatController {
       _repository.refreshUsers(accountId);
 
   void setCacheLimit(int bytes) => _repository.setCacheLimit(bytes);
+  void setReactions(bool on) => _repository.setReactions(on);
   void setVideoAutoDownloadLimit(int bytes) =>
       _repository.setVideoAutoDownloadLimit(bytes);
 
@@ -189,6 +190,7 @@ class ChatController {
     required ({String accountId, String chatGid})? visibleChat,
     ChatConversation? conversation,
     bool whileViewing = false,
+    bool reactions = true,
   }) => _shouldNotify(
     message,
     enabled: enabled,
@@ -196,6 +198,7 @@ class ChatController {
     visibleChat: visibleChat,
     conversation: conversation,
     whileViewing: whileViewing,
+    reactions: reactions,
   );
 
   Future<Result<void>> trust(String accountId, String fingerprint) =>
@@ -336,16 +339,6 @@ class ChatController {
     ChatMessage message, {
     required List<String> toChatGids,
   }) => _forward(message, toChatGids: toChatGids);
-
-  /// The thread [messageId] belongs to (its root and every reply).
-  ReplyThread thread(int messageId, List<ChatMessage> replies) =>
-      _threads(messageId, replies);
-
-  Map<int, int> replyCounts(List<ChatMessage> replies) =>
-      _threads.countsByRoot(replies);
-
-  Map<int, ThreadSummary> threadSummaries(List<ChatMessage> replies) =>
-      _threads.summariesByRoot(replies);
 
   int threadRootOf(int messageId, List<ChatMessage> replies) =>
       _threads.rootOf(messageId, replies);

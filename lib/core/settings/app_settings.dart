@@ -65,6 +65,7 @@ class AppSettings {
     this.chatNotifications = true,
     this.chatNotifyWhileViewing = true,
     this.chatSendTypingStatus = true,
+    this.chatReactions = false,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
@@ -147,6 +148,11 @@ class AppSettings {
   /// Tell chat peers while the user is typing to them.
   final bool chatSendTypingStatus;
 
+  /// Read a reply that is just an emoji as a reaction: a chip under the
+  /// message it answers, with a React action to add one. Off, such a reply
+  /// is a message like any other, as the official client shows it.
+  final bool chatReactions;
+
   /// Most disk space downloaded chat attachments may use, in MB.
   final int chatCacheLimitMb;
 
@@ -194,6 +200,7 @@ class AppSettings {
     bool? chatNotifications,
     bool? chatNotifyWhileViewing,
     bool? chatSendTypingStatus,
+    bool? chatReactions,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
@@ -230,6 +237,7 @@ class AppSettings {
       chatNotifyWhileViewing:
           chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
       chatSendTypingStatus: chatSendTypingStatus ?? this.chatSendTypingStatus,
+      chatReactions: chatReactions ?? this.chatReactions,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
           chatAutoDownloadVideos ?? this.chatAutoDownloadVideos,
@@ -327,6 +335,7 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatNotifyWhileViewing: on));
   void setChatSendTypingStatus(bool on) =>
       _set(state.copyWith(chatSendTypingStatus: on));
+  void setChatReactions(bool on) => _set(state.copyWith(chatReactions: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));
   void setChatAutoDownloadVideos(bool on) =>

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/chat_conversation.dart';
+import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'typing_dots.dart';
 
@@ -73,14 +75,14 @@ class _Typing extends StatelessWidget {
   }
 }
 
-class _LastMessage extends StatelessWidget {
+class _LastMessage extends ConsumerWidget {
   const _LastMessage({super.key, required this.chat, this.lastSender});
 
   final ChatConversation chat;
   final String? lastSender;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final last = chat.lastMessage;
     final unread = chat.unreadCount > 0;
@@ -98,7 +100,15 @@ class _LastMessage extends StatelessWidget {
                     : Color.lerp(c.textSecondary, c.textPrimary, 0.4),
               ),
             ),
-          TextSpan(text: last == null ? '' : chatPreview(context, last)),
+          TextSpan(
+            text: last == null
+                ? ''
+                : chatPreview(
+                    context,
+                    last,
+                    reactions: ref.watch(chatReactionsOnProvider),
+                  ),
+          ),
         ],
       ),
       maxLines: 1,

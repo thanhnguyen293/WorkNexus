@@ -151,6 +151,11 @@ class Settings extends Table {
   BoolColumn get chatSendTypingStatus =>
       boolean().withDefault(const Constant(true))();
 
+  /// Whether a reply that is just an emoji reads as a reaction (a chip under
+  /// the message it answers) rather than as a message of its own.
+  BoolColumn get chatReactions =>
+      boolean().withDefault(const Constant(false))();
+
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
       integer().withDefault(const Constant(2048))();
@@ -574,7 +579,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 56;
+  int get schemaVersion => 57;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -888,6 +893,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 56 && !await _hasColumn('chat_messages', 'search_text')) {
         await m.addColumn(chatMessages, chatMessages.searchText);
+      }
+      if (from < 57 && !await _hasColumn('settings', 'chat_reactions')) {
+        await m.addColumn(settings, settings.chatReactions);
       }
     },
   );
