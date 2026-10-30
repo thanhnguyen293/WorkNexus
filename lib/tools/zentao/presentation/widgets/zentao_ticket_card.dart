@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -15,6 +16,7 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../features/translation/presentation/translation_providers.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/ticket_card_meta.dart';
+import 'zentao_card_parent.dart';
 import 'zentao_formatters.dart';
 
 /// The Kanban card of a ZenTao bug or task, one look for both: its [kind]
@@ -136,6 +138,18 @@ class ZenTaoTicketCard extends ConsumerWidget {
                           ],
                         ),
                         SizedBox(height: context.spacing.sm),
+
+                        if (ticket.providerEntity case ZenTaoTaskEntity(
+                          :final parentId?,
+                          :final parentName,
+                        )) ...[
+                          ZenTaoCardParent(
+                            accountId: ticket.accountId,
+                            parentId: parentId,
+                            parentName: parentName,
+                          ),
+                          SizedBox(height: context.spacing.xs),
+                        ],
 
                         Text(
                           cleanTitle,
