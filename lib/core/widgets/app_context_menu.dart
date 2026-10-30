@@ -10,7 +10,7 @@ import 'app_popup_card.dart';
 /// One row of an [showAppContextMenu].
 class AppMenuEntry {
   const AppMenuEntry({
-    required this.icon,
+    this.icon,
     required this.label,
     this.destructive = false,
     this.dividerBefore = false,
@@ -18,7 +18,8 @@ class AppMenuEntry {
     this.checked = false,
   });
 
-  final IconData icon;
+  /// Left out for a plain-text pick (a view: All, Related to me…).
+  final IconData? icon;
   final String label;
 
   /// Tints the icon (e.g. a status colour); defaults to secondary text.
@@ -223,12 +224,14 @@ class _MenuItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: s.lg, vertical: s.md),
         child: Row(
           children: [
-            Icon(
-              entry.icon,
-              size: s.xl3,
-              color: tint ?? entry.iconColor ?? c.textSecondary,
-            ),
-            SizedBox(width: s.lg),
+            if (entry.icon case final icon?) ...[
+              Icon(
+                icon,
+                size: s.xl3,
+                color: tint ?? entry.iconColor ?? c.textSecondary,
+              ),
+              SizedBox(width: s.lg),
+            ],
             Expanded(
               child: Text(
                 entry.label,

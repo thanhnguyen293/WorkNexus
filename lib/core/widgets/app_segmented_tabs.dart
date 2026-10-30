@@ -38,9 +38,17 @@ class AppSegmentedTab {
 /// control: the active segment is raised on an inset track, at the toolbar's
 /// control height, with an optional count (or a spinner while it loads).
 class AppSegmentedTabs extends StatelessWidget {
-  const AppSegmentedTabs({super.key, required this.tabs});
+  const AppSegmentedTabs({
+    super.key,
+    required this.tabs,
+    this.iconOnly = false,
+  });
 
   final List<AppSegmentedTab> tabs;
+
+  /// Draws a tab that has an icon as the icon alone, its label in a tooltip:
+  /// for a narrow toolbar.
+  final bool iconOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -56,22 +64,39 @@ class AppSegmentedTabs extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [for (final tab in tabs) _Segment(tab)],
+        children: [for (final tab in tabs) _Segment(tab, iconOnly: iconOnly)],
       ),
     );
   }
 }
 
 class _Segment extends StatelessWidget {
-  const _Segment(this.tab);
+  const _Segment(this.tab, {required this.iconOnly});
 
   final AppSegmentedTab tab;
+  final bool iconOnly;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
     final radius = BorderRadius.circular(context.radii.sm);
+    final ink = tab.active ? c.textPrimary : c.textSecondary;
+    if (iconOnly && tab.icon != null) {
+      return Tooltip(
+        message: tab.label,
+        child: HoverSurface(
+          onTap: tab.onTap,
+          selected: tab.active,
+          padding: EdgeInsets.symmetric(horizontal: s.md),
+          alignment: Alignment.center,
+          color: tab.active ? c.surface : c.surfaceSubtle,
+          borderRadius: radius,
+          border: tab.active ? context.cardBorder : null,
+          child: Icon(tab.icon, size: context.sizes.iconMd, color: ink),
+        ),
+      );
+    }
     return HoverSurface(
       onTap: tab.onTap,
       selected: tab.active,
