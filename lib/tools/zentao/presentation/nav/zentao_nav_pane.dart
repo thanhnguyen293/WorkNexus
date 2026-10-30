@@ -12,8 +12,8 @@ import '../../../../shared/shell_pane/feature_tab_strip.dart';
 import '../../../../shared/shell_pane/tool_pane_scaffold.dart';
 import 'zentao_scope_lists.dart';
 
-/// Builds the chat list shown in the ZenTao pane, collapsed to avatars when
-/// [compact].
+/// Builds the chat list shown in the ZenTao pane, narrowed (no search or
+/// filter tabs) when [compact].
 typedef ChatPaneBuilder = Widget Function(BuildContext context, bool compact);
 
 /// Navigation pane (L3/L4) for ZenTao accounts. Composes the header,
@@ -34,7 +34,7 @@ class ZentaoNavPane extends ConsumerWidget {
   final ChatPaneBuilder? chatPane;
 
   /// Narrowest the chat's message column may get: in a window too narrow
-  /// for it beside the full pane, the pane collapses to avatars.
+  /// for it beside the full pane, the pane narrows (on every section).
   final double chatMessagesMinWidth;
 
   @override
@@ -42,10 +42,10 @@ class ZentaoNavPane extends ConsumerWidget {
     final l = AppL10n.of(context);
     final sizes = context.sizes;
     final chatPane = this.chatPane;
-    // The board scrolls sideways when narrow; the chat would squeeze its
-    // messages a few letters per line instead.
+    // The chat would squeeze its messages a few letters per line. Every
+    // section narrows alike, so the pane and its tabs keep one size as the
+    // user moves between them.
     final compact =
-        location.section.value == 'zentao.chat' &&
         chatPane != null &&
         MediaQuery.sizeOf(context).width -
                 sizes.railWidth -
@@ -71,10 +71,9 @@ class ZentaoNavPane extends ConsumerWidget {
     }
 
     return ToolPaneScaffold(
-      // As narrow as the rail: the chat list's avatars line up with it.
-      width: compact ? sizes.railWidth : null,
+      // Narrower, its section tabs still side by side.
+      width: compact ? sizes.toolPaneCompactWidth : null,
       tabStrip: FeatureTabStrip(
-        vertical: compact,
         sections: sections,
         selectedSectionId: location.section,
         onSectionSelected: (id) => ref
