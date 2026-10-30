@@ -1,8 +1,9 @@
 import 'package:flutter/widgets.dart';
 
-/// Chat list width, full and collapsed to avatars.
+/// Chat list width, full and narrowed (as wide as the narrowed tool pane,
+/// `AppSizes.toolPaneCompactWidth`).
 const double kChatListWidth = 320;
-const double kChatListCompactWidth = 76;
+const double kChatListCompactWidth = 240;
 
 /// Narrowest the message column may get before the info panel gives way,
 /// then the chat list collapses.
@@ -13,7 +14,7 @@ const double kChatPanelRoom = 380;
 
 /// How the chat view fits its width: whether the info panel stays open
 /// beside a chat (it only gives way when there is no room), and whether the
-/// chat list collapses to avatars (once the info panel is gone and there is
+/// chat list narrows (once the info panel is gone and there is
 /// still no room). A panel the user opens without room slides over the
 /// messages instead (see `ChatSidePanelHost`), so it takes no width here.
 @immutable

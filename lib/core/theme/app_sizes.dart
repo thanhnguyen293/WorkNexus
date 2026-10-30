@@ -37,6 +37,9 @@ class AppSizes extends ThemeExtension<AppSizes> {
   // ---- Shell layout (unified workspace shell) ----
   double get railWidth => 76;
   double get toolPaneWidth => 300;
+  // Narrowed in a narrow window: still room for its section tabs side by
+  // side, and for each chat's name and last message.
+  double get toolPaneCompactWidth => 240;
   double get titleBarHeight => 56;
 
   /// The title bar on macOS; the traffic lights are centred in it by

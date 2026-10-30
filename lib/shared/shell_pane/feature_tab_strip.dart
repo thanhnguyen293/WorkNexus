@@ -20,16 +20,11 @@ class FeatureTabStrip extends StatelessWidget {
     required this.sections,
     required this.selectedSectionId,
     required this.onSectionSelected,
-    this.vertical = false,
   });
 
   final List<ToolSection> sections;
   final SectionId selectedSectionId;
   final ValueChanged<SectionId> onSectionSelected;
-
-  /// Tabs stacked in a column, for a pane collapsed too narrow to fit them
-  /// side by side.
-  final bool vertical;
 
   @override
   Widget build(BuildContext context) {
@@ -42,30 +37,18 @@ class FeatureTabStrip extends StatelessWidget {
         border: Border(bottom: context.hairlineSide),
       ),
       padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.xxs),
-      child: vertical
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final section in sections)
-                  FeatureTabItem(
-                    section: section,
-                    selected: section.id == selectedSectionId,
-                    onTap: () => onSectionSelected(section.id),
-                  ),
-              ],
-            )
-          : Row(
-              children: [
-                for (final section in sections)
-                  Expanded(
-                    child: FeatureTabItem(
-                      section: section,
-                      selected: section.id == selectedSectionId,
-                      onTap: () => onSectionSelected(section.id),
-                    ),
-                  ),
-              ],
+      child: Row(
+        children: [
+          for (final section in sections)
+            Expanded(
+              child: FeatureTabItem(
+                section: section,
+                selected: section.id == selectedSectionId,
+                onTap: () => onSectionSelected(section.id),
+              ),
             ),
+        ],
+      ),
     );
   }
 }

@@ -34,12 +34,15 @@ import 'package:work_nexus/features/chat/presentation/providers/chat_typing_prov
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_list_tabs.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_search_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_debug_button.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_wallpaper.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/conversation_list_pane.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_list.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/pinned_message_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/pinned_messages_panel.dart';
@@ -575,6 +578,17 @@ void main() {
     );
     expect(find.text('3'), findsWidgets);
     expect(find.text('Select a conversation'), findsOneWidget);
+  });
+
+  testWidgets('a narrow window narrows the chat list but keeps its search, '
+      'filter tabs and last messages', (tester) async {
+    await pumpChat(tester, size: const Size(700, 900));
+
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(ConversationListPane)).width, 240);
+    expect(find.byType(ChatSearchField), findsOneWidget);
+    expect(find.byType(ChatListTabs), findsOneWidget);
+    expect(find.text('Dyno: hi @Thanh', findRichText: true), findsOneWidget);
   });
 
   testWidgets('a chat row shows the hand cursor under the mouse', (
