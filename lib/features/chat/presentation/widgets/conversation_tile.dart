@@ -27,8 +27,7 @@ class ConversationTile extends StatelessWidget {
     this.compact = false,
   });
 
-  /// Avatar only (with the unread count on it), the title as a tooltip —
-  /// for the collapsed chat list.
+  /// Tighter side margins, for the narrowed chat list.
   final bool compact;
 
   final ChatConversation chat;
@@ -64,33 +63,6 @@ class ConversationTile extends StatelessWidget {
       presence: presence,
       verified: verified,
     );
-    if (compact) {
-      return Tooltip(
-        message: title,
-        waitDuration: const Duration(milliseconds: 400),
-        child: _TileInk(
-          selected: selected,
-          onTap: onTap,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: context.spacing.md),
-            child: Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  avatarWidget,
-                  if (unread)
-                    Positioned(
-                      top: -context.spacing.xs,
-                      right: -context.spacing.sm,
-                      child: UnreadBadge(count: chat.unreadCount),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
     // Square and edge to edge: the selection fills the whole row; the inner
     // margin keeps the content where the list's own used to put it.
     return _TileInk(
@@ -98,7 +70,7 @@ class ConversationTile extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: context.spacing.xl3,
+          horizontal: compact ? context.spacing.lg : context.spacing.xl3,
           vertical: context.spacing.md,
         ),
         child: Row(

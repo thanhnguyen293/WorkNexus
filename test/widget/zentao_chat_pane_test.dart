@@ -31,7 +31,11 @@ void main() {
 
   setUp(compacts.clear);
 
-  Future<void> pump(WidgetTester tester, {required double width}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    required double width,
+    String section = 'zentao.chat',
+  }) async {
     tester.view.physicalSize = Size(width, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -51,7 +55,7 @@ void main() {
               alignment: Alignment.topLeft,
               child: ZentaoNavPane(
                 account: _account,
-                location: const ToolLocation(section: SectionId('zentao.chat')),
+                location: ToolLocation(section: SectionId(section)),
                 sections: module.sections,
                 chatPane: module.chatPane,
                 chatMessagesMinWidth: module.chatMessagesMinWidth,
@@ -70,14 +74,24 @@ void main() {
     expect(tester.getSize(find.byType(ToolPaneScaffold)).width, 300);
   });
 
-  testWidgets('in a narrow window, the chat pane collapses to the rail width '
-      'so the messages keep their room', (tester) async {
+  testWidgets('in a narrow window, the chat pane narrows so the messages keep '
+      'their room, its section tabs still side by side', (tester) async {
     await pump(tester, width: 680);
 
     expect(compacts.last, isTrue);
-    expect(tester.getSize(find.byType(ToolPaneScaffold)).width, 76);
-    // The tabs still fit, one under the other.
+    expect(tester.getSize(find.byType(ToolPaneScaffold)).width, 240);
     expect(tester.takeException(), isNull);
-    expect(find.text('Tasks'), findsOneWidget);
+    // One row of tabs, as on the Tasks and Bugs panes.
+    final chat = tester.getCenter(find.text('Chat'));
+    final tasks = tester.getCenter(find.text('Tasks'));
+    expect(tasks.dy, chat.dy);
+    expect(tasks.dx, greaterThan(chat.dx));
+  });
+
+  testWidgets('in a narrow window, the Tasks pane narrows to the same width '
+      'as the chat one', (tester) async {
+    await pump(tester, width: 680, section: 'zentao.tasks');
+
+    expect(tester.getSize(find.byType(ToolPaneScaffold)).width, 240);
   });
 }

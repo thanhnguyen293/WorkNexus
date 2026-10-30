@@ -12,7 +12,6 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
-import '../../domain/value_objects/chat_list_tab.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
@@ -36,8 +35,7 @@ class ConversationListPane extends ConsumerWidget {
   final String accountId;
   final OpenAccountProfile? onViewProfile;
 
-  /// Collapsed to avatars (narrow window): no account picker or search,
-  /// only the new-chat button above the list.
+  /// Narrowed (narrow window): tighter side margins, the same controls.
   final bool compact;
 
   @override
@@ -48,12 +46,9 @@ class ConversationListPane extends ConsumerWidget {
     final users =
         ref.watch(chatUsersProvider(accountId)).asData?.value ??
         const <int, ChatUser>{};
-    // The search box is hidden when collapsed: show every chat then.
-    final query = compact
-        ? ''
-        : ref.watch(chatSearchProvider).trim().toLowerCase();
+    final query = ref.watch(chatSearchProvider).trim().toLowerCase();
     final selected = ref.watch(selectedChatGidProvider(accountId));
-    final tab = compact ? ChatListTab.all : ref.watch(chatListTabProvider);
+    final tab = ref.watch(chatListTabProvider);
 
     final visible =
         [
@@ -76,53 +71,38 @@ class ConversationListPane extends ConsumerWidget {
         children: [
           // Sized by its controls: under the tool pane's tabs, its bottom
           // line could never meet the chat header's beside it anyway.
-          if (compact)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
-              child: Center(
-                child: AppIconButton(
+          const ChatAccountPicker(),
+          Padding(
+            // The rows' own margin, so the avatars line up in one column.
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? context.spacing.lg : context.spacing.xl3,
+              vertical: context.spacing.lg,
+            ),
+            child: Row(
+              children: [
+                ChatSelfAvatarButton(
+                  accountId: accountId,
+                  onViewProfile: onViewProfile,
+                ),
+                SizedBox(width: context.spacing.md),
+                Expanded(child: ChatSearchField(hint: l.chatSearch)),
+                SizedBox(width: context.spacing.xs),
+                _MyCloudButton(accountId: accountId),
+                AppIconButton(
                   icon: LucideIcons.squarePen300,
                   tooltip: l.chatNewChat,
                   onPressed: () => NewChatDialog.show(context, accountId),
                 ),
-              ),
-            )
-          else ...[
-            const ChatAccountPicker(),
-            Padding(
-              // The rows' own margin, so the avatars line up in one column.
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.xl3,
-                vertical: context.spacing.lg,
-              ),
-              child: Row(
-                children: [
-                  ChatSelfAvatarButton(
-                    accountId: accountId,
-                    onViewProfile: onViewProfile,
-                  ),
-                  SizedBox(width: context.spacing.md),
-                  Expanded(child: ChatSearchField(hint: l.chatSearch)),
-                  SizedBox(width: context.spacing.xs),
-                  _MyCloudButton(accountId: accountId),
-                  AppIconButton(
-                    icon: LucideIcons.squarePen300,
-                    tooltip: l.chatNewChat,
-                    onPressed: () => NewChatDialog.show(context, accountId),
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
           const _SectionDivider(),
-          if (!compact) ...[
-            SizedBox(height: context.spacing.sm),
-            const ChatListTabs(),
-            SizedBox(height: context.spacing.sm),
-            const _SectionDivider(),
-          ],
+          SizedBox(height: context.spacing.sm),
+          const ChatListTabs(),
+          SizedBox(height: context.spacing.sm),
+          const _SectionDivider(),
           // The list stays when a refresh fails; the failure shows above it.
-          if (chatsAsync.hasError && chatsAsync.hasValue && !compact)
+          if (chatsAsync.hasError && chatsAsync.hasValue)
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: context.spacing.xl3,
@@ -135,18 +115,6 @@ class ConversationListPane extends ConsumerWidget {
             ),
           Expanded(
             child: switch (chatsAsync) {
-              // Collapsed to avatars: too narrow for a message, so only Retry.
-              _ when chatsAsync.hasError && !chatsAsync.hasValue && compact =>
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: AppIconButton(
-                    icon: LucideIcons.refreshCw300,
-                    tooltip: l.retry,
-                    color: c.error,
-                    onPressed: () =>
-                        ref.invalidate(chatConversationsProvider(accountId)),
-                  ),
-                ),
               _ when chatsAsync.hasError && !chatsAsync.hasValue =>
                 AppStateView.error(
                   compact: true,
@@ -157,7 +125,6 @@ class ConversationListPane extends ConsumerWidget {
               _ when !chatsAsync.hasValue => const AppStateView.loading(
                 compact: true,
               ),
-              _ when visible.isEmpty && compact => const SizedBox.shrink(),
               _ when visible.isEmpty => AppStateView.empty(
                 compact: true,
                 icon: query.isEmpty
