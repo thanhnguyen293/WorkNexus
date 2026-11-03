@@ -22,9 +22,12 @@ const double _kCardMaxWidth = 420;
 /// and a square image — at a fixed height. While loading it shows skeleton
 /// lines; when the page has nothing to show, its address.
 class LinkPreviewCard extends ConsumerWidget {
-  const LinkPreviewCard({super.key, required this.url});
+  const LinkPreviewCard({super.key, required this.url, this.fillWidth = false});
 
   final String url;
+
+  /// Fills the width of the bubble it is in.
+  final bool fillWidth;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,7 +43,9 @@ class LinkPreviewCard extends ConsumerWidget {
       child: HoverSurface(
         onTap: () => openChatLink(ref, url),
         height: _kCardHeight,
-        constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
+        constraints: fillWidth
+            ? null
+            : const BoxConstraints(maxWidth: _kCardMaxWidth),
         color: ink.quoteFill,
         hoverColor: ink.hoverFill,
         borderRadius: radius,
