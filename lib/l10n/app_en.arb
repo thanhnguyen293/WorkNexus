@@ -2143,6 +2143,7 @@
   "miniAppReload": "Reload",
   "miniAppHome": "Home",
   "miniAppUnsupported": "Web pages can't be shown inside the app on this system.",
+  "miniAppClose": "Close page (free memory)",
   "miniAppEdit": "Edit mini app",
   "miniAppIcon": "Icon",
   "miniAppIconChoose": "Choose image…",
