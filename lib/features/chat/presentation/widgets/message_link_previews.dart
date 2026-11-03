@@ -26,6 +26,10 @@ List<String> _previewUrls(ChatMessage message) => switch (message.content) {
   _ => const [],
 };
 
+/// Whether [message] shows link cards or a page preview under its text.
+bool messageHasLinkPreviews(ChatMessage message) =>
+    _previewUrls(message).isNotEmpty;
+
 /// In a message's bubble, under its text: a compact live card for each
 /// merge request, GitLab/GitHub issue and ZenTao ticket it links (a few at most), then a preview
 /// of the first other web page. The links themselves stay in the text.
@@ -41,14 +45,14 @@ class MessageLinkPreviews extends StatelessWidget {
     final cards = urls.where(_isCardLink).take(_kMaxLinkCards);
     final page = urls.where((u) => !_isCardLink(u)).firstOrNull;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final url in cards)
           const ParseMergeRequestLink()(url) != null
-              ? MergeRequestCard(url: url)
-              : ZenTaoTicketCard(url: url),
-        if (page != null) LinkPreviewCard(url: page),
+              ? MergeRequestCard(url: url, fillWidth: true)
+              : ZenTaoTicketCard(url: url, fillWidth: true),
+        if (page != null) LinkPreviewCard(url: page, fillWidth: true),
       ],
     );
   }

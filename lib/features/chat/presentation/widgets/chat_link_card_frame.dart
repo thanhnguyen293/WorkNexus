@@ -18,11 +18,16 @@ class ChatLinkCardFrame extends StatelessWidget {
     required this.onTap,
     required this.child,
     this.bar,
+    this.fillWidth = false,
   });
 
   final VoidCallback onTap;
   final Widget child;
   final Color? bar;
+
+  /// Takes the width it is given (a message bubble's) instead of its own
+  /// natural width up to a cap.
+  final bool fillWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,9 @@ class ChatLinkCardFrame extends StatelessWidget {
       padding: EdgeInsets.only(top: s.md),
       child: HoverSurface(
         onTap: onTap,
-        constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
+        constraints: fillWidth
+            ? null
+            : const BoxConstraints(maxWidth: _kCardMaxWidth),
         padding: EdgeInsets.fromLTRB(s.lg, s.md, s.lg, s.md),
         color: ink.quoteFill,
         hoverColor: ink.hoverFill,

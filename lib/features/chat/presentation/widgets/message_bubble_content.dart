@@ -57,7 +57,12 @@ class MessageBubbleContent extends StatelessWidget {
           ),
       ],
     );
-    return pinned ? _Pinned(footer: footer, child: column) : column;
+    // The cards under the text are as wide as the bubble: it is sized to its
+    // widest content, and they then take that width.
+    final sized = messageHasLinkPreviews(message)
+        ? IntrinsicWidth(child: column)
+        : column;
+    return pinned ? _Pinned(footer: footer, child: sized) : sized;
   }
 }
 

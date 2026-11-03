@@ -6,6 +6,7 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_link_card_frame.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/mention_text.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble_content.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_footer.dart';
@@ -34,6 +35,7 @@ void main() {
     MessageContent content, {
     int? replies,
     VoidCallback? onOpenReplies,
+    double width = 400,
   }) async {
     final message = _message(content);
     await tester.pumpWidget(
@@ -51,7 +53,7 @@ void main() {
             body: Align(
               alignment: Alignment.topLeft,
               child: SizedBox(
-                width: 400,
+                width: width,
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: MessageBubbleContent(
@@ -91,6 +93,25 @@ void main() {
     expect(at.right, content.right);
     expect(content.width, lessThan(400), reason: 'no wider than its content');
     await disposeTree(tester);
+  });
+
+  testWidgets('a link card is as wide as the bubble, not capped under it', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      MessageContent.text(
+        'https://zentao.example.com/zentao/bug-view-7173.html ${'long ' * 40}',
+      ),
+      width: 700,
+    );
+    final bubble = tester.getSize(find.byKey(const Key('content')));
+    final card = tester.getSize(find.byType(ChatLinkCardFrame));
+    expect(bubble.width, greaterThan(420));
+    expect(card.width, bubble.width);
+    // Lets the ticket streams close before the test ends.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 10));
   });
 
   testWidgets('message text is selectable, with mentions and links still '
