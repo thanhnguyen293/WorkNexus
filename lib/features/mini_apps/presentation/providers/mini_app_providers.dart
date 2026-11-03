@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
@@ -181,3 +182,13 @@ final miniAppPermissionControllerProvider =
     NotifierProvider<MiniAppPermissionController, void>(
       MiniAppPermissionController.new,
     );
+
+/// The ids of the mini apps whose page is running (kept by `MiniAppsHost`),
+/// for the rail to offer closing those.
+final runningMiniAppsProvider = StateProvider<Set<String>>((ref) => const {});
+
+/// A request to close a mini app's page and free its memory; [seq] tells one
+/// request from the next for the same app.
+final miniAppCloseRequestProvider = StateProvider<({String id, int seq})?>(
+  (ref) => null,
+);

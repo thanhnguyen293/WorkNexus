@@ -1365,6 +1365,7 @@
   "miniAppReload": "Tải lại",
   "miniAppHome": "Về trang chủ",
   "miniAppUnsupported": "Hệ điều hành này không hiển thị được trang web trong ứng dụng.",
+  "miniAppClose": "Đóng trang (giải phóng bộ nhớ)",
   "miniAppEdit": "Sửa mini app",
   "miniAppIcon": "Biểu tượng",
   "miniAppIconChoose": "Chọn ảnh…",
