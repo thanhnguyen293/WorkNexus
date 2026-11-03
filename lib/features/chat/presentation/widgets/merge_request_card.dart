@@ -29,9 +29,16 @@ import 'chat_link_card_frame.dart';
 /// could not be loaded). Coming back to the app refetches one still open,
 /// so a merge done in the browser shows at once.
 class MergeRequestCard extends ConsumerWidget {
-  const MergeRequestCard({super.key, required this.url});
+  const MergeRequestCard({
+    super.key,
+    required this.url,
+    this.fillWidth = false,
+  });
 
   final String url;
+
+  /// Fills the width of the bubble it is in.
+  final bool fillWidth;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,6 +58,7 @@ class MergeRequestCard extends ConsumerWidget {
         ? null
         : mergeRequestState(context, ticket.providerStatus, link.provider);
     return ChatLinkCardFrame(
+      fillWidth: fillWidth,
       bar: state?.$1,
       onTap: () => ticket == null
           ? openExternally(url)

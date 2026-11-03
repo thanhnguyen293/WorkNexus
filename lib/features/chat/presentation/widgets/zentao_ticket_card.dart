@@ -21,9 +21,17 @@ import 'chat_links.dart';
 /// takes the status colour. A ticket the board has not synced is fetched
 /// through the connected ZenTao account; a tap opens it beside the chat.
 class ZenTaoTicketCard extends ConsumerWidget {
-  const ZenTaoTicketCard({super.key, required this.url, this.fallbackTitle});
+  const ZenTaoTicketCard({
+    super.key,
+    required this.url,
+    this.fallbackTitle,
+    this.fillWidth = false,
+  });
 
   final String url;
+
+  /// Fills the width of the bubble it is in.
+  final bool fillWidth;
 
   /// Shown until the ticket is loaded, or when it cannot be (e.g. a bot
   /// notification already names the item).
@@ -51,6 +59,7 @@ class ZenTaoTicketCard extends ConsumerWidget {
       _ => null,
     };
     return ChatLinkCardFrame(
+      fillWidth: fillWidth,
       bar: status,
       onTap: () => openChatLink(ref, url),
       child: Column(
