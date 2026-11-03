@@ -100,6 +100,14 @@ class _MiniAppRailButton extends ConsumerWidget {
   final MiniApp app;
   final bool selected;
 
+  void _close(WidgetRef ref) {
+    final last = ref.read(miniAppCloseRequestProvider)?.seq ?? 0;
+    ref.read(miniAppCloseRequestProvider.notifier).state = (
+      id: app.id,
+      seq: last + 1,
+    );
+  }
+
   Future<void> _remove(BuildContext context, WidgetRef ref) async {
     final l = AppL10n.of(context);
     final confirmed = await AppConfirmDialog.show(
@@ -119,6 +127,9 @@ class _MiniAppRailButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
+    final running = ref.watch(
+      runningMiniAppsProvider.select((ids) => ids.contains(app.id)),
+    );
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onSecondaryTapUp: (details) async {
@@ -127,6 +138,8 @@ class _MiniAppRailButton extends ConsumerWidget {
           at: details.globalPosition,
           entries: [
             AppMenuEntry(icon: LucideIcons.pencil300, label: l.miniAppEdit),
+            if (running)
+              AppMenuEntry(icon: LucideIcons.power300, label: l.miniAppClose),
             AppMenuEntry(
               icon: LucideIcons.trash2300,
               label: l.miniAppRemove,
@@ -136,11 +149,12 @@ class _MiniAppRailButton extends ConsumerWidget {
           ],
         );
         if (!context.mounted) return;
-        if (picked == 0) {
-          await MiniAppDialog.show(context, existing: app);
-        } else if (picked == 1) {
-          await _remove(context, ref);
-        }
+        final entries = [
+          () => MiniAppDialog.show(context, existing: app),
+          if (running) () async => _close(ref),
+          () => _remove(context, ref),
+        ];
+        if (picked != null) await entries[picked]();
       },
       child: AppRailLabeledButton(
         leading: MiniAppIcon(name: app.name, iconPath: app.iconPath),
