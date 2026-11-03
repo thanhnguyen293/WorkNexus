@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,6 +51,22 @@ class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
       (_, apps) => _publishTargets(apps.asData?.value ?? const []),
       fireImmediately: true,
     );
+    ref.listenManual(miniAppCloseRequestProvider, (_, request) {
+      if (request != null) _close(request.id);
+    });
+  }
+
+  /// Closes [id]'s page; it opens again, reloaded, when shown on the rail.
+  void _close(String id) {
+    if (ref.read(openMiniAppIdProvider) == id) {
+      ref.read(appNavProvider.notifier).closeMiniApp();
+    }
+    setState(
+      () => _live = [
+        for (final live in _live)
+          if (live != id) live,
+      ],
+    );
   }
 
   @override
@@ -67,6 +84,14 @@ class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
         if (Uri.tryParse(app.url)?.host case final host? when host.isNotEmpty)
           MiniAppLinkTarget(id: app.id, host: host),
     ];
+  });
+
+  /// Outside the build phase, and only when the set changed.
+  void _publishRunning() => Future.microtask(() {
+    if (!mounted) return;
+    final running = _live.toSet();
+    final notifier = ref.read(runningMiniAppsProvider.notifier);
+    if (!setEquals(notifier.state, running)) notifier.state = running;
   });
 
   /// A tap on a notification a mini app's page showed brings its app forward.
@@ -102,6 +127,7 @@ class _MiniAppsHostState extends ConsumerState<MiniAppsHost>
       existing: {for (final a in apps) a.id},
       max: ref.watch(appSettingsProvider.select((s) => s.miniAppLiveLimit)),
     );
+    _publishRunning();
     return Offstage(
       offstage: !visible,
       child: Stack(
