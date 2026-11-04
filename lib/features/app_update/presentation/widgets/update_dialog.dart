@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -30,6 +31,7 @@ class UpdateDialog extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
+    final appName = ref.watch(appDisplayNameProvider);
     final state = ref.watch(updateControllerProvider);
     final ready = state is UpdateReady;
     final failed = state is UpdateFailed;
@@ -38,7 +40,7 @@ class UpdateDialog extends ConsumerWidget {
     final busy = !ready && !manual;
 
     return AppDialogFrame(
-      title: l.updateDialogHeadline,
+      title: l.updateDialogHeadline(appName),
       // Roomy enough for release notes to read like a page.
       maxWidth: context.sizes.dialogLg,
       actions: [
@@ -82,14 +84,14 @@ class UpdateDialog extends ConsumerWidget {
             ],
             SizedBox(height: s.xl2),
             if (busy)
-              _Progress(state: state)
+              _Progress(state: state, appName: appName)
             else
               Text(
                 failed
                     ? l.updateInstallFailed
                     : manual
                     ? l.updateManualInstall
-                    : l.updateReadyHint,
+                    : l.updateReadyHint(appName),
                 style: context.typography.paragraph.copyWith(
                   color: failed ? c.error : c.textSecondary,
                 ),
@@ -161,9 +163,10 @@ class _Pill extends StatelessWidget {
 }
 
 class _Progress extends StatelessWidget {
-  const _Progress({required this.state});
+  const _Progress({required this.state, required this.appName});
 
   final UpdateState state;
+  final String appName;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +192,7 @@ class _Progress extends StatelessWidget {
         SizedBox(height: context.spacing.md),
         Text(
           installing
-              ? l.updateRestarting
+              ? l.updateRestarting(appName)
               : '${l.updateDownloading} ${((progress ?? 0) * 100).round()}%',
           style: context.typography.paragraph.copyWith(color: c.textSecondary),
         ),

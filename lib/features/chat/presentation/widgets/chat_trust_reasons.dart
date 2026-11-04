@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -9,11 +11,11 @@ import '../../../../l10n/app_localizations.dart';
 
 /// "Why am I asked?": what confirming the chat server's certificate does, so
 /// the step reads as protection rather than an error to click through.
-class ChatTrustReasons extends StatelessWidget {
+class ChatTrustReasons extends ConsumerWidget {
   const ChatTrustReasons({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final s = context.spacing;
     return Column(
@@ -26,7 +28,10 @@ class ChatTrustReasons extends StatelessWidget {
           ),
         ),
         SizedBox(height: s.md),
-        _Reason(icon: LucideIcons.history300, text: l.chatTrustWhyOnce),
+        _Reason(
+          icon: LucideIcons.history300,
+          text: l.chatTrustWhyOnce(ref.watch(appDisplayNameProvider)),
+        ),
         SizedBox(height: s.md),
         _Reason(icon: LucideIcons.shieldAlert300, text: l.chatTrustWhyChange),
         SizedBox(height: s.md),

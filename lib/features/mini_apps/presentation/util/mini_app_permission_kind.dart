@@ -49,8 +49,10 @@ extension MiniAppPermissionKindView on MiniAppPermissionKind {
   };
 
   /// One line on what allowing it means.
-  String description(AppL10n l) => switch (this) {
-    MiniAppPermissionKind.notifications => l.miniAppPermNotificationsDesc,
+  String description(AppL10n l, String appName) => switch (this) {
+    MiniAppPermissionKind.notifications => l.miniAppPermNotificationsDesc(
+      appName,
+    ),
     MiniAppPermissionKind.clipboard => l.miniAppPermClipboardDesc,
     MiniAppPermissionKind.autoplay => l.miniAppPermAutoplayDesc,
     MiniAppPermissionKind.multipleDownloads =>

@@ -17,6 +17,11 @@ class DesktopTrayService with TrayListener {
   Future<void> Function()? _onQuit;
   bool _ready = false;
 
+  /// The name the user gave the app (null while it has its own) and the
+  /// language, which the menu is made of.
+  String? _name;
+  Locale? _locale;
+
   Future<bool> initialize({
     required Locale locale,
     required Future<void> Function() onOpen,
@@ -46,7 +51,10 @@ class DesktopTrayService with TrayListener {
   /// Shows [name] as the tray tooltip, or the app's own name for null.
   Future<void> setToolTip(String? name) async {
     if (!_ready) return;
+    _name = name;
     await trayManager.setToolTip(name ?? AppConfig.appName);
+    final locale = _locale;
+    if (locale != null) await updateLocale(locale);
   }
 
   /// Shows the icon file at [path] in the tray, or the app's own for null.
@@ -57,14 +65,16 @@ class DesktopTrayService with TrayListener {
 
   Future<void> updateLocale(Locale locale) async {
     if (!(Platform.isWindows || Platform.isMacOS)) return;
+    _locale = locale;
     try {
       final strings = lookupAppL10n(locale);
+      final name = _name ?? AppConfig.appName;
       await trayManager.setContextMenu(
         Menu(
           items: [
-            MenuItem(key: _openKey, label: strings.trayOpenApp),
+            MenuItem(key: _openKey, label: strings.trayOpenApp(name)),
             MenuItem.separator(),
-            MenuItem(key: _quitKey, label: strings.trayQuitApp),
+            MenuItem(key: _quitKey, label: strings.trayQuitApp(name)),
           ],
         ),
       );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/platform/open_external.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -35,7 +36,10 @@ class UpdateRailButton extends ConsumerWidget {
       UpdateManual(:final update) ||
       UpdateFailed(:final update) => AppRailButton(
         icon: LucideIcons.circleFadingArrowUp300,
-        label: l.updateAvailable(update.latestVersion),
+        label: l.updateAvailable(
+          update.latestVersion,
+          ref.watch(appDisplayNameProvider),
+        ),
         selected: false,
         onTap: () => openExternally(update.releaseUrl),
         badge: const _AttentionDot(),

@@ -1,10 +1,13 @@
 {
   "@@locale": "en",
   "appTitle": "Task Board",
-  "updateAvailable": "WorkNexus {version} is available.",
+  "updateAvailable": "{appName} {version} is available.",
   "@updateAvailable": {
     "placeholders": {
       "version": {
+        "type": "String"
+      },
+      "appName": {
         "type": "String"
       }
     }
@@ -17,8 +20,22 @@
       }
     }
   },
-  "trayOpenApp": "Open WorkNexus",
-  "trayQuitApp": "Quit WorkNexus",
+  "trayOpenApp": "Open {appName}",
+  "@trayOpenApp": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "trayQuitApp": "Quit {appName}",
+  "@trayQuitApp": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "storageTitle": "Storage & cache",
   "storageOpen": "Manage storage…",
   "localCacheTitle": "Local database",
@@ -609,7 +626,14 @@
   "emptyTitle": "No tasks match these filters",
   "emptyDesc": "Try clearing a filter or switching workspace.",
   "clearAllFilters": "Clear all filters",
-  "welcomeTitle": "Welcome to WorkNexus",
+  "welcomeTitle": "Welcome to {appName}",
+  "@welcomeTitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "welcomeHint": "Pick a source from the sidebar to get started.",
   "quickSettings": "Quick settings",
   "appearance": "Appearance",
@@ -1000,7 +1024,14 @@
   },
   "chatBotName": "Xuanbot",
   "chatViewDetail": "View details",
-  "chatNotificationsBlocked": "Notifications are turned off for WorkNexus in System Settings, so you won't be alerted to new messages.",
+  "chatNotificationsBlocked": "Notifications are turned off for {appName} in System Settings, so you won't be alerted to new messages.",
+  "@chatNotificationsBlocked": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "chatNotificationsAllow": "Turn on",
   "chatNotificationsBlockedShort": "Notifications are blocked in System Settings",
   "chatDismiss": "Dismiss",
@@ -1170,10 +1201,13 @@
   "chatKicked": "Signed out because this account signed in somewhere else.",
   "chatReviewCertificate": "Review certificate",
   "chatTrustTitle": "Confirm the chat server",
-  "chatTrustBody": "{host} secures chat with its own (self-signed) certificate, not one your system already trusts, so WorkNexus checks with you once before connecting.",
+  "chatTrustBody": "{host} secures chat with its own (self-signed) certificate, not one your system already trusts, so {appName} checks with you once before connecting.",
   "@chatTrustBody": {
     "placeholders": {
       "host": {
+        "type": "String"
+      },
+      "appName": {
         "type": "String"
       }
     }
@@ -1182,7 +1216,14 @@
   "chatTrustIssuer": "Issued by",
   "chatTrustAction": "Trust and connect",
   "chatTrustWhy": "Why am I asked?",
-  "chatTrustWhyOnce": "Only once. WorkNexus remembers this exact certificate and connects on its own after that.",
+  "chatTrustWhyOnce": "Only once. {appName} remembers this exact certificate and connects on its own after that.",
+  "@chatTrustWhyOnce": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "chatTrustWhyChange": "If it ever changes unexpectedly, you are asked again instead of being connected silently. A changed certificate can mean someone is intercepting the connection.",
   "chatTrustWhyCheck": "Not sure? Ask your ZenTao administrator to confirm the fingerprint below.",
   "chatTrustDetails": "Certificate",
@@ -1265,14 +1306,20 @@
   "chatReacted": "Reacted {emoji}",
   "@chatReacted": {
     "placeholders": {
-      "emoji": {"type": "String"}
+      "emoji": {
+        "type": "String"
+      }
     }
   },
   "chatReactionBy": "{names} reacted with {emoji}",
   "@chatReactionBy": {
     "placeholders": {
-      "names": {"type": "String"},
-      "emoji": {"type": "String"}
+      "names": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
     }
   },
   "chatReactionRemoveExpired": "A reaction can only be taken back within 2 minutes",
@@ -1423,7 +1470,14 @@
   "chatNotificationsSetting": "New message notifications",
   "chatNotificationsSettingHint": "Show a system notification when a chat message arrives.",
   "chatNotifyWhileViewing": "Notify while viewing the chat",
-  "chatNotifyWhileViewingHint": "Also notify for the chat open on screen while WorkNexus is in front.",
+  "chatNotifyWhileViewingHint": "Also notify for the chat open on screen while {appName} is in front.",
+  "@chatNotifyWhileViewingHint": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "chatStorageThisChat": "Storage",
   "chatStoragePhotos": "Photos",
   "chatStorageVideos": "Videos",
@@ -1432,9 +1486,23 @@
   "chatReadOnlyAdmins": "Only admins can send messages in this chat",
   "chatReadOnly": "You can't send messages in this chat",
   "updateAction": "Update",
-  "updateReadyHint": "Downloaded and verified. WorkNexus restarts into the new version whenever you are ready.",
+  "updateReadyHint": "Downloaded and verified. {appName} restarts into the new version whenever you are ready.",
+  "@updateReadyHint": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "updateDownloading": "Downloading the update…",
-  "updateRestarting": "Installing — WorkNexus will restart…",
+  "updateRestarting": "Installing — {appName} will restart…",
+  "@updateRestarting": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "updateLater": "Later",
   "updateRestartNow": "Update & restart",
   "updateInstallFailed": "The update could not be installed automatically. Download it from the release page instead.",
@@ -1477,7 +1545,14 @@
   "translationApiSave": "Save",
   "translationApiRemove": "Remove key",
   "translationApiLoadFailed": "Couldn't read the saved translation key.",
-  "updateDialogHeadline": "A new version of WorkNexus is available",
+  "updateDialogHeadline": "A new version of {appName} is available",
+  "@updateDialogHeadline": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "appVersionLabel": "Version",
   "reportIssue": "Report an issue",
   "reportIssueHint": "Found a problem? Open a GitHub issue with your version filled in.",
@@ -1558,7 +1633,9 @@
   "notificationsNewCount": "{count} new ZenTao notifications",
   "@notificationsNewCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "notificationsUndated": "Undated",
@@ -1789,9 +1866,21 @@
   "workspaceCodeLabel": "Badge letters",
   "workspaceNameRequired": "Enter a name",
   "workspaceNameTooLong": "Use at most {max} characters",
-  "@workspaceNameTooLong": { "placeholders": { "max": { "type": "int" } } },
+  "@workspaceNameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "workspaceCodeTooLong": "Use at most {max} badge letters",
-  "@workspaceCodeTooLong": { "placeholders": { "max": { "type": "int" } } },
+  "@workspaceCodeTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "workspaceSaveFailed": "Couldn't save the workspace.",
   "connectionsColor": "Color",
   "connectionsIcon": "Icon",
@@ -2157,7 +2246,14 @@
   "miniAppDevTools": "Developer tools",
   "miniAppPermNotificationsLabel": "Notifications",
   "miniAppPermNotificationsAction": "show notifications",
-  "miniAppPermNotificationsDesc": "Appear as desktop notifications, also when WorkNexus is in the background.",
+  "miniAppPermNotificationsDesc": "Appear as desktop notifications, also when {appName} is in the background.",
+  "@miniAppPermNotificationsDesc": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppPermClipboardLabel": "Clipboard",
   "miniAppPermClipboardAction": "read your clipboard",
   "miniAppPermClipboardDesc": "Lets it paste what you copied elsewhere.",
@@ -2221,8 +2317,12 @@
   "certPromptMessage": "{origin}\n\nIts certificate {reason}.\n\nIf you trust this site, for example your own company's server, the app remembers it and stops asking. Anyone able to intercept your connection to it could then read what you send.",
   "@certPromptMessage": {
     "placeholders": {
-      "origin": {"type": "String"},
-      "reason": {"type": "String"}
+      "origin": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
     }
   },
   "certReasonDates": "has expired, or is not valid yet",
@@ -2231,7 +2331,9 @@
   "certReasonOther": "is not valid ({error})",
   "@certReasonOther": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "certTrust": "Trust this site",

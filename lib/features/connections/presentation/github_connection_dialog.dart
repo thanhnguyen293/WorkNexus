@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/platform/app_name_providers.dart';
 import '../../../core/platform/open_external.dart';
 import '../../../core/widgets/connection_text_field.dart';
 import '../../../l10n/app_localizations.dart';
@@ -133,8 +134,9 @@ class _GitHubConnectionDialogState
   /// browser — so the user can create a token without hunting through settings.
   Future<void> _openTokenPage() async {
     final base = _tokenSettingsBase(_baseUrl.text);
+    final name = Uri.encodeQueryComponent(ref.read(appDisplayNameProvider));
     final url =
-        '$base/settings/tokens/new?scopes=repo,read:org&description=WorkNexus';
+        '$base/settings/tokens/new?scopes=repo,read:org&description=$name';
     await openExternally(url);
   }
 

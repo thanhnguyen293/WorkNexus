@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -30,7 +31,7 @@ class ChatNotificationSettings extends ConsumerWidget {
         ),
         QuickSettingsSwitchField(
           label: l.chatNotifyWhileViewing,
-          hint: l.chatNotifyWhileViewingHint,
+          hint: l.chatNotifyWhileViewingHint(ref.watch(appDisplayNameProvider)),
           value: whileViewing,
           // Means nothing while notifications are off.
           onChanged: on ? settings.setChatNotifyWhileViewing : null,
