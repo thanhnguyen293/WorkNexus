@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/app_config.dart';
 import 'app_name_service.dart';
 
 /// The name service; `main` wires it to the tray, anything else gets one with
@@ -27,3 +28,9 @@ class AppNameController extends AsyncNotifier<String?> {
     return done;
   }
 }
+
+/// The name to call the app in text: the one the user gave it, else its own.
+/// What the strings that name the app are filled with.
+final appDisplayNameProvider = Provider<String>(
+  (ref) => ref.watch(appNameProvider).asData?.value ?? AppConfig.appName,
+);

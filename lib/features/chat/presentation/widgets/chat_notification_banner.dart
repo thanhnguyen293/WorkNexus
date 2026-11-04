@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -75,7 +76,7 @@ class _ChatNotificationBannerState
           SizedBox(width: s.lg),
           Expanded(
             child: Text(
-              l.chatNotificationsBlocked,
+              l.chatNotificationsBlocked(ref.watch(appDisplayNameProvider)),
               style: context.typography.secondary.copyWith(
                 color: c.textPrimary,
               ),

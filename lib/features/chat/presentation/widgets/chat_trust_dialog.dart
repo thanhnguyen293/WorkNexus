@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/app_name_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -107,7 +108,10 @@ class _ChatTrustDialogState extends ConsumerState<ChatTrustDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l.chatTrustBody(widget.request.host),
+              l.chatTrustBody(
+                widget.request.host,
+                ref.watch(appDisplayNameProvider),
+              ),
               style: context.typography.paragraph.copyWith(
                 color: c.textSecondary,
               ),

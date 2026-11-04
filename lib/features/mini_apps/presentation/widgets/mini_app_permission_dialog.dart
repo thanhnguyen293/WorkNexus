@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/platform/app_name_providers.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -14,7 +17,7 @@ import '../util/mini_app_permission_kind.dart';
 /// Asks whether the page of [site] may use [kinds]: what it wants in the
 /// title, what allowing it means under it, and the two answers. Resolves to
 /// the answer, or null when dismissed (neither remembered nor allowed).
-class MiniAppPermissionDialog extends StatelessWidget {
+class MiniAppPermissionDialog extends ConsumerWidget {
   const MiniAppPermissionDialog({
     super.key,
     required this.site,
@@ -34,7 +37,7 @@ class MiniAppPermissionDialog extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
@@ -68,7 +71,13 @@ class MiniAppPermissionDialog extends StatelessWidget {
           spacing: s.xl,
           children: [
             for (final kind in kinds)
-              _KindRow(kind: kind, description: kind.description(l)),
+              _KindRow(
+                kind: kind,
+                description: kind.description(
+                  l,
+                  ref.watch(appDisplayNameProvider),
+                ),
+              ),
             Text(
               l.miniAppPermissionRemembered,
               style: context.typography.caption.copyWith(color: c.textTertiary),

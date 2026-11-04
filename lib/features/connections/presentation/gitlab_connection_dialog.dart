@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/domain/value_objects/provider_type.dart';
+import '../../../core/platform/app_name_providers.dart';
 import '../../../core/platform/open_external.dart';
 import '../../../core/widgets/connection_text_field.dart';
 import '../../../l10n/app_localizations.dart';
@@ -145,7 +146,8 @@ class _GitLabConnectionDialogState
     final path = isSaaS
         ? '/-/user_settings/personal_access_tokens'
         : '/-/profile/personal_access_tokens';
-    final url = '$base$path?name=WorkNexus&scopes=api';
+    final name = Uri.encodeQueryComponent(ref.read(appDisplayNameProvider));
+    final url = '$base$path?name=$name&scopes=api';
     await openExternally(url);
   }
 
