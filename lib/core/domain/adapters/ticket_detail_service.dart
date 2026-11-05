@@ -14,6 +14,10 @@ abstract interface class TicketDetailService {
 
   Future<String?> cacheAttachment(Ticket ticket, TicketAttachment att);
 
+  /// A still frame of a video attachment, downloading it when it is small
+  /// enough; null when the video is too big or no frame can be made.
+  Future<Uint8List?> attachmentThumbnail(Ticket ticket, TicketAttachment att);
+
   Future<String?> saveAttachmentToDownloads(
     String localCachedPath,
     String suggestedFileName,

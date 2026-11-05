@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/chat/data/datasources/video_thumbnailer.dart';
+import 'package:work_nexus/core/platform/video_thumbnailer.dart';
 
 void main() {
   test('concurrent requests for one video share a single run', () async {
