@@ -51,6 +51,13 @@ class VideoStreamProxy {
       await VideoProxy.init(
         cacheDir: _cacheDir.path,
         maxStorageCacheSize: maxStorageMb,
+        // The proxy hands a segment to the player only once all of it has
+        // arrived, and a self-hosted server is slow per connection (ZenTao:
+        // ~0.4 MB/s each, more in parallel). Small segments fetched wide get
+        // the first frame out sooner: cold start of a 39 MB recording went
+        // from ~10-15 s (2 MB × 4) to ~5.5-7 s (1 MB × 8).
+        segmentSize: 1,
+        maxConcurrentDownloads: 8,
         urlMatcher: _AnyVideoIsMp4(),
       );
       return true;
