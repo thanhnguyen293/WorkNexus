@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
+import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -15,6 +16,8 @@ import '../../../../core/widgets/rich_body_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../util/activity_action_parts.dart';
 import '../util/image_fallback.dart';
+import 'attachment_kinds.dart';
+import 'attachment_video_frame.dart';
 import 'timeline_headline.dart';
 import 'timeline_item.dart';
 
@@ -80,6 +83,7 @@ class ActivityRow extends StatelessWidget {
     this.isLast = false,
     this.files = const [],
     this.onOpenFile,
+    this.ticket,
   });
   final ActivityEvent event;
   final bool isFirst;
@@ -90,6 +94,10 @@ class ActivityRow extends StatelessWidget {
   /// was since deleted) stays a plain label.
   final List<TicketAttachment> files;
   final ValueChanged<TicketAttachment>? onOpenFile;
+
+  /// The ticket [files] belong to; set, a video draws as a frame with a
+  /// still (as chat shows one) instead of a chip.
+  final Ticket? ticket;
 
   @override
   Widget build(BuildContext context) {
@@ -128,19 +136,33 @@ class ActivityRow extends StatelessWidget {
               runSpacing: s.xs,
               children: [
                 for (final name in event.attachments)
-                  _AttachmentChip(
-                    name,
-                    onTap: switch ((onOpenFile, _fileNamed(name))) {
-                      (final open?, final file?) => () => open(file),
-                      _ => null,
-                    },
-                  ),
+                  switch ((onOpenFile, _fileNamed(name), ticket)) {
+                    (final open?, final file?, final t?)
+                        when kVideoExts.contains(_extOf(file)) =>
+                      AttachmentVideoFrame(
+                        ticket: t,
+                        attachment: file,
+                        onTap: () => open(file),
+                      ),
+                    (final open?, final file?, _) => _AttachmentChip(
+                      name,
+                      onTap: () => open(file),
+                    ),
+                    _ => _AttachmentChip(name),
+                  },
               ],
             ),
           ],
         ],
       ),
     );
+  }
+
+  static String _extOf(TicketAttachment file) {
+    final ext = file.extension;
+    if (ext != null) return ext.toLowerCase();
+    final dot = file.title.lastIndexOf('.');
+    return dot < 0 ? '' : file.title.substring(dot + 1).toLowerCase();
   }
 
   TicketAttachment? _fileNamed(String name) {
@@ -187,22 +209,25 @@ class _AttachmentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final tappable = onTap != null;
+    // A file that opens reads as a link (accent, with its kind's icon) so it
+    // doesn't look like the static label of a file that's gone.
+    final ink = tappable ? c.accent : c.textSecondary;
     return HoverSurface(
       onTap: onTap,
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.sm,
         vertical: context.spacing.xxs,
       ),
-      color: c.surfaceSubtle,
+      color: tappable ? c.selectionFill : c.surfaceSubtle,
       borderRadius: BorderRadius.circular(context.radii.sm),
-      border: Border.all(color: c.border),
+      border: Border.all(color: tappable ? c.selectionBorder : c.border),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            LucideIcons.paperclip300,
+            tappable ? _iconFor(name) : LucideIcons.paperclip300,
             size: context.sizes.iconXs,
-            color: c.textTertiary,
+            color: tappable ? ink : c.textTertiary,
           ),
           SizedBox(width: context.spacing.xs),
           Flexible(
@@ -210,13 +235,19 @@ class _AttachmentChip extends StatelessWidget {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typography.caption.copyWith(
-                color: tappable ? c.textPrimary : c.textSecondary,
-              ),
+              style: context.typography.caption.copyWith(color: ink),
             ),
           ),
         ],
       ),
     );
+  }
+
+  static IconData _iconFor(String name) {
+    final dot = name.lastIndexOf('.');
+    final ext = dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
+    if (kVideoExts.contains(ext)) return LucideIcons.circlePlay300;
+    if (kImageExts.contains(ext)) return LucideIcons.image300;
+    return LucideIcons.eye300;
   }
 }
