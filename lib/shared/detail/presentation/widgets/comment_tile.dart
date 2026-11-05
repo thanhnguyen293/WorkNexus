@@ -3,11 +3,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/inline_image.dart';
 import '../../../../core/widgets/rich_body_text.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -76,10 +78,18 @@ class ActivityRow extends StatelessWidget {
     super.key,
     this.isFirst = false,
     this.isLast = false,
+    this.files = const [],
+    this.onOpenFile,
   });
   final ActivityEvent event;
   final bool isFirst;
   final bool isLast;
+
+  /// The ticket's attachments. The event only names its files, so a chip
+  /// opens the attachment whose title matches; one with no match (the file
+  /// was since deleted) stays a plain label.
+  final List<TicketAttachment> files;
+  final ValueChanged<TicketAttachment>? onOpenFile;
 
   @override
   Widget build(BuildContext context) {
@@ -117,13 +127,28 @@ class ActivityRow extends StatelessWidget {
               spacing: s.xs,
               runSpacing: s.xs,
               children: [
-                for (final name in event.attachments) _AttachmentChip(name),
+                for (final name in event.attachments)
+                  _AttachmentChip(
+                    name,
+                    onTap: switch ((onOpenFile, _fileNamed(name))) {
+                      (final open?, final file?) => () => open(file),
+                      _ => null,
+                    },
+                  ),
               ],
             ),
           ],
         ],
       ),
     );
+  }
+
+  TicketAttachment? _fileNamed(String name) {
+    final key = name.trim().toLowerCase();
+    for (final f in files) {
+      if (f.title.trim().toLowerCase() == key) return f;
+    }
+    return null;
   }
 }
 
@@ -151,25 +176,26 @@ class _NoteCard extends StatelessWidget {
   }
 }
 
-/// A read-only chip naming a file attached in a state-change comment (e.g. a
-/// reopen with an added screen recording).
+/// A chip naming a file attached in a state-change comment (e.g. a reopen
+/// with an added screen recording). Opens the file when [onTap] is set.
 class _AttachmentChip extends StatelessWidget {
-  const _AttachmentChip(this.name);
+  const _AttachmentChip(this.name, {this.onTap});
   final String name;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Container(
+    final tappable = onTap != null;
+    return HoverSurface(
+      onTap: onTap,
       padding: EdgeInsets.symmetric(
         horizontal: context.spacing.sm,
         vertical: context.spacing.xxs,
       ),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.sm),
-        border: Border.all(color: c.border),
-      ),
+      color: c.surfaceSubtle,
+      borderRadius: BorderRadius.circular(context.radii.sm),
+      border: Border.all(color: c.border),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -185,7 +211,7 @@ class _AttachmentChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.typography.caption.copyWith(
-                color: c.textSecondary,
+                color: tappable ? c.textPrimary : c.textSecondary,
               ),
             ),
           ),
