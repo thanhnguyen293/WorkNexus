@@ -2523,5 +2523,17 @@
   "@attachmentStorageUsed": {"placeholders": {"used": {"type": "String"}}},
   "attachmentStorageClear": "Clear",
   "attachmentStorageClearConfirm": "Delete the downloaded ticket videos and attachments? They download again when opened.",
-  "attachmentStorageFailed": "Couldn't read or clear the attachment storage"
+  "attachmentStorageFailed": "Couldn't read or clear the attachment storage",
+  "videoPlay": "Play (Space)",
+  "videoPause": "Pause (Space)",
+  "videoBack10": "Back 10 seconds (←)",
+  "videoForward10": "Forward 10 seconds (→)",
+  "videoMute": "Mute (M)",
+  "videoUnmute": "Unmute (M)",
+  "videoSpeed": "Playback speed",
+  "videoLoop": "Loop",
+  "videoExpand": "Expand (F)",
+  "videoCollapse": "Exit expanded (F)",
+  "videoBuffering": "Loading {percent}%",
+  "@videoBuffering": {"placeholders": {"percent": {"type": "int"}}}
 }
