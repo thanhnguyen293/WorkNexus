@@ -5,6 +5,7 @@ import '../../../../core/di/locator.dart';
 import '../../../../core/domain/adapters/ticket_detail_service.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
+import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -13,6 +14,7 @@ import '../../../../core/util/body_format.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
 import '../util/image_fallback.dart';
+import 'attachment_viewer_dialog.dart';
 import 'comment_composer.dart';
 import 'comment_tile.dart';
 
@@ -47,6 +49,11 @@ class CommentsSection extends ConsumerWidget {
         (ref.watch(activityProvider(ticket.id)).asData?.value ??
                 const <ActivityEvent>[])
             .where((a) => a.action != 'commented');
+    // Activity rows name their files; these are what a name resolves to.
+    final files = switch (ticket.providerEntity) {
+      ZenTaoBugEntity(:final attachments) => attachments,
+      _ => const <TicketAttachment>[],
+    };
     final items = <(DateTime, Object)>[
       for (final cm in comments) (cm.createdAt, cm),
       for (final a in activity) (a.at, a),
@@ -82,6 +89,8 @@ class CommentsSection extends ConsumerWidget {
                     a,
                     isFirst: i == 0,
                     isLast: i == items.length - 1,
+                    files: files,
+                    onOpenFile: (f) => showAttachmentViewer(context, ticket, f),
                   ),
                   _ => const SizedBox.shrink(),
                 },
