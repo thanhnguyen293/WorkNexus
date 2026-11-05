@@ -9,6 +9,7 @@ import '../../../../core/domain/adapters/repo_changes_adapter.dart';
 import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/media_request.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/repo_change.dart';
 import '../../../../core/domain/value_objects/ticket_sort.dart';
@@ -57,6 +58,11 @@ class GitLabAdapter implements GitLabMrAdapter, RepoChangesAdapter {
 
   @override
   Future<Uint8List?> downloadBytes(String url) => fetchBytes(url);
+
+  // Its files need the token as an Authorization header, which would then
+  // travel to the CDN a download redirects to: downloaded whole instead.
+  @override
+  Future<MediaRequest?> streamRequest(String url) async => null;
 
   @override
   Object? get rawClient => _client;
