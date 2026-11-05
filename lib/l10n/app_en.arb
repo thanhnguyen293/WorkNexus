@@ -2516,5 +2516,12 @@
   },
   "zentaoProductsGroup": "Products",
   "zentaoProjectsGroup": "Projects",
-  "zentaoPickExecution": "Pick an execution to see its tasks"
+  "zentaoPickExecution": "Pick an execution to see its tasks",
+  "attachmentStorage": "Ticket videos & attachments",
+  "attachmentStorageHint": "Videos played from tickets are kept so they open instantly next time; files opened this session sit alongside them.",
+  "attachmentStorageUsed": "Using {used}",
+  "@attachmentStorageUsed": {"placeholders": {"used": {"type": "String"}}},
+  "attachmentStorageClear": "Clear",
+  "attachmentStorageClearConfirm": "Delete the downloaded ticket videos and attachments? They download again when opened.",
+  "attachmentStorageFailed": "Couldn't read or clear the attachment storage"
 }

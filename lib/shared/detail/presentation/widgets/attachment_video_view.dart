@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/domain/value_objects/media_request.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -14,36 +15,69 @@ import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 
-/// In-app video playback for a cached attachment file, with a tap-to-toggle
-/// play/pause overlay and a scrub bar. Owns its [VideoPlayerController].
+/// In-app video playback for an attachment, with a tap-to-toggle play/pause
+/// overlay and a scrub bar. Streams it when [stream] gives a source (it plays
+/// while the rest downloads), else — or when that fails — plays the file
+/// [download] fetches whole. Owns its [VideoPlayerController].
 class AttachmentVideoView extends StatefulWidget {
-  const AttachmentVideoView({super.key, required this.path});
+  const AttachmentVideoView({
+    super.key,
+    required this.stream,
+    required this.download,
+  });
 
-  final String path;
+  final Future<MediaRequest?> Function() stream;
+  final Future<String?> Function() download;
 
   @override
   State<AttachmentVideoView> createState() => _AttachmentVideoViewState();
 }
 
 class _AttachmentVideoViewState extends State<AttachmentVideoView> {
-  late final VideoPlayerController _controller;
-  bool _ready = false;
+  VideoPlayerController? _player;
   bool _failed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.path))
-      ..initialize()
-          .then((_) {
-            if (!mounted) return;
-            setState(() => _ready = true);
-          })
-          .catchError((_) {
-            if (!mounted) return;
-            setState(() => _failed = true);
-          });
-    _controller.addListener(_tick);
+    _open();
+  }
+
+  Future<void> _open() async {
+    final stream = await widget.stream();
+    if (stream != null &&
+        await _use(
+          VideoPlayerController.networkUrl(
+            stream.uri,
+            httpHeaders: stream.headers,
+          ),
+        )) {
+      return;
+    }
+    // No stream, or it didn't start (an expired session, a format the proxy
+    // can't serve): fetch the whole file as before.
+    final path = mounted ? await widget.download() : null;
+    if (path != null && await _use(VideoPlayerController.file(File(path)))) {
+      return;
+    }
+    if (mounted) setState(() => _failed = true);
+  }
+
+  /// Starts [player]; keeps it if it is ready and this view still shows.
+  Future<bool> _use(VideoPlayerController player) async {
+    try {
+      await player.initialize().timeout(const Duration(seconds: 20));
+    } on Exception {
+      await player.dispose();
+      return false;
+    }
+    if (!mounted) {
+      await player.dispose();
+      return false;
+    }
+    player.addListener(_tick);
+    setState(() => _player = player);
+    return true;
   }
 
   void _tick() {
@@ -52,14 +86,17 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
 
   @override
   void dispose() {
-    _controller.removeListener(_tick);
-    _controller.dispose();
+    _player
+      ?..removeListener(_tick)
+      ..dispose();
     super.dispose();
   }
 
   void _toggle() {
+    final player = _player;
+    if (player == null) return;
     setState(() {
-      _controller.value.isPlaying ? _controller.pause() : _controller.play();
+      player.value.isPlaying ? player.pause() : player.play();
     });
   }
 
@@ -70,8 +107,9 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
     if (_failed) {
       return AppStateView.error(title: l.attachmentLoadFailed);
     }
-    if (!_ready) return const AppStateView.loading();
-    final playing = _controller.value.isPlaying;
+    final player = _player;
+    if (player == null) return const AppStateView.loading();
+    final playing = player.value.isPlaying;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -86,8 +124,8 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
               alignment: Alignment.center,
               children: [
                 AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
+                  aspectRatio: player.value.aspectRatio,
+                  child: VideoPlayer(player),
                 ),
                 if (!playing)
                   Container(
@@ -122,11 +160,11 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
                 onPressed: _toggle,
               ),
               SizedBox(width: context.spacing.md),
-              Expanded(child: _SeekBar(controller: _controller)),
+              Expanded(child: _SeekBar(controller: player)),
               SizedBox(width: context.spacing.md),
               Text(
-                '${_fmt(_controller.value.position)} / '
-                '${_fmt(_controller.value.duration)}',
+                '${_fmt(player.value.position)} / '
+                '${_fmt(player.value.duration)}',
                 style: context.typography.mono.copyWith(color: c.textSecondary),
               ),
             ],

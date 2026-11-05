@@ -344,7 +344,8 @@ TicketProviderEntity _zentaoBugEntity(
 
 /// Maps ZenTao's id-keyed `files` map onto domain [TicketAttachment]s. Prefers
 /// the payload's absolute `url`; falls back to the classic
-/// `{base}/file-download-{id}.{ext}` when it's missing.
+/// `{base}/file-download-{id}.{ext}` when it's missing. `webPath` becomes the
+/// attachment's stream URL.
 List<TicketAttachment> zentaoAttachments(ZenTaoEntity e, String baseUrl) {
   final base = baseUrl.endsWith('/')
       ? baseUrl.substring(0, baseUrl.length - 1)
@@ -360,6 +361,7 @@ List<TicketAttachment> zentaoAttachments(ZenTaoEntity e, String baseUrl) {
         (ext == null ? 'file-$id' : 'file-$id.$ext');
     final url =
         _text(f.url) ?? '$base/file-download-$id${ext == null ? '' : '.$ext'}';
+    final webPath = _text(f.webPath);
     out.add(
       TicketAttachment(
         id: id,
@@ -369,6 +371,11 @@ List<TicketAttachment> zentaoAttachments(ZenTaoEntity e, String baseUrl) {
         size: f.size,
         addedBy: _text(f.addedBy),
         addedDate: parseZenTaoDate(f.addedDate),
+        // Apache serves it with byte ranges; `file-download` streams the whole
+        // file through PHP, so a player could only start once it all arrived.
+        streamUrl: webPath == null
+            ? null
+            : Uri.parse(base).resolve(webPath).toString(),
       ),
     );
   }

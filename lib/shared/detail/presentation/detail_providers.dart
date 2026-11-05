@@ -11,6 +11,7 @@ import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/repositories/activity_repository.dart';
 import '../../../core/domain/repositories/comment_repository.dart';
+import '../../../core/error/result.dart';
 
 enum DetailTab { original, translation }
 
@@ -52,3 +53,8 @@ final attachmentThumbnailProvider = FutureProvider.autoDispose
       (ref, key) =>
           getIt<TicketDetailService>().attachmentThumbnail(key.$1, key.$2),
     );
+
+/// Disk taken by downloaded ticket attachments and kept stream videos.
+final attachmentStorageBytesProvider = FutureProvider.autoDispose<Result<int>>(
+  (ref) => getIt<TicketDetailService>().attachmentStorageBytes(),
+);

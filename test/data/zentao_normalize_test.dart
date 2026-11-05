@@ -243,6 +243,7 @@ void main() {
             'addedBy': 'Ryan',
             'addedDate': '2026-05-21 00:00:00',
             'url': 'https://z.example.com/zentao/file-download-11548.json',
+            'webPath': '/zentao/data/upload/1/202605/2114013906a1b2',
           },
           '7931': {
             'id': 7931,
@@ -276,6 +277,13 @@ void main() {
         'https://z.example.com/zentao/file-download-11548.json',
       );
       expect(bug.attachments.last.addedDate, isNotNull);
+      // webPath (served with byte ranges) becomes the stream URL; without
+      // one there is nothing to stream.
+      expect(
+        bug.attachments.last.streamUrl,
+        'https://z.example.com/zentao/data/upload/1/202605/2114013906a1b2',
+      );
+      expect(bug.attachments.first.streamUrl, isNull);
     });
 
     test('no files → empty attachments, null activatedCount', () {
