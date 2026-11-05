@@ -1723,5 +1723,16 @@
   "attachmentStorageUsed": "Đang dùng {used}",
   "attachmentStorageClear": "Xoá",
   "attachmentStorageClearConfirm": "Xoá video và tệp đính kèm ticket đã tải? Mở lại sẽ tải lại.",
-  "attachmentStorageFailed": "Không đọc hoặc xoá được bộ nhớ tệp đính kèm"
+  "attachmentStorageFailed": "Không đọc hoặc xoá được bộ nhớ tệp đính kèm",
+  "videoPlay": "Phát (Space)",
+  "videoPause": "Tạm dừng (Space)",
+  "videoBack10": "Lùi 10 giây (←)",
+  "videoForward10": "Tới 10 giây (→)",
+  "videoMute": "Tắt tiếng (M)",
+  "videoUnmute": "Bật tiếng (M)",
+  "videoSpeed": "Tốc độ phát",
+  "videoLoop": "Lặp lại",
+  "videoExpand": "Mở rộng (F)",
+  "videoCollapse": "Thu nhỏ (F)",
+  "videoBuffering": "Đang tải {percent}%"
 }
