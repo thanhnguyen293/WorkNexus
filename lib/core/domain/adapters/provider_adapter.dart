@@ -5,6 +5,7 @@ import '../../util/cancel_signal.dart';
 import '../entities/activity_event.dart';
 import '../entities/comment.dart';
 import '../entities/ticket.dart';
+import '../value_objects/media_request.dart';
 import '../value_objects/provider_type.dart';
 import '../value_objects/ticket_sort.dart';
 
@@ -259,6 +260,10 @@ abstract class ProviderAdapter {
 
   /// Downloads raw bytes for an attachment URL.
   Future<Uint8List?> downloadBytes(String url) async => null;
+
+  /// How a player can fetch an attachment's stream [url] itself (with the
+  /// session it needs); null when only [downloadBytes] can get the file.
+  Future<MediaRequest?> streamRequest(String url) async => null;
 
   /// Optional underlying client object (e.g. ZenTaoClient, GitLabClient) for tool services.
   Object? get rawClient => null;

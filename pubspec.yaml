@@ -56,6 +56,10 @@ dependencies:
   # (video_player_avfoundation) is a standard method-channel plugin — not a
   # native-assets/FFI build hook — so it does not affect build_runner.
   video_player: 2.14.1
+  # Streams an attachment video through a localhost caching proxy, so it plays
+  # while it downloads instead of after the whole file is fetched. Its
+  # downloader forwards the player's headers (the ZenTao session) upstream.
+  flutter_video_caching: 1.1.6
   # Telegram sticker import: renders an animated (.tgs) sticker's Lottie frames
   # so they can become an animated WebP. Pure Dart (no native-assets hook).
   lottie: 3.6.1

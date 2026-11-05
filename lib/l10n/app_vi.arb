@@ -1717,5 +1717,11 @@
   "workspaceCreateFailed": "Không tạo được workspace: {error}",
   "zentaoProductsGroup": "Product",
   "zentaoProjectsGroup": "Project",
-  "zentaoPickExecution": "Chọn một bản thực thi để xem task"
+  "zentaoPickExecution": "Chọn một bản thực thi để xem task",
+  "attachmentStorage": "Video & tệp đính kèm ticket",
+  "attachmentStorageHint": "Video đã phát từ ticket được giữ lại để lần sau mở ngay; tệp đã mở trong phiên này cũng nằm ở đây.",
+  "attachmentStorageUsed": "Đang dùng {used}",
+  "attachmentStorageClear": "Xoá",
+  "attachmentStorageClearConfirm": "Xoá video và tệp đính kèm ticket đã tải? Mở lại sẽ tải lại.",
+  "attachmentStorageFailed": "Không đọc hoặc xoá được bộ nhớ tệp đính kèm"
 }

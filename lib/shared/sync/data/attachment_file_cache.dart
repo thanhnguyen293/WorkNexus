@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../../../core/platform/directory_size.dart';
+
 /// On-disk cache for downloaded ticket attachments (repro videos, screenshots),
 /// backing [SyncService.cacheAttachment] so the in-app viewer reads a local
 /// file instead of refetching. Two safeguards keep it from growing without
@@ -41,6 +43,9 @@ class AttachmentFileCache {
     await _enforceCap();
     return file.path;
   }
+
+  /// Bytes the cached files take.
+  Future<int> sizeBytes() => directoryBytes(_root);
 
   /// Deletes the entire cache directory. Call once at startup so the cache is
   /// scoped to a single app session.

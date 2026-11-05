@@ -18,9 +18,11 @@ import '../../../core/domain/entities/comment.dart';
 import '../../../core/domain/entities/provider_entity.dart';
 import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/repositories/sync_status_repository.dart';
+import '../../../core/domain/value_objects/media_request.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/platform/video_stream_proxy.dart';
 import '../../../core/platform/video_thumbnailer.dart';
 import 'attachment_file_cache.dart';
 import 'merge_detail_labels.dart';
@@ -39,7 +41,9 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     AttachmentFileCache? attachmentCache,
     SyncStatusRepository? statusRepository,
     this._thumbnailer = const VideoThumbnailer(),
+    VideoStreamProxy? streamProxy,
   }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
+       _streamProxy = streamProxy ?? VideoStreamProxy(),
        _statusRepo = statusRepository,
        _adapters = ProviderAdapterPool(_db, _credentials, _registry),
        _store = TicketStore(_db),
@@ -50,6 +54,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   final ProviderAdapterRegistry _registry;
   final AttachmentFileCache _attachmentCache;
   final VideoThumbnailer _thumbnailer;
+  final VideoStreamProxy _streamProxy;
   final SyncStatusRepository? _statusRepo;
   final ProviderAdapterPool _adapters;
   final TicketStore _store;
@@ -254,6 +259,24 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     }
   }
 
+  @override
+  Future<MediaRequest?> attachmentStream(
+    Ticket ticket,
+    TicketAttachment att,
+  ) async {
+    try {
+      final url = att.streamUrl;
+      if (url == null) return null;
+      final adapter = await adapterFor(ticket.accountId);
+      final origin = await adapter?.streamRequest(url);
+      if (origin == null) return null;
+      final local = await _streamProxy.localUri(origin.uri);
+      return local == null ? null : (uri: local, headers: origin.headers);
+    } on Exception {
+      return null;
+    }
+  }
+
   /// Videos above this are only framed once opened (and so downloaded): a
   /// ticket's timeline shouldn't pull in every large recording up front.
   /// Matches chat's default auto-download limit.
@@ -272,6 +295,30 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     final path = existing ?? await cacheAttachment(ticket, att);
     if (path == null) return null;
     return _thumbnailer.thumbnailOf(path);
+  }
+
+  @override
+  Future<Result<int>> attachmentStorageBytes() async {
+    try {
+      final sizes = await Future.wait([
+        _attachmentCache.sizeBytes(),
+        _streamProxy.sizeBytes(),
+      ]);
+      return Ok(sizes[0] + sizes[1]);
+    } on FileSystemException catch (e) {
+      return Err(StorageFailure(e.message, cause: e));
+    }
+  }
+
+  @override
+  Future<Result<void>> clearAttachmentStorage() async {
+    try {
+      await _attachmentCache.purge();
+      await _streamProxy.clear();
+      return const Ok(null);
+    } on FileSystemException catch (e) {
+      return Err(StorageFailure(e.message, cause: e));
+    }
   }
 
   Future<void> purgeAttachmentCache() => _attachmentCache.purge();

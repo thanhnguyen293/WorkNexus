@@ -9,6 +9,7 @@ import '../../../../core/domain/entities/activity_event.dart';
 import '../../../../core/domain/entities/comment.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/media_request.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/error/failure.dart';
@@ -47,6 +48,9 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
 
   @override
   Future<Uint8List?> downloadBytes(String url) => _client.downloadBytes(url);
+
+  @override
+  Future<MediaRequest?> streamRequest(String url) => _client.streamRequest(url);
 
   @override
   Object? get rawClient => _client;

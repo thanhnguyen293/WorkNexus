@@ -1080,4 +1080,26 @@ void main() {
       expect(got.above, isNull);
     });
   });
+
+  test(
+    'streamRequest hands a player the session for an on-server file',
+    () async {
+      final fake = _FakeAdapter((opts) {
+        if (opts.path.endsWith('/tokens')) return _json({'token': 'tok123'});
+        return _json({});
+      });
+      final client = _client(fake);
+
+      final req = await client.streamRequest('/file-download-7.mp4');
+
+      expect(req?.uri.host, 'zentao.example.com');
+      expect(req?.uri.queryParameters['zentaosid'], 'tok123');
+      expect(req?.headers, {'Cookie': 'zentaosid=tok123', 'Token': 'tok123'});
+      // Another host never receives the session.
+      expect(
+        await client.streamRequest('https://cdn.example.org/a.mp4'),
+        isNull,
+      );
+    },
+  );
 }

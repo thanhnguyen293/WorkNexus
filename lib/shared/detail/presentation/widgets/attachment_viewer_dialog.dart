@@ -47,16 +47,24 @@ class AttachmentViewerDialog extends ConsumerStatefulWidget {
 
 class _AttachmentViewerDialogState
     extends ConsumerState<AttachmentViewerDialog> {
-  late final Future<String?> _pathFuture;
+  Future<String?>? _pathFuture;
   String? _path;
   bool _loading = true;
   bool _saving = false;
 
+  bool get _isVideo =>
+      kVideoExts.contains(widget.attachment.extension?.toLowerCase() ?? '');
+
   @override
   void initState() {
     super.initState();
-    _pathFuture = _load();
+    // A video streams, so it is only downloaded whole to save it (or when
+    // streaming fails); anything else is shown from the downloaded file.
+    if (!_isVideo) _download();
   }
+
+  /// The one download of the file, shared by the preview and Save.
+  Future<String?> _download() => _pathFuture ??= _load();
 
   Future<String?> _load() async {
     final path = await getIt<TicketDetailService>().cacheAttachment(
@@ -77,7 +85,7 @@ class _AttachmentViewerDialogState
     setState(() => _saving = true);
     // Download is always enabled; if the preview is still caching, await that
     // same fetch rather than starting a second one.
-    final path = _path ?? await _pathFuture;
+    final path = _path ?? await _download();
     final saved = path == null
         ? null
         : await getIt<TicketDetailService>().saveAttachmentToDownloads(
@@ -118,11 +126,17 @@ class _AttachmentViewerDialogState
               onClose: () => Navigator.of(context).pop(),
             ),
             Flexible(
-              child: _ViewerBody(
-                loading: _loading,
-                path: _path,
-                attachment: widget.attachment,
-              ),
+              child: _isVideo
+                  ? AttachmentVideoView(
+                      stream: () => getIt<TicketDetailService>()
+                          .attachmentStream(widget.ticket, widget.attachment),
+                      download: _download,
+                    )
+                  : _ViewerBody(
+                      loading: _loading,
+                      path: _path,
+                      attachment: widget.attachment,
+                    ),
             ),
           ],
         ),
@@ -131,8 +145,9 @@ class _AttachmentViewerDialogState
   }
 }
 
-/// What the viewer shows under its header: a spinner while the file caches,
-/// then the image / video, or why there is nothing to preview.
+/// What the viewer shows under its header for a file that isn't a video: a
+/// spinner while it caches, then the image, or why there is nothing to
+/// preview.
 class _ViewerBody extends StatelessWidget {
   const _ViewerBody({
     required this.loading,
@@ -158,9 +173,6 @@ class _ViewerBody extends StatelessWidget {
         maxScale: 5,
         child: Center(child: Image.file(File(path))),
       );
-    }
-    if (kVideoExts.contains(ext)) {
-      return AttachmentVideoView(path: path);
     }
     return AppStateView.empty(
       icon: LucideIcons.file300,

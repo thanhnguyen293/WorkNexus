@@ -9,13 +9,15 @@ import '../../core/widgets/app_dialog_frame.dart';
 import '../../features/chat/presentation/widgets/chat_storage_panel.dart';
 import '../../features/connections/presentation/widgets/local_cache_panel.dart';
 import '../../l10n/app_localizations.dart';
+import '../../shared/detail/presentation/widgets/attachment_storage_panel.dart';
 import 'reload_after_cache_clear.dart';
 
 /// Tallest the dialog grows, in logical pixels.
 const _maxHeight = 900.0;
 
-/// The one place to free space: downloaded chat files on top, the synced
-/// local data below. Lives in the app because it joins two features.
+/// The one place to free space: downloaded chat files on top, then ticket
+/// attachments and videos, the synced local data below. Lives in the app
+/// because it joins several features.
 class StorageDialog extends ConsumerWidget {
   const StorageDialog({super.key});
 
@@ -41,6 +43,9 @@ class StorageDialog extends ConsumerWidget {
           children: [
             _SectionTitle(l.chatStorage),
             const ChatStoragePanel(),
+            Divider(height: s.xl5 * 2, color: c.border),
+            _SectionTitle(l.attachmentStorage),
+            const AttachmentStoragePanel(),
             Divider(height: s.xl5 * 2, color: c.border),
             _SectionTitle(l.localCacheTitle),
             LocalCachePanel(

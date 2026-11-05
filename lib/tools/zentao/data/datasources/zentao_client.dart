@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import '../../../../core/debug/app_talker.dart';
+import '../../../../core/domain/value_objects/media_request.dart';
 import '../../../../core/network/api_paging.dart';
 import '../../../../core/util/cancel_signal.dart';
 import '../models/zentao_models.dart';
@@ -644,6 +645,23 @@ class ZenTaoClient {
   /// by the detail panel's attachment "open" action. Returns null on failure.
   Future<Uint8List?> downloadBytes(String url) =>
       _authedBytes(url, imageOnly: false);
+
+  /// The URL and session headers a player needs to fetch attachment [url]
+  /// itself — ZenTao takes the session as a `zentaosid` cookie, header and
+  /// query param, as in [_authedBytes]. Null for a URL off this server (it
+  /// carries no session to hand over).
+  Future<MediaRequest?> streamRequest(String url) async {
+    final base = Uri.parse('$baseUrl/');
+    final resolved = base.resolveUri(Uri.parse(url));
+    if (resolved.host != base.host) return null;
+    final token = await _ensureToken();
+    return (
+      uri: resolved.replace(
+        queryParameters: {...resolved.queryParameters, 'zentaosid': token},
+      ),
+      headers: {'Cookie': 'zentaosid=$token', 'Token': token},
+    );
+  }
 
   /// Shared transport for [fetchBytes]/[downloadBytes]: attaches the session id
   /// as a `zentaosid` cookie (ZenTao's session mechanism) plus the `Token`
