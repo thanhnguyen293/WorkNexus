@@ -203,6 +203,11 @@ abstract class TicketAttachment with _$TicketAttachment {
     int? size,
     String? addedBy,
     DateTime? addedDate,
+
+    /// Where a player can stream the file from, when the provider serves it
+    /// with byte ranges (ZenTao's static upload path, which its web viewer
+    /// plays; [url] goes through a download script that ignores ranges).
+    String? streamUrl,
   }) = _TicketAttachment;
 
   factory TicketAttachment.fromJson(Map<String, dynamic> json) =>

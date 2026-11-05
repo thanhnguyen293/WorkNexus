@@ -90,6 +90,7 @@ class ZenTaoFile {
     this.extension,
     this.size,
     this.url,
+    this.webPath,
     this.addedBy,
     this.addedDate,
   });
@@ -101,6 +102,9 @@ class ZenTaoFile {
   @JsonKey(fromJson: zentaoInt)
   final int? size;
   final Object? url;
+
+  /// The file's static path under the web root (`/zentao/data/upload/…`).
+  final Object? webPath;
   final Object? addedBy;
   final Object? addedDate;
 
