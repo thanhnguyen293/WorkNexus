@@ -8,6 +8,7 @@ import '../../../../core/di/locator.dart';
 import '../../../../core/domain/adapters/ticket_detail_service.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/widgets/app_snack.dart';
@@ -51,6 +52,22 @@ class _AttachmentViewerDialogState
   String? _path;
   bool _loading = true;
   bool _saving = false;
+
+  /// The window went full screen for the video: the viewer fills it.
+  bool _expanded = false;
+  final _window = const DesktopWindowService();
+
+  Future<void> _toggleExpanded() async {
+    setState(() => _expanded = !_expanded);
+    await _window.toggleFullScreen();
+  }
+
+  @override
+  void dispose() {
+    // Closing the viewer leaves full screen too.
+    if (_expanded) _window.exitFullScreen();
+    super.dispose();
+  }
 
   bool get _isVideo =>
       kVideoExts.contains(widget.attachment.extension?.toLowerCase() ?? '');
@@ -108,14 +125,19 @@ class _AttachmentViewerDialogState
     final size = MediaQuery.of(context).size;
     return Dialog(
       backgroundColor: c.card,
+      insetPadding: _expanded ? EdgeInsets.zero : null,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(context.radii.lg),
+        borderRadius: _expanded
+            ? BorderRadius.zero
+            : BorderRadius.circular(context.radii.lg),
       ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: (size.width * 0.8).clamp(360.0, 960.0),
-          maxHeight: (size.height * 0.85).clamp(320.0, 720.0),
-        ),
+        constraints: _expanded
+            ? BoxConstraints.tight(size)
+            : BoxConstraints(
+                maxWidth: (size.width * 0.8).clamp(360.0, 960.0),
+                maxHeight: (size.height * 0.85).clamp(320.0, 720.0),
+              ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -131,6 +153,8 @@ class _AttachmentViewerDialogState
                       stream: () => getIt<TicketDetailService>()
                           .attachmentStream(widget.ticket, widget.attachment),
                       download: _download,
+                      expanded: _expanded,
+                      onToggleExpand: _toggleExpanded,
                     )
                   : _ViewerBody(
                       loading: _loading,

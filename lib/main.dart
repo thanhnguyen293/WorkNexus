@@ -44,10 +44,13 @@ Future<void> main(List<String> arguments) async {
     await LinuxDesktopEntry().ensureInstalled();
   }
   // The official video_player has no Windows/Linux implementation; fvp
-  // (libmdk) provides one there, so chat videos play in-app everywhere.
+  // (libmdk) provides one there, so chat videos play in-app everywhere. On
+  // macOS it replaces AVFoundation too: AVPlayer holds a stream back until it
+  // predicts no stall (half a slow ZenTao recording), while mdk starts once
+  // about a second is buffered and catches up as it plays.
   fvp.registerWith(
     options: {
-      'platforms': ['windows', 'linux'],
+      'platforms': ['windows', 'linux', 'macos'],
     },
   );
 
