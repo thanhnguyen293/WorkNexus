@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/locator.dart';
@@ -5,6 +7,8 @@ import '../../../core/di/providers.dart';
 import '../../../core/domain/adapters/ticket_detail_service.dart';
 import '../../../core/domain/entities/activity_event.dart';
 import '../../../core/domain/entities/comment.dart';
+import '../../../core/domain/entities/provider_entity.dart';
+import '../../../core/domain/entities/ticket.dart';
 import '../../../core/domain/repositories/activity_repository.dart';
 import '../../../core/domain/repositories/comment_repository.dart';
 
@@ -41,3 +45,10 @@ final ticketDetailSyncProvider = FutureProvider.autoDispose
       if (ticket == null) return;
       await getIt<TicketDetailService>().syncTicketDetail(ticket);
     });
+
+/// A still frame of a ticket's video attachment (null: none can be shown).
+final attachmentThumbnailProvider = FutureProvider.autoDispose
+    .family<Uint8List?, (Ticket, TicketAttachment)>(
+      (ref, key) =>
+          getIt<TicketDetailService>().attachmentThumbnail(key.$1, key.$2),
+    );

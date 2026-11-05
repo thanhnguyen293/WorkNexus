@@ -91,6 +91,7 @@ class CommentsSection extends ConsumerWidget {
                     isLast: i == items.length - 1,
                     files: files,
                     onOpenFile: (f) => showAttachmentViewer(context, ticket, f),
+                    ticket: ticket,
                   ),
                   _ => const SizedBox.shrink(),
                 },

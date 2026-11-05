@@ -3,9 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/domain/entities/activity_event.dart';
 import 'package:work_nexus/core/domain/entities/provider_entity.dart';
+import 'package:work_nexus/core/domain/entities/ticket.dart';
+import 'package:work_nexus/core/domain/value_objects/priority.dart';
+import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
+import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/detail/presentation/detail_providers.dart';
+import 'package:work_nexus/shared/detail/presentation/widgets/attachment_video_frame.dart';
 import 'package:work_nexus/shared/detail/presentation/widgets/comment_tile.dart';
 
 void main() {
@@ -16,10 +22,30 @@ void main() {
     extension: 'mp4',
   );
 
-  Future<List<TicketAttachment>> pumpRow(WidgetTester tester) async {
+  const ticket = Ticket(
+    id: 'zentao:bug:1',
+    accountId: 'zt',
+    projectId: 'zt:P',
+    providerType: ProviderType.zentao,
+    externalKey: '1',
+    title: 't',
+    body: 'b',
+    priority: Priority.medium,
+    status: UnifiedStatus.todo,
+    providerStatus: 'active',
+    sourceHash: 'h',
+  );
+
+  Future<List<TicketAttachment>> pumpRow(
+    WidgetTester tester, {
+    Ticket? withTicket,
+  }) async {
     final opened = <TicketAttachment>[];
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          attachmentThumbnailProvider.overrideWith((ref, key) async => null),
+        ],
         child: MaterialApp(
           theme: buildAppTheme(
             variant: AppThemeVariant.dark,
@@ -40,6 +66,7 @@ void main() {
               ),
               files: const [rec],
               onOpenFile: opened.add,
+              ticket: withTicket,
             ),
           ),
         ),
@@ -62,5 +89,17 @@ void main() {
     await tester.tap(find.text('deleted.mp4'));
 
     expect(opened, isEmpty);
+  });
+
+  testWidgets('with its ticket, a video draws as a frame that opens it', (
+    tester,
+  ) async {
+    final opened = await pumpRow(tester, withTicket: ticket);
+    await tester.pump();
+
+    expect(find.byType(AttachmentVideoFrame), findsOneWidget);
+    await tester.tap(find.byType(AttachmentVideoFrame));
+
+    expect(opened, [rec]);
   });
 }

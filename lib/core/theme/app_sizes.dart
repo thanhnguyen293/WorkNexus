@@ -33,6 +33,7 @@ class AppSizes extends ThemeExtension<AppSizes> {
   double get boardColumn => 272; // one kanban column
   double get stateMessage => 360; // max line length of an empty / error message
   double get pageMaxWidth => 1000; // content of a full page (workspace pages)
+  double get mediaPreview => 360; // an inline video frame in a ticket timeline
 
   // ---- Shell layout (unified workspace shell) ----
   double get railWidth => 76;

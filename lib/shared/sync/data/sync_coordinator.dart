@@ -21,6 +21,7 @@ import '../../../core/domain/repositories/sync_status_repository.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/platform/video_thumbnailer.dart';
 import 'attachment_file_cache.dart';
 import 'merge_detail_labels.dart';
 import 'provider_adapter_pool.dart';
@@ -37,6 +38,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     required this._registry,
     AttachmentFileCache? attachmentCache,
     SyncStatusRepository? statusRepository,
+    this._thumbnailer = const VideoThumbnailer(),
   }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
        _statusRepo = statusRepository,
        _adapters = ProviderAdapterPool(_db, _credentials, _registry),
@@ -47,6 +49,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   final CredentialStore _credentials;
   final ProviderAdapterRegistry _registry;
   final AttachmentFileCache _attachmentCache;
+  final VideoThumbnailer _thumbnailer;
   final SyncStatusRepository? _statusRepo;
   final ProviderAdapterPool _adapters;
   final TicketStore _store;
@@ -249,6 +252,26 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Videos above this are only framed once opened (and so downloaded): a
+  /// ticket's timeline shouldn't pull in every large recording up front.
+  /// Matches chat's default auto-download limit.
+  static const _thumbnailAutoDownloadBytes = 20 * 1024 * 1024;
+
+  @override
+  Future<Uint8List?> attachmentThumbnail(
+    Ticket ticket,
+    TicketAttachment att,
+  ) async {
+    final safeName = _safeName(att.title);
+    final existing = await _attachmentCache.existing(att.id, safeName);
+    if (existing == null && (att.size ?? 0) > _thumbnailAutoDownloadBytes) {
+      return null;
+    }
+    final path = existing ?? await cacheAttachment(ticket, att);
+    if (path == null) return null;
+    return _thumbnailer.thumbnailOf(path);
   }
 
   Future<void> purgeAttachmentCache() => _attachmentCache.purge();
