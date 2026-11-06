@@ -30,6 +30,7 @@ import '../../core/domain/adapters/zentao_workflow_service.dart';
 import '../../core/domain/repositories/activity_repository.dart';
 import '../../core/domain/repositories/comment_repository.dart';
 import '../../core/domain/repositories/dev_link_repository.dart';
+import '../../core/domain/repositories/pinned_certificate_repository.dart';
 import '../../core/domain/repositories/sync_status_repository.dart';
 import '../../core/domain/repositories/ticket_repository.dart';
 import '../../core/domain/repositories/workspace_repository.dart';
@@ -59,6 +60,7 @@ import '../../features/chat/data/datasources/webp_sticker_converter.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
 import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/cached_link_preview_repository.dart';
+import '../../features/chat/data/repositories/chat_pinned_certificate_repository.dart';
 import '../../features/chat/data/repositories/keychain_telegram_token_store.dart';
 import '../../features/chat/data/repositories/local_message_translation_repository.dart';
 import '../../features/chat/data/repositories/local_sticker_repository.dart';
@@ -104,6 +106,7 @@ import '../../features/mini_apps/domain/repositories/web_view_cookie_repository.
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/check_cookie_imports.dart';
 import '../../features/mini_apps/domain/usecases/import_browser_cookies.dart';
+import '../../features/mini_apps/domain/usecases/is_pinned_certificate.dart';
 import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
 import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
@@ -580,6 +583,14 @@ abstract class ServiceModule {
     WebViewCookieRepository webView,
     CookieImportRepository imports,
   ) => ImportBrowserCookies(browsers, webView, imports);
+
+  @lazySingleton
+  PinnedCertificateRepository pinnedCertificateRepository(AppDatabase db) =>
+      ChatPinnedCertificateRepository(ChatLocalDatasource(db));
+
+  @lazySingleton
+  IsPinnedCertificate isPinnedCertificate(PinnedCertificateRepository pins) =>
+      IsPinnedCertificate(pins);
 
   @lazySingleton
   CheckCookieImports checkCookieImports(

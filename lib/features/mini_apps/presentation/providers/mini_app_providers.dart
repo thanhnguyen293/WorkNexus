@@ -13,6 +13,7 @@ import '../../domain/repositories/mini_app_permission_repository.dart';
 import '../../domain/repositories/mini_app_repository.dart';
 import '../../domain/usecases/add_mini_app.dart';
 import '../../domain/usecases/find_saved_web_login.dart';
+import '../../domain/usecases/is_pinned_certificate.dart';
 import '../../domain/usecases/move_mini_app.dart';
 import '../../domain/usecases/resolve_mini_app_permission.dart';
 import '../../domain/usecases/update_mini_app.dart';
@@ -33,6 +34,11 @@ final miniAppBrowsingDataRepositoryProvider =
     Provider<MiniAppBrowsingDataRepository>(
       (ref) => getIt<MiniAppBrowsingDataRepository>(),
     );
+
+/// Whether a page's server certificate is one the user pinned in the app.
+final isPinnedCertificateProvider = Provider<IsPinnedCertificate>(
+  (ref) => getIt<IsPinnedCertificate>(),
+);
 
 final addMiniAppProvider = Provider<AddMiniApp>((ref) => getIt<AddMiniApp>());
 

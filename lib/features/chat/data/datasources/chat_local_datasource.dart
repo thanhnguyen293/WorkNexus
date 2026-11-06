@@ -184,6 +184,12 @@ class ChatLocalDatasource {
           ))
           .write(ChatConversationsCompanion(lastReadIndex: Value(index)));
 
+  /// The certificate fingerprints pinned for the chat servers.
+  Future<List<String>> pinnedFingerprints() async => [
+    for (final row in await _db.select(_db.chatAccounts).get())
+      if (row.pinnedFingerprint case final pin? when pin.isNotEmpty) pin,
+  ];
+
   /// Ids of the accounts that have logged into chat.
   Future<List<String>> chatAccountIds() async => [
     for (final row in await _db.select(_db.chatAccounts).get()) row.accountId,
