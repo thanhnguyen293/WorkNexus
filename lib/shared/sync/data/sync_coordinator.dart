@@ -22,6 +22,7 @@ import '../../../core/domain/value_objects/media_request.dart';
 import '../../../core/error/failure.dart';
 import '../../../core/error/result.dart';
 import '../../../core/platform/credential_store.dart';
+import '../../../core/platform/media_playback_priority.dart';
 import '../../../core/platform/video_stream_proxy.dart';
 import '../../../core/platform/video_thumbnailer.dart';
 import 'attachment_file_cache.dart';
@@ -42,7 +43,9 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     SyncStatusRepository? statusRepository,
     this._thumbnailer = const VideoThumbnailer(),
     VideoStreamProxy? streamProxy,
+    MediaPlaybackPriority? priority,
   }) : _attachmentCache = attachmentCache ?? AttachmentFileCache(),
+       _priority = priority ?? mediaPlaybackPriority,
        _streamProxy = streamProxy ?? VideoStreamProxy(),
        _statusRepo = statusRepository,
        _adapters = ProviderAdapterPool(_db, _credentials, _registry),
@@ -55,6 +58,9 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
   final AttachmentFileCache _attachmentCache;
   final VideoThumbnailer _thumbnailer;
   final VideoStreamProxy _streamProxy;
+
+  /// A playing video loads first: preview downloads wait for it.
+  final MediaPlaybackPriority _priority;
   final SyncStatusRepository? _statusRepo;
   final ProviderAdapterPool _adapters;
   final TicketStore _store;
@@ -321,6 +327,8 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     if (existing == null && (att.size ?? 0) > _thumbnailAutoDownloadBytes) {
       return null;
     }
+    // A preview frame can wait: a playing video loads first.
+    if (existing == null) await _priority.idle();
     final path = existing ?? await cacheAttachment(ticket, att);
     if (path == null) return null;
     return _thumbnailer.thumbnailOf(path);

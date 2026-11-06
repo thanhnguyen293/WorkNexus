@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/platform/desktop_window_service.dart';
 import '../../../../core/platform/open_external.dart';
+import '../../../../core/platform/video_playback_hold.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -79,6 +80,9 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   final _window = const DesktopWindowService();
   VideoPlayerController? _player;
   String? _path;
+
+  /// Stops [_player] holding the network while it streams.
+  void Function()? _release;
   String? _error;
 
   /// The window went full screen for the video: the viewer fills it.
@@ -150,6 +154,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
     if (widget.startAt case final at?) await player.seekTo(at);
     if (!mounted) return player.dispose();
     final source = player.dataSource;
+    _release = holdWhileLoading(player);
     setState(() {
       _player = player;
       // "Open with" needs the file itself: only when it plays from disk.
@@ -163,6 +168,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   @override
   void dispose() {
     widget.onClosed?.call(_player?.value.position);
+    _release?.call();
     _player?.dispose();
     // Leaving the player leaves full screen too.
     _window.exitFullScreen();
