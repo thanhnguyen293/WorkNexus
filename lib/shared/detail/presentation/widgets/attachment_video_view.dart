@@ -25,6 +25,7 @@ class AttachmentVideoView extends StatefulWidget {
     required this.download,
     required this.expanded,
     required this.onToggleExpand,
+    this.sizeBytes,
   });
 
   final Future<MediaRequest?> Function() stream;
@@ -33,6 +34,9 @@ class AttachmentVideoView extends StatefulWidget {
   /// Whether the viewer fills the window; [onToggleExpand] flips it.
   final bool expanded;
   final VoidCallback onToggleExpand;
+
+  /// The file's size, for the loading speed.
+  final int? sizeBytes;
 
   @override
   State<AttachmentVideoView> createState() => _AttachmentVideoViewState();
@@ -131,7 +135,11 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child: AttachmentVideoPicture(player: player, onTap: _toggle),
+              child: AttachmentVideoPicture(
+                player: player,
+                onTap: _toggle,
+                sizeBytes: widget.sizeBytes,
+              ),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(s.lg, s.xs, s.lg, s.md),
