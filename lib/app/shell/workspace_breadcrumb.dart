@@ -65,6 +65,7 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
         ),
         ...switch (nav.rail) {
           WorkspaceTarget() => _buildWorkspaceSegments(context, nav, l),
+          ChatTarget() => _chatSegments(context, l),
           AccountTarget(:final accountId) => _buildAccountSegments(
             context,
             ref,
@@ -96,6 +97,17 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
       _Separator(color: c.textTertiary),
       Text(
         label,
+        style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),
+      ),
+    ];
+  }
+
+  List<Widget> _chatSegments(BuildContext context, AppL10n l) {
+    final c = context.colors;
+    return [
+      _Separator(color: c.textTertiary),
+      Text(
+        l.chat,
         style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),
       ),
     ];

@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/app/tool_registry.dart';
+import 'package:work_nexus/core/domain/entities/account.dart';
+import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/tools/tool_module.dart';
@@ -89,6 +92,38 @@ void main() {
       final loc = container.read(currentToolLocationProvider)!;
       expect(loc.scopeId, 's6');
       expect(loc.recentScopeIds, ['s6', 's5', 's4', 's3', 's2']);
+    });
+  });
+
+  group('chat', () {
+    const zentao = Account(
+      id: 'zt',
+      workspaceId: 'ws',
+      providerType: ProviderType.zentao,
+      handle: 'me',
+    );
+
+    test('the shell picking a default app leaves the chat open', () {
+      nav().selectChat();
+
+      // The shell asks this after every build.
+      nav().selectDefaultAppIfApplicable(
+        accounts: const [zentao],
+        registry: defaultToolRegistry,
+      );
+
+      expect(state().rail, const RailTarget.chat());
+    });
+
+    test('a workspace switch still moves on to its first app', () {
+      nav().selectChat();
+
+      nav().onWorkspaceSwitched(
+        newAccounts: const [zentao],
+        registry: defaultToolRegistry,
+      );
+
+      expect(state().rail, const RailTarget.account('zt'));
     });
   });
 

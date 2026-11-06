@@ -162,7 +162,7 @@ class GitlabModule extends ToolModule {
     tickets,
     accountId: switch (ref.watch(railTargetProvider)) {
       AccountTarget(:final accountId) => accountId,
-      WorkspaceTarget() => null,
+      WorkspaceTarget() || ChatTarget() => null,
     },
     scopeId: location.scopeId,
   );
