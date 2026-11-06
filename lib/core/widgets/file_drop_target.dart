@@ -69,7 +69,11 @@ class _FileDropTargetState extends State<FileDropTarget> {
   @override
   Widget build(BuildContext context) {
     return DropTarget(
-      enable: widget.enabled,
+      // desktop_drop hands a drop to every target whose box holds the point,
+      // shown or not, and the shell keeps hidden sections laid out under the
+      // visible one (their tickers off): a hidden chat would take a file
+      // dropped on a ticket's comment. Only a target on screen takes drops.
+      enable: widget.enabled && TickerMode.valuesOf(context).enabled,
       onDragEntered: (_) => _hover(true),
       onDragExited: (_) => _hover(false),
       onDragDone: _drop,
