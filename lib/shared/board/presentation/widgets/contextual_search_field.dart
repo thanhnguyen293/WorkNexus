@@ -4,25 +4,30 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/di/providers.dart';
-import '../../core/domain/entities/account.dart';
-import '../../core/domain/entities/ticket.dart';
-import '../../core/navigation/navigation_providers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radii.dart';
-import '../../core/theme/app_sizes.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import '../../l10n/app_localizations.dart';
-import '../../shared/board/domain/usecases/search_local_tickets.dart';
+import '../../../../core/di/providers.dart';
+import '../../../../core/domain/entities/account.dart';
+import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../domain/usecases/search_local_tickets.dart';
+import '../providers/board_providers.dart';
 import 'search_results_overlay.dart';
 import 'search_trailing_affordance.dart';
 
-/// Contextual search field in the title bar (design §7, specs S2.3).
+/// Contextual ticket search in a board's toolbar (design §7, specs S2.3).
 /// Features 150ms debounce, Ctrl/Cmd+K global focus, contextual placeholder,
 /// keyboard navigation (↑/↓/Enter/Esc), and anchors [SearchResultsOverlay].
 class ContextualSearchField extends ConsumerStatefulWidget {
-  const ContextualSearchField({super.key});
+  const ContextualSearchField({super.key, this.scope});
+
+  /// What the board on screen is scoped to (a product, an execution), for
+  /// the placeholder; without one it names the tool.
+  final String? scope;
 
   @override
   ConsumerState<ContextualSearchField> createState() =>
@@ -57,6 +62,9 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
 
   bool _handleGlobalKey(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
+    // Boards the viewport keeps mounted off screen hold a field too: only
+    // the one on screen takes Ctrl/Cmd+K.
+    if (!mounted || !TickerMode.valuesOf(context).enabled) return false;
     final isMetaOrControl =
         HardwareKeyboard.instance.isMetaPressed ||
         HardwareKeyboard.instance.isControlPressed;
@@ -93,18 +101,12 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
       return;
     }
 
-    final nav = ref.read(appNavProvider);
-    final accountId = switch (nav.rail) {
-      AccountTarget(:final accountId) => accountId,
-      WorkspaceTarget() || ChatTarget() || SettingsTarget() => null,
-    };
-    final tickets = ref.read(ticketsProvider).asData?.value ?? const <Ticket>[];
-
+    // Only what the board on screen is scoped to (the picked product or
+    // execution, tasks or bugs), before its chip filters.
     final matches = const SearchLocalTickets().call(
       SearchLocalTicketsInput(
-        tickets: tickets,
+        tickets: ref.read(scopedTicketsProvider),
         query: trimmed,
-        accountId: accountId,
       ),
     );
 
@@ -181,9 +183,12 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
     final l = AppL10n.of(context);
     final nav = ref.watch(appNavProvider);
     final accounts = ref.watch(accountsProvider).asData?.value ?? const [];
-    ref.watch(ticketsProvider);
+    ref.watch(scopedTicketsProvider);
 
-    final placeholder = _resolvePlaceholder(l, nav, accounts);
+    final scope = widget.scope;
+    final placeholder = scope != null
+        ? l.searchContextTool(scope)
+        : _resolvePlaceholder(l, nav, accounts);
 
     return OverlayPortal(
       controller: _portal,
@@ -216,7 +221,6 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
             onKeyEvent: _handleKeyEvent,
             child: Container(
               height: context.sizes.controlMd,
-              constraints: const BoxConstraints(maxWidth: 480),
               decoration: BoxDecoration(
                 color: c.surface,
                 borderRadius: BorderRadius.circular(r.md),
