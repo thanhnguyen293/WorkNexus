@@ -81,6 +81,8 @@ dependencies:
   # drift_dev: 2.35 needs analyzer 13+, which stable freezed 3.x does not
   # accept (freezed 4 needs Dart 3.13).
   drift: 2.34.4
+  # Reads the browsers' own cookie databases for the mini apps' cookie import.
+  sqlite3: 3.5.2
   drift_flutter: 0.3.1
 
   # Networking / secure storage.
@@ -157,7 +159,6 @@ dev_dependencies:
 
   # Testing
   mocktail: 1.0.5
-  sqlite3: 3.5.2
   yaml: 3.1.4
 
   # Type-safe asset references (assets/brands/*.svg → Assets.brands.*). The

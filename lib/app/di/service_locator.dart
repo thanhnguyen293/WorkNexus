@@ -76,21 +76,34 @@ import '../../features/connections/data/repositories/drift_local_cache_repositor
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/connections/domain/repositories/local_cache_repository.dart';
 import '../../features/connections/domain/usecases/clear_local_cache.dart';
+import '../../features/mini_apps/data/datasources/browser_cookies/chromium_cookie_reader.dart';
+import '../../features/mini_apps/data/datasources/browser_cookies/firefox_cookie_reader.dart';
+import '../../features/mini_apps/data/datasources/browser_cookies/safari_cookie_reader.dart';
+import '../../features/mini_apps/data/datasources/cookie_import_store.dart';
 import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
 import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
 import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
 import '../../features/mini_apps/data/datasources/trusted_certificate_store.dart';
 import '../../features/mini_apps/data/datasources/web_profile_datasource.dart';
+import '../../features/mini_apps/data/datasources/web_view_cookie_datasource.dart';
+import '../../features/mini_apps/data/repositories/local_browser_cookie_repository.dart';
+import '../../features/mini_apps/data/repositories/local_cookie_import_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
 import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
 import '../../features/mini_apps/data/repositories/local_trusted_certificate_repository.dart';
+import '../../features/mini_apps/data/repositories/local_web_view_cookie_repository.dart';
+import '../../features/mini_apps/domain/repositories/browser_cookie_repository.dart';
+import '../../features/mini_apps/domain/repositories/cookie_import_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_browsing_data_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
 import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
 import '../../features/mini_apps/domain/repositories/trusted_certificate_repository.dart';
+import '../../features/mini_apps/domain/repositories/web_view_cookie_repository.dart';
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
+import '../../features/mini_apps/domain/usecases/check_cookie_imports.dart';
+import '../../features/mini_apps/domain/usecases/import_browser_cookies.dart';
 import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
 import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
@@ -540,6 +553,39 @@ abstract class ServiceModule {
   @lazySingleton
   MiniAppBrowsingDataRepository miniAppBrowsingDataRepository() =>
       const LocalMiniAppBrowsingDataRepository(WebProfileDatasource());
+
+  @lazySingleton
+  BrowserCookieRepository browserCookieRepository() =>
+      LocalBrowserCookieRepository(
+        chromium: ChromiumCookieReader(),
+        firefox: const FirefoxCookieReader(),
+        safari: const SafariCookieReader(),
+      );
+
+  @lazySingleton
+  WebViewCookieRepository webViewCookieRepository() =>
+      const LocalWebViewCookieRepository(WebViewCookieDatasource());
+
+  @lazySingleton
+  CookieImportRepository cookieImportRepository() =>
+      LocalCookieImportRepository(
+        CookieImportStore(
+          file: () async => File(await _support('cookie_imports.json')),
+        ),
+      );
+
+  @lazySingleton
+  ImportBrowserCookies importBrowserCookies(
+    BrowserCookieRepository browsers,
+    WebViewCookieRepository webView,
+    CookieImportRepository imports,
+  ) => ImportBrowserCookies(browsers, webView, imports);
+
+  @lazySingleton
+  CheckCookieImports checkCookieImports(
+    CookieImportRepository imports,
+    WebViewCookieRepository webView,
+  ) => CheckCookieImports(imports, webView);
 
   @lazySingleton
   TicketDraftRepository ticketDraftRepository(AppDatabase db) =>
