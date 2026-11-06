@@ -161,6 +161,7 @@ class QuickSettingsSwitchField extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.hint,
+    this.padding,
     super.key,
   });
 
@@ -168,6 +169,10 @@ class QuickSettingsSwitchField extends StatelessWidget {
   final String? hint;
   final bool value;
   final ValueChanged<bool>? onChanged;
+
+  /// The inset of the row, for one outside a settings card; the card's own
+  /// by default.
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +184,7 @@ class QuickSettingsSwitchField extends StatelessWidget {
       onTap: onChanged == null ? null : () => onChanged(!value),
       borderRadius: BorderRadius.circular(context.radii.md),
       child: Padding(
-        padding: _rowPadding(context),
+        padding: padding ?? _rowPadding(context),
         child: Row(
           children: [
             Expanded(
