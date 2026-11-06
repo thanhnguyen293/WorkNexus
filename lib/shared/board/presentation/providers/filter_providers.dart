@@ -148,6 +148,11 @@ class FilterController extends Notifier<FilterState> {
 
   void clearAll() => state = _cleared(state);
 
+  /// Everything cleared but the module picked in the side panel — what a view
+  /// that is a filter of its own (Related to me) keeps.
+  void clearAllButModules() =>
+      state = _cleared(state).copyWith(modules: state.modules);
+
   /// Switches the board filter to the board identified by [key] (see
   /// `boardKeyProvider`), filing the current board's filter away first.
   ///

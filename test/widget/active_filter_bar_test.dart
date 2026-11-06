@@ -108,6 +108,20 @@ void main() {
     await disposeTree(tester);
   });
 
+  testWidgets('Related to me keeps only the picked module', (tester) async {
+    final container = await pump(tester);
+    container.read(filterStateProvider.notifier)
+      ..selectModule('12')
+      ..toggleSeverity(1)
+      ..clearAllButModules();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Live stream'), findsOneWidget);
+    expect(find.text('Critical'), findsNothing);
+    expect(container.read(filterStateProvider).severities, isEmpty);
+    await disposeTree(tester);
+  });
+
   testWidgets('the saved filter in effect leads, and Clear all clears', (
     tester,
   ) async {
