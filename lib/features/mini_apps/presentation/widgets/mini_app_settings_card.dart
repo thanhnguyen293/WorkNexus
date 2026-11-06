@@ -16,6 +16,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_browsing_data_controller.dart';
 import '../providers/mini_app_providers.dart';
+import 'mini_app_cookie_imports_section.dart';
 import 'mini_app_settings_app_list.dart';
 import 'mini_app_trusted_certificates_section.dart';
 
@@ -63,6 +64,11 @@ class MiniAppSettingsCard extends ConsumerWidget {
           title: l.miniAppDataSection,
           hint: l.miniAppDataHint,
           child: _DataActions(apps: apps),
+        ),
+        AppExpandableCardSection(
+          title: l.miniAppCookiesSection,
+          hint: l.miniAppCookiesHint,
+          child: const MiniAppCookieImportsSection(),
         ),
         AppExpandableCardSection(
           title: l.miniAppTrustedCertsSection,
