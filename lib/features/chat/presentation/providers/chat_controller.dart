@@ -349,6 +349,11 @@ class ChatController {
     MessageContent content,
   ) => _open(accountId: accountId, content: content);
 
+  /// Where a player streams a video from (a pass-through): the file on disk
+  /// when it is here, else a local URL that plays while it downloads.
+  Future<Result<Uri>> videoStream(String accountId, MessageContent content) =>
+      _repository.videoStream(accountId, content);
+
   /// Stops downloading an attachment the user opened.
   /// Saves a copy of an attachment at [targetPath] (a pass-through).
   Future<Result<void>> saveAttachmentCopy(

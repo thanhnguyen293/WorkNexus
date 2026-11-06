@@ -6,6 +6,7 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
+import '../datasources/chat_video_stream_server.dart';
 import '../datasources/image_header_size.dart';
 import '../datasources/xxd/xxd_connection_state.dart';
 import '../datasources/xxd/xxd_http_datasource.dart';
@@ -19,9 +20,11 @@ class ChatAttachmentLoader {
     this._http,
     this._files, {
     this.maxCacheBytes = 64 * 1024 * 1024,
-  });
+    ChatVideoStreamServer? streams,
+  }) : _streams = streams ?? ChatVideoStreamServer();
 
   final XxdHttpDatasource _http;
+  final ChatVideoStreamServer _streams;
   final ChatFileCache _files;
   final int maxCacheBytes;
   // Insertion-ordered map: re-inserting on a hit makes it an LRU.
@@ -179,6 +182,47 @@ class ChatAttachmentLoader {
       await _files.write(accountId, diskName, value);
     }
     return result;
+  }
+
+  /// A local URL a player streams video [content] from while it downloads,
+  /// so it starts at once instead of after the whole file; the copy on disk
+  /// when there is one.
+  Future<Result<Uri>> videoStream(
+    String accountId,
+    ChatSession? session,
+    MessageContent content,
+  ) async {
+    final (fileId, name) = _fileOf(content);
+    final onDisk = fileId > 0
+        ? await _files.open(accountId, _diskName(fileId, name))
+        : null;
+    if (onDisk != null) return Ok(Uri.file(onDisk.path));
+    if (content is! FileContent) {
+      return const Err(NotFoundFailure('This message has no video'));
+    }
+    final state = session?.connection.state;
+    final xxd = state is XxdOnline ? state.session : null;
+    final sessionId = xxd?.sessionId;
+    if (session == null || xxd == null || sessionId == null) {
+      return const Err(NetworkFailure('Chat is offline'));
+    }
+    final credentials = session.connection.credentials;
+    final local = await _streams.localUri((
+      uri: _http.fileDownloadUri(
+        server: credentials.server,
+        userId: xxd.userId,
+        sessionId: sessionId,
+        fileId: fileId,
+        fileName: name,
+        fileTime: content.time,
+        serverName: credentials.serverName,
+      ),
+      pin: credentials.pinnedFingerprint,
+      contentType: content.mimeType ?? 'video/mp4',
+    ), name: name);
+    return local == null
+        ? const Err(NetworkFailure('Could not stream the video'))
+        : Ok(local);
   }
 
   /// Where the attachment is (or would be) cached on disk; null when there
