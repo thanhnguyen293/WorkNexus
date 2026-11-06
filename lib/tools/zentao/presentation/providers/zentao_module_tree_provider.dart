@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/board/domain/entities/filter_state.dart';
-import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/usecases/build_zentao_module_tree.dart';
@@ -31,15 +30,19 @@ final zentaoModuleTreeProvider =
       final query = ref.watch(boardQueryProvider);
       final picked = query.filter.modules;
       final hideEmpty = ref.watch(zentaoHideEmptyModulesProvider);
+      // Counted as the board shows them: its columns, so a view without
+      // Closed does not count closed bugs.
+      final shown = BuildZenTaoBugBoard(
+        includeClosed:
+            ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all,
+      )(query.withFilter(query.filter.copyWith(modules: {})));
       return ref
           .watch(bugModuleNamesProvider((product.accountId, product.productId)))
           .whenData(
             (paths) => const BuildZenTaoModuleTree()(
               ZenTaoModuleTreeInput(
                 paths: paths,
-                bugs: const FilterTickets()(
-                  query.withFilter(query.filter.copyWith(modules: {})),
-                ),
+                bugs: [for (final c in shown.columns) ...c.tickets],
                 hideEmpty: hideEmpty,
                 selected: picked.length == 1 ? picked.first : null,
               ),

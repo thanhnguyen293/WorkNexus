@@ -91,15 +91,20 @@ class ZenTaoBugCard extends ConsumerWidget {
             Row(
               spacing: s.sm,
               children: [
+                // Each part shrinks (ellipsis) rather than overflow; the
+                // assignee keeps the largest share.
                 Flexible(
+                  flex: 3,
                   child: AssigneeChip(
                     ticket.assignee,
                     wsColor,
                     accountId: ticket.accountId,
                   ),
                 ),
-                for (final tag in tags.take(2)) _Tag(tag),
-                Expanded(child: _ModuleName(ticket)),
+                for (final tag in tags.take(1))
+                  Flexible(flex: 3, child: _Tag(tag)),
+                const Spacer(),
+                Flexible(flex: 2, child: _ModuleName(ticket)),
                 TranslationDot(trStatus),
               ],
             ),
