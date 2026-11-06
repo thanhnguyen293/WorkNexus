@@ -84,6 +84,22 @@ void main() {
     );
   });
 
+  test('a module picked over a preset saved without one still matches', () {
+    expect(
+      applied(
+        myTeam,
+        const FilterState(
+          assignees: {'thanh', 'an'},
+          severities: {1},
+          modules: {'12'},
+        ),
+      ),
+      isTrue,
+    );
+    final inFeed = preset(const FilterState(modules: {'12'}));
+    expect(applied(inFeed, const FilterState(modules: {'13'})), isFalse);
+  });
+
   test('a preset saved with a search needs that search', () {
     final withSearch = preset(const FilterState(search: 'login'));
     expect(applied(withSearch, const FilterState(search: 'login')), isTrue);
