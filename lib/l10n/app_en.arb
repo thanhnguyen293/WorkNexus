@@ -2514,6 +2514,18 @@
       }
     }
   },
+  "zentaoModulesGroup": "Modules",
+  "zentaoAllModules": "All modules",
+  "zentaoHideEmptyModules": "Hide empty modules",
+  "zentaoShowEmptyModules": "Show empty modules",
+  "zentaoNoModules": "This product has no modules.",
+  "zentaoModulesUnavailable": "Couldn't load the modules",
+  "boardShownOfTotal": "{shown} of {total} shown",
+  "@boardShownOfTotal": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "boardFoldColumn": "Fold column",
+  "boardOpenColumn": "Open {column}",
+  "@boardOpenColumn": {"placeholders": {"column": {"type": "String"}}},
+  "removeFilter": "Remove filter",
   "zentaoProductsGroup": "Products",
   "zentaoProjectsGroup": "Projects",
   "zentaoPickExecution": "Pick an execution to see its tasks",

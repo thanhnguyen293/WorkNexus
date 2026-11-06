@@ -47,6 +47,17 @@ void main() {
       expect(mod3, isNull);
     });
 
+    test('extractTags strips the brackets off each leading tag', () {
+      final (title, tags) = ZenTaoFormatters.extractTags(
+        '[Discovery][Change Request] Long Press: close the sheet',
+      );
+      expect(title, 'Long Press: close the sheet');
+      expect(tags, ['Discovery', 'Change Request']);
+      final (plain, none) = ZenTaoFormatters.extractTags('No tags here');
+      expect(plain, 'No tags here');
+      expect(none, isEmpty);
+    });
+
     test('extractDeadline extracts deadline from ticket labels', () {
       final now = DateTime.now();
       final ticketWithDeadline = Ticket(

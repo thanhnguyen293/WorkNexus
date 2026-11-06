@@ -28,6 +28,20 @@ abstract final class ZenTaoFormatters {
     return (rawTitle, null);
   }
 
+  /// Splits "[Discovery][Change Request] Title" into the title and its
+  /// bracketed tags, without the brackets.
+  static (String, List<String>) extractTags(String rawTitle) {
+    final (title, tags) = extractModule(rawTitle);
+    if (tags == null) return (title, const []);
+    return (
+      title,
+      [
+        for (final tag in tags.substring(1, tags.length - 1).split(']['))
+          if (tag.trim().isNotEmpty) tag.trim(),
+      ],
+    );
+  }
+
   /// Formats date to YYYY-MM-DD.
   static String formatDeadline(DateTime d) {
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

@@ -160,11 +160,15 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
       ),
     ];
 
-    if (hasScope) {
+    if (hasScope && loc != null) {
       widgets.addAll([
         _Separator(color: c.textTertiary),
         Text(
-          scopeId,
+          switch (module.scopeTitle(account, loc)) {
+                final title? => ref.watch(title),
+                null => null,
+              } ??
+              scopeId,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -7,6 +8,8 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_icon_button.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'board_column_empty_slot.dart';
 
 /// One kanban column's chrome, shared by every board: a structured header
@@ -22,6 +25,7 @@ class BoardColumnFrame extends StatelessWidget {
     required this.itemCount,
     required this.itemBuilder,
     this.highlighted = false,
+    this.onFold,
   });
 
   final Widget dot;
@@ -30,6 +34,10 @@ class BoardColumnFrame extends StatelessWidget {
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final bool highlighted;
+
+  /// Folds the column to a strip (see `BoardFoldedColumn`); no fold button
+  /// without it.
+  final VoidCallback? onFold;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +80,15 @@ class BoardColumnFrame extends StatelessWidget {
                 ),
                 SizedBox(width: s.md),
                 badge,
+                if (onFold case final fold?) ...[
+                  SizedBox(width: s.xs),
+                  AppIconButton(
+                    icon: LucideIcons.chevronsLeft300,
+                    tooltip: AppL10n.of(context).boardFoldColumn,
+                    size: AppIconButtonSize.small,
+                    onPressed: fold,
+                  ),
+                ],
               ],
             ),
           ),

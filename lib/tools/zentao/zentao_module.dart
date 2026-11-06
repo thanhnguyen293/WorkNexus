@@ -21,6 +21,7 @@ import 'presentation/detail/zentao_ticket_actions.dart';
 import 'presentation/nav/zentao_nav_pane.dart';
 import 'presentation/providers/zentao_metrics_providers.dart';
 import 'presentation/providers/zentao_scope_providers.dart';
+import 'presentation/providers/zentao_scope_title_provider.dart';
 import 'presentation/sections/zentao_bugs_section.dart';
 import 'presentation/sections/zentao_tasks_section.dart';
 
@@ -88,6 +89,16 @@ class ZentaoModule extends ToolModule {
   ProviderListenable<AsyncValue<ToolMetrics>> metrics(Account account) {
     return computeZentaoMetricsProvider(account.id);
   }
+
+  @override
+  ProviderListenable<String?>? scopeTitle(
+    Account account,
+    ToolLocation location,
+  ) => zentaoScopeTitleProvider((
+    accountId: account.id,
+    scopeId: location.scopeId,
+    bugs: location.section.value == 'zentao.bugs',
+  ));
 
   @override
   Uri? webUrl(Account account, ToolLocation location) {
