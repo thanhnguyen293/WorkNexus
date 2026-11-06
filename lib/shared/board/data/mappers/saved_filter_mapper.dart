@@ -31,6 +31,7 @@ String encodeFilterState(FilterState f) => jsonEncode(<String, dynamic>{
   'resolvers': f.resolvers.toList(),
   'reporters': f.reporters.toList(),
   'confirmations': f.confirmations.toList(),
+  'modules': f.modules.toList(),
   'search': f.search,
 });
 
@@ -58,6 +59,7 @@ FilterState decodeFilterState(String json) {
     resolvers: _stringSet(map['resolvers']),
     reporters: _stringSet(map['reporters']),
     confirmations: _stringSet(map['confirmations']),
+    modules: _stringSet(map['modules']),
     search: map['search']?.toString() ?? '',
   );
 }
