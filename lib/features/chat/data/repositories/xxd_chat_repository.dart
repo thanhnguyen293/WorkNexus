@@ -656,6 +656,10 @@ class XxdChatRepository implements ChatRepository {
   ) => _attachments.localFile(accountId, _sessions[accountId], content);
 
   @override
+  Future<Result<Uri>> videoStream(String accountId, MessageContent content) =>
+      _attachments.videoStream(accountId, _sessions[accountId], content);
+
+  @override
   Future<Result<void>> saveAttachmentCopy(
     String accountId,
     MessageContent content,

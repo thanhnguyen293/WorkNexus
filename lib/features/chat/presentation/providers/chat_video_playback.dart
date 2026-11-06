@@ -49,23 +49,20 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
     return null;
   }
 
-  /// Plays the local file at [path] for [messageGid] (from [at]), stopping
-  /// whatever played before. False when the platform player can't open it.
+  /// Plays [source] for [messageGid] (from [at]), stopping whatever played
+  /// before: a local file, or a URL streamed while it downloads (see
+  /// `ChatController.videoStream`). False when the platform player can't
+  /// open it.
   Future<bool> start({
     required ChatThreadKey thread,
     required String messageGid,
     required FileContent file,
-    required String path,
+    required Uri source,
     Duration? at,
   }) async {
     stop();
-    final player = VideoPlayerController.file(File(path));
-    try {
-      await player.initialize();
-    } on Exception {
-      await player.dispose();
-      return false;
-    }
+    final player = await openChatVideo(source);
+    if (player == null) return false;
     if (at != null) await player.seekTo(at);
     _player = player;
     state = ChatVideoPlayback(
@@ -111,6 +108,22 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
     SchedulerBinding.instance
       ..addPostFrameCallback((_) => current.player.dispose())
       ..ensureVisualUpdate();
+  }
+}
+
+/// A ready player for a chat video at [source] — a local file, or a URL
+/// streamed while it downloads — or null when the platform player can't
+/// open it.
+Future<VideoPlayerController?> openChatVideo(Uri source) async {
+  final player = source.isScheme('file')
+      ? VideoPlayerController.file(File.fromUri(source))
+      : VideoPlayerController.networkUrl(source);
+  try {
+    await player.initialize();
+    return player;
+  } on Exception {
+    await player.dispose();
+    return null;
   }
 }
 

@@ -494,6 +494,10 @@ class _FakeChatRepository implements ChatRepository {
       const Err(NotFoundFailure('none'));
 
   @override
+  Future<Result<Uri>> videoStream(String a, MessageContent c) async =>
+      const Err(NotFoundFailure('none'));
+
+  @override
   Future<Result<Uint8List>> videoThumbnail(String a, MessageContent v) async =>
       const Err(NotFoundFailure('none'));
 
