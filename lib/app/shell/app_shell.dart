@@ -25,6 +25,7 @@ import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
 import '../../shared/detail/presentation/detail_panel.dart';
 import 'account_sync_at_launch.dart';
 import 'app_nav_rail.dart';
+import 'chat_place.dart';
 import 'new_ticket_menu.dart';
 import 'title_bar.dart';
 import 'viewport.dart';
@@ -144,6 +145,7 @@ class _ToolPane extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (nav.rail) {
       WorkspaceTarget() => const WorkspaceNavPane(),
+      ChatTarget() => const ChatToolPane(),
       AccountTarget(:final accountId) => _buildAccountPane(
         context,
         ref,

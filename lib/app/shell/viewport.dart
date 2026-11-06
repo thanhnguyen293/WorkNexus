@@ -16,6 +16,7 @@ import '../../features/workspace_overview/presentation/pages/integrations_page.d
 import '../../features/workspace_overview/presentation/pages/members_page.dart';
 import '../../features/workspace_overview/presentation/pages/overview_page.dart';
 import 'auth_expired_banner.dart';
+import 'chat_place.dart';
 import 'section_error_boundary.dart';
 import 'workspace_settings_page.dart';
 
@@ -131,6 +132,13 @@ class _ViewportState extends ConsumerState<Viewport> {
       WorkspaceTarget() => _buildWorkspaceSection(
         context,
         nav.workspaceSection,
+      ),
+      ChatTarget() => (
+        'chat',
+        const SectionErrorBoundary(
+          key: ValueKey('chat'),
+          child: ChatSectionView(),
+        ),
       ),
       AccountTarget(:final accountId) => _buildAccountSection(
         context,

@@ -79,10 +79,7 @@ Future<void> openDirectChatWith(
   if (!context.mounted) return;
   switch (result) {
     case Ok(:final value):
-      ref.read(appNavProvider.notifier).selectAccount(accountId);
-      ref
-          .read(appNavProvider.notifier)
-          .selectSection(const SectionId('zentao.chat'));
+      ref.read(appNavProvider.notifier).selectChat();
       ref.read(pickedChatAccountProvider.notifier).state = accountId;
       ref.read(selectedChatGidProvider(accountId).notifier).state = value;
     case Err(:final failure):

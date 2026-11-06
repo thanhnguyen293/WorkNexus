@@ -55,6 +55,16 @@ class AppNavController extends Notifier<AppNavState> {
     );
   }
 
+  /// Shows the chat beside the rail.
+  void selectChat() {
+    state = state.copyWith(
+      rail: const RailTarget.chat(),
+      userSelectedWorkspace: false,
+      editor: null,
+      miniAppId: null,
+    );
+  }
+
   /// Automatically selects the first app in [accounts] and activates its first
   /// feature (section), unless the user has explicitly chosen the workspace section.
   void selectDefaultAppIfApplicable({
@@ -69,6 +79,8 @@ class AppNavController extends Notifier<AppNavState> {
     }
 
     if (!force) {
+      // The chat is a place the user picked, as an account is.
+      if (state.rail is ChatTarget) return;
       if (state.rail case AccountTarget(:final accountId)) {
         if (accounts.any((a) => a.id == accountId)) {
           return;

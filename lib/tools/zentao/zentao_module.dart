@@ -25,28 +25,13 @@ import 'presentation/sections/zentao_bugs_section.dart';
 import 'presentation/sections/zentao_tasks_section.dart';
 
 class ZentaoModule extends ToolModule {
-  const ZentaoModule({
-    this.chatSection,
-    this.chatPane,
-    this.chatUnread,
-    this.chatMessagesMinWidth = 0,
-  });
-
-  final WidgetBuilder? chatSection;
-  final ChatPaneBuilder? chatPane;
-  final ProviderListenable<int>? chatUnread;
-
-  /// Narrowest the chat's message column may get: below it, the chat pane
-  /// collapses to avatars.
-  final double chatMessagesMinWidth;
+  const ZentaoModule();
 
   @override
   ProviderType get providerType => ProviderType.zentao;
 
   @override
-  SectionId get defaultSection => (chatSection != null && chatPane != null)
-      ? const SectionId('zentao.chat')
-      : const SectionId('zentao.tasks');
+  SectionId get defaultSection => const SectionId('zentao.tasks');
 
   @override
   String Function(AppL10n) get roleLabel =>
@@ -54,14 +39,6 @@ class ZentaoModule extends ToolModule {
 
   @override
   List<ToolSection> get sections => [
-    if (chatSection != null && chatPane != null)
-      ToolSection(
-        id: const SectionId('zentao.chat'),
-        label: (l) => l.chat,
-        icon: LucideIcons.messageSquare300,
-        scopeKind: ScopeKind.conversation,
-        unreadCount: chatUnread,
-      ),
     ToolSection(
       id: const SectionId('zentao.tasks'),
       label: (l) => l.tasks,
@@ -88,8 +65,6 @@ class ZentaoModule extends ToolModule {
       account: account,
       location: location,
       sections: sections,
-      chatPane: chatPane,
-      chatMessagesMinWidth: chatMessagesMinWidth,
     );
   }
 
@@ -104,8 +79,6 @@ class ZentaoModule extends ToolModule {
         return ZentaoTasksSection(account: account, location: location);
       case 'zentao.bugs':
         return ZentaoBugsSection(account: account, location: location);
-      case 'zentao.chat':
-        return chatSection?.call(context) ?? const SizedBox.shrink();
       default:
         return const SizedBox.shrink();
     }
