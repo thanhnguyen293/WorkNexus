@@ -119,6 +119,15 @@ void main() {
         .saveCurrent('MyTeam');
     await tester.pumpAndSettle();
     expect(find.text('MyTeam'), findsOneWidget);
+    // Its severity is the saved filter's own: no chip of its own.
+    expect(find.text('Critical'), findsNothing);
+
+    // A module picked on top keeps the saved filter and adds its chip.
+    filters.selectModule('12');
+    await tester.pumpAndSettle();
+    expect(find.text('MyTeam'), findsOneWidget);
+    expect(find.text('Live stream'), findsOneWidget);
+    filters.selectModule(null);
 
     filters.toggleSeverity(2);
     await tester.pumpAndSettle();
