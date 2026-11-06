@@ -173,9 +173,15 @@ class FilterController extends Notifier<FilterState> {
   }
 
   /// Replaces the chip filters with a saved preset's, keeping the board's own
-  /// workspace scope (a preset is a set of criteria, not a place to go).
-  void applyPreset(FilterState preset) =>
-      state = preset.copyWith(workspaceId: state.workspaceId);
+  /// workspace scope (a preset is a set of criteria, not a place to go). A
+  /// preset saved on the All view keeps the view tab you are on, as picking
+  /// any other filter does.
+  void applyPreset(FilterState preset) => state = preset.copyWith(
+    workspaceId: state.workspaceId,
+    savedView: preset.savedView == SavedView.all
+        ? state.savedView
+        : preset.savedView,
+  );
 
   /// Everything cleared except the board's scope ([FilterState.workspaceId]).
   FilterState _cleared(FilterState from) => from.copyWith(
