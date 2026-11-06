@@ -14,8 +14,8 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/translation/presentation/translation_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/tools/zentao/presentation/widgets/zentao_board_card.dart';
 import 'package:work_nexus/tools/zentao/presentation/widgets/zentao_card_parent.dart';
-import 'package:work_nexus/tools/zentao/presentation/widgets/zentao_task_card.dart';
 
 const _task = Ticket(
   id: 'acc1:task:13600',
@@ -60,7 +60,7 @@ void main() {
           supportedLocales: AppL10n.supportedLocales,
           home: Scaffold(
             body: Center(
-              child: SizedBox(width: 256, child: ZenTaoTaskCard(ticket)),
+              child: SizedBox(width: 256, child: ZenTaoBoardCard(ticket)),
             ),
           ),
         ),

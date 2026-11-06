@@ -5,7 +5,7 @@ import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/error/result.dart';
 import '../../../../shared/board/domain/usecases/derive_board_facets.dart';
 import '../../domain/usecases/build_zentao_facet_catalog.dart';
-import 'bug_module_names_provider.dart';
+import 'task_module_names_provider.dart';
 import 'zentao_board_providers.dart';
 import 'zentao_data_providers.dart';
 
@@ -17,24 +17,11 @@ final zentaoFacetCatalogProvider = Provider.autoDispose
         ZenTaoFacetCatalogInput(
           bugs: bugs,
           members: ref.watch(_boardMembersProvider(bugs)).value ?? const [],
-          modules: bugs ? ref.watch(_productModulesProvider) : const {},
+          modules:
+              ref.watch(zentaoBoardModuleNamesProvider(bugs)).value ?? const {},
         ),
       ),
     );
-
-/// The bug board product's modules (id → path), for the module filter. Only
-/// bugs carry a module here, so the task board has none. Until they load, or
-/// when they cannot, the board has no module filter (its other filters work).
-final _productModulesProvider = Provider.autoDispose<Map<String, String>>((
-  ref,
-) {
-  final product = ref.watch(selectedZenTaoProductProvider);
-  if (product == null) return const {};
-  return ref
-          .watch(bugModuleNamesProvider((product.accountId, product.productId)))
-          .value ??
-      const {};
-});
 
 final _boardMembersProvider = FutureProvider.autoDispose
     .family<List<ProviderUser>, bool>((ref, bugs) async {

@@ -93,9 +93,7 @@ class ZentaoTasksSection extends ConsumerWidget {
               label: l.viewAll,
               active: !isRelated && !dueThisWeek,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.all);
+                ref.read(filterStateProvider.notifier).leaveOwnView();
                 ref.read(zentaoTaskDueThisWeekProvider.notifier).set(false);
               },
             ),
@@ -103,10 +101,11 @@ class ZentaoTasksSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated && !dueThisWeek,
               onTap: () {
-                // Related to me is a filter of its own: no others on it.
-                ref.read(filterStateProvider.notifier)
-                  ..clearAll()
-                  ..setSavedView(SavedView.related);
+                // Related to me is a filter of its own: the others are set
+                // aside (All brings them back), the picked module stays.
+                ref
+                    .read(filterStateProvider.notifier)
+                    .enterOwnView(SavedView.related);
                 ref.read(zentaoTaskDueThisWeekProvider.notifier).set(false);
               },
             ),
@@ -114,9 +113,7 @@ class ZentaoTasksSection extends ConsumerWidget {
               label: l.dueThisWeek,
               active: dueThisWeek,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.all);
+                ref.read(filterStateProvider.notifier).leaveOwnView();
                 ref.read(zentaoTaskDueThisWeekProvider.notifier).set(true);
               },
             ),
