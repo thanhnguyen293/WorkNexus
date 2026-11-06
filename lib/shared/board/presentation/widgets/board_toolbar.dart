@@ -24,6 +24,7 @@ class BoardToolbar extends StatelessWidget {
     required this.modes,
     required this.viewMode,
     required this.onViewMode,
+    this.below,
   });
 
   /// Left out when empty.
@@ -38,6 +39,10 @@ class BoardToolbar extends StatelessWidget {
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
   final ValueChanged<ViewModeId> onViewMode;
+
+  /// A row under the controls, inside the bar (the filters in effect), so
+  /// the bar's divider stays under everything that filters the board.
+  final Widget? below;
 
   @override
   Widget build(BuildContext context) {
@@ -59,17 +64,24 @@ class BoardToolbar extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: s.xl, vertical: s.sm),
-        child: BoardToolbarLayout(
-          gap: s.sm,
-          scopes: filters.isEmpty ? null : AppSegmentedTabs(tabs: filters),
-          scopesMenu: filters.isEmpty
-              ? null
-              : AppSegmentedTabsMenu(tabs: filters),
-          filters: filtersButton,
-          search: ContextualSearchField(scope: searchScope),
-          refresh: refresh,
-          modes: AppSegmentedTabs(tabs: modeTabs),
-          modesCompact: AppSegmentedTabs(tabs: modeTabs, iconOnly: true),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            BoardToolbarLayout(
+              gap: s.sm,
+              scopes: filters.isEmpty ? null : AppSegmentedTabs(tabs: filters),
+              scopesMenu: filters.isEmpty
+                  ? null
+                  : AppSegmentedTabsMenu(tabs: filters),
+              filters: filtersButton,
+              search: ContextualSearchField(scope: searchScope),
+              refresh: refresh,
+              modes: AppSegmentedTabs(tabs: modeTabs),
+              modesCompact: AppSegmentedTabs(tabs: modeTabs, iconOnly: true),
+            ),
+            ?below,
+          ],
         ),
       ),
     );

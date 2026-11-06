@@ -35,7 +35,7 @@ class ZenTaoBugColumnCard extends ConsumerStatefulWidget {
   final ZenTaoBugBoardColumn column;
 
   /// Whether the user flipped this column from how it opens by default:
-  /// folded when it has nothing to show (or is Closed), open otherwise.
+  /// Closed starts folded, every other column open.
   final bool toggled;
   final VoidCallback onToggleFold;
 
@@ -65,7 +65,7 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
         setState(() => _over = false);
         await _handleDrop(details.data, col.column);
       },
-      builder: (context, _, _) => _folded(more)
+      builder: (context, _, _) => _folded
           ? BoardFoldedColumn(
               highlighted: _over,
               dot: BoardColumnDot(color),
@@ -102,14 +102,10 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
     );
   }
 
-  /// Empty columns (nothing loaded, nothing more to load) and Closed start
-  /// folded, so the columns with work get the width.
-  bool _folded(bool more) {
-    final col = widget.column;
-    final byDefault =
-        (col.tickets.isEmpty && !more) || col.column == ZenTaoBugColumn.closed;
-    return byDefault != widget.toggled;
-  }
+  /// Closed starts folded (its bugs are done with); an empty column stays
+  /// open, so the board keeps its shape. Any column folds from its header.
+  bool get _folded =>
+      (widget.column.column == ZenTaoBugColumn.closed) != widget.toggled;
 
   bool _canDrop(Ticket ticket, ZenTaoBugColumn target) {
     final current = zentaoBugColumnFor(ticket);
