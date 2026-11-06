@@ -106,7 +106,7 @@ import '../../features/mini_apps/domain/repositories/web_view_cookie_repository.
 import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/check_cookie_imports.dart';
 import '../../features/mini_apps/domain/usecases/import_browser_cookies.dart';
-import '../../features/mini_apps/domain/usecases/is_pinned_certificate.dart';
+import '../../features/mini_apps/domain/usecases/is_trusted_server_certificate.dart';
 import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
 import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
 import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
@@ -589,8 +589,10 @@ abstract class ServiceModule {
       ChatPinnedCertificateRepository(ChatLocalDatasource(db));
 
   @lazySingleton
-  IsPinnedCertificate isPinnedCertificate(PinnedCertificateRepository pins) =>
-      IsPinnedCertificate(pins);
+  IsTrustedServerCertificate isTrustedServerCertificate(
+    PinnedCertificateRepository pins,
+    TrustedCertificateRepository trusted,
+  ) => IsTrustedServerCertificate(pins, trusted);
 
   @lazySingleton
   CheckCookieImports checkCookieImports(

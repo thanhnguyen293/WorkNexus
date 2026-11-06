@@ -24,8 +24,11 @@ class TrustedCertificatesController
   Future<bool> isTrusted(String origin) async =>
       (await future).any((item) => item.origin == origin);
 
-  Future<Result<void>> trust(String origin, String error) =>
-      _apply(_repository.trust(origin, error));
+  Future<Result<void>> trust(
+    String origin,
+    String error, {
+    String? fingerprint,
+  }) => _apply(_repository.trust(origin, error, fingerprint: fingerprint));
 
   Future<Result<void>> forget(TrustedCertificate certificate) =>
       _apply(_repository.forget(certificate));

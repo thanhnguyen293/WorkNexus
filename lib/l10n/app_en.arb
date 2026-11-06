@@ -2575,5 +2575,7 @@
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",
   "miniAppCookiesRetry": "Try again",
   "miniAppCookiesExpiredTooltip": "Sign-in cookies expired: import them again from {browser}",
-  "@miniAppCookiesExpiredTooltip": {"placeholders": {"browser": {"type": "String"}}}
+  "@miniAppCookiesExpiredTooltip": {"placeholders": {"browser": {"type": "String"}}},
+  "certPromptFingerprint": "Certificate fingerprint (SHA-256):\n{fingerprint}",
+  "@certPromptFingerprint": {"placeholders": {"fingerprint": {"type": "String"}}}
 }

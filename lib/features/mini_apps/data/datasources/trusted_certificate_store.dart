@@ -2,7 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 /// One trusted site as it is written in the file.
-typedef TrustedCertificateRow = ({String origin, String error});
+typedef TrustedCertificateRow = ({
+  String origin,
+  String error,
+  String? fingerprint,
+});
 
 /// The trusted certificates kept as a small JSON file in the support folder.
 /// Throws on a file it cannot read or write; a damaged file reads as empty.
@@ -27,7 +31,13 @@ class TrustedCertificateStore {
           if (item is Map &&
               item['origin'] is String &&
               item['error'] is String)
-            (origin: item['origin'] as String, error: item['error'] as String),
+            (
+              origin: item['origin'] as String,
+              error: item['error'] as String,
+              fingerprint: item['fingerprint'] is String
+                  ? item['fingerprint'] as String
+                  : null,
+            ),
     ];
   }
 
@@ -41,7 +51,12 @@ class TrustedCertificateStore {
     await file.parent.create(recursive: true);
     await file.writeAsString(
       jsonEncode([
-        for (final row in rows) {'origin': row.origin, 'error': row.error},
+        for (final row in rows)
+          {
+            'origin': row.origin,
+            'error': row.error,
+            if (row.fingerprint != null) 'fingerprint': row.fingerprint,
+          },
       ]),
     );
   }

@@ -1766,5 +1766,6 @@
   "miniAppCookiesOpenPrivacy": "Mở cài đặt Quyền riêng tư",
   "miniAppCookiesReadFailed": "Không đọc được cookie của trình duyệt này.",
   "miniAppCookiesRetry": "Thử lại",
-  "miniAppCookiesExpiredTooltip": "Cookie đăng nhập đã hết hạn: nhập lại từ {browser}"
+  "miniAppCookiesExpiredTooltip": "Cookie đăng nhập đã hết hạn: nhập lại từ {browser}",
+  "certPromptFingerprint": "Vân tay chứng chỉ (SHA-256):\n{fingerprint}"
 }
