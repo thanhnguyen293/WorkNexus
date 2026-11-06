@@ -1,4 +1,6 @@
-import 'package:flutter/widgets.dart';
+import 'dart:typed_data';
+
+import 'package:flutter/painting.dart';
 
 /// The little pointer some messengers draw on a bubble.
 enum BubbleTailKind {
@@ -9,107 +11,121 @@ enum BubbleTailKind {
   triangleTop,
 }
 
-/// Paints a [BubbleTailKind] tail in [color]. Laid out beside the bubble on
-/// the avatar side; [pointsLeft] for incoming messages.
-class BubbleTail extends StatelessWidget {
-  const BubbleTail({
-    super.key,
-    required this.kind,
-    required this.color,
-    required this.pointsLeft,
-  });
-
-  /// Width the tail sticks out of the bubble.
+/// The size of a bubble's tail.
+abstract final class BubbleTail {
+  /// Width the tail sticks out of the bubble (kept free beside it).
   static const double width = 7;
 
-  final BubbleTailKind kind;
-  final Color color;
-  final bool pointsLeft;
+  /// Height of the tail along the bubble's edge.
+  static const double height = 14;
 
-  @override
-  Widget build(BuildContext context) => CustomPaint(
-    size: const Size(width, 14),
-    painter: _TailPainter(kind, color, pointsLeft),
-  );
+  /// How far below the bubble's top a [BubbleTailKind.triangleTop] starts.
+  static const double topInset = 8;
 }
 
-/// A bubble with its tail drawn just outside the avatar-side edge.
-class BubbleWithTail extends StatelessWidget {
-  const BubbleWithTail({
-    super.key,
+/// A bubble and its tail as one shape: one fill and one outline around both,
+/// so a bordered bubble (TBChat's hairline) has no seam where the tail
+/// meets it and the tail is outlined too. The tail sticks [BubbleTail.width]
+/// out of the box on the avatar side ([tailOnLeft] for incoming messages);
+/// the caller keeps that room free.
+class TailedBubbleBorder extends ShapeBorder {
+  const TailedBubbleBorder({
     required this.kind,
-    required this.color,
-    required this.mine,
-    required this.child,
+    required this.borderRadius,
+    required this.tailOnLeft,
+    this.side = BorderSide.none,
   });
 
   final BubbleTailKind kind;
-  final Color color;
-  final bool mine;
-  final Widget child;
+  final BorderRadius borderRadius;
+  final bool tailOnLeft;
+  final BorderSide side;
 
   @override
-  Widget build(BuildContext context) {
-    final tail = BubbleTail(kind: kind, color: color, pointsLeft: !mine);
-    final top = kind == BubbleTailKind.triangleTop;
-    return Padding(
-      // Room for the tail so it is not clipped by the row.
-      padding: EdgeInsets.only(
-        left: mine ? 0 : BubbleTail.width,
-        right: mine ? BubbleTail.width : 0,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child,
-          Positioned(
-            left: mine ? null : -BubbleTail.width,
-            right: mine ? -BubbleTail.width : null,
-            top: top ? 8 : null,
-            bottom: top ? null : 0,
-            child: tail,
-          ),
-        ],
-      ),
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  ShapeBorder scale(double t) => TailedBubbleBorder(
+    kind: kind,
+    borderRadius: borderRadius * t,
+    tailOnLeft: tailOnLeft,
+    side: side.scale(t),
+  );
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => _path(rect);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => _path(rect);
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    if (side.style == BorderStyle.none || side.width == 0) return;
+    canvas.drawPath(_path(rect), side.toPaint());
+  }
+
+  /// Drawn with the tail on the left; mirrored for a tail on the right.
+  Path _path(Rect rect) {
+    final r = tailOnLeft
+        ? borderRadius
+        : BorderRadius.only(
+            topLeft: borderRadius.topRight,
+            topRight: borderRadius.topLeft,
+            bottomLeft: borderRadius.bottomRight,
+            bottomRight: borderRadius.bottomLeft,
+          );
+    final l = rect.left;
+    final t = rect.top;
+    final rt = rect.right;
+    final b = rect.bottom;
+    const w = BubbleTail.width;
+    const h = BubbleTail.height;
+    final path = Path()
+      ..moveTo(l + r.topLeft.x, t)
+      ..lineTo(rt - r.topRight.x, t)
+      ..arcToPoint(Offset(rt, t + r.topRight.y), radius: r.topRight)
+      ..lineTo(rt, b - r.bottomRight.y)
+      ..arcToPoint(Offset(rt - r.bottomRight.x, b), radius: r.bottomRight);
+    switch (kind) {
+      case BubbleTailKind.curlBottom:
+        // The bottom corner on the tail side is square: the curl takes it.
+        path
+          ..lineTo(l - w, b)
+          ..quadraticBezierTo(l, b - h * 0.2, l, b - h);
+      case BubbleTailKind.triangleTop:
+        const top = BubbleTail.topInset;
+        path
+          ..lineTo(l + r.bottomLeft.x, b)
+          ..arcToPoint(Offset(l, b - r.bottomLeft.y), radius: r.bottomLeft)
+          ..lineTo(l, t + top + h * 0.85)
+          ..lineTo(l - w, t + top + h * 0.5)
+          ..lineTo(l, t + top + h * 0.15);
+    }
+    path
+      ..lineTo(l, t + r.topLeft.y)
+      ..arcToPoint(Offset(l + r.topLeft.x, t), radius: r.topLeft)
+      ..close();
+    if (tailOnLeft) return path;
+    // Mirror around the box's vertical centre line.
+    // Column-major: x' = (left + right) − x.
+    return path.transform(
+      Float64List.fromList([
+        -1, 0, 0, 0, //
+        0, 1, 0, 0, //
+        0, 0, 1, 0, //
+        rect.left + rect.right, 0, 0, 1, //
+      ]),
     );
   }
-}
-
-class _TailPainter extends CustomPainter {
-  _TailPainter(this.kind, this.color, this.pointsLeft);
-
-  final BubbleTailKind kind;
-  final Color color;
-  final bool pointsLeft;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    // Drawn pointing left; mirrored for outgoing bubbles.
-    final path = switch (kind) {
-      BubbleTailKind.curlBottom =>
-        Path()
-          ..moveTo(w, 0)
-          ..quadraticBezierTo(w, h * 0.8, 0, h)
-          ..lineTo(w, h)
-          ..close(),
-      BubbleTailKind.triangleTop =>
-        Path()
-          ..moveTo(w, h * 0.15)
-          ..lineTo(0, h * 0.5)
-          ..lineTo(w, h * 0.85)
-          ..close(),
-    };
-    if (!pointsLeft) {
-      canvas
-        ..translate(w, 0)
-        ..scale(-1, 1);
-    }
-    canvas.drawPath(path, Paint()..color = color);
-  }
+  bool operator ==(Object other) =>
+      other is TailedBubbleBorder &&
+      other.kind == kind &&
+      other.borderRadius == borderRadius &&
+      other.tailOnLeft == tailOnLeft &&
+      other.side == side;
 
   @override
-  bool shouldRepaint(_TailPainter old) =>
-      old.kind != kind || old.color != color || old.pointsLeft != pointsLeft;
+  int get hashCode => Object.hash(kind, borderRadius, tailOnLeft, side);
 }

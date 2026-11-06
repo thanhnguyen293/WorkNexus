@@ -93,7 +93,7 @@ import_edges:
     rule: "5.1"
     owner_phase: "Phase 2"
   # Tools reading features/translation
-  - source: lib/tools/zentao/presentation/widgets/zentao_ticket_card.dart
+  - source: lib/tools/zentao/presentation/widgets/zentao_board_card.dart
     target: lib/features/translation/presentation/translation_providers.dart
     rule: "tool_isolation"
     owner_phase: "Phase 4"
