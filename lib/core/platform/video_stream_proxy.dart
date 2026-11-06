@@ -2,7 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_video_caching/flutter_video_caching.dart'
-    show LruCacheSingleton, UrlExt, UrlMatcherDefault, VideoProxy;
+    show
+        DownloadTask,
+        LruCacheSingleton,
+        UrlExt,
+        UrlMatcherDefault,
+        UrlParserMp4,
+        VideoCaching,
+        VideoProxy;
 
 import 'directory_size.dart';
 
@@ -27,6 +34,49 @@ class VideoStreamProxy {
   Future<Uri?> localUri(Uri origin) async {
     if (!await (_started ??= _start())) return null;
     return origin.toString().toLocalUri();
+  }
+
+  /// Segment size handed to the proxy, in its (decimal) megabytes.
+  static const _segmentMb = 1;
+  static const _segmentBytes = _segmentMb * 1000 * 1000;
+
+  /// Fetches the opening [segments] of [origin] and its last one into the
+  /// cache, queued behind anything a player is waiting for. A phone screen
+  /// recording keeps its index (moov) at the end, and a player needs that
+  /// before the first frame — so with both ends cached it starts at once.
+  Future<void> precache(
+    Uri origin,
+    Map<String, String> headers, {
+    int segments = 2,
+  }) async {
+    if (!await (_started ??= _start())) return;
+    try {
+      await VideoCaching.precache(
+        origin.toString(),
+        headers: headers,
+        cacheSegments: segments,
+        // Not `false`: that only lists the tasks without starting the
+        // downloader, and a player then waits on them forever.
+      );
+      final parser = UrlParserMp4();
+      final length = await parser.head(origin, headers: headers);
+      if (length <= _segmentBytes * segments) return;
+      // Keyed as playback asks for it: segment-aligned, clamped to the end.
+      final last = (length - 1) - (length - 1) % _segmentBytes;
+      // Started, not awaited: it completes in the background (see above).
+      unawaited(
+        parser.download(
+          DownloadTask(
+            uri: origin,
+            startRange: last,
+            endRange: length - 1,
+            headers: headers,
+          ),
+        ),
+      );
+    } on Exception {
+      // A warm-up only: playback fetches whatever is missing.
+    }
   }
 
   /// Bytes of video kept on disk.
@@ -56,7 +106,7 @@ class VideoStreamProxy {
         // ~0.4 MB/s each, more in parallel). Small segments fetched wide get
         // the first frame out sooner: cold start of a 39 MB recording went
         // from ~10-15 s (2 MB × 4) to ~5.5-7 s (1 MB × 8).
-        segmentSize: 1,
+        segmentSize: _segmentMb,
         maxConcurrentDownloads: 8,
         urlMatcher: _AnyVideoIsMp4(),
       );
