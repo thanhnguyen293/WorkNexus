@@ -12,21 +12,32 @@ import '../../../../core/widgets/celebration_overlay.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/board_column_frame.dart';
+import '../../../../shared/board/presentation/widgets/board_folded_column.dart';
 import '../../../../shared/board/presentation/widgets/paged_column_footer.dart';
-import '../../../../shared/board/presentation/widgets/ticket_card.dart';
 import '../../../../shared/board/presentation/widgets/ticket_card_drag_feedback.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../detail/non_fix_resolution_dialog.dart';
 import '../providers/zentao_bug_streams.dart';
+import 'zentao_bug_card.dart';
 import 'zentao_bug_column_footer.dart';
 import 'zentao_bug_column_parts.dart';
 
 /// One draggable status column on the ZenTao bug board. Dropping a card here
 /// runs the matching bug transition (confirm / activate / resolve).
 class ZenTaoBugColumnCard extends ConsumerStatefulWidget {
-  const ZenTaoBugColumnCard({super.key, required this.column});
+  const ZenTaoBugColumnCard({
+    super.key,
+    required this.column,
+    required this.toggled,
+    required this.onToggleFold,
+  });
 
   final ZenTaoBugBoardColumn column;
+
+  /// Whether the user flipped this column from how it opens by default:
+  /// folded when it has nothing to show (or is Closed), open otherwise.
+  final bool toggled;
+  final VoidCallback onToggleFold;
 
   @override
   ConsumerState<ZenTaoBugColumnCard> createState() =>
@@ -54,30 +65,50 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
         setState(() => _over = false);
         await _handleDrop(details.data, col.column);
       },
-      builder: (context, _, _) => BoardColumnFrame(
-        highlighted: _over,
-        dot: BoardColumnDot(color),
-        label: label,
-        badge: PagedColumnCount(col.count, more: more),
-        itemCount: col.tickets.length + (more ? 1 : 0),
-        itemBuilder: (context, i) {
-          if (i == col.tickets.length) {
-            return ZenTaoBugColumnFooter(column: col.column);
-          }
-          final ticket = col.tickets[i];
-          return Draggable<Ticket>(
-            key: ValueKey(ticket.id),
-            data: ticket,
-            feedback: TicketCardDragFeedback(child: TicketCard(ticket)),
-            childWhenDragging: Opacity(
-              opacity: 0.35,
-              child: TicketCard(ticket),
+      builder: (context, _, _) => _folded(more)
+          ? BoardFoldedColumn(
+              highlighted: _over,
+              dot: BoardColumnDot(color),
+              label: label,
+              badge: PagedColumnCount(col.count, more: more),
+              onOpen: widget.onToggleFold,
+            )
+          : BoardColumnFrame(
+              onFold: widget.onToggleFold,
+              highlighted: _over,
+              dot: BoardColumnDot(color),
+              label: label,
+              badge: PagedColumnCount(col.count, more: more),
+              itemCount: col.tickets.length + (more ? 1 : 0),
+              itemBuilder: (context, i) {
+                if (i == col.tickets.length) {
+                  return ZenTaoBugColumnFooter(column: col.column);
+                }
+                final ticket = col.tickets[i];
+                return Draggable<Ticket>(
+                  key: ValueKey(ticket.id),
+                  data: ticket,
+                  feedback: TicketCardDragFeedback(
+                    child: ZenTaoBugCard(ticket),
+                  ),
+                  childWhenDragging: Opacity(
+                    opacity: 0.35,
+                    child: ZenTaoBugCard(ticket),
+                  ),
+                  child: ZenTaoBugCard(ticket),
+                );
+              },
             ),
-            child: TicketCard(ticket),
-          );
-        },
-      ),
     );
+  }
+
+  /// Empty columns (nothing loaded, nothing more to load) and Closed start
+  /// folded, so the columns with work get the width.
+  bool _folded(bool more) {
+    final col = widget.column;
+    final byDefault =
+        (col.tickets.isEmpty && !more) || col.column == ZenTaoBugColumn.closed;
+    return byDefault != widget.toggled;
   }
 
   bool _canDrop(Ticket ticket, ZenTaoBugColumn target) {

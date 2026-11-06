@@ -69,6 +69,17 @@ class BoardQuery {
 
   /// accountId → Account, for user assignment matching.
   final Map<String, Account> accounts;
+
+  /// The same board under another [filter] — e.g. without one of its chips,
+  /// to count what picking another value would show.
+  BoardQuery withFilter(FilterState filter) => BoardQuery(
+    tickets: tickets,
+    filter: filter,
+    accountWorkspace: accountWorkspace,
+    now: now,
+    workspaceOrder: workspaceOrder,
+    accounts: accounts,
+  );
 }
 
 /// Whether a ticket satisfies a built-in saved view.

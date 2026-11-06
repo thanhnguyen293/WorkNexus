@@ -20,6 +20,7 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
     required this.modes,
     required this.viewMode,
     this.filtering = true,
+    this.keepViewOnPick = false,
     this.searchScope,
   });
 
@@ -35,6 +36,10 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
   /// button there.
   final bool filtering;
 
+  /// Picking a filter keeps the view on screen; otherwise it moves to the
+  /// All view, so the filter shows over every ticket.
+  final bool keepViewOnPick;
+
   /// The picked product / execution, named in the search's placeholder.
   final String? searchScope;
 
@@ -47,7 +52,9 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
             statusOption: zentaoStatusFilterOption(bugBoard: bugs),
             catalog: ref.watch(zentaoFacetCatalogProvider(bugs)),
             // Picking a filter shows it over every ticket: the All view.
-            onPick: scopes.first.active ? null : scopes.first.onTap,
+            onPick: keepViewOnPick || scopes.first.active
+                ? null
+                : scopes.first.onTap,
           )
         : null,
     refresh: ZenTaoBoardRefreshButton(bugs: bugs),

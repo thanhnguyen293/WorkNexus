@@ -5,12 +5,10 @@ import '../../../../core/domain/value_objects/priority.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/semantic.dart';
-import '../../../../core/util/labels.dart';
-import '../../../../core/util/zentao_labels.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/entities/filter_state.dart';
 import '../../domain/usecases/derive_board_facets.dart';
 import '../providers/board_providers.dart';
+import 'facet_labels.dart';
 import 'filter_option_group.dart';
 import 'filter_people_block.dart';
 
@@ -67,9 +65,9 @@ class FacetFilterGroups extends ConsumerWidget {
           )
         else
           FilterChipOption(
-            label: o.label ?? _facetLabel(l, g.kind, o.value),
+            label: o.label ?? facetLabel(l, g.kind, o.value),
             count: o.count > 0 ? o.count : null,
-            active: _facetActive(f, g.kind, o.value),
+            active: facetActive(f, g.kind, o.value),
             dotColor: _facetDot(c, g.kind, o.value),
             onTap: () {
               _facetToggle(ctrl, g.kind, o.value);
@@ -92,12 +90,12 @@ class FacetFilterGroups extends ConsumerWidget {
             FilterPeopleBlock(
               groups: [
                 for (final p in people)
-                  (label: _facetHeader(l, p.kind), options: optionsOf(p)),
+                  (label: facetHeader(l, p.kind), options: optionsOf(p)),
               ],
             )
           else if (!together || !people.contains(g))
             FilterOptionsGroup(
-              label: _facetHeader(l, g.kind),
+              label: facetHeader(l, g.kind),
               // A person or module is found by name: a dropdown however few
               // there are.
               dropdownThreshold:
@@ -129,37 +127,6 @@ typedef FacetStatusOption =
       required VoidCallback onTap,
     });
 
-String _facetHeader(AppL10n l, BoardFacetKind kind) => switch (kind) {
-  BoardFacetKind.status => l.status,
-  BoardFacetKind.resolvedBy => l.fieldResolvedBy,
-  BoardFacetKind.openedBy => l.openedBy,
-  BoardFacetKind.confirmed => l.fieldConfirmation,
-  BoardFacetKind.assignee => l.assignee,
-  BoardFacetKind.reviewer => l.reviewers,
-  BoardFacetKind.severity => l.severity,
-  BoardFacetKind.priority => l.priority,
-  BoardFacetKind.bugType => l.bugType,
-  BoardFacetKind.resolution => l.resolution,
-  BoardFacetKind.module => l.fieldModule,
-};
-
-String _facetLabel(AppL10n l, BoardFacetKind kind, String value) =>
-    switch (kind) {
-      // Drawn by [FacetFilterGroups.statusOption]; the plain name otherwise.
-      BoardFacetKind.status => value,
-      BoardFacetKind.resolvedBy || BoardFacetKind.openedBy => value,
-      BoardFacetKind.confirmed => value == '1' ? l.confirmed : l.bugUnconfirmed,
-      BoardFacetKind.assignee => value.isEmpty ? l.unassigned : value,
-      BoardFacetKind.reviewer => value.isEmpty ? l.unassigned : value,
-      BoardFacetKind.severity =>
-        zentaoSeverityLabel(int.tryParse(value)) ?? value,
-      BoardFacetKind.priority => priorityName(l, Priority.values.byName(value)),
-      BoardFacetKind.bugType => zentaoBugTypeLabel(value) ?? value,
-      BoardFacetKind.resolution => zentaoResolutionLabel(value) ?? value,
-      // Named by the catalog; a module it lacks (since deleted) by its id.
-      BoardFacetKind.module => value,
-    };
-
 Color? _facetDot(AppColors c, BoardFacetKind kind, String value) =>
     switch (kind) {
       BoardFacetKind.severity => severityColor(c, int.tryParse(value)),
@@ -168,25 +135,6 @@ Color? _facetDot(AppColors c, BoardFacetKind kind, String value) =>
         Priority.values.byName(value),
       ),
       _ => null,
-    };
-
-bool _facetActive(FilterState f, BoardFacetKind kind, String value) =>
-    switch (kind) {
-      BoardFacetKind.status => f.zentaoStatuses.contains(value),
-      BoardFacetKind.resolvedBy => f.resolvers.contains(value),
-      BoardFacetKind.openedBy => f.reporters.contains(value),
-      BoardFacetKind.confirmed => f.confirmations.contains(value),
-      BoardFacetKind.assignee => f.assignees.contains(value),
-      BoardFacetKind.reviewer => f.reviewers.contains(value),
-      BoardFacetKind.severity => f.severities.contains(
-        int.tryParse(value) ?? -1,
-      ),
-      BoardFacetKind.priority => f.priorities.contains(
-        Priority.values.byName(value),
-      ),
-      BoardFacetKind.bugType => f.bugTypes.contains(value),
-      BoardFacetKind.resolution => f.resolutions.contains(value),
-      BoardFacetKind.module => f.modules.contains(value),
     };
 
 void _facetToggle(FilterController ctrl, BoardFacetKind kind, String value) {

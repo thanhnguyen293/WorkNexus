@@ -5,6 +5,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../domain/entities/filter_state.dart';
+import '../../domain/usecases/derive_board_facets.dart';
 import '../../domain/usecases/switch_board_filter.dart';
 import '../../domain/value_objects/saved_view.dart';
 import 'board_loading_provider.dart';
@@ -125,6 +126,25 @@ class FilterController extends Notifier<FilterState> {
 
   void toggleModule(String id) =>
       state = state.copyWith(modules: _toggle(state.modules, id));
+
+  /// Shows one module only, as the module tree picks it; null shows all.
+  void selectModule(String? id) =>
+      state = state.copyWith(modules: id == null ? {} : {id});
+
+  /// Drops every value picked in one facet group (its chip's ✕).
+  void clearFacet(BoardFacetKind kind) => state = switch (kind) {
+    BoardFacetKind.status => state.copyWith(zentaoStatuses: {}),
+    BoardFacetKind.assignee => state.copyWith(assignees: {}),
+    BoardFacetKind.resolvedBy => state.copyWith(resolvers: {}),
+    BoardFacetKind.openedBy => state.copyWith(reporters: {}),
+    BoardFacetKind.confirmed => state.copyWith(confirmations: {}),
+    BoardFacetKind.reviewer => state.copyWith(reviewers: {}),
+    BoardFacetKind.severity => state.copyWith(severities: {}),
+    BoardFacetKind.priority => state.copyWith(priorities: {}),
+    BoardFacetKind.bugType => state.copyWith(bugTypes: {}),
+    BoardFacetKind.resolution => state.copyWith(resolutions: {}),
+    BoardFacetKind.module => state.copyWith(modules: {}),
+  };
 
   void clearAll() => state = _cleared(state);
 
