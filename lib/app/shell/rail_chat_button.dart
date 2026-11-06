@@ -23,7 +23,7 @@ class RailChatButton extends ConsumerWidget {
         ref.watch(chatOpenProvider) && !ref.watch(miniAppOnScreenProvider);
     return AppRailLabeledButton(
       key: const ValueKey('rail-chat-button'),
-      leading: const Icon(LucideIcons.messageSquare300),
+      leading: const Icon(LucideIcons.messagesSquare300),
       label: AppL10n.of(context).chat,
       selected: selected,
       badge: unread > 0 ? UnreadBadge(count: unread) : null,
