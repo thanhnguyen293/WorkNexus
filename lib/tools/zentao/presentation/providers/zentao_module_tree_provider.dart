@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/domain/entities/ticket.dart';
 import '../../../../shared/board/domain/entities/filter_state.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../../domain/usecases/build_zentao_module_tree.dart';
+import '../../domain/usecases/build_zentao_task_board.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
-import 'bug_module_names_provider.dart';
+import 'task_module_names_provider.dart';
 import 'zentao_board_providers.dart';
 
 /// Whether the bug board's module tree hides modules with no bugs. Kept for
@@ -20,29 +22,39 @@ class ZenTaoHideEmptyModules extends Notifier<bool> {
 final zentaoHideEmptyModulesProvider =
     NotifierProvider<ZenTaoHideEmptyModules, bool>(ZenTaoHideEmptyModules.new);
 
-/// The open product's module tree for the side panel, counted from the bugs
-/// the board would show with every filter but the module one. Loading or
-/// failed while the product's module names are.
-final zentaoModuleTreeProvider =
-    Provider.autoDispose<AsyncValue<ZenTaoModuleTree>>((ref) {
-      final product = ref.watch(selectedZenTaoProductProvider);
-      if (product == null) return const AsyncData(ZenTaoModuleTree.empty);
+/// The module tree of the board on screen (the bug board's product when
+/// [bugs], else the task board's execution) for the side panel, counted from
+/// the tickets the board would show with every filter but the module one.
+/// Loading or failed while the module names are.
+final zentaoModuleTreeProvider = Provider.autoDispose
+    .family<AsyncValue<ZenTaoModuleTree>, bool>((ref, bugs) {
       final query = ref.watch(boardQueryProvider);
       final picked = query.filter.modules;
       final hideEmpty = ref.watch(zentaoHideEmptyModulesProvider);
+      final unpicked = query.withFilter(query.filter.copyWith(modules: {}));
       // Counted as the board shows them: its columns, so a view without
       // Closed does not count closed bugs.
-      final shown = BuildZenTaoBugBoard(
-        includeClosed:
-            ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all,
-      )(query.withFilter(query.filter.copyWith(modules: {})));
+      final List<Ticket> shown = bugs
+          ? [
+              for (final c in BuildZenTaoBugBoard(
+                includeClosed:
+                    ref.watch(zentaoBugTabProvider) == ZenTaoBugBrowseType.all,
+              )(unpicked).columns)
+                ...c.tickets,
+            ]
+          : [
+              for (final c in BuildZenTaoTaskBoard(
+                dueThisWeekOnly: ref.watch(zentaoTaskDueThisWeekProvider),
+              )(unpicked).columns)
+                ...c.tickets,
+            ];
       return ref
-          .watch(bugModuleNamesProvider((product.accountId, product.productId)))
+          .watch(zentaoBoardModuleNamesProvider(bugs))
           .whenData(
             (paths) => const BuildZenTaoModuleTree()(
               ZenTaoModuleTreeInput(
                 paths: paths,
-                bugs: [for (final c in shown.columns) ...c.tickets],
+                tickets: shown,
                 hideEmpty: hideEmpty,
                 selected: picked.length == 1 ? picked.first : null,
               ),

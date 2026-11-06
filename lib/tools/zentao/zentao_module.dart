@@ -35,6 +35,9 @@ class ZentaoModule extends ToolModule {
   SectionId get defaultSection => const SectionId('zentao.tasks');
 
   @override
+  bool get sectionsOnRail => true;
+
+  @override
   String Function(AppL10n) get roleLabel =>
       (l) => l.roleProjectManagement;
 

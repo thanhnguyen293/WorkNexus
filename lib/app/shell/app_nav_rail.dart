@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/domain/entities/account.dart';
 import '../../core/domain/value_objects/provider_type.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_borders.dart';
@@ -14,6 +15,7 @@ import '../../features/mini_apps/presentation/widgets/mini_app_rail_section.dart
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import 'rail_account_button.dart';
 import 'rail_chat_button.dart';
+import 'rail_section_buttons.dart';
 import 'rail_settings_button.dart';
 import 'rail_workspace_button.dart';
 
@@ -74,7 +76,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
 
     if (digitIndex < 0) return false;
 
-    final sorted = ref.read(sortedActiveAccountsProvider);
+    final sorted = _railAccounts(ref.read(sortedActiveAccountsProvider));
 
     if (digitIndex < sorted.length) {
       final account = sorted[digitIndex];
@@ -91,13 +93,23 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
     return false;
   }
 
+  /// The accounts that get a rail button of their own.
+  List<Account> _railAccounts(List<Account> accounts) {
+    final registry = ref.read(toolRegistryProvider);
+    return [
+      for (final a in accounts)
+        if (registry[a.providerType]?.sectionsOnRail != true) a,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
     final nav = ref.watch(appNavProvider);
     final registry = ref.watch(toolRegistryProvider);
-    final sorted = ref.watch(sortedActiveAccountsProvider);
+    // A tool whose sections sit on the rail has no account buttons.
+    final sorted = _railAccounts(ref.watch(sortedActiveAccountsProvider));
     final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
     final providerCounts = <ProviderType, int>{};
@@ -118,6 +130,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
           children: [
             const RailWorkspaceButton(),
             const RailChatButton(),
+            const RailSectionButtons(),
             Divider(
               height: s.lg,
               indent: s.md,

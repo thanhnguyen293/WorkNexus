@@ -5,6 +5,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/domain/value_objects/zentao_board_status.dart';
+import '../../../../core/domain/value_objects/zentao_module_of.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/filter_state.dart';
 import '../value_objects/saved_view.dart';
@@ -211,12 +212,9 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           return false;
         }
       }
-      if (f.modules.isNotEmpty) {
-        final entity = t.providerEntity;
-        if (entity is! ZenTaoBugEntity ||
-            !f.modules.contains(entity.module ?? '')) {
-          return false;
-        }
+      if (f.modules.isNotEmpty &&
+          !f.modules.contains(zentaoModuleOf(t) ?? '')) {
+        return false;
       }
       if (query.isNotEmpty) {
         final hay = [

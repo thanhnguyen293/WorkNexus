@@ -39,7 +39,7 @@ void main() {
   ];
 
   test('names each module by its last path part, indented and counted', () {
-    final tree = build(ZenTaoModuleTreeInput(paths: paths, bugs: bugs));
+    final tree = build(ZenTaoModuleTreeInput(paths: paths, tickets: bugs));
     expect(names(tree), ['Live stream:0', '  Share:2', 'Feed:1', 'Location:0']);
     expect(tree.total, 4);
   });
@@ -47,7 +47,9 @@ void main() {
   test('hiding empty modules keeps parents of busy sub-modules', () {
     expect(
       names(
-        build(ZenTaoModuleTreeInput(paths: paths, bugs: bugs, hideEmpty: true)),
+        build(
+          ZenTaoModuleTreeInput(paths: paths, tickets: bugs, hideEmpty: true),
+        ),
       ),
       ['Live stream:0', '  Share:2', 'Feed:1'],
     );
@@ -59,7 +61,7 @@ void main() {
         build(
           ZenTaoModuleTreeInput(
             paths: paths,
-            bugs: bugs,
+            tickets: bugs,
             hideEmpty: true,
             selected: '4',
           ),

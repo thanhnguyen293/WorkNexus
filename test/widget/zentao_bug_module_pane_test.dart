@@ -43,7 +43,7 @@ void main() {
             ProviderProduct(id: '4', name: 'VN_Socialfi', accountId: 'acc-zt'),
           ]),
         ),
-        zentaoModuleTreeProvider.overrideWithValue(
+        zentaoModuleTreeProvider(true).overrideWithValue(
           const AsyncData(
             ZenTaoModuleTree(
               total: 8,

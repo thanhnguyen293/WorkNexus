@@ -8,7 +8,7 @@ import '../../../../shared/board/presentation/widgets/paged_column_footer.dart';
 import '../../domain/usecases/build_zentao_task_board.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_task_streams.dart';
-import 'zentao_task_card.dart';
+import 'zentao_board_card.dart';
 import 'zentao_task_column_parts.dart';
 import 'zentao_task_table_view.dart';
 
@@ -57,7 +57,7 @@ class _TaskColumn extends ConsumerWidget {
               column: column.column,
               visible: column.tickets.length,
             )
-          : ZenTaoTaskCard(
+          : ZenTaoBoardCard(
               column.tickets[i],
               key: ValueKey(column.tickets[i].id),
             ),

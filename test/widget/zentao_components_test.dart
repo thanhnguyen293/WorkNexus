@@ -53,6 +53,13 @@ void main() {
       );
       expect(title, 'Long Press: close the sheet');
       expect(tags, ['Discovery', 'Change Request']);
+      final (spaced, both) = ZenTaoFormatters.extractTags(
+        '[Mobile] [SocialFi] Update new tbchat camera',
+      );
+      expect(spaced, 'Update new tbchat camera');
+      expect(both, ['Mobile', 'SocialFi']);
+      final (only, _) = ZenTaoFormatters.extractTags('[Feed]');
+      expect(only, '[Feed]');
       final (plain, none) = ZenTaoFormatters.extractTags('No tags here');
       expect(plain, 'No tags here');
       expect(none, isEmpty);

@@ -144,7 +144,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(RailWorkspaceButton), findsOneWidget);
-      expect(find.byType(RailAccountButton), findsNWidgets(3));
+      // ZenTao's places (Tasks, Bugs) stand in for its account button.
+      expect(find.byType(RailAccountButton), findsNWidgets(2));
+      expect(find.text('Tasks'), findsOneWidget);
+      expect(find.text('Bugs'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('rail-settings-button')),
         findsOneWidget,
@@ -157,8 +160,8 @@ void main() {
         await tester.pumpWidget(_buildTestApp(child: const AppNavRail()));
         await tester.pumpAndSettle();
 
-        // ZenTao is unique, so it shows provider name
-        expect(find.text('ZenTao'), findsOneWidget);
+        // ZenTao has no account button: Tasks and Bugs stand in for it.
+        expect(find.text('ZenTao'), findsNothing);
 
         // Two GitLab accounts repeat the provider, so they show their handles
         expect(find.text('gitlab-work'), findsOneWidget);
@@ -225,9 +228,7 @@ void main() {
       expect(find.byKey(const ValueKey('rail-chat-button')), findsNothing);
     });
 
-    testWidgets('clicking an account button calls selectAccount', (
-      tester,
-    ) async {
+    testWidgets('Bugs opens the ZenTao account on its bugs', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
           child: const AppNavRail(),
@@ -241,13 +242,16 @@ void main() {
       );
       expect(container.read(appNavProvider).rail, const WorkspaceTarget());
 
-      // Tap ZenTao account
-      await tester.tap(find.text('ZenTao'));
+      await tester.tap(find.text('Bugs'));
       await tester.pumpAndSettle();
 
       expect(
         container.read(appNavProvider).rail,
         const AccountTarget('acc-zt'),
+      );
+      expect(
+        container.read(appNavProvider).currentLocation?.section,
+        const SectionId('zentao.bugs'),
       );
     });
 
@@ -278,7 +282,8 @@ void main() {
 
         expect(container.read(appNavProvider).rail, const WorkspaceTarget());
 
-        // Press Ctrl+2 (selects 1st sorted account: acc-zt)
+        // Press Ctrl+2 (selects the 1st account on the rail: a GitLab one,
+        // ZenTao having places instead of an account button)
         await tester.sendKeyDownEvent(LogicalKeyboardKey.control);
         await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
         await tester.sendKeyUpEvent(LogicalKeyboardKey.control);
@@ -286,7 +291,11 @@ void main() {
 
         expect(
           container.read(appNavProvider).rail,
-          const AccountTarget('acc-zt'),
+          isA<AccountTarget>().having(
+            (t) => t.accountId,
+            'accountId',
+            startsWith('acc-gl'),
+          ),
         );
       },
     );

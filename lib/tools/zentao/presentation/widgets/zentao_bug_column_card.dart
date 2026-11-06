@@ -18,7 +18,7 @@ import '../../../../shared/board/presentation/widgets/ticket_card_drag_feedback.
 import '../../domain/usecases/build_zentao_bug_board.dart';
 import '../detail/non_fix_resolution_dialog.dart';
 import '../providers/zentao_bug_streams.dart';
-import 'zentao_bug_card.dart';
+import 'zentao_board_card.dart';
 import 'zentao_bug_column_footer.dart';
 import 'zentao_bug_column_parts.dart';
 
@@ -89,13 +89,13 @@ class _ZenTaoBugColumnCardState extends ConsumerState<ZenTaoBugColumnCard> {
                   key: ValueKey(ticket.id),
                   data: ticket,
                   feedback: TicketCardDragFeedback(
-                    child: ZenTaoBugCard(ticket),
+                    child: ZenTaoBoardCard(ticket),
                   ),
                   childWhenDragging: Opacity(
                     opacity: 0.35,
-                    child: ZenTaoBugCard(ticket),
+                    child: ZenTaoBoardCard(ticket),
                   ),
-                  child: ZenTaoBugCard(ticket),
+                  child: ZenTaoBoardCard(ticket),
                 );
               },
             ),

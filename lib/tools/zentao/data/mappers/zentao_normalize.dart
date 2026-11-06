@@ -258,6 +258,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
       parentName: _text(e.parentName),
       execution: _executionId(e.execution),
       project: _executionId(e.project),
+      module: _text(e.module),
       isParent: e.isParent == 1 || e.parent == -1 || e.children.isNotEmpty,
       estimate: e.estimate,
       consumed: e.consumed,

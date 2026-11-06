@@ -28,18 +28,20 @@ abstract final class ZenTaoFormatters {
     return (rawTitle, null);
   }
 
-  /// Splits "[Discovery][Change Request] Title" into the title and its
-  /// bracketed tags, without the brackets.
+  /// Splits "[Discovery][Change Request] Title" (or "[Mobile] [SocialFi]
+  /// Title", tags apart) into the title and its leading bracketed tags,
+  /// without the brackets. A title that is nothing but tags keeps them.
   static (String, List<String>) extractTags(String rawTitle) {
-    final (title, tags) = extractModule(rawTitle);
-    if (tags == null) return (title, const []);
-    return (
-      title,
-      [
-        for (final tag in tags.substring(1, tags.length - 1).split(']['))
-          if (tag.trim().isNotEmpty) tag.trim(),
-      ],
-    );
+    final tags = <String>[];
+    var rest = rawTitle.trim();
+    final lead = RegExp(r'^\[([^\]]*)\]\s*');
+    for (var m = lead.firstMatch(rest); m != null; m = lead.firstMatch(rest)) {
+      final tag = m.group(1)?.trim() ?? '';
+      if (tag.isNotEmpty) tags.add(tag);
+      rest = rest.substring(m.end);
+    }
+    if (rest.isEmpty) return (rawTitle.trim(), const []);
+    return (rest, tags);
   }
 
   /// Formats date to YYYY-MM-DD.

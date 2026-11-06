@@ -13,8 +13,10 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/build_zentao_module_tree.dart';
 import 'package:work_nexus/tools/zentao/presentation/nav/zentao_nav_pane.dart';
 import 'package:work_nexus/tools/zentao/presentation/providers/zentao_board_providers.dart';
+import 'package:work_nexus/tools/zentao/presentation/providers/zentao_module_tree_provider.dart';
 import 'package:work_nexus/tools/zentao/presentation/sections/zentao_bugs_section.dart';
 import 'package:work_nexus/tools/zentao/presentation/sections/zentao_tasks_section.dart';
 import 'package:work_nexus/tools/zentao/presentation/widgets/zentao_bug_board_view.dart';
@@ -104,6 +106,9 @@ Widget _buildHarness({
         () => _TicketsController([_testTask]),
       ),
       appNavProvider.overrideWith(() => _TestNavNotifier(initialNav)),
+      zentaoModuleTreeProvider(
+        false,
+      ).overrideWithValue(const AsyncData(ZenTaoModuleTree.empty)),
       selectedZenTaoExecutionProvider.overrideWith(_ExecutionSelection.new),
       zentaoExecutionsProvider((
         accountId: 'acc-zt',
@@ -260,7 +265,7 @@ void main() {
 
   group('ZenTao Nav Pane', () {
     testWidgets(
-      'renders sections, no quick scopes; a project opens, an execution is picked',
+      'shows the open execution and its modules; no Tasks / Bugs tabs',
       (tester) async {
         tester.view.physicalSize = const Size(1400, 900);
         tester.view.devicePixelRatio = 1.0;
@@ -269,58 +274,35 @@ void main() {
         const initialNav = AppNavState(
           rail: RailTarget.account('acc-zt'),
           locations: {
-            'acc-zt': ToolLocation(section: SectionId('zentao.tasks')),
+            'acc-zt': ToolLocation(
+              section: SectionId('zentao.tasks'),
+              scopeId: 'exec-1',
+            ),
           },
         );
 
-        late WidgetRef capturedRef;
         await tester.pumpWidget(
           _buildHarness(
             initialNav: initialNav,
-            builder: (loc) => Consumer(
-              builder: (context, ref, _) {
-                capturedRef = ref;
-                return SizedBox(
-                  width: 260,
-                  child: ZentaoNavPane(
-                    account: _testAccount,
-                    location: loc,
-                    sections: zentaoModule.sections,
-                  ),
-                );
-              },
+            builder: (loc) => SizedBox(
+              width: 260,
+              child: ZentaoNavPane(
+                account: _testAccount,
+                location: loc,
+                sections: zentaoModule.sections,
+              ),
             ),
           ),
         );
         await tester.pumpAndSettle();
 
-        // Verify sections in feature tab strip
-        expect(find.text('Tasks'), findsOneWidget);
-        expect(find.text('Bugs'), findsOneWidget);
-
-        // No quick scopes: ZenTao has no account-wide task list, and the
-        // board's own chip narrows to your tasks.
-        expect(find.text('All projects'), findsNothing);
-        expect(find.text('Assigned to me'), findsNothing);
-
-        // Verify project row
-        expect(find.text('Alpha Project'), findsOneWidget);
-
-        // A project only opens: it is never the board's scope.
-        await tester.tap(find.text('Alpha Project'));
-        await tester.pumpAndSettle();
-        expect(
-          capturedRef.read(appNavProvider).currentLocation?.scopeId,
-          isNull,
-        );
-
-        // Its executions are what opens a board.
-        await tester.tap(find.text('Sprint 1'));
-        await tester.pumpAndSettle();
-        expect(
-          capturedRef.read(appNavProvider).currentLocation?.scopeId,
-          equals('exec-1'),
-        );
+        // Tasks and Bugs are rail places now, not tabs of the pane; one
+        // account needs no account switcher.
+        expect(find.text('Bugs'), findsNothing);
+        // The open execution, then the module tree.
+        expect(find.text('Sprint 1'), findsOneWidget);
+        expect(find.text('MODULES'), findsOneWidget);
+        expect(find.text('All modules'), findsOneWidget);
       },
     );
   });
