@@ -28,6 +28,7 @@ class MiniAppToolbar extends StatelessWidget {
     this.onStop,
     this.onHome,
     this.onDevTools,
+    this.trailing,
     this.showNavigation = true,
   });
 
@@ -50,6 +51,9 @@ class MiniAppToolbar extends StatelessWidget {
 
   /// Opens the page's developer tools; null hides the button.
   final VoidCallback? onDevTools;
+
+  /// Shown before the developer tools, e.g. a prompt to import cookies again.
+  final Widget? trailing;
   final bool showNavigation;
 
   @override
@@ -100,6 +104,7 @@ class MiniAppToolbar extends StatelessWidget {
               ),
             ),
           ),
+          ?trailing,
           if (onDevTools != null)
             AppIconButton(
               icon: LucideIcons.bug300,

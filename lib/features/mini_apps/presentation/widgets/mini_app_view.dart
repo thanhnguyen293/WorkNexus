@@ -12,6 +12,7 @@ import '../../domain/usecases/normalize_mini_app_url.dart';
 import '../providers/mini_app_browser_controller.dart';
 import '../providers/mini_app_providers.dart';
 import '../util/mini_app_shortcuts.dart';
+import 'mini_app_cookie_button.dart';
 import 'mini_app_linux_web_view.dart';
 import 'mini_app_load_error.dart';
 import 'mini_app_toolbar.dart';
@@ -181,6 +182,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
             onStop: _browser.stop,
             onHome: _goHome,
             onDevTools: embedded ? _browser.openDevTools : null,
+            trailing: MiniAppCookieButton(app: widget.app),
             onSubmitted: _go,
             onOpenExternal: () => _openExternal(
               Uri.tryParse(_address.text) ?? Uri.parse(widget.app.url),
