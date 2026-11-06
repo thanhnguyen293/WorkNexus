@@ -2,6 +2,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/zentao_board_status.dart';
 import '../../../../core/domain/value_objects/zentao_bug_column.dart';
+import '../../../../core/domain/value_objects/zentao_module_of.dart';
 import '../../../../core/domain/value_objects/zentao_task_column.dart';
 import '../../../../core/usecase/usecase.dart';
 
@@ -126,6 +127,7 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
         BoardFacetKind.confirmed,
       ],
       BoardFacetScope.task => const [
+        BoardFacetKind.module,
         BoardFacetKind.assignee,
         BoardFacetKind.status,
         BoardFacetKind.priority,
@@ -223,8 +225,7 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
             : '';
         return code.isEmpty ? const [] : [code];
       case BoardFacetKind.module:
-        final e = t.providerEntity;
-        final id = e is ZenTaoBugEntity ? (e.module ?? '') : '';
+        final id = zentaoModuleOf(t) ?? '';
         // '0' is ZenTao's "no module".
         return id.isEmpty || id == '0' ? const [] : [id];
     }

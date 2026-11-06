@@ -61,6 +61,9 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
     // and the project that holds that execution.
     String? execution,
     String? project,
+    // The product module the task sits in (id; '0' for none), as ZenTao's
+    // task list groups by.
+    String? module,
     // A parent task's status follows its subtasks, so ZenTao offers it fewer
     // actions (no start, finish or reopen).
     @Default(false) bool isParent,

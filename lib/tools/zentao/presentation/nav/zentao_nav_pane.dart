@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/tools/tool_module.dart';
-import '../../../../shared/shell_pane/feature_tab_strip.dart';
 import '../../../../shared/shell_pane/tool_pane_scaffold.dart';
+import 'zentao_account_switcher.dart';
 import 'zentao_bug_module_pane.dart';
-import 'zentao_scope_lists.dart';
+import 'zentao_task_module_pane.dart';
 
 /// Navigation pane (L3/L4) for ZenTao accounts. Composes the header,
 /// feature tab strip, and scope lists.
@@ -28,7 +28,7 @@ class ZentaoNavPane extends ConsumerWidget {
     final Widget body;
     switch (location.section.value) {
       case 'zentao.tasks':
-        body = ZentaoProjectsScopeList(account: account, location: location);
+        body = ZentaoTaskModulePane(account: account);
       case 'zentao.bugs':
         body = ZentaoBugModulePane(account: account, location: location);
       default:
@@ -36,12 +36,12 @@ class ZentaoNavPane extends ConsumerWidget {
     }
 
     return ToolPaneScaffold(
-      tabStrip: FeatureTabStrip(
+      // Tasks and Bugs are rail places of their own; the pane picks the
+      // account instead.
+      tabStrip: ZenTaoAccountSwitcher(
+        account: account,
+        section: location.section,
         sections: sections,
-        selectedSectionId: location.section,
-        onSectionSelected: (id) => ref
-            .read(appNavProvider.notifier)
-            .selectSection(id, sections: sections),
       ),
       body: body,
     );

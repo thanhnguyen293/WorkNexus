@@ -1,10 +1,10 @@
-import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/zentao_module_of.dart';
 import '../../../../core/usecase/usecase.dart';
 
 /// A row of the module tree: the module's own [name] (the last part of its
 /// path), how deep it sits ([depth] 0 for a top-level module) and how many of
-/// the board's bugs sit in it ([count]).
+/// the board's bugs or tasks sit in it ([count]).
 class ZenTaoModuleNode {
   const ZenTaoModuleNode({
     required this.id,
@@ -19,7 +19,7 @@ class ZenTaoModuleNode {
   final int count;
 }
 
-/// The module tree and how many bugs the board shows over all modules
+/// The module tree and how many tickets the board shows over all modules
 /// ([total], the "All modules" row).
 class ZenTaoModuleTree {
   const ZenTaoModuleTree({required this.nodes, required this.total});
@@ -31,28 +31,30 @@ class ZenTaoModuleTree {
 }
 
 /// Input for [BuildZenTaoModuleTree]: the product's module [paths] (id →
-/// "Live stream/Share", in ZenTao's order), the board's [bugs] with every
+/// "Live stream/Share", in ZenTao's order), the board's [tickets] (bugs or
+/// tasks) with every
 /// filter but the module one applied, whether to [hideEmpty] modules, and the
 /// [selected] module id (kept whatever its count, so a pick never vanishes
 /// from under the cursor).
 class ZenTaoModuleTreeInput {
   const ZenTaoModuleTreeInput({
     required this.paths,
-    required this.bugs,
+    required this.tickets,
     this.hideEmpty = false,
     this.selected,
   });
 
   final Map<String, String> paths;
-  final List<Ticket> bugs;
+  final List<Ticket> tickets;
   final bool hideEmpty;
   final String? selected;
 }
 
-/// The bug board's module tree, like the one beside ZenTao's own bug list:
+/// A ZenTao board's module tree, like the one beside ZenTao's own bug and
+/// task lists:
 /// each module named by the last part of its path, indented under its
-/// parents, with the count of bugs the board would show on picking it.
-/// Hiding empty modules keeps a parent whose sub-modules have bugs, so a busy
+/// parents, with the count of tickets the board would show on picking it.
+/// Hiding empty modules keeps a parent whose sub-modules have tickets, so a busy
 /// sub-module never loses its place. ZenTao's "no module" ('0') is not listed.
 class BuildZenTaoModuleTree
     extends UseCase<ZenTaoModuleTree, ZenTaoModuleTreeInput> {
@@ -61,8 +63,8 @@ class BuildZenTaoModuleTree
   @override
   ZenTaoModuleTree call(ZenTaoModuleTreeInput input) {
     final counts = <String, int>{};
-    for (final bug in input.bugs) {
-      if (bug.providerEntity case ZenTaoBugEntity(:final module?)) {
+    for (final ticket in input.tickets) {
+      if (zentaoModuleOf(ticket) case final module?) {
         counts[module] = (counts[module] ?? 0) + 1;
       }
     }
@@ -79,7 +81,7 @@ class BuildZenTaoModuleTree
       }
     }
     return ZenTaoModuleTree(
-      total: input.bugs.length,
+      total: input.tickets.length,
       nodes: [
         for (final m in modules)
           if (!input.hideEmpty || busyPaths.contains(m.parts.join('/')))

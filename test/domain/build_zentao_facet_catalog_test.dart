@@ -49,7 +49,8 @@ void main() {
         modules: {'12': 'Live stream'},
       ),
     );
-    expect(tasks.choices.containsKey(BoardFacetKind.module), isFalse);
+    // The task board names its execution's modules too.
+    expect(values(tasks, BoardFacetKind.module), ['12']);
   });
 
   test('without members the people are left to the tickets', () {

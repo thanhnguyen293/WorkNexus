@@ -7,8 +7,8 @@ import '../../../../core/util/zentao_labels.dart';
 import '../../../../shared/board/domain/usecases/derive_board_facets.dart';
 
 /// Input for [BuildZenTaoFacetCatalog]: the bug board ([bugs]) or the task
-/// board, the [members] of its product or execution, and the bug board
-/// product's [modules] (id → path such as "Livestream/Share", in ZenTao's
+/// board, the [members] of its product or execution, and the [modules] of
+/// that product or execution (id → path such as "Livestream/Share", in ZenTao's
 /// order).
 class ZenTaoFacetCatalogInput {
   const ZenTaoFacetCatalogInput({
@@ -55,8 +55,15 @@ class BuildZenTaoFacetCatalog
     final priorities = [
       for (final p in Priority.values) BoardFacetChoice(p.name),
     ];
+    // ZenTao's "no module" ('0', path "/") is not a module to pick.
+    final modules = [
+      for (final e in input.modules.entries)
+        if (e.key != '0' && e.value.trim().isNotEmpty)
+          BoardFacetChoice(e.key, label: e.value),
+    ];
     if (!input.bugs) {
       return BoardFacetCatalog({
+        if (modules.isNotEmpty) BoardFacetKind.module: modules,
         BoardFacetKind.status: [
           for (final c in [
             ...ZenTaoTaskColumn.values,
@@ -67,12 +74,6 @@ class BuildZenTaoFacetCatalog
         BoardFacetKind.priority: priorities,
       });
     }
-    // ZenTao's "no module" ('0', path "/") is not a module to pick.
-    final modules = [
-      for (final e in input.modules.entries)
-        if (e.key != '0' && e.value.trim().isNotEmpty)
-          BoardFacetChoice(e.key, label: e.value),
-    ];
     return BoardFacetCatalog({
       if (modules.isNotEmpty) BoardFacetKind.module: modules,
       BoardFacetKind.status: [

@@ -71,6 +71,11 @@ abstract class ToolModule {
   /// Sections supported by this module.
   List<ToolSection> get sections => const [];
 
+  /// Whether the rail shows this tool's [sections] as places of their own
+  /// (like the chat) instead of one button per account; the account is then
+  /// picked inside the tool's navigation pane.
+  bool get sectionsOnRail => false;
+
   /// Role label for this tool module on the workspace overview card (e.g. "Project management").
   String Function(AppL10n) get roleLabel =>
       (l10n) => '';

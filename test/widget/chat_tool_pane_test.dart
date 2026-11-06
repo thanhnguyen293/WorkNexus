@@ -68,7 +68,7 @@ void main() {
     expect(paneWidth(tester), 240);
   });
 
-  testWidgets('ZenTao tabs are Tasks and Bugs, full width even when narrow', (
+  testWidgets('the ZenTao pane keeps its full width even when narrow', (
     tester,
   ) async {
     const module = ZentaoModule();
@@ -83,8 +83,8 @@ void main() {
     );
 
     expect(paneWidth(tester), 300);
-    expect(find.text('Tasks'), findsOneWidget);
-    expect(find.text('Bugs'), findsOneWidget);
+    // Tasks and Bugs are rail places, not tabs of the pane.
+    expect(find.text('Bugs'), findsNothing);
     expect(find.text('Chat'), findsNothing);
   });
 }
