@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_input_decoration.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/detail/presentation/widgets/action_dialog_scaffold.dart';
+import '../../../../shared/detail/presentation/widgets/ticket_note_field.dart';
 import '../../domain/value_objects/zentao_bug_action.dart';
 import 'zentao_action_looks.dart';
 
@@ -32,7 +33,7 @@ class ZenTaoBugActionDialog extends ConsumerStatefulWidget {
 }
 
 class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
-  final _note = TextEditingController();
+  late final _note = TicketNoteController(widget.ticket);
   final _build = TextEditingController(text: 'trunk');
   String? _assignee;
   bool _busy = false;
@@ -54,15 +55,15 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
       ZenTaoBugAction.confirm => service.confirmBug(
         ticket,
         assignee: _assignee,
-        comment: _note.text,
+        comment: _note.value,
       ),
       ZenTaoBugAction.activate => service.activateBug(
         ticket,
         build: _build.text,
         assignee: _assignee,
-        comment: _note.text,
+        comment: _note.value,
       ),
-      ZenTaoBugAction.close => service.closeBug(ticket, comment: _note.text),
+      ZenTaoBugAction.close => service.closeBug(ticket, comment: _note.value),
       ZenTaoBugAction.resolve => throw ArgumentError.value(
         widget.action,
         'action',
@@ -112,7 +113,7 @@ class _ZenTaoBugActionDialogState extends ConsumerState<ZenTaoBugActionDialog> {
             SizedBox(height: context.spacing.xl2),
           ],
           FieldLabel(l.zentaoNote),
-          NoteField(_note),
+          TicketNoteField(ticket: widget.ticket, controller: _note),
         ],
       ),
     );
