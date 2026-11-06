@@ -259,12 +259,13 @@ class AppSettings {
 const Object _unset = Object();
 
 /// The selectable UI fonts. Geist Mono is served via `google_fonts`; Be
-/// Vietnam Pro / Space Grotesk / Space Mono are bundled in `assets/fonts/`;
-/// the rest are standard macOS system families (rendered via the platform font
+/// Vietnam Pro / Poppins / Space Grotesk / Space Mono are bundled in
+/// `assets/fonts/`; the rest are standard macOS system families (rendered via the platform font
 /// manager, with a fallback to the bundled sans if unavailable).
 const List<String> kFontChoices = <String>[
   kSystemFont,
   kVietnamFont, // Be Vietnam Pro (default, bundled)
+  kPoppinsFont, // Poppins (bundled; Vietnamese letters fall back)
   kSansFont, // Space Grotesk (bundled)
   'Helvetica Neue',
   'Avenir Next',
