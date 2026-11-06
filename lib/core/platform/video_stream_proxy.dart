@@ -12,6 +12,7 @@ import 'package:flutter_video_caching/flutter_video_caching.dart'
         VideoProxy;
 
 import 'directory_size.dart';
+import 'media_playback_priority.dart';
 
 /// A localhost caching proxy (flutter_video_caching) a player streams a
 /// remote video through: it plays while the rest downloads in segments, and
@@ -20,14 +21,26 @@ import 'directory_size.dart';
 ///
 /// Started on first use, not at launch: most sessions never play a video.
 class VideoStreamProxy {
-  VideoStreamProxy({Directory? cacheDir, this.maxStorageMb = 1024})
-    : _cacheDir =
-          cacheDir ??
-          Directory('${Directory.systemTemp.path}/worknexus_video_stream');
+  VideoStreamProxy({
+    Directory? cacheDir,
+    this.maxStorageMb = 1024,
+    MediaPlaybackPriority? priority,
+  }) : _cacheDir =
+           cacheDir ??
+           Directory('${Directory.systemTemp.path}/worknexus_video_stream'),
+       _priority = priority ?? mediaPlaybackPriority;
 
   final Directory _cacheDir;
   final int maxStorageMb;
+  final MediaPlaybackPriority _priority;
   Future<bool>? _started;
+
+  /// The precache's priority in the download pool; a player's own requests
+  /// rank higher, so pausing these never stalls the video being watched.
+  static const _backgroundPriority = 1;
+
+  /// Precache downloads paused for a playing video, resumed once it loaded.
+  final _paused = <String>{};
 
   /// [origin] rewritten to go through the proxy; null when the proxy can't
   /// start (the caller then downloads the whole file instead).
@@ -50,6 +63,8 @@ class VideoStreamProxy {
     int segments = 2,
   }) async {
     if (!await (_started ??= _start())) return;
+    // Not while a playing video is still loading.
+    await _priority.idle();
     try {
       await VideoCaching.precache(
         origin.toString(),
@@ -77,6 +92,24 @@ class VideoStreamProxy {
     } on Exception {
       // A warm-up only: playback fetches whatever is missing.
     }
+  }
+
+  /// Pauses the precache while a playing video loads; resumes it after.
+  void _onPlayback(bool busy) {
+    final downloads = VideoProxy.downloadManager;
+    if (busy) {
+      for (final task in [...downloads.downloadingTasks]) {
+        if (task.priority > _backgroundPriority) continue;
+        _paused.add(task.id);
+        downloads.pauseTaskById(task.id);
+      }
+      return;
+    }
+    final waiting = {for (final t in downloads.allTasks) t.id};
+    for (final id in _paused) {
+      if (waiting.contains(id)) downloads.resumeTaskById(id);
+    }
+    _paused.clear();
   }
 
   /// Bytes of video kept on disk.
@@ -110,6 +143,7 @@ class VideoStreamProxy {
         maxConcurrentDownloads: 8,
         urlMatcher: _AnyVideoIsMp4(),
       );
+      _priority.changes.listen(_onPlayback);
       return true;
     } on Exception {
       // Retried on the next video rather than never.

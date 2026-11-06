@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/platform/media_playback_priority.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 
 void main() {
@@ -73,5 +74,70 @@ void main() {
 
     final result = await upload.timeout(const Duration(seconds: 3));
     expect((result as Err).failure, isA<CancelledFailure>());
+  });
+
+  group('a background download gives way to a playing video', () {
+    test('it waits to start while a video loads, then runs', () async {
+      final priority = MediaPlaybackPriority();
+      final release = priority.hold();
+      var received = 0;
+      final download = const XxdHttpDatasource(clientVersion: '9.0').download(
+        Uri.parse('http://127.0.0.1:${server.port}/file'),
+        yieldTo: priority,
+        onProgress: (got, total) => received = got,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(received, 0, reason: 'not started while the video loads');
+
+      release();
+      final result = await download.timeout(const Duration(seconds: 30));
+      expect(result, isA<Ok<Uint8List>>());
+      expect(received, 1024 * 1024);
+    });
+
+    test('it pauses midway while a video loads', () async {
+      final priority = MediaPlaybackPriority();
+      final started = Completer<void>();
+      var received = 0;
+      final download = const XxdHttpDatasource(clientVersion: '9.0').download(
+        Uri.parse('http://127.0.0.1:${server.port}/file'),
+        yieldTo: priority,
+        onProgress: (got, total) {
+          received = got;
+          if (!started.isCompleted) started.complete();
+        },
+      );
+      await started.future.timeout(const Duration(seconds: 3));
+      final release = priority.hold();
+      // What was already in flight lands; then nothing more.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      final atPause = received;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      expect(received, atPause);
+      expect(received, lessThan(1024 * 1024));
+
+      release();
+      final result = await download.timeout(const Duration(seconds: 30));
+      expect(result, isA<Ok<Uint8List>>());
+    });
+
+    test('cancelling it while paused still ends it', () async {
+      final priority = MediaPlaybackPriority();
+      final cancel = Completer<void>();
+      final started = Completer<void>();
+      final download = const XxdHttpDatasource(clientVersion: '9.0').download(
+        Uri.parse('http://127.0.0.1:${server.port}/file'),
+        yieldTo: priority,
+        cancel: cancel.future,
+        onProgress: (got, total) {
+          if (!started.isCompleted) started.complete();
+        },
+      );
+      await started.future.timeout(const Duration(seconds: 3));
+      priority.hold();
+      cancel.complete();
+      final result = await download.timeout(const Duration(seconds: 3));
+      expect((result as Err).failure, isA<CancelledFailure>());
+    });
   });
 }

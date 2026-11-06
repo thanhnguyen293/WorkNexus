@@ -5,6 +5,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/platform/video_playback_hold.dart';
+
 import '../../domain/value_objects/message_content.dart';
 import 'chat_providers.dart';
 
@@ -43,9 +45,16 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
   /// read state.
   VideoPlayerController? _player;
 
+  /// Stops [_player] holding the network while it streams (see
+  /// [holdWhileLoading]).
+  void Function()? _release;
+
   @override
   ChatVideoPlayback? build() {
-    ref.onDispose(() => _player?.dispose());
+    ref.onDispose(() {
+      _release?.call();
+      _player?.dispose();
+    });
     return null;
   }
 
@@ -65,6 +74,8 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
     if (player == null) return false;
     if (at != null) await player.seekTo(at);
     _player = player;
+    // Background video downloads wait while this one still loads.
+    _release = holdWhileLoading(player);
     state = ChatVideoPlayback(
       thread: thread,
       messageGid: messageGid,
@@ -101,6 +112,8 @@ class ChatVideoPlaybackNotifier extends Notifier<ChatVideoPlayback?> {
     if (!ref.mounted) return;
     final current = state;
     if (current == null) return;
+    _release?.call();
+    _release = null;
     _player = null;
     state = null;
     // Once the frame that drops its views is drawn: a VideoPlayer still on

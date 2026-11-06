@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/platform/media_playback_priority.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/api_scheme_codec.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_cipher.dart';
 import 'package:work_nexus/features/chat/data/datasources/xxd/xxd_http_datasource.dart';
@@ -32,6 +33,7 @@ class FakeXxdHttp extends XxdHttpDatasource {
     String? pinnedFingerprint,
     void Function(int received, int? total)? onProgress,
     Future<void>? cancel,
+    MediaPlaybackPriority? yieldTo,
   }) async {
     downloads.add(uri);
     return Ok(downloadBytes);

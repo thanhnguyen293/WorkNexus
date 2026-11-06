@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/domain/value_objects/media_request.dart';
+import '../../../../core/platform/video_playback_hold.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/video/smooth_video_position.dart';
@@ -46,6 +47,10 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
   VideoPlayerController? _player;
   bool _failed = false;
 
+  /// Stops [_player] holding the network while it streams: background
+  /// video caching waits for it (see `holdWhileLoading`).
+  void Function()? _release;
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +90,7 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
       await player.dispose();
       return false;
     }
+    _release = holdWhileLoading(player);
     setState(() => _player = player);
     await player.play();
     return true;
@@ -92,6 +98,7 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
 
   @override
   void dispose() {
+    _release?.call();
     _player?.dispose();
     super.dispose();
   }

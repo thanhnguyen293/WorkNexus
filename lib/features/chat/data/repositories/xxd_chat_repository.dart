@@ -804,7 +804,13 @@ class XxdChatRepository implements ChatRepository {
       final frame = await _thumbnailer.cachedThumbnailOf(cached);
       if (frame != null) return Ok(frame);
     }
-    final path = await attachmentFile(accountId, video);
+    // Downloaded for its frame only: a playing video loads first.
+    final path = await _attachments.localFile(
+      accountId,
+      _sessions[accountId],
+      video,
+      background: true,
+    );
     switch (path) {
       case Ok(:final value):
         final frame = await _thumbnailer.thumbnailOf(value);
