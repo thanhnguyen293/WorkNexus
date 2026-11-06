@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/filter_state.dart';
 import '../../domain/usecases/derive_board_facets.dart';
 import '../../domain/usecases/is_saved_filter_applied.dart';
 import '../providers/board_providers.dart';
@@ -69,7 +70,11 @@ class ActiveFilterBar extends ConsumerWidget {
             ),
           for (final g in facets.groups)
             if (g.options.where((o) => facetActive(f, g.kind, o.value))
-                case final picked when picked.isNotEmpty)
+                case final picked
+                when picked.isNotEmpty &&
+                    // The saved filter's own picks are its chip; only what
+                    // was added on top of it (a module) gets one of its own.
+                    !_fromPreset(g, picked, applied?.filter))
               _ActiveChip(
                 label: facetHeader(l, g.kind),
                 value: picked.map((o) => nameOf(g, o)).join(', '),
@@ -84,6 +89,21 @@ class ActiveFilterBar extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Whether [picked] in group [g] is exactly what [preset] picks there.
+bool _fromPreset(
+  BoardFacetGroup g,
+  Iterable<BoardFacetOption> picked,
+  FilterState? preset,
+) {
+  if (preset == null) return false;
+  final saved = {
+    for (final o in g.options)
+      if (facetActive(preset, g.kind, o.value)) o.value,
+  };
+  return saved.length == picked.length &&
+      picked.every((o) => saved.contains(o.value));
 }
 
 class _ActiveChip extends StatelessWidget {

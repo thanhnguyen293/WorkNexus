@@ -8,6 +8,8 @@ import '../value_objects/saved_filter.dart';
 /// The workspace is the board's scope, not a criterion (applying a preset keeps
 /// it), so it never counts. Nor does a toolbar search typed over a preset saved
 /// without one: searching the board does not stop the preset being in effect.
+/// The same goes for a module picked from the module tree over a preset saved
+/// without one: narrowing to a module keeps the preset in effect.
 class IsSavedFilterApplied {
   const IsSavedFilterApplied();
 
@@ -16,6 +18,7 @@ class IsSavedFilterApplied {
     return saved.copyWith(
           workspaceId: current.workspaceId,
           search: saved.search.trim().isEmpty ? current.search : saved.search,
+          modules: saved.modules.isEmpty ? current.modules : saved.modules,
         ) ==
         current;
   }
