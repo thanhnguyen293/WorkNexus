@@ -183,6 +183,8 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     // every watch over these tables); compared against the stored row, so the
     // server's answer still replaces an optimistic guess.
     await _store.writeIfChanged(merged);
+    // Warm its videos while the reader is still on the description.
+    unawaited(_precacheVideos(merged));
 
     // Concurrently; `Future.wait` keeps an adapter's own exception type.
     final [
@@ -274,6 +276,33 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
       return local == null ? null : (uri: local, headers: origin.headers);
     } on Exception {
       return null;
+    }
+  }
+
+  /// Videos of a ticket worth warming at once; the rest load when opened.
+  static const _precacheVideoLimit = 3;
+
+  static const _videoExts = {'mp4', 'mov', 'm4v', 'webm'};
+
+  Future<void> _precacheVideos(Ticket ticket) async {
+    final files = switch (ticket.providerEntity) {
+      ZenTaoBugEntity(:final attachments) => attachments,
+      _ => const <TicketAttachment>[],
+    };
+    final videos = files
+        .where((f) => _videoExts.contains(f.extension?.toLowerCase()))
+        .take(_precacheVideoLimit);
+    for (final video in videos) {
+      final url = video.streamUrl;
+      if (url == null) continue;
+      try {
+        final adapter = await adapterFor(ticket.accountId);
+        final origin = await adapter?.streamRequest(url);
+        if (origin == null) continue;
+        await _streamProxy.precache(origin.uri, origin.headers);
+      } on Exception {
+        // A warm-up only: opening the video fetches what's missing.
+      }
     }
   }
 

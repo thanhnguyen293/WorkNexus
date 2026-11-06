@@ -8,12 +8,14 @@ import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter.dart';
 import 'package:work_nexus/core/domain/adapters/provider_adapter_registry.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
+import 'package:work_nexus/core/domain/entities/provider_entity.dart';
 import 'package:work_nexus/core/domain/entities/ticket.dart';
 import 'package:work_nexus/core/domain/value_objects/priority.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/platform/credential_store.dart';
+import 'package:work_nexus/core/platform/video_stream_proxy.dart';
 import 'package:work_nexus/shared/sync/data/source_list_cache.dart';
 import 'package:work_nexus/shared/sync/data/sync_coordinator.dart';
 
@@ -77,7 +79,11 @@ void main() {
   late _RecordingRegistry registry;
   late SyncCoordinator coordinator;
 
-  setUpAll(() => registerFallbackValue(_ticket));
+  setUpAll(() {
+    registerFallbackValue(_ticket);
+    registerFallbackValue(Uri());
+    registerFallbackValue(<String, String>{});
+  });
 
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
@@ -256,4 +262,64 @@ void main() {
     await coordinator.syncAccount(_account);
     verify(adapter.listAssignedTickets).called(1);
   });
+
+  test('syncing a ticket warms its streamable videos only', () async {
+    final proxy = _MockStreamProxy();
+    when(() => proxy.precache(any(), any())).thenAnswer((_) async {});
+    final warmed = SyncCoordinator(
+      db,
+      credentials,
+      registry: registry,
+      streamProxy: proxy,
+    );
+    final adapter = await warmed.adapterFor('gl-acc') as _MockAdapter;
+    const video = 'https://z.example/data/upload/1/v';
+    when(() => adapter.getTicket(any())).thenAnswer(
+      (_) async => Ok(
+        _ticket.copyWith(
+          providerEntity: const TicketProviderEntity.zentaoBug(
+            attachments: [
+              TicketAttachment(
+                id: '1',
+                title: 'rec.mp4',
+                url: 'u1',
+                extension: 'mp4',
+                streamUrl: video,
+              ),
+              TicketAttachment(
+                id: '2',
+                title: 'shot.png',
+                url: 'u2',
+                extension: 'png',
+                streamUrl: 'https://z.example/data/upload/1/p',
+              ),
+              TicketAttachment(
+                id: '3',
+                title: 'old.mp4',
+                url: 'u3',
+                extension: 'mp4',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    when(
+      () => adapter.listComments(any()),
+    ).thenAnswer((_) async => const Ok([]));
+    when(
+      () => adapter.listActivity(any()),
+    ).thenAnswer((_) async => const Ok([]));
+    when(() => adapter.streamRequest(video)).thenAnswer(
+      (_) async => (uri: Uri.parse(video), headers: const {'Token': 't'}),
+    );
+
+    await warmed.syncTicketDetail(_ticket);
+    await pumpEventQueue();
+
+    verify(() => proxy.precache(Uri.parse(video), {'Token': 't'})).called(1);
+    verifyNoMoreInteractions(proxy);
+  });
 }
+
+class _MockStreamProxy extends Mock implements VideoStreamProxy {}
