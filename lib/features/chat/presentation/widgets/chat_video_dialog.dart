@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +12,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_video_playback.dart';
 import 'attachment_download.dart';
 import 'chat_image_viewer.dart';
 import 'chat_labels.dart';
@@ -121,40 +120,44 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
     _load();
   }
 
+  /// Streams the video (it plays while it downloads; the file on disk when
+  /// it is here), falling back to downloading it whole.
   Future<void> _load() async {
-    final path = await ref
-        .read(chatControllerProvider)
-        .attachmentFile(widget.accountId, widget.video);
+    final chats = ref.read(chatControllerProvider);
+    final stream = await chats.videoStream(widget.accountId, widget.video);
     if (!mounted) return;
-    switch (path) {
-      case Ok(:final value):
-        final player = VideoPlayerController.file(File(value));
-        try {
-          await player.initialize();
-        } on Exception {
-          await player.dispose();
-          if (mounted) {
-            setState(() => _error = AppL10n.of(context).chatVideoFailed);
-          }
+    var player = switch (stream) {
+      Ok(:final value) => await openChatVideo(value),
+      Err() => null,
+    };
+    if (!mounted) return player?.dispose();
+    if (player == null) {
+      final path = await chats.attachmentFile(widget.accountId, widget.video);
+      if (!mounted) return;
+      switch (path) {
+        case Ok(:final value):
+          player = await openChatVideo(Uri.file(value));
+        case Err(:final failure):
+          setState(() => _error = failure.message);
           return;
-        }
-        if (!mounted) {
-          await player.dispose();
-          return;
-        }
-        if (widget.startAt case final at?) await player.seekTo(at);
-        if (!mounted) {
-          await player.dispose();
-          return;
-        }
-        setState(() {
-          _player = player;
-          _path = value;
-        });
-        await player.play();
-      case Err(:final failure):
-        setState(() => _error = failure.message);
+      }
+      if (!mounted) return player?.dispose();
+      if (player == null) {
+        setState(() => _error = AppL10n.of(context).chatVideoFailed);
+        return;
+      }
     }
+    if (widget.startAt case final at?) await player.seekTo(at);
+    if (!mounted) return player.dispose();
+    final source = player.dataSource;
+    setState(() {
+      _player = player;
+      // "Open with" needs the file itself: only when it plays from disk.
+      _path = source.startsWith('file://')
+          ? Uri.parse(source).toFilePath()
+          : null;
+    });
+    await player.play();
   }
 
   @override
@@ -183,7 +186,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
   }
 
   Future<void> _save() async {
-    if (_path == null) return;
+    if (_player == null) return;
     await saveAttachmentCopyAs(
       context,
       ref,
@@ -233,7 +236,7 @@ class _ChatVideoDialogState extends ConsumerState<ChatVideoDialog> {
                   ChatViewerButton(
                     icon: LucideIcons.download300,
                     tooltip: l.chatSaveAs,
-                    onPressed: path == null ? null : _save,
+                    onPressed: player == null ? null : _save,
                   ),
                   ChatViewerButton(
                     icon: LucideIcons.squareArrowOutUpRight300,

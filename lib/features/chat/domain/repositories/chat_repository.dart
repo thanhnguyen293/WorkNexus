@@ -219,6 +219,10 @@ abstract class ChatRepository implements ChatRuntimeSettings {
     MessageContent content,
   );
 
+  /// Where a player streams video [content] from: the copy on disk when it
+  /// is here, else a local URL that plays while the file downloads.
+  Future<Result<Uri>> videoStream(String accountId, MessageContent content);
+
   /// Copies an attachment (downloaded first if needed) to [targetPath],
   /// remembering it for [savedAttachmentCopy].
   Future<Result<void>> saveAttachmentCopy(

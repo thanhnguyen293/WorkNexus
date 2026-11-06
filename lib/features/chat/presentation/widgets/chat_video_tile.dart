@@ -88,6 +88,13 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
       return;
     }
     setState(() => _starting = true);
+    // Streamed: it plays while it downloads. Downloaded whole (with its
+    // progress) only when it can't be.
+    if (await _stream()) {
+      if (mounted) setState(() => _starting = false);
+      return;
+    }
+    if (!mounted) return;
     await openAttachment(
       context,
       ref,
@@ -98,21 +105,34 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
     if (mounted) setState(() => _starting = false);
   }
 
-  Future<void> _start() async {
+  /// Plays [source] in the frame; false when it can't be opened.
+  Future<bool> _playFrom(Uri source) async {
     final (gid, chatGid) = (widget.messageGid, widget.chatGid);
-    if (gid == null || chatGid == null) return;
+    if (gid == null || chatGid == null) return false;
+    return _playback.start(
+      thread: (accountId: widget.accountId, chatGid: chatGid),
+      messageGid: gid,
+      file: widget.file,
+      source: source,
+    );
+  }
+
+  Future<bool> _stream() async {
+    final stream = await ref
+        .read(chatControllerProvider)
+        .videoStream(widget.accountId, widget.file);
+    if (!mounted) return true;
+    return stream is Ok<Uri> && await _playFrom(stream.value);
+  }
+
+  Future<void> _start() async {
     final path = await ref
         .read(chatControllerProvider)
         .attachmentFile(widget.accountId, widget.file);
     if (!mounted) return;
     switch (path) {
       case Ok(:final value):
-        final ok = await _playback.start(
-          thread: (accountId: widget.accountId, chatGid: chatGid),
-          messageGid: gid,
-          file: widget.file,
-          path: value,
-        );
+        final ok = await _playFrom(Uri.file(value));
         if (!ok && mounted) {
           showChatSnack(context, AppL10n.of(context).chatVideoFailed);
         }
