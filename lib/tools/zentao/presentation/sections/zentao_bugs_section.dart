@@ -13,7 +13,6 @@ import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_scope_title_provider.dart';
 import '../util/keep_bug_board_product.dart';
-import '../widgets/zentao_active_filter_bar.dart';
 import '../widgets/zentao_board_toolbar.dart';
 import '../widgets/zentao_bug_board_view.dart';
 import '../widgets/zentao_bug_section_header.dart';
@@ -130,8 +129,6 @@ class ZentaoBugsSection extends ConsumerWidget {
             ),
           ],
         ),
-
-        const ZenTaoActiveFilterBar(bugs: true),
 
         // Section Body (Board or Table)
         Expanded(child: body),
