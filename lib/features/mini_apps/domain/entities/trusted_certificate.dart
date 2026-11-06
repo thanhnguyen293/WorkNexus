@@ -2,6 +2,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'trusted_certificate.freezed.dart';
 
+/// The [TrustedCertificate.error] of a site trusted from its mini app's
+/// settings, before any certificate was refused.
+const kTrustedByChoice = 'trusted-by-choice';
+
 /// A site whose invalid certificate the user chose to trust: the [origin]
 /// (`https://host:port`) and the [error] its certificate was refused with when
 /// they trusted it (`net::ERR_CERT_DATE_INVALID`), kept to say in Settings what

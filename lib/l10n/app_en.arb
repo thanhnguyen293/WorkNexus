@@ -2236,6 +2236,16 @@
   },
   "certTrust": "Trust this site",
   "certTrustSaveFailed": "Couldn't save that you trust this site.",
+  "miniAppCertAlwaysTrust": "Always trust this site's certificate",
+  "miniAppCertAlwaysTrustHint": "Skips the certificate warning for {origin}. Anyone able to intercept your connection to it could read what you send, so use it only for servers you run yourself.",
+  "@miniAppCertAlwaysTrustHint": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppTrustedCertByChoice": "Trusted from the mini app's settings, without a prompt",
   "miniAppTrustedCertsSection": "Trusted certificates",
   "miniAppTrustedCertsHint": "Sites whose invalid certificate you chose to trust. They load without asking again, until you forget them here. Windows only.",
   "miniAppTrustedCertsEmpty": "No site is trusted.",

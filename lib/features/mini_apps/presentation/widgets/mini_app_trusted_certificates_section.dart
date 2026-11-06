@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/trusted_certificate.dart';
 import '../../domain/value_objects/certificate_problem.dart';
 import '../providers/trusted_certificates_controller.dart';
 
@@ -89,11 +90,12 @@ class MiniAppTrustedCertificatesSection extends ConsumerWidget {
   }
 
   /// The problem in a few words: the same ones the prompt used.
-  static String _reason(AppL10n l, String error) =>
-      switch (CertificateProblem.of(error)) {
-        CertificateProblem.dates => l.certReasonDates,
-        CertificateProblem.name => l.certReasonName,
-        CertificateProblem.authority => l.certReasonAuthority,
-        CertificateProblem.other => l.certReasonOther(error),
-      };
+  static String _reason(AppL10n l, String error) => error == kTrustedByChoice
+      ? l.miniAppTrustedCertByChoice
+      : switch (CertificateProblem.of(error)) {
+          CertificateProblem.dates => l.certReasonDates,
+          CertificateProblem.name => l.certReasonName,
+          CertificateProblem.authority => l.certReasonAuthority,
+          CertificateProblem.other => l.certReasonOther(error),
+        };
 }
