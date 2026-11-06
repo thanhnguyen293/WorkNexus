@@ -25,14 +25,21 @@ class LocalTrustedCertificateRepository
   }
 
   @override
-  Future<Result<List<TrustedCertificate>>> trust(String origin, String error) =>
-      _change(
-        (items) => [
-          for (final item in items)
-            if (item.origin != origin) item,
-          TrustedCertificate(origin: origin, error: error),
-        ],
-      );
+  Future<Result<List<TrustedCertificate>>> trust(
+    String origin,
+    String error, {
+    String? fingerprint,
+  }) => _change(
+    (items) => [
+      for (final item in items)
+        if (item.origin != origin) item,
+      TrustedCertificate(
+        origin: origin,
+        error: error,
+        fingerprint: fingerprint,
+      ),
+    ],
+  );
 
   @override
   Future<Result<List<TrustedCertificate>>> forget(
@@ -50,7 +57,11 @@ class LocalTrustedCertificateRepository
 
   Future<List<TrustedCertificate>> _read() async => [
     for (final row in await _store.read())
-      TrustedCertificate(origin: row.origin, error: row.error),
+      TrustedCertificate(
+        origin: row.origin,
+        error: row.error,
+        fingerprint: row.fingerprint,
+      ),
   ];
 
   Future<Result<List<TrustedCertificate>>> _change(
@@ -60,7 +71,12 @@ class LocalTrustedCertificateRepository
       try {
         final items = change(await _read());
         await _store.write([
-          for (final item in items) (origin: item.origin, error: item.error),
+          for (final item in items)
+            (
+              origin: item.origin,
+              error: item.error,
+              fingerprint: item.fingerprint,
+            ),
         ]);
         return Ok<List<TrustedCertificate>>(items);
       } on Exception catch (e) {

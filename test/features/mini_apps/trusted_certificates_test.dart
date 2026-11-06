@@ -65,6 +65,17 @@ void main() {
       expect(await all(), isEmpty);
     });
 
+    test('keeps the fingerprint of the certificate trusted', () async {
+      await repository.trust(_site, _expired, fingerprint: 'ABCD');
+      expect(await all(), [
+        const TrustedCertificate(
+          origin: _site,
+          error: _expired,
+          fingerprint: 'ABCD',
+        ),
+      ]);
+    });
+
     test('trust is for the site, and answers with the new list', () async {
       final after = await repository.trust(_site, _expired);
       expect(after.valueOrNull, [

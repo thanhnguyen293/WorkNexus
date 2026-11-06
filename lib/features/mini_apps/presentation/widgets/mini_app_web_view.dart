@@ -20,6 +20,7 @@ import '../util/mini_app_flutter_web_focus_capability.dart';
 import '../util/mini_app_login_capability.dart';
 import '../util/mini_app_notifications.dart';
 import '../util/mini_app_page_capability.dart';
+import '../util/mini_app_server_trust.dart';
 import '../util/route_mini_app_window_link.dart';
 import 'mini_app_discarded_window.dart';
 import 'mini_app_popup.dart';
@@ -55,6 +56,10 @@ class MiniAppWebView extends ConsumerStatefulWidget {
 class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
   /// What to do when the site's certificate is refused (Windows only).
   late final _certificates = MiniAppCertificateGuard(
+    context: () => context,
+    ref: ref,
+  );
+  late final _serverTrust = MiniAppServerTrust(
     context: () => context,
     ref: ref,
   );
@@ -114,20 +119,11 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
         browser.attach(web);
         _certificates.attach(controller);
       },
-      // A server the system refuses but whose certificate the user already
-      // accepted in the app (the ZenTao chat server's self-signed one, which
-      // ZenTao's own web chat calls) is let through for that certificate
-      // only. Every other answer stays the web view's own.
-      onReceivedServerTrustAuthRequest: (_, challenge) async {
-        final der =
-            challenge.protectionSpace.sslCertificate?.x509Certificate?.encoded;
-        if (der == null || !await ref.read(isPinnedCertificateProvider)(der)) {
-          return null;
-        }
-        return ServerTrustAuthResponse(
-          action: ServerTrustAuthResponseAction.PROCEED,
-        );
-      },
+      // A refused certificate (ZenTao's chat server's self-signed one, which
+      // its web chat calls) goes through once the user accepted it, in the
+      // chat or when asked here (macOS; Windows has its guard above).
+      onReceivedServerTrustAuthRequest: (_, challenge) =>
+          _serverTrust.answer(challenge.protectionSpace),
       onPermissionRequest: (_, request) => answerMiniAppPermission(
         context,
         ref,

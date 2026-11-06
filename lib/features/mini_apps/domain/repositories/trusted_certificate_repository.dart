@@ -6,9 +6,14 @@ import '../entities/trusted_certificate.dart';
 abstract class TrustedCertificateRepository {
   Future<Result<List<TrustedCertificate>>> all();
 
-  /// Trusts [origin], which was refused with [error]; a site already trusted
-  /// keeps one entry, with the latest error.
-  Future<Result<List<TrustedCertificate>>> trust(String origin, String error);
+  /// Trusts [origin], which was refused with [error] — only the certificate
+  /// with [fingerprint] when one is given. A site already trusted keeps one
+  /// entry, with the latest error and fingerprint.
+  Future<Result<List<TrustedCertificate>>> trust(
+    String origin,
+    String error, {
+    String? fingerprint,
+  });
 
   Future<Result<List<TrustedCertificate>>> forget(
     TrustedCertificate certificate,
