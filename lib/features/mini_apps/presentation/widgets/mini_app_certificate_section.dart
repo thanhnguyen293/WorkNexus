@@ -46,6 +46,7 @@ class MiniAppCertificateSection extends ConsumerWidget {
     return QuickSettingsSwitchField(
       label: l.miniAppCertAlwaysTrust,
       hint: l.miniAppCertAlwaysTrustHint,
+      padding: EdgeInsets.zero,
       value: trusted != null,
       onChanged: change,
     );
