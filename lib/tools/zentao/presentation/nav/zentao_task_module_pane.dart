@@ -11,11 +11,13 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/shell_pane/scope_rows.dart';
 import '../providers/zentao_board_providers.dart';
 import '../util/open_execution_board.dart';
+import '../widgets/zentao_execution_popover.dart';
 import 'zentao_module_tree_section.dart';
+import 'zentao_scope_picker_row.dart';
 
-/// The Tasks side panel, like the Bugs one: the open execution and the
-/// pinned ones (any other is a pick away in the header's execution
-/// switcher), then the execution's module tree, which narrows the board.
+/// The Tasks side panel, like the Bugs one: the pinned executions (and the
+/// open one), a picker for any other, then the execution's module tree,
+/// which narrows the board.
 class ZentaoTaskModulePane extends ConsumerWidget {
   const ZentaoTaskModulePane({super.key, required this.account});
 
@@ -39,11 +41,12 @@ class ZentaoTaskModulePane extends ConsumerWidget {
       appSettingsProvider.select((s) => s.pinnedExecutions),
     );
     bool isPinned(PinnedExecution e) => pinned.any((p) => p.key == e.key);
-    // The open execution first, then the pinned ones.
+    // The pinned ones in their own order, so opening one never reorders
+    // them; an open execution that is not pinned shows above them.
     final rows = [
-      ?current,
+      if (current != null && !isPinned(current)) current,
       for (final e in pinned)
-        if (e.accountId == account.id && e.key != current?.key) e,
+        if (e.accountId == account.id) e,
     ];
 
     return Column(
@@ -74,6 +77,11 @@ class ZentaoTaskModulePane extends ConsumerWidget {
                     ),
                   ),
                 ),
+              ZenTaoScopePickerRow(
+                label: l.zentaoOtherExecutions,
+                popover: (close) =>
+                    ZenTaoExecutionPopover(account: account, onClose: close),
+              ),
               SizedBox(height: s.sm),
               const ZenTaoModuleTreeSection(bugs: false),
             ],

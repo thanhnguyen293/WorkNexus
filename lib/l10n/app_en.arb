@@ -2526,6 +2526,8 @@
   "boardOpenColumn": "Open {column}",
   "@boardOpenColumn": {"placeholders": {"column": {"type": "String"}}},
   "removeFilter": "Remove filter",
+  "zentaoOtherExecutions": "Other executions…",
+  "zentaoOtherProducts": "Other products…",
   "zentaoProductsGroup": "Products",
   "zentaoProjectsGroup": "Projects",
   "zentaoPickExecution": "Pick an execution to see its tasks",
