@@ -7,8 +7,8 @@ import '../../../../shared/board/presentation/widgets/board_horizontal_scroll.da
 import '../providers/zentao_board_providers.dart';
 import 'zentao_bug_column_card.dart';
 
-/// The ZenTao bug Kanban board; the table is [ZenTaoBugTableView]. Columns
-/// with nothing to show fold to strips; the user can open or fold any.
+/// The ZenTao bug Kanban board; the table is [ZenTaoBugTableView]. Closed
+/// starts folded to a strip; the user can open or fold any column.
 class ZenTaoBugBoardView extends ConsumerStatefulWidget {
   const ZenTaoBugBoardView({super.key});
 

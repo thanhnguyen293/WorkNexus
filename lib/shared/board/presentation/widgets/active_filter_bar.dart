@@ -20,8 +20,9 @@ import 'filter_facet_groups.dart';
 
 /// The filters in effect, under a board's toolbar: the saved filter they
 /// match (highlighted), then one chip per picked group ("Severity: Critical,
-/// Major") whose ✕ drops that group, and Clear all. Nothing when no filter is
-/// picked, so an unfiltered board keeps its height.
+/// Major") whose ✕ drops that group, and Clear all. Sits inside the board's
+/// toolbar (`BoardToolbar.below`); nothing when no filter is picked, so an
+/// unfiltered board keeps its height.
 class ActiveFilterBar extends ConsumerWidget {
   const ActiveFilterBar({super.key, this.catalog, this.statusOption});
 
@@ -52,7 +53,7 @@ class ActiveFilterBar extends ConsumerWidget {
 
     final s = context.spacing;
     return Padding(
-      padding: EdgeInsets.fromLTRB(s.xl, 0, s.xl, s.md),
+      padding: EdgeInsets.only(top: s.sm),
       child: Wrap(
         spacing: s.sm,
         runSpacing: s.sm,

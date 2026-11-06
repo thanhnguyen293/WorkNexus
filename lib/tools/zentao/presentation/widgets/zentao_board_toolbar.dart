@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../shared/board/presentation/widgets/board_toolbar.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../providers/zentao_facet_catalog_provider.dart';
+import 'zentao_active_filter_bar.dart';
 import 'zentao_board_refresh_button.dart';
 import 'zentao_status_filter_option.dart';
 
@@ -61,5 +62,6 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
     modes: modes,
     viewMode: viewMode,
     onViewMode: (id) => ref.read(appNavProvider.notifier).setViewMode(id),
+    below: filtering ? ZenTaoActiveFilterBar(bugs: bugs) : null,
   );
 }
