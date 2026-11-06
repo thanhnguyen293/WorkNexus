@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import '../../../../../core/error/failure.dart';
 import '../../../../../core/error/result.dart';
+import '../../../../../core/platform/media_playback_priority.dart';
 import 'xxd_server_info.dart';
 import 'xxd_signing.dart';
 import 'xxd_tls.dart';
@@ -93,12 +94,18 @@ class XxdHttpDatasource {
   /// GETs [uri] (a `fileDownload` URL) through the pinned client.
   /// Downloads [uri]; [onProgress] gets the bytes received and the total
   /// (the response's length, else null).
+  ///
+  /// A background download passes [yieldTo]: it starts once no playing
+  /// video is loading and pauses while one is, so the video being watched
+  /// gets the bandwidth.
   Future<Result<Uint8List>> download(
     Uri uri, {
     String? pinnedFingerprint,
     void Function(int received, int? total)? onProgress,
     Future<void>? cancel,
+    MediaPlaybackPriority? yieldTo,
   }) async {
+    await yieldTo?.idle();
     XxdCertificate? rejected;
     final client = createPinnedHttpClient(
       pinnedFingerprint: pinnedFingerprint,
@@ -118,10 +125,31 @@ class XxdHttpDatasource {
       )).close().timeout(const Duration(seconds: 60));
       final builder = BytesBuilder(copy: false);
       final total = response.contentLength > 0 ? response.contentLength : null;
-      await response.forEach((chunk) {
-        builder.add(chunk);
-        onProgress?.call(builder.length, total);
-      });
+      final done = Completer<void>();
+      final reading = response.listen(
+        (chunk) {
+          builder.add(chunk);
+          onProgress?.call(builder.length, total);
+        },
+        onError: done.completeError,
+        onDone: done.complete,
+        cancelOnError: true,
+      );
+      final yielding = yieldTo?.changes.listen(
+        (busy) => busy ? reading.pause() : reading.resume(),
+      );
+      if (yieldTo?.busy ?? false) reading.pause();
+      // A paused read would hold the cancel's error back: end it here.
+      unawaited(
+        cancel?.then((_) {
+          if (!done.isCompleted) done.complete();
+        }),
+      );
+      try {
+        await done.future;
+      } finally {
+        await yielding?.cancel();
+      }
       if (cancelled) return const Err(CancelledFailure('Download cancelled'));
       if (response.statusCode != HttpStatus.ok) {
         return Err(

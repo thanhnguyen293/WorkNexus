@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/platform/media_playback_priority.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../datasources/chat_file_cache.dart';
 import '../datasources/chat_video_stream_server.dart';
@@ -21,10 +22,13 @@ class ChatAttachmentLoader {
     this._files, {
     this.maxCacheBytes = 64 * 1024 * 1024,
     ChatVideoStreamServer? streams,
-  }) : _streams = streams ?? ChatVideoStreamServer();
+    MediaPlaybackPriority? priority,
+  }) : _streams = streams ?? ChatVideoStreamServer(),
+       _priority = priority ?? mediaPlaybackPriority;
 
   final XxdHttpDatasource _http;
   final ChatVideoStreamServer _streams;
+  final MediaPlaybackPriority _priority;
   final ChatFileCache _files;
   final int maxCacheBytes;
   // Insertion-ordered map: re-inserting on a hit makes it an LRU.
@@ -74,6 +78,7 @@ class ChatAttachmentLoader {
     ChatSession? session,
     MessageContent content, {
     bool thumbnail = false,
+    bool background = false,
   }) async {
     if (content case ImageContent(:final inlineBase64?)) {
       try {
@@ -133,6 +138,7 @@ class ChatAttachmentLoader {
           thumb: thumb,
           expected: expected,
           image: content is ImageContent,
+          background: background,
           // A block body: returning the removed future (this one) from the
           // callback would make whenComplete wait on itself forever.
         ).whenComplete(() {
@@ -154,6 +160,7 @@ class ChatAttachmentLoader {
     required bool thumb,
     required int? expected,
     required bool image,
+    required bool background,
   }) async {
     final credentials = session.connection.credentials;
     final cancel = _cancels[key] = Completer<void>();
@@ -170,6 +177,8 @@ class ChatAttachmentLoader {
       ),
       pinnedFingerprint: credentials.pinnedFingerprint,
       cancel: cancel.future,
+      // A download nobody is waiting on gives way to a playing video.
+      yieldTo: background ? _priority : null,
       onProgress: (received, total) {
         final all = total ?? expected;
         if (all != null && all > 0) {
@@ -235,18 +244,27 @@ class ChatAttachmentLoader {
 
   /// The attachment as a local file (downloaded once into the cache), for
   /// players and "open with" — which cannot use the pinned HTTPS client.
+  ///
+  /// A [background] download (a preview frame nobody asked for) gives way to
+  /// a playing video that is still loading.
   Future<Result<String>> localFile(
     String accountId,
     ChatSession? session,
-    MessageContent content,
-  ) async {
+    MessageContent content, {
+    bool background = false,
+  }) async {
     final (fileId, name) = _fileOf(content);
     final diskName = _diskName(fileId, name);
     if (fileId > 0) {
       final cached = await _files.open(accountId, diskName);
       if (cached != null) return Ok(cached.path);
     }
-    final bytes = await load(accountId, session, content);
+    final bytes = await load(
+      accountId,
+      session,
+      content,
+      background: background,
+    );
     if (bytes case Err(:final failure)) return Err(failure);
     final file = await _files.open(accountId, diskName);
     return file == null
