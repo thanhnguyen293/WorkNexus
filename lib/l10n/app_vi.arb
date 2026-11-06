@@ -1728,6 +1728,8 @@
   "boardFoldColumn": "Thu gọn cột",
   "boardOpenColumn": "Mở {column}",
   "removeFilter": "Bỏ filter",
+  "zentaoOtherExecutions": "Execution khác…",
+  "zentaoOtherProducts": "Product khác…",
   "zentaoProductsGroup": "Product",
   "zentaoProjectsGroup": "Project",
   "zentaoPickExecution": "Chọn một bản thực thi để xem task",

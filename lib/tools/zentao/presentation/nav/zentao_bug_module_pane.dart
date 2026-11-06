@@ -10,11 +10,13 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/shell_pane/scope_rows.dart';
 import '../providers/zentao_board_providers.dart';
 import '../util/select_bug_board_product.dart';
+import '../widgets/zentao_product_popover.dart';
 import 'zentao_module_tree_section.dart';
+import 'zentao_scope_picker_row.dart';
 
-/// The Bugs side panel: the open product and the pinned ones (any other
-/// product is a pick away in the header's product switcher), then the open
-/// product's module tree, which narrows the board like ZenTao's own.
+/// The Bugs side panel: the pinned products (and the open one), a picker for
+/// any other, then the open product's module tree, which narrows the board
+/// like ZenTao's own.
 class ZentaoBugModulePane extends ConsumerWidget {
   const ZentaoBugModulePane({
     super.key,
@@ -35,12 +37,13 @@ class ZentaoBugModulePane extends ConsumerWidget {
       appSettingsProvider.select((s) => s.pinnedProjects),
     );
     String keyOf(String productId) => '${account.id}:$productId';
-    // The open product first, then the pinned ones.
+    // The pinned ones in their own order, so opening one never reorders
+    // them; an open product that is not pinned shows above them.
     final rows = [
-      ...products.where((p) => p.id == location.scopeId),
       ...products.where(
-        (p) => p.id != location.scopeId && pinned.contains(keyOf(p.id)),
+        (p) => p.id == location.scopeId && !pinned.contains(keyOf(p.id)),
       ),
+      ...products.where((p) => pinned.contains(keyOf(p.id))),
     ];
 
     return Column(
@@ -62,6 +65,11 @@ class ZentaoBugModulePane extends ConsumerWidget {
                       .togglePinnedProject(keyOf(p.id)),
                   onTap: () => selectBugBoardProduct(ref, p),
                 ),
+              ZenTaoScopePickerRow(
+                label: l.zentaoOtherProducts,
+                popover: (close) =>
+                    ZenTaoProductPopover(account: account, onClose: close),
+              ),
               SizedBox(height: s.sm),
               const ZenTaoModuleTreeSection(bugs: true),
             ],
