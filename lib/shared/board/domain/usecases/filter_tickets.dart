@@ -200,6 +200,13 @@ class FilterTickets extends UseCase<List<Ticket>, BoardQuery> {
           return false;
         }
       }
+      if (f.modules.isNotEmpty) {
+        final entity = t.providerEntity;
+        if (entity is! ZenTaoBugEntity ||
+            !f.modules.contains(entity.module ?? '')) {
+          return false;
+        }
+      }
       if (query.isNotEmpty) {
         final hay = [
           t.title,

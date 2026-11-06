@@ -33,6 +33,9 @@ abstract class FilterState with _$FilterState {
     @Default(<String>{}) Set<String> resolvers,
     @Default(<String>{}) Set<String> reporters,
     @Default(<String>{}) Set<String> confirmations,
+    // ZenTao bug boards: the product modules (ids) a bug sits in, like the
+    // module tree beside ZenTao's own bug list.
+    @Default(<String>{}) Set<String> modules,
     @Default('') String search,
   }) = _FilterState;
 
@@ -51,6 +54,7 @@ abstract class FilterState with _$FilterState {
       resolvers.isNotEmpty ||
       reporters.isNotEmpty ||
       confirmations.isNotEmpty ||
+      modules.isNotEmpty ||
       search.trim().isNotEmpty;
 
   /// Whether this filter can hide any of a board's tickets: a workspace or a
@@ -74,5 +78,6 @@ abstract class FilterState with _$FilterState {
       zentaoStatuses.length +
       resolvers.length +
       reporters.length +
-      confirmations.length;
+      confirmations.length +
+      modules.length;
 }

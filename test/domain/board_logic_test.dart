@@ -341,6 +341,26 @@ void main() {
       );
     });
 
+    test('module narrows to the ZenTao bugs in the picked modules', () {
+      Ticket bug(String id, String? module) =>
+          _ztBug(id: id, providerStatus: 'active').copyWith(
+            providerEntity: TicketProviderEntity.zentaoBug(module: module),
+          );
+      final tickets = [
+        bug('live', '12'),
+        bug('share', '13'),
+        bug('none', '0'),
+        bug('unknown', null),
+        _t(id: 'gh'),
+      ];
+      List<String> ids(FilterState f) =>
+          filter(_q(tickets, f)).map((t) => t.id).toList();
+      expect(ids(const FilterState(modules: {'12'})), ['live']);
+      expect(ids(const FilterState(modules: {'12', '13'})), ['live', 'share']);
+      expect(ids(const FilterState()), hasLength(5));
+      expect(const FilterState(modules: {'12'}).activeTokenCount, 1);
+    });
+
     test('assignee, resolver and reporter pass a ticket when any matches', () {
       Ticket bug(String id, {String? to, String? by, String? opened}) =>
           _ztBug(id: id, providerStatus: 'active').copyWith(
