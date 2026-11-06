@@ -155,6 +155,7 @@ class _AttachmentViewerDialogState
                       download: _download,
                       expanded: _expanded,
                       onToggleExpand: _toggleExpanded,
+                      sizeBytes: widget.attachment.size,
                     )
                   : _ViewerBody(
                       loading: _loading,

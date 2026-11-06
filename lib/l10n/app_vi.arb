@@ -1734,5 +1734,6 @@
   "videoLoop": "Lặp lại",
   "videoExpand": "Mở rộng (F)",
   "videoCollapse": "Thu nhỏ (F)",
-  "videoBuffering": "Đang tải {percent}%"
+  "videoBuffering": "Đang tải {percent}%",
+  "videoBufferingSpeed": "Đang tải {percent}% · {speed}/s"
 }
