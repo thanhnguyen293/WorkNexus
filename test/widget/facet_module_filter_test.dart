@@ -32,15 +32,17 @@ Ticket _bug(String id, String module) => Ticket(
   providerEntity: TicketProviderEntity.zentaoBug(module: module),
 );
 
-/// The bug board's Module filter in the Filters popover: the product's modules
-/// by name, picked from a dropdown; "Any" when none is picked.
+/// The bug board's Filters popover has no Module group: the module is picked
+/// from the side panel's module tree.
 void main() {
   late AppDatabase db;
 
   setUp(() async => db = await setUpTestLocator(seed: false));
   tearDown(() async => resetTestLocator(db));
 
-  testWidgets('picking a module filters the board by its id', (tester) async {
+  testWidgets('the popover leaves the module to the side panel', (
+    tester,
+  ) async {
     final container = ProviderContainer(
       overrides: [
         boardFacetScopeProvider.overrideWithValue(BoardFacetScope.bug),
@@ -80,13 +82,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('MODULE'), findsOneWidget);
-    await tester.tap(find.text('Any').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Live stream'));
-    await tester.pumpAndSettle();
-
-    expect(container.read(filterStateProvider).modules, {'12'});
+    // Modules are picked from the side panel's module tree, not here.
+    expect(find.text('MODULE'), findsNothing);
+    expect(find.text('Live stream'), findsNothing);
     await disposeTree(tester);
   });
 }
