@@ -14,6 +14,7 @@ import '../../../../core/widgets/connection_text_field.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/mini_app.dart';
 import '../providers/mini_app_providers.dart';
+import 'mini_app_certificate_section.dart';
 import 'mini_app_icon_picker.dart';
 import 'mini_app_permissions_section.dart';
 
@@ -186,6 +187,7 @@ class _MiniAppDialogState extends ConsumerState<MiniAppDialog> {
                       .fetchSiteIcon(existing.id, _url.text),
                 ),
               ),
+            MiniAppCertificateSection(url: _url.text),
             if (existing != null)
               MiniAppPermissionsSection(miniAppId: existing.id),
           ],
