@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/settings/app_settings.dart';
@@ -18,14 +17,12 @@ import '../../../../features/translation/presentation/translation_providers.dart
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../../../shared/board/presentation/widgets/ticket_card_meta.dart';
-import '../providers/bug_module_names_provider.dart';
 import 'zentao_formatters.dart';
 
-/// A ZenTao bug's card on the bug board. The title leads: the bracketed tags
-/// ZenTao titles start with ("[Discovery]") move to small chips in the
-/// footer, beside the bug's module and assignee; the top line carries the id,
-/// severity, priority and how long ago it changed. No workspace stripe: a
-/// bug board shows one product of one account.
+/// A ZenTao bug's card on the bug board, kept to what triage needs: the id,
+/// severity, priority and how long ago it changed; the title without the
+/// bracketed tags ZenTao titles start with ("[Discovery]"); the assignee. No
+/// workspace stripe: a bug board shows one product of one account.
 class ZenTaoBugCard extends ConsumerWidget {
   const ZenTaoBugCard(this.ticket, {super.key});
 
@@ -56,7 +53,7 @@ class ZenTaoBugCard extends ConsumerWidget {
     final trStatus = ref.watch(
       translationStatusProvider(ticket.id).select((t) => t.state),
     );
-    final (title, tags) = ZenTaoFormatters.extractTags(ticket.title);
+    final (title, _) = ZenTaoFormatters.extractTags(ticket.title);
     final border = context.borders.showOutline
         ? Border.all(color: c.border)
         : null;
@@ -91,20 +88,13 @@ class ZenTaoBugCard extends ConsumerWidget {
             Row(
               spacing: s.sm,
               children: [
-                // Each part shrinks (ellipsis) rather than overflow; the
-                // assignee keeps the largest share.
-                Flexible(
-                  flex: 3,
+                Expanded(
                   child: AssigneeChip(
                     ticket.assignee,
                     wsColor,
                     accountId: ticket.accountId,
                   ),
                 ),
-                for (final tag in tags.take(1))
-                  Flexible(flex: 3, child: _Tag(tag)),
-                const Spacer(),
-                Flexible(flex: 2, child: _ModuleName(ticket)),
                 TranslationDot(trStatus),
               ],
             ),
@@ -156,66 +146,5 @@ class _TopLine extends StatelessWidget {
     if (d.inHours < 1) return l.minutesAgo(d.inMinutes < 1 ? 1 : d.inMinutes);
     if (d.inDays < 1) return l.hoursAgo(d.inHours);
     return l.daysAgo(d.inDays);
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag(this.tag);
-
-  final String tag;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.xs,
-        vertical: context.spacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: c.surfaceSubtle,
-        borderRadius: BorderRadius.circular(context.radii.xs),
-      ),
-      child: Text(
-        tag,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: context.typography.monoXs.copyWith(color: c.textSecondary),
-      ),
-    );
-  }
-}
-
-/// The bug's module by its own name ("Share" for "Live stream/Share");
-/// nothing until the product's module names load, or for "no module".
-class _ModuleName extends ConsumerWidget {
-  const _ModuleName(this.ticket);
-
-  final Ticket ticket;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final e = ticket.providerEntity;
-    final module = e is ZenTaoBugEntity ? e.module : null;
-    final product = e is ZenTaoBugEntity ? e.product : null;
-    if (module == null || module == '0' || product == null) {
-      return const SizedBox.shrink();
-    }
-    final path = ref.watch(
-      bugModuleNamesProvider((
-        ticket.accountId,
-        product,
-      )).select((names) => names.value?[module]),
-    );
-    if (path == null) return const SizedBox.shrink();
-    return Text(
-      path.split('/').last,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.right,
-      style: context.typography.captionSm.copyWith(
-        color: context.colors.textTertiary,
-      ),
-    );
   }
 }
