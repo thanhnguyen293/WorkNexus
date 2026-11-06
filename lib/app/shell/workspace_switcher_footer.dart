@@ -58,7 +58,7 @@ class WorkspaceSwitcherFooter extends ConsumerWidget {
               onClose();
               ref
                   .read(appNavProvider.notifier)
-                  .selectWorkspaceSection(WorkspaceSection.settings);
+                  .selectSettings(SettingsSection.general);
             },
             borderRadius: BorderRadius.circular(context.radii.sm),
             padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),

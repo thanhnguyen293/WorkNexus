@@ -14,12 +14,13 @@ import '../../features/mini_apps/presentation/widgets/mini_app_rail_section.dart
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import 'rail_account_button.dart';
 import 'rail_chat_button.dart';
-import 'rail_connect_button.dart';
+import 'rail_settings_button.dart';
 import 'rail_workspace_button.dart';
 
 /// The 76px left navigation rail for the unified workspace shell (design §8, specs S3).
 /// Features workspace and chat buttons (the chat with its unread badge),
-/// per-account buttons with duplicate handling, notifications, update, dashed connect button,
+/// per-account buttons with duplicate handling, notifications, update, and
+/// Settings at the foot (accounts are connected from its Integrations page),
 /// and Ctrl/Cmd+1…9 shortcuts.
 class AppNavRail extends ConsumerStatefulWidget {
   const AppNavRail({super.key});
@@ -140,7 +141,9 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
                       switch (nav.rail) {
                         AccountTarget(:final accountId) =>
                           accountId == account.id,
-                        WorkspaceTarget() || ChatTarget() => false,
+                        WorkspaceTarget() ||
+                        ChatTarget() ||
+                        SettingsTarget() => false,
                       };
                   final hasDuplicate =
                       (providerCounts[account.providerType] ?? 0) > 1;
@@ -176,8 +179,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
             ),
             const NotificationsRailButton(),
             const UpdateRailButton(),
-            SizedBox(height: s.xs),
-            const RailConnectButton(),
+            const RailSettingsButton(),
           ],
         ),
       ),

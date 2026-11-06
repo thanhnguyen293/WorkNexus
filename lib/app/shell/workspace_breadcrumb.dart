@@ -64,8 +64,18 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
           },
         ),
         ...switch (nav.rail) {
-          WorkspaceTarget() => _buildWorkspaceSegments(context, nav, l),
-          ChatTarget() => _chatSegments(context, l),
+          WorkspaceTarget() => _segments(context, [
+            switch (nav.workspaceSection) {
+              WorkspaceSection.overview => l.overview,
+              WorkspaceSection.members => l.members,
+            },
+          ]),
+          ChatTarget() => _segments(context, [l.chat]),
+          SettingsTarget() => _segments(context, [
+            l.settings,
+            if (nav.settingsSection == SettingsSection.integrations)
+              l.integrations,
+          ]),
           AccountTarget(:final accountId) => _buildAccountSegments(
             context,
             ref,
@@ -80,36 +90,17 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
     );
   }
 
-  List<Widget> _buildWorkspaceSegments(
-    BuildContext context,
-    AppNavState nav,
-    AppL10n l,
-  ) {
-    final c = context.colors;
-    final label = switch (nav.workspaceSection) {
-      WorkspaceSection.overview => l.overview,
-      WorkspaceSection.integrations => l.integrations,
-      WorkspaceSection.members => l.members,
-      WorkspaceSection.settings => l.settings,
-    };
-
-    return [
-      _Separator(color: c.textTertiary),
-      Text(
-        label,
-        style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),
-      ),
-    ];
-  }
-
-  List<Widget> _chatSegments(BuildContext context, AppL10n l) {
+  /// A place's own trail: each label after a separator.
+  List<Widget> _segments(BuildContext context, List<String> labels) {
     final c = context.colors;
     return [
-      _Separator(color: c.textTertiary),
-      Text(
-        l.chat,
-        style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),
-      ),
+      for (final label in labels) ...[
+        _Separator(color: c.textTertiary),
+        Text(
+          label,
+          style: context.typography.bodySmStrong.copyWith(color: c.textPrimary),
+        ),
+      ],
     ];
   }
 
