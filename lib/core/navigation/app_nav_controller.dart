@@ -55,6 +55,17 @@ class AppNavController extends Notifier<AppNavState> {
     );
   }
 
+  /// Shows the Settings place on [section] (the one last shown when null).
+  void selectSettings([SettingsSection? section]) {
+    state = state.copyWith(
+      rail: const RailTarget.settings(),
+      settingsSection: section ?? state.settingsSection,
+      userSelectedWorkspace: false,
+      editor: null,
+      miniAppId: null,
+    );
+  }
+
   /// Shows the chat beside the rail.
   void selectChat() {
     state = state.copyWith(
@@ -79,8 +90,8 @@ class AppNavController extends Notifier<AppNavState> {
     }
 
     if (!force) {
-      // The chat is a place the user picked, as an account is.
-      if (state.rail is ChatTarget) return;
+      // The chat and Settings are places the user picked, as an account is.
+      if (state.rail is ChatTarget || state.rail is SettingsTarget) return;
       if (state.rail case AccountTarget(:final accountId)) {
         if (accounts.any((a) => a.id == accountId)) {
           return;

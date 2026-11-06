@@ -24,7 +24,7 @@ import 'package:work_nexus/features/app_update/presentation/providers/update_sta
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/connections/presentation/providers/zentao_profile_startup_controller.dart';
 import 'package:work_nexus/features/notifications/presentation/providers/notification_providers.dart';
-import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/pages/overview_page.dart';
 
 import '../support/di_test_harness.dart';
 import '../support/mini_app_overrides.dart';
@@ -132,7 +132,7 @@ void main() {
 
       expect(find.byType(TitleBar), findsOneWidget);
       expect(find.byType(AppNavRail), findsOneWidget);
-      expect(find.byType(WorkspaceNavPane), findsNothing);
+      expect(find.byType(OverviewPage), findsNothing);
       expect(find.byType(Viewport), findsOneWidget);
 
       final element = tester.element(find.byType(WorkNexusApp));
@@ -149,7 +149,7 @@ void main() {
       await tester.tap(workspaceButton);
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byType(WorkspaceNavPane), findsOneWidget);
+      expect(find.byType(OverviewPage), findsOneWidget);
       expect(find.text('Overview'), findsWidgets);
       expect(find.text('Assigned to you'), findsOneWidget);
 
@@ -163,8 +163,8 @@ void main() {
       await tester.pumpWidget(_buildApp(initialNav: savedState));
       await tester.pump(const Duration(milliseconds: 600));
 
-      // The workspace nav pane should appear (workspace is selected)
-      expect(find.byType(WorkspaceNavPane), findsOneWidget);
+      // The Overview comes back (workspace is selected)
+      expect(find.byType(OverviewPage), findsOneWidget);
       expect(find.byType(AppNavRail), findsOneWidget);
       expect(find.byType(Viewport), findsOneWidget);
 

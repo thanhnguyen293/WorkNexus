@@ -2,34 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/navigation/navigation_providers.dart';
-import '../../../../core/theme/app_borders.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/hover_surface.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../providers/overview_providers.dart';
+import '../../core/navigation/navigation_providers.dart';
+import '../../core/theme/app_borders.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_radii.dart';
+import '../../core/theme/app_sizes.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/widgets/hover_surface.dart';
+import '../../features/workspace_overview/presentation/providers/overview_providers.dart';
+import '../../l10n/app_localizations.dart';
 
-/// Navigation pane (L3) for workspace-level sections:
-/// Overview, Integrations, Members, and Settings (design §5).
-class WorkspaceNavPane extends ConsumerWidget {
-  const WorkspaceNavPane({super.key});
+/// The Settings place's column beside the rail: the app's settings and the
+/// connected accounts, with how many there are.
+class SettingsNavPane extends ConsumerWidget {
+  const SettingsNavPane({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final activeWs = ref.watch(activeWorkspaceProvider);
-    final nav = ref.watch(appNavProvider);
+    final section = ref.watch(appNavProvider.select((n) => n.settingsSection));
     final accounts = ref.watch(workspaceAccountsProvider);
-    final wsName = activeWs?.name ?? '';
+    final nav = ref.read(appNavProvider.notifier);
 
     return Container(
-      width: 300,
+      width: context.sizes.toolPaneWidth,
       decoration: BoxDecoration(
         color: c.surface,
         border: Border(right: context.hairlineSide),
@@ -37,40 +36,24 @@ class WorkspaceNavPane extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _WorkspaceHeader(workspaceName: wsName),
+          _PaneHeader(title: l.settings),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.sm),
             child: Column(
+              spacing: s.xxs,
               children: [
-                _WorkspaceNavRow(
-                  label: l.overview,
-                  icon: LucideIcons.layoutDashboard300,
-                  selected: nav.workspaceSection == WorkspaceSection.overview,
-                  onTap: () => ref
-                      .read(appNavProvider.notifier)
-                      .selectWorkspaceSection(WorkspaceSection.overview),
+                _SettingsNavRow(
+                  label: l.settings,
+                  icon: LucideIcons.slidersHorizontal300,
+                  selected: section == SettingsSection.general,
+                  onTap: () => nav.selectSettings(SettingsSection.general),
                 ),
-                SizedBox(height: s.xxs),
-                _WorkspaceNavRow(
+                _SettingsNavRow(
                   label: l.integrations,
                   icon: LucideIcons.plug300,
                   count: accounts.length,
-                  selected:
-                      nav.workspaceSection == WorkspaceSection.integrations,
-                  onTap: () => ref
-                      .read(appNavProvider.notifier)
-                      .selectWorkspaceSection(WorkspaceSection.integrations),
-                ),
-                // Members stays out of the menu until the feature exists:
-                // for now its page only says it is coming.
-                SizedBox(height: s.xxs),
-                _WorkspaceNavRow(
-                  label: l.settings,
-                  icon: LucideIcons.settings300,
-                  selected: nav.workspaceSection == WorkspaceSection.settings,
-                  onTap: () => ref
-                      .read(appNavProvider.notifier)
-                      .selectWorkspaceSection(WorkspaceSection.settings),
+                  selected: section == SettingsSection.integrations,
+                  onTap: () => nav.selectSettings(SettingsSection.integrations),
                 ),
               ],
             ),
@@ -81,16 +64,15 @@ class WorkspaceNavPane extends ConsumerWidget {
   }
 }
 
-class _WorkspaceHeader extends StatelessWidget {
-  const _WorkspaceHeader({required this.workspaceName});
+class _PaneHeader extends StatelessWidget {
+  const _PaneHeader({required this.title});
 
-  final String workspaceName;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    final headerText = 'WORKSPACE / $workspaceName'.toUpperCase();
 
     return Container(
       height: context.sizes.titleBarHeight,
@@ -98,7 +80,7 @@ class _WorkspaceHeader extends StatelessWidget {
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
       child: Text(
-        headerText,
+        title.toUpperCase(),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: context.typography.labelWide.copyWith(
@@ -110,8 +92,8 @@ class _WorkspaceHeader extends StatelessWidget {
   }
 }
 
-class _WorkspaceNavRow extends StatelessWidget {
-  const _WorkspaceNavRow({
+class _SettingsNavRow extends StatelessWidget {
+  const _SettingsNavRow({
     required this.label,
     required this.icon,
     required this.selected,

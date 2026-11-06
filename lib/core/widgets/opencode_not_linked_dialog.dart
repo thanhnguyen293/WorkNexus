@@ -57,7 +57,7 @@ class OpenCodeNotLinkedDialog extends ConsumerWidget {
             Navigator.of(context).pop();
             ref
                 .read(appNavProvider.notifier)
-                .selectWorkspaceSection(WorkspaceSection.settings);
+                .selectSettings(SettingsSection.general);
           },
           child: Text(l.openCodeOpenSettings),
         ),

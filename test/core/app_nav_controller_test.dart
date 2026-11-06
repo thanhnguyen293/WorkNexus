@@ -29,7 +29,7 @@ void main() {
           const RailTarget.account('acc_1'),
         );
 
-        nav().selectWorkspaceSection(WorkspaceSection.integrations);
+        nav().selectWorkspaceSection(WorkspaceSection.members);
 
         expect(
           container.read(railTargetProvider),
@@ -37,7 +37,7 @@ void main() {
         );
         expect(
           container.read(workspaceSectionProvider),
-          WorkspaceSection.integrations,
+          WorkspaceSection.members,
         );
       },
     );

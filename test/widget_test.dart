@@ -25,7 +25,7 @@ import 'package:work_nexus/features/app_update/presentation/providers/update_sta
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/connections/presentation/providers/zentao_profile_startup_controller.dart';
 import 'package:work_nexus/features/notifications/presentation/providers/notification_providers.dart';
-import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
+import 'package:work_nexus/features/workspace_overview/presentation/pages/overview_page.dart';
 
 import 'support/di_test_harness.dart';
 
@@ -120,7 +120,7 @@ void main() {
 
       expect(find.byType(TitleBar), findsOneWidget);
       expect(find.byType(AppNavRail), findsOneWidget);
-      expect(find.byType(WorkspaceNavPane), findsNothing);
+      expect(find.byType(OverviewPage), findsNothing);
       expect(find.byType(Viewport), findsOneWidget);
 
       final element = tester.element(find.byType(WorkNexusApp));
@@ -165,7 +165,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       // Initially on first app's view
-      expect(find.byType(WorkspaceNavPane), findsNothing);
+      expect(find.byType(OverviewPage), findsNothing);
 
       // Tap on the Workspace button on the rail
       final workspaceButton = find.byType(RailWorkspaceButton);
@@ -173,8 +173,8 @@ void main() {
       await tester.tap(workspaceButton);
       await tester.pump(const Duration(milliseconds: 600));
 
-      // WorkspaceNavPane should now appear
-      expect(find.byType(WorkspaceNavPane), findsOneWidget);
+      // The dashboard shows the Overview
+      expect(find.byType(OverviewPage), findsOneWidget);
       expect(find.text('Overview'), findsWidgets);
 
       await disposeTree(tester);

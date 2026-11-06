@@ -213,15 +213,32 @@ void main() {
     test(
       'selectWorkspaceSection updates workspace section and marks user selection',
       () {
-        controller.selectWorkspaceSection(WorkspaceSection.integrations);
+        controller.selectWorkspaceSection(WorkspaceSection.members);
         expect(controller.state.rail, equals(const RailTarget.workspace()));
         expect(
           controller.state.workspaceSection,
-          equals(WorkspaceSection.integrations),
+          equals(WorkspaceSection.members),
         );
         expect(controller.state.userSelectedWorkspace, isTrue);
       },
     );
+
+    test('selectSettings opens Settings on a page and keeps it', () {
+      controller.selectSettings(SettingsSection.integrations);
+      expect(controller.state.rail, equals(const RailTarget.settings()));
+      expect(
+        controller.state.settingsSection,
+        equals(SettingsSection.integrations),
+      );
+
+      controller
+        ..selectWorkspaceSection(WorkspaceSection.overview)
+        ..selectSettings();
+      expect(
+        controller.state.settingsSection,
+        equals(SettingsSection.integrations),
+      );
+    });
 
     test(
       'selectDefaultAppIfApplicable selects first app and activates its first feature',

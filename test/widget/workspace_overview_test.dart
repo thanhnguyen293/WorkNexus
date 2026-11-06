@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/app/shell/settings_nav_pane.dart';
 import 'package:work_nexus/app/tool_registry.dart';
 import 'package:work_nexus/core/di/providers.dart';
 import 'package:work_nexus/core/domain/entities/account.dart';
@@ -19,7 +20,6 @@ import 'package:work_nexus/features/workspace_overview/presentation/pages/member
 import 'package:work_nexus/features/workspace_overview/presentation/pages/overview_page.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/assigned_work_list.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/tool_card.dart';
-import 'package:work_nexus/features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
 import 'package:work_nexus/features/workspace_overview/presentation/widgets/zentao_overview_section.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -278,41 +278,36 @@ void main() {
     });
 
     testWidgets(
-      'workspace nav pane displays header, 3 rows (no Members yet), account count, and switches section',
+      'settings nav pane lists Settings and Integrations with the account count',
       (tester) async {
         final navNotifier = _TestNavController();
 
         await tester.pumpWidget(
           _buildTestApp(
-            child: const WorkspaceNavPane(),
+            child: const SettingsNavPane(),
             accounts: [_accountZentao, _accountGithub],
             navNotifier: navNotifier,
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('WORKSPACE / MOBILE APP'), findsOneWidget);
-        expect(find.text('Overview'), findsOneWidget);
-        expect(find.text('Integrations'), findsOneWidget);
-        expect(find.text('Members'), findsNothing);
-        expect(find.text('Settings'), findsOneWidget);
-        expect(
-          find.text('2'),
-          findsOneWidget,
-        ); // 2 accounts in Integrations badge
+        expect(find.text('SETTINGS'), findsOneWidget);
+        expect(find.text('Overview'), findsNothing);
+        expect(find.text('2'), findsOneWidget); // accounts on Integrations
 
         await tester.tap(find.text('Integrations'));
         await tester.pumpAndSettle();
+        expect(navNotifier.currentState.rail, const RailTarget.settings());
         expect(
-          navNotifier.currentState.workspaceSection,
-          WorkspaceSection.integrations,
+          navNotifier.currentState.settingsSection,
+          SettingsSection.integrations,
         );
 
         await tester.tap(find.text('Settings'));
         await tester.pumpAndSettle();
         expect(
-          navNotifier.currentState.workspaceSection,
-          WorkspaceSection.settings,
+          navNotifier.currentState.settingsSection,
+          SettingsSection.general,
         );
       },
     );
