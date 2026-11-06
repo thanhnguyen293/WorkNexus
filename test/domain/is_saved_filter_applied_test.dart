@@ -42,7 +42,7 @@ void main() {
     expect(applied(myTeam, const FilterState()), isFalse);
   });
 
-  test('a different view no longer matches', () {
+  test('a preset saved on All matches on any view tab', () {
     expect(
       applied(
         myTeam,
@@ -52,8 +52,17 @@ void main() {
           savedView: SavedView.related,
         ),
       ),
-      isFalse,
+      isTrue,
     );
+  });
+
+  test('a preset saved on another view needs that view', () {
+    final related = preset(const FilterState(savedView: SavedView.related));
+    expect(
+      applied(related, const FilterState(savedView: SavedView.related)),
+      isTrue,
+    );
+    expect(applied(related, const FilterState()), isFalse);
   });
 
   test('the board workspace never counts', () {
