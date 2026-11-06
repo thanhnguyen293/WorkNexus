@@ -12,6 +12,7 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_icon_button.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/shared/board/domain/usecases/derive_board_facets.dart';
+import 'package:work_nexus/shared/board/domain/value_objects/saved_view.dart';
 import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
 import 'package:work_nexus/shared/board/presentation/providers/saved_filter_providers.dart';
 import 'package:work_nexus/shared/board/presentation/widgets/active_filter_bar.dart';
@@ -108,17 +109,30 @@ void main() {
     await disposeTree(tester);
   });
 
-  testWidgets('Related to me keeps only the picked module', (tester) async {
+  testWidgets('Related to me sets the filters aside, All brings them back', (
+    tester,
+  ) async {
     final container = await pump(tester);
     container.read(filterStateProvider.notifier)
       ..selectModule('12')
       ..toggleSeverity(1)
-      ..clearAllButModules();
+      ..enterOwnView(SavedView.related);
     await tester.pumpAndSettle();
 
     expect(find.text('Live stream'), findsOneWidget);
     expect(find.text('Critical'), findsNothing);
     expect(container.read(filterStateProvider).severities, isEmpty);
+
+    // Back on All, the filters set aside come back; a module picked on
+    // Related to me stays.
+    container.read(filterStateProvider.notifier)
+      ..selectModule('13')
+      ..leaveOwnView();
+    await tester.pumpAndSettle();
+    final f = container.read(filterStateProvider);
+    expect(f.severities, {1});
+    expect(f.modules, {'13'});
+    expect(f.savedView, SavedView.all);
     await disposeTree(tester);
   });
 

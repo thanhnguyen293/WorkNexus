@@ -54,6 +54,10 @@ class FilterController extends Notifier<FilterState> {
   /// (defined in `board_providers.dart`, which re-exports this file).
   final Map<String, FilterState> _memory = <String, FilterState>{};
 
+  /// Per board, the filter set aside on entering a view that is a filter of
+  /// its own (see [enterOwnView]), put back by [leaveOwnView].
+  final Map<String, FilterState> _setAside = <String, FilterState>{};
+
   /// The board [state] currently belongs to; null before the first board opens.
   String? _activeKey;
 
@@ -148,10 +152,25 @@ class FilterController extends Notifier<FilterState> {
 
   void clearAll() => state = _cleared(state);
 
-  /// Everything cleared but the module picked in the side panel — what a view
-  /// that is a filter of its own (Related to me) keeps.
-  void clearAllButModules() =>
-      state = _cleared(state).copyWith(modules: state.modules);
+  /// Shows [view], a view that is a filter of its own (Related to me): every
+  /// other filter is set aside, not lost, and only the module picked in the
+  /// side panel stays.
+  void enterOwnView(SavedView view) {
+    final key = _activeKey;
+    if (key != null && !_setAside.containsKey(key)) _setAside[key] = state;
+    state = _cleared(state).copyWith(modules: state.modules, savedView: view);
+  }
+
+  /// Back to the All view, with the filters [enterOwnView] set aside (the
+  /// module picked meanwhile kept).
+  void leaveOwnView() {
+    final aside = _setAside.remove(_activeKey);
+    state = (aside ?? state).copyWith(
+      workspaceId: state.workspaceId,
+      modules: state.modules,
+      savedView: SavedView.all,
+    );
+  }
 
   /// Switches the board filter to the board identified by [key] (see
   /// `boardKeyProvider`), filing the current board's filter away first.

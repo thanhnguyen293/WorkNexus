@@ -107,9 +107,7 @@ class ZentaoBugsSection extends ConsumerWidget {
               label: l.viewAll,
               active: !isRelated,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.all);
+                ref.read(filterStateProvider.notifier).leaveOwnView();
                 ref
                     .read(zentaoBugTabProvider.notifier)
                     .set(ZenTaoBugBrowseType.unclosed);
@@ -119,9 +117,9 @@ class ZentaoBugsSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated,
               onTap: () {
-                ref.read(filterStateProvider.notifier)
-                  ..clearAllButModules()
-                  ..setSavedView(SavedView.related);
+                ref
+                    .read(filterStateProvider.notifier)
+                    .enterOwnView(SavedView.related);
                 ref
                     .read(zentaoBugTabProvider.notifier)
                     .set(ZenTaoBugBrowseType.relatedToMe);
