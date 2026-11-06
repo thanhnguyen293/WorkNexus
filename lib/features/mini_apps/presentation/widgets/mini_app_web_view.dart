@@ -114,6 +114,20 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
         browser.attach(web);
         _certificates.attach(controller);
       },
+      // A server the system refuses but whose certificate the user already
+      // accepted in the app (the ZenTao chat server's self-signed one, which
+      // ZenTao's own web chat calls) is let through for that certificate
+      // only. Every other answer stays the web view's own.
+      onReceivedServerTrustAuthRequest: (_, challenge) async {
+        final der =
+            challenge.protectionSpace.sslCertificate?.x509Certificate?.encoded;
+        if (der == null || !await ref.read(isPinnedCertificateProvider)(der)) {
+          return null;
+        }
+        return ServerTrustAuthResponse(
+          action: ServerTrustAuthResponseAction.PROCEED,
+        );
+      },
       onPermissionRequest: (_, request) => answerMiniAppPermission(
         context,
         ref,

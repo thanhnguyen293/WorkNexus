@@ -32,5 +32,14 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Mini apps are web pages: ATS stays on for the app's own connections,
+	     but web content may reach a server whose self-signed certificate the
+	     app itself accepts (only one the user pinned, e.g. ZenTao's chat
+	     server); without this key WebKit refuses it whatever the app says. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
