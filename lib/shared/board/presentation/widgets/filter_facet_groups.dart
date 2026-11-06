@@ -43,9 +43,14 @@ class FacetFilterGroups extends ConsumerWidget {
     final l = AppL10n.of(context);
     final f = ref.watch(filterStateProvider);
     final ctrl = ref.read(filterStateProvider.notifier);
-    final facets = ref.watch(boardFacetsProvider(catalog));
+    // The module is picked from the board's side panel (its module tree),
+    // not here; its chip under the toolbar still shows and drops it.
+    final groups = [
+      for (final g in ref.watch(boardFacetsProvider(catalog)).groups)
+        if (g.kind != BoardFacetKind.module) g,
+    ];
 
-    if (facets.groups.isEmpty) {
+    if (groups.isEmpty) {
       return Text(
         l.noBoardFilters,
         style: context.typography.meta.copyWith(color: c.textTertiary),
@@ -76,7 +81,7 @@ class FacetFilterGroups extends ConsumerWidget {
           ),
     ];
     final people = [
-      for (final g in facets.groups)
+      for (final g in groups)
         if (_people.contains(g.kind)) g,
     ];
     // Two or more people groups are one question (any of them matching), so
@@ -85,7 +90,7 @@ class FacetFilterGroups extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final g in facets.groups)
+        for (final g in groups)
           if (together && identical(g, people.first))
             FilterPeopleBlock(
               groups: [
