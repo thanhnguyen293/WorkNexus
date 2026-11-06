@@ -13,6 +13,10 @@ sealed class RailTarget with _$RailTarget {
 
   const factory RailTarget.workspace() = WorkspaceTarget;
   const factory RailTarget.account(String accountId) = AccountTarget;
+
+  /// The chat, a place of its own on the rail rather than a tab of ZenTao,
+  /// so going back to ZenTao lands on its tasks / bugs, not on the chat.
+  const factory RailTarget.chat() = ChatTarget;
 }
 
 @freezed
@@ -65,6 +69,6 @@ abstract class AppNavState with _$AppNavState {
 
   ToolLocation? get currentLocation => switch (rail) {
     AccountTarget(:final accountId) => locations[accountId],
-    WorkspaceTarget() => null,
+    WorkspaceTarget() || ChatTarget() => null,
   };
 }

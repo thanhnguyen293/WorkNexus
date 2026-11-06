@@ -422,10 +422,7 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     if (isChat) {
-      container.read(appNavProvider.notifier).selectAccount('acc-zt');
-      container
-          .read(appNavProvider.notifier)
-          .selectSection(const SectionId('zentao.chat'));
+      container.read(appNavProvider.notifier).selectChat();
     } else {
       container
           .read(appNavProvider.notifier)

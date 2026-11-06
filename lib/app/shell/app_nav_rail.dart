@@ -10,16 +10,16 @@ import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../features/app_update/presentation/widgets/update_rail_button.dart';
-import '../../features/chat/presentation/providers/chat_providers.dart';
 import '../../features/mini_apps/presentation/widgets/mini_app_rail_section.dart';
 import '../../features/notifications/presentation/widgets/notifications_rail_button.dart';
 import 'rail_account_button.dart';
+import 'rail_chat_button.dart';
 import 'rail_connect_button.dart';
 import 'rail_workspace_button.dart';
 
 /// The 76px left navigation rail for the unified workspace shell (design §8, specs S3).
-/// Features workspace button, per-account buttons with duplicate handling,
-/// unread badge for ZenTao, notifications, update, dashed connect button,
+/// Features workspace and chat buttons (the chat with its unread badge),
+/// per-account buttons with duplicate handling, notifications, update, dashed connect button,
 /// and Ctrl/Cmd+1…9 shortcuts.
 class AppNavRail extends ConsumerStatefulWidget {
   const AppNavRail({super.key});
@@ -96,7 +96,6 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
     final s = context.spacing;
     final nav = ref.watch(appNavProvider);
     final registry = ref.watch(toolRegistryProvider);
-    final unreadTotal = ref.watch(chatUnreadTotalProvider);
     final sorted = ref.watch(sortedActiveAccountsProvider);
     final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
@@ -117,6 +116,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
         builder: (context, rail) => Column(
           children: [
             const RailWorkspaceButton(),
+            const RailChatButton(),
             Divider(
               height: s.lg,
               indent: s.md,
@@ -140,7 +140,7 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
                       switch (nav.rail) {
                         AccountTarget(:final accountId) =>
                           accountId == account.id,
-                        WorkspaceTarget() => false,
+                        WorkspaceTarget() || ChatTarget() => false,
                       };
                   final hasDuplicate =
                       (providerCounts[account.providerType] ?? 0) > 1;
@@ -150,9 +150,6 @@ class _AppNavRailState extends ConsumerState<AppNavRail> {
                     account: account,
                     isSelected: isSelected,
                     hasDuplicateProvider: hasDuplicate,
-                    unreadCount: account.providerType == ProviderType.zentao
-                        ? unreadTotal
-                        : 0,
                     onTap: () {
                       if (module != null) {
                         ref

@@ -35,11 +35,8 @@ class ChatTrustDebugButton extends ConsumerWidget {
             return;
           }
           preview.state = kChatTrustPreviewRequest;
-          final accountId = ref.read(selectedChatAccountIdProvider);
-          if (accountId == null) return;
-          final nav = ref.read(appNavProvider.notifier);
-          nav.selectAccount(accountId);
-          nav.selectSection(const SectionId('zentao.chat'));
+          if (ref.read(selectedChatAccountIdProvider) == null) return;
+          ref.read(appNavProvider.notifier).selectChat();
         },
         width: s.xl5 + s.xs,
         height: s.xl5 + s.xs,

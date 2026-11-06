@@ -120,10 +120,7 @@ class _ChatNotificationListenerState
     if (decoded case {'a': final String accountId, 'c': final String gid}) {
       await const DesktopWindowService().bringToFront();
       if (!mounted) return;
-      ref.read(appNavProvider.notifier).selectAccount(accountId);
-      ref
-          .read(appNavProvider.notifier)
-          .selectSection(const SectionId('zentao.chat'));
+      ref.read(appNavProvider.notifier).selectChat();
       ref.read(pickedChatAccountProvider.notifier).state = accountId;
       ref.read(selectedChatGidProvider(accountId).notifier).state = gid;
       // The tapped message, found (loading older pages if need be) and

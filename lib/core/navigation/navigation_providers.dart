@@ -58,13 +58,9 @@ final ticketCanGoBackProvider = Provider<bool>(
   (ref) => ref.watch(appNavProvider.select((s) => s.canGoBack)),
 );
 
-/// Whether the ZenTao chat view is the active section.
+/// Whether the chat is what the rail shows.
 final chatOpenProvider = Provider<bool>(
-  (ref) =>
-      ref.watch(
-        appNavProvider.select((s) => s.currentLocation?.section.value),
-      ) ==
-      'zentao.chat',
+  (ref) => ref.watch(appNavProvider.select((s) => s.rail is ChatTarget)),
 );
 
 /// The open bug / task editor, which replaces the board and sidebar; null when
