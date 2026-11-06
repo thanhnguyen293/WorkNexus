@@ -85,9 +85,7 @@ class OverviewPage extends ConsumerWidget {
                         onConnect ??
                         () => ref
                             .read(appNavProvider.notifier)
-                            .selectWorkspaceSection(
-                              WorkspaceSection.integrations,
-                            ),
+                            .selectSettings(SettingsSection.integrations),
                     child: Text(l.connectATool),
                   ),
                 ],
@@ -122,7 +120,7 @@ class OverviewPage extends ConsumerWidget {
       trailing: AppButton.text(
         onPressed: () => ref
             .read(appNavProvider.notifier)
-            .selectWorkspaceSection(WorkspaceSection.integrations),
+            .selectSettings(SettingsSection.integrations),
         child: Text(l.manageIntegrations),
       ),
       children: [

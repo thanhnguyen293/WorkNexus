@@ -17,6 +17,10 @@ sealed class RailTarget with _$RailTarget {
   /// The chat, a place of its own on the rail rather than a tab of ZenTao,
   /// so going back to ZenTao lands on its tasks / bugs, not on the chat.
   const factory RailTarget.chat() = ChatTarget;
+
+  /// The app's settings and connected accounts, at the foot of the rail
+  /// rather than inside the dashboard.
+  const factory RailTarget.settings() = SettingsTarget;
 }
 
 @freezed
@@ -43,6 +47,7 @@ abstract class AppNavState with _$AppNavState {
   const factory AppNavState({
     @Default(RailTarget.workspace()) RailTarget rail,
     @Default(WorkspaceSection.overview) WorkspaceSection workspaceSection,
+    @Default(SettingsSection.general) SettingsSection settingsSection,
 
     /// Last location per account — restored when its rail button is picked.
     @Default(<String, ToolLocation>{}) Map<String, ToolLocation> locations,
@@ -69,6 +74,6 @@ abstract class AppNavState with _$AppNavState {
 
   ToolLocation? get currentLocation => switch (rail) {
     AccountTarget(:final accountId) => locations[accountId],
-    WorkspaceTarget() || ChatTarget() => null,
+    WorkspaceTarget() || ChatTarget() || SettingsTarget() => null,
   };
 }

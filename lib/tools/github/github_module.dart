@@ -162,7 +162,7 @@ class GithubModule extends ToolModule {
     tickets,
     accountId: switch (ref.watch(railTargetProvider)) {
       AccountTarget(:final accountId) => accountId,
-      WorkspaceTarget() || ChatTarget() => null,
+      WorkspaceTarget() || ChatTarget() || SettingsTarget() => null,
     },
     scopeId: location.scopeId,
   );

@@ -96,7 +96,7 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
     final nav = ref.read(appNavProvider);
     final accountId = switch (nav.rail) {
       AccountTarget(:final accountId) => accountId,
-      WorkspaceTarget() || ChatTarget() => null,
+      WorkspaceTarget() || ChatTarget() || SettingsTarget() => null,
     };
     final tickets = ref.read(ticketsProvider).asData?.value ?? const <Ticket>[];
 
@@ -278,7 +278,9 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
     List<Account> accounts,
   ) {
     return switch (nav.rail) {
-      WorkspaceTarget() || ChatTarget() => l.searchContextWorkspace,
+      WorkspaceTarget() ||
+      ChatTarget() ||
+      SettingsTarget() => l.searchContextWorkspace,
       AccountTarget(:final accountId) => _accountPlaceholder(
         l,
         accountId,

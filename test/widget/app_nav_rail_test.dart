@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/app/shell/app_nav_rail.dart';
 import 'package:work_nexus/app/shell/rail_account_button.dart';
-import 'package:work_nexus/app/shell/rail_connect_button.dart';
 import 'package:work_nexus/app/shell/rail_workspace_button.dart';
 import 'package:work_nexus/app/tool_registry.dart';
 import 'package:work_nexus/core/di/providers.dart';
@@ -25,7 +24,6 @@ import 'package:work_nexus/features/app_update/domain/usecases/install_update.da
 import 'package:work_nexus/features/app_update/presentation/providers/update_controller.dart';
 import 'package:work_nexus/features/app_update/presentation/providers/update_state.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
-import 'package:work_nexus/features/connections/presentation/connect_account_dialog.dart';
 import 'package:work_nexus/features/notifications/presentation/providers/notification_providers.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
@@ -147,7 +145,10 @@ void main() {
 
       expect(find.byType(RailWorkspaceButton), findsOneWidget);
       expect(find.byType(RailAccountButton), findsNWidgets(3));
-      expect(find.byType(RailConnectButton), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('rail-settings-button')),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
@@ -202,6 +203,19 @@ void main() {
       expect(container.read(appNavProvider).rail, const ChatTarget());
     });
 
+    testWidgets('the settings button opens the Settings place', (tester) async {
+      await tester.pumpWidget(_buildTestApp(child: const AppNavRail()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('rail-settings-button')));
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(AppNavRail)),
+      );
+      expect(container.read(appNavProvider).rail, const SettingsTarget());
+    });
+
     testWidgets('no chat account, no chat button', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(child: const AppNavRail(), chatAccountId: null),
@@ -235,18 +249,6 @@ void main() {
         container.read(appNavProvider).rail,
         const AccountTarget('acc-zt'),
       );
-    });
-
-    testWidgets('+ Connect opens ConnectAccountDialog', (tester) async {
-      await tester.pumpWidget(_buildTestApp(child: const AppNavRail()));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(ConnectAccountDialog), findsNothing);
-
-      await tester.tap(find.byType(RailConnectButton));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(ConnectAccountDialog), findsOneWidget);
     });
 
     testWidgets(

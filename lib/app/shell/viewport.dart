@@ -133,6 +133,7 @@ class _ViewportState extends ConsumerState<Viewport> {
         context,
         nav.workspaceSection,
       ),
+      SettingsTarget() => _buildSettingsSection(context, nav.settingsSection),
       ChatTarget() => (
         'chat',
         const SectionErrorBoundary(
@@ -156,14 +157,24 @@ class _ViewportState extends ConsumerState<Viewport> {
     final key = 'workspace:${section.name}';
     final Widget page = switch (section) {
       WorkspaceSection.overview => const OverviewPage(),
-      WorkspaceSection.integrations => IntegrationsPage(
+      WorkspaceSection.members => const MembersPage(),
+    };
+
+    return (key, SectionErrorBoundary(key: ValueKey(key), child: page));
+  }
+
+  (String, Widget) _buildSettingsSection(
+    BuildContext context,
+    SettingsSection section,
+  ) {
+    final key = 'settings:${section.name}';
+    final Widget page = switch (section) {
+      SettingsSection.general => const WorkspaceSettingsPage(),
+      SettingsSection.integrations => IntegrationsPage(
         accounts: const ActiveWorkspaceAccounts(),
         onConnect: () => ConnectAccountDialog.show(context),
       ),
-      WorkspaceSection.members => const MembersPage(),
-      WorkspaceSection.settings => const WorkspaceSettingsPage(),
     };
-
     return (key, SectionErrorBoundary(key: ValueKey(key), child: page));
   }
 
