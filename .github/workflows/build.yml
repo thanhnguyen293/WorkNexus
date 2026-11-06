@@ -149,7 +149,7 @@ jobs:
         run: flutter build ${{ matrix.platform }} --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }} --dart-define-from-file=.env
 
       # Before the check below, which then covers the bundled libraries too.
-      - name: Bundle tray libraries (Linux)
+      - name: Bundle native libraries (Linux)
         if: matrix.platform == 'linux'
         run: bash packaging/linux/bundle_libs.sh build/linux/x64/release/bundle
 
