@@ -1265,14 +1265,20 @@
   "chatReacted": "Reacted {emoji}",
   "@chatReacted": {
     "placeholders": {
-      "emoji": {"type": "String"}
+      "emoji": {
+        "type": "String"
+      }
     }
   },
   "chatReactionBy": "{names} reacted with {emoji}",
   "@chatReactionBy": {
     "placeholders": {
-      "names": {"type": "String"},
-      "emoji": {"type": "String"}
+      "names": {
+        "type": "String"
+      },
+      "emoji": {
+        "type": "String"
+      }
     }
   },
   "chatReactionRemoveExpired": "A reaction can only be taken back within 2 minutes",
@@ -1558,7 +1564,9 @@
   "notificationsNewCount": "{count} new ZenTao notifications",
   "@notificationsNewCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "notificationsUndated": "Undated",
@@ -1789,9 +1797,21 @@
   "workspaceCodeLabel": "Badge letters",
   "workspaceNameRequired": "Enter a name",
   "workspaceNameTooLong": "Use at most {max} characters",
-  "@workspaceNameTooLong": { "placeholders": { "max": { "type": "int" } } },
+  "@workspaceNameTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "workspaceCodeTooLong": "Use at most {max} badge letters",
-  "@workspaceCodeTooLong": { "placeholders": { "max": { "type": "int" } } },
+  "@workspaceCodeTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "workspaceSaveFailed": "Couldn't save the workspace.",
   "connectionsColor": "Color",
   "connectionsIcon": "Icon",
@@ -2221,8 +2241,12 @@
   "certPromptMessage": "{origin}\n\nIts certificate {reason}.\n\nIf you trust this site, for example your own company's server, the app remembers it and stops asking. Anyone able to intercept your connection to it could then read what you send.",
   "@certPromptMessage": {
     "placeholders": {
-      "origin": {"type": "String"},
-      "reason": {"type": "String"}
+      "origin": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
     }
   },
   "certReasonDates": "has expired, or is not valid yet",
@@ -2231,20 +2255,15 @@
   "certReasonOther": "is not valid ({error})",
   "@certReasonOther": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "certTrust": "Trust this site",
   "certTrustSaveFailed": "Couldn't save that you trust this site.",
   "miniAppCertAlwaysTrust": "Always trust this site's certificate",
-  "miniAppCertAlwaysTrustHint": "Skips the certificate warning for {origin}. Anyone able to intercept your connection to it could read what you send, so use it only for servers you run yourself.",
-  "@miniAppCertAlwaysTrustHint": {
-    "placeholders": {
-      "origin": {
-        "type": "String"
-      }
-    }
-  },
+  "miniAppCertAlwaysTrustHint": "Skips the certificate warning. Only use it for servers you run yourself.",
   "miniAppTrustedCertByChoice": "Trusted from the mini app's settings, without a prompt",
   "miniAppTrustedCertsSection": "Trusted certificates",
   "miniAppTrustedCertsHint": "Sites whose invalid certificate you chose to trust. They load without asking again, until you forget them here. Windows only.",
@@ -2530,7 +2549,13 @@
   "attachmentStorage": "Ticket videos & attachments",
   "attachmentStorageHint": "Videos played from tickets are kept so they open instantly next time; files opened this session sit alongside them.",
   "attachmentStorageUsed": "Using {used}",
-  "@attachmentStorageUsed": {"placeholders": {"used": {"type": "String"}}},
+  "@attachmentStorageUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      }
+    }
+  },
   "attachmentStorageClear": "Clear",
   "attachmentStorageClearConfirm": "Delete the downloaded ticket videos and attachments? They download again when opened.",
   "attachmentStorageFailed": "Couldn't read or clear the attachment storage",
@@ -2545,16 +2570,43 @@
   "videoExpand": "Expand (F)",
   "videoCollapse": "Exit expanded (F)",
   "videoBuffering": "Loading {percent}%",
-  "@videoBuffering": {"placeholders": {"percent": {"type": "int"}}},
+  "@videoBuffering": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "videoBufferingSpeed": "Loading {percent}% · {speed}/s",
-  "@videoBufferingSpeed": {"placeholders": {"percent": {"type": "int"}, "speed": {"type": "String"}}},
+  "@videoBufferingSpeed": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesSection": "Imported cookies",
   "miniAppCookiesHint": "Sign mini apps in with the cookies a browser on this device already has. Only the sites you pick are imported.",
   "miniAppCookiesImport": "Import from a browser…",
   "miniAppCookiesUnsupported": "Cookies can be imported on macOS and Windows only.",
   "miniAppCookiesEmpty": "No site imported yet.",
   "miniAppCookiesFrom": "{browser} · {profile} · {when}",
-  "@miniAppCookiesFrom": {"placeholders": {"browser": {"type": "String"}, "profile": {"type": "String"}, "when": {"type": "String"}}},
+  "@miniAppCookiesFrom": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      },
+      "profile": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesActive": "Valid",
   "miniAppCookiesExpired": "Expired",
   "miniAppCookiesExpiredHint": "Its sign-in cookies are gone from the mini apps. Import them again from the browser.",
@@ -2565,25 +2617,61 @@
   "miniAppCookiesNoBrowser": "No browser with cookies was found on this device.",
   "miniAppCookiesSearch": "Search sites",
   "miniAppCookiesSiteCount": "{count, plural, =1{1 cookie} other{{count} cookies}}",
-  "@miniAppCookiesSiteCount": {"placeholders": {"count": {"type": "int"}}},
+  "@miniAppCookiesSiteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "miniAppCookiesUsedByApp": "Mini app",
   "miniAppCookiesSelectAll": "Select all",
   "miniAppCookiesSelectNone": "Select none",
   "miniAppCookiesImportCount": "{count, plural, =0{Import} =1{Import 1 site} other{Import {count} sites}}",
-  "@miniAppCookiesImportCount": {"placeholders": {"count": {"type": "int"}}},
+  "@miniAppCookiesImportCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "miniAppCookiesImported": "{count, plural, =1{Imported 1 cookie.} other{Imported {count} cookies.}}",
-  "@miniAppCookiesImported": {"placeholders": {"count": {"type": "int"}}},
+  "@miniAppCookiesImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "miniAppCookiesFailed": "Could not import the cookies.",
   "miniAppCookiesNone": "The browser has no cookies for this site any more. Sign in there first.",
   "miniAppCookiesNoSites": "This browser has no cookies.",
   "miniAppCookiesKeychainHint": "macOS will ask to let WorkNexus read {browser}'s cookie key: choose Allow.",
-  "@miniAppCookiesKeychainHint": {"placeholders": {"browser": {"type": "String"}}},
+  "@miniAppCookiesKeychainHint": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesKeychainDenied": "macOS did not give out {browser}'s cookie key. Try again and choose Allow.",
-  "@miniAppCookiesKeychainDenied": {"placeholders": {"browser": {"type": "String"}}},
+  "@miniAppCookiesKeychainDenied": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesSafariAccess": "Reading Safari's cookies needs Full Disk Access: turn it on for WorkNexus, then try again.",
   "miniAppCookiesOpenPrivacy": "Open Privacy settings",
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",
   "miniAppCookiesRetry": "Try again",
   "miniAppCookiesExpiredTooltip": "Sign-in cookies expired: import them again from {browser}",
-  "@miniAppCookiesExpiredTooltip": {"placeholders": {"browser": {"type": "String"}}}
+  "@miniAppCookiesExpiredTooltip": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  }
 }
