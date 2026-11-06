@@ -13,6 +13,7 @@ import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../providers/zentao_board_providers.dart';
 import '../providers/zentao_scope_title_provider.dart';
 import '../util/keep_bug_board_product.dart';
+import '../widgets/zentao_active_filter_bar.dart';
 import '../widgets/zentao_board_toolbar.dart';
 import '../widgets/zentao_bug_board_view.dart';
 import '../widgets/zentao_bug_section_header.dart';
@@ -99,7 +100,9 @@ class ZentaoBugsSection extends ConsumerWidget {
           ),
           modes: modes,
           viewMode: viewMode,
-          filtering: !isRelated,
+          // Filters work on every view, Related to me included, and
+          // picking one keeps the view you are on.
+          keepViewOnPick: true,
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
@@ -117,10 +120,9 @@ class ZentaoBugsSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated,
               onTap: () {
-                // Related to me is a filter of its own: no others on it.
-                ref.read(filterStateProvider.notifier)
-                  ..clearAll()
-                  ..setSavedView(SavedView.related);
+                ref
+                    .read(filterStateProvider.notifier)
+                    .setSavedView(SavedView.related);
                 ref
                     .read(zentaoBugTabProvider.notifier)
                     .set(ZenTaoBugBrowseType.relatedToMe);
@@ -128,6 +130,8 @@ class ZentaoBugsSection extends ConsumerWidget {
             ),
           ],
         ),
+
+        const ZenTaoActiveFilterBar(bugs: true),
 
         // Section Body (Board or Table)
         Expanded(child: body),

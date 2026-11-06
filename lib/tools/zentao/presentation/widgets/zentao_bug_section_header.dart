@@ -12,8 +12,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/zentao_board_providers.dart';
+import '../providers/zentao_module_tree_provider.dart';
 import '../providers/zentao_scope_title_provider.dart';
-import '../providers/zentao_table_providers.dart';
 import 'zentao_product_popover.dart';
 
 /// Top Viewport Header for ZenTao Bugs matching the task header style:
@@ -58,8 +58,7 @@ class _ZentaoBugSectionHeaderState
     );
     // Only until the section has picked a product.
     final displayTitle = scopeTitle ?? l.fieldProduct;
-    final bugTable = ref.watch(zentaoBugTableProvider);
-    final bugCount = bugTable.rows.length;
+    final counts = ref.watch(zentaoBugShownCountProvider);
 
     return Container(
       color: c.surface,
@@ -131,7 +130,7 @@ class _ZentaoBugSectionHeaderState
           ),
           SizedBox(width: s.md),
           Text(
-            '${l.bugs} · $bugCount',
+            '${l.bugs} · ${l.boardShownOfTotal(counts.shown, counts.total)}',
             style: context.typography.body.copyWith(color: c.textTertiary),
           ),
           const Spacer(),

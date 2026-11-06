@@ -111,6 +111,13 @@ abstract class ToolModule {
   /// External web deep link for [location] (e.g. ↗ to open in browser).
   Uri? webUrl(Account account, ToolLocation location) => null;
 
+  /// The name of what [location] is scoped to (a product, an execution), for
+  /// the title bar's breadcrumb; null shows the scope id.
+  ProviderListenable<String?>? scopeTitle(
+    Account account,
+    ToolLocation location,
+  ) => null;
+
   /// Builds the slide-over detail body for [ticket] (only called when
   /// `ticket.providerType == providerType`), or null to use the standard tabbed panel.
   Widget? buildDetail(
