@@ -46,7 +46,7 @@ class ZentaoModule extends ToolModule {
     ToolSection(
       id: const SectionId('zentao.tasks'),
       label: (l) => l.tasks,
-      icon: LucideIcons.checkSquare300,
+      icon: LucideIcons.listChecks300,
       scopeKind: ScopeKind.project,
       viewModes: ZentaoTasksSection.modes,
     ),

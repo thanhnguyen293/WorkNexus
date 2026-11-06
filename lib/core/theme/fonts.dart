@@ -8,6 +8,11 @@ const String kMonoFont = 'Space Mono';
 /// and semi-bold text render in the real faces.
 const String kVietnamFont = 'Be Vietnam Pro';
 
+/// Poppins — a geometric sans, bundled in `assets/fonts/` with its 400–700
+/// weights and italics. It has no Vietnamese stacked-diacritic letters (ấ, ộ,
+/// ư…): those fall back to [kVietnamFont] (see `fontFamilyFallback`).
+const String kPoppinsFont = 'Poppins';
+
 /// Geist Mono — a monospace UI font served via `google_fonts` (not a bundled
 /// asset): a marker family name resolved to the generated google-fonts family
 /// in `buildAppTheme`.
