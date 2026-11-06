@@ -84,6 +84,7 @@ Widget _buildTestApp({
   required Widget child,
   List<Account> accounts = const [_accountZt, _accountGl1, _accountGl2],
   int unreadCount = 0,
+  String? chatAccountId = 'acc-zt',
   AppNavState? initialNav,
 }) {
   return ProviderScope(
@@ -94,6 +95,7 @@ Widget _buildTestApp({
       activeWorkspaceIdProvider.overrideWith((ref) => 'ws-1'),
       accountsProvider.overrideWith((ref) => Stream.value(accounts)),
       chatUnreadTotalProvider.overrideWith((ref) => unreadCount),
+      selectedChatAccountIdProvider.overrideWithValue(chatAccountId),
       updateControllerProvider.overrideWith(_MockUpdateController.new),
       notificationAccountsProvider.overrideWith((ref) => const []),
       if (initialNav != null)
@@ -164,7 +166,7 @@ void main() {
       },
     );
 
-    testWidgets('ZenTao account shows unread badge when unreadCount > 0', (
+    testWidgets('the chat button carries the unread count, not ZenTao', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -173,7 +175,40 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(UnreadBadge), findsOneWidget);
-      expect(find.text('5'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('rail-chat-button')),
+          matching: find.text('5'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the chat button opens the chat', (tester) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          child: const AppNavRail(),
+          initialNav: const AppNavState(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(AppNavRail)),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('rail-chat-button')));
+      await tester.pumpAndSettle();
+
+      expect(container.read(appNavProvider).rail, const ChatTarget());
+    });
+
+    testWidgets('no chat account, no chat button', (tester) async {
+      await tester.pumpWidget(
+        _buildTestApp(child: const AppNavRail(), chatAccountId: null),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('rail-chat-button')), findsNothing);
     });
 
     testWidgets('clicking an account button calls selectAccount', (

@@ -33,7 +33,7 @@ final boardKeyProvider = Provider<String>((ref) {
         s.currentLocation?.section.value,
         switch (s.rail) {
           AccountTarget(:final accountId) => accountId,
-          WorkspaceTarget() => null,
+          WorkspaceTarget() || ChatTarget() => null,
         },
         s.currentLocation?.scopeId,
       ),
