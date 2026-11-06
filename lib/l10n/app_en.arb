@@ -2535,5 +2535,7 @@
   "videoExpand": "Expand (F)",
   "videoCollapse": "Exit expanded (F)",
   "videoBuffering": "Loading {percent}%",
-  "@videoBuffering": {"placeholders": {"percent": {"type": "int"}}}
+  "@videoBuffering": {"placeholders": {"percent": {"type": "int"}}},
+  "videoBufferingSpeed": "Loading {percent}% · {speed}/s",
+  "@videoBufferingSpeed": {"placeholders": {"percent": {"type": "int"}, "speed": {"type": "String"}}}
 }
