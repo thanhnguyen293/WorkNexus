@@ -31,6 +31,7 @@ void main() {
         resolvers: {'Thanh'},
         reporters: {'Ryan'},
         confirmations: {'1'},
+        modules: {'12'},
         search: 'login',
       );
 

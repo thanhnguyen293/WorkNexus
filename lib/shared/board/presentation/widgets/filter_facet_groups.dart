@@ -98,8 +98,12 @@ class FacetFilterGroups extends ConsumerWidget {
           else if (!together || !people.contains(g))
             FilterOptionsGroup(
               label: _facetHeader(l, g.kind),
-              // A person is found by name: a dropdown however few there are.
-              dropdownThreshold: _people.contains(g.kind) ? 0 : 8,
+              // A person or module is found by name: a dropdown however few
+              // there are.
+              dropdownThreshold:
+                  _people.contains(g.kind) || g.kind == BoardFacetKind.module
+                  ? 0
+                  : 8,
               options: optionsOf(g),
             ),
       ],
@@ -136,6 +140,7 @@ String _facetHeader(AppL10n l, BoardFacetKind kind) => switch (kind) {
   BoardFacetKind.priority => l.priority,
   BoardFacetKind.bugType => l.bugType,
   BoardFacetKind.resolution => l.resolution,
+  BoardFacetKind.module => l.fieldModule,
 };
 
 String _facetLabel(AppL10n l, BoardFacetKind kind, String value) =>
@@ -151,6 +156,8 @@ String _facetLabel(AppL10n l, BoardFacetKind kind, String value) =>
       BoardFacetKind.priority => priorityName(l, Priority.values.byName(value)),
       BoardFacetKind.bugType => zentaoBugTypeLabel(value) ?? value,
       BoardFacetKind.resolution => zentaoResolutionLabel(value) ?? value,
+      // Named by the catalog; a module it lacks (since deleted) by its id.
+      BoardFacetKind.module => value,
     };
 
 Color? _facetDot(AppColors c, BoardFacetKind kind, String value) =>
@@ -179,6 +186,7 @@ bool _facetActive(FilterState f, BoardFacetKind kind, String value) =>
       ),
       BoardFacetKind.bugType => f.bugTypes.contains(value),
       BoardFacetKind.resolution => f.resolutions.contains(value),
+      BoardFacetKind.module => f.modules.contains(value),
     };
 
 void _facetToggle(FilterController ctrl, BoardFacetKind kind, String value) {
@@ -203,5 +211,7 @@ void _facetToggle(FilterController ctrl, BoardFacetKind kind, String value) {
       ctrl.toggleBugType(value);
     case BoardFacetKind.resolution:
       ctrl.toggleResolution(value);
+    case BoardFacetKind.module:
+      ctrl.toggleModule(value);
   }
 }

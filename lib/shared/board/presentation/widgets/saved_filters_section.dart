@@ -17,6 +17,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/usecases/is_saved_filter_applied.dart';
 import '../../domain/value_objects/saved_filter.dart';
 import '../providers/board_providers.dart';
 import '../providers/saved_filter_providers.dart';
@@ -101,11 +102,19 @@ class _PresetChip extends ConsumerWidget {
     final c = context.colors;
     final l = AppL10n.of(context);
     final controller = ref.read(savedFilterControllerProvider.notifier);
+    // Shown as selected while the filter on screen is still this preset's,
+    // like an active status or severity chip.
+    final applied = ref.watch(
+      filterStateProvider.select(
+        (f) => const IsSavedFilterApplied()(preset, f),
+      ),
+    );
     return HoverSurface(
       onTap: () => controller.apply(preset),
+      selected: applied,
       height: context.sizes.controlSm,
       padding: EdgeInsets.only(left: context.spacing.lg),
-      color: c.surfaceSubtle,
+      color: applied ? c.selectionFill : c.surfaceSubtle,
       borderRadius: BorderRadius.circular(context.radii.pill),
       border: context.borders.showOutline ? Border.all(color: c.border) : null,
       child: Row(
@@ -118,7 +127,7 @@ class _PresetChip extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: context.typography.meta.copyWith(
                 fontWeight: FontWeight.w500,
-                color: c.textSecondary,
+                color: applied ? c.textPrimary : c.textSecondary,
               ),
             ),
           ),

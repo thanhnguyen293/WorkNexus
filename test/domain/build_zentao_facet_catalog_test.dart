@@ -26,6 +26,32 @@ void main() {
     expect(values(c, BoardFacetKind.status).first, 'newUnconfirmed');
   });
 
+  test('the bug board names its product modules, leaving out "no module"', () {
+    final c = build(
+      const ZenTaoFacetCatalogInput(
+        bugs: true,
+        members: [],
+        modules: {'0': '', '12': 'Live stream', '13': 'Live stream/Share'},
+      ),
+    );
+    final modules = c.choices[BoardFacetKind.module]!;
+    expect(modules.map((m) => m.value), ['12', '13']);
+    expect(modules.map((m) => m.label), ['Live stream', 'Live stream/Share']);
+  });
+
+  test('without modules there is no module choice', () {
+    final c = build(const ZenTaoFacetCatalogInput(bugs: true, members: []));
+    expect(c.choices.containsKey(BoardFacetKind.module), isFalse);
+    final tasks = build(
+      const ZenTaoFacetCatalogInput(
+        bugs: false,
+        members: [],
+        modules: {'12': 'Live stream'},
+      ),
+    );
+    expect(tasks.choices.containsKey(BoardFacetKind.module), isFalse);
+  });
+
   test('without members the people are left to the tickets', () {
     final c = build(const ZenTaoFacetCatalogInput(bugs: true, members: []));
     expect(c.choices.containsKey(BoardFacetKind.assignee), isFalse);

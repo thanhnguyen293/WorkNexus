@@ -6,6 +6,7 @@ import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_button.dart';
+import 'package:work_nexus/core/widgets/hover_surface.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
 import 'package:work_nexus/shared/board/presentation/widgets/saved_filters_section.dart';
@@ -97,6 +98,37 @@ void main() {
     expect(container.read(filterStateProvider).statuses, {
       UnifiedStatus.blocked,
     });
+    await disposeTree(tester);
+  });
+
+  testWidgets('the applied preset shows selected until the filter changes', (
+    tester,
+  ) async {
+    final container = await pumpSection(tester);
+    final filters = container.read(filterStateProvider.notifier);
+    filters.toggleStatus(UnifiedStatus.blocked);
+    await tester.pumpAndSettle();
+    await savePreset(tester, 'Blocked work');
+
+    bool? chipSelected() => tester
+        .widget<HoverSurface>(
+          find.ancestor(
+            of: find.text('Blocked work'),
+            matching: find.byType(HoverSurface),
+          ),
+        )
+        .selected;
+
+    // Saving leaves the filter on screen as the preset's.
+    expect(chipSelected(), isTrue);
+
+    filters.toggleStatus(UnifiedStatus.review);
+    await tester.pumpAndSettle();
+    expect(chipSelected(), isFalse);
+
+    await tester.tap(find.text('Blocked work'));
+    await tester.pumpAndSettle();
+    expect(chipSelected(), isTrue);
     await disposeTree(tester);
   });
 }
