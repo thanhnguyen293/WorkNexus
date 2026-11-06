@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/domain/adapters/provider_adapter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../providers/zentao_board_providers.dart';
 
@@ -191,12 +192,16 @@ class _PopoverProjectExecutions extends ConsumerWidget {
           ],
         );
       },
+      // Aligned, or the stretched column around it widens the spinner into
+      // an oval across the popover.
       loading: () => Padding(
         padding: const EdgeInsets.only(left: 32, top: 4, bottom: 4),
-        child: SizedBox(
-          width: 12,
-          height: 12,
-          child: CircularProgressIndicator(strokeWidth: 1.5, color: c.accent),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: SizedBox.square(
+            dimension: context.sizes.iconXs,
+            child: CircularProgressIndicator(strokeWidth: 1.5, color: c.accent),
+          ),
         ),
       ),
       error: (_, _) => Padding(
