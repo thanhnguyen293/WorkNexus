@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../core/widgets/attachments_input.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/detail/presentation/widgets/action_dialog_scaffold.dart';
+import '../../../../shared/detail/presentation/widgets/ticket_note_field.dart';
 import '../../domain/usecases/check_zentao_task_input.dart';
 import 'task_action_date_field.dart';
 import 'task_hours_field.dart';
@@ -49,7 +50,7 @@ class _ZenTaoTaskActionDialogState
       _ => '',
     },
   );
-  final _note = TextEditingController();
+  late final _note = TicketNoteController(widget.ticket);
   // Preset as ZenTao's forms are: starting keeps the task with its holder,
   // finishing hands it back to its creator.
   late String? _assignee = switch (widget.action) {
@@ -79,7 +80,7 @@ class _ZenTaoTaskActionDialogState
     began: widget.action.asksBegin ? _began : null,
     ended: widget.action.asksEnd ? _ended : null,
     files: _files,
-    comment: _note.text,
+    comment: _note.value,
   );
 
   @override
@@ -219,7 +220,7 @@ class _ZenTaoTaskActionDialogState
             SizedBox(height: s.xl2),
           ],
           FieldLabel(l.zentaoNote),
-          NoteField(_note),
+          TicketNoteField(ticket: widget.ticket, controller: _note),
         ],
       ),
     );

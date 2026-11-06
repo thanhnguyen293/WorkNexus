@@ -9,6 +9,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'action_dialog_scaffold.dart';
+import 'ticket_note_field.dart';
 
 /// Assigns a ticket to a provider user, with an optional note.
 class AssignDialog extends ConsumerStatefulWidget {
@@ -20,7 +21,7 @@ class AssignDialog extends ConsumerStatefulWidget {
 }
 
 class _AssignDialogState extends ConsumerState<AssignDialog> {
-  final _note = TextEditingController();
+  late final _note = TicketNoteController(widget.ticket);
   String? _assignee;
   bool _busy = false;
 
@@ -39,7 +40,7 @@ class _AssignDialogState extends ConsumerState<AssignDialog> {
     final res = await getIt<TicketDetailService>().assignTicket(
       widget.ticket,
       assignee: assignee,
-      comment: _note.text,
+      comment: _note.value,
     );
     if (!mounted) return;
     showAppSnack(
@@ -76,7 +77,7 @@ class _AssignDialogState extends ConsumerState<AssignDialog> {
           ),
           SizedBox(height: context.spacing.xl2),
           FieldLabel(l.zentaoNote),
-          NoteField(_note),
+          TicketNoteField(ticket: widget.ticket, controller: _note),
         ],
       ),
     );

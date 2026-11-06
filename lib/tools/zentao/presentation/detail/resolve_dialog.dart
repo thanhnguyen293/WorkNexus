@@ -14,6 +14,7 @@ import '../../../../core/widgets/celebration_overlay.dart';
 import '../../../../core/widgets/searchable_dropdown_field.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/detail/presentation/widgets/action_dialog_scaffold.dart';
+import '../../../../shared/detail/presentation/widgets/ticket_note_field.dart';
 
 /// ZenTao's own bug resolution codes, in the order the picker lists them.
 const _resolutionCodes = [
@@ -49,7 +50,7 @@ class ResolveDialog extends ConsumerStatefulWidget {
 }
 
 class _ResolveDialogState extends ConsumerState<ResolveDialog> {
-  final _note = TextEditingController();
+  late final _note = TicketNoteController(widget.ticket);
   final _build = TextEditingController(text: 'trunk');
   String? _resolution;
   String? _assignee;
@@ -73,7 +74,7 @@ class _ResolveDialogState extends ConsumerState<ResolveDialog> {
       resolution: resolution,
       build: _build.text,
       assignee: _assignee,
-      comment: _note.text,
+      comment: _note.value,
     );
     if (!mounted) return;
     // Fireworks for a fix only, not for duplicate / by design / won't fix.
@@ -134,7 +135,7 @@ class _ResolveDialogState extends ConsumerState<ResolveDialog> {
           ),
           SizedBox(height: context.spacing.xl2),
           FieldLabel(l.zentaoNote),
-          NoteField(_note),
+          TicketNoteField(ticket: widget.ticket, controller: _note),
         ],
       ),
     );
