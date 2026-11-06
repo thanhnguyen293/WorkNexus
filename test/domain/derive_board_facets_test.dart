@@ -338,6 +338,36 @@ void main() {
       ]);
     });
 
+    test('lists modules first, counted by the id each bug carries', () {
+      Ticket inModule(String id, String module) => _bug(id: id).copyWith(
+        providerEntity: TicketProviderEntity.zentaoBug(module: module),
+      );
+      final f = facets(
+        [inModule('1', '12'), inModule('2', '12'), inModule('3', '0')],
+        const BoardFacetCatalog({
+          BoardFacetKind.module: [
+            BoardFacetChoice('12', label: 'Live stream'),
+            BoardFacetChoice('13', label: 'Share'),
+          ],
+        }),
+      );
+      expect(f.groups.first.kind, BoardFacetKind.module);
+      final module = group(f, BoardFacetKind.module);
+      expect(module.options.map((o) => o.label), ['Live stream', 'Share']);
+      expect(module.options.map((o) => o.count), [2, 0]);
+    });
+
+    test('no module group without names for them', () {
+      Ticket inModule(String id, String module) => _bug(id: id).copyWith(
+        providerEntity: TicketProviderEntity.zentaoBug(module: module),
+      );
+      final f = facets([
+        inModule('1', '12'),
+        inModule('2', '13'),
+      ], const BoardFacetCatalog({}));
+      expect(f.groups.any((g) => g.kind == BoardFacetKind.module), isFalse);
+    });
+
     test('leaves a dimension it does not name to the tickets', () {
       final f = facets(
         [_bug(id: '1', severity: 1)],

@@ -123,6 +123,9 @@ class FilterController extends Notifier<FilterState> {
   void toggleConfirmation(String c) =>
       state = state.copyWith(confirmations: _toggle(state.confirmations, c));
 
+  void toggleModule(String id) =>
+      state = state.copyWith(modules: _toggle(state.modules, id));
+
   void clearAll() => state = _cleared(state);
 
   /// Switches the board filter to the board identified by [key] (see
@@ -170,6 +173,7 @@ class FilterController extends Notifier<FilterState> {
     resolvers: {},
     reporters: {},
     confirmations: {},
+    modules: {},
     search: '',
   );
 

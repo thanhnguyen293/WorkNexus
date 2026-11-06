@@ -20,6 +20,10 @@ enum BoardFacetKind {
   priority,
   bugType,
   resolution,
+
+  /// A ZenTao bug's product module, by id. Listed only from the tool's
+  /// [BoardFacetCatalog] (which names them): an id alone means nothing.
+  module,
 }
 
 /// One option within a facet group: its canonical [value] (the exact string/int
@@ -107,7 +111,10 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
       // The ones picked most first: the people (one OR box), then the
       // status (a table has no columns to tell them apart), then what the
       // bug is.
+      // The module first, as ZenTao's own bug list leads with its module
+      // tree.
       BoardFacetScope.bug => const [
+        BoardFacetKind.module,
         BoardFacetKind.assignee,
         BoardFacetKind.resolvedBy,
         BoardFacetKind.openedBy,
@@ -140,6 +147,7 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
         }
       }
       final known = input.catalog?.choices[kind];
+      if (known == null && kind == BoardFacetKind.module) continue;
       if (known == null && counts.length < 2) continue;
       final derived =
           [
@@ -214,6 +222,11 @@ class DeriveBoardFacets extends UseCase<BoardFacets, BoardFacetsInput> {
             ? (e.resolution ?? '').toLowerCase()
             : '';
         return code.isEmpty ? const [] : [code];
+      case BoardFacetKind.module:
+        final e = t.providerEntity;
+        final id = e is ZenTaoBugEntity ? (e.module ?? '') : '';
+        // '0' is ZenTao's "no module".
+        return id.isEmpty || id == '0' ? const [] : [id];
     }
   }
 }
