@@ -99,9 +99,9 @@ class ZentaoBugsSection extends ConsumerWidget {
           ),
           modes: modes,
           viewMode: viewMode,
-          // Filters work on every view, Related to me included, and
-          // picking one keeps the view you are on.
-          keepViewOnPick: true,
+          // Related to me is a filter of its own: no Filters there, only
+          // the module picked in the side panel.
+          filtering: !isRelated,
           scopes: [
             AppSegmentedTab(
               label: l.viewAll,
@@ -119,9 +119,9 @@ class ZentaoBugsSection extends ConsumerWidget {
               label: l.relatedToMe,
               active: isRelated,
               onTap: () {
-                ref
-                    .read(filterStateProvider.notifier)
-                    .setSavedView(SavedView.related);
+                ref.read(filterStateProvider.notifier)
+                  ..clearAllButModules()
+                  ..setSavedView(SavedView.related);
                 ref
                     .read(zentaoBugTabProvider.notifier)
                     .set(ZenTaoBugBrowseType.relatedToMe);
