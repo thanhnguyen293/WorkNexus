@@ -174,7 +174,7 @@ void main() {
         expect(stack.index, 0);
 
         // Section 2: Integrations
-        nav.selectWorkspaceSection(WorkspaceSection.integrations);
+        nav.selectSettings(SettingsSection.integrations);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
@@ -191,7 +191,7 @@ void main() {
 
         // Section 4: Settings (exceeds max of 3 -> takes the slot of the
         // least recently used: overview)
-        nav.selectWorkspaceSection(WorkspaceSection.settings);
+        nav.selectSettings(SettingsSection.general);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
@@ -199,7 +199,7 @@ void main() {
         expect(stack.index, 0);
 
         // Re-visit Integrations (already cached -> keeps its slot)
-        nav.selectWorkspaceSection(WorkspaceSection.integrations);
+        nav.selectSettings(SettingsSection.integrations);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
@@ -304,7 +304,7 @@ void main() {
       final before = overview();
 
       final nav = container.read(appNavProvider.notifier)
-        ..selectWorkspaceSection(WorkspaceSection.integrations);
+        ..selectSettings(SettingsSection.integrations);
       await tester.pumpAndSettle();
       nav.selectWorkspaceSection(WorkspaceSection.overview);
       await tester.pumpAndSettle();
@@ -335,7 +335,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final nav = container.read(appNavProvider.notifier);
-      nav.selectWorkspaceSection(WorkspaceSection.integrations);
+      nav.selectSettings(SettingsSection.integrations);
       await tester.pumpAndSettle();
 
       final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));

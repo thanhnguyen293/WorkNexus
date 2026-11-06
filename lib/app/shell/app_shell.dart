@@ -20,13 +20,13 @@ import '../../features/connections/presentation/widgets/local_cache_quick_settin
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/notifications/presentation/widgets/notification_alerts.dart';
 import '../../features/notifications/presentation/widgets/notifications_panel.dart';
-import '../../features/workspace_overview/presentation/widgets/workspace_nav_pane.dart';
 import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
 import '../../shared/detail/presentation/detail_panel.dart';
 import 'account_sync_at_launch.dart';
 import 'app_nav_rail.dart';
 import 'chat_place.dart';
 import 'new_ticket_menu.dart';
+import 'settings_nav_pane.dart';
 import 'title_bar.dart';
 import 'viewport.dart';
 
@@ -144,7 +144,9 @@ class _ToolPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (nav.rail) {
-      WorkspaceTarget() => const WorkspaceNavPane(),
+      // The dashboard is the overview alone: no menu beside it.
+      WorkspaceTarget() => const SizedBox.shrink(),
+      SettingsTarget() => const SettingsNavPane(),
       ChatTarget() => const ChatToolPane(),
       AccountTarget(:final accountId) => _buildAccountPane(
         context,

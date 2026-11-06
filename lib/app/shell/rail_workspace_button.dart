@@ -7,8 +7,7 @@ import '../../core/widgets/app_rail_labeled_button.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The top workspace button in the navigation rail (design §8, specs S3.1),
-/// labelled "Dashboard": selects the workspace-level view (Overview,
-/// Integrations, Settings).
+/// labelled "Dashboard": shows the workspace's Overview.
 class RailWorkspaceButton extends ConsumerWidget {
   const RailWorkspaceButton({super.key});
 
