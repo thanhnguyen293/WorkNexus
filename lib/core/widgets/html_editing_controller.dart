@@ -9,15 +9,22 @@ import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart
 import 'package:html/parser.dart' as html_parser;
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 
+import '../platform/image_clipboard.dart';
+
 /// Holds rich text being edited, read from and written back as HTML — the
 /// format ZenTao's own editor stores descriptions in.
 class HtmlEditingController {
-  HtmlEditingController({String html = ''}) : _initialHtml = html {
+  HtmlEditingController({
+    String html = '',
+    // Injectable for tests: the clipboard plugin has no test double.
+    this._readImage = readClipboardImage,
+  }) : _initialHtml = html {
     quill = QuillController(
       document: _document(html),
       selection: const TextSelection.collapsed(offset: 0),
       config: QuillControllerConfig(
         clipboardConfig: QuillClipboardConfig(
+          onClipboardPaste: pasteClipboardImage,
           enableExternalRichPaste: true,
           onImagePaste: (bytes) async => onImagePaste?.call(bytes),
         ),
@@ -27,12 +34,34 @@ class HtmlEditingController {
   }
 
   final String _initialHtml;
+  final Future<Uint8List?> Function() _readImage;
   late final Delta _initialDelta;
   late final QuillController quill;
 
   /// Turns a pasted image into the URL to show it at (by uploading it); a
   /// pasted image is dropped while this is null or gives null.
   Future<String?> Function(Uint8List bytes)? onImagePaste;
+
+  /// Pastes the clipboard's picture as an uploaded image, when it holds one
+  /// and no text beyond (at most) its address; false leaves the paste to the
+  /// editor. A browser's "Copy image" puts the picture next to an `<img>`
+  /// pointing back at the web, which the editor would paste first — an image
+  /// the provider never receives.
+  Future<bool> pasteClipboardImage() async {
+    final upload = onImagePaste;
+    if (upload == null) return false;
+    final text =
+        (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim() ?? '';
+    if (text.isNotEmpty && Uri.tryParse(text)?.hasScheme != true) return false;
+    final bytes = await _readImage();
+    if (bytes == null) return false;
+    final url = await upload(bytes);
+    // A failed upload is reported by the uploader; the web copy stays out.
+    if (url == null) return true;
+    final at = quill.selection.end < 0 ? 0 : quill.selection.end;
+    quill.replaceText(at, 0, BlockEmbed.image(url), null);
+    return true;
+  }
 
   /// The text as HTML; empty when nothing but whitespace was written.
   String get html {
