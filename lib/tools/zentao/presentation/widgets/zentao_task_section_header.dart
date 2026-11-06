@@ -11,7 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../providers/zentao_board_providers.dart';
+import '../providers/zentao_scope_title_provider.dart';
 import '../providers/zentao_table_providers.dart';
 import 'zentao_execution_popover.dart';
 
@@ -43,16 +43,15 @@ class _ZentaoTaskSectionHeaderState
     final c = context.colors;
     final s = context.spacing;
 
-    // The selection is app-wide: it is this board's only while it matches
-    // this account and scope (as the board's own scoping requires).
-    final picked = ref.watch(selectedZenTaoExecutionProvider);
-    final execution =
-        picked?.accountId == widget.account.id &&
-            picked?.executionId == widget.location.scopeId
-        ? picked
-        : null;
+    final scopeTitle = ref.watch(
+      zentaoScopeTitleProvider((
+        accountId: widget.account.id,
+        scopeId: widget.location.scopeId,
+        bugs: false,
+      )),
+    );
     // Only until the section has picked an execution.
-    final displayTitle = execution?.executionName ?? l.zentaoProjectsGroup;
+    final displayTitle = scopeTitle ?? l.zentaoProjectsGroup;
     final taskTable = ref.watch(zentaoTaskTableProvider);
     final taskCount = taskTable.rows.length;
 
@@ -139,7 +138,10 @@ class _ZentaoTaskSectionHeaderState
                   NewTaskRoute(
                     accountId: widget.account.id,
                     // Filed into the open execution, not ZenTao's current one.
-                    executionId: execution?.executionId ?? '0',
+                    // A title means the open execution is the picked one.
+                    executionId: scopeTitle == null
+                        ? '0'
+                        : widget.location.scopeId ?? '0',
                   ),
                 ),
             child: Text(l.newTask),

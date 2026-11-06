@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/zentao_board_providers.dart';
+import '../providers/zentao_scope_title_provider.dart';
 import '../providers/zentao_table_providers.dart';
 import 'zentao_product_popover.dart';
 
@@ -43,36 +44,18 @@ class _ZentaoBugSectionHeaderState
     final c = context.colors;
     final s = context.spacing;
 
-    // The selections are app-wide: they are this board's only while they
-    // match this account and scope (as the board's own scoping requires).
+    // The selection is app-wide: this board's only while it matches.
     final pickedProduct = ref.watch(selectedZenTaoProductProvider);
-    final selectedProduct =
+    final productPicked =
         pickedProduct?.accountId == widget.account.id &&
-            pickedProduct?.productId == widget.location.scopeId
-        ? pickedProduct
-        : null;
-    final pickedExec = ref.watch(selectedZenTaoExecutionProvider);
-    final selectedExec =
-        selectedProduct != null && pickedExec?.accountId == widget.account.id
-        ? pickedExec
-        : null;
-    final products = ref
-        .watch(zentaoProductsProvider(widget.account.id))
-        .asData
-        ?.value;
-    String? scopeTitle;
-    if (selectedExec != null) {
-      scopeTitle = selectedExec.executionName;
-    } else if (selectedProduct != null) {
-      scopeTitle = selectedProduct.productName;
-    } else if (widget.location.scopeId != null && products != null) {
-      for (final p in products) {
-        if (p.id == widget.location.scopeId) {
-          scopeTitle = p.name;
-          break;
-        }
-      }
-    }
+        pickedProduct?.productId == widget.location.scopeId;
+    final scopeTitle = ref.watch(
+      zentaoScopeTitleProvider((
+        accountId: widget.account.id,
+        scopeId: widget.location.scopeId,
+        bugs: true,
+      )),
+    );
     // Only until the section has picked a product.
     final displayTitle = scopeTitle ?? l.fieldProduct;
     final bugTable = ref.watch(zentaoBugTableProvider);
@@ -160,7 +143,9 @@ class _ZentaoBugSectionHeaderState
                 .openEditor(
                   NewBugRoute(
                     accountId: widget.account.id,
-                    productId: selectedProduct?.productId ?? '0',
+                    productId: productPicked
+                        ? widget.location.scopeId ?? '0'
+                        : '0',
                   ),
                 ),
             child: Text(l.newBug),

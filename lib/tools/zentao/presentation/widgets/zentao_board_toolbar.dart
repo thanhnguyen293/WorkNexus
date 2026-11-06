@@ -20,6 +20,7 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
     required this.modes,
     required this.viewMode,
     this.filtering = true,
+    this.searchScope,
   });
 
   /// The bug board, else the task board.
@@ -34,9 +35,13 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
   /// button there.
   final bool filtering;
 
+  /// The picked product / execution, named in the search's placeholder.
+  final String? searchScope;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => BoardToolbar(
     filters: scopes,
+    searchScope: searchScope,
     filtersButton: filtering
         ? FiltersButton(
             statusOption: zentaoStatusFilterOption(bugBoard: bugs),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/platform/desktop_window_service.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radii.dart';
-import '../../core/theme/app_sizes.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import '../../core/widgets/hover_surface.dart';
+import '../../../../core/platform/desktop_window_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_sizes.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/hover_surface.dart';
 
 /// Trailing clear icon or keyboard shortcut badge for [ContextualSearchField].
 class SearchTrailingAffordance extends StatelessWidget {

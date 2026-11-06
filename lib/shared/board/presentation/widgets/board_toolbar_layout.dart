@@ -9,16 +9,19 @@ enum BoardToolbarSlot {
   scopes,
   scopesMenu,
   filters,
+  search,
   refresh,
   modes,
   modesCompact,
 }
 
 /// Lays a board toolbar out on one row — scopes and filters on the left,
-/// refresh and view modes on the right — folding it as the row narrows
-/// instead of overflowing: first the view modes go icon-only, then the
-/// scopes fold into a menu. Every piece is built (so the choice needs no
-/// extra frame), only the chosen ones are painted and hit.
+/// refresh and view modes on the right, [search] filling the room between
+/// them — folding it as the row narrows instead of overflowing: first the
+/// view modes go icon-only, then the scopes fold into a menu, and only when
+/// even that leaves no room does the search go. Every piece is built (so
+/// the choice needs no extra frame), only the chosen ones are painted and
+/// hit.
 class BoardToolbarLayout
     extends SlottedMultiChildRenderObjectWidget<BoardToolbarSlot, RenderBox> {
   const BoardToolbarLayout({
@@ -27,6 +30,7 @@ class BoardToolbarLayout
     this.scopes,
     this.scopesMenu,
     this.filters,
+    this.search,
     required this.refresh,
     required this.modes,
     required this.modesCompact,
@@ -36,6 +40,11 @@ class BoardToolbarLayout
   final Widget? scopes;
   final Widget? scopesMenu;
   final Widget? filters;
+
+  /// Laid out at the width it is given (never its own), between
+  /// [RenderBoardToolbar.searchMinWidth] and
+  /// [RenderBoardToolbar.searchMaxWidth].
+  final Widget? search;
   final Widget refresh;
   final Widget modes;
   final Widget modesCompact;
@@ -48,6 +57,7 @@ class BoardToolbarLayout
     BoardToolbarSlot.scopes => scopes,
     BoardToolbarSlot.scopesMenu => scopesMenu,
     BoardToolbarSlot.filters => filters,
+    BoardToolbarSlot.search => search,
     BoardToolbarSlot.refresh => refresh,
     BoardToolbarSlot.modes => modes,
     BoardToolbarSlot.modesCompact => modesCompact,
@@ -97,6 +107,10 @@ class RenderBoardToolbar extends RenderBox
     markNeedsLayout();
   }
 
+  /// Narrower than this, the search leaves the row instead of squeezing.
+  static const searchMinWidth = 160.0;
+  static const searchMaxWidth = 480.0;
+
   /// Widest first: the first that fits is used, else the last.
   static const _layouts = [
     (
@@ -114,6 +128,11 @@ class RenderBoardToolbar extends RenderBox
   ];
 
   List<RenderBox> _shown = const [];
+
+  RenderBox? get _search => childForSlot(BoardToolbarSlot.search);
+
+  /// Every piece but the search, which takes its width from the row.
+  Iterable<RenderBox> get _sized => children.where((box) => box != _search);
 
   (List<RenderBox>, List<RenderBox>) _boxes(
     (List<BoardToolbarSlot>, List<BoardToolbarSlot>) layout,
@@ -142,14 +161,15 @@ class RenderBoardToolbar extends RenderBox
 
   @override
   double computeMaxIntrinsicWidth(double height) =>
-      _intrinsicWidth(_layouts.first);
+      _intrinsicWidth(_layouts.first) +
+      (_search == null ? 0 : _gap + searchMaxWidth);
 
   @override
   double computeMinIntrinsicHeight(double width) =>
       computeMaxIntrinsicHeight(width);
 
   @override
-  double computeMaxIntrinsicHeight(double width) => children.fold(
+  double computeMaxIntrinsicHeight(double width) => _sized.fold(
     0,
     (h, box) => math.max(h, box.getMaxIntrinsicHeight(double.infinity)),
   );
@@ -157,7 +177,7 @@ class RenderBoardToolbar extends RenderBox
   @override
   Size computeDryLayout(covariant BoxConstraints constraints) {
     final natural = BoxConstraints(maxHeight: constraints.maxHeight);
-    final height = children.fold(
+    final height = _sized.fold(
       0.0,
       (h, box) => math.max(h, box.getDryLayout(natural).height),
     );
@@ -175,28 +195,49 @@ class RenderBoardToolbar extends RenderBox
   void performLayout() {
     // Each piece at its own width first: that is what decides the fold.
     final natural = BoxConstraints(maxHeight: constraints.maxHeight);
-    for (final box in children) {
+    for (final box in _sized) {
       box.layout(natural, parentUsesSize: true);
     }
     final maxWidth = constraints.hasBoundedWidth
         ? constraints.maxWidth
         : double.infinity;
+    final search = _search;
+    double width(List<RenderBox> boxes) =>
+        _rowWidth([for (final b in boxes) b.size.width]);
 
+    // The widest form that still leaves the search its minimum, else the
+    // widest that fits without it, else the narrowest.
     var (left, right) = _boxes(_layouts.last);
-    for (final layout in _layouts) {
-      final (l, r) = _boxes(layout);
-      if (_rowWidth([
-            for (final b in [...l, ...r]) b.size.width,
-          ]) <=
-          maxWidth) {
-        (left, right) = (l, r);
+    var withSearch = false;
+    for (final wantSearch in [if (search != null) true, false]) {
+      final extra = wantSearch ? _gap + searchMinWidth : 0;
+      final fit = _layouts
+          .map(_boxes)
+          .where((form) => width([...form.$1, ...form.$2]) + extra <= maxWidth);
+      if (fit.isNotEmpty) {
+        (left, right) = fit.first;
+        withSearch = wantSearch;
         break;
       }
     }
 
-    final rightWidth = _rowWidth([for (final b in right) b.size.width]);
+    final leftWidth = width(left);
+    final rightWidth = width(right);
+    var searchWidth = 0.0;
+    if (withSearch && search != null) {
+      final room =
+          maxWidth - leftWidth - rightWidth - _gap * (left.isEmpty ? 1 : 2);
+      searchWidth = room.isFinite
+          ? math.min(room, searchMaxWidth)
+          : searchMaxWidth;
+      search.layout(
+        BoxConstraints.tightFor(width: searchWidth).enforce(natural),
+        parentUsesSize: true,
+      );
+    }
+
     var height = 0.0;
-    for (final box in [...left, ...right]) {
+    for (final box in [...left, ...right, if (withSearch) ?search]) {
       height = math.max(height, box.size.height);
     }
     size = constraints.constrain(
@@ -205,6 +246,7 @@ class RenderBoardToolbar extends RenderBox
             ? maxWidth
             : _rowWidth([
                 for (final b in [...left, ...right]) b.size.width,
+                if (withSearch) searchWidth,
               ]),
         height,
       ),
@@ -215,12 +257,13 @@ class RenderBoardToolbar extends RenderBox
       _place(box, x);
       x += box.size.width + _gap;
     }
+    if (withSearch && search != null) _place(search, x);
     x = size.width - rightWidth;
     for (final box in right) {
       _place(box, x);
       x += box.size.width + _gap;
     }
-    _shown = [...left, ...right];
+    _shown = [...left, if (withSearch) ?search, ...right];
   }
 
   void _place(RenderBox box, double x) {

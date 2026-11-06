@@ -11,6 +11,7 @@ import '../../../../shared/board/domain/value_objects/saved_view.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../../domain/value_objects/zentao_bug_browse_type.dart';
 import '../providers/zentao_board_providers.dart';
+import '../providers/zentao_scope_title_provider.dart';
 import '../util/keep_bug_board_product.dart';
 import '../widgets/zentao_board_toolbar.dart';
 import '../widgets/zentao_bug_board_view.dart';
@@ -89,6 +90,13 @@ class ZentaoBugsSection extends ConsumerWidget {
 
         ZenTaoBoardToolbar(
           bugs: true,
+          searchScope: ref.watch(
+            zentaoScopeTitleProvider((
+              accountId: account.id,
+              scopeId: location.scopeId,
+              bugs: true,
+            )),
+          ),
           modes: modes,
           viewMode: viewMode,
           filtering: !isRelated,

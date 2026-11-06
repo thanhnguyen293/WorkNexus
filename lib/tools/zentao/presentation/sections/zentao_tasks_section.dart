@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/domain/value_objects/saved_view.dart';
 import '../../../../shared/board/presentation/providers/board_providers.dart';
 import '../providers/zentao_board_providers.dart';
+import '../providers/zentao_scope_title_provider.dart';
 import '../util/keep_task_board_scope.dart';
 import '../widgets/zentao_board_toolbar.dart';
 import '../widgets/zentao_task_board_view.dart';
@@ -77,6 +78,13 @@ class ZentaoTasksSection extends ConsumerWidget {
 
         ZenTaoBoardToolbar(
           bugs: false,
+          searchScope: ref.watch(
+            zentaoScopeTitleProvider((
+              accountId: account.id,
+              scopeId: location.scopeId,
+              bugs: false,
+            )),
+          ),
           modes: modes,
           viewMode: viewMode,
           filtering: !isRelated,

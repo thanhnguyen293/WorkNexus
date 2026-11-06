@@ -8,16 +8,18 @@ import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../core/widgets/app_segmented_tabs_menu.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'board_toolbar_layout.dart';
+import 'contextual_search_field.dart';
 
 /// The bar over a board, one row of controls at one height: the quick
-/// [filters] (and the board's [filtersButton], if it has one) on the left;
-/// [refresh] and the view [modes] on the right. A narrow window folds it
+/// [filters] (and the board's [filtersButton], if it has one) on the left,
+/// then the ticket search; [refresh] and the view [modes] on the right. A narrow window folds it
 /// (see [BoardToolbarLayout]) rather than letting it overflow.
 class BoardToolbar extends StatelessWidget {
   const BoardToolbar({
     super.key,
     this.filters = const [],
     this.filtersButton,
+    this.searchScope,
     required this.refresh,
     required this.modes,
     required this.viewMode,
@@ -29,6 +31,9 @@ class BoardToolbar extends StatelessWidget {
 
   /// The advanced filters, after the quick ones.
   final Widget? filtersButton;
+
+  /// What the board is scoped to, named in the search's placeholder.
+  final String? searchScope;
   final Widget refresh;
   final List<ToolViewMode> modes;
   final ViewModeId viewMode;
@@ -61,6 +66,7 @@ class BoardToolbar extends StatelessWidget {
               ? null
               : AppSegmentedTabsMenu(tabs: filters),
           filters: filtersButton,
+          search: ContextualSearchField(scope: searchScope),
           refresh: refresh,
           modes: AppSegmentedTabs(tabs: modeTabs),
           modesCompact: AppSegmentedTabs(tabs: modeTabs, iconOnly: true),

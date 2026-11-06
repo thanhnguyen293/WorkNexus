@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/app/shell/contextual_search_field.dart';
-import 'package:work_nexus/app/shell/search_results_overlay.dart';
 import 'package:work_nexus/app/shell/workspace_switcher_popover.dart';
 import 'package:work_nexus/app/tool_registry.dart';
 import 'package:work_nexus/core/di/providers.dart';
@@ -18,6 +16,9 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/tools/tool_registry_provider.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
+import 'package:work_nexus/shared/board/presentation/providers/board_providers.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/contextual_search_field.dart';
+import 'package:work_nexus/shared/board/presentation/widgets/search_results_overlay.dart';
 
 const _ws1 = Workspace(
   id: 'ws-1',
@@ -245,6 +246,17 @@ void main() {
       expect(find.text('Search tasks, bugs, PRs, MRs…'), findsOneWidget);
     });
 
+    testWidgets('names the board scope in the placeholder', (tester) async {
+      await tester.pumpWidget(
+        _buildTestWidget(
+          child: const ContextualSearchField(scope: 'VN_Socialfi'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Search in VN_Socialfi…'), findsOneWidget);
+    });
+
     testWidgets('debounces query and shows search results overlay', (
       tester,
     ) async {
@@ -271,6 +283,25 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Fix authentication crash'), findsOneWidget);
+    });
+
+    testWidgets('finds only the tickets the board on screen is scoped to', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestWidget(child: const ContextualSearchField()),
+      );
+      await tester.pumpAndSettle();
+      // The board is scoped to the other ticket only (another product).
+      ProviderScope.containerOf(
+        tester.element(find.byType(ContextualSearchField)),
+      ).read(scopedTicketsOverrideProvider.notifier).set(const [_testTicket2]);
+
+      await tester.enterText(find.byType(TextField), 'BUG-101');
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fix authentication crash'), findsNothing);
     });
 
     testWidgets('escape key clears search field and closes overlay', (

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/domain/entities/ticket.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radii.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import '../../core/widgets/app_popup_card.dart';
-import '../../core/widgets/badges.dart';
-import '../../core/widgets/hover_surface.dart';
-import '../../l10n/app_localizations.dart';
-import '../../shared/detail/presentation/widgets/ticket_status_pill.dart';
+import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_popup_card.dart';
+import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/hover_surface.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../detail/presentation/widgets/ticket_status_pill.dart';
 
 /// Floating results card for contextual search (design §7, specs S2.3).
 /// Displays up to 8 ticket matches with key, title, and status pill.
