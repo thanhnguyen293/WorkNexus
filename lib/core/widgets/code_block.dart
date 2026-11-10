@@ -72,7 +72,7 @@ class _CodeBlockState extends State<CodeBlock> {
               Positioned(
                 top: context.spacing.xs,
                 right: context.spacing.xs,
-                child: _CopyButton(widget.code),
+                child: CodeCopyButton(widget.code),
               ),
             ],
           ),
@@ -144,16 +144,18 @@ class _ToggleBar extends StatelessWidget {
 
 /// Copies the whole snippet (collapsed or not), then shows a check for a
 /// moment as confirmation.
-class _CopyButton extends StatefulWidget {
-  const _CopyButton(this.code);
+/// Copies [code] to the clipboard, ticking for a moment once copied; sits in
+/// the corner of a code surface.
+class CodeCopyButton extends StatefulWidget {
+  const CodeCopyButton(this.code, {super.key});
 
   final String code;
 
   @override
-  State<_CopyButton> createState() => _CopyButtonState();
+  State<CodeCopyButton> createState() => _CodeCopyButtonState();
 }
 
-class _CopyButtonState extends State<_CopyButton> {
+class _CodeCopyButtonState extends State<CodeCopyButton> {
   bool _copied = false;
   Timer? _timer;
 

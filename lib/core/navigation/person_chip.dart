@@ -31,3 +31,19 @@ typedef PersonAvatarBuilder =
 final personAvatarBuilderProvider = Provider<PersonAvatarBuilder?>(
   (ref) => null,
 );
+
+/// Draws a "message" button that opens a direct chat with ZenTao person
+/// [name] (login handle or display name) of account [accountId], or nothing
+/// when chat doesn't know them — for a popup listing people.
+typedef PersonChatButtonBuilder =
+    Widget Function(
+      BuildContext context, {
+      required String accountId,
+      required String name,
+    });
+
+/// Wired in from the chat feature like [personChipBuilderProvider]. Null
+/// (tests, no chat) means no button.
+final personChatButtonBuilderProvider = Provider<PersonChatButtonBuilder?>(
+  (ref) => null,
+);
