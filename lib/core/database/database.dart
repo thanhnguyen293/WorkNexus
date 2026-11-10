@@ -435,6 +435,20 @@ class SourceListSnapshots extends Table {
   Set<Column> get primaryKey => {accountId, kind};
 }
 
+/// ZenTao documents, cached raw per account so the Docs tab opens instantly
+/// and offline; parsed on read. [key] is `libs` (the library list),
+/// `lib:<id>` (one library's document list) or `doc:<id>` (one document).
+@DataClassName('ZenTaoDocSnapshotRow')
+class ZenTaoDocSnapshots extends Table {
+  TextColumn get accountId => text()();
+  TextColumn get key => text()();
+  TextColumn get json => text()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, key};
+}
+
 /// ZenTao web notifications (the bell menu), per account. The server's list
 /// replaces an account's rows on every refresh.
 @DataClassName('ZenTaoNotificationRow')
@@ -557,6 +571,7 @@ class MiniAppPermissions extends Table {
     TicketDrafts,
     MiniApps,
     MiniAppPermissions,
+    ZenTaoDocSnapshots,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -579,7 +594,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 57;
+  int get schemaVersion => 58;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -896,6 +911,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 57 && !await _hasColumn('settings', 'chat_reactions')) {
         await m.addColumn(settings, settings.chatReactions);
+      }
+      if (from < 58 && !await _hasTable('zen_tao_doc_snapshots')) {
+        await m.createTable(zenTaoDocSnapshots);
       }
     },
   );

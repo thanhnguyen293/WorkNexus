@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
@@ -110,6 +112,46 @@ class ChatPersonAvatar extends ConsumerWidget {
       name: user?.realname.isNotEmpty == true ? user!.realname : name,
       imageUrl: user?.avatarUrl,
       diameter: diameter,
+    );
+  }
+}
+
+/// A small "message" button opening a direct chat with the ZenTao person
+/// [name]; nothing for someone chat doesn't know.
+class ChatPersonChatButton extends ConsumerWidget {
+  const ChatPersonChatButton({
+    super.key,
+    required this.accountId,
+    required this.name,
+  });
+
+  final String accountId;
+
+  /// Display name or login handle.
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final users =
+        ref.watch(chatUsersProvider(accountId)).value ??
+        const <int, ChatUser>{};
+    final user = _find(users.values, name);
+    if (user == null) return const SizedBox.shrink();
+    final shown = user.realname.isNotEmpty ? user.realname : name;
+    return Tooltip(
+      message: AppL10n.of(context).chatWithPerson(shown),
+      waitDuration: const Duration(milliseconds: 400),
+      child: AppButton.outlinedNeutral(
+        size: AppButtonSize.small,
+        icon: LucideIcons.messageCircle300,
+        onPressed: () => openDirectChatWith(
+          context,
+          ref,
+          accountId: accountId,
+          userId: user.userId,
+        ),
+        child: Text(AppL10n.of(context).personMessage),
+      ),
     );
   }
 }

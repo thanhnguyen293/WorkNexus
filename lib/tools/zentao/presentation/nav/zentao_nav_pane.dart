@@ -7,6 +7,7 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../shared/shell_pane/tool_pane_scaffold.dart';
 import 'zentao_account_switcher.dart';
 import 'zentao_bug_module_pane.dart';
+import 'zentao_doc_libs_scope_list.dart';
 import 'zentao_task_module_pane.dart';
 
 /// Navigation pane (L3/L4) for ZenTao accounts. Composes the header,
@@ -31,6 +32,8 @@ class ZentaoNavPane extends ConsumerWidget {
         body = ZentaoTaskModulePane(account: account);
       case 'zentao.bugs':
         body = ZentaoBugModulePane(account: account, location: location);
+      case 'zentao.docs':
+        body = ZentaoDocLibsScopeList(account: account, location: location);
       default:
         body = const SizedBox.shrink();
     }

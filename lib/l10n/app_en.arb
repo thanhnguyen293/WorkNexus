@@ -698,6 +698,69 @@
   },
   "bugs": "Bugs",
   "tasks": "Tasks",
+  "docs": "Docs",
+  "docsFilterLibraries": "Filter libraries",
+  "docsLibrariesGroup": "Libraries",
+  "docsLoadingLibraries": "Loading libraries…",
+  "docsLibrariesUnavailable": "Can't load libraries",
+  "docsReadOnLight": "Read on a light page",
+  "docsReadOnDark": "Read on a dark page",
+  "docsPinLibrary": "Pin library",
+  "docsUnpinLibrary": "Unpin library",
+  "docsPinDoc": "Pin document",
+  "docsUnpinDoc": "Unpin document",
+  "docsLoadingDocs": "Loading documents…",
+  "docsCopyMarkdown": "Copy the document as Markdown",
+  "docsCopied": "Document copied as Markdown",
+  "personMessage": "Message",
+  "docsCreatedAction": "created",
+  "docsEditedAction": "edited",
+  "docsCreatedOn": "Created {date}",
+  "@docsCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "docsViews": "{count} views",
+  "@docsViews": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "docsPeopleCreated": "Created by",
+  "docsPeopleEdited": "Edited by",
+  "docsPreviewFile": "Show the file here",
+  "docsHidePreview": "Hide the preview",
+  "docsDownloadFile": "Save to Downloads",
+  "docsPreviewFailed": "Couldn't load the file",
+  "docsNoLibraries": "No document libraries",
+  "docsPickLibrary": "Pick a library",
+  "docsPickLibraryHint": "Choose a document library on the left to see its documents.",
+  "docsEmptyLibrary": "No documents in this library",
+  "docsPickDocument": "Pick a document in the list on the left.",
+  "docsUnreadable": "Can't open this document",
+  "docsUnreadableHint": "You may not have access to it, or it was deleted.",
+  "docsAttachmentOnly": "This document is an attached file.",
+  "docsVersion": "Version {version}",
+  "@docsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "docsEditedOn": "Edited {date}",
+  "@docsEditedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "bugTag": "Bug",
   "taskTag": "Task",
   "storyTag": "Story",
