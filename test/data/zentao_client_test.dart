@@ -324,6 +324,27 @@ void main() {
     },
   );
 
+  test('assigning a task sends the hours left typed in', () async {
+    final fake = _FakeAdapter((opts) {
+      if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});
+      return _json({'result': 'success'});
+    });
+    final adapter = ZenTaoAdapter(accountId: 'zt', client: _client(fake));
+    final task = _bugTicket().copyWith(
+      externalKey: '12',
+      externalType: 'Task',
+      providerEntity: const TicketProviderEntity.zentaoTask(execution: '7'),
+    );
+    final res = await adapter.assignTicket(task, assignee: 'thanh', left: 4);
+
+    expect(res, isA<Ok<bool>>());
+    final req = fake.requests.firstWhere(
+      (r) => r.path.contains('task-assignTo-7-12'),
+    );
+    // ZenTao refuses an unfinished task assigned with no hours left.
+    expect((req.data as Map)['left'], '4');
+  });
+
   test('resolveBug POSTs resolution + default build to bug-resolve', () async {
     final fake = _FakeAdapter((opts) {
       if (opts.uri.path.endsWith('/tokens')) return _json({'token': 't'});

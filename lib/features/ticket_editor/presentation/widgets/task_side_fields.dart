@@ -171,6 +171,8 @@ class TaskSideFields extends ConsumerWidget {
             ),
             EditorField(
               label: l.fieldDeadline,
+              missing: state.missing.contains(DraftField.deadline),
+              missingText: l.zentaoEndBeforeBegin,
               child: EditorDateInput(
                 value: draft.deadline,
                 onChanged: (v) =>

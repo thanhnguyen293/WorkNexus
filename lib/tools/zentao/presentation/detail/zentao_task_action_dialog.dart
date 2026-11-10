@@ -19,6 +19,7 @@ import '../../../../shared/detail/presentation/widgets/ticket_note_field.dart';
 import '../../domain/usecases/check_zentao_task_input.dart';
 import 'task_action_date_field.dart';
 import 'task_hours_field.dart';
+import 'task_input_problem_text.dart';
 import 'zentao_action_looks.dart';
 
 /// Runs a status action on a ZenTao task, asking what ZenTao's own form for it
@@ -168,7 +169,7 @@ class _ZenTaoTaskActionDialogState
             ),
             if (problem != null &&
                 problem != ZenTaoTaskInputProblem.endBeforeBegin)
-              _Problem(problem),
+              TaskInputProblemText(problem),
             SizedBox(height: s.xl2),
           ],
           if (action.asksAssignee) ...[
@@ -206,7 +207,7 @@ class _ZenTaoTaskActionDialogState
               ],
             ),
             if (problem == ZenTaoTaskInputProblem.endBeforeBegin)
-              const _Problem(ZenTaoTaskInputProblem.endBeforeBegin),
+              const TaskInputProblemText(ZenTaoTaskInputProblem.endBeforeBegin),
             SizedBox(height: s.xl2),
           ],
           if (action.asksFiles) ...[
@@ -242,32 +243,6 @@ class _Hint extends StatelessWidget {
         text,
         style: context.typography.bodySm.copyWith(
           color: context.colors.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-/// Why the input would be refused, under the fields it is about.
-class _Problem extends StatelessWidget {
-  const _Problem(this.problem);
-
-  final ZenTaoTaskInputProblem problem;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppL10n.of(context);
-    return Padding(
-      padding: EdgeInsets.only(top: context.spacing.md),
-      child: Text(
-        switch (problem) {
-          ZenTaoTaskInputProblem.invalidHours => l.zentaoHoursInvalid,
-          ZenTaoTaskInputProblem.leftRequired => l.zentaoHoursLeftRequired,
-          ZenTaoTaskInputProblem.spentRequired => l.zentaoHoursSpentRequired,
-          ZenTaoTaskInputProblem.endBeforeBegin => l.zentaoEndBeforeBegin,
-        },
-        style: context.typography.bodySm.copyWith(
-          color: context.colors.textTertiary,
         ),
       ),
     );

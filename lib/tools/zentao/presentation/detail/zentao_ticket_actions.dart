@@ -23,6 +23,7 @@ import 'resolve_dialog.dart';
 import 'zentao_action_looks.dart';
 import 'zentao_bug_action_dialog.dart';
 import 'zentao_task_action_dialog.dart';
+import 'zentao_task_assign_dialog.dart';
 
 /// ZenTao's own toolbar for a bug or task: Assign, a "⋯" menu, and the one
 /// status action that moves the ticket on as the filled main button (see
@@ -87,7 +88,12 @@ class ZenTaoActions extends ConsumerWidget {
           DetailActionButton(
             icon: LucideIcons.userPlus300,
             label: l.assign,
-            onTap: () => _open(context, AssignDialog(ticket: ticket)),
+            onTap: () => _open(
+              context,
+              kind == 'task'
+                  ? ZenTaoTaskAssignDialog(ticket: ticket)
+                  : AssignDialog(ticket: ticket),
+            ),
           ),
         if (kind == 'task')
           DetailActionButton(

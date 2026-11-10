@@ -6,6 +6,7 @@ import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/domain/value_objects/unified_status.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/check_zentao_assign_left.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/check_zentao_task_input.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/list_zentao_bug_actions.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/list_zentao_create_actions.dart';
@@ -153,6 +154,23 @@ void main() {
         entity: const TicketProviderEntity.zentaoTask(isParent: true),
       );
       expect(list(parent).canAssign, isFalse);
+    });
+  });
+
+  group('CheckZenTaoAssignLeft', () {
+    const check = CheckZenTaoAssignLeft();
+
+    test('refuses no hours left, as ZenTao does', () {
+      expect(check(0), ZenTaoTaskInputProblem.leftRequired);
+    });
+
+    test('refuses hours that are not a number or negative', () {
+      expect(check(double.nan), ZenTaoTaskInputProblem.invalidHours);
+      expect(check(-1), ZenTaoTaskInputProblem.invalidHours);
+    });
+
+    test('accepts hours left above 0', () {
+      expect(check(1.5), isNull);
     });
   });
 
