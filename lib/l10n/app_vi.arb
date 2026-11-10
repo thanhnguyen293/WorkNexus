@@ -582,6 +582,7 @@
   "docsLoadingDocs": "Đang tải tài liệu…",
   "docsCopyMarkdown": "Sao chép tài liệu dạng Markdown",
   "docsCopied": "Đã sao chép tài liệu dạng Markdown",
+  "docsLinkCopied": "Đã sao chép liên kết tài liệu",
   "personMessage": "Nhắn tin",
   "docsCreatedAction": "đã tạo",
   "docsEditedAction": "đã sửa",
