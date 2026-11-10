@@ -1,8 +1,8 @@
 import 'package:html2md/html2md.dart' as html2md;
 
-import '../../domain/entities/zentao_doc.dart';
+import '../entities/zentao_doc.dart';
 
-/// [doc] as Markdown for the clipboard: its title as a heading, then the body
+/// [doc] as Markdown, for the clipboard or an export: its title as a heading, then the body
 /// with fenced code and GFM tables, so it pastes into a chat, an issue or an
 /// editor with its structure kept. Falls back to the body's text when the
 /// conversion fails.

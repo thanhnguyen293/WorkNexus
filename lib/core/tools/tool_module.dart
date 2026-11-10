@@ -113,12 +113,10 @@ abstract class ToolModule {
     List<Ticket> tickets,
   ) => tickets;
 
-  /// Whether the navigation pane folds to a thin strip at [location] — it
-  /// opens over the viewport while hovered — leaving the viewport the room,
-  /// e.g. while a document is being read. Watched by the shell through [ref],
-  /// so the pane folds and unfolds as what it reads changes.
-  bool paneAutoHides(WidgetRef ref, Account account, ToolLocation location) =>
-      false;
+  /// Whether the navigation pane at [location] can be folded to a thin
+  /// strip — by its own collapse button (see `collapsedPanesProvider`) —
+  /// leaving the viewport the room, e.g. to read a document.
+  bool paneCollapsible(ToolLocation location) => false;
 
   /// External web deep link for [location] (e.g. ↗ to open in browser).
   Uri? webUrl(Account account, ToolLocation location) => null;

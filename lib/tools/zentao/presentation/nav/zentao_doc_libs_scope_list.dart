@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
+import '../../../../core/navigation/collapsed_panes.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/shell_pane/scope_filter_field.dart';
 import '../../../../shared/shell_pane/scope_rows.dart';
@@ -83,11 +86,29 @@ class _ZentaoDocLibsScopeListState
 
     return Column(
       children: [
-        ScopeFilterField(
-          placeholder: l.docsFilterLibraries,
-          value: filter,
-          onChanged: (val) =>
-              ref.read(zentaoDocFilterProvider.notifier).set(account.id, val),
+        Row(
+          children: [
+            Expanded(
+              child: ScopeFilterField(
+                placeholder: l.docsFilterLibraries,
+                value: filter,
+                onChanged: (val) => ref
+                    .read(zentaoDocFilterProvider.notifier)
+                    .set(account.id, val),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(right: s.sm),
+              child: AppIconButton(
+                icon: LucideIcons.panelLeftClose300,
+                tooltip: l.paneCollapse,
+                size: AppIconButtonSize.small,
+                onPressed: () => ref
+                    .read(collapsedPanesProvider.notifier)
+                    .collapse(paneKey(account.id, widget.location.section)),
+              ),
+            ),
+          ],
         ),
         Expanded(
           child: ListView(

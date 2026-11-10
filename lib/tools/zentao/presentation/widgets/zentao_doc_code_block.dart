@@ -69,41 +69,61 @@ class _ZenTaoDocCodeBlockState extends State<ZenTaoDocCodeBlock> {
       ),
       child: Stack(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(s.xl, s.lg, s.md, s.lg),
-                // Left out of a selection: copying lines copies the code only.
-                child: SelectionContainer.disabled(
-                  child: Text(
-                    [for (var i = 1; i <= lines.length; i++) '$i'].join('\n'),
-                    textAlign: TextAlign.right,
-                    style: style.copyWith(color: c.textTertiary),
+          // Intrinsic height: the gutter's band runs the block's full height.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // The gutter: its own tinted band, ruled off from the code,
+                // so the numbers don't read as part of it.
+                Container(
+                  padding: EdgeInsets.fromLTRB(s.lg, s.lg, s.md, s.lg),
+                  decoration: BoxDecoration(
+                    color: c.hoverFill,
+                    border: Border(
+                      right: BorderSide(
+                        color: c.border,
+                        width: context.borders.hairline,
+                      ),
+                    ),
+                  ),
+                  // Left out of a selection: copying lines copies the code
+                  // only.
+                  child: SelectionContainer.disabled(
+                    child: Text(
+                      [for (var i = 1; i <= lines.length; i++) '$i'].join('\n'),
+                      textAlign: TextAlign.right,
+                      style: style.copyWith(color: c.textTertiary),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Scrollbar(
-                  controller: _scroll,
-                  child: SingleChildScrollView(
+                Expanded(
+                  child: Scrollbar(
                     controller: _scroll,
-                    scrollDirection: Axis.horizontal,
-                    // Room on the right for the copy button over line one.
-                    padding: EdgeInsets.fromLTRB(s.xs, s.lg, s.xl6, s.lg),
-                    child: switch (widget.reader) {
-                      final reader? when widget.matches.isNotEmpty =>
-                        ValueListenableBuilder<int>(
-                          valueListenable: reader.current,
-                          builder: (context, current, _) =>
-                              Text.rich(_highlighted(context, style, current)),
-                        ),
-                      _ => Text(widget.code, style: style),
-                    },
+                    child: SingleChildScrollView(
+                      controller: _scroll,
+                      scrollDirection: Axis.horizontal,
+                      // Room on the right for the copy button over line one.
+                      padding: EdgeInsets.fromLTRB(s.md, s.lg, s.xl6, s.lg),
+                      child: switch (widget.reader) {
+                        final reader? when widget.matches.isNotEmpty =>
+                          ValueListenableBuilder<int>(
+                            valueListenable: reader.current,
+                            builder: (context, current, _) => Text.rich(
+                              _highlighted(context, style, current),
+                              softWrap: false,
+                            ),
+                          ),
+                        // No wrap: the gutter's intrinsic-height pass measures
+                        // the code at the visible width, and wrapped lines
+                        // there left an empty band under the block.
+                        _ => Text(widget.code, style: style, softWrap: false),
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Positioned(
             top: s.xs,

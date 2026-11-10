@@ -12,6 +12,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/zentao_doc.dart';
 import '../providers/zentao_doc_providers.dart';
 import '../util/zentao_doc_prepare.dart';
+import 'zentao_doc_export_button.dart';
 import 'zentao_doc_find_bar.dart';
 import 'zentao_doc_header.dart';
 import 'zentao_doc_history_button.dart';
@@ -198,6 +199,10 @@ class _ZenTaoDocViewerState extends ConsumerState<ZenTaoDocViewer> {
                                 history: ZenTaoDocHistoryButton(
                                   account: account,
                                   docId: widget.docId,
+                                ),
+                                export: ZenTaoDocExportButton(
+                                  account: account,
+                                  doc: doc,
                                 ),
                                 onFind: _finding ? _closeFind : _openFind,
                                 webUrl: _webUrl(account, doc),

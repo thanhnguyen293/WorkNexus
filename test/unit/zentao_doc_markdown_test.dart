@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/tools/zentao/domain/entities/zentao_doc.dart';
-import 'package:work_nexus/tools/zentao/presentation/util/zentao_doc_markdown.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/render_zentao_doc_markdown.dart';
 
 void main() {
   test('title, fenced code and a GFM table survive the copy', () {
