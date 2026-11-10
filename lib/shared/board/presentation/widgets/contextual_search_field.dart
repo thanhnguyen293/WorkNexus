@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/di/providers.dart';
-import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -16,6 +15,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/search_local_tickets.dart';
 import '../providers/board_providers.dart';
+import 'search_placeholder.dart';
 import 'search_results_overlay.dart';
 import 'search_trailing_affordance.dart';
 
@@ -188,7 +188,7 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
     final scope = widget.scope;
     final placeholder = scope != null
         ? l.searchContextTool(scope)
-        : _resolvePlaceholder(l, nav, accounts);
+        : searchPlaceholder(l, nav, accounts);
 
     return OverlayPortal(
       controller: _portal,
@@ -274,32 +274,5 @@ class _ContextualSearchFieldState extends ConsumerState<ContextualSearchField> {
         ),
       ),
     );
-  }
-
-  String _resolvePlaceholder(
-    AppL10n l,
-    AppNavState nav,
-    List<Account> accounts,
-  ) {
-    return switch (nav.rail) {
-      WorkspaceTarget() ||
-      ChatTarget() ||
-      SettingsTarget() => l.searchContextWorkspace,
-      AccountTarget(:final accountId) => _accountPlaceholder(
-        l,
-        accountId,
-        accounts,
-      ),
-    };
-  }
-
-  String _accountPlaceholder(
-    AppL10n l,
-    String accountId,
-    List<Account> accounts,
-  ) {
-    final account = accounts.where((a) => a.id == accountId).firstOrNull;
-    if (account == null) return l.searchContextWorkspace;
-    return l.searchContextTool(account.providerType.displayName);
   }
 }
