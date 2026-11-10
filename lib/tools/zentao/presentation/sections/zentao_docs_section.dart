@@ -11,7 +11,8 @@ import '../widgets/zentao_doc_viewer.dart';
 
 /// The L5 Viewport section for ZenTao Docs: the open document, across the
 /// whole viewport. Libraries and their documents are picked in the nav
-/// pane's tree; the open document's library is the location's scope.
+/// pane's tree; the open document is kept per account, so it is still open
+/// after a trip to Tasks or Bugs.
 class ZentaoDocsSection extends ConsumerWidget {
   const ZentaoDocsSection({
     super.key,
@@ -24,10 +25,9 @@ class ZentaoDocsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final libId = location.scopeId;
-    final docId = libId == null
-        ? null
-        : ref.watch(zentaoOpenDocProvider.select((m) => m[libId]));
+    final docId = ref.watch(
+      zentaoOpenDocProvider.select((m) => m[account.id]?.docId),
+    );
     if (docId == null) {
       return AppStateView.empty(
         title: AppL10n.of(context).docsPickDocument,
