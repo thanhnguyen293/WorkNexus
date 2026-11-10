@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart'
+    show FlutterQuillLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -77,7 +79,10 @@ void main() {
             surface: SurfaceStyle.outline,
             density: AppDensity.comfortable,
           ),
-          localizationsDelegates: AppL10n.localizationsDelegates,
+          localizationsDelegates: const [
+            ...AppL10n.localizationsDelegates,
+            FlutterQuillLocalizations.delegate,
+          ],
           supportedLocales: AppL10n.supportedLocales,
           home: Scaffold(body: ZenTaoActions(ticket: ticket)),
         ),

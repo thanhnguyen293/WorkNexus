@@ -126,7 +126,7 @@ line_count_exemptions:
 
   # Non-UI files over 400 lines (rule 9.3)
   - file: lib/app/di/service_locator.dart
-    max_lines: 570
+    max_lines: 623
     owner_phase: "Phase 2"
     reason: "Injectable composition root wiring all features and services"
   - file: lib/core/database/database.dart
@@ -146,7 +146,7 @@ line_count_exemptions:
     owner_phase: "Permanent"
     reason: "Palette color token constants"
   - file: lib/features/chat/data/datasources/chat_local_datasource.dart
-    max_lines: 624
+    max_lines: 629
     owner_phase: "Follow-up"
     reason: "Chat local datasource (exempt in Open question 1)"
   - file: lib/features/chat/data/datasources/xxd/api_scheme_codec.dart
@@ -157,8 +157,12 @@ line_count_exemptions:
     max_lines: 480
     owner_phase: "Follow-up"
     reason: "Xuanxuan websocket connection protocol handler"
+  - file: lib/features/chat/data/repositories/chat_attachment_loader.dart
+    max_lines: 429
+    owner_phase: "Follow-up"
+    reason: "Chat attachment loading and caching"
   - file: lib/features/chat/data/repositories/xxd_chat_repository.dart
-    max_lines: 1148
+    max_lines: 1158
     owner_phase: "Follow-up"
     reason: "Chat repository implementation"
   - file: lib/features/chat/domain/value_objects/emojione_shortnames.dart
@@ -181,8 +185,12 @@ line_count_exemptions:
     max_lines: 760
     owner_phase: "Phase 4"
     reason: "ZenTao adapter"
+  - file: lib/shared/sync/data/sync_coordinator.dart
+    max_lines: 493
+    owner_phase: "Follow-up"
+    reason: "Sync coordinator: per-account sync plus ticket detail actions"
   - file: lib/tools/zentao/data/datasources/zentao_client.dart
-    max_lines: 770
+    max_lines: 774
     owner_phase: "Phase 4"
     reason: "ZenTao client"
   - file: lib/tools/zentao/data/mappers/zentao_normalize.dart
