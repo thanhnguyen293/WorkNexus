@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/debug/talker_debug_overlay.dart';
 import '../../core/di/providers.dart';
-import '../../core/domain/entities/account.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/tools/tool_registry_provider.dart';
@@ -24,10 +23,10 @@ import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
 import '../../shared/detail/presentation/detail_panel.dart';
 import 'account_sync_at_launch.dart';
 import 'app_nav_rail.dart';
-import 'chat_place.dart';
+import 'chat_at_launch.dart';
 import 'new_ticket_menu.dart';
-import 'settings_nav_pane.dart';
 import 'title_bar.dart';
+import 'tool_pane_host.dart';
 import 'viewport.dart';
 
 /// Top-level unified workspace shell (specs S1.1).
@@ -81,48 +80,58 @@ class AppShell extends ConsumerWidget {
     final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
     return AccountSyncAtLaunch(
-      child: BoardFilterKeepAlive(
-        child: TicketLinkHandler(
-          child: ChatNotificationListener(
-            child: NotificationAlerts(
-              child: ChatAppBadge(
-                child: StickerImportListener(
-                  child: Scaffold(
-                    backgroundColor: c.background,
-                    body: NewTicketShortcut(
-                      child: Column(
-                        children: [
-                          TitleBar(assignedCount: assigned),
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                const ZenTaoProfileStartup(),
-                                Row(
-                                  children: [
-                                    const AppNavRail(),
-                                    if (editor == null && !miniAppOnScreen)
-                                      _ToolPane(nav: nav),
-                                    const Expanded(child: Viewport()),
-                                  ],
-                                ),
-                                NotificationsPanel(
-                                  leftInset: AppNavRail.widthOf(context),
-                                ),
-                                const DetailOverlay(),
-                                const QuickSettingsSidePanel(
-                                  generalSections: [LocalCacheQuickSettings()],
-                                  chatSections: [
-                                    ChatAppearanceSettings(),
-                                    ChatAutoDownloadSettings(),
-                                    ChatNotificationSettings(),
-                                    ChatPrivacySettings(),
-                                  ],
-                                ),
-                                const TalkerDebugOverlay(),
-                              ],
+      child: ChatAtLaunch(
+        child: BoardFilterKeepAlive(
+          child: TicketLinkHandler(
+            child: ChatNotificationListener(
+              child: NotificationAlerts(
+                child: ChatAppBadge(
+                  child: StickerImportListener(
+                    child: Scaffold(
+                      backgroundColor: c.background,
+                      body: NewTicketShortcut(
+                        child: Column(
+                          children: [
+                            TitleBar(assignedCount: assigned),
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  const ZenTaoProfileStartup(),
+                                  Row(
+                                    children: [
+                                      const AppNavRail(),
+                                      // Mounted throughout, so each place's
+                                      // column outlives the editor or a mini
+                                      // app taking the area.
+                                      ToolPaneHost(
+                                        nav: nav,
+                                        hidden:
+                                            editor != null || miniAppOnScreen,
+                                      ),
+                                      const Expanded(child: Viewport()),
+                                    ],
+                                  ),
+                                  NotificationsPanel(
+                                    leftInset: AppNavRail.widthOf(context),
+                                  ),
+                                  const DetailOverlay(),
+                                  const QuickSettingsSidePanel(
+                                    generalSections: [
+                                      LocalCacheQuickSettings(),
+                                    ],
+                                    chatSections: [
+                                      ChatAppearanceSettings(),
+                                      ChatAutoDownloadSettings(),
+                                      ChatNotificationSettings(),
+                                      ChatPrivacySettings(),
+                                    ],
+                                  ),
+                                  const TalkerDebugOverlay(),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -133,51 +142,5 @@ class AppShell extends ConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class _ToolPane extends ConsumerWidget {
-  const _ToolPane({required this.nav});
-
-  final AppNavState nav;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return switch (nav.rail) {
-      // The dashboard is the overview alone: no menu beside it.
-      WorkspaceTarget() => const SizedBox.shrink(),
-      SettingsTarget() => const SettingsNavPane(),
-      ChatTarget() => const ChatToolPane(),
-      AccountTarget(:final accountId) => _buildAccountPane(
-        context,
-        ref,
-        accountId,
-      ),
-    };
-  }
-
-  Widget _buildAccountPane(
-    BuildContext context,
-    WidgetRef ref,
-    String accountId,
-  ) {
-    final accounts = ref.watch(accountsProvider).asData?.value ?? const [];
-    Account? account;
-    for (final a in accounts) {
-      if (a.id == accountId) {
-        account = a;
-        break;
-      }
-    }
-    if (account == null) return const SizedBox.shrink();
-
-    final registry = ref.watch(toolRegistryProvider);
-    final module = registry[account.providerType];
-    if (module == null) return const SizedBox.shrink();
-
-    final location =
-        nav.locations[accountId] ??
-        ToolLocation(section: module.defaultSection);
-    return module.buildNavPane(context, account, location);
   }
 }

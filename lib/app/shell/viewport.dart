@@ -21,7 +21,7 @@ import 'section_error_boundary.dart';
 import 'workspace_settings_page.dart';
 
 /// Main viewport hosting workspace views, tool sections, or ticket editor (specs S5, S6).
-/// Keys sections by `(accountId, sectionId)` and keeps the last 3 alive with
+/// Keys sections by `(accountId, sectionId)` and keeps the last 5 alive with
 /// LRU IndexedStack caching (design §9).
 class Viewport extends ConsumerStatefulWidget {
   const Viewport({super.key});
@@ -42,7 +42,8 @@ class _CachedSection {
 }
 
 class _ViewportState extends ConsumerState<Viewport> {
-  static const int _maxCachedSections = 3;
+  // Chat, Tasks, Bugs and Docs (plus one more) stay alive together.
+  static const int _maxCachedSections = 5;
   final List<_CachedSection> _cache = [];
 
   int _uses = 0;
