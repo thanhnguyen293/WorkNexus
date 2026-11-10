@@ -1,5 +1,5 @@
 import 'package:drift/native.dart';
-import 'package:flutter/widgets.dart' show Locale;
+import 'package:flutter/widgets.dart' show Brightness, Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/data/mappers/mappers.dart';
 import 'package:work_nexus/core/data/repositories/local_ticket_repository.dart';
@@ -303,5 +303,23 @@ void main() {
 
     final reloaded = appSettingsFromRow((await db.getSettings())!);
     expect(reloaded.fontFamily, kSystemFont);
+  });
+
+  test('the Docs reader look persists, and null follows the app', () async {
+    await db.saveSettings(
+      appSettingsToCompanion(
+        const AppSettings(docsReaderBrightness: Brightness.dark),
+      ),
+    );
+    expect(
+      appSettingsFromRow((await db.getSettings())!).docsReaderBrightness,
+      Brightness.dark,
+    );
+
+    await db.saveSettings(appSettingsToCompanion(const AppSettings()));
+    expect(
+      appSettingsFromRow((await db.getSettings())!).docsReaderBrightness,
+      isNull,
+    );
   });
 }

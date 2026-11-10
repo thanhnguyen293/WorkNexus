@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:flutter/widgets.dart' show Locale;
+import 'package:flutter/widgets.dart' show Brightness, Locale;
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../database/database.dart';
@@ -224,6 +224,11 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   fontFamily: r.fontFamily,
   componentRadius: r.componentRadius,
   accentColorValue: r.accentColorValue,
+  docsReaderBrightness: switch (r.docsReaderBrightness) {
+    'light' => Brightness.light,
+    'dark' => Brightness.dark,
+    _ => null,
+  },
   // `zentao-project:` keys came from a build that pinned ZenTao projects;
   // projects are no pins, so they are dropped (and gone on the next save).
   pinnedProjects: {
@@ -271,6 +276,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   fontFamily: Value(s.fontFamily),
   componentRadius: Value(s.componentRadius),
   accentColorValue: Value(s.accentColorValue),
+  docsReaderBrightness: Value(s.docsReaderBrightness?.name),
   pinnedProjectsJson: Value(encodeLabels(s.pinnedProjects.toList())),
   pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
   sidebarWidth: Value(s.sidebarWidth),
