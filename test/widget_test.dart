@@ -83,6 +83,10 @@ Widget _buildTestApp() {
       updateControllerProvider.overrideWith(_MockUpdateController.new),
       notificationAccountsProvider.overrideWith((ref) => const []),
       chatAutoConnectProvider.overrideWith((ref) {}),
+      // No chat account: these flows are about the first app & feature the
+      // shell opens without one (with one, launch opens the chat — see
+      // chat_at_launch_test).
+      selectedChatAccountIdProvider.overrideWithValue(null),
       zenTaoProfileStartupControllerProvider.overrideWith(
         (ref) => _FakeZenTaoProfileStartupController(),
       ),
