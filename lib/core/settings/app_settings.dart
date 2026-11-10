@@ -53,6 +53,7 @@ class AppSettings {
     this.fontFamily = kVietnamFont,
     this.componentRadius = kComponentRadiusDefault,
     this.accentColorValue,
+    this.docsReaderBrightness,
     this.pinnedProjects = const <String>{},
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
@@ -114,6 +115,10 @@ class AppSettings {
   /// The user-chosen app primary/accent color (ARGB int), or `null` to use the
   /// active theme variant's built-in accent.
   final int? accentColorValue;
+
+  /// The light / dark look the user set for the ZenTao Docs reader, or null
+  /// to follow the app's theme.
+  final Brightness? docsReaderBrightness;
 
   /// The UI font family (a bundled or system family name). Monospace text
   /// (code / ids) always stays on [kMonoFont] regardless of this.
@@ -209,6 +214,8 @@ class AppSettings {
     bool? miniAppNotifyInBackground,
     // Sentinel so `null` can be passed explicitly to reset to the theme accent.
     Object? accentColorValue = _unset,
+    // Sentinel too: `null` sets the Docs reader back to following the app.
+    Object? docsReaderBrightness = _unset,
   }) {
     return AppSettings(
       variant: variant ?? this.variant,
@@ -250,6 +257,9 @@ class AppSettings {
       accentColorValue: identical(accentColorValue, _unset)
           ? this.accentColorValue
           : accentColorValue as int?,
+      docsReaderBrightness: identical(docsReaderBrightness, _unset)
+          ? this.docsReaderBrightness
+          : docsReaderBrightness as Brightness?,
     );
   }
 }
@@ -386,6 +396,10 @@ class AppSettingsController extends Notifier<AppSettings> {
     index >= 0 ? next.removeAt(index) : next.add(execution);
     _set(state.copyWith(pinnedExecutions: next));
   }
+
+  /// Sets the Docs reader's look; `null` follows the app's theme again.
+  void setDocsReaderBrightness(Brightness? b) =>
+      _set(state.copyWith(docsReaderBrightness: b));
 
   void toggleCompanyTint() =>
       _set(state.copyWith(companyTint: !state.companyTint));

@@ -198,6 +198,10 @@ class Settings extends Table {
   TextColumn get tableColumnWidthsJson =>
       text().withDefault(const Constant('{}'))();
 
+  /// The ZenTao Docs reader's look the user set (`light` / `dark`), or null
+  /// to follow the app's theme.
+  TextColumn get docsReaderBrightness => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -594,7 +598,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 58;
+  int get schemaVersion => 59;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -914,6 +918,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 58 && !await _hasTable('zen_tao_doc_snapshots')) {
         await m.createTable(zenTaoDocSnapshots);
+      }
+      if (from < 59 &&
+          !await _hasColumn('settings', 'docs_reader_brightness')) {
+        await m.addColumn(settings, settings.docsReaderBrightness);
       }
     },
   );

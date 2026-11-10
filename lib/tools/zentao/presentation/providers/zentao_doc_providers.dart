@@ -7,6 +7,7 @@ import '../../../../core/di/locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../domain/entities/zentao_doc.dart';
 import '../../domain/entities/zentao_doc_action.dart';
 import '../../domain/entities/zentao_doc_lib.dart';
@@ -150,8 +151,9 @@ class ZenTaoDocFilters extends Notifier<Map<String, String>> {
 }
 
 /// The light / dark look the document reader is forced to, or null to
-/// follow the app's theme. Kept for the session: a dark app may read a long
-/// document on light, as ZenTao's web shows it.
+/// follow the app's theme: a dark app may read a long document on light, as
+/// ZenTao's web shows it. Kept in the app's settings, so the choice survives
+/// a restart.
 final zentaoDocReaderBrightnessProvider =
     NotifierProvider<ZenTaoDocReaderBrightness, Brightness?>(
       ZenTaoDocReaderBrightness.new,
@@ -159,7 +161,8 @@ final zentaoDocReaderBrightnessProvider =
 
 class ZenTaoDocReaderBrightness extends Notifier<Brightness?> {
   @override
-  Brightness? build() => null;
+  Brightness? build() =>
+      ref.watch(appSettingsProvider.select((s) => s.docsReaderBrightness));
 
   /// Flips the reader from what it shows ([current]); landing back on the
   /// app's own brightness ([app]) follows the app again.
@@ -167,7 +170,9 @@ class ZenTaoDocReaderBrightness extends Notifier<Brightness?> {
     final next = current == Brightness.dark
         ? Brightness.light
         : Brightness.dark;
-    state = next == app ? null : next;
+    ref
+        .read(appSettingsProvider.notifier)
+        .setDocsReaderBrightness(next == app ? null : next);
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/tools/zentao/presentation/providers/zentao_doc_providers.dart';
 
 void main() {
@@ -27,6 +28,25 @@ void main() {
   test('switching a light app reads on dark', () {
     notifier().toggle(current: Brightness.light, app: Brightness.light);
     expect(forced(), Brightness.dark);
+  });
+
+  test('the choice is saved to the settings and read back on start', () {
+    AppSettings? saved;
+    final c = ProviderContainer(
+      overrides: [settingsPersistProvider.overrideWithValue((s) => saved = s)],
+    );
+    addTearDown(c.dispose);
+    c
+        .read(zentaoDocReaderBrightnessProvider.notifier)
+        .toggle(current: Brightness.dark, app: Brightness.dark);
+    expect(saved?.docsReaderBrightness, Brightness.light);
+
+    // A restart seeds the settings with what was saved.
+    final restarted = ProviderContainer(
+      overrides: [initialAppSettingsProvider.overrideWithValue(saved!)],
+    );
+    addTearDown(restarted.dispose);
+    expect(restarted.read(zentaoDocReaderBrightnessProvider), Brightness.light);
   });
 
   test('the open document is kept per account', () {
