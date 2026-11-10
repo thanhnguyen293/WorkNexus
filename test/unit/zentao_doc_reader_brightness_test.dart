@@ -28,4 +28,21 @@ void main() {
     notifier().toggle(current: Brightness.light, app: Brightness.light);
     expect(forced(), Brightness.dark);
   });
+
+  test('the open document is kept per account', () {
+    container.read(zentaoOpenDocProvider.notifier)
+      ..open('a1', '247', '115')
+      ..open('a2', '89', '50')
+      ..open('a1', '89', '59');
+    expect(container.read(zentaoOpenDocProvider), {
+      'a1': (libId: '89', docId: '59'),
+      'a2': (libId: '89', docId: '50'),
+    });
+  });
+
+  test('the tree filter is kept per account', () {
+    container.read(zentaoDocFilterProvider.notifier).set('a1', 'wal');
+    expect(container.read(zentaoDocFilterProvider)['a1'], 'wal');
+    expect(container.read(zentaoDocFilterProvider)['a2'], isNull);
+  });
 }
