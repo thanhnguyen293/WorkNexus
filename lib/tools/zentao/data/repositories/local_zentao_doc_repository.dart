@@ -12,11 +12,13 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/zentao_doc.dart';
+import '../../domain/entities/zentao_doc_action.dart';
 import '../../domain/entities/zentao_doc_lib.dart';
 import '../../domain/entities/zentao_doc_pins.dart';
 import '../../domain/entities/zentao_doc_summary.dart';
 import '../../domain/repositories/zentao_doc_repository.dart';
 import '../datasources/zentao_docs_remote.dart';
+import '../mappers/zentao_doc_history_mapper.dart';
 import '../mappers/zentao_doc_mapper.dart';
 
 /// The document endpoints for [account], or null when it has no stored
@@ -43,6 +45,7 @@ class LocalZenTaoDocRepository implements ZenTaoDocRepository {
   static const _pinsKey = 'pins';
   static String _libKey(String libId) => 'lib:$libId';
   static String _docKey(String docId) => 'doc:$docId';
+  static String _historyKey(String docId) => 'history:$docId';
 
   @override
   Stream<List<ZenTaoDocLib>> watchLibs(String accountId) => _watch(
@@ -88,6 +91,17 @@ class LocalZenTaoDocRepository implements ZenTaoDocRepository {
         // built from it on read.
         return {'base': remote.baseUrl, 'doc': json};
       });
+
+  @override
+  Stream<List<ZenTaoDocAction>> watchHistory(String accountId, String docId) =>
+      _watch(
+        accountId,
+        _historyKey(docId),
+      ).map((json) => json == null ? const [] : mapZenTaoDocHistory(json));
+
+  @override
+  Future<Result<void>> refreshHistory(Account account, String docId) =>
+      _refresh(account, _historyKey(docId), (remote) => remote.history(docId));
 
   @override
   Stream<ZenTaoDocPins> watchPins(String accountId) =>

@@ -19,6 +19,7 @@ import 'presentation/detail/task_detail_sections.dart';
 import 'presentation/detail/task_effort_bar.dart';
 import 'presentation/detail/zentao_ticket_actions.dart';
 import 'presentation/nav/zentao_nav_pane.dart';
+import 'presentation/providers/zentao_doc_providers.dart';
 import 'presentation/providers/zentao_metrics_providers.dart';
 import 'presentation/providers/zentao_scope_providers.dart';
 import 'presentation/providers/zentao_scope_title_provider.dart';
@@ -111,6 +112,13 @@ class ZentaoModule extends ToolModule {
     scopeId: location.scopeId,
     bugs: location.section.value == 'zentao.bugs',
   ));
+
+  /// Docs folds the libraries tree away while a document is open: the page
+  /// gets the width, and the tree is a hover away.
+  @override
+  bool paneAutoHides(WidgetRef ref, Account account, ToolLocation location) =>
+      location.section.value == 'zentao.docs' &&
+      ref.watch(zentaoOpenDocProvider.select((m) => m[account.id] != null));
 
   @override
   Uri? webUrl(Account account, ToolLocation location) {

@@ -10,6 +10,7 @@ import 'package:work_nexus/tools/zentao/domain/entities/zentao_doc_summary.dart'
 import 'package:work_nexus/tools/zentao/domain/repositories/zentao_doc_repository.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/filter_zentao_doc_libs.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/refresh_zentao_doc.dart';
+import 'package:work_nexus/tools/zentao/domain/usecases/refresh_zentao_doc_history.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/refresh_zentao_doc_libs.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/refresh_zentao_docs.dart';
 import 'package:work_nexus/tools/zentao/domain/usecases/toggle_zentao_doc_pin.dart';
@@ -106,5 +107,13 @@ void main() {
 
       verify(() => repository.savePins('a1', const ZenTaoDocPins())).called(1);
     });
+  });
+
+  test('RefreshZenTaoDocHistory refreshes one document history', () async {
+    when(
+      () => repository.refreshHistory(any(), any()),
+    ).thenAnswer((_) async => const Ok(null));
+    await RefreshZenTaoDocHistory(repository)(_account, '111');
+    verify(() => repository.refreshHistory(_account, '111')).called(1);
   });
 }

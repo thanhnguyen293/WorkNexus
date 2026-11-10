@@ -8,6 +8,7 @@ import '../../tools/zentao/data/datasources/zentao_docs_remote.dart';
 import '../../tools/zentao/data/repositories/local_zentao_doc_repository.dart';
 import '../../tools/zentao/domain/repositories/zentao_doc_repository.dart';
 import '../../tools/zentao/domain/usecases/refresh_zentao_doc.dart';
+import '../../tools/zentao/domain/usecases/refresh_zentao_doc_history.dart';
 import '../../tools/zentao/domain/usecases/refresh_zentao_doc_libs.dart';
 import '../../tools/zentao/domain/usecases/refresh_zentao_docs.dart';
 import '../../tools/zentao/domain/usecases/toggle_zentao_doc_pin.dart';
@@ -55,4 +56,9 @@ abstract class ZenTaoDocsModule {
   @lazySingleton
   ToggleZenTaoDocPin toggleZenTaoDocPin(ZenTaoDocRepository repository) =>
       ToggleZenTaoDocPin(repository);
+
+  @lazySingleton
+  RefreshZenTaoDocHistory refreshZenTaoDocHistory(
+    ZenTaoDocRepository repository,
+  ) => RefreshZenTaoDocHistory(repository);
 }

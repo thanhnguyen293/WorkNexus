@@ -190,9 +190,9 @@ line_count_exemptions:
     owner_phase: "Follow-up"
     reason: "Sync coordinator: per-account sync plus ticket detail actions"
   - file: lib/tools/zentao/data/datasources/zentao_client.dart
-    max_lines: 795
+    max_lines: 815
     owner_phase: "Phase 4"
-    reason: "ZenTao client (+ getV1Json, the generic REST call ZenTaoDocsRemote builds on)"
+    reason: "ZenTao client (+ getV1Json / getClassicJson, the generic calls ZenTaoDocsRemote builds on)"
   - file: lib/tools/zentao/data/mappers/zentao_normalize.dart
     max_lines: 430
     owner_phase: "Phase 4"

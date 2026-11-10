@@ -4,6 +4,7 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/error/result.dart';
 import '../entities/zentao_doc.dart';
+import '../entities/zentao_doc_action.dart';
 import '../entities/zentao_doc_lib.dart';
 import '../entities/zentao_doc_pins.dart';
 import '../entities/zentao_doc_summary.dart';
@@ -19,6 +20,10 @@ abstract class ZenTaoDocRepository {
   Future<Result<void>> refreshLibs(Account account);
   Future<Result<void>> refreshDocs(Account account, String libId);
   Future<Result<void>> refreshDoc(Account account, String docId);
+
+  /// A document's history, oldest first.
+  Stream<List<ZenTaoDocAction>> watchHistory(String accountId, String docId);
+  Future<Result<void>> refreshHistory(Account account, String docId);
 
   /// The account's pinned libraries and documents (stored locally only).
   Stream<ZenTaoDocPins> watchPins(String accountId);

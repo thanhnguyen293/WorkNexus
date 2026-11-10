@@ -1,26 +1,30 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/failure.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/zentao_doc.dart';
 import '../providers/zentao_doc_providers.dart';
-import 'zentao_doc_body.dart';
-import 'zentao_doc_files.dart';
+import '../util/zentao_doc_prepare.dart';
+import 'zentao_doc_find_bar.dart';
 import 'zentao_doc_header.dart';
+import 'zentao_doc_history_button.dart';
+import 'zentao_doc_outline.dart';
+import 'zentao_doc_page.dart';
+import 'zentao_doc_reader_controller.dart';
 import 'zentao_doc_reader_theme.dart';
 
 /// One document: its cached copy at once, fetched afresh when opened. A text
-/// document shows its HTML body; an attachment document its files.
-class ZenTaoDocViewer extends ConsumerWidget {
+/// document shows its HTML body; an attachment document its files. Find in
+/// the document (⌘F / Ctrl+F) and its outline — beside the page when there
+/// is room, in a popover otherwise — work on the body as prepared here.
+class ZenTaoDocViewer extends ConsumerStatefulWidget {
   const ZenTaoDocViewer({
     super.key,
     required this.account,
@@ -31,12 +35,59 @@ class ZenTaoDocViewer extends ConsumerWidget {
   final String docId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ZenTaoDocViewer> createState() => _ZenTaoDocViewerState();
+}
+
+class _ZenTaoDocViewerState extends ConsumerState<ZenTaoDocViewer> {
+  final _reader = ZenTaoDocReader();
+  bool _finding = false;
+  String _query = '';
+
+  ZenTaoDocPrepared? _prepared;
+  String? _preparedHtml;
+  String? _preparedQuery;
+
+  @override
+  void dispose() {
+    _reader.dispose();
+    super.dispose();
+  }
+
+  /// The body with its outline anchors and find marks — prepared again only
+  /// when the body or the query changes.
+  ZenTaoDocPrepared _prepare(String html) {
+    final cached = _prepared;
+    if (cached != null && _preparedHtml == html && _preparedQuery == _query) {
+      return cached;
+    }
+    final prepared = prepareZenTaoDocHtml(html, query: _query);
+    _prepared = prepared;
+    _preparedHtml = html;
+    _preparedQuery = _query;
+    // The marks exist once the page is built from it.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _reader.resetMatches(prepared.matchCount);
+      _reader.revealCurrent();
+    });
+    return prepared;
+  }
+
+  void _openFind() => setState(() => _finding = true);
+
+  void _closeFind() => setState(() {
+    _finding = false;
+    _query = '';
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppL10n.of(context);
-    final syncKey = (account: account, libId: null, docId: docId);
+    final account = widget.account;
+    final syncKey = (account: account, libId: null, docId: widget.docId);
     final sync = ref.watch(zentaoDocSyncProvider(syncKey));
     final cached = ref.watch(
-      zentaoDocProvider((accountId: account.id, docId: docId)),
+      zentaoDocProvider((accountId: account.id, docId: widget.docId)),
     );
     final doc = cached.asData?.value;
     void refresh() =>
@@ -68,99 +119,114 @@ class ZenTaoDocViewer extends ConsumerWidget {
       return ZenTaoDocReaderTheme(child: state);
     }
 
-    final s = context.spacing;
-    final reading = context.sizes.readingWidth;
+    final prepared = _prepare(doc.html);
     // Read outside the reader's own theme: the switch returns to it.
     final appBrightness = Theme.of(context).brightness;
+    const find = SingleActivator(LogicalKeyboardKey.keyF, meta: true);
+    const findCtrl = SingleActivator(LogicalKeyboardKey.keyF, control: true);
     return ZenTaoDocReaderTheme(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ZenTaoDocToolbar(
-            doc: doc,
-            appBrightness: appBrightness,
-            syncing: sync.isLoading,
-            onRefresh: refresh,
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, box) {
-                // The column is centred by padding, not by a narrower box, so
-                // the wheel scrolls the page wherever the pointer is.
-                final side = math.max(s.xl6, (box.maxWidth - reading) / 2);
-                Widget pad(
-                  Widget sliver, {
-                  double top = 0,
-                  double bottom = 0,
-                }) => SliverPadding(
-                  padding: EdgeInsets.fromLTRB(side, top, side, bottom),
-                  sliver: sliver,
-                );
-                // One selection across title, text, tables and code, so any
-                // part of the page can be dragged over and copied.
-                return SelectionArea(
-                  child: CustomScrollView(
-                    // Keeps the reading position across a trip elsewhere.
-                    key: PageStorageKey('zentao-doc-$docId'),
-                    slivers: [
-                      pad(
-                        SliverToBoxAdapter(
-                          child: ZenTaoDocHeader(
-                            accountId: account.id,
+      child: CallbackShortcuts(
+        bindings: {find: _openFind, findCtrl: _openFind},
+        child: Focus(
+          autofocus: true,
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final sizes = context.sizes;
+              final outlineWidth = sizes.toolPaneCompactWidth;
+              final hasOutline = prepared.headings.length >= 2;
+              // Beside the page only with room for both.
+              final outlineBeside =
+                  hasOutline &&
+                  box.maxWidth >=
+                      sizes.readingWidth +
+                          outlineWidth +
+                          context.spacing.xl6 * 2;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // The page spans the whole width, so its scrollbar runs
+                  // down the window's right edge; the outline sits over the
+                  // page's right margin, which the page leaves free for it.
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ZenTaoDocPage(
+                            account: account,
                             doc: doc,
+                            html: prepared.html,
+                            reader: _reader,
+                            rightInset: outlineBeside ? outlineWidth : 0,
                           ),
                         ),
-                        top: s.md,
-                        bottom: s.xl5,
-                      ),
-                      if (doc.hasBody)
-                        pad(
-                          ZenTaoDocBody(
-                            doc.html,
-                            imageLoader: (url) => ref
-                                .read(zenTaoDocRepositoryProvider)
-                                .fetchImage(account, url),
-                            imageFallbackUrl: (url) =>
-                                _absolute(account.baseUrl, url),
+                        if (outlineBeside)
+                          Positioned(
+                            // Below the floating tools.
+                            top: context.sizes.controlLg + context.spacing.xl,
+                            // Clear of the page's scrollbar along the edge.
+                            right: context.spacing.lg,
+                            bottom: 0,
+                            width: outlineWidth,
+                            child: ZenTaoDocOutline(
+                              headings: prepared.headings,
+                              reader: _reader,
+                            ),
                           ),
-                        )
-                      else if (doc.isAttachment && doc.files.isEmpty)
-                        pad(
-                          SliverToBoxAdapter(
-                            child: Text(
-                              l.docsAttachmentOnly,
-                              style: context.typography.body.copyWith(
-                                color: context.colors.textTertiary,
+                        Positioned(
+                          top: context.spacing.md,
+                          right: context.spacing.lg + context.spacing.md,
+                          // The find bar floats on the tools' line, to their
+                          // left.
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_finding) ...[
+                                ZenTaoDocFindBar(
+                                  reader: _reader,
+                                  query: _query,
+                                  onQuery: (q) => setState(() => _query = q),
+                                  onClose: _closeFind,
+                                ),
+                                SizedBox(width: context.spacing.sm),
+                              ],
+                              ZenTaoDocToolbar(
+                                doc: doc,
+                                appBrightness: appBrightness,
+                                syncing: sync.isLoading,
+                                onRefresh: refresh,
+                                finding: _finding,
+                                history: ZenTaoDocHistoryButton(
+                                  account: account,
+                                  docId: widget.docId,
+                                ),
+                                onFind: _finding ? _closeFind : _openFind,
+                                webUrl: _webUrl(account, doc),
+                                outline: hasOutline && !outlineBeside
+                                    ? ZenTaoDocOutlineButton(
+                                        headings: prepared.headings,
+                                        reader: _reader,
+                                      )
+                                    : null,
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                      if (doc.files.isNotEmpty)
-                        pad(
-                          SliverToBoxAdapter(
-                            child: ZenTaoDocFiles(
-                              account: account,
-                              files: doc.files,
-                              // An attachment document reads as its file.
-                              openFirst: doc.isAttachment && !doc.hasBody,
-                            ),
-                          ),
-                          top: s.xl5,
-                        ),
-                      pad(const SliverToBoxAdapter(), bottom: s.xl6),
-                    ],
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
+                ],
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
 
-  static String? _absolute(String? baseUrl, String url) {
-    if (baseUrl == null || baseUrl.isEmpty) return null;
-    return Uri.parse('$baseUrl/').resolve(url).toString();
+  /// The document on ZenTao's web (`doc-view-{id}.html`).
+  static Uri? _webUrl(Account account, ZenTaoDoc doc) {
+    final base = account.baseUrl;
+    if (base == null || base.isEmpty) return null;
+    return Uri.tryParse('$base/')?.resolve('doc-view-${doc.id}.html');
   }
 }

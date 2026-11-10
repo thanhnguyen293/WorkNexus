@@ -442,7 +442,13 @@ class ZenTaoClient {
   /// The view map of a classic `{status, data}` reply, whose `data` is itself
   /// JSON-encoded; null when the reply is not that (e.g. a login page).
   Map<String, dynamic>? _classicView(Response<dynamic> res) {
-    Object? body = res.data;
+    final data = _classicPayload(res.data);
+    return data is Map ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// A classic page's payload: its `data` (JSON in a JSON string, sometimes
+  /// twice over) decoded; null when it isn't JSON (a login redirect).
+  Object? _classicPayload(Object? body) {
     for (var i = 0; i < 2 && body is String; i++) {
       try {
         body = jsonDecode(body);
@@ -450,15 +456,24 @@ class ZenTaoClient {
         return null;
       }
     }
-    Object? data = body is Map ? (body['data'] ?? body) : null;
-    if (data is String) {
-      try {
-        data = jsonDecode(data);
-      } on FormatException {
-        return null;
-      }
+    final data = body is Map ? (body['data'] ?? body) : body;
+    if (data is! String) return data;
+    try {
+      return jsonDecode(data);
+    } on FormatException {
+      return null;
     }
-    return data is Map ? Map<String, dynamic>.from(data) : null;
+  }
+
+  /// A classic `{path}.json` page's payload (a map or a list), for what
+  /// REST v1 lacks — e.g. a document's history.
+  Future<Object?> getClassicJson(String path) async {
+    final token = await _ensureToken();
+    final res = await _dio.get<dynamic>(
+      '$baseUrl/$path.json',
+      queryParameters: {'zentaosid': token},
+    );
+    return _classicPayload(res.data);
   }
 
   /// Projects for this account (`GET /projects`), used to group executions.

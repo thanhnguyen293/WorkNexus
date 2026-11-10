@@ -6,24 +6,40 @@ import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/code_block.dart';
+import 'zentao_doc_inline.dart';
+import 'zentao_doc_reader_controller.dart';
 
 /// A code block in a ZenTao document, as ZenTao's web shows one: numbered
 /// lines that never wrap — documents hold ASCII diagrams and aligned tables
 /// whose columns a wrap would break — scrolling sideways when wider than the
 /// page, with a copy button in the corner. Selectable through the reader's
-/// selection area.
+/// selection area. Find [matches] in it are highlighted, the [reader]'s
+/// current one strongest.
 class ZenTaoDocCodeBlock extends StatefulWidget {
-  const ZenTaoDocCodeBlock(this.code, {super.key, required this.fontSize});
+  const ZenTaoDocCodeBlock(
+    this.code, {
+    super.key,
+    required this.fontSize,
+    this.reader,
+    this.matches = const [],
+  });
 
   final String code;
   final double fontSize;
+  final ZenTaoDocReader? reader;
+
+  /// Find matches as their index and range in [code].
+  final List<({int index, int start, int end})> matches;
 
   @override
   State<ZenTaoDocCodeBlock> createState() => _ZenTaoDocCodeBlockState();
 }
 
 class _ZenTaoDocCodeBlockState extends State<ZenTaoDocCodeBlock> {
-  final _scroll = ScrollController();
+  // Not kept in PageStorage: without a key of its own this sideways scroll
+  // would share the page's storage slot, read back the page's vertical
+  // offset and open every block scrolled to its far end.
+  final _scroll = ScrollController(keepScrollOffset: false);
 
   @override
   void dispose() {
@@ -75,7 +91,15 @@ class _ZenTaoDocCodeBlockState extends State<ZenTaoDocCodeBlock> {
                     scrollDirection: Axis.horizontal,
                     // Room on the right for the copy button over line one.
                     padding: EdgeInsets.fromLTRB(s.xs, s.lg, s.xl6, s.lg),
-                    child: Text(widget.code, style: style),
+                    child: switch (widget.reader) {
+                      final reader? when widget.matches.isNotEmpty =>
+                        ValueListenableBuilder<int>(
+                          valueListenable: reader.current,
+                          builder: (context, current, _) =>
+                              Text.rich(_highlighted(context, style, current)),
+                        ),
+                      _ => Text(widget.code, style: style),
+                    },
                   ),
                 ),
               ),
@@ -89,5 +113,33 @@ class _ZenTaoDocCodeBlockState extends State<ZenTaoDocCodeBlock> {
         ],
       ),
     );
+  }
+
+  /// [ZenTaoDocCodeBlock.code] with its find matches on a highlight.
+  TextSpan _highlighted(BuildContext context, TextStyle style, int current) {
+    final code = widget.code;
+    final spans = <TextSpan>[];
+    var at = 0;
+    for (final m in widget.matches) {
+      final start = m.start.clamp(at, code.length);
+      final end = m.end.clamp(start, code.length);
+      if (start > at) spans.add(TextSpan(text: code.substring(at, start)));
+      if (end > start) {
+        spans.add(
+          TextSpan(
+            text: code.substring(start, end),
+            style: TextStyle(
+              backgroundColor: zenTaoFindFill(
+                context,
+                current: m.index == current,
+              ),
+            ),
+          ),
+        );
+      }
+      at = end;
+    }
+    if (at < code.length) spans.add(TextSpan(text: code.substring(at)));
+    return TextSpan(style: style, children: spans);
   }
 }
