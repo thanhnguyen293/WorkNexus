@@ -207,6 +207,24 @@ class ZenTaoClient {
     return json;
   }
 
+  /// A REST v1 GET at [path] (e.g. `/doclibs`), answered as a JSON object.
+  /// Kept generic so endpoint-specific callers (the docs datasource) live in
+  /// their own files instead of growing this transport.
+  Future<Map<String, dynamic>> getV1Json(
+    String path, {
+    Map<String, dynamic>? query,
+  }) async {
+    final res = await _dio.get<dynamic>('$_v1$path', queryParameters: query);
+    if ((res.statusCode ?? 0) >= 400) {
+      throw DioException.badResponse(
+        statusCode: res.statusCode!,
+        requestOptions: res.requestOptions,
+        response: res,
+      );
+    }
+    return _responseMap(res.data);
+  }
+
   Future<List<Map<String, dynamic>>> departments() async {
     final res = await _dio.get<dynamic>('$_v1/departments');
     if ((res.statusCode ?? 0) >= 400) {

@@ -23,6 +23,7 @@ import 'presentation/providers/zentao_metrics_providers.dart';
 import 'presentation/providers/zentao_scope_providers.dart';
 import 'presentation/providers/zentao_scope_title_provider.dart';
 import 'presentation/sections/zentao_bugs_section.dart';
+import 'presentation/sections/zentao_docs_section.dart';
 import 'presentation/sections/zentao_tasks_section.dart';
 
 class ZentaoModule extends ToolModule {
@@ -57,6 +58,12 @@ class ZentaoModule extends ToolModule {
       scopeKind: ScopeKind.product,
       viewModes: ZentaoBugsSection.modes,
     ),
+    ToolSection(
+      id: const SectionId('zentao.docs'),
+      label: (l) => l.docs,
+      icon: LucideIcons.bookOpen300,
+      scopeKind: ScopeKind.library,
+    ),
   ];
 
   @override
@@ -83,6 +90,8 @@ class ZentaoModule extends ToolModule {
         return ZentaoTasksSection(account: account, location: location);
       case 'zentao.bugs':
         return ZentaoBugsSection(account: account, location: location);
+      case 'zentao.docs':
+        return ZentaoDocsSection(account: account, location: location);
       default:
         return const SizedBox.shrink();
     }
@@ -110,6 +119,10 @@ class ZentaoModule extends ToolModule {
     final root = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
+
+    if (location.section.value == 'zentao.docs') {
+      return Uri.tryParse('$root/doc-index.html');
+    }
 
     if (location.scopeId != null) {
       if (location.section.value == 'zentao.bugs') {

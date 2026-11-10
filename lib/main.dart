@@ -121,6 +121,10 @@ Future<void> main(List<String> arguments) async {
                 avatarSize: avatarSize,
               ),
         ),
+        personChatButtonBuilderProvider.overrideWithValue(
+          (context, {required accountId, required name}) =>
+              ChatPersonChatButton(accountId: accountId, name: name),
+        ),
         personAvatarBuilderProvider.overrideWithValue(
           (context, {required accountId, required name, required diameter}) =>
               ChatPersonAvatar(
