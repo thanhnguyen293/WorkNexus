@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show Brightness;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/di/service_locator.dart';
+import '../../../../core/di/locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
@@ -18,18 +20,23 @@ final zenTaoDocRepositoryProvider = Provider<ZenTaoDocRepository>(
   (ref) => getIt<ZenTaoDocRepository>(),
 );
 
+// The tree's cache reads stay alive: the nav pane is rebuilt on every trip
+// to Tasks or Bugs (only the viewport keeps its sections), and a fresh
+// subscription has no rows for a frame — the tree would flash "Loading" and
+// lose its scroll position. They are cheap local watches, one per account
+// or opened library.
+
 /// An account's cached document libraries.
-final zentaoDocLibsProvider = StreamProvider.autoDispose
-    .family<List<ZenTaoDocLib>, String>(
-      (ref, accountId) =>
-          ref.watch(zenTaoDocRepositoryProvider).watchLibs(accountId),
-    );
+final zentaoDocLibsProvider = StreamProvider.family<List<ZenTaoDocLib>, String>(
+  (ref, accountId) =>
+      ref.watch(zenTaoDocRepositoryProvider).watchLibs(accountId),
+);
 
 typedef ZenTaoDocListKey = ({String accountId, String libId});
 
 /// One library's cached document list.
-final zentaoDocsProvider = StreamProvider.autoDispose
-    .family<List<ZenTaoDocSummary>, ZenTaoDocListKey>(
+final zentaoDocsProvider =
+    StreamProvider.family<List<ZenTaoDocSummary>, ZenTaoDocListKey>(
       (ref, key) => ref
           .watch(zenTaoDocRepositoryProvider)
           .watchDocs(key.accountId, key.libId),
@@ -51,7 +58,9 @@ typedef ZenTaoDocSyncKey = ({Account account, String? libId, String? docId});
 
 /// Fetches into the cache when first watched; [ZenTaoDocSync.refresh] fetches
 /// again. The cached rows render meanwhile, so a failure here is shown beside
-/// them rather than in their place.
+/// them rather than in their place. Kept for [ZenTaoDocSync.idleLife] once
+/// nothing watches it, so leaving Docs for a moment doesn't refetch the
+/// libraries and every opened library on return.
 final zentaoDocSyncProvider = AsyncNotifierProvider.autoDispose
     .family<ZenTaoDocSync, void, ZenTaoDocSyncKey>(ZenTaoDocSync.new);
 
@@ -60,8 +69,19 @@ class ZenTaoDocSync extends AsyncNotifier<void> {
 
   final ZenTaoDocSyncKey key;
 
+  /// How long a fetch stays fresh with nothing watching it.
+  static const idleLife = Duration(minutes: 10);
+
   @override
-  Future<void> build() => _run();
+  Future<void> build() {
+    final link = ref.keepAlive();
+    Timer? expiry;
+    ref
+      ..onCancel(() => expiry = Timer(idleLife, link.close))
+      ..onResume(() => expiry?.cancel())
+      ..onDispose(() => expiry?.cancel());
+    return _run();
+  }
 
   Future<void> refresh() async {
     if (state.isLoading) return;
@@ -89,16 +109,37 @@ class ZenTaoDocSyncException implements Exception {
   final Failure failure;
 }
 
-/// The document open in each library, by library id; kept for the session so
-/// going back to a library shows the document read last.
-final zentaoOpenDocProvider =
-    NotifierProvider<ZenTaoOpenDocs, Map<String, String>>(ZenTaoOpenDocs.new);
+/// The document open in the reader, as its library and id.
+typedef ZenTaoOpenDoc = ({String libId, String docId});
 
-class ZenTaoOpenDocs extends Notifier<Map<String, String>> {
+/// The document open for each account, kept for the session apart from the
+/// location's scope — which a trip to Tasks or Bugs clears — so coming back
+/// to Docs shows the document left open.
+final zentaoOpenDocProvider =
+    NotifierProvider<ZenTaoOpenDocs, Map<String, ZenTaoOpenDoc>>(
+      ZenTaoOpenDocs.new,
+    );
+
+class ZenTaoOpenDocs extends Notifier<Map<String, ZenTaoOpenDoc>> {
+  @override
+  Map<String, ZenTaoOpenDoc> build() => const {};
+
+  void open(String accountId, String libId, String docId) =>
+      state = {...state, accountId: (libId: libId, docId: docId)};
+}
+
+/// The Docs tree's filter text per account, kept for the session.
+final zentaoDocFilterProvider =
+    NotifierProvider<ZenTaoDocFilters, Map<String, String>>(
+      ZenTaoDocFilters.new,
+    );
+
+class ZenTaoDocFilters extends Notifier<Map<String, String>> {
   @override
   Map<String, String> build() => const {};
 
-  void open(String libId, String docId) => state = {...state, libId: docId};
+  void set(String accountId, String text) =>
+      state = {...state, accountId: text};
 }
 
 /// The light / dark look the document reader is forced to, or null to
@@ -124,11 +165,10 @@ class ZenTaoDocReaderBrightness extends Notifier<Brightness?> {
 }
 
 /// An account's pinned libraries and documents.
-final zentaoDocPinsProvider = StreamProvider.autoDispose
-    .family<ZenTaoDocPins, String>(
-      (ref, accountId) =>
-          ref.watch(zenTaoDocRepositoryProvider).watchPins(accountId),
-    );
+final zentaoDocPinsProvider = StreamProvider.family<ZenTaoDocPins, String>(
+  (ref, accountId) =>
+      ref.watch(zenTaoDocRepositoryProvider).watchPins(accountId),
+);
 
 /// The libraries opened in the Docs tree, as `accountId|libId`; kept for the
 /// session so coming back to Docs shows the tree as it was left.

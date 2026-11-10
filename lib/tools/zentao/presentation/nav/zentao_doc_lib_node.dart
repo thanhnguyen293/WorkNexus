@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/di/service_locator.dart';
+import '../../../../core/di/locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/theme/app_sizes.dart';
@@ -87,9 +87,8 @@ class _LibDocs extends ConsumerWidget {
             .asData
             ?.value ??
         const <ZenTaoDocSummary>[];
-    final openId = location.scopeId == lib.id
-        ? ref.watch(zentaoOpenDocProvider.select((m) => m[lib.id]))
-        : null;
+    final open = ref.watch(zentaoOpenDocProvider.select((m) => m[account.id]));
+    final openId = open?.libId == lib.id ? open?.docId : null;
 
     if (docs.isEmpty) {
       return Padding(
@@ -156,7 +155,7 @@ class ZenTaoDocRow extends ConsumerWidget {
       subtitle: libraryName,
       indented: libraryName == null,
       selected: selected,
-      onTap: () => openZenTaoDoc(ref, doc.libId, doc.id),
+      onTap: () => openZenTaoDoc(ref, account.id, doc.libId, doc.id),
       pinned: pinned,
       pinTooltip: pinned ? l.docsUnpinDoc : l.docsPinDoc,
       onPin: () => getIt<ToggleZenTaoDocPin>()(account.id, doc: doc),
