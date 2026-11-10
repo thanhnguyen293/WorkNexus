@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/di/providers.dart';
 import '../../core/domain/entities/account.dart';
+import '../../core/navigation/collapsed_panes.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/tools/tool_registry_provider.dart';
 import '../../l10n/app_localizations.dart';
-import 'auto_hide_pane.dart';
 import 'chat_place.dart';
+import 'collapsible_pane.dart';
 import 'settings_nav_pane.dart';
 
 /// The column beside the rail (the tool pane), kept alive per place like the
@@ -110,17 +111,18 @@ class _ToolPaneHostState extends ConsumerState<ToolPaneHost> {
         nav.locations[accountId] ??
         ToolLocation(section: module.defaultSection);
     final pane = module.buildNavPane(context, account, location);
+    final key = paneKey(accountId, location.section);
     return (
-      '$accountId|${location.section.value}',
+      key,
       switch (module.sections
           .where((sec) => sec.id == location.section)
           .firstOrNull) {
-        final section? when module.paneAutoHides(ref, account, location) =>
-          AutoHidePane(
-            icon: section.icon,
-            label: section.label(AppL10n.of(context)),
-            child: pane,
-          ),
+        final section? when module.paneCollapsible(location) => CollapsiblePane(
+          paneKey: key,
+          icon: section.icon,
+          label: section.label(AppL10n.of(context)),
+          child: pane,
+        ),
         _ => pane,
       },
     );

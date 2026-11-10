@@ -17,8 +17,8 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/board/presentation/widgets/board_refresh_button.dart';
 import '../../domain/entities/zentao_doc.dart';
+import '../../domain/usecases/render_zentao_doc_markdown.dart';
 import '../providers/zentao_doc_providers.dart';
-import '../util/zentao_doc_markdown.dart';
 import 'zentao_doc_people.dart';
 
 /// The reader's tools, floating at the page's top right: find in the document, the
@@ -34,6 +34,7 @@ class ZenTaoDocToolbar extends ConsumerWidget {
     required this.finding,
     required this.onFind,
     required this.history,
+    required this.export,
     this.webUrl,
     this.outline,
   });
@@ -43,6 +44,10 @@ class ZenTaoDocToolbar extends ConsumerWidget {
 
   /// The history button (its popover holds the document's history).
   final Widget history;
+
+  /// The export button (its menu saves the document as Markdown, HTML or a
+  /// JSON backup).
+  final Widget export;
 
   /// Opens the find bar, or closes it when [finding].
   final VoidCallback onFind;
@@ -94,6 +99,7 @@ class ZenTaoDocToolbar extends ConsumerWidget {
                 if (context.mounted) showAppSnack(context, l.docsCopied);
               },
             ),
+            export,
             if (webUrl case final url?)
               AppIconButton(
                 icon: LucideIcons.externalLink300,

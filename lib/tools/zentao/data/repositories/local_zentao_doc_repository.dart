@@ -184,6 +184,35 @@ class LocalZenTaoDocRepository implements ZenTaoDocRepository {
     }
   }
 
+  @override
+  Future<Result<String>> readBackup(String accountId, String docId) async {
+    try {
+      final stored = await _watch(accountId, _docKey(docId)).first;
+      final doc = stored?['doc'];
+      if (doc is! Map) {
+        return const Err(NotFoundFailure('ZenTao document is not cached'));
+      }
+      return Ok(const JsonEncoder.withIndent('  ').convert(doc));
+    } on Exception catch (error) {
+      return Err(StorageFailure('Could not read the document', cause: error));
+    }
+  }
+
+  @override
+  Future<Result<String>> saveText(String fileName, String text) async {
+    try {
+      final dir = await _downloads();
+      if (dir == null) {
+        return const Err(StorageFailure('No Downloads folder'));
+      }
+      final dest = await _freePath(dir, _safeName(fileName));
+      await File(dest).writeAsString(text, flush: true);
+      return Ok(dest);
+    } on FileSystemException catch (error) {
+      return Err(StorageFailure('Could not save the file', cause: error));
+    }
+  }
+
   Stream<Map<String, dynamic>?> _watch(String accountId, String key) =>
       (_db.select(_db.zenTaoDocSnapshots)..where(
             (row) => row.accountId.equals(accountId) & row.key.equals(key),
