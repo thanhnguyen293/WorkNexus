@@ -35,8 +35,6 @@ class ZentaoDocLibsScopeList extends ConsumerStatefulWidget {
 
 class _ZentaoDocLibsScopeListState
     extends ConsumerState<ZentaoDocLibsScopeList> {
-  String _filter = '';
-
   @override
   Widget build(BuildContext context) {
     final l = AppL10n.of(context);
@@ -70,27 +68,31 @@ class _ZentaoDocLibsScopeListState
       );
     }
 
-    final query = _filter.trim().toLowerCase();
-    final filtered = const FilterZenTaoDocLibs()(libs, _filter);
-    final pinnedLibs = const FilterZenTaoDocLibs()(pins.libs, _filter);
+    final filter = ref.watch(
+      zentaoDocFilterProvider.select((m) => m[account.id] ?? ''),
+    );
+    final query = filter.trim().toLowerCase();
+    final filtered = const FilterZenTaoDocLibs()(libs, filter);
+    final pinnedLibs = const FilterZenTaoDocLibs()(pins.libs, filter);
     final pinnedDocs = [
       for (final d in pins.docs)
         if (query.isEmpty || d.title.toLowerCase().contains(query)) d,
     ];
     final libName = {for (final lib in libs) lib.id: lib.name};
-    final openLib = widget.location.scopeId;
-    final openDoc = openLib == null
-        ? null
-        : ref.watch(zentaoOpenDocProvider.select((m) => m[openLib]));
+    final open = ref.watch(zentaoOpenDocProvider.select((m) => m[account.id]));
 
     return Column(
       children: [
         ScopeFilterField(
           placeholder: l.docsFilterLibraries,
-          onChanged: (val) => setState(() => _filter = val),
+          value: filter,
+          onChanged: (val) =>
+              ref.read(zentaoDocFilterProvider.notifier).set(account.id, val),
         ),
         Expanded(
           child: ListView(
+            // Keeps the tree's scroll offset across a trip to another place.
+            key: PageStorageKey('zentao-doc-tree-${account.id}'),
             padding: EdgeInsets.fromLTRB(s.sm, s.xs, s.sm, s.lg),
             children: [
               if (pinnedDocs.isNotEmpty || pinnedLibs.isNotEmpty) ...[
@@ -101,7 +103,7 @@ class _ZentaoDocLibsScopeListState
                     account: account,
                     doc: doc,
                     pins: pins,
-                    selected: doc.id == openDoc && doc.libId == openLib,
+                    selected: doc.id == open?.docId && doc.libId == open?.libId,
                     libraryName: libName[doc.libId] ?? '',
                   ),
                 for (final lib in pinnedLibs)

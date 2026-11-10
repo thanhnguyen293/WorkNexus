@@ -35,28 +35,37 @@ class ZenTaoDocViewer extends ConsumerWidget {
     final l = AppL10n.of(context);
     final syncKey = (account: account, libId: null, docId: docId);
     final sync = ref.watch(zentaoDocSyncProvider(syncKey));
-    final doc = ref
-        .watch(zentaoDocProvider((accountId: account.id, docId: docId)))
-        .asData
-        ?.value;
+    final cached = ref.watch(
+      zentaoDocProvider((accountId: account.id, docId: docId)),
+    );
+    final doc = cached.asData?.value;
     void refresh() =>
         ref.read(zentaoDocSyncProvider(syncKey).notifier).refresh();
 
+    // Every state sits on the reader's page, so switching documents never
+    // shows the window's (greyer) background between two pages.
     if (doc == null) {
-      if (sync.isLoading) return const AppStateView.loading();
-      final failure = switch (sync.error) {
-        ZenTaoDocSyncException(:final failure) => failure,
-        _ => null,
-      };
-      if (failure is NotFoundFailure) {
-        return AppStateView.error(
-          title: l.docsUnreadable,
-          message: l.docsUnreadableHint,
-          icon: LucideIcons.fileLock300,
-          onRetry: refresh,
-        );
+      final Widget state;
+      if (!cached.hasValue) {
+        // The cache answers within a frame: a spinner here would only blink.
+        state = const SizedBox.expand();
+      } else if (sync.isLoading) {
+        state = const AppStateView.loading();
+      } else {
+        final failure = switch (sync.error) {
+          ZenTaoDocSyncException(:final failure) => failure,
+          _ => null,
+        };
+        state = failure is NotFoundFailure
+            ? AppStateView.error(
+                title: l.docsUnreadable,
+                message: l.docsUnreadableHint,
+                icon: LucideIcons.fileLock300,
+                onRetry: refresh,
+              )
+            : AppStateView.error(onRetry: refresh);
       }
-      return AppStateView.error(onRetry: refresh);
+      return ZenTaoDocReaderTheme(child: state);
     }
 
     final s = context.spacing;
@@ -91,6 +100,8 @@ class ZenTaoDocViewer extends ConsumerWidget {
                 // part of the page can be dragged over and copied.
                 return SelectionArea(
                   child: CustomScrollView(
+                    // Keeps the reading position across a trip elsewhere.
+                    key: PageStorageKey('zentao-doc-$docId'),
                     slivers: [
                       pad(
                         SliverToBoxAdapter(
