@@ -712,6 +712,7 @@
   "docsLoadingDocs": "Loading documents…",
   "docsCopyMarkdown": "Copy the document as Markdown",
   "docsCopied": "Document copied as Markdown",
+  "docsLinkCopied": "Link to the document copied",
   "personMessage": "Message",
   "docsCreatedAction": "created",
   "docsEditedAction": "edited",

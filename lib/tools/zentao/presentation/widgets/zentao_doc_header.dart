@@ -21,9 +21,10 @@ import '../../domain/usecases/render_zentao_doc_markdown.dart';
 import '../providers/zentao_doc_providers.dart';
 import 'zentao_doc_people.dart';
 
-/// The reader's tools, floating at the page's top right: find in the document, the
-/// outline (when it isn't beside the page), copy as Markdown, open on
-/// ZenTao's web, the page's light / dark switch and refresh.
+/// The reader's tools, floating at the page's top right: find in the
+/// document, the outline (when it isn't beside the page), history, export,
+/// copy as Markdown, copy its link, open on ZenTao's web, the page's light /
+/// dark switch and refresh.
 class ZenTaoDocToolbar extends ConsumerWidget {
   const ZenTaoDocToolbar({
     super.key,
@@ -100,12 +101,21 @@ class ZenTaoDocToolbar extends ConsumerWidget {
               },
             ),
             export,
-            if (webUrl case final url?)
+            if (webUrl case final url?) ...[
+              AppIconButton(
+                icon: LucideIcons.link300,
+                tooltip: l.copyLink,
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: url.toString()));
+                  if (context.mounted) showAppSnack(context, l.docsLinkCopied);
+                },
+              ),
               AppIconButton(
                 icon: LucideIcons.externalLink300,
                 tooltip: l.docsOpenInZenTao,
                 onPressed: () => openExternally(url.toString()),
               ),
+            ],
             AppIconButton(
               icon: dark ? LucideIcons.sun300 : LucideIcons.moon300,
               tooltip: dark ? l.docsReadOnLight : l.docsReadOnDark,
