@@ -13,6 +13,7 @@ import '../../domain/entities/zentao_doc_lib.dart';
 import '../../domain/entities/zentao_doc_pins.dart';
 import '../../domain/entities/zentao_doc_summary.dart';
 import '../../domain/repositories/zentao_doc_repository.dart';
+import '../../domain/usecases/export_zentao_doc.dart';
 import '../../domain/usecases/refresh_zentao_doc.dart';
 import '../../domain/usecases/refresh_zentao_doc_history.dart';
 import '../../domain/usecases/refresh_zentao_doc_libs.dart';
@@ -20,6 +21,10 @@ import '../../domain/usecases/refresh_zentao_docs.dart';
 
 final zenTaoDocRepositoryProvider = Provider<ZenTaoDocRepository>(
   (ref) => getIt<ZenTaoDocRepository>(),
+);
+
+final exportZenTaoDocProvider = Provider<ExportZenTaoDoc>(
+  (ref) => getIt<ExportZenTaoDoc>(),
 );
 
 // The tree's cache reads stay alive: the nav pane is rebuilt on every trip

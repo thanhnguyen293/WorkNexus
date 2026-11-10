@@ -38,4 +38,12 @@ abstract class ZenTaoDocRepository {
   /// Saves a document's attached [file] to the user's Downloads folder and
   /// returns the saved path.
   Future<Result<String>> saveFile(Account account, TicketAttachment file);
+
+  /// The cached document [docId] as ZenTao sent it — its whole record —
+  /// as indented JSON, for a backup.
+  Future<Result<String>> readBackup(String accountId, String docId);
+
+  /// Saves [text] to the user's Downloads folder as [fileName] (numbered
+  /// when the name is taken) and returns the saved path.
+  Future<Result<String>> saveText(String fileName, String text);
 }
