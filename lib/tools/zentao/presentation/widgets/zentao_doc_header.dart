@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/platform/open_external.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -19,8 +21,9 @@ import '../providers/zentao_doc_providers.dart';
 import '../util/zentao_doc_markdown.dart';
 import 'zentao_doc_people.dart';
 
-/// The reader's tool row, pinned above the page: copy the whole document
-/// (as Markdown), the page's light / dark switch and refresh, on the right.
+/// The reader's tools, floating at the page's top right: find in the document, the
+/// outline (when it isn't beside the page), copy as Markdown, open on
+/// ZenTao's web, the page's light / dark switch and refresh.
 class ZenTaoDocToolbar extends ConsumerWidget {
   const ZenTaoDocToolbar({
     super.key,
@@ -28,9 +31,25 @@ class ZenTaoDocToolbar extends ConsumerWidget {
     required this.appBrightness,
     required this.syncing,
     required this.onRefresh,
+    required this.finding,
+    required this.onFind,
+    required this.history,
+    this.webUrl,
+    this.outline,
   });
 
   final ZenTaoDoc doc;
+  final bool finding;
+
+  /// The history button (its popover holds the document's history).
+  final Widget history;
+
+  /// Opens the find bar, or closes it when [finding].
+  final VoidCallback onFind;
+  final Uri? webUrl;
+
+  /// The outline's popover button, when the outline isn't beside the page.
+  final Widget? outline;
 
   /// The app's own brightness, which the switch returns to.
   final Brightness appBrightness;
@@ -43,30 +62,54 @@ class ZenTaoDocToolbar extends ConsumerWidget {
     final s = context.spacing;
     final current = Theme.of(context).brightness;
     final dark = current == Brightness.dark;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(s.md, s.md, s.md, 0),
-      child: Row(
-        children: [
-          const Spacer(),
-          AppIconButton(
-            icon: LucideIcons.copy300,
-            tooltip: l.docsCopyMarkdown,
-            onPressed: () async {
-              await Clipboard.setData(
-                ClipboardData(text: zenTaoDocMarkdown(doc)),
-              );
-              if (context.mounted) showAppSnack(context, l.docsCopied);
-            },
-          ),
-          AppIconButton(
-            icon: dark ? LucideIcons.sun300 : LucideIcons.moon300,
-            tooltip: dark ? l.docsReadOnLight : l.docsReadOnDark,
-            onPressed: () => ref
-                .read(zentaoDocReaderBrightnessProvider.notifier)
-                .toggle(current: current, app: appBrightness),
-          ),
-          BoardRefreshButton(loading: syncing, onPressed: onRefresh),
-        ],
+    final c = context.colors;
+    // A floating cluster, not a band across the page: the page scrolls up to
+    // its top edge under it rather than being cut off by an empty strip.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(context.radii.md),
+        border: Border.all(color: c.border, width: context.borders.hairline),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(s.xxs),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIconButton(
+              icon: LucideIcons.search300,
+              tooltip: l.docsFind,
+              selected: finding,
+              onPressed: onFind,
+            ),
+            ?outline,
+            history,
+            AppIconButton(
+              icon: LucideIcons.copy300,
+              tooltip: l.docsCopyMarkdown,
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: zenTaoDocMarkdown(doc)),
+                );
+                if (context.mounted) showAppSnack(context, l.docsCopied);
+              },
+            ),
+            if (webUrl case final url?)
+              AppIconButton(
+                icon: LucideIcons.externalLink300,
+                tooltip: l.docsOpenInZenTao,
+                onPressed: () => openExternally(url.toString()),
+              ),
+            AppIconButton(
+              icon: dark ? LucideIcons.sun300 : LucideIcons.moon300,
+              tooltip: dark ? l.docsReadOnLight : l.docsReadOnDark,
+              onPressed: () => ref
+                  .read(zentaoDocReaderBrightnessProvider.notifier)
+                  .toggle(current: current, app: appBrightness),
+            ),
+            BoardRefreshButton(loading: syncing, onPressed: onRefresh),
+          ],
+        ),
       ),
     );
   }

@@ -8,11 +8,13 @@ import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/zentao_doc.dart';
+import '../../domain/entities/zentao_doc_action.dart';
 import '../../domain/entities/zentao_doc_lib.dart';
 import '../../domain/entities/zentao_doc_pins.dart';
 import '../../domain/entities/zentao_doc_summary.dart';
 import '../../domain/repositories/zentao_doc_repository.dart';
 import '../../domain/usecases/refresh_zentao_doc.dart';
+import '../../domain/usecases/refresh_zentao_doc_history.dart';
 import '../../domain/usecases/refresh_zentao_doc_libs.dart';
 import '../../domain/usecases/refresh_zentao_docs.dart';
 
@@ -198,3 +200,24 @@ class ZenTaoDocExpandedLibs extends Notifier<Set<String>> {
     if (!state.contains(key)) state = {...state, key};
   }
 }
+
+/// A document's cached history, oldest first.
+final zentaoDocHistoryProvider = StreamProvider.autoDispose
+    .family<List<ZenTaoDocAction>, ZenTaoDocKey>(
+      (ref, key) => ref
+          .watch(zenTaoDocRepositoryProvider)
+          .watchHistory(key.accountId, key.docId),
+    );
+
+typedef ZenTaoDocHistoryKey = ({Account account, String docId});
+
+/// Fetches a document's history into the cache while its panel is open;
+/// invalidate it to fetch again.
+final zentaoDocHistorySyncProvider = FutureProvider.autoDispose
+    .family<void, ZenTaoDocHistoryKey>((ref, key) async {
+      final res = await getIt<RefreshZenTaoDocHistory>()(
+        key.account,
+        key.docId,
+      );
+      if (res case Err(:final failure)) throw ZenTaoDocSyncException(failure);
+    });

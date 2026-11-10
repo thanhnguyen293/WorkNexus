@@ -157,4 +157,24 @@ void main() {
     expect(await repository.watchPins('a1').first, pins);
     expect(await repository.watchPins('a2').first, const ZenTaoDocPins());
   });
+
+  test('refreshHistory stores the document history', () async {
+    when(() => remote.history('111')).thenAnswer(
+      (_) async => {
+        'actions': [
+          {
+            'id': 1,
+            'action': 'edited',
+            'content': '2026-10-29 11:25:30, edited by <strong>Vi</strong> .',
+          },
+        ],
+      },
+    );
+
+    expect(await repository.refreshHistory(_account, '111'), isA<Ok<void>>());
+
+    final history = await repository.watchHistory('a1', '111').first;
+    expect(history.single.actor, 'Vi');
+    expect(await repository.watchHistory('a1', '222').first, isEmpty);
+  });
 }
