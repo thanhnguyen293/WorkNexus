@@ -737,6 +737,80 @@
   "docsHidePreview": "Hide the preview",
   "docsDownloadFile": "Save to Downloads",
   "docsPreviewFailed": "Couldn't load the file",
+  "docsFind": "Find in document",
+  "docsFindHint": "Find in this document",
+  "docsFindCount": "{current} of {total}",
+  "@docsFindCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "docsFindNone": "No results",
+  "docsFindNext": "Next result",
+  "docsFindPrevious": "Previous result",
+  "docsFindClose": "Close search",
+  "docsOutline": "On this page",
+  "docsOpenInZenTao": "Open in ZenTao",
+  "docsHistory": "History",
+  "docsHistoryEmpty": "No history yet",
+  "docsHistoryUnavailable": "Couldn't load the history",
+  "docsShowChanges": "Show what changed",
+  "docsHideChanges": "Hide what changed",
+  "docsActionCreated": "{name} created it",
+  "@docsActionCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsActionEdited": "{name} edited it",
+  "@docsActionEdited": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsActionSavedDraft": "{name} saved a draft",
+  "@docsActionSavedDraft": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsActionMoved": "{name} moved it",
+  "@docsActionMoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsActionReleased": "{name} released it",
+  "@docsActionReleased": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsActionCommented": "{name} commented",
+  "@docsActionCommented": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "docsBodyChanged": "The document's content changed",
+  "docsEmptyValue": "(empty)",
   "docsNoLibraries": "No document libraries",
   "docsPickLibrary": "Pick a library",
   "docsPickLibraryHint": "Choose a document library on the left to see its documents.",

@@ -5,6 +5,8 @@ import '../../core/di/providers.dart';
 import '../../core/domain/entities/account.dart';
 import '../../core/navigation/navigation_providers.dart';
 import '../../core/tools/tool_registry_provider.dart';
+import '../../l10n/app_localizations.dart';
+import 'auto_hide_pane.dart';
 import 'chat_place.dart';
 import 'settings_nav_pane.dart';
 
@@ -107,9 +109,20 @@ class _ToolPaneHostState extends ConsumerState<ToolPaneHost> {
     final location =
         nav.locations[accountId] ??
         ToolLocation(section: module.defaultSection);
+    final pane = module.buildNavPane(context, account, location);
     return (
       '$accountId|${location.section.value}',
-      module.buildNavPane(context, account, location),
+      switch (module.sections
+          .where((sec) => sec.id == location.section)
+          .firstOrNull) {
+        final section? when module.paneAutoHides(ref, account, location) =>
+          AutoHidePane(
+            icon: section.icon,
+            label: section.label(AppL10n.of(context)),
+            child: pane,
+          ),
+        _ => pane,
+      },
     );
   }
 }
