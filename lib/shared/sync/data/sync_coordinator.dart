@@ -402,6 +402,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   }) async {
     final adapter = await adapterFor(ticket.accountId);
     if (adapter == null) {
@@ -411,6 +412,7 @@ class SyncCoordinator implements TicketDetailService, AccountSyncService {
       ticket,
       assignee: assignee,
       comment: comment,
+      left: left,
     );
     if (res case Err(:final failure)) return Err(failure);
     return syncTicketDetail(ticket);

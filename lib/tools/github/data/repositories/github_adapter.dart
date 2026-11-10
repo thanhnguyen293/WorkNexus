@@ -246,6 +246,7 @@ class GitHubAdapter
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   }) async {
     // GitHub assigns by login string directly — no username→id lookup needed.
     return _guard(() async {

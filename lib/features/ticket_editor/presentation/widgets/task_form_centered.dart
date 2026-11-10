@@ -199,6 +199,8 @@ class _TaskFormCenteredState extends ConsumerState<TaskFormCentered> {
                     Expanded(
                       child: EditorField(
                         label: '${l.fieldEstStarted} – ${l.fieldDeadline}',
+                        missing: missing.contains(DraftField.deadline),
+                        missingText: l.zentaoEndBeforeBegin,
                         child: TaskTimeframeInput(
                           estStarted: draft.estStarted,
                           deadline: draft.deadline,

@@ -286,6 +286,7 @@ class GitLabAdapter implements GitLabMrAdapter, RepoChangesAdapter {
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   }) async {
     // Resolve the assignee login → numeric id (what `assignee_ids` expects).
     final userRes = await _guard(() => _client.userByUsername(assignee));

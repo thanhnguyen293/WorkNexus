@@ -217,11 +217,14 @@ abstract class ProviderAdapter {
     CancelSignal? cancel,
   });
 
-  /// Reassign the ticket to [assignee] (a provider account), with an optional note.
+  /// Reassign the ticket to [assignee] (a provider account), with an optional
+  /// note. [left] is the hours left that ZenTao's task assign form requires;
+  /// other providers ignore it.
   Future<Result<bool>> assignTicket(
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   });
 
   /// Resolve a bug with the given [resolution] (and optional build / next
