@@ -45,9 +45,22 @@ class _TestToolModule extends ToolModule {
       icon: Icons.check,
       scopeKind: ScopeKind.project,
     ),
+    ToolSection(
+      id: SectionId('bugs'),
+      label: _label,
+      icon: Icons.bug_report,
+      scopeKind: ScopeKind.product,
+    ),
   ];
 
   static String _label(AppL10n l) => 'Tasks';
+
+  @override
+  Widget buildNavPane(
+    BuildContext context,
+    Account account,
+    ToolLocation location,
+  ) => const SizedBox.shrink();
 
   @override
   String Function(AppL10n) get roleLabel =>
@@ -136,7 +149,7 @@ void main() {
     );
 
     testWidgets(
-      'maintains a 3-section LRU cache in IndexedStack and evicts the oldest',
+      'maintains a 5-section LRU cache in IndexedStack and evicts the oldest',
       (tester) async {
         final container = ProviderContainer(
           overrides: [
@@ -189,13 +202,29 @@ void main() {
         expect(stack.children.length, 3);
         expect(stack.index, 2);
 
-        // Section 4: Settings (exceeds max of 3 -> takes the slot of the
-        // least recently used: overview)
+        // Section 4: Settings
         nav.selectSettings(SettingsSection.general);
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
-        expect(stack.children.length, 3);
+        expect(stack.children.length, 4);
+        expect(stack.index, 3);
+
+        // Section 5: the account's Tasks
+        nav.selectAccount(_testAccount.id);
+        await tester.pumpAndSettle();
+
+        stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+        expect(stack.children.length, 5);
+        expect(stack.index, 4);
+
+        // Section 6: the account's Bugs (exceeds max of 5 -> takes the slot
+        // of the least recently used: overview)
+        nav.selectSection(const SectionId('bugs'));
+        await tester.pumpAndSettle();
+
+        stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+        expect(stack.children.length, 5);
         expect(stack.index, 0);
 
         // Re-visit Integrations (already cached -> keeps its slot)
@@ -203,7 +232,7 @@ void main() {
         await tester.pumpAndSettle();
 
         stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
-        expect(stack.children.length, 3);
+        expect(stack.children.length, 5);
         expect(stack.index, 1);
       },
     );
