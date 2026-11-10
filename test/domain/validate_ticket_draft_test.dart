@@ -24,4 +24,24 @@ void main() {
       isEmpty,
     );
   });
+
+  test(
+    'a task deadline before its planned start is refused, as ZenTao does',
+    () {
+      const draft = TaskDraft(
+        execution: '9',
+        name: 'x',
+        estStarted: '2026-05-10',
+      );
+      expect(
+        const ValidateTaskDraft()(draft.copyWith(deadline: '2026-05-09')),
+        {DraftField.deadline},
+      );
+      expect(
+        const ValidateTaskDraft()(draft.copyWith(deadline: '2026-05-10')),
+        isEmpty,
+      );
+      expect(const ValidateTaskDraft()(draft), isEmpty);
+    },
+  );
 }

@@ -36,10 +36,12 @@ abstract interface class TicketDetailService {
 
   Future<Result<void>> postComment(Ticket ticket, String body);
 
+  /// [left]: the hours left a ZenTao task is handed over with.
   Future<Result<void>> assignTicket(
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   });
 
   Future<Result<void>> setReviewers(Ticket ticket, List<String> logins);

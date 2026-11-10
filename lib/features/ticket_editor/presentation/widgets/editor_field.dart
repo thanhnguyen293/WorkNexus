@@ -6,7 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// A labelled form field; a required one is starred, and [missing] shows it
-/// needs filling in.
+/// needs filling in — or [missingText] when it is filled in wrongly.
 class EditorField extends StatelessWidget {
   const EditorField({
     super.key,
@@ -14,12 +14,14 @@ class EditorField extends StatelessWidget {
     required this.child,
     this.required = false,
     this.missing = false,
+    this.missingText,
   });
 
   final String label;
   final Widget child;
   final bool required;
   final bool missing;
+  final String? missingText;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +54,7 @@ class EditorField extends StatelessWidget {
           if (missing) ...[
             SizedBox(height: s.xs),
             Text(
-              AppL10n.of(context).formRequired,
+              missingText ?? AppL10n.of(context).formRequired,
               style: context.typography.caption.copyWith(color: c.error),
             ),
           ],

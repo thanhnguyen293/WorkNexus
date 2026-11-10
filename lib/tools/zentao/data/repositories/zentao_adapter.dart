@@ -521,16 +521,18 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
     Ticket ticket, {
     required String assignee,
     String? comment,
+    double? left,
   }) async {
     return _guard(() async {
       // Classic web action `{type}-assignTo-{id}` (no REST v1 endpoint on this
       // build); mirrors the web client's assign request.
       final type = _typeOf(ticket);
       final task = ticket.providerEntity;
-      // A task's assign form also carries its hours left, which ZenTao 20+
-      // resets to 0 when the field is missing.
-      final left = switch (task) {
-        ZenTaoTaskEntity(:final left?) => zentaoHours(left),
+      // A task's assign form also carries its hours left (required while the
+      // task is unfinished), which ZenTao 20+ resets to 0 when the field is
+      // missing: the hours typed in, else the ones it already has.
+      final hours = switch (task) {
+        ZenTaoTaskEntity(left: final had) => left ?? had,
         _ => null,
       };
       // `task::assignTo` takes the execution BEFORE the task id; with the id
@@ -544,7 +546,7 @@ class ZenTaoAdapter implements ProviderAdapter, ZenTaoMessagesAdapter {
         '${type.pathSegment}-assignTo-$target',
         {
           'assignedTo': assignee,
-          'left': ?left,
+          'left': ?(hours == null ? null : zentaoHours(hours)),
           if (comment != null && comment.trim().isNotEmpty) 'comment': comment,
         },
       );
