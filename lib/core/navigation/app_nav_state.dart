@@ -54,8 +54,12 @@ abstract class AppNavState with _$AppNavState {
     @Default(false) bool notificationsOpen,
     TicketEditorRoute? editor,
 
-    /// Tickets opened in the detail slide-over, oldest first.
-    @Default(<String>[]) List<String> ticketHistory,
+    /// The detail slide-over of each place ([detailPlace]: the chat, an
+    /// account's Bugs / Tasks / Docs…): the tickets opened there, oldest
+    /// first. Each keeps its own, so going elsewhere and back finds the
+    /// detail as it was left.
+    @Default(<String, List<String>>{})
+    Map<String, List<String>> ticketHistories,
 
     /// Whether the user explicitly navigated to the Workspace section.
     @Default(false) bool userSelectedWorkspace,
@@ -64,6 +68,20 @@ abstract class AppNavState with _$AppNavState {
     /// (null: none). Picking a place on the rail closes it.
     String? miniAppId,
   }) = _AppNavState;
+
+  /// The place on screen that keeps a detail slide-over of its own: each
+  /// account section (Bugs, Tasks, Docs…), the chat, each workspace page.
+  String get detailPlace => switch (rail) {
+    AccountTarget(:final accountId) =>
+      'account:$accountId/${locations[accountId]?.section.value ?? ''}',
+    WorkspaceTarget() => 'workspace:${workspaceSection.name}',
+    ChatTarget() => 'chat',
+    SettingsTarget() => 'settings',
+  };
+
+  /// The tickets opened in the detail slide-over of the place on screen,
+  /// oldest first.
+  List<String> get ticketHistory => ticketHistories[detailPlace] ?? const [];
 
   /// The ticket the detail slide-over shows; null when it is closed or the
   /// editor covers it.

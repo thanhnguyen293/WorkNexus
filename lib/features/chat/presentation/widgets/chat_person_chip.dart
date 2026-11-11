@@ -46,8 +46,11 @@ class ChatPersonChip extends ConsumerWidget {
       onTap: user == null
           ? null
           : () {
-              // The detail slide-over would stay on top of the chat.
-              ref.read(appNavProvider.notifier).closeTicket();
+              // A detail open over the chat would stay on top of the chat
+              // it opens; one on another place waits there.
+              if (ref.read(railTargetProvider) is ChatTarget) {
+                ref.read(appNavProvider.notifier).closeTicket();
+              }
               openDirectChatWith(
                 context,
                 ref,

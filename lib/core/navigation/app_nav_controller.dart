@@ -269,7 +269,7 @@ class AppNavController extends Notifier<AppNavState> {
     miniAppId: id,
     editor: null,
     notificationsOpen: false,
-    ticketHistory: const [],
+    ticketHistories: _withHistory(const []),
   );
 
   /// Leaves the mini app for the rail's workspace / account view.
@@ -288,10 +288,10 @@ class AppNavController extends Notifier<AppNavState> {
         ? const <String>[]
         : state.ticketHistory;
     if (history.lastOrNull == id) {
-      state = state.copyWith(ticketHistory: history);
+      state = state.copyWith(ticketHistories: _withHistory(history));
       return;
     }
-    state = state.copyWith(ticketHistory: [...history, id]);
+    state = state.copyWith(ticketHistories: _withHistory([...history, id]));
   }
 
   /// Returns the detail slide-over to the previous ticket; no-op without one.
@@ -299,12 +299,28 @@ class AppNavController extends Notifier<AppNavState> {
     if (!state.canGoBack) return;
     final history = state.ticketHistory;
     state = state.copyWith(
-      ticketHistory: history.sublist(0, history.length - 1),
+      ticketHistories: _withHistory(history.sublist(0, history.length - 1)),
     );
   }
 
-  /// Closes the detail slide-over and forgets its history.
-  void closeTicket() => state = state.copyWith(ticketHistory: const []);
+  /// Closes the detail slide-over of the place on screen and forgets its
+  /// history; the other places keep theirs.
+  void closeTicket() =>
+      state = state.copyWith(ticketHistories: _withHistory(const []));
+
+  /// Closes the detail slide-over on every place (switching workspaces).
+  void closeAllTickets() => state = state.copyWith(ticketHistories: const {});
+
+  /// [ticketHistories] with the place on screen's set to [history] (dropped
+  /// when empty).
+  Map<String, List<String>> _withHistory(List<String> history) {
+    final place = state.detailPlace;
+    return {
+      for (final e in state.ticketHistories.entries)
+        if (e.key != place) e.key: e.value,
+      if (history.isNotEmpty) place: history,
+    };
+  }
 
   /// Opens the bug / task editor on [route]. It takes the whole area beside
   /// the rail, so the notifications panel closes; the ticket detail hides until
