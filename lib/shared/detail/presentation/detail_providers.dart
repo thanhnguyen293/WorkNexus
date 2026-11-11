@@ -15,12 +15,18 @@ import '../../../core/error/result.dart';
 
 enum DetailTab { original, translation }
 
-/// Which detail tab is active (resets to original when a new ticket opens).
-final detailTabProvider = NotifierProvider<DetailTabController, DetailTab>(
-  DetailTabController.new,
-);
+/// Which detail tab each ticket shows (reset to original when it opens), so
+/// details kept on different rail places keep their own tab.
+final detailTabProvider =
+    NotifierProvider.family<DetailTabController, DetailTab, String>(
+      DetailTabController.new,
+    );
 
 class DetailTabController extends Notifier<DetailTab> {
+  DetailTabController(this.ticketId);
+
+  final String ticketId;
+
   @override
   DetailTab build() => DetailTab.original;
   void set(DetailTab tab) => state = tab;

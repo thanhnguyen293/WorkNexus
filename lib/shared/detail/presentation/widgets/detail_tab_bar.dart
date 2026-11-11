@@ -9,7 +9,12 @@ import 'detail_underline_tabs.dart';
 
 /// The detail panel's horizontal tab strip.
 class DetailTabBar extends ConsumerWidget {
-  const DetailTabBar({super.key, required this.current});
+  const DetailTabBar({
+    super.key,
+    required this.ticketId,
+    required this.current,
+  });
+  final String ticketId;
   final DetailTab current;
 
   @override
@@ -25,7 +30,8 @@ class DetailTabBar extends ConsumerWidget {
     return DetailUnderlineTabs<DetailTab>(
       labels: labels,
       current: current,
-      onSelect: (tab) => ref.read(detailTabProvider.notifier).set(tab),
+      onSelect: (tab) =>
+          ref.read(detailTabProvider(ticketId).notifier).set(tab),
     );
   }
 }

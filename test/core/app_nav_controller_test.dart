@@ -195,6 +195,54 @@ void main() {
   });
 
   group('ticket history', () {
+    test('the detail waits on its place while the rail is elsewhere', () {
+      nav()
+        ..selectAccount('zentao')
+        ..openTicket('t1')
+        ..selectChat();
+
+      expect(container.read(openTicketIdProvider), isNull);
+
+      nav().selectAccount('zentao');
+      expect(container.read(openTicketIdProvider), 't1');
+    });
+
+    test('Bugs and Tasks of one account keep their own detail', () {
+      nav()
+        ..selectAccount('zentao')
+        ..selectSection(const SectionId('zentao.bugs'))
+        ..openTicket('bug1')
+        ..selectSection(const SectionId('zentao.tasks'));
+
+      expect(container.read(openTicketIdProvider), isNull);
+      nav().openTicket('task1');
+
+      nav().selectSection(const SectionId('zentao.bugs'));
+      expect(container.read(openTicketIdProvider), 'bug1');
+      nav().selectSection(const SectionId('zentao.tasks'));
+      expect(container.read(openTicketIdProvider), 'task1');
+    });
+
+    test('each place keeps its own detail', () {
+      nav()
+        ..selectAccount('zentao')
+        ..openTicket('t1')
+        ..selectChat()
+        ..openTicket('t2');
+
+      expect(container.read(openTicketIdProvider), 't2');
+      nav().selectAccount('zentao');
+      expect(container.read(openTicketIdProvider), 't1');
+
+      // Closing one leaves the other waiting.
+      nav()
+        ..closeTicket()
+        ..selectChat();
+      expect(container.read(openTicketIdProvider), 't2');
+      nav().closeAllTickets();
+      expect(container.read(openTicketIdProvider), isNull);
+    });
+
     test('a ticket opened from the detail goes back to the previous one', () {
       nav()
         ..openTicket('parent')

@@ -20,7 +20,7 @@ import '../../features/connections/presentation/widgets/zentao_profile_startup.d
 import '../../features/notifications/presentation/widgets/notification_alerts.dart';
 import '../../features/notifications/presentation/widgets/notifications_panel.dart';
 import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
-import '../../shared/detail/presentation/detail_panel.dart';
+import '../../shared/detail/presentation/detail_overlay.dart';
 import 'account_sync_at_launch.dart';
 import 'app_nav_rail.dart';
 import 'chat_at_launch.dart';
