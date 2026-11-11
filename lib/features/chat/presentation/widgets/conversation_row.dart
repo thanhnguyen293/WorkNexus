@@ -23,6 +23,7 @@ class ConversationRow extends ConsumerWidget {
     required this.title,
     required this.users,
     required this.selected,
+    this.highlighted = false,
     required this.compact,
   });
 
@@ -31,6 +32,9 @@ class ConversationRow extends ConsumerWidget {
   final String title;
   final Map<int, ChatUser> users;
   final bool selected;
+
+  /// Picked with ↑ / ↓ from the search box; scrolled into view.
+  final bool highlighted;
   final bool compact;
 
   @override
@@ -39,7 +43,7 @@ class ConversationRow extends ConsumerWidget {
       chatTypingUsersProvider((accountId: accountId, chatGid: chat.gid)),
     );
     final withPeer = _withPeer(chat);
-    return GestureDetector(
+    final row = GestureDetector(
       onSecondaryTapUp: (d) =>
           showConversationMenu(context, ref, chat: chat, at: d.globalPosition),
       child: ConversationTile(
@@ -53,13 +57,52 @@ class ConversationRow extends ConsumerWidget {
         lastSender: _lastSender(context, chat, users),
         typing: _typingLabel(context, chat, users, typing),
         selected: selected,
+        highlighted: highlighted,
         compact: compact,
         onTap: () =>
             ref.read(selectedChatGidProvider(accountId).notifier).state =
                 chat.gid,
       ),
     );
+    return _RevealWhenHighlighted(highlighted: highlighted, child: row);
   }
+}
+
+/// Scrolls [child] into view when it becomes [highlighted], so stepping with
+/// the arrow keys never leaves the picked row off screen.
+class _RevealWhenHighlighted extends StatefulWidget {
+  const _RevealWhenHighlighted({
+    required this.highlighted,
+    required this.child,
+  });
+
+  final bool highlighted;
+  final Widget child;
+
+  @override
+  State<_RevealWhenHighlighted> createState() => _RevealWhenHighlightedState();
+}
+
+class _RevealWhenHighlightedState extends State<_RevealWhenHighlighted> {
+  @override
+  void didUpdateWidget(_RevealWhenHighlighted old) {
+    super.didUpdateWidget(old);
+    if (!widget.highlighted || old.highlighted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+      Scrollable.ensureVisible(
+        context,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// A one-to-one chat with someone else: their presence and badge show.
