@@ -638,6 +638,23 @@ void main() {
     expect(find.text('VN Mobile Team'), findsNothing);
   });
 
+  testWidgets('↓ picks a search result and Enter opens it', (tester) async {
+    await pumpChat(tester);
+    // Both chats match: VN Mobile Team, then Dyno.
+    await tester.enterText(find.byType(TextField).first, 'n');
+    await tester.pumpAndSettle();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(repo.calls, contains('refresh 31&40'));
+    expect(repo.calls, isNot(contains('refresh g1')));
+  });
+
   testWidgets('the search box keeps its height with or without text', (
     tester,
   ) async {

@@ -8,9 +8,20 @@ import '../providers/chat_providers.dart';
 /// filters by it), so a box rebuilt after switching views starts from that
 /// text rather than empty over a still-filtered list.
 class ChatSearchField extends ConsumerStatefulWidget {
-  const ChatSearchField({super.key, required this.hint});
+  const ChatSearchField({
+    super.key,
+    required this.hint,
+    required this.onMove,
+    required this.onSubmitted,
+  });
 
   final String hint;
+
+  /// ↑ (-1) / ↓ (+1): steps the highlight through the listed chats.
+  final ValueChanged<int> onMove;
+
+  /// Enter: opens the highlighted chat.
+  final VoidCallback onSubmitted;
 
   @override
   ConsumerState<ChatSearchField> createState() => _ChatSearchFieldState();
@@ -26,9 +37,17 @@ class _ChatSearchFieldState extends ConsumerState<ChatSearchField> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      AppSearchField(controller: _text, hint: widget.hint, onChanged: _search);
+  Widget build(BuildContext context) => AppSearchField(
+    controller: _text,
+    hint: widget.hint,
+    onChanged: _search,
+    onMove: widget.onMove,
+    onSubmitted: (_) => widget.onSubmitted(),
+  );
 
-  void _search(String text) =>
-      ref.read(chatSearchProvider.notifier).state = text;
+  void _search(String text) {
+    ref.read(chatSearchProvider.notifier).state = text;
+    // The list changes under it: start picking from the top again.
+    ref.read(chatSearchHighlightProvider.notifier).state = null;
+  }
 }
