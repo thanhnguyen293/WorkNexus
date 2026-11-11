@@ -184,6 +184,10 @@ final chatTabUnreadProvider = Provider.autoDispose.family<int, ChatListTab>((
 /// The chat list filter text.
 final chatSearchProvider = StateProvider<String>((ref) => '');
 
+/// The chat picked with ↑ / ↓ in the search box (Enter opens it); cleared
+/// whenever the search text changes.
+final chatSearchHighlightProvider = StateProvider<String?>((ref) => null);
+
 /// Which messages a thread shows: the newest ones (growing as older pages
 /// load), or a window around a message jumped to far back. Dropped when the
 /// thread closes, so a chat always reopens on its newest messages.

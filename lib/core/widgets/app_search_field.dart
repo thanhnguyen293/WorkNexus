@@ -13,7 +13,8 @@ import 'app_input_decoration.dart';
 /// The app's search box: a magnifier, the [hint], and a clear button once
 /// there is text. Esc clears the text; on an empty box it passes through to
 /// the surrounding panel / popover (which typically closes). The caller owns the [controller] (and so the query); [onChanged]
-/// also fires with `''` when the box is cleared.
+/// also fires with `''` when the box is cleared. With [onMove], ↑ / ↓ go to
+/// it (-1 / +1) instead of moving the caret, to step through results.
 ///
 /// It is exactly [height] tall (default: the toolbar control height), so it
 /// lines up with the buttons beside it whether or not the clear button shows.
@@ -24,6 +25,7 @@ class AppSearchField extends StatelessWidget {
     required this.hint,
     this.onChanged,
     this.onSubmitted,
+    this.onMove,
     this.focusNode,
     this.autofocus = false,
     this.fillColor,
@@ -34,6 +36,7 @@ class AppSearchField extends StatelessWidget {
   final String hint;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<int>? onMove;
   final FocusNode? focusNode;
   final bool autofocus;
   final Color? fillColor;
@@ -56,6 +59,19 @@ class AppSearchField extends StatelessWidget {
         canRequestFocus: false,
         skipTraversal: true,
         onKeyEvent: (_, event) {
+          if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+            return KeyEventResult.ignored;
+          }
+          final move = onMove;
+          final step = switch (event.logicalKey) {
+            LogicalKeyboardKey.arrowDown => 1,
+            LogicalKeyboardKey.arrowUp => -1,
+            _ => 0,
+          };
+          if (move != null && step != 0) {
+            move(step);
+            return KeyEventResult.handled;
+          }
           if (event is! KeyDownEvent ||
               event.logicalKey != LogicalKeyboardKey.escape ||
               controller.text.isEmpty) {

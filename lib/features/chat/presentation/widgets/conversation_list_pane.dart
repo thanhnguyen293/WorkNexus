@@ -49,6 +49,7 @@ class ConversationListPane extends ConsumerWidget {
     final query = ref.watch(chatSearchProvider).trim().toLowerCase();
     final selected = ref.watch(selectedChatGidProvider(accountId));
     final tab = ref.watch(chatListTabProvider);
+    final highlighted = ref.watch(chatSearchHighlightProvider);
 
     final visible =
         [
@@ -85,7 +86,18 @@ class ConversationListPane extends ConsumerWidget {
                   onViewProfile: onViewProfile,
                 ),
                 SizedBox(width: context.spacing.md),
-                Expanded(child: ChatSearchField(hint: l.chatSearch)),
+                Expanded(
+                  child: ChatSearchField(
+                    hint: l.chatSearch,
+                    // Only over search results: the full list is not a pick.
+                    onMove: (step) => query.isEmpty
+                        ? null
+                        : _moveHighlight(ref, visible, step),
+                    onSubmitted: () => query.isEmpty
+                        ? null
+                        : _openHighlighted(ref, accountId, visible),
+                  ),
+                ),
                 SizedBox(width: context.spacing.xs),
                 _MyCloudButton(accountId: accountId),
                 AppIconButton(
@@ -146,6 +158,8 @@ class ConversationListPane extends ConsumerWidget {
                       title: e.title,
                       users: users,
                       selected: e.chat.gid == selected,
+                      highlighted:
+                          query.isNotEmpty && e.chat.gid == highlighted,
                       compact: compact,
                     );
                   },
@@ -157,6 +171,32 @@ class ConversationListPane extends ConsumerWidget {
       ),
     );
   }
+}
+
+typedef _Listed = ({ChatConversation chat, String title});
+
+/// Steps the search highlight by [step] through [visible], from the top (↓)
+/// or the bottom (↑) when nothing listed is highlighted yet.
+void _moveHighlight(WidgetRef ref, List<_Listed> visible, int step) {
+  if (visible.isEmpty) return;
+  // Read now, not from the last build: keys can repeat faster than frames.
+  final highlighted = ref.read(chatSearchHighlightProvider);
+  final at = visible.indexWhere((e) => e.chat.gid == highlighted);
+  final next = at < 0
+      ? (step > 0 ? 0 : visible.length - 1)
+      : (at + step).clamp(0, visible.length - 1);
+  ref.read(chatSearchHighlightProvider.notifier).state = visible[next].chat.gid;
+}
+
+/// Opens the highlighted chat — the first listed when none is — as a tap on
+/// its row would.
+void _openHighlighted(WidgetRef ref, String accountId, List<_Listed> visible) {
+  if (visible.isEmpty) return;
+  final highlighted = ref.read(chatSearchHighlightProvider);
+  final pick =
+      visible.where((e) => e.chat.gid == highlighted).firstOrNull ??
+      visible.first;
+  ref.read(selectedChatGidProvider(accountId).notifier).state = pick.chat.gid;
 }
 
 /// Opens My Cloud, the chat with yourself (created on first use).

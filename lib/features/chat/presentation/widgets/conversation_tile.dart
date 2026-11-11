@@ -18,6 +18,7 @@ class ConversationTile extends StatelessWidget {
     required this.chat,
     required this.title,
     required this.selected,
+    this.highlighted = false,
     required this.onTap,
     required this.avatar,
     this.presence,
@@ -33,6 +34,9 @@ class ConversationTile extends StatelessWidget {
   final ChatConversation chat;
   final String title;
   final bool selected;
+
+  /// Picked with the arrow keys from the search box: Enter opens it.
+  final bool highlighted;
   final VoidCallback onTap;
 
   /// See `chatAvatarStyle`.
@@ -67,6 +71,7 @@ class ConversationTile extends StatelessWidget {
     // margin keeps the content where the list's own used to put it.
     return _TileInk(
       selected: selected,
+      highlighted: highlighted,
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -153,17 +158,23 @@ class ConversationTile extends StatelessWidget {
 class _TileInk extends StatelessWidget {
   const _TileInk({
     required this.selected,
+    required this.highlighted,
     required this.onTap,
     required this.child,
   });
 
   final bool selected;
+  final bool highlighted;
   final VoidCallback onTap;
   final Widget child;
 
   @override
   Widget build(BuildContext context) => Material(
-    color: selected ? context.colors.selectionFill : Colors.transparent,
+    color: selected
+        ? context.colors.selectionFill
+        : highlighted
+        ? context.colors.hoverFill
+        : Colors.transparent,
     child: InkWell(
       mouseCursor: WidgetStateMouseCursor.clickable,
       onTap: onTap,
