@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../di/providers.dart';
 import '../domain/entities/account.dart';
 import '../domain/entities/workspace.dart';
+import '../settings/app_settings.dart';
 import 'app_nav_controller.dart';
 import 'app_nav_state.dart';
 import 'ticket_editor_route.dart';
@@ -52,6 +53,19 @@ final workspaceSectionProvider = Provider<WorkspaceSection>(
 final currentToolLocationProvider = Provider<ToolLocation?>(
   (ref) => ref.watch(appNavProvider.select((s) => s.currentLocation)),
 );
+
+/// The view mode last picked for [SectionId] on any account, kept across
+/// restarts; null when none was picked. A section reads its account's own
+/// pick first, then this, then its default.
+final rememberedViewModeProvider = Provider.family<ViewModeId?, SectionId>((
+  ref,
+  section,
+) {
+  final mode = ref.watch(
+    appSettingsProvider.select((s) => s.viewModes[section.value]),
+  );
+  return mode == null ? null : ViewModeId(mode);
+});
 
 /// Whether the detail slide-over has an earlier ticket to go back to.
 final ticketCanGoBackProvider = Provider<bool>(

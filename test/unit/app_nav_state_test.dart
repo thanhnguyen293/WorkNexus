@@ -4,12 +4,42 @@ import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
+import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/tools/tool_module.dart';
 import 'package:work_nexus/tools/github/github_module.dart';
 import 'package:work_nexus/tools/gitlab/gitlab_module.dart';
 import 'package:work_nexus/tools/zentao/zentao_module.dart';
 
 void main() {
+  test('a picked view mode is saved and opens the section after a restart', () {
+    AppSettings? saved;
+    final c = ProviderContainer(
+      overrides: [settingsPersistProvider.overrideWithValue((s) => saved = s)],
+    );
+    addTearDown(c.dispose);
+    c.read(appNavProvider.notifier)
+      ..selectAccount('acc_zt', module: const ZentaoModule())
+      ..setViewMode(const ViewModeId('list'));
+    expect(saved?.viewModes, {'zentao.tasks': 'list'});
+
+    final restarted = ProviderContainer(
+      overrides: [initialAppSettingsProvider.overrideWithValue(saved!)],
+    );
+    addTearDown(restarted.dispose);
+    expect(
+      restarted.read(
+        rememberedViewModeProvider(const SectionId('zentao.tasks')),
+      ),
+      const ViewModeId('list'),
+    );
+    expect(
+      restarted.read(
+        rememberedViewModeProvider(const SectionId('zentao.bugs')),
+      ),
+      isNull,
+    );
+  });
+
   group('AppNavController', () {
     late ProviderContainer container;
     late AppNavController controller;

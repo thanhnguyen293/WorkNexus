@@ -77,7 +77,9 @@ class GitlabMrsSection extends ConsumerWidget {
     watchGitLabItems(context, ref, GitLabItemKind.mergeRequest);
     final l = AppL10n.of(context);
     final viewMode =
-        location.viewModes[location.section] ?? const ViewModeId('open');
+        location.viewModes[location.section] ??
+        ref.watch(rememberedViewModeProvider(location.section)) ??
+        const ViewModeId('open');
 
     final activeChip = ref.watch(gitlabMrChipFilterProvider);
     final allTickets =

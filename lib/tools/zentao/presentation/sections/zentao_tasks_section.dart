@@ -49,7 +49,9 @@ class ZentaoTasksSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final viewMode =
-        location.viewModes[location.section] ?? const ViewModeId('board');
+        location.viewModes[location.section] ??
+        ref.watch(rememberedViewModeProvider(location.section)) ??
+        const ViewModeId('board');
     keepTaskBoardScope(context, ref, account, location);
 
     final Widget body;

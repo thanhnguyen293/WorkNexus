@@ -238,6 +238,7 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   pinnedExecutions: decodePinnedExecutions(r.pinnedExecutionsJson),
   sidebarWidth: r.sidebarWidth,
   tableColumnWidths: decodeColumnWidths(r.tableColumnWidthsJson),
+  viewModes: decodeViewModes(r.viewModesJson),
   chatAppearance: _enumByName(
     ChatAppearance.values,
     // The Messenger style became ZenTao's, with the same layout.
@@ -281,6 +282,7 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   pinnedExecutionsJson: Value(encodePinnedExecutions(s.pinnedExecutions)),
   sidebarWidth: Value(s.sidebarWidth),
   tableColumnWidthsJson: Value(jsonEncode(s.tableColumnWidths)),
+  viewModesJson: Value(jsonEncode(s.viewModes)),
   chatAppearance: Value(s.chatAppearance.name),
   chatPrimaryBubbles: Value(s.chatPrimaryBubbles),
   chatWallpaper: Value(s.chatWallpaper),
@@ -325,6 +327,20 @@ Map<String, double> decodeColumnWidths(String json) {
     };
   } on FormatException {
     return const <String, double>{};
+  }
+}
+
+/// Decodes the persisted per-section view modes; tolerates malformed rows.
+Map<String, String> decodeViewModes(String json) {
+  try {
+    final decoded = jsonDecode(json);
+    if (decoded is! Map) return const <String, String>{};
+    return {
+      for (final MapEntry(:key, :value) in decoded.entries)
+        if (key is String && value is String) key: value,
+    };
+  } on FormatException {
+    return const <String, String>{};
   }
 }
 

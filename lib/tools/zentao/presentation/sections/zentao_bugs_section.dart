@@ -48,7 +48,9 @@ class ZentaoBugsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final viewMode =
-        location.viewModes[location.section] ?? const ViewModeId('board');
+        location.viewModes[location.section] ??
+        ref.watch(rememberedViewModeProvider(location.section)) ??
+        const ViewModeId('board');
 
     final filter = ref.watch(filterStateProvider);
     final isRelated = filter.savedView == SavedView.related;
