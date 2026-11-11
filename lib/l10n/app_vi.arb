@@ -730,6 +730,7 @@
   "copyTitle": "Sao chép tiêu đề",
   "titleCopied": "Đã sao chép tiêu đề",
   "refresh": "Làm mới",
+  "refreshWithShortcut": "Làm mới ({shortcut})",
   "openInBrowser": "Mở trong trình duyệt",
   "more": "Thêm",
   "code": "Code",
