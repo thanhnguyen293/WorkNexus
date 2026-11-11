@@ -57,7 +57,7 @@ class _WorkspaceSwitcherPopoverState
   void _selectWorkspace(Workspace ws) {
     ref.read(activeWorkspaceIdProvider.notifier).state = ws.id;
     ref.read(filterStateProvider.notifier).setWorkspace(ws.id);
-    ref.read(appNavProvider.notifier).closeTicket();
+    ref.read(appNavProvider.notifier).closeAllTickets();
 
     final allAccounts = ref.read(accountsProvider).asData?.value ?? const [];
     final newAccounts = allAccounts
