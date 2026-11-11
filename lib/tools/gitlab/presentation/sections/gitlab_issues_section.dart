@@ -54,7 +54,9 @@ class GitlabIssuesSection extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final viewMode =
-        location.viewModes[location.section] ?? const ViewModeId('list');
+        location.viewModes[location.section] ??
+        ref.watch(rememberedViewModeProvider(location.section)) ??
+        const ViewModeId('list');
 
     final allTickets =
         ref.watch(ticketsProvider).asData?.value ?? const <Ticket>[];
