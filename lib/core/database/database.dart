@@ -202,6 +202,10 @@ class Settings extends Table {
   /// to follow the app's theme.
   TextColumn get docsReaderBrightness => text().nullable()();
 
+  /// JSON object of the view mode last picked per tool section, keyed by
+  /// section id.
+  TextColumn get viewModesJson => text().withDefault(const Constant('{}'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -598,7 +602,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 59;
+  int get schemaVersion => 60;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -922,6 +926,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 59 &&
           !await _hasColumn('settings', 'docs_reader_brightness')) {
         await m.addColumn(settings, settings.docsReaderBrightness);
+      }
+      if (from < 60 && !await _hasColumn('settings', 'view_modes_json')) {
+        await m.addColumn(settings, settings.viewModesJson);
       }
     },
   );

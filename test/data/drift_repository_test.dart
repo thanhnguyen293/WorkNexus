@@ -322,4 +322,20 @@ void main() {
       isNull,
     );
   });
+
+  test('the view mode picked per section persists', () async {
+    await db.saveSettings(
+      appSettingsToCompanion(
+        const AppSettings(viewModes: {'zentao.tasks': 'list'}),
+      ),
+    );
+    expect(appSettingsFromRow((await db.getSettings())!).viewModes, {
+      'zentao.tasks': 'list',
+    });
+  });
+
+  test('a malformed view-modes column reads as none', () {
+    expect(decodeViewModes('not json'), isEmpty);
+    expect(decodeViewModes('{"zentao.bugs": 1}'), isEmpty);
+  });
 }

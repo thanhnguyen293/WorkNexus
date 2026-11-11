@@ -58,6 +58,7 @@ class AppSettings {
     this.pinnedExecutions = const <PinnedExecution>[],
     this.sidebarWidth = kSidebarWidthDefault,
     this.tableColumnWidths = const <String, double>{},
+    this.viewModes = const <String, String>{},
     this.chatAppearance = ChatAppearance.worknexus,
     this.chatPrimaryBubbles = false,
     this.chatWallpaper = kChatWallpaperPattern,
@@ -111,6 +112,10 @@ class AppSettings {
   /// Widths (logical px) the ticket tables' columns were dragged to, keyed
   /// `"<table>.<column>"`; a column missing here keeps its default width.
   final Map<String, double> tableColumnWidths;
+
+  /// The view mode (Board / List…) last picked per tool section, keyed by
+  /// section id (`zentao.tasks`), so a section opens the way it was left.
+  final Map<String, String> viewModes;
 
   /// The user-chosen app primary/accent color (ARGB int), or `null` to use the
   /// active theme variant's built-in accent.
@@ -197,6 +202,7 @@ class AppSettings {
     List<PinnedExecution>? pinnedExecutions,
     double? sidebarWidth,
     Map<String, double>? tableColumnWidths,
+    Map<String, String>? viewModes,
     ChatAppearance? chatAppearance,
     bool? chatPrimaryBubbles,
     String? chatWallpaper,
@@ -235,6 +241,7 @@ class AppSettings {
       pinnedExecutions: pinnedExecutions ?? this.pinnedExecutions,
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       tableColumnWidths: tableColumnWidths ?? this.tableColumnWidths,
+      viewModes: viewModes ?? this.viewModes,
       chatAppearance: chatAppearance ?? this.chatAppearance,
       chatPrimaryBubbles: chatPrimaryBubbles ?? this.chatPrimaryBubbles,
       chatWallpaper: chatWallpaper ?? this.chatWallpaper,
@@ -377,6 +384,12 @@ class AppSettingsController extends Notifier<AppSettings> {
     final next = Map<String, double>.of(state.tableColumnWidths);
     width == null ? next.remove(key) : next[key] = width;
     _set(state.copyWith(tableColumnWidths: next));
+  }
+
+  /// Remembers [mode] as the view of the section [sectionId].
+  void setViewMode(String sectionId, String mode) {
+    if (state.viewModes[sectionId] == mode) return;
+    _set(state.copyWith(viewModes: {...state.viewModes, sectionId: mode}));
   }
 
   /// Pins/unpins [key]: a ZenTao product (`accountId:productId`) or a

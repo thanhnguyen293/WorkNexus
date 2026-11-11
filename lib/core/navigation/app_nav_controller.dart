@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/entities/account.dart';
 import '../domain/value_objects/provider_type.dart';
+import '../settings/app_settings.dart';
 import '../tools/tool_module.dart';
 import 'app_nav_state.dart';
 import 'ticket_editor_route.dart';
@@ -213,6 +214,8 @@ class AppNavController extends Notifier<AppNavState> {
   }
 
   /// Sets the remembered view mode for the active section (e.g. tasks → kanban).
+  /// Also kept in the app settings, so the section opens that way after a
+  /// restart (see `rememberedViewModeProvider`).
   void setViewMode(ViewModeId viewMode) {
     if (state.rail case AccountTarget(:final accountId)) {
       final cur = state.locations[accountId];
@@ -220,6 +223,9 @@ class AppNavController extends Notifier<AppNavState> {
       final viewModes = Map<SectionId, ViewModeId>.from(cur.viewModes)
         ..[cur.section] = viewMode;
       final updated = cur.copyWith(viewModes: viewModes);
+      ref
+          .read(appSettingsProvider.notifier)
+          .setViewMode(cur.section.value, viewMode.value);
       state = state.copyWith(
         locations: <String, ToolLocation>{
           ...state.locations,
