@@ -17,6 +17,7 @@ class MessageBubbleBox extends StatelessWidget {
     required this.child,
     this.borderColor,
     this.tail,
+    this.tailTip,
   });
 
   final Color fill;
@@ -31,6 +32,9 @@ class MessageBubbleBox extends StatelessWidget {
 
   /// Drawn on the avatar side when set; the caller keeps the room for it.
   final BubbleTailKind? tail;
+
+  /// Where a top tail points, below the bubble's top (the avatar's centre).
+  final double? tailTip;
   final Widget child;
 
   @override
@@ -72,6 +76,7 @@ class MessageBubbleBox extends StatelessWidget {
                 borderRadius: borderRadius,
                 tailOnLeft: !mine,
                 side: side,
+                tipOffset: tailTip,
               ),
             ),
             child: content,

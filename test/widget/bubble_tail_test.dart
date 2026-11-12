@@ -29,6 +29,17 @@ void main() {
     expect(p.contains(const Offset(-BubbleTail.width + 2, tip)), isTrue);
     expect(p.contains(const Offset(-1, BubbleTail.topInset)), isFalse);
   });
+
+  test('with a tip offset the triangle points there (the avatar centre)', () {
+    final p = const TailedBubbleBorder(
+      kind: BubbleTailKind.triangleTop,
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      tailOnLeft: true,
+      tipOffset: 20,
+    ).getOuterPath(rect);
+    expect(p.contains(const Offset(-BubbleTail.width + 2, 20)), isTrue);
+    expect(p.contains(const Offset(-BubbleTail.width + 2, 14)), isFalse);
+  });
 }
 
 extension on TailedBubbleBorder {
