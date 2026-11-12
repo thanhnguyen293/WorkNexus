@@ -23,6 +23,10 @@ enum ChatNamePlacement {
   /// A header over the first bubble of every run, for own messages and
   /// one-to-one chats too, with the run's time beside the name (ZenTao).
   header,
+
+  /// Above the avatar and bubble together, so the avatar lines up with the
+  /// bubble rather than with the name (TBChat).
+  aboveRow,
 }
 
 /// Where a message's time goes.
