@@ -12,6 +12,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
+import 'reply_media_thumb.dart';
 
 /// Above the composer input: which message is being replied to — sender and
 /// a one-line preview — with a button to cancel the reply.
@@ -51,6 +52,10 @@ class ReplyDraftBanner extends ConsumerWidget {
         children: [
           Icon(LucideIcons.quote300, size: s.xl2, color: c.accent),
           SizedBox(width: s.sm),
+          if (!message.deleted && ReplyMediaThumb.shows(message.content)) ...[
+            ReplyMediaThumb(accountId: accountId, content: message.content),
+            SizedBox(width: s.sm),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
