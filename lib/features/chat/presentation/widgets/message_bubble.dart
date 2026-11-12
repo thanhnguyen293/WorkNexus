@@ -130,7 +130,11 @@ class MessageBubble extends ConsumerWidget {
         !media &&
         switch (style.tail!) {
           BubbleTailKind.curlBottom => lastOfRun,
-          BubbleTailKind.triangleTop => true,
+          // At the top: on the bubble beside the avatar — every one when
+          // each message has its avatar (WeChat), else the run's first
+          // (TBChat).
+          BubbleTailKind.triangleTop =>
+            style.avatar == ChatAvatarPlacement.everyMessage || firstOfRun,
         };
 
     // Styles with tails keep the tail's width free on every message, tailed
