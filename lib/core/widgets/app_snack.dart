@@ -9,7 +9,7 @@ import 'app_toast_host.dart';
 
 export 'app_toast_controller.dart' show AppToastKind;
 
-/// Shows the app's toast: a compact pill at the top centre (see
+/// Shows the app's toast: a compact card at the top centre (see
 /// [AppToastLayer]) that never covers the inputs along the bottom. [kind]
 /// says what it reports; [isError] is the shorthand for an error, so a
 /// failure doesn't read like a confirmation. Safe to call after an `await`:
