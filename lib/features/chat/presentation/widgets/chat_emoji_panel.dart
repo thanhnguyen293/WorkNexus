@@ -42,9 +42,13 @@ class ChatEmojiPanel extends StatelessWidget {
     required this.onInsert,
     required this.onSent,
     this.onExpand,
+    this.threadRootId,
   });
 
   final ChatThreadKey thread;
+
+  /// The thread whose composer opened the panel; null in the chat's own.
+  final int? threadRootId;
   final ValueChanged<String> onInsert;
 
   /// Called as a sticker is sent (closes the panel).
@@ -61,6 +65,7 @@ class ChatEmojiPanel extends StatelessWidget {
         height: s.xl6 * (_kVisibleRows + 2),
         child: ChatEmojiTabs(
           thread: thread,
+          threadRootId: threadRootId,
           onInsert: onInsert,
           onSent: onSent,
           action: expand == null
@@ -80,7 +85,8 @@ class ChatEmojiPanel extends StatelessWidget {
 /// emoji to type — an emoji sent on its own shows large. Fills its box; the
 /// popup and the expanded panel each give it one. [action] sits at the end
 /// of the tab row; [tabRowHeight], when given, is the tab row's height with
-/// its bottom border.
+/// its bottom border. A sticker answers the composer's reply draft (which is
+/// then cleared), else [threadRootId] in a thread — like a typed message.
 class ChatEmojiTabs extends ConsumerWidget {
   const ChatEmojiTabs({
     super.key,
@@ -89,9 +95,11 @@ class ChatEmojiTabs extends ConsumerWidget {
     required this.onSent,
     this.action,
     this.tabRowHeight,
+    this.threadRootId,
   });
 
   final ChatThreadKey thread;
+  final int? threadRootId;
   final ValueChanged<String> onInsert;
 
   /// Called as a sticker is sent.
@@ -109,8 +117,14 @@ class ChatEmojiTabs extends ConsumerWidget {
   ) async {
     final controller = ref.read(stickerControllerProvider);
     final host = Navigator.of(context).context;
+    final draft = chatReplyDraftProvider((
+      chat: thread,
+      inThread: threadRootId != null,
+    ));
+    final replyToId = ref.read(draft)?.serverId ?? threadRootId;
+    ref.read(draft.notifier).state = null;
     onSent();
-    final result = await controller.send(thread, sticker);
+    final result = await controller.send(thread, sticker, replyToId: replyToId);
     if (result case Err(:final failure) when host.mounted) {
       showChatFailure(host, failure);
     }

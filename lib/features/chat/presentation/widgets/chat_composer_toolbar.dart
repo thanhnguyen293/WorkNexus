@@ -70,6 +70,7 @@ class ChatComposerTools extends StatelessWidget {
             text: text,
             focus: focus,
             dockable: !draftKey.inThread,
+            threadRootId: threadRootId,
           ),
           ChatSendCodeButton(draftKey: draftKey, threadRootId: threadRootId),
           const _MarkdownToggle(),

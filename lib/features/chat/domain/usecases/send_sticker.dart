@@ -5,7 +5,7 @@ import '../repositories/chat_repository.dart';
 import '../repositories/sticker_repository.dart';
 import 'encode_emoji.dart';
 
-/// Sends a sticker image as an image message.
+/// Sends a sticker image as an image message, answering [replyToId] when set.
 class SendSticker {
   const SendSticker(this._chats, this._stickers);
 
@@ -16,12 +16,14 @@ class SendSticker {
     required String accountId,
     required String chatGid,
     required ChatSticker sticker,
+    int? replyToId,
   }) async => switch (await _stickers.bytes(sticker)) {
     Ok(:final value) => _chats.sendFile(
       accountId,
       chatGid,
       name: sticker.name,
       bytes: value,
+      replyToId: replyToId,
     ),
     Err(:final failure) => Err(failure),
   };
