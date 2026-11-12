@@ -35,12 +35,17 @@ class TailedBubbleBorder extends ShapeBorder {
     required this.borderRadius,
     required this.tailOnLeft,
     this.side = BorderSide.none,
+    this.tipOffset,
   });
 
   final BubbleTailKind kind;
   final BorderRadius borderRadius;
   final bool tailOnLeft;
   final BorderSide side;
+
+  /// How far below the top a [BubbleTailKind.triangleTop] points — the
+  /// avatar's centre, so it points at it. Defaults to just under the corner.
+  final double? tipOffset;
 
   @override
   EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
@@ -51,6 +56,7 @@ class TailedBubbleBorder extends ShapeBorder {
     borderRadius: borderRadius * t,
     tailOnLeft: tailOnLeft,
     side: side.scale(t),
+    tipOffset: tipOffset == null ? null : tipOffset! * t,
   );
 
   @override
@@ -94,9 +100,14 @@ class TailedBubbleBorder extends ShapeBorder {
           ..lineTo(l - w, b)
           ..quadraticBezierTo(l, b - h * 0.2, l, b - h);
       case BubbleTailKind.triangleTop:
-        // Below the top corner's arc, or the outline would double back
-        // over it and kink.
-        final top = math.max(BubbleTail.topInset + h * 0.15, r.topLeft.y);
+        final tip = tipOffset ?? BubbleTail.topInset + h * 0.5;
+        // Clear of both corners' arcs, or the outline would double back
+        // over one and kink.
+        final lowest = b - t - r.bottomLeft.y - h * 0.7;
+        final top = (tip - h * 0.35).clamp(
+          r.topLeft.y,
+          math.max(r.topLeft.y, lowest),
+        );
         path
           ..lineTo(l + r.bottomLeft.x, b)
           ..arcToPoint(Offset(l, b - r.bottomLeft.y), radius: r.bottomLeft)
@@ -127,8 +138,10 @@ class TailedBubbleBorder extends ShapeBorder {
       other.kind == kind &&
       other.borderRadius == borderRadius &&
       other.tailOnLeft == tailOnLeft &&
-      other.side == side;
+      other.side == side &&
+      other.tipOffset == tipOffset;
 
   @override
-  int get hashCode => Object.hash(kind, borderRadius, tailOnLeft, side);
+  int get hashCode =>
+      Object.hash(kind, borderRadius, tailOnLeft, side, tipOffset);
 }

@@ -5,12 +5,12 @@ import '../../../../core/theme/app_spacing.dart';
 /// A message laid out beside its sender's avatar column: [avatar] on the
 /// start side, or on the end side for [alignEnd], when there is one. With
 /// [name] the sender's name goes over the avatar and bubble together, so
-/// the avatar lines up with the bubble; it is indented to the bubble's edge.
+/// the avatar lines up with the bubble; it starts at the row's edge, over
+/// the avatar.
 class MessageRow extends StatelessWidget {
   const MessageRow({
     super.key,
     required this.avatar,
-    required this.avatarWidth,
     required this.alignEnd,
     required this.avatarAtBottom,
     required this.top,
@@ -19,7 +19,6 @@ class MessageRow extends StatelessWidget {
   });
 
   final Widget? avatar;
-  final double avatarWidth;
   final bool alignEnd;
 
   /// The avatar sits by the run's last bubble (Telegram), not its first.
@@ -55,7 +54,6 @@ class MessageRow extends StatelessWidget {
         child: row,
       );
     }
-    final indent = s.xs + (avatar != null ? avatarWidth + gap : 0);
     return Padding(
       padding: EdgeInsets.only(top: top),
       child: Column(
@@ -64,11 +62,7 @@ class MessageRow extends StatelessWidget {
             : CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(
-              left: alignEnd ? s.xs : indent,
-              right: alignEnd ? indent : s.xs,
-              bottom: s.xs,
-            ),
+            padding: EdgeInsets.only(bottom: s.xs),
             child: name,
           ),
           row,
