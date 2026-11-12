@@ -7,6 +7,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
@@ -134,7 +135,11 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
       case Ok(:final value):
         final ok = await _playFrom(Uri.file(value));
         if (!ok && mounted) {
-          showChatSnack(context, AppL10n.of(context).chatVideoFailed);
+          showChatSnack(
+            context,
+            AppL10n.of(context).chatVideoFailed,
+            kind: AppToastKind.error,
+          );
         }
       case Err(:final failure):
         showChatFailure(context, failure);
