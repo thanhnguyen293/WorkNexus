@@ -35,6 +35,10 @@ enum ChatTimePlacement {
   /// Bottom-right inside the bubble, on every message (Telegram).
   insideEnd,
 
+  /// Bottom inside the bubble, on every message, on the side the bubble is
+  /// aligned to: left for others' messages, right for own (TBChat).
+  insideAligned,
+
   /// Not on messages: centered time separators after pauses instead.
   separators,
 
@@ -196,6 +200,14 @@ class ChatStyle {
 
   /// Whether a message lines up with the right edge.
   bool alignEnd({required bool mine}) => mine && !ownOnLeft;
+
+  /// Whether the time inside a bubble aligned so ([alignEnd]) is pinned to
+  /// its bottom-end corner, rather than on a row of its own at the start.
+  bool timeAtEnd({required bool alignEnd}) => switch (time) {
+    ChatTimePlacement.insideEnd => true,
+    ChatTimePlacement.insideAligned => alignEnd,
+    _ => false,
+  };
 
   /// Colour for a sender's name.
   Color nameColor(int senderId) {

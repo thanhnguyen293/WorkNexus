@@ -9,6 +9,7 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/bubble_tail.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_avatar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble_box.dart';
@@ -152,6 +153,33 @@ void main() {
       tester.getBottomLeft(find.text('Dyno')).dy,
       lessThanOrEqualTo(avatarTop),
     );
+    // Indented to the bubble's edge, past the tail's room in the box.
+    expect(
+      tester.getTopLeft(find.text('Dyno')).dx,
+      moreOrLessEquals(
+        tester.getTopLeft(find.byType(MessageBubbleBox)).dx + BubbleTail.width,
+      ),
+    );
     await disposeTree(tester);
+  });
+
+  testWidgets('tbchat: the time sits at the bubble\'s left for others\' '
+      'messages, at its right for own', (tester) async {
+    for (final mine in [false, true]) {
+      await pump(
+        tester,
+        const MessageContent.text('a longer message here'),
+        appearance: ChatAppearance.tbchat,
+        mine: mine,
+      );
+      final box = tester.getRect(find.byType(MessageBubbleBox));
+      final time = tester.getRect(find.text('13:42').last);
+      if (mine) {
+        expect(box.right - time.right, lessThan(box.width / 4));
+      } else {
+        expect(time.left - box.left, lessThan(box.width / 4));
+      }
+      await disposeTree(tester);
+    }
   });
 }

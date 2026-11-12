@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import 'bubble_tail.dart';
+import 'chat_style.dart';
 
 /// A message laid out beside its sender's avatar column: [avatar] on the
 /// start side, or on the end side for [alignEnd], when there is one. With
 /// [name] the sender's name goes over the avatar and bubble together, so
-/// the avatar lines up with the bubble; it starts at the row's edge, over
-/// the avatar.
+/// the avatar lines up with the bubble; it is indented to the bubble's edge
+/// (past the avatar and the tail's room).
 class MessageRow extends StatelessWidget {
   const MessageRow({
     super.key,
     required this.avatar,
     required this.alignEnd,
-    required this.avatarAtBottom,
+    required this.style,
     required this.top,
     required this.child,
     this.name,
@@ -21,8 +23,8 @@ class MessageRow extends StatelessWidget {
   final Widget? avatar;
   final bool alignEnd;
 
-  /// The avatar sits by the run's last bubble (Telegram), not its first.
-  final bool avatarAtBottom;
+  /// The chat style: avatar size and placement, and the tail's room.
+  final ChatStyle style;
 
   /// The gap above the row.
   final double top;
@@ -38,7 +40,8 @@ class MessageRow extends StatelessWidget {
       mainAxisAlignment: alignEnd
           ? MainAxisAlignment.end
           : MainAxisAlignment.start,
-      crossAxisAlignment: avatarAtBottom
+      // The avatar sits by the run's last bubble (Telegram) or its first.
+      crossAxisAlignment: style.avatar == ChatAvatarPlacement.lastOfRun
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
@@ -48,6 +51,8 @@ class MessageRow extends StatelessWidget {
       ],
     );
     final name = this.name;
+    final tailRoom = style.tail == null ? 0.0 : BubbleTail.width;
+    final indent = tailRoom + (avatar != null ? style.avatarSize + gap : 0);
     if (name == null) {
       return Padding(
         padding: EdgeInsets.only(top: top),
@@ -62,7 +67,11 @@ class MessageRow extends StatelessWidget {
             : CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(bottom: s.xs),
+            padding: EdgeInsets.only(
+              left: alignEnd ? 0 : indent,
+              right: alignEnd ? indent : 0,
+              bottom: s.xs,
+            ),
             child: name,
           ),
           row,
