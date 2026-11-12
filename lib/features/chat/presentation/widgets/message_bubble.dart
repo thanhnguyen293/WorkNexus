@@ -99,7 +99,7 @@ class MessageBubble extends ConsumerWidget {
     final showFooter = switch (style.time) {
       _ when message.sendState != SendState.sent => true,
       ChatTimePlacement.belowContent => lastOfRun,
-      ChatTimePlacement.insideEnd => true,
+      ChatTimePlacement.insideEnd || ChatTimePlacement.insideAligned => true,
       ChatTimePlacement.separators || ChatTimePlacement.header => false,
     };
     final repliesInMeta = style.threadInMeta && message.serverId != null;
@@ -138,8 +138,7 @@ class MessageBubble extends ConsumerWidget {
         showName &&
         !overRow &&
         (style.name != ChatNamePlacement.insideBubble || media);
-    // With nothing stacked over the bubble its top is the avatar's, so a top
-    // tail points at the avatar's centre.
+    // Nothing over the bubble: a top tail points at the avatar's centre.
     final avatarLevel =
         hasSlot &&
         avatarVisible &&
@@ -152,15 +151,14 @@ class MessageBubble extends ConsumerWidget {
         !media &&
         switch (style.tail!) {
           BubbleTailKind.curlBottom => lastOfRun,
-          // At the top: on the bubble beside the avatar — every one when
-          // each message has its avatar (WeChat), else the run's first
-          // (TBChat).
+          // At the top: beside the avatar — on every message (WeChat) or
+          // the run's first (TBChat).
           BubbleTailKind.triangleTop =>
             style.avatar == ChatAvatarPlacement.everyMessage || firstOfRun,
         };
 
     // Styles with tails keep the tail's width free on every message, tailed
-    // or not, so bubbles, media and outside quotes share one edge.
+    // or not, so bubbles, media, quotes and what's under share one edge.
     final gutter = style.tail == null
         ? EdgeInsets.zero
         : EdgeInsets.only(
@@ -207,7 +205,7 @@ class MessageBubble extends ConsumerWidget {
         child: MessageBubbleContent(
           accountId: chat.accountId,
           message: message,
-          timeAtEnd: style.time == ChatTimePlacement.insideEnd,
+          timeAtEnd: style.timeAtEnd(alignEnd: alignEnd),
           name: showName && style.name == ChatNamePlacement.insideBubble
               ? nameText
               : null,
@@ -268,13 +266,16 @@ class MessageBubble extends ConsumerWidget {
               child: quote,
             ),
           ),
-        MessageUnderBubble(
-          chat: chat,
-          message: message,
-          users: users,
-          alignEnd: alignEnd,
-          thread: style.threadInMeta ? null : thread,
-          onOpenThread: onOpenThread,
+        Padding(
+          padding: gutter,
+          child: MessageUnderBubble(
+            chat: chat,
+            message: message,
+            users: users,
+            alignEnd: alignEnd,
+            thread: style.threadInMeta ? null : thread,
+            onOpenThread: onOpenThread,
+          ),
         ),
       ],
     );
@@ -290,7 +291,7 @@ class MessageBubble extends ConsumerWidget {
     return MessageRow(
       avatar: hasSlot ? slot : null,
       alignEnd: alignEnd,
-      avatarAtBottom: style.avatar == ChatAvatarPlacement.lastOfRun,
+      style: style,
       top: firstOfRun ? style.groupGap : style.runGap,
       name: overRow ? nameText : null,
       child: column,

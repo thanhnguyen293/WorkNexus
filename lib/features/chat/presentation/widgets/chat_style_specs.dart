@@ -148,7 +148,7 @@ ChatStyle chatStyleSpec(
       ownAvatar: false,
       avatarInDirectChats: false,
       name: ChatNamePlacement.aboveRow,
-      time: ChatTimePlacement.insideEnd,
+      time: ChatTimePlacement.insideAligned,
       quote: ChatQuotePlacement.inside,
       separator: ChatSeparatorStyle.pill,
       separatorGap: null,
