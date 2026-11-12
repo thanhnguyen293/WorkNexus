@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../providers/chat_controller.dart';
@@ -215,7 +216,11 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     }
     if (!mounted || widget.thread != t) return;
     if (target == null) {
-      showChatSnack(context, AppL10n.of(context).chatJumpNotFound);
+      showChatSnack(
+        context,
+        AppL10n.of(context).chatJumpNotFound,
+        kind: AppToastKind.warning,
+      );
       return;
     }
     final found = await jump.reveal(

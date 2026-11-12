@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/sticker_import_jobs.dart';
 import 'chat_snack.dart';
@@ -27,7 +28,11 @@ class StickerImportListener extends ConsumerWidget {
             r.stills == 0 ? done : '$done · ${l.stickerImportStills(r.stills)}',
           );
         } else {
-          showChatSnack(context, l.stickerImportFailedNamed(job.title));
+          showChatSnack(
+            context,
+            l.stickerImportFailedNamed(job.title),
+            kind: AppToastKind.error,
+          );
         }
         // After this notification, not during it.
         scheduleMicrotask(

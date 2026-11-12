@@ -8,7 +8,11 @@ import '../../../../l10n/app_localizations.dart';
 void showChatFailure(BuildContext context, Failure failure) {
   if (!context.mounted) return;
   if (failure is ExpiredFailure) {
-    showAppSnack(context, AppL10n.of(context).chatReactionRemoveExpired);
+    showAppSnack(
+      context,
+      AppL10n.of(context).chatReactionRemoveExpired,
+      kind: AppToastKind.warning,
+    );
     return;
   }
   showAppSnack(
@@ -18,6 +22,10 @@ void showChatFailure(BuildContext context, Failure failure) {
   );
 }
 
-/// A short confirmation (copied, saved, …).
-void showChatSnack(BuildContext context, String message) =>
-    showAppSnack(context, message);
+/// A short note on a chat action: a confirmation (copied, saved, …) unless
+/// [kind] says otherwise.
+void showChatSnack(
+  BuildContext context,
+  String message, {
+  AppToastKind kind = AppToastKind.success,
+}) => showAppSnack(context, message, kind: kind);
