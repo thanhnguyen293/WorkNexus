@@ -116,4 +116,57 @@ void main() {
     expect(shown, ['shot.png']);
     expect(hidden, isEmpty);
   });
+
+  testWidgets('in a group, every target shows its hint while files hover '
+      'over one; only that one is highlighted', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(
+          variant: AppThemeVariant.light,
+          surface: SurfaceStyle.outline,
+          density: AppDensity.comfortable,
+        ),
+        home: Scaffold(
+          body: FileDropZones(
+            child: Column(
+              children: [
+                Expanded(
+                  child: FileDropTarget(
+                    hint: 'send now',
+                    onDrop: (_) async {},
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Expanded(
+                  child: FileDropTarget(
+                    hint: 'attach',
+                    onDrop: (_) async {},
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    List<double> overlays() => [
+      for (final o in tester.widgetList<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      ))
+        o.opacity,
+    ];
+    expect(overlays(), [0, 0]);
+
+    final top = tester.getCenter(find.byType(FileDropTarget).first);
+    await _fromOs(tester, 'entered', [top.dx, top.dy]);
+    await tester.pump();
+    expect(overlays(), [1, 1]);
+    expect(find.text('send now'), findsOneWidget);
+    expect(find.text('attach'), findsOneWidget);
+
+    await _fromOs(tester, 'exited', [top.dx, top.dy]);
+    await tester.pump();
+    expect(overlays(), [0, 0]);
+  });
 }
