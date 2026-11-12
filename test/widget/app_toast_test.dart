@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_snack.dart';
@@ -15,9 +16,9 @@ void main() {
       }
       expect(c.toasts.map((t) => t.message), ['d', 'c', 'b']);
 
-      c.show('c', isError: true);
+      c.show('c', kind: AppToastKind.error);
       expect(c.toasts.map((t) => t.message), ['c', 'd', 'b']);
-      expect(c.toasts.first.isError, isTrue);
+      expect(c.toasts.first.kind, AppToastKind.error);
 
       c.dismiss(c.toasts.first.id);
       expect(c.toasts.map((t) => t.message), ['d', 'b']);
@@ -48,6 +49,14 @@ void main() {
                       onPressed: () =>
                           showAppSnack(context, 'Upload failed', isError: true),
                       child: const Text('fail'),
+                    ),
+                    TextButton(
+                      onPressed: () => showAppSnack(
+                        context,
+                        'Link expired',
+                        kind: AppToastKind.warning,
+                      ),
+                      child: const Text('warn'),
                     ),
                     TextButton(onPressed: onTap, child: const Text('bottom')),
                   ],
@@ -91,5 +100,20 @@ void main() {
     await tester.tap(find.text('Upload failed'));
     await tester.pump();
     expect(find.text('Upload failed'), findsNothing);
+  });
+
+  testWidgets('a warning shows its glyph and outlasts a confirmation', (
+    tester,
+  ) async {
+    await pump(tester, onTap: () {});
+
+    await tester.tap(find.text('warn'));
+    await tester.pump();
+    expect(find.byIcon(LucideIcons.triangleAlert300), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Link expired'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Link expired'), findsNothing);
   });
 }

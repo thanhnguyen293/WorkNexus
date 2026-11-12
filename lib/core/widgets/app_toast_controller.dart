@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 
+/// What a toast reports: a done action, something to watch out for, or a
+/// failure.
+enum AppToastKind { success, warning, error }
+
 /// One toast on screen.
-typedef AppToast = ({int id, String message, bool isError});
+typedef AppToast = ({int id, String message, AppToastKind kind});
 
 /// The toasts on screen, newest first, at most [maxShown]. Showing a message
 /// that is already up moves it to the top instead of repeating it.
@@ -13,9 +17,9 @@ class AppToastController extends ChangeNotifier {
 
   List<AppToast> get toasts => _toasts;
 
-  void show(String message, {bool isError = false}) {
+  void show(String message, {AppToastKind kind = AppToastKind.success}) {
     _toasts = [
-      (id: _nextId++, message: message, isError: isError),
+      (id: _nextId++, message: message, kind: kind),
       ..._toasts.where((t) => t.message != message),
     ].take(maxShown).toList(growable: false);
     notifyListeners();

@@ -10,14 +10,18 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'app_toast_controller.dart';
 
-/// How long a toast stays up; an error longer, as it needs reading.
-const _kShowFor = Duration(milliseconds: 2500);
-const _kErrorShowFor = Duration(seconds: 5);
+/// How long a toast stays up: the more it needs reading, the longer.
+Duration _showFor(AppToastKind kind) => switch (kind) {
+  AppToastKind.success => const Duration(milliseconds: 2500),
+  AppToastKind.warning => const Duration(seconds: 4),
+  AppToastKind.error => const Duration(seconds: 5),
+};
 const _kAppear = Duration(milliseconds: 150);
 
 /// A compact toast: a pill with a status glyph and the message. It slides in,
 /// goes away by itself (held while the pointer is on it), and a click
-/// dismisses it. An error is tinted and has a close button.
+/// dismisses it. A warning or an error is tinted in its colour and has a
+/// close button.
 class AppToastCard extends StatefulWidget {
   const AppToastCard({super.key, required this.toast, required this.onDismiss});
 
@@ -42,10 +46,7 @@ class _AppToastCardState extends State<AppToastCard>
 
   void _start() {
     _timer?.cancel();
-    _timer = Timer(
-      widget.toast.isError ? _kErrorShowFor : _kShowFor,
-      widget.onDismiss,
-    );
+    _timer = Timer(_showFor(widget.toast.kind), widget.onDismiss);
   }
 
   @override
@@ -59,7 +60,14 @@ class _AppToastCardState extends State<AppToastCard>
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    final error = widget.toast.isError;
+    final kind = widget.toast.kind;
+    final (glyph, tint) = switch (kind) {
+      AppToastKind.success => (LucideIcons.circleCheck300, c.success),
+      AppToastKind.warning => (LucideIcons.triangleAlert300, c.warning),
+      AppToastKind.error => (LucideIcons.circleAlert300, c.error),
+    };
+    // A success stays plain; the others carry their colour and a close.
+    final flagged = kind != AppToastKind.success;
     final radius = BorderRadius.circular(context.radii.pill);
     final curved = CurvedAnimation(parent: _appear, curve: Curves.easeOut);
     return FadeTransition(
@@ -73,15 +81,15 @@ class _AppToastCardState extends State<AppToastCard>
           onEnter: (_) => _timer?.cancel(),
           onExit: (_) => _start(),
           child: Material(
-            color: error
-                ? Color.alphaBlend(c.error.withValues(alpha: 0.12), c.card)
+            color: flagged
+                ? Color.alphaBlend(tint.withValues(alpha: 0.12), c.card)
                 : c.card,
             elevation: 2,
             shadowColor: c.scrim,
             shape: RoundedRectangleBorder(
               borderRadius: radius,
               side: BorderSide(
-                color: error ? c.error.withValues(alpha: 0.4) : c.borderStrong,
+                color: flagged ? tint.withValues(alpha: 0.4) : c.borderStrong,
               ),
             ),
             child: InkWell(
@@ -92,20 +100,14 @@ class _AppToastCardState extends State<AppToastCard>
                 padding: EdgeInsets.fromLTRB(
                   s.lg,
                   s.sm,
-                  error ? s.sm : s.lg,
+                  flagged ? s.sm : s.lg,
                   s.sm,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   spacing: s.sm,
                   children: [
-                    Icon(
-                      error
-                          ? LucideIcons.circleAlert300
-                          : LucideIcons.circleCheck300,
-                      size: context.sizes.iconMd,
-                      color: error ? c.error : c.success,
-                    ),
+                    Icon(glyph, size: context.sizes.iconMd, color: tint),
                     Flexible(
                       child: Text(
                         widget.toast.message,
@@ -114,7 +116,7 @@ class _AppToastCardState extends State<AppToastCard>
                         ),
                       ),
                     ),
-                    if (error)
+                    if (flagged)
                       Semantics(
                         button: true,
                         label: MaterialLocalizations.of(
