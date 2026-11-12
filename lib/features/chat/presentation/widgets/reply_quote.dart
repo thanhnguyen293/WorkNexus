@@ -12,6 +12,7 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
+import 'reply_media_thumb.dart';
 
 /// The message a reply answers, quoted above the reply. Fetches it from the
 /// server when it is older than what is loaded. Tap jumps to it in the chat.
@@ -83,33 +84,65 @@ class _ReplyQuoteState extends ConsumerState<ReplyQuote> {
                 l.chatReplyMissing,
                 style: label.copyWith(color: c.textTertiary),
               )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    chatUserName(context, widget.users, message.senderId),
-                    style: label.copyWith(
-                      fontWeight: ink.labelSize == null
-                          ? FontWeight.w500
-                          : FontWeight.w600,
-                      color: readableOn(
-                        bar,
-                        ink.quoteSurface,
-                        towards: ink.text,
+            : _QuotedMessage(
+                thumb:
+                    ReplyMediaThumb.shows(message.content) && !message.deleted
+                    ? ReplyMediaThumb(
+                        accountId: widget.chat.accountId,
+                        content: message.content,
+                      )
+                    : null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      chatUserName(context, widget.users, message.senderId),
+                      style: label.copyWith(
+                        fontWeight: ink.labelSize == null
+                            ? FontWeight.w500
+                            : FontWeight.w600,
+                        color: readableOn(
+                          bar,
+                          ink.quoteSurface,
+                          towards: ink.text,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    message.deleted
-                        ? l.chatRetracted
-                        : chatPreview(context, message),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: label.copyWith(color: ink.text),
-                  ),
-                ],
+                    Text(
+                      message.deleted
+                          ? l.chatRetracted
+                          : chatPreview(context, message),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: label.copyWith(color: ink.text),
+                    ),
+                  ],
+                ),
               ),
       ),
+    );
+  }
+}
+
+/// The quoted sender + preview, after the media thumb when there is one.
+class _QuotedMessage extends StatelessWidget {
+  const _QuotedMessage({required this.thumb, required this.child});
+
+  final Widget? thumb;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final thumb = this.thumb;
+    if (thumb == null) return child;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        thumb,
+        SizedBox(width: context.spacing.md),
+        Flexible(child: child),
+      ],
     );
   }
 }
