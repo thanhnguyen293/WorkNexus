@@ -1279,6 +1279,8 @@
   "chatWithPerson": "Nhắn tin với {name}",
   "dropFilesFailed": "Không đọc được file vừa thả",
   "dropFilesToSend": "Thả file để gửi",
+  "dropFilesToStage": "Thả file để đính kèm vào tin nhắn",
+  "chatStagedFilesHint": "Enter để gửi · Esc để bỏ tất cả",
   "dropFilesToInsert": "Thả ảnh để chèn, file khác để đính kèm",
   "stateLoadFailedTitle": "Không tải được nội dung",
   "stateLoadFailedHint": "Kiểm tra kết nối rồi thử lại.",

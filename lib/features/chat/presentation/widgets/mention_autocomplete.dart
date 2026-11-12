@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'chat_composer_controller.dart';
 
@@ -73,6 +74,39 @@ class MentionAutocomplete extends ChangeNotifier {
     );
     _active = null;
     notifyListeners();
+  }
+
+  /// Types "@" at [text]'s cursor (after a space if needed): starts a
+  /// mention.
+  void start(ChatComposerController text) {
+    final value = text.value;
+    final at = value.selection.isValid
+        ? value.selection.start
+        : value.text.length;
+    final before = value.text.substring(0, at);
+    final spaced =
+        before.isEmpty || before.endsWith(' ') || before.endsWith('\n');
+    text.insertText(spaced ? '@' : ' @');
+  }
+
+  /// ↑/↓ pick, Enter/Tab insert into [text], Esc close while suggestions are
+  /// shown. Whether [key] was taken.
+  bool handleKey(LogicalKeyboardKey key, ChatComposerController text) {
+    if (query == null || visible.isEmpty) return false;
+    if (key == LogicalKeyboardKey.arrowDown) {
+      move(1, visible.length);
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      move(-1, visible.length);
+    } else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.tab) {
+      insert(text, visible[highlight]);
+    } else if (key == LogicalKeyboardKey.escape) {
+      dismiss();
+    } else {
+      return false;
+    }
+    return true;
   }
 
   /// After sending: no query is pending.
