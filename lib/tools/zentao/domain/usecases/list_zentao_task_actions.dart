@@ -11,8 +11,9 @@ class ListZenTaoTaskActions
   const ListZenTaoTaskActions();
 
   /// What a parent task allows in both ZenTao 18.x and 20+: its status follows
-  /// its subtasks, so it is never started, finished, reopened or reassigned
-  /// by hand (and 18.x also refuses to pause or close it).
+  /// its subtasks, so it is never started, finished or reopened by hand (and
+  /// 18.x also refuses to pause or close it). It can still be reassigned —
+  /// teams on 21.x hand parent tasks around (see `canAssign`).
   static const _parentActions = {
     ZenTaoTaskAction.restart,
     ZenTaoTaskAction.cancel,
@@ -52,8 +53,7 @@ class ListZenTaoTaskActions
 
     final actions = ZenTaoTaskAction.values.where(offers).toList();
     return (
-      canAssign:
-          !isParent && raw.isNotEmpty && raw != 'closed' && raw != 'cancel',
+      canAssign: raw.isNotEmpty && raw != 'closed' && raw != 'cancel',
       actions: actions,
       primary: _forward.where(actions.contains).firstOrNull,
     );
