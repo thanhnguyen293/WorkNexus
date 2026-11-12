@@ -125,6 +125,27 @@ class MessageBubble extends ConsumerWidget {
         : null;
     final media = _isMedia && quote == null;
 
+    final hasSlot =
+        (!mine || style.ownAvatar) && (showSender || style.avatarInDirectChats);
+    final avatarVisible = switch (style.avatar) {
+      ChatAvatarPlacement.firstOfRun => firstOfRun,
+      ChatAvatarPlacement.lastOfRun => lastOfRun,
+      ChatAvatarPlacement.everyMessage => true,
+    };
+    // Media has no bubble to hold the name, so it goes above it in every
+    // style.
+    final nameAbove =
+        showName &&
+        !overRow &&
+        (style.name != ChatNamePlacement.insideBubble || media);
+    // With nothing stacked over the bubble its top is the avatar's, so a top
+    // tail points at the avatar's centre.
+    final avatarLevel =
+        hasSlot &&
+        avatarVisible &&
+        !nameAbove &&
+        !(style.quote == ChatQuotePlacement.above && quote != null);
+
     // The tail belongs to the bubble that touches the avatar side.
     final tailed =
         style.tail != null &&
@@ -182,6 +203,7 @@ class MessageBubble extends ConsumerWidget {
         padding: style.padding,
         mine: mine,
         tail: tailed ? style.tail : null,
+        tailTip: avatarLevel ? style.avatarSize / 2 : null,
         child: MessageBubbleContent(
           accountId: chat.accountId,
           message: message,
@@ -209,11 +231,7 @@ class MessageBubble extends ConsumerWidget {
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
-        // Media has no bubble to hold the name, so it goes above it in every
-        // style.
-        if (showName &&
-            !overRow &&
-            (style.name != ChatNamePlacement.insideBubble || media))
+        if (nameAbove)
           Padding(
             padding: EdgeInsets.only(left: s.xs, right: s.xs, bottom: s.xs),
             child: nameText,
@@ -261,13 +279,6 @@ class MessageBubble extends ConsumerWidget {
       ],
     );
 
-    final hasSlot =
-        (!mine || style.ownAvatar) && (showSender || style.avatarInDirectChats);
-    final avatarVisible = switch (style.avatar) {
-      ChatAvatarPlacement.firstOfRun => firstOfRun,
-      ChatAvatarPlacement.lastOfRun => lastOfRun,
-      ChatAvatarPlacement.everyMessage => true,
-    };
     final slot = MessageAvatarSlot(
       accountId: chat.accountId,
       senderId: message.senderId,
@@ -278,7 +289,6 @@ class MessageBubble extends ConsumerWidget {
     );
     return MessageRow(
       avatar: hasSlot ? slot : null,
-      avatarWidth: style.avatarSize,
       alignEnd: alignEnd,
       avatarAtBottom: style.avatar == ChatAvatarPlacement.lastOfRun,
       top: firstOfRun ? style.groupGap : style.runGap,
