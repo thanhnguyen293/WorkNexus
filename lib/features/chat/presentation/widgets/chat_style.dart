@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -276,6 +278,11 @@ class ChatStyle {
       if (!senderSide) return big;
       if (withTail) {
         if (tail == BubbleTailKind.curlBottom && !top) return Radius.zero;
+        // A top triangle starts where this corner's arc ends: kept small,
+        // so the triangle sits close to the corner (TBChat).
+        if (tail == BubbleTailKind.triangleTop && top) {
+          return Radius.circular(math.min(radius, BubbleTail.topInset));
+        }
       }
       final edge = top ? firstOfRun : lastOfRun;
       return edge ? big : join;
