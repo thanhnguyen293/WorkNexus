@@ -147,7 +147,7 @@ ChatStyle chatStyleSpec(
       avatarSize: 40,
       ownAvatar: false,
       avatarInDirectChats: false,
-      name: ChatNamePlacement.aboveBubble,
+      name: ChatNamePlacement.aboveRow,
       time: ChatTimePlacement.insideEnd,
       quote: ChatQuotePlacement.inside,
       separator: ChatSeparatorStyle.pill,

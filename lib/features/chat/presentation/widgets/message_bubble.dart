@@ -9,18 +9,18 @@ import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/value_objects/chat_media_kind.dart';
 import '../providers/chat_providers.dart';
 import 'bubble_tail.dart';
-import 'chat_avatar.dart';
 import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
 import 'chat_style.dart';
-import 'chat_user_profile_dialog.dart';
 import 'message_actions.dart';
+import 'message_avatar_slot.dart';
 import 'message_body.dart';
 import 'message_bubble_box.dart';
 import 'message_bubble_content.dart';
 import 'message_footer.dart';
 import 'message_hover_actions.dart';
+import 'message_row.dart';
 import 'message_sender_name.dart';
 import 'message_under_bubble.dart';
 import 'reaction_picker.dart';
@@ -85,6 +85,7 @@ class MessageBubble extends ConsumerWidget {
     // A header names every run, own and in one-to-one chats too.
     final showName = firstOfRun && (headed || (!mine && showSender));
     final alignEnd = style.alignEnd(mine: mine);
+    final overRow = showName && style.name == ChatNamePlacement.aboveRow;
     final nameText = MessageSenderName(
       accountId: chat.accountId,
       userId: message.senderId,
@@ -210,7 +211,9 @@ class MessageBubble extends ConsumerWidget {
       children: [
         // Media has no bubble to hold the name, so it goes above it in every
         // style.
-        if (showName && (style.name != ChatNamePlacement.insideBubble || media))
+        if (showName &&
+            !overRow &&
+            (style.name != ChatNamePlacement.insideBubble || media))
           Padding(
             padding: EdgeInsets.only(left: s.xs, right: s.xs, bottom: s.xs),
             child: nameText,
@@ -265,39 +268,22 @@ class MessageBubble extends ConsumerWidget {
       ChatAvatarPlacement.lastOfRun => lastOfRun,
       ChatAvatarPlacement.everyMessage => true,
     };
-    final slot = SizedBox(
-      width: style.avatarSize,
-      child: avatarVisible
-          ? ChatProfileTap(
-              accountId: chat.accountId,
-              userId: message.senderId,
-              name: name,
-              child: ChatAvatar(
-                name: name,
-                imageUrl: chatAvatarUrl(users, message.senderId),
-                verified: chatVerifiedBadge(context, users, message.senderId),
-                shape: style.avatarShape,
-                diameter: style.avatarSize,
-              ),
-            )
-          : null,
+    final slot = MessageAvatarSlot(
+      accountId: chat.accountId,
+      senderId: message.senderId,
+      name: name,
+      users: users,
+      style: style,
+      visible: avatarVisible,
     );
-
-    return Padding(
-      padding: EdgeInsets.only(top: firstOfRun ? style.groupGap : style.runGap),
-      child: Row(
-        mainAxisAlignment: alignEnd
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: style.avatar == ChatAvatarPlacement.lastOfRun
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          if (hasSlot && !alignEnd) ...[slot, SizedBox(width: s.md)],
-          Flexible(child: column),
-          if (hasSlot && alignEnd) ...[SizedBox(width: s.md), slot],
-        ],
-      ),
+    return MessageRow(
+      avatar: hasSlot ? slot : null,
+      avatarWidth: style.avatarSize,
+      alignEnd: alignEnd,
+      avatarAtBottom: style.avatar == ChatAvatarPlacement.lastOfRun,
+      top: firstOfRun ? style.groupGap : style.runGap,
+      name: overRow ? nameText : null,
+      child: column,
     );
   }
 }

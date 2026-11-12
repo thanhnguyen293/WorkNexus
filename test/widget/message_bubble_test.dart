@@ -9,7 +9,9 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_avatar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/message_bubble_box.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 import '../support/di_test_harness.dart';
@@ -132,6 +134,24 @@ void main() {
     );
     final width = tester.getSize(find.byType(MaterialApp)).width;
     expect(tester.getTopRight(find.text('hello')).dx, greaterThan(width / 2));
+    await disposeTree(tester);
+  });
+
+  testWidgets('tbchat: the avatar lines up with the bubble, under the name', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const MessageContent.text('hello'),
+      appearance: ChatAppearance.tbchat,
+    );
+    final avatarTop = tester.getTopLeft(find.byType(ChatAvatar)).dy;
+    final bubbleTop = tester.getTopLeft(find.byType(MessageBubbleBox)).dy;
+    expect(avatarTop, bubbleTop);
+    expect(
+      tester.getBottomLeft(find.text('Dyno')).dy,
+      lessThanOrEqualTo(avatarTop),
+    );
     await disposeTree(tester);
   });
 }
