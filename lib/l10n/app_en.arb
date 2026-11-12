@@ -1918,6 +1918,8 @@
   },
   "dropFilesFailed": "Couldn't read the dropped files",
   "dropFilesToSend": "Drop files to send",
+  "dropFilesToStage": "Drop files to add them to the message",
+  "chatStagedFilesHint": "Enter sends · Esc removes all",
   "dropFilesToInsert": "Drop images to insert, other files to attach",
   "stateLoadFailedTitle": "Couldn't load this",
   "stateLoadFailedHint": "Check your connection, then try again.",

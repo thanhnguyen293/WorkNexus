@@ -19,12 +19,30 @@ Future<void> previewAndSendChatFiles(
 }) async {
   final chosen = await AttachmentPreviewDialog.show(context, files);
   if (chosen == null || chosen.isEmpty || !context.mounted) return;
+  await sendChatFiles(
+    context,
+    ref,
+    draftKey: draftKey,
+    files: chosen,
+    threadRootId: threadRootId,
+  );
+}
+
+/// Sends [files] straight away, without the preview — as a reply the same
+/// way [previewAndSendChatFiles] does.
+Future<void> sendChatFiles(
+  BuildContext context,
+  WidgetRef ref, {
+  required ChatComposerKey draftKey,
+  required List<ChatAttachment> files,
+  int? threadRootId,
+}) async {
   final draft = chatReplyDraftProvider(draftKey);
   final replyToId = ref.read(draft)?.serverId ?? threadRootId;
   ref.read(draft.notifier).state = null;
   final t = draftKey.chat;
   final controller = ref.read(chatControllerProvider);
-  for (final f in chosen) {
+  for (final f in files) {
     final result = await controller.sendFile(
       t.accountId,
       t.chatGid,

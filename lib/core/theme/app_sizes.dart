@@ -36,6 +36,7 @@ class AppSizes extends ThemeExtension<AppSizes> {
   double get pageMaxWidth => 1000; // content of a full page (workspace pages)
   double get readingWidth => 780; // a long-form document column (~80 chars)
   double get mediaPreview => 360; // an inline video frame in a ticket timeline
+  double get attachmentThumb => 64; // a file staged in the chat input
 
   // ---- Shell layout (unified workspace shell) ----
   double get railWidth => 76;
