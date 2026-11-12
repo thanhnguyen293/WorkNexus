@@ -154,7 +154,9 @@ ChatStyle chatStyleSpec(
       separatorGap: null,
       radius: 12,
       joinRadius: 12,
-      tail: BubbleTailKind.curlBottom,
+      // TBChat points a small triangle near the top at the avatar, with
+      // every corner rounded (not Telegram's curl at the bottom).
+      tail: BubbleTailKind.triangleTop,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       maxWidth: 560,
       runGap: 4,
