@@ -18,7 +18,7 @@ Duration _showFor(AppToastKind kind) => switch (kind) {
 };
 const _kAppear = Duration(milliseconds: 150);
 
-/// A compact toast: a pill with a status glyph and the message. It slides in,
+/// A compact toast: a card (app radius) with a status glyph and the message. It slides in,
 /// goes away by itself (held while the pointer is on it), and a click
 /// dismisses it. A warning or an error is tinted in its colour and has a
 /// close button.
@@ -68,7 +68,7 @@ class _AppToastCardState extends State<AppToastCard>
     };
     // A success stays plain; the others carry their colour and a close.
     final flagged = kind != AppToastKind.success;
-    final radius = BorderRadius.circular(context.radii.pill);
+    final radius = BorderRadius.circular(context.radii.md);
     final curved = CurvedAnimation(parent: _appear, curve: Curves.easeOut);
     return FadeTransition(
       opacity: curved,
