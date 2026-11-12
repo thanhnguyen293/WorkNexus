@@ -86,56 +86,59 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
     // input they wait there (see ChatComposer). The targets must not overlap:
     // desktop_drop hands a drop to every target under the pointer.
     final canSend = ref.watch(chatCanSendProvider(t));
-    final messages = Column(
-      children: [
-        ChatThreadHeader(thread: t, chat: chat, users: users),
-        if (searching) ChatThreadSearchBar(thread: t),
-        // Searching, the pinned bar would only push the matches down.
-        if (pinned.isNotEmpty && !searching)
-          PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
-        Expanded(
-          // Sits over the persistent background while messages load
-          // and scroll.
-          child: FileDropTarget(
-            enabled: canSend,
-            hint: AppL10n.of(context).dropFilesToSend,
-            onDrop: (files) => sendChatFiles(
-              context,
-              ref,
-              draftKey: (chat: t, inThread: false),
-              files: files,
-            ),
-            child: Stack(
-              children: [
-                ChatTextScale(
-                  child: MessageList(
-                    // The background is reused across chats; the list is
-                    // not.
-                    key: ValueKey(t),
-                    thread: t,
-                    showSenders: chat?.type != ChatType.one2one,
+    // Both drop areas show their hints while files hover over either.
+    final messages = FileDropZones(
+      child: Column(
+        children: [
+          ChatThreadHeader(thread: t, chat: chat, users: users),
+          if (searching) ChatThreadSearchBar(thread: t),
+          // Searching, the pinned bar would only push the matches down.
+          if (pinned.isNotEmpty && !searching)
+            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+          Expanded(
+            // Sits over the persistent background while messages load
+            // and scroll.
+            child: FileDropTarget(
+              enabled: canSend,
+              hint: AppL10n.of(context).dropFilesToSend,
+              onDrop: (files) => sendChatFiles(
+                context,
+                ref,
+                draftKey: (chat: t, inThread: false),
+                files: files,
+              ),
+              child: Stack(
+                children: [
+                  ChatTextScale(
+                    child: MessageList(
+                      // The background is reused across chats; the list is
+                      // not.
+                      key: ValueKey(t),
+                      thread: t,
+                      showSenders: chat?.type != ChatType.one2one,
+                    ),
                   ),
-                ),
-                // A video scrolled out of view plays on over the list.
-                Positioned.fill(child: ChatFloatingVideo(thread: t)),
-              ],
+                  // A video scrolled out of view plays on over the list.
+                  Positioned.fill(child: ChatFloatingVideo(thread: t)),
+                ],
+              ),
             ),
           ),
-        ),
-        if (canSend)
-          ChatTextScale(
-            child: ChatComposer(
-              thread: t,
-              hint: chat == null
-                  ? null
-                  : AppL10n.of(
-                      context,
-                    ).chatMessageTo(chatTitle(context, chat, users)),
-            ),
-          )
-        else
-          ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
-      ],
+          if (canSend)
+            ChatTextScale(
+              child: ChatComposer(
+                thread: t,
+                hint: chat == null
+                    ? null
+                    : AppL10n.of(
+                        context,
+                      ).chatMessageTo(chatTitle(context, chat, users)),
+              ),
+            )
+          else
+            ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
+        ],
+      ),
     );
     final Widget? panel = openThread != null
         ? ChatTextScale(
