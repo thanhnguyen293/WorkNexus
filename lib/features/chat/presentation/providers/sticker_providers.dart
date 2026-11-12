@@ -136,12 +136,16 @@ class StickerController {
   Future<Result<void>> removePack(String pack) =>
       _changed(_stickers.removePack(pack));
 
-  Future<Result<void>> send(ChatThreadKey chat, ChatSticker sticker) =>
-      _sendSticker(
-        accountId: chat.accountId,
-        chatGid: chat.chatGid,
-        sticker: sticker,
-      );
+  Future<Result<void>> send(
+    ChatThreadKey chat,
+    ChatSticker sticker, {
+    int? replyToId,
+  }) => _sendSticker(
+    accountId: chat.accountId,
+    chatGid: chat.chatGid,
+    sticker: sticker,
+    replyToId: replyToId,
+  );
 
   /// Keeps a chat image (its original) as one of the user's stickers.
   Future<Result<void>> saveImage(String accountId, MessageContent image) =>
