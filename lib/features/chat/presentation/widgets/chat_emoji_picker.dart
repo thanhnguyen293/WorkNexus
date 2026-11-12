@@ -26,12 +26,16 @@ class ChatEmojiButton extends ConsumerStatefulWidget {
     required this.text,
     required this.focus,
     this.dockable = false,
+    this.threadRootId,
   });
 
   final ChatThreadKey thread;
   final ChatComposerController text;
   final FocusNode focus;
   final bool dockable;
+
+  /// The thread this composer answers; a sticker replies to it.
+  final int? threadRootId;
 
   @override
   ConsumerState<ChatEmojiButton> createState() => _ChatEmojiButtonState();
@@ -84,6 +88,7 @@ class _ChatEmojiButtonState extends ConsumerState<ChatEmojiButton> {
           onInsert: _insert,
           onSent: _menu.close,
           onExpand: dockable ? _expand : null,
+          threadRootId: widget.threadRootId,
         ),
       ],
       builder: (context, menu, _) => ChatComposerToolButton(

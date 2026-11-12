@@ -57,6 +57,36 @@ void main() {
     verify(() => chats.sendFile('acc', 'g1', name: 'ok.png', bytes: png));
   });
 
+  test('a sticker answers the message it replies to', () async {
+    when(() => stickers.bytes(sticker)).thenAnswer((_) async => Ok(png));
+    when(
+      () => chats.sendFile(
+        any(),
+        any(),
+        name: any(named: 'name'),
+        bytes: any(named: 'bytes'),
+        replyToId: any(named: 'replyToId'),
+      ),
+    ).thenAnswer((_) async => const Ok(null));
+
+    await SendSticker(chats, stickers)(
+      accountId: 'acc',
+      chatGid: 'g1',
+      sticker: sticker,
+      replyToId: 42,
+    );
+
+    verify(
+      () => chats.sendFile(
+        'acc',
+        'g1',
+        name: 'ok.png',
+        bytes: png,
+        replyToId: 42,
+      ),
+    );
+  });
+
   test('an unreadable sticker is not sent', () async {
     when(
       () => stickers.bytes(sticker),
