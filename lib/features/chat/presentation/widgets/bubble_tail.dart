@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/painting.dart';
@@ -93,13 +94,15 @@ class TailedBubbleBorder extends ShapeBorder {
           ..lineTo(l - w, b)
           ..quadraticBezierTo(l, b - h * 0.2, l, b - h);
       case BubbleTailKind.triangleTop:
-        const top = BubbleTail.topInset;
+        // Below the top corner's arc, or the outline would double back
+        // over it and kink.
+        final top = math.max(BubbleTail.topInset + h * 0.15, r.topLeft.y);
         path
           ..lineTo(l + r.bottomLeft.x, b)
           ..arcToPoint(Offset(l, b - r.bottomLeft.y), radius: r.bottomLeft)
-          ..lineTo(l, t + top + h * 0.85)
-          ..lineTo(l - w, t + top + h * 0.5)
-          ..lineTo(l, t + top + h * 0.15);
+          ..lineTo(l, t + top + h * 0.7)
+          ..lineTo(l - w, t + top + h * 0.35)
+          ..lineTo(l, t + top);
     }
     path
       ..lineTo(l, t + r.topLeft.y)
