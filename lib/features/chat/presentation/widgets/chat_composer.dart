@@ -7,8 +7,12 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/util/dropped_files.dart';
+import '../../../../core/widgets/file_drop_target.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/is_single_emoji.dart';
 import '../providers/chat_providers.dart';
+import '../providers/chat_staged_files_provider.dart';
 import '../providers/chat_typing_providers.dart';
 import '../providers/chat_typing_sender.dart';
 import 'chat_attachments.dart';
@@ -18,11 +22,14 @@ import 'chat_composer_toolbar.dart';
 import 'chat_file_send.dart';
 import 'chat_mention_overlay.dart';
 import 'chat_snack.dart';
+import 'chat_staged_files.dart';
+import 'chat_text_send.dart';
 import 'mention_autocomplete.dart';
 import 'reply_draft_banner.dart';
 
 /// Message input: Enter sends, Shift+Enter adds a line; pasted files or
-/// images are sent as attachments. A message picked with "reply" shows above
+/// images are sent as attachments; dropped ones wait in the input (which then
+/// takes no text) until sent. A message picked with "reply" shows above
 /// the input and the next send answers it; in a reply thread
 /// ([threadRootId]) sends answer its root unless another message is picked.
 class ChatComposer extends ConsumerStatefulWidget {
@@ -90,7 +97,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
         !keys.isShiftPressed;
     // Holding Enter must not type line breaks after the send.
     if (event is KeyRepeatEvent) return enter ? KeyEventResult.handled : null;
-    if (_mentionKey(key)) return KeyEventResult.handled;
+    if (_mentions.handleKey(key, _text)) return KeyEventResult.handled;
     if (enter) {
       _send();
       return KeyEventResult.handled;
@@ -148,37 +155,26 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     if (mounted) _focus.requestFocus();
   }
 
-  /// Types "@" at the cursor (after a space if needed): starts a mention.
-  void _startMention() {
-    final value = _text.value;
-    final at = value.selection.isValid
-        ? value.selection.start
-        : value.text.length;
-    final before = value.text.substring(0, at);
-    final spaced =
-        before.isEmpty || before.endsWith(' ') || before.endsWith('\n');
-    _text.insertText(spaced ? '@' : ' @');
-    _focus.requestFocus();
+  /// Sends files that waited in the input, then goes back to typing.
+  Future<void> _sendStaged(List<DroppedFile> files) async {
+    _refocus();
+    await sendChatFiles(
+      context,
+      ref,
+      draftKey: _draftKey,
+      files: files,
+      threadRootId: widget.threadRootId,
+    );
   }
 
-  /// ↑/↓ pick, Enter/Tab insert, Esc close while suggestions are shown.
-  bool _mentionKey(LogicalKeyboardKey key) {
-    final visible = _mentions.visible;
-    if (_mentions.query == null || visible.isEmpty) return false;
-    if (key == LogicalKeyboardKey.arrowDown) {
-      _mentions.move(1, visible.length);
-    } else if (key == LogicalKeyboardKey.arrowUp) {
-      _mentions.move(-1, visible.length);
-    } else if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter ||
-        key == LogicalKeyboardKey.tab) {
-      _mentions.insert(_text, visible[_mentions.highlight]);
-    } else if (key == LogicalKeyboardKey.escape) {
-      _mentions.dismiss();
-    } else {
-      return false;
-    }
-    return true;
+  /// The text input is back only after the next frame.
+  void _refocus() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) _focus.requestFocus();
+  });
+
+  void _startMention() {
+    _mentions.start(_text);
+    _focus.requestFocus();
   }
 
   /// Sends [emoji] the way the official client does: shown large, not in a
@@ -209,23 +205,13 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   }
 
   /// Sends [text] as a message, answering the reply draft (or thread root).
-  Future<void> _deliver(String text) async {
-    final replyToId = _replyToId;
-    _cancelReply();
-    final t = widget.thread;
-    final result = await ref
-        .read(chatControllerProvider)
-        .send(
-          t.accountId,
-          t.chatGid,
-          text,
-          replyToId: replyToId,
-          markdown: ref.read(appSettingsProvider).chatSendMarkdown,
-        );
-    if (result case Err(:final failure)) {
-      if (mounted) showChatFailure(context, failure);
-    }
-  }
+  Future<void> _deliver(String text) => sendChatText(
+    context,
+    ref,
+    draftKey: _draftKey,
+    text: text,
+    threadRootId: widget.threadRootId,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -239,61 +225,75 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       if (next != null) _focus.requestFocus();
     });
     final draft = ref.watch(chatReplyDraftProvider(_draftKey));
+    final staged = chatStagedFilesProvider(_draftKey);
+    final hasStaged = ref.watch(staged.select((f) => f.isNotEmpty));
     // Zalo-style: a flat full-width bar, tools above the input line.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.surface,
-        border: Border(top: context.hairlineSide),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ChatComposerTools(
-            onPickImage: () => _pick(imagesOnly: true),
-            onAttach: _pick,
-            onMention: _startMention,
-            thread: widget.thread,
-            draftKey: _draftKey,
-            threadRootId: widget.threadRootId,
-            text: _text,
-            focus: _focus,
-          ),
-          Divider(height: 1, thickness: 1, color: c.border),
-          if (draft != null)
-            Padding(
-              padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, 0),
-              child: ReplyDraftBanner(
-                message: draft,
-                accountId: widget.thread.accountId,
-                onCancel: () {
-                  _cancelReply();
+    return FileDropTarget(
+      hint: AppL10n.of(context).dropFilesToStage,
+      onDrop: (files) async =>
+          ref.read(staged.notifier).state = [...ref.read(staged), ...files],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: c.surface,
+          border: Border(top: context.hairlineSide),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ChatComposerTools(
+              onPickImage: () => _pick(imagesOnly: true),
+              onAttach: _pick,
+              onMention: _startMention,
+              thread: widget.thread,
+              draftKey: _draftKey,
+              threadRootId: widget.threadRootId,
+              text: _text,
+              focus: _focus,
+            ),
+            Divider(height: 1, thickness: 1, color: c.border),
+            if (draft != null)
+              Padding(
+                padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, 0),
+                child: ReplyDraftBanner(
+                  message: draft,
+                  accountId: widget.thread.accountId,
+                  onCancel: () {
+                    _cancelReply();
+                    _focus.requestFocus();
+                  },
+                ),
+              ),
+            if (hasStaged)
+              ChatStagedFiles(
+                draftKey: _draftKey,
+                onSend: _sendStaged,
+                onCleared: _refocus,
+              )
+            else
+              ChatMentionOverlay(
+                thread: widget.thread,
+                mentions: _mentions,
+                focus: _focus,
+                onPick: (candidate) {
+                  _mentions.insert(_text, candidate);
                   _focus.requestFocus();
                 },
+                child: ChatComposerField(
+                  controller: _text,
+                  focus: _focus,
+                  onKey: _onKey,
+                  autofocus: widget.threadRootId == null,
+                  markdown: ref.watch(
+                    appSettingsProvider.select((s) => s.chatSendMarkdown),
+                  ),
+                  hint: widget.hint,
+                  onSend: _send,
+                  onLike: () => _sendLargeEmoji('👍'),
+                ),
               ),
-            ),
-          ChatMentionOverlay(
-            thread: widget.thread,
-            mentions: _mentions,
-            focus: _focus,
-            onPick: (candidate) {
-              _mentions.insert(_text, candidate);
-              _focus.requestFocus();
-            },
-            child: ChatComposerField(
-              controller: _text,
-              focus: _focus,
-              onKey: _onKey,
-              autofocus: widget.threadRootId == null,
-              markdown: ref.watch(
-                appSettingsProvider.select((s) => s.chatSendMarkdown),
-              ),
-              hint: widget.hint,
-              onSend: _send,
-              onLike: () => _sendLargeEmoji('👍'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
