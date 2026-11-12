@@ -14,6 +14,7 @@ import '../theme/app_radii.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../util/dropped_files.dart';
+import 'app_snack.dart';
 import 'editor_image_embed.dart';
 import 'editor_toolbar_buttons.dart';
 import 'file_drop_target.dart';
@@ -88,7 +89,9 @@ class _RichTextEditorState extends State<RichTextEditor> {
     setState(() => _uploading = true);
     final url = await upload(bytes, name);
     if (mounted) setState(() => _uploading = false);
-    if (url == null) messenger?.showSnackBar(SnackBar(content: Text(failed)));
+    if (url == null && messenger != null) {
+      showAppSnackOn(messenger, failed, isError: true);
+    }
     return url;
   }
 

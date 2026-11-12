@@ -10,6 +10,7 @@ import '../core/platform/desktop_app_lifecycle.dart';
 import '../core/settings/app_settings.dart';
 import '../core/theme/app_palette.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/app_toast_host.dart';
 import '../core/widgets/celebration_overlay.dart';
 import '../l10n/app_localizations.dart';
 import 'shell/app_shell.dart';
@@ -76,26 +77,30 @@ class WorkNexusApp extends ConsumerWidget {
       appSettingsProvider.select((s) => s.themeFollowsSystem),
     );
     final themes = ref.watch(appThemesProvider);
-    return MaterialApp(
-      onGenerateTitle: (context) => AppL10n.of(context).appTitle,
-      debugShowCheckedModeBanner: false,
-      locale: locale,
-      localizationsDelegates: const [
-        AppL10n.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        // The rich-text editor's toolbar tooltips and dialogs.
-        FlutterQuillLocalizations.delegate,
-      ],
-      supportedLocales: AppL10n.supportedLocales,
-      theme: themes.light,
-      darkTheme: themes.dark,
-      themeMode: followsSystem ? ThemeMode.system : ThemeMode.light,
-      // Above the navigator, so a show also plays over an open dialog.
-      builder: (context, child) =>
-          CelebrationOverlay(child: child ?? const SizedBox.shrink()),
-      home: const AppShell(),
+    return AppToasts(
+      child: MaterialApp(
+        onGenerateTitle: (context) => AppL10n.of(context).appTitle,
+        debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: const [
+          AppL10n.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          // The rich-text editor's toolbar tooltips and dialogs.
+          FlutterQuillLocalizations.delegate,
+        ],
+        supportedLocales: AppL10n.supportedLocales,
+        theme: themes.light,
+        darkTheme: themes.dark,
+        themeMode: followsSystem ? ThemeMode.system : ThemeMode.light,
+        // Above the navigator, so a show also plays over an open dialog.
+        // Toasts too: over dialogs, and over the title bar's edge if need be.
+        builder: (context, child) => AppToastLayer(
+          child: CelebrationOverlay(child: child ?? const SizedBox.shrink()),
+        ),
+        home: const AppShell(),
+      ),
     );
   }
 }
