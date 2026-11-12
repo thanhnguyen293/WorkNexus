@@ -153,7 +153,14 @@ void main() {
         'doing',
         entity: const TicketProviderEntity.zentaoTask(isParent: true),
       );
-      expect(list(parent).canAssign, isFalse);
+      // Reassigning stays open: ZenTao 21.x lets a parent task change hands.
+      expect(list(parent).canAssign, isTrue);
+      final closedParent = _ticket(
+        'Task',
+        'closed',
+        entity: const TicketProviderEntity.zentaoTask(isParent: true),
+      );
+      expect(list(closedParent).canAssign, isFalse);
     });
   });
 
