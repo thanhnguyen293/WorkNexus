@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/mini_apps/domain/entities/browser_cookie.dart';
@@ -28,16 +29,22 @@ CookieSite _site(String site, {bool app = false}) => CookieSite(
   cookies: [BrowserCookie(name: 'sid', value: 'v', domain: site)],
 );
 
-Future<void> _pump(WidgetTester tester, Widget dialog) => tester.pumpWidget(
+Future<void> _pump(
+  WidgetTester tester,
+  Widget dialog, {
+  Failure? readFailure,
+}) => tester.pumpWidget(
   ProviderScope(
     overrides: [
       cookieSourcesProvider.overrideWith((ref) async => [_chrome, _firefox]),
       cookieSitesProvider.overrideWith(
-        (ref, source) async => [
-          _site('alpha.com', app: true),
-          _site('mac-mini-2.local', app: true),
-          _site('zeta.com'),
-        ],
+        (ref, source) async => readFailure != null
+            ? throw readFailure
+            : [
+                _site('alpha.com', app: true),
+                _site('mac-mini-2.local', app: true),
+                _site('zeta.com'),
+              ],
       ),
     ],
     child: MaterialApp(
@@ -89,5 +96,19 @@ void main() {
       lessThan(tester.getTopLeft(find.text('alpha.com')).dy),
     );
     expect(find.text('Import 1 site'), findsOneWidget);
+  });
+  testWidgets('an unanswered keychain prompt says so instead of spinning', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const CookieImportDialog(),
+      readFailure: const ExpiredFailure('The keychain prompt went unanswered'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.textContaining('got no answer'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

@@ -2830,6 +2830,14 @@
       }
     }
   },
+  "miniAppCookiesKeychainTimeout": "macOS got no answer to the prompt for {browser}'s cookie key. It may be behind this window, or on another desktop while the app is full screen. Try again and choose Allow.",
+  "@miniAppCookiesKeychainTimeout": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesSafariAccess": "Reading Safari's cookies needs Full Disk Access: turn it on for WorkNexus, then try again.",
   "miniAppCookiesOpenPrivacy": "Open Privacy settings",
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",

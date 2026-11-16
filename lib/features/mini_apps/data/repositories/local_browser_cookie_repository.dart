@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/entities/browser_cookie.dart';
@@ -57,6 +58,17 @@ class LocalBrowserCookieRepository implements BrowserCookieRepository {
 
   @override
   Future<Result<List<BrowserCookie>>> read(CookieSource source) async {
+    final result = await _read(source);
+    if (result case Err(:final failure)) {
+      appTalker.warning(
+        'Cookie import: reading ${source.browser.name} failed: '
+        '${failure.message} (${failure.cause})',
+      );
+    }
+    return result;
+  }
+
+  Future<Result<List<BrowserCookie>>> _read(CookieSource source) async {
     try {
       return Ok(switch (source.browser) {
         CookieBrowser.firefox => await _firefox.read(source.profileId),
@@ -65,12 +77,18 @@ class LocalBrowserCookieRepository implements BrowserCookieRepository {
       });
     } on KeychainDeniedException catch (e) {
       return Err(AuthFailure('The keychain refused the password', cause: e));
+    } on KeychainTimeoutException catch (e) {
+      return Err(
+        ExpiredFailure('The keychain prompt went unanswered', cause: e),
+      );
     } on FileSystemException catch (e) {
       if (_refused.contains(e.osError?.errorCode)) {
         return Err(AuthFailure('The system refused access', cause: e));
       }
       return Err(StorageFailure('Could not read the cookies', cause: e));
-    } on Exception catch (e) {
+    } on Object catch (e) {
+      // Errors too (a RemoteError from the reading isolate, a cookie row of
+      // an unexpected shape): one thrown past here left the import spinning.
       return Err(StorageFailure('Could not read the cookies', cause: e));
     }
   }
