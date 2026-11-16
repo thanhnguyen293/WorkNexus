@@ -18,6 +18,9 @@ String cookieFailureMessage(AppL10n l, CookieSource source, Failure failure) =>
       AuthFailure() => l.miniAppCookiesKeychainDenied(
         cookieBrowserName(source.browser),
       ),
+      ExpiredFailure() => l.miniAppCookiesKeychainTimeout(
+        cookieBrowserName(source.browser),
+      ),
       NotFoundFailure() => l.miniAppCookiesNone,
       _ => l.miniAppCookiesFailed,
     };

@@ -37,6 +37,14 @@ class MiniAppView extends ConsumerStatefulWidget {
       defaultTargetPlatform == TargetPlatform.macOS ||
       defaultTargetPlatform == TargetPlatform.linux;
 
+  /// The page's developer tools are for a debug build, and only where the
+  /// web view opens them: macOS's has none of its own (Safari's Web Inspector
+  /// attaches instead), so a button there did nothing.
+  static bool get hasDevTools =>
+      kDebugMode &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux);
+
   @override
   ConsumerState<MiniAppView> createState() => _MiniAppViewState();
 }
@@ -157,6 +165,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
   Widget build(BuildContext context) {
     final state = ref.watch(miniAppBrowserProvider(widget.app.id));
     final embedded = MiniAppView.embedded;
+    final devTools = MiniAppView.hasDevTools ? _browser.openDevTools : null;
     return CallbackShortcuts(
       bindings: embedded
           ? miniAppShortcuts(
@@ -166,7 +175,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
               forward: _browser.goForward,
               home: _goHome,
               focusAddress: _focusAddress,
-              devTools: _browser.openDevTools,
+              devTools: devTools,
             )
           : const {},
       child: Column(
@@ -181,7 +190,7 @@ class _MiniAppViewState extends ConsumerState<MiniAppView> {
             onReload: _browser.reload,
             onStop: _browser.stop,
             onHome: _goHome,
-            onDevTools: embedded ? _browser.openDevTools : null,
+            onDevTools: devTools,
             trailing: MiniAppCookieButton(app: widget.app),
             onSubmitted: _go,
             onOpenExternal: () => _openExternal(

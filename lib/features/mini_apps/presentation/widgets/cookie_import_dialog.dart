@@ -57,14 +57,22 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
   Future<void> _import(CookieSource source, Set<String> sites) async {
     final navigator = Navigator.of(context);
     setState(() => _importing = true);
-    final job = ref.read(cookieImportsProvider.notifier).import(source, sites);
-    await reportCookieImport(context, source, job);
-    final result = await job;
-    if (!mounted) return;
-    if (result.isOk) {
-      navigator.pop();
-    } else {
-      setState(() => _importing = false);
+    var imported = false;
+    // Whatever the import ends in, even a throw, the button stops spinning.
+    try {
+      final job = ref
+          .read(cookieImportsProvider.notifier)
+          .import(source, sites);
+      await reportCookieImport(context, source, job);
+      imported = (await job).isOk;
+    } finally {
+      if (mounted) {
+        if (imported) {
+          navigator.pop();
+        } else {
+          setState(() => _importing = false);
+        }
+      }
     }
   }
 
@@ -209,7 +217,7 @@ class _ReadError extends ConsumerWidget {
       spacing: context.spacing.md,
       children: [
         _Note(
-          failure is AuthFailure
+          failure is AuthFailure || failure is ExpiredFailure
               ? cookieFailureMessage(l, source, failure)
               : l.miniAppCookiesReadFailed,
           error: true,

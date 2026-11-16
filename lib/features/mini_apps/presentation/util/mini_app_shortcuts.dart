@@ -3,7 +3,8 @@ import 'package:flutter/widgets.dart';
 
 /// The browser's usual keys for a mini app, to hand to [CallbackShortcuts].
 /// Ctrl and Cmd are interchangeable so the same keys work on Windows and
-/// macOS. Esc is left to the page, which often uses it.
+/// macOS. Esc is left to the page, which often uses it. Without [devTools]
+/// its keys are left to the page too.
 Map<ShortcutActivator, VoidCallback> miniAppShortcuts({
   required VoidCallback reload,
   required VoidCallback hardReload,
@@ -11,7 +12,7 @@ Map<ShortcutActivator, VoidCallback> miniAppShortcuts({
   required VoidCallback forward,
   required VoidCallback home,
   required VoidCallback focusAddress,
-  required VoidCallback devTools,
+  VoidCallback? devTools,
 }) => {
   for (final ctrl in const [true, false]) ...{
     SingleActivator(LogicalKeyboardKey.keyR, control: ctrl, meta: !ctrl):
@@ -29,12 +30,12 @@ Map<ShortcutActivator, VoidCallback> miniAppShortcuts({
       control: ctrl,
       meta: !ctrl,
       shift: true,
-    ): devTools,
+    ): ?devTools,
   },
   const SingleActivator(LogicalKeyboardKey.f5): reload,
   const SingleActivator(LogicalKeyboardKey.f5, control: true): hardReload,
   const SingleActivator(LogicalKeyboardKey.f6): focusAddress,
-  const SingleActivator(LogicalKeyboardKey.f12): devTools,
+  const SingleActivator(LogicalKeyboardKey.f12): ?devTools,
   const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true): back,
   const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true): forward,
   const SingleActivator(LogicalKeyboardKey.home, alt: true): home,

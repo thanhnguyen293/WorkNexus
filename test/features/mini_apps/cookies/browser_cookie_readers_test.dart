@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -120,7 +121,7 @@ void main() {
         var asked = 0;
         final reader = ChromiumCookieReader(
           home: tmp.path,
-          run: (cmd, args) async {
+          run: (cmd, args, _) async {
             asked++;
             return ProcessResult(0, 0, 'pw\n', '');
           },
@@ -150,7 +151,7 @@ void main() {
       File('${profile.path}/Cookies').writeAsStringSync('');
       final reader = ChromiumCookieReader(
         home: tmp.path,
-        run: (_, _) async => ProcessResult(0, 51, '', 'denied'),
+        run: (_, _, _) async => ProcessResult(0, 51, '', 'denied'),
       );
 
       expect(
@@ -158,6 +159,40 @@ void main() {
         throwsA(isA<KeychainDeniedException>()),
       );
     });
+
+    test(
+      'an unanswered keychain prompt is a KeychainTimeoutException',
+      () async {
+        final profile = Directory(
+          '${tmp.path}/Library/Application Support/Google/Chrome/Default',
+        )..createSync(recursive: true);
+        File('${profile.path}/Cookies').writeAsStringSync('');
+        Duration? waited;
+        final reader = ChromiumCookieReader(
+          home: tmp.path,
+          keychainTimeout: const Duration(seconds: 5),
+          run: (_, _, timeout) {
+            waited = timeout;
+            return Future.error(TimeoutException('no answer', timeout));
+          },
+        );
+
+        await expectLater(
+          reader.read(CookieBrowser.chrome, profile.path),
+          throwsA(isA<KeychainTimeoutException>()),
+        );
+        expect(waited, const Duration(seconds: 5));
+      },
+    );
+
+    test('a killed command times out instead of waiting', () async {
+      expect(
+        runKilledAfterTimeout('sleep', [
+          '5',
+        ], const Duration(milliseconds: 200)),
+        throwsA(isA<TimeoutException>()),
+      );
+    }, skip: Platform.isWindows);
   });
 
   group('Firefox', () {

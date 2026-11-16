@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -17,16 +18,55 @@ typedef ChromiumProfile = ({String path, String name});
 /// holding its cookie password.
 typedef _Install = ({String dataDir, String keychainService});
 
+/// Runs a command, giving up after [timeout] with a [TimeoutException].
+typedef RunCommand =
+    Future<ProcessResult> Function(
+      String executable,
+      List<String> arguments,
+      Duration timeout,
+    );
+
+/// [RunCommand] on a real process, which is killed when the time is up.
+/// Its stdin is closed at once, so a tool that falls back to asking on the
+/// terminal fails instead of waiting on it.
+Future<ProcessResult> runKilledAfterTimeout(
+  String executable,
+  List<String> arguments,
+  Duration timeout,
+) async {
+  final process = await Process.start(executable, arguments);
+  unawaited(process.stdin.close());
+  final out = process.stdout.transform(systemEncoding.decoder).join();
+  final err = process.stderr.transform(systemEncoding.decoder).join();
+  final code = await process.exitCode.timeout(
+    timeout,
+    onTimeout: () {
+      process.kill();
+      throw TimeoutException('$executable did not finish', timeout);
+    },
+  );
+  return ProcessResult(process.pid, code, await out, await err);
+}
+
 /// The cookies of Chromium browsers on macOS. Reading the keychain password
 /// makes macOS ask the user once; the key is then kept for the session.
 ///
 /// Not offered on Windows: since Chrome 127 its cookies there are bound to
 /// Chrome itself and no other app can decrypt them.
 class ChromiumCookieReader {
-  ChromiumCookieReader({this._home, this._run = Process.run});
+  ChromiumCookieReader({
+    this._home,
+    this._run = runKilledAfterTimeout,
+    this._keychainTimeout = const Duration(seconds: 90),
+  });
 
   final String? _home;
-  final Future<ProcessResult> Function(String, List<String>) _run;
+  final RunCommand _run;
+
+  /// How long the keychain prompt is waited on. It can open where the user
+  /// does not see it (on another Space while the app is full screen, behind
+  /// the window), and the import would otherwise wait on it for good.
+  final Duration _keychainTimeout;
   final _keys = <CookieBrowser, ChromiumCookieCrypto>{};
 
   static _Install? _install(CookieBrowser browser) => switch (browser) {
@@ -165,12 +205,17 @@ class ChromiumCookieReader {
   Future<ChromiumCookieCrypto> _keyFor(CookieBrowser browser) async {
     final service = _install(browser)?.keychainService;
     if (service == null) throw ArgumentError.value(browser, 'browser');
-    final result = await _run('security', [
-      'find-generic-password',
-      '-w',
-      '-s',
-      service,
-    ]);
+    final ProcessResult result;
+    try {
+      result = await _run('security', [
+        'find-generic-password',
+        '-w',
+        '-s',
+        service,
+      ], _keychainTimeout);
+    } on TimeoutException {
+      throw KeychainTimeoutException(service);
+    }
     if (result.exitCode != 0) throw KeychainDeniedException(service);
     return ChromiumCookieCrypto.fromPassword((result.stdout as String).trim());
   }
@@ -185,6 +230,16 @@ class KeychainDeniedException implements Exception {
 
   @override
   String toString() => 'KeychainDeniedException($service)';
+}
+
+/// The keychain prompt for a browser's cookie password went unanswered.
+class KeychainTimeoutException implements Exception {
+  const KeychainTimeoutException(this.service);
+
+  final String service;
+
+  @override
+  String toString() => 'KeychainTimeoutException($service)';
 }
 
 /// Chromium counts microseconds from 1601; zero is a session cookie.

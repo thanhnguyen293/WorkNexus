@@ -1844,6 +1844,7 @@
   "miniAppCookiesNoSites": "Trình duyệt này không có cookie nào.",
   "miniAppCookiesKeychainHint": "macOS sẽ hỏi quyền cho WorkNexus đọc khoá cookie của {browser}: hãy chọn Cho phép.",
   "miniAppCookiesKeychainDenied": "macOS chưa cho đọc khoá cookie của {browser}. Thử lại và chọn Cho phép.",
+  "miniAppCookiesKeychainTimeout": "macOS chưa nhận được câu trả lời cho hộp thoại khoá cookie của {browser}. Hộp thoại có thể bị che sau cửa sổ này, hoặc nằm ở desktop khác khi app đang full-screen. Thử lại và chọn Cho phép.",
   "miniAppCookiesSafariAccess": "Đọc cookie Safari cần quyền Full Disk Access: bật cho WorkNexus rồi thử lại.",
   "miniAppCookiesOpenPrivacy": "Mở cài đặt Quyền riêng tư",
   "miniAppCookiesReadFailed": "Không đọc được cookie của trình duyệt này.",
