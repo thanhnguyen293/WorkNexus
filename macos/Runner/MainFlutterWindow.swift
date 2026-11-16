@@ -10,6 +10,7 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    Self.letMouseThroughDropTarget(in: flutterViewController.view)
 
     // The unread count on the Dock icon (lib/core/platform/app_icon_badge.dart).
     FlutterMethodChannel(
@@ -26,6 +27,31 @@ class MainFlutterWindow: NSWindow {
     }
 
     super.awakeFromNib()
+  }
+
+  // desktop_drop (0.8.x) lays its DropTarget view over the whole Flutter view,
+  // and the stock NSView hitTest makes it the view under the mouse
+  // everywhere. WKWebView only passes a mouse move to its page when the
+  // window's hit test lands inside the web view, so a mini app's page never
+  // saw hover (:hover, mouseenter — ZenTao's submenus). Hit-testing through
+  // it puts the platform views back under the mouse; file drops still reach
+  // it, as AppKit finds a drag destination by registerForDraggedTypes, not by
+  // hitTest.
+  private static func letMouseThroughDropTarget(in view: NSView) {
+    let selector = #selector(NSView.hitTest(_:))
+    guard let method = class_getInstanceMethod(NSView.self, selector) else { return }
+    let passThrough: @convention(block) (NSView, NSPoint) -> NSView? = { _, _ in nil }
+    for target in view.subviews
+    where String(describing: type(of: target)) == "DropTarget" {
+      // Added to DropTarget itself (it has no hitTest of its own), so no
+      // other NSView is touched.
+      class_addMethod(
+        type(of: target),
+        selector,
+        imp_implementationWithBlock(passThrough),
+        method_getTypeEncoding(method)
+      )
+    }
   }
 
   // The Flutter title bar (TitleBar, AppSizes.macTitleBarHeight) is 52pt
