@@ -10,9 +10,11 @@ import '../../domain/usecases/build_board.dart';
 import '../../domain/usecases/derive_board_facets.dart';
 import '../../domain/usecases/filter_tickets.dart';
 import '../../domain/usecases/search_local_tickets.dart';
+import 'board_sort_provider.dart';
 import 'filter_providers.dart';
 
 export 'board_loading_provider.dart';
+export 'board_sort_provider.dart';
 export 'filter_providers.dart';
 
 /// The layout style for displaying task and bug collections:
@@ -110,6 +112,7 @@ final boardQueryProvider = Provider<BoardQuery>((ref) {
     workspaceOrder: ref.watch(workspaceOrderProvider),
     now: DateTime.now(),
     accounts: ref.watch(lookupsProvider).accounts,
+    sort: ref.watch(boardSortProvider),
   );
 });
 

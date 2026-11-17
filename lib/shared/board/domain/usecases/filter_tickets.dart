@@ -3,12 +3,14 @@ import 'package:collection/collection.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
+import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/domain/value_objects/zentao_board_status.dart';
 import '../../../../core/domain/value_objects/zentao_module_of.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/filter_state.dart';
 import '../value_objects/saved_view.dart';
+import 'compare_tickets.dart';
 import 'is_assigned_to_me.dart';
 import 'is_related_to_me.dart';
 
@@ -22,6 +24,7 @@ class BoardQuery {
     required this.now,
     this.workspaceOrder = const [],
     this.accounts = const {},
+    this.sort = boardDefaultSort,
   });
 
   final List<Ticket> tickets;
@@ -36,6 +39,9 @@ class BoardQuery {
   /// Workspace ids in display order (for the List view sort).
   final List<String> workspaceOrder;
 
+  /// The order of the cards within each board column.
+  final TicketSort sort;
+
   /// Value equality, so a provider rebuilt with the same inputs (a loading
   /// flag flipping upstream, a settings change that left the scope alone) does
   /// not re-filter, re-group and re-sort the board for every consumer. The
@@ -47,6 +53,7 @@ class BoardQuery {
       other is BoardQuery &&
           filter == other.filter &&
           now == other.now &&
+          sort == other.sort &&
           const ListEquality<Ticket>().equals(tickets, other.tickets) &&
           const MapEquality<String, String>().equals(
             accountWorkspace,
@@ -62,6 +69,7 @@ class BoardQuery {
   int get hashCode => Object.hash(
     filter,
     now,
+    sort,
     const ListEquality<Ticket>().hash(tickets),
     const MapEquality<String, String>().hash(accountWorkspace),
     const ListEquality<String>().hash(workspaceOrder),
@@ -80,6 +88,7 @@ class BoardQuery {
     now: now,
     workspaceOrder: workspaceOrder,
     accounts: accounts,
+    sort: sort,
   );
 }
 

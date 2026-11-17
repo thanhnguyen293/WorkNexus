@@ -3,6 +3,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/zentao_board_status.dart';
 import '../../../../core/domain/value_objects/zentao_bug_column.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 
 class ZenTaoBugBoardColumn {
@@ -52,7 +53,7 @@ class BuildZenTaoBugBoard extends UseCase<ZenTaoBugBoardModel, BoardQuery> {
           if (includeClosed || column != ZenTaoBugColumn.closed)
             ZenTaoBugBoardColumn(
               column: column,
-              tickets: byColumn[column]!..sort(_byPriorityThenUpdated),
+              tickets: byColumn[column]!..sort(boardComparator(q.sort)),
             ),
       ],
     );
@@ -62,11 +63,3 @@ class BuildZenTaoBugBoard extends UseCase<ZenTaoBugBoardModel, BoardQuery> {
 bool _isZenTaoBug(Ticket ticket) =>
     ticket.providerType == ProviderType.zentao &&
     (ticket.externalType ?? '').toLowerCase() == 'bug';
-
-int _byPriorityThenUpdated(Ticket a, Ticket b) {
-  final p = a.priority.level.compareTo(b.priority.level);
-  if (p != 0) return p;
-  final au = a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  final bu = b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  return bu.compareTo(au);
-}

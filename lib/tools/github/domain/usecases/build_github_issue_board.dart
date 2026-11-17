@@ -2,9 +2,9 @@ import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/unified_status.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 import '../value_objects/github_issue_column.dart';
-import 'build_github_pr_board.dart' show githubByPriorityThenUpdated;
 
 class GitHubIssueBoardColumn {
   const GitHubIssueBoardColumn({required this.column, required this.tickets});
@@ -48,7 +48,7 @@ class BuildGitHubIssueBoard extends UseCase<GitHubIssueBoardModel, BoardQuery> {
         for (final column in GitHubIssueColumn.columns)
           GitHubIssueBoardColumn(
             column: column,
-            tickets: byColumn[column]!..sort(githubByPriorityThenUpdated),
+            tickets: byColumn[column]!..sort(boardComparator(q.sort)),
           ),
       ],
     );

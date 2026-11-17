@@ -149,6 +149,11 @@
   "cardKindTask": "Task",
   "summary": "Summary",
   "updated": "Updated",
+  "boardSort": "Sort cards",
+  "boardSortCreated": "Created",
+  "@boardSortCreated": {
+    "description": "Board sort option: by ticket id, i.e. creation order."
+  },
   "priorityUrgent": "Urgent",
   "priorityHigh": "High",
   "priorityMedium": "Medium",

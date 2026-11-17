@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/domain/value_objects/ticket_sort.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -7,18 +8,21 @@ import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../core/widgets/app_segmented_tabs_menu.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/usecases/compare_tickets.dart';
+import 'board_sort_button.dart';
 import 'board_toolbar_layout.dart';
 import 'contextual_search_field.dart';
 
 /// The bar over a board, one row of controls at one height: the quick
-/// [filters] (and the board's [filtersButton], if it has one) on the left,
-/// then the ticket search; [refresh] and the view [modes] on the right. A narrow window folds it
+/// [filters] (and the board's [filtersButton], if it has one) and, on the
+/// Kanban view, the card [sortFields] on the left, then the ticket search; [refresh] and the view [modes] on the right. A narrow window folds it
 /// (see [BoardToolbarLayout]) rather than letting it overflow.
 class BoardToolbar extends StatelessWidget {
   const BoardToolbar({
     super.key,
     this.filters = const [],
     this.filtersButton,
+    this.sortFields = boardSortFields,
     this.searchScope,
     required this.refresh,
     required this.modes,
@@ -32,6 +36,10 @@ class BoardToolbar extends StatelessWidget {
 
   /// The advanced filters, after the quick ones.
   final Widget? filtersButton;
+
+  /// What the Kanban view's Sort button offers; the List view sorts by its
+  /// own column headers, so it gets none.
+  final List<TicketSortField> sortFields;
 
   /// What the board is scoped to, named in the search's placeholder.
   final String? searchScope;
@@ -57,6 +65,10 @@ class BoardToolbar extends StatelessWidget {
           onTap: () => onViewMode(m.id),
         ),
     ];
+    final sortButton = viewMode == _kanban && sortFields.isNotEmpty
+        ? BoardSortButton(fields: sortFields)
+        : null;
+    final filtersButton = this.filtersButton;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: context.colors.surface,
@@ -74,7 +86,13 @@ class BoardToolbar extends StatelessWidget {
               scopesMenu: filters.isEmpty
                   ? null
                   : AppSegmentedTabsMenu(tabs: filters),
-              filters: filtersButton,
+              filters: sortButton == null
+                  ? filtersButton
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: s.sm,
+                      children: [?filtersButton, sortButton],
+                    ),
               search: ContextualSearchField(scope: searchScope),
               refresh: refresh,
               modes: AppSegmentedTabs(tabs: modeTabs),
@@ -87,3 +105,6 @@ class BoardToolbar extends StatelessWidget {
     );
   }
 }
+
+/// The view mode id every board section gives its Kanban view.
+const _kanban = ViewModeId('board');

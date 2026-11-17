@@ -3,6 +3,7 @@ import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/domain/value_objects/zentao_board_status.dart';
 import '../../../../core/domain/value_objects/zentao_task_column.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 
 import '../usecases/is_due_this_week.dart';
@@ -56,7 +57,7 @@ class BuildZenTaoTaskBoard extends UseCase<ZenTaoTaskBoardModel, BoardQuery> {
         for (final column in ZenTaoTaskColumn.columns)
           ZenTaoTaskBoardColumn(
             column: column,
-            tickets: byColumn[column]!..sort(_byPriorityThenUpdated),
+            tickets: byColumn[column]!..sort(boardComparator(q.sort)),
           ),
       ],
     );
@@ -66,11 +67,3 @@ class BuildZenTaoTaskBoard extends UseCase<ZenTaoTaskBoardModel, BoardQuery> {
 bool _isZenTaoTask(Ticket ticket) =>
     ticket.providerType == ProviderType.zentao &&
     (ticket.externalType ?? '').toLowerCase() == 'task';
-
-int _byPriorityThenUpdated(Ticket a, Ticket b) {
-  final p = a.priority.level.compareTo(b.priority.level);
-  if (p != 0) return p;
-  final au = a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  final bu = b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  return bu.compareTo(au);
-}
