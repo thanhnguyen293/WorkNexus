@@ -67,6 +67,7 @@ class AppSettings {
     this.chatNotifications = true,
     this.chatNotifyWhileViewing = true,
     this.chatSendTypingStatus = true,
+    this.chatLocalApi = false,
     this.chatReactions = false,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
@@ -158,6 +159,10 @@ class AppSettings {
   /// Tell chat peers while the user is typing to them.
   final bool chatSendTypingStatus;
 
+  /// Let local tools (an AI assistant's MCP server) send chat messages
+  /// through this app's session, over a localhost endpoint.
+  final bool chatLocalApi;
+
   /// Read a reply that is just an emoji as a reaction: a chip under the
   /// message it answers, with a React action to add one. Off, such a reply
   /// is a message like any other, as the official client shows it.
@@ -211,6 +216,7 @@ class AppSettings {
     bool? chatNotifications,
     bool? chatNotifyWhileViewing,
     bool? chatSendTypingStatus,
+    bool? chatLocalApi,
     bool? chatReactions,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
@@ -251,6 +257,7 @@ class AppSettings {
       chatNotifyWhileViewing:
           chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
       chatSendTypingStatus: chatSendTypingStatus ?? this.chatSendTypingStatus,
+      chatLocalApi: chatLocalApi ?? this.chatLocalApi,
       chatReactions: chatReactions ?? this.chatReactions,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
@@ -353,6 +360,7 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatNotifyWhileViewing: on));
   void setChatSendTypingStatus(bool on) =>
       _set(state.copyWith(chatSendTypingStatus: on));
+  void setChatLocalApi(bool on) => _set(state.copyWith(chatLocalApi: on));
   void setChatReactions(bool on) => _set(state.copyWith(chatReactions: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));

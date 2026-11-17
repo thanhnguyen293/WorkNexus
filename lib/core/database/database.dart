@@ -151,6 +151,10 @@ class Settings extends Table {
   BoolColumn get chatSendTypingStatus =>
       boolean().withDefault(const Constant(true))();
 
+  /// Whether local tools (an AI assistant's MCP server) may send chat
+  /// messages through this app's session. Off by default.
+  BoolColumn get chatLocalApi => boolean().withDefault(const Constant(false))();
+
   /// Whether a reply that is just an emoji reads as a reaction (a chip under
   /// the message it answers) rather than as a message of its own.
   BoolColumn get chatReactions =>
@@ -602,7 +606,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 60;
+  int get schemaVersion => 61;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -929,6 +933,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 60 && !await _hasColumn('settings', 'view_modes_json')) {
         await m.addColumn(settings, settings.viewModesJson);
+      }
+      if (from < 61 && !await _hasColumn('settings', 'chat_local_api')) {
+        await m.addColumn(settings, settings.chatLocalApi);
       }
     },
   );

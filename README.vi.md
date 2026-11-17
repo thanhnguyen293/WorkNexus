@@ -212,6 +212,18 @@ và asset; chưa có adapter Jira.
 - Trạng thái rõ ràng: `none`, `loading`, `done`, `outdated`, `error`.
 - Prompt yêu cầu giữ nguyên code, định danh, đường dẫn file, URL và Markdown.
 
+### Công cụ AI (MCP)
+
+- WorkNexus có sẵn một **MCP server** ([`mcp/`](mcp/)) để Claude hoặc client
+  MCP khác xem danh sách, đọc, tìm tin chat ZenTao (từ cache trên máy, không
+  cần mật khẩu) và TBChat (nếu có cài), và gửi tin ZenTao.
+- **Quick Settings › Chat › Công cụ AI › Kết nối công cụ AI** hiện sẵn lệnh /
+  cấu hình cho Claude Code, Claude Desktop và client khác, đã điền đường dẫn
+  thật trên máy. Cần Node.js 22.13 trở lên.
+- Gửi tin đi qua chính phiên chat của WorkNexus, qua một endpoint localhost
+  **mặc định tắt** ("Cho công cụ AI trên máy gửi tin"): chỉ 127.0.0.1, có
+  token, từ chối request từ trình duyệt.
+
 ### Giao diện và workflow
 
 - UI hỗ trợ đầy đủ tiếng Anh và tiếng Việt.
