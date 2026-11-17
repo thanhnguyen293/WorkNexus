@@ -46,6 +46,8 @@ void main() {
                   scope('Related to me'),
                   scope('Due this week'),
                 ],
+                // The widths below are tuned to the fold order alone.
+                sortFields: const [],
                 refresh: const SizedBox.square(dimension: 28),
                 modes: [
                   ToolViewMode(

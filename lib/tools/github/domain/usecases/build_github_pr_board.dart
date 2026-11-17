@@ -1,6 +1,7 @@
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 import '../value_objects/github_pr_column.dart';
 
@@ -45,7 +46,7 @@ class BuildGitHubPrBoard extends UseCase<GitHubPrBoardModel, BoardQuery> {
         for (final column in GitHubPrColumn.columns)
           GitHubPrBoardColumn(
             column: column,
-            tickets: byColumn[column]!..sort(githubByPriorityThenUpdated),
+            tickets: byColumn[column]!..sort(boardComparator(q.sort)),
           ),
       ],
     );
@@ -63,14 +64,3 @@ GitHubPrColumn githubPrColumnFor(Ticket ticket) =>
       'closed' => GitHubPrColumn.closed,
       _ => GitHubPrColumn.review,
     };
-
-/// Sort: higher priority first, then most-recently-updated. Shared by both
-/// GitHub boards (kept local to the GitHub use cases to avoid a name clash with
-/// the GitLab board's equivalent comparator).
-int githubByPriorityThenUpdated(Ticket a, Ticket b) {
-  final p = a.priority.level.compareTo(b.priority.level);
-  if (p != 0) return p;
-  final au = a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  final bu = b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  return bu.compareTo(au);
-}

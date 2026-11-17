@@ -121,6 +121,8 @@
   "cardKindTask": "Task",
   "summary": "Nội dung",
   "updated": "Cập nhật",
+  "boardSort": "Sắp xếp thẻ",
+  "boardSortCreated": "Ngày tạo",
   "priorityUrgent": "Khẩn",
   "priorityHigh": "Cao",
   "priorityMedium": "Vừa",

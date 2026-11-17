@@ -1,6 +1,7 @@
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/provider_type.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/domain/usecases/filter_tickets.dart';
 import '../value_objects/gitlab_mr_column.dart';
 
@@ -45,7 +46,7 @@ class BuildGitLabMrBoard extends UseCase<GitLabMrBoardModel, BoardQuery> {
         for (final column in GitLabMrColumn.columns)
           GitLabMrBoardColumn(
             column: column,
-            tickets: byColumn[column]!..sort(byPriorityThenUpdated),
+            tickets: byColumn[column]!..sort(boardComparator(q.sort)),
           ),
       ],
     );
@@ -63,11 +64,3 @@ GitLabMrColumn gitlabMrColumnFor(Ticket ticket) =>
       'closed' => GitLabMrColumn.closed,
       _ => GitLabMrColumn.review,
     };
-
-int byPriorityThenUpdated(Ticket a, Ticket b) {
-  final p = a.priority.level.compareTo(b.priority.level);
-  if (p != 0) return p;
-  final au = a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  final bu = b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-  return bu.compareTo(au);
-}

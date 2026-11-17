@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/navigation/navigation_providers.dart';
 import '../../../../core/tools/tool_module.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
+import '../../../../shared/board/domain/usecases/compare_tickets.dart';
 import '../../../../shared/board/presentation/widgets/board_toolbar.dart';
 import '../../../../shared/board/presentation/widgets/filters_button.dart';
 import '../providers/zentao_facet_catalog_provider.dart';
@@ -51,6 +52,8 @@ class ZenTaoBoardToolbar extends ConsumerWidget {
             onPick: scopes.first.active ? null : scopes.first.onTap,
           )
         : null,
+    // Bugs carry a severity of their own; tasks don't.
+    sortFields: bugs ? boardSortFieldsWithSeverity : boardSortFields,
     refresh: ZenTaoBoardRefreshButton(bugs: bugs),
     modes: modes,
     viewMode: viewMode,
