@@ -52,9 +52,12 @@ import '../../features/app_update/domain/repositories/update_repository.dart';
 import '../../features/app_update/domain/usecases/check_for_update.dart';
 import '../../features/app_update/domain/usecases/download_update.dart';
 import '../../features/app_update/domain/usecases/install_update.dart';
+import '../../features/chat/data/datasources/chat_local_api_server.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_http_datasource.dart';
 import '../../features/chat/data/datasources/link_preview_local_datasource.dart';
+import '../../features/chat/data/datasources/mcp_script_installer.dart';
+import '../../features/chat/data/datasources/node_runtime_probe.dart';
 import '../../features/chat/data/datasources/telegram_sticker_source.dart';
 import '../../features/chat/data/datasources/webp_sticker_converter.dart';
 import '../../features/chat/data/datasources/xxd/xxd_connection.dart';
@@ -62,12 +65,16 @@ import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/cached_link_preview_repository.dart';
 import '../../features/chat/data/repositories/chat_pinned_certificate_repository.dart';
 import '../../features/chat/data/repositories/keychain_telegram_token_store.dart';
+import '../../features/chat/data/repositories/local_mcp_setup_repository.dart';
 import '../../features/chat/data/repositories/local_message_translation_repository.dart';
 import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
+import '../../features/chat/data/repositories/server_chat_local_api.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
+import '../../features/chat/domain/repositories/chat_local_api.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/repositories/link_preview_repository.dart';
+import '../../features/chat/domain/repositories/mcp_setup_repository.dart';
 import '../../features/chat/domain/repositories/message_translation_repository.dart';
 import '../../features/chat/domain/repositories/sticker_pack_source.dart';
 import '../../features/chat/domain/repositories/sticker_repository.dart';
@@ -343,6 +350,20 @@ abstract class ServiceModule {
         http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
         onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
       );
+
+  @lazySingleton
+  ChatLocalApi chatLocalApi() => ServerChatLocalApi(
+    ChatLocalApiServer(directory: getApplicationSupportDirectory),
+  );
+
+  @lazySingleton
+  McpSetupRepository mcpSetupRepository() => LocalMcpSetupRepository(
+    installer: McpScriptInstaller(
+      bundle: rootBundle,
+      directory: () async => Directory(await _support('mcp')),
+    ),
+    probe: NodeRuntimeProbe(),
+  );
 
   @lazySingleton
   MessageTranslationRepository messageTranslationRepository(AppDatabase db) =>

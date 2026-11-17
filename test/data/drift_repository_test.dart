@@ -305,6 +305,14 @@ void main() {
     expect(reloaded.fontFamily, kSystemFont);
   });
 
+  test('the local chat API switch persists and is off by default', () async {
+    expect(const AppSettings().chatLocalApi, isFalse);
+    await db.saveSettings(
+      appSettingsToCompanion(const AppSettings(chatLocalApi: true)),
+    );
+    expect(appSettingsFromRow((await db.getSettings())!).chatLocalApi, isTrue);
+  });
+
   test('the Docs reader look persists, and null follows the app', () async {
     await db.saveSettings(
       appSettingsToCompanion(

@@ -195,6 +195,9 @@ flutter:
     - assets/stickers/Pepe/
     - assets/stickers/PepeAnim/
     - assets/tray/
+    # The MCP server AI tools run (built from mcp/ by `npm run build`); the
+    # app copies it out to app support and shows how to register it.
+    - assets/mcp/
 
   fonts:
     - family: Be Vietnam Pro

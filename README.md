@@ -213,6 +213,18 @@ placeholder; no Jira adapter is implemented yet.
 - State is explicit: `none`, `loading`, `done`, `outdated`, or `error`.
 - Prompts preserve code, identifiers, file paths, URLs, and Markdown.
 
+### AI tools (MCP)
+
+- WorkNexus ships an **MCP server** ([`mcp/`](mcp/)) that lets Claude or any
+  MCP client list, read and search your ZenTao chats (from the local cache, no
+  password) and TBChat (when installed), and send ZenTao messages.
+- **Quick Settings › Chat › AI tools › Connect an AI tool** shows the exact
+  command / config entry for Claude Code, Claude Desktop and other clients,
+  with this computer's paths filled in. It needs Node.js 22.13+.
+- Sending goes through WorkNexus' own chat session, over a localhost endpoint
+  that is **off by default** ("Let local AI tools send messages"): 127.0.0.1
+  only, token-protected, browsers refused.
+
 ### Appearance and workflow settings
 
 - Full English/Vietnamese UI localization.
