@@ -1,0 +1,7092 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:1306539287058684953",
+      "lastPropertyId": "33:2648350760375070738",
+      "name": "CloudFile",
+      "properties": [
+        {
+          "id": "1:5022860478296403786",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5112669835136494997",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "3:3654065469681275708",
+          "name": "fileHash",
+          "type": 9
+        },
+        {
+          "id": "4:1420333305284615279",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "5:4255290790646414048",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "6:5472026085597790873",
+          "name": "createdAt",
+          "type": 6
+        },
+        {
+          "id": "7:777999431540262475",
+          "name": "updatedAt",
+          "type": 6
+        },
+        {
+          "id": "8:2258442601025250885",
+          "name": "thumb",
+          "type": 9
+        },
+        {
+          "id": "9:3713823197527559147",
+          "name": "isFavorite",
+          "type": 1
+        },
+        {
+          "id": "10:5979783492566267390",
+          "name": "isCrypt",
+          "type": 1
+        },
+        {
+          "id": "11:4969250092357265595",
+          "name": "isDeleted",
+          "type": 1
+        },
+        {
+          "id": "12:2906436322257956264",
+          "name": "isSys",
+          "type": 1
+        },
+        {
+          "id": "13:4748393337687240339",
+          "name": "pwd",
+          "type": 9
+        },
+        {
+          "id": "14:3256030649902028469",
+          "name": "dir",
+          "type": 9
+        },
+        {
+          "id": "16:3425515194429033313",
+          "name": "hash",
+          "type": 9
+        },
+        {
+          "id": "17:5249153005189884889",
+          "name": "ext",
+          "type": 9
+        },
+        {
+          "id": "18:7868899116478245023",
+          "name": "mimeType",
+          "type": 9
+        },
+        {
+          "id": "19:7424483035615556763",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "20:9107662667806698964",
+          "name": "favoriteAt",
+          "type": 6
+        },
+        {
+          "id": "21:3043776795778843909",
+          "name": "version",
+          "type": 6
+        },
+        {
+          "id": "22:6353892410200752914",
+          "name": "parentId",
+          "indexId": "1:2565456472619879890",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "CloudFolder"
+        },
+        {
+          "id": "23:5452151732030242898",
+          "name": "platform",
+          "type": 6
+        },
+        {
+          "id": "24:7808762084314121390",
+          "name": "remoteId",
+          "type": 9
+        },
+        {
+          "id": "25:5270659756987810716",
+          "name": "deletedAt",
+          "type": 6
+        },
+        {
+          "id": "26:831076444147491186",
+          "name": "width",
+          "type": 6
+        },
+        {
+          "id": "27:2523691888069296387",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "28:7922824553530248019",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "29:5027908644101041204",
+          "name": "metaData",
+          "type": 9
+        },
+        {
+          "id": "30:3378429629632343208",
+          "name": "unique",
+          "type": 9
+        },
+        {
+          "id": "31:8314669982654028382",
+          "name": "parentRemoteId",
+          "type": 9
+        },
+        {
+          "id": "32:7109367002761522676",
+          "name": "space",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:2177181095880970890",
+      "lastPropertyId": "23:8477028129171798019",
+      "name": "CloudFolder",
+      "properties": [
+        {
+          "id": "1:1304051057525638216",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6359942424760262279",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "3:2556968678501162655",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:2047116404840021734",
+          "name": "hash",
+          "type": 9
+        },
+        {
+          "id": "5:2537733133710511752",
+          "name": "isCrypt",
+          "type": 1
+        },
+        {
+          "id": "6:1273032695767830545",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "7:1348569699517454772",
+          "name": "createdAt",
+          "type": 6
+        },
+        {
+          "id": "8:3714181524755290263",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "9:4887264163267351167",
+          "name": "isFavorite",
+          "type": 1
+        },
+        {
+          "id": "10:9132611264064958307",
+          "name": "pwd",
+          "type": 9
+        },
+        {
+          "id": "11:3856442506761397802",
+          "name": "isRoot",
+          "type": 1
+        },
+        {
+          "id": "12:6503735479659040386",
+          "name": "isSystem",
+          "type": 1
+        },
+        {
+          "id": "13:3022847221542082013",
+          "name": "favoriteAt",
+          "type": 6
+        },
+        {
+          "id": "14:8046502571355596521",
+          "name": "parentId",
+          "indexId": "2:6455684461804861582",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "CloudFolder"
+        },
+        {
+          "id": "15:3482607386160145171",
+          "name": "remoteId",
+          "type": 9
+        },
+        {
+          "id": "16:2222175300812248744",
+          "name": "isDeleted",
+          "type": 1
+        },
+        {
+          "id": "17:5914678347909685865",
+          "name": "childFileCount",
+          "type": 6
+        },
+        {
+          "id": "18:3647117801725492620",
+          "name": "childFolderCount",
+          "type": 6
+        },
+        {
+          "id": "19:5309805869076284826",
+          "name": "deletedAt",
+          "type": 6
+        },
+        {
+          "id": "20:1348455539746569132",
+          "name": "parentRemoteId",
+          "type": 9
+        },
+        {
+          "id": "21:9038514829547544359",
+          "name": "space",
+          "type": 9
+        },
+        {
+          "id": "23:8477028129171798019",
+          "name": "folderType",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:2456228755865347117",
+      "lastPropertyId": "35:1710812261197927314",
+      "name": "Contact",
+      "properties": [
+        {
+          "id": "1:2162076316403911618",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8028971601808564412",
+          "name": "nodeId",
+          "indexId": "31:4943660715179549251",
+          "type": 9,
+          "flags": 32808
+        },
+        {
+          "id": "3:5074880460158111437",
+          "name": "nicName",
+          "type": 9
+        },
+        {
+          "id": "4:3876156231135371234",
+          "name": "pubKey",
+          "type": 9
+        },
+        {
+          "id": "5:2981546544143271833",
+          "name": "pubCurve",
+          "type": 9
+        },
+        {
+          "id": "6:3070224871205851115",
+          "name": "avatarId",
+          "type": 9
+        },
+        {
+          "id": "7:8513876322963808271",
+          "name": "avatarPath",
+          "type": 9
+        },
+        {
+          "id": "8:225527308561477271",
+          "name": "version",
+          "type": 6
+        },
+        {
+          "id": "9:2063720005417252059",
+          "name": "bId",
+          "type": 6
+        },
+        {
+          "id": "10:8101545885561248046",
+          "name": "hideState",
+          "type": 6
+        },
+        {
+          "id": "11:8328337584986512493",
+          "name": "domain",
+          "type": 9
+        },
+        {
+          "id": "15:1858818838781359160",
+          "name": "remarkName",
+          "type": 9
+        },
+        {
+          "id": "16:526725208293788026",
+          "name": "isTop",
+          "type": 1
+        },
+        {
+          "id": "17:1614201302318819165",
+          "name": "topTime",
+          "type": 6
+        },
+        {
+          "id": "18:2343026374826784273",
+          "name": "groupConfigId",
+          "indexId": "3:6946243577054628615",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "GroupSettings"
+        },
+        {
+          "id": "19:2143871390141349596",
+          "name": "lastMessageId",
+          "indexId": "4:5506142059012174119",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "Message"
+        },
+        {
+          "id": "20:510183824106641806",
+          "name": "lastTime",
+          "type": 6
+        },
+        {
+          "id": "22:3090464060680520521",
+          "name": "markUnreadCount",
+          "type": 6
+        },
+        {
+          "id": "24:4244027330571379448",
+          "name": "isHidden",
+          "type": 1
+        },
+        {
+          "id": "26:8949141016071912111",
+          "name": "notDisturbType",
+          "type": 6
+        },
+        {
+          "id": "27:1119791731210827261",
+          "name": "relationType",
+          "type": 6
+        },
+        {
+          "id": "28:1119791731210827262",
+          "name": "roleType",
+          "type": 6
+        },
+        {
+          "id": "29:5536489138836415846",
+          "name": "accountStatus",
+          "type": 6
+        },
+        {
+          "id": "30:8222938019106818527",
+          "name": "lastServerMsgId",
+          "type": 6
+        },
+        {
+          "id": "31:1119791731210827263",
+          "name": "disappearingDays",
+          "type": 6
+        },
+        {
+          "id": "32:2619793111210827731",
+          "name": "otherRelationType",
+          "type": 6
+        },
+        {
+          "id": "33:7311082979311122627",
+          "name": "realRelationType",
+          "type": 6
+        },
+        {
+          "id": "34:1710812261197927313",
+          "name": "msgMinId",
+          "type": 6
+        },
+        {
+          "id": "35:1710812261197927314",
+          "name": "groupReadMaxId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:8169101176336844982",
+      "lastPropertyId": "17:4249260134501961885",
+      "name": "ContactRequest",
+      "properties": [
+        {
+          "id": "1:5449300421939170059",
+          "name": "requestId",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:4249260134501961884",
+          "name": "fromNodeId",
+          "type": 9
+        },
+        {
+          "id": "3:18816000679175283",
+          "name": "targetNickname",
+          "type": 9
+        },
+        {
+          "id": "4:6339145985178592552",
+          "name": "remark",
+          "type": 9
+        },
+        {
+          "id": "7:3968187399308758704",
+          "name": "targetAvatarUrl",
+          "type": 9
+        },
+        {
+          "id": "8:4246411999280418723",
+          "name": "targetAvatarId",
+          "type": 9
+        },
+        {
+          "id": "10:4559733369402973187",
+          "name": "targetDomain",
+          "type": 9
+        },
+        {
+          "id": "12:8075729978919896612",
+          "name": "isRead",
+          "type": 1
+        },
+        {
+          "id": "15:1933176183447736808",
+          "name": "status",
+          "type": 6
+        },
+        {
+          "id": "16:8075729978919896614",
+          "name": "isSelfOperate",
+          "type": 6
+        },
+        {
+          "id": "17:4249260134501961885",
+          "name": "toNodeId",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "2:7981489352930310120",
+          "name": "messages",
+          "targetId": "11:5540306439156564466"
+        }
+      ]
+    },
+    {
+      "id": "5:4323575037783032948",
+      "lastPropertyId": "2:7994462339770816698",
+      "name": "DbMeta",
+      "properties": [
+        {
+          "id": "1:1436862653095901723",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:7994462339770816698",
+          "name": "dbVersion",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:9123298856566174276",
+      "lastPropertyId": "5:8181043177063457212",
+      "name": "FileCache",
+      "properties": [
+        {
+          "id": "1:2224097035697663580",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5668718780895351427",
+          "name": "hash",
+          "type": 9
+        },
+        {
+          "id": "3:6592140677976764176",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "4:2730148878799367511",
+          "name": "nodeId",
+          "type": 9
+        },
+        {
+          "id": "5:8181043177063457212",
+          "name": "type",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:2124756894639410671",
+      "lastPropertyId": "37:4471336295435498333",
+      "name": "FileCacheTransferEntity",
+      "properties": [
+        {
+          "id": "1:6698782269191093363",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1437542922944405087",
+          "name": "taskId",
+          "type": 9
+        },
+        {
+          "id": "3:2702722583312092835",
+          "name": "describe",
+          "type": 9
+        },
+        {
+          "id": "4:6373779060799337328",
+          "name": "ext",
+          "type": 9
+        },
+        {
+          "id": "5:2175297701677939342",
+          "name": "isCrypt",
+          "type": 1
+        },
+        {
+          "id": "6:4217715748536410793",
+          "name": "pwd",
+          "type": 9
+        },
+        {
+          "id": "7:6072642051142493931",
+          "name": "isDir",
+          "type": 1
+        },
+        {
+          "id": "8:3992012933931944130",
+          "name": "dir",
+          "type": 9
+        },
+        {
+          "id": "9:8408444087498094945",
+          "name": "direction",
+          "type": 6
+        },
+        {
+          "id": "10:2830328259043681137",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "11:7126534856685659362",
+          "name": "parentId",
+          "type": 6
+        },
+        {
+          "id": "12:1300798161242106912",
+          "name": "platform",
+          "type": 6
+        },
+        {
+          "id": "13:7898221531193588202",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "14:6909773063732369432",
+          "name": "time",
+          "type": 6
+        },
+        {
+          "id": "15:107146252290412144",
+          "name": "unique",
+          "type": 9
+        },
+        {
+          "id": "16:5779657673418404219",
+          "name": "status",
+          "type": 6
+        },
+        {
+          "id": "17:563379253568359372",
+          "name": "fileHash",
+          "type": 9
+        },
+        {
+          "id": "18:374889337065024451",
+          "name": "endTime",
+          "type": 6
+        },
+        {
+          "id": "19:7721258661116413434",
+          "name": "process",
+          "type": 8
+        },
+        {
+          "id": "20:4536811133540627372",
+          "name": "error",
+          "type": 9
+        },
+        {
+          "id": "21:3350464482018107540",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "22:1630596651342856606",
+          "name": "isDisplay",
+          "type": 1
+        },
+        {
+          "id": "23:2949488827165941655",
+          "name": "isDelete",
+          "type": 1
+        },
+        {
+          "id": "24:5015915453001610909",
+          "name": "thumb",
+          "type": 9
+        },
+        {
+          "id": "25:7684532631891663868",
+          "name": "code",
+          "type": 6
+        },
+        {
+          "id": "26:707798812968354488",
+          "name": "fileMimeType",
+          "type": 9
+        },
+        {
+          "id": "27:975236518654529465",
+          "name": "folderId",
+          "type": 9
+        },
+        {
+          "id": "28:4728923136902945107",
+          "name": "fileVideoResolution",
+          "type": 9
+        },
+        {
+          "id": "32:3964380219092818559",
+          "name": "width",
+          "type": 6
+        },
+        {
+          "id": "33:3826555311169920652",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "34:1545639994428562320",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "35:1640999130132878039",
+          "name": "metaData",
+          "type": 9
+        },
+        {
+          "id": "36:7202359712130350683",
+          "name": "infoData",
+          "type": 9
+        },
+        {
+          "id": "37:4471336295435498333",
+          "name": "space",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "8:2016468031275660033",
+      "lastPropertyId": "15:5739281046183924751",
+      "name": "GroupMemberItem",
+      "properties": [
+        {
+          "id": "1:1997596161935933854",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4509117993205289774",
+          "name": "memberId",
+          "indexId": "59:8343740234246415907",
+          "type": 9,
+          "flags": 36896
+        },
+        {
+          "id": "3:8850928156645193290",
+          "name": "gId",
+          "indexId": "33:8453586114971681243",
+          "type": 9,
+          "flags": 4096
+        },
+        {
+          "id": "4:6257139236024328750",
+          "name": "nodeId",
+          "type": 9
+        },
+        {
+          "id": "5:3199484028464188986",
+          "name": "nickname",
+          "type": 9
+        },
+        {
+          "id": "6:2495177611071976448",
+          "name": "pfpId",
+          "type": 9
+        },
+        {
+          "id": "7:2249721681783493477",
+          "name": "pfpUrl",
+          "type": 9
+        },
+        {
+          "id": "8:6279743569156812223",
+          "name": "domain",
+          "type": 9
+        },
+        {
+          "id": "9:8356847123671846250",
+          "name": "isAdmin",
+          "type": 1
+        },
+        {
+          "id": "10:1491665924458738709",
+          "name": "isOwner",
+          "type": 1
+        },
+        {
+          "id": "11:366828901849928754",
+          "name": "isEditedNickname",
+          "type": 1
+        },
+        {
+          "id": "12:2298721520537817484",
+          "name": "pubKey",
+          "type": 9
+        },
+        {
+          "id": "13:6188312314710089286",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "14:6258998455417317822",
+          "name": "updateTime",
+          "type": 6
+        },
+        {
+          "id": "15:5739281046183924751",
+          "name": "remarkName",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "9:5071997880944856514",
+      "lastPropertyId": "31:6322979971046564614",
+      "name": "GroupSettings",
+      "properties": [
+        {
+          "id": "1:2121883058134415805",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1040734311776281407",
+          "name": "gId",
+          "type": 9
+        },
+        {
+          "id": "3:4795955211770712730",
+          "name": "num",
+          "type": 6
+        },
+        {
+          "id": "4:2480520191977967269",
+          "name": "maxAdminNum",
+          "type": 6
+        },
+        {
+          "id": "5:7055287584496864734",
+          "name": "isRename",
+          "type": 1
+        },
+        {
+          "id": "6:2517904734628620109",
+          "name": "isAstrict",
+          "type": 1
+        },
+        {
+          "id": "7:6700746875383913877",
+          "name": "isAllMute",
+          "type": 1
+        },
+        {
+          "id": "8:1151477149562629020",
+          "name": "isQrAllow",
+          "type": 1
+        },
+        {
+          "id": "9:5381923515817109504",
+          "name": "isApplied",
+          "type": 1
+        },
+        {
+          "id": "10:2110040542124437051",
+          "name": "isMbrChat",
+          "type": 1
+        },
+        {
+          "id": "11:6342650948767239711",
+          "name": "isMbrAudioCall",
+          "type": 1
+        },
+        {
+          "id": "12:160374027194435769",
+          "name": "isMbrVideoCall",
+          "type": 1
+        },
+        {
+          "id": "13:9059018034696489425",
+          "name": "groupType",
+          "type": 6
+        },
+        {
+          "id": "14:7783999065150936597",
+          "name": "info",
+          "type": 9
+        },
+        {
+          "id": "15:3004400756619794772",
+          "name": "groupState",
+          "type": 6
+        },
+        {
+          "id": "16:1189246942072257504",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "17:8267061599634553905",
+          "name": "updateTime",
+          "type": 6
+        },
+        {
+          "id": "20:4530858349543881009",
+          "name": "announcement",
+          "type": 9
+        },
+        {
+          "id": "21:3925885870006508206",
+          "name": "currentMemberNum",
+          "type": 6
+        },
+        {
+          "id": "22:8985333983804498161",
+          "name": "vipLevel",
+          "type": 6
+        },
+        {
+          "id": "23:5426810464999124048",
+          "name": "msgVisibleMinId",
+          "type": 6
+        },
+        {
+          "id": "24:7182936455019283746",
+          "name": "historyScope",
+          "type": 6
+        },
+        {
+          "id": "25:2642933303201599838",
+          "name": "revokeTime",
+          "type": 6
+        },
+        {
+          "id": "26:8559997276714908153",
+          "name": "isModifyRevoke",
+          "type": 6
+        },
+        {
+          "id": "27:8559997276714908154",
+          "name": "isDisappearingMessages",
+          "type": 1
+        },
+        {
+          "id": "28:8559997276714908155",
+          "name": "isTimeLimitMsgLock",
+          "type": 1
+        },
+        {
+          "id": "29:8865149517567999270",
+          "name": "showTabMode",
+          "type": 6
+        },
+        {
+          "id": "31:6322979971046564614",
+          "name": "observerPermission",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "10:5803117367987744011",
+      "lastPropertyId": "22:4266996102774518387",
+      "name": "Message",
+      "properties": [
+        {
+          "id": "1:5763707254001764383",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3437325897488570124",
+          "name": "msgId",
+          "indexId": "102:1627899080173265678",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:8740936066512363278",
+          "name": "sessionId",
+          "indexId": "32:1728138874425927399",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:1968824836077916520",
+          "name": "content",
+          "type": 9
+        },
+        {
+          "id": "5:8716441257727097148",
+          "name": "type",
+          "type": 6
+        },
+        {
+          "id": "6:4052175854136083949",
+          "name": "msgSource",
+          "type": 6
+        },
+        {
+          "id": "7:2332621439782006930",
+          "name": "contentBytes",
+          "type": 9
+        },
+        {
+          "id": "8:2616809849705362356",
+          "name": "state",
+          "type": 6
+        },
+        {
+          "id": "9:3236702761137947613",
+          "name": "sendState",
+          "type": 6
+        },
+        {
+          "id": "10:6010135654790041132",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "11:651386555896953984",
+          "name": "updateTime",
+          "type": 6
+        },
+        {
+          "id": "12:6929963929457696163",
+          "name": "senderId",
+          "indexId": "6:8111299902622853362",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "SenderMemberInfo"
+        },
+        {
+          "id": "14:4753777648088872893",
+          "name": "translatedContent",
+          "type": 9
+        },
+        {
+          "id": "15:2978834836177926531",
+          "name": "isMentioned",
+          "type": 1
+        },
+        {
+          "id": "16:7492816359048261735",
+          "name": "serverMsgId",
+          "type": 6
+        },
+        {
+          "id": "17:5921847360194857632",
+          "name": "expireAt",
+          "indexId": "71:1676652176128779703",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "18:6847293156082741937",
+          "name": "isEdited",
+          "type": 1
+        },
+        {
+          "id": "19:7247764808889385377",
+          "name": "sysTipCode",
+          "type": 6
+        },
+        {
+          "id": "20:6480875324778879387",
+          "name": "respCode",
+          "type": 6
+        },
+        {
+          "id": "22:4266996102774518387",
+          "name": "topicId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "11:5540306439156564466",
+      "lastPropertyId": "4:4659703624138245596",
+      "name": "RequestMessage",
+      "properties": [
+        {
+          "id": "1:7993511550153137168",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5038750012773504870",
+          "name": "nodeId",
+          "type": 9
+        },
+        {
+          "id": "3:2312334467710773329",
+          "name": "content",
+          "type": 9
+        },
+        {
+          "id": "4:4659703624138245596",
+          "name": "time",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "12:4243757618130621734",
+      "lastPropertyId": "12:7919851996866114541",
+      "name": "SenderMemberInfo",
+      "properties": [
+        {
+          "id": "1:4034196509734324881",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:815546333511506810",
+          "name": "nodeId",
+          "indexId": "92:423231597395651231",
+          "type": 9,
+          "flags": 4096
+        },
+        {
+          "id": "3:4302223872814092635",
+          "name": "nickname",
+          "type": 9
+        },
+        {
+          "id": "4:2151110387595990589",
+          "name": "originalNickname",
+          "type": 9
+        },
+        {
+          "id": "5:1641150052890882568",
+          "name": "pfpId",
+          "type": 9
+        },
+        {
+          "id": "6:1382235102380835522",
+          "name": "pfpUrl",
+          "type": 9
+        },
+        {
+          "id": "7:7414266678749213027",
+          "name": "domain",
+          "type": 9
+        },
+        {
+          "id": "8:9190668787308157732",
+          "name": "ps",
+          "type": 9
+        },
+        {
+          "id": "9:3951957687899676360",
+          "name": "isOwner",
+          "type": 1
+        },
+        {
+          "id": "10:7956931326228144245",
+          "name": "isAdmin",
+          "type": 1
+        },
+        {
+          "id": "11:426310837592531965",
+          "name": "isMbrChat",
+          "type": 1
+        },
+        {
+          "id": "12:7919851996866114541",
+          "name": "updateTime",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "13:4925240381610996722",
+      "lastPropertyId": "20:5625425746805170379",
+      "name": "V1Token",
+      "properties": [
+        {
+          "id": "1:5540418154861209204",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2903337789541676479",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "3:8128967254787194538",
+          "name": "networkList",
+          "type": 30
+        },
+        {
+          "id": "4:8430717335049678748",
+          "name": "decimals",
+          "type": 6
+        },
+        {
+          "id": "5:6097178346355531404",
+          "name": "totalSupply",
+          "type": 9
+        },
+        {
+          "id": "6:4331804338873345897",
+          "name": "priceUsd",
+          "type": 9
+        },
+        {
+          "id": "7:3356416305517306406",
+          "name": "changePercent24Hr",
+          "type": 9
+        },
+        {
+          "id": "8:6837398039171860031",
+          "name": "highPriceUsd",
+          "type": 9
+        },
+        {
+          "id": "9:7718140677389808467",
+          "name": "lowPriceUsd",
+          "type": 9
+        },
+        {
+          "id": "10:1878553803029815010",
+          "name": "priceCnyToUsd",
+          "type": 9
+        },
+        {
+          "id": "11:2927228656035301048",
+          "name": "volumeUsd24Hr",
+          "type": 9
+        },
+        {
+          "id": "12:3533783224624488973",
+          "name": "isVisible",
+          "type": 1
+        },
+        {
+          "id": "13:2314148319653879038",
+          "name": "contractAddress",
+          "type": 9
+        },
+        {
+          "id": "14:7462636385661545899",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "15:9105311469762859103",
+          "name": "image",
+          "type": 9
+        },
+        {
+          "id": "16:4696755648009878315",
+          "name": "isNative",
+          "type": 1
+        },
+        {
+          "id": "17:6189740402537344853",
+          "name": "bipCoinType",
+          "type": 6
+        },
+        {
+          "id": "18:3709260070615192940",
+          "name": "isDefault",
+          "type": 1
+        },
+        {
+          "id": "19:4796910793939943053",
+          "name": "deploymentsJson",
+          "type": 9
+        },
+        {
+          "id": "20:5625425746805170379",
+          "name": "isVerified",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "14:4824462994661692493",
+      "lastPropertyId": "10:8589059993725506811",
+      "name": "TronStakingRecord",
+      "properties": [
+        {
+          "id": "1:8397530721569825873",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8312843219535460844",
+          "name": "resource",
+          "type": 9
+        },
+        {
+          "id": "3:3517371101878562449",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "4:7090890580224599865",
+          "name": "amount",
+          "type": 8
+        },
+        {
+          "id": "5:1785802279245506325",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "6:5251939239159740283",
+          "name": "txHash",
+          "indexId": "7:2819339061467682400",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "7:6225175881013517747",
+          "name": "blockTime",
+          "type": 6
+        },
+        {
+          "id": "8:3161613514351094351",
+          "name": "gas",
+          "type": 9
+        },
+        {
+          "id": "9:1068767356095231326",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "10:8589059993725506811",
+          "name": "withdraw",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "15:8051460099316761493",
+      "lastPropertyId": "29:5613175676885565802",
+      "name": "User",
+      "properties": [
+        {
+          "id": "1:3307267104204640749",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7874498991661944303",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1637849632440238044",
+          "name": "nodeId",
+          "type": 9
+        },
+        {
+          "id": "4:7920534975426961620",
+          "name": "accountDirId",
+          "type": 9
+        },
+        {
+          "id": "5:862257846967003373",
+          "name": "pubKey",
+          "type": 9
+        },
+        {
+          "id": "6:8425087068161214324",
+          "name": "pubCurve",
+          "type": 9
+        },
+        {
+          "id": "7:6212855032132856864",
+          "name": "avatarPath",
+          "type": 9
+        },
+        {
+          "id": "8:4462749601103113799",
+          "name": "avatarId",
+          "type": 9
+        },
+        {
+          "id": "11:2932300972610736944",
+          "name": "deviceId",
+          "type": 9
+        },
+        {
+          "id": "12:5952642523166226823",
+          "name": "settingsId",
+          "indexId": "8:3514959097665236678",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "UserSettings"
+        },
+        {
+          "id": "13:2451254217147123044",
+          "name": "isSetPrivacyPwd",
+          "type": 1
+        },
+        {
+          "id": "14:711584916287446329",
+          "name": "isSetFaceID",
+          "type": 1
+        },
+        {
+          "id": "15:3488694662113710923",
+          "name": "isSetFingerprint",
+          "type": 1
+        },
+        {
+          "id": "16:7470835027788964167",
+          "name": "isSetGesturePwd",
+          "type": 1
+        },
+        {
+          "id": "17:6238945299149548363",
+          "name": "isSetImWalletPwd",
+          "type": 1
+        },
+        {
+          "id": "19:3083216743287591027",
+          "name": "hasBackedUpMnemonic",
+          "type": 1
+        },
+        {
+          "id": "20:788578413351130038",
+          "name": "contactListVersion",
+          "type": 6
+        },
+        {
+          "id": "21:5856834726367357604",
+          "name": "isFinishFirstUploadUserInfo",
+          "type": 1
+        },
+        {
+          "id": "23:5267683593463391681",
+          "name": "version",
+          "type": 6
+        },
+        {
+          "id": "24:4628371950284756193",
+          "name": "receiveScope",
+          "type": 6
+        },
+        {
+          "id": "25:8552713464121353153",
+          "name": "validityPeriod",
+          "type": 6
+        },
+        {
+          "id": "26:4353891834450185292",
+          "name": "subscribeToTop",
+          "type": 6
+        },
+        {
+          "id": "27:8546574623434016254",
+          "name": "subscribeClearTimeMs",
+          "type": 6
+        },
+        {
+          "id": "28:3406528543746462541",
+          "name": "strangerNotice",
+          "type": 6
+        },
+        {
+          "id": "29:5613175676885565802",
+          "name": "noticeSettingsId",
+          "indexId": "96:8514791042659530164",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "UserNoticeSettings"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "16:2005521907112073309",
+      "lastPropertyId": "19:8158735052921378847",
+      "name": "Device",
+      "properties": [
+        {
+          "id": "1:2011858771028144709",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "3:742953193917692276",
+          "name": "deviceId",
+          "type": 9
+        },
+        {
+          "id": "4:8148279914401570907",
+          "name": "isOnline",
+          "type": 1
+        },
+        {
+          "id": "6:7841119456127657239",
+          "name": "deviceName",
+          "type": 9
+        },
+        {
+          "id": "7:3400429163810713334",
+          "name": "deviceTypeName",
+          "type": 9
+        },
+        {
+          "id": "8:2836033496617174926",
+          "name": "deviceVersion",
+          "type": 9
+        },
+        {
+          "id": "9:4563615868872786036",
+          "name": "lastLoginTime",
+          "type": 6
+        },
+        {
+          "id": "10:805569004360915425",
+          "name": "version",
+          "type": 6
+        },
+        {
+          "id": "12:4567890123456789012",
+          "name": "deviceUUID",
+          "type": 9
+        },
+        {
+          "id": "13:6472163458180055044",
+          "name": "recvNewMsg",
+          "type": 1
+        },
+        {
+          "id": "14:2836742095388515860",
+          "name": "recvVoiceMsg",
+          "type": 1
+        },
+        {
+          "id": "15:3838153268943335777",
+          "name": "vibrateNewMsg",
+          "type": 1
+        },
+        {
+          "id": "16:1830210871271129528",
+          "name": "soundNewMsg",
+          "type": 1
+        },
+        {
+          "id": "17:1237262124172861897",
+          "name": "vibrateVoiceMsg",
+          "type": 1
+        },
+        {
+          "id": "18:8306333918886797792",
+          "name": "soundVoiceMsg",
+          "type": 1
+        },
+        {
+          "id": "19:8158735052921378847",
+          "name": "noticeSettingsId",
+          "indexId": "94:1892148448029480485",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "DeviceNoticeSetting"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "17:4625467207098639164",
+      "lastPropertyId": "5:7304268804910325751",
+      "name": "UserSettings",
+      "properties": [
+        {
+          "id": "1:4739061604904105066",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "3:5956513359193766387",
+          "name": "shakeClear",
+          "type": 1
+        },
+        {
+          "id": "4:2010434083336181034",
+          "name": "autoDownloadMode",
+          "type": 6
+        },
+        {
+          "id": "5:7304268804910325751",
+          "name": "shakeClearDeleteNodes",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "18:1721452165949785602",
+      "lastPropertyId": "19:2560676942852583803",
+      "name": "UserSpaceEntity",
+      "properties": [
+        {
+          "id": "1:7522615430056420572",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6700001650246592333",
+          "name": "freeSpace",
+          "type": 6
+        },
+        {
+          "id": "3:2715536836563988648",
+          "name": "useSpace",
+          "type": 6
+        },
+        {
+          "id": "5:1962486910486838131",
+          "name": "myFavoritesSize",
+          "type": 6
+        },
+        {
+          "id": "6:8941222687043312930",
+          "name": "userTodaySpace",
+          "type": 6
+        },
+        {
+          "id": "7:8749182798716406628",
+          "name": "storageDaySize",
+          "type": 6
+        },
+        {
+          "id": "8:1073183686542684892",
+          "name": "storageMaxSpeed",
+          "type": 6
+        },
+        {
+          "id": "9:1950751488103506731",
+          "name": "storageSingleFileSize",
+          "type": 6
+        },
+        {
+          "id": "10:9134199497880120618",
+          "name": "imDaySize",
+          "type": 6
+        },
+        {
+          "id": "11:1227494219242968356",
+          "name": "imMaxSpeed",
+          "type": 6
+        },
+        {
+          "id": "12:8295948201444612094",
+          "name": "imSingleFileSize",
+          "type": 6
+        },
+        {
+          "id": "13:516058167698296716",
+          "name": "countCurrentDown",
+          "type": 6
+        },
+        {
+          "id": "14:8483848469029628636",
+          "name": "temporaryFileUsage",
+          "type": 8
+        },
+        {
+          "id": "15:2446747073168103240",
+          "name": "useSpaceMyChat",
+          "type": 6
+        },
+        {
+          "id": "18:1011287094773565527",
+          "name": "buySpace",
+          "type": 6
+        },
+        {
+          "id": "19:2560676942852583803",
+          "name": "freeSpaceDefault",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "20:8022045886014226491",
+      "lastPropertyId": "12:4004543861248570561",
+      "name": "Wallet",
+      "properties": [
+        {
+          "id": "1:1547980605739241743",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6067922951792769273",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1012936505690437988",
+          "name": "isIMWallet",
+          "type": 1
+        },
+        {
+          "id": "4:5819091212219295159",
+          "name": "isPrivateKeyWallet",
+          "type": 1
+        },
+        {
+          "id": "5:8658660840561084756",
+          "name": "isBackup",
+          "type": 1
+        },
+        {
+          "id": "6:45823700204720459",
+          "name": "walletIndex",
+          "type": 6
+        },
+        {
+          "id": "7:5617687840891430884",
+          "name": "isSelected",
+          "type": 1
+        },
+        {
+          "id": "8:2597923493054006102",
+          "name": "hashMnemonic",
+          "type": 9
+        },
+        {
+          "id": "9:1136326738967359190",
+          "name": "hashPrivateKey",
+          "type": 9
+        },
+        {
+          "id": "10:6872264136032078315",
+          "name": "dataFetchSuccessful",
+          "type": 1
+        },
+        {
+          "id": "11:5306671327906713485",
+          "name": "lastDataFetchAttempt",
+          "type": 10
+        },
+        {
+          "id": "12:4004543861248570561",
+          "name": "bId",
+          "indexId": "103:939512629397251586",
+          "type": 6,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "21:8889823599526350786",
+      "lastPropertyId": "9:341310415649170532",
+      "name": "WalletAccount",
+      "properties": [
+        {
+          "id": "1:7538554457110363259",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2221487215840675473",
+          "name": "walletId",
+          "indexId": "10:7643514979820299836",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "Wallet"
+        },
+        {
+          "id": "3:4395578232477719611",
+          "name": "accountIndex",
+          "type": 6
+        },
+        {
+          "id": "4:2620322450628425325",
+          "name": "accountName",
+          "type": 9
+        },
+        {
+          "id": "5:9151010998448593698",
+          "name": "hashAvatar",
+          "type": 9
+        },
+        {
+          "id": "6:8184639730775522209",
+          "name": "isMultiSignAddress",
+          "type": 1
+        },
+        {
+          "id": "7:7480957623812908157",
+          "name": "isSelected",
+          "type": 1
+        },
+        {
+          "id": "8:6501665934785086772",
+          "name": "isRedPacketReceived",
+          "type": 1
+        },
+        {
+          "id": "9:341310415649170532",
+          "name": "isRedPacketTransfer",
+          "type": 1
+        }
+      ],
+      "relations": [
+        {
+          "id": "11:4832101901847733892",
+          "name": "transactions",
+          "targetId": "24:118648758355469043"
+        }
+      ]
+    },
+    {
+      "id": "22:2796182109117074425",
+      "lastPropertyId": "18:6326555612252430630",
+      "name": "V1WalletAsset",
+      "properties": [
+        {
+          "id": "1:5242203722671820734",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1637811431941535440",
+          "name": "accountId",
+          "indexId": "11:8722951064351159242",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletAccount"
+        },
+        {
+          "id": "3:3084061737442671020",
+          "name": "network",
+          "indexId": "12:3341419753525956456",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:4960368837227975061",
+          "name": "symbol",
+          "indexId": "13:2149142132922530180",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "5:2303818235140501704",
+          "name": "address",
+          "indexId": "14:6869787777443148362",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:7546994144783621916",
+          "name": "amount",
+          "type": 8
+        },
+        {
+          "id": "7:6585356094792056805",
+          "name": "segwitType",
+          "type": 9
+        },
+        {
+          "id": "8:3993484796360823551",
+          "name": "isMultiSignAddress",
+          "type": 1
+        },
+        {
+          "id": "9:6162483094292605489",
+          "name": "isVisible",
+          "type": 1
+        },
+        {
+          "id": "10:3401605569655027937",
+          "name": "image",
+          "type": 9
+        },
+        {
+          "id": "11:5581934395715467318",
+          "name": "isManualAdd",
+          "type": 1
+        },
+        {
+          "id": "12:1801503260141038795",
+          "name": "tokenContractAddress",
+          "type": 9
+        },
+        {
+          "id": "13:1168561659349565177",
+          "name": "decimal",
+          "type": 6
+        },
+        {
+          "id": "14:2115858128320690291",
+          "name": "updateAt",
+          "type": 9
+        },
+        {
+          "id": "15:6257266395360753415",
+          "name": "createAt",
+          "type": 9
+        },
+        {
+          "id": "16:6009571769977983058",
+          "name": "isVerified",
+          "type": 1
+        },
+        {
+          "id": "17:6442794461043068736",
+          "name": "tokenName",
+          "type": 9
+        },
+        {
+          "id": "18:6326555612252430630",
+          "name": "isNative",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "23:7647544402443041869",
+      "lastPropertyId": "26:7814308328822144098",
+      "name": "WalletGasFee",
+      "properties": [
+        {
+          "id": "1:2569404285424071647",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7839517799971240931",
+          "name": "coinType",
+          "type": 9
+        },
+        {
+          "id": "3:1709571279192648602",
+          "name": "chain",
+          "type": 9
+        },
+        {
+          "id": "4:9000406659548501304",
+          "name": "feeUnit",
+          "type": 9
+        },
+        {
+          "id": "5:91390739222137567",
+          "name": "slow",
+          "type": 9
+        },
+        {
+          "id": "6:2939924271646356222",
+          "name": "slowMaxFee",
+          "type": 9
+        },
+        {
+          "id": "7:6001636579331640193",
+          "name": "base",
+          "type": 9
+        },
+        {
+          "id": "8:6241060358762893178",
+          "name": "baseMaxFee",
+          "type": 9
+        },
+        {
+          "id": "9:4855806025205727247",
+          "name": "fast",
+          "type": 9
+        },
+        {
+          "id": "10:1121927099657599377",
+          "name": "fastMaxFee",
+          "type": 9
+        },
+        {
+          "id": "11:523729151380822954",
+          "name": "slowView",
+          "type": 9
+        },
+        {
+          "id": "12:5657862835348056894",
+          "name": "baseView",
+          "type": 9
+        },
+        {
+          "id": "13:4075801533864802640",
+          "name": "fastView",
+          "type": 9
+        },
+        {
+          "id": "14:7587638205380738082",
+          "name": "slowTimeView",
+          "type": 6
+        },
+        {
+          "id": "15:3548258205817415328",
+          "name": "baseTimeView",
+          "type": 6
+        },
+        {
+          "id": "16:8738846078864649482",
+          "name": "fastTimeView",
+          "type": 6
+        },
+        {
+          "id": "17:2342784733167009664",
+          "name": "baseFee",
+          "type": 9
+        },
+        {
+          "id": "18:7936405261254356632",
+          "name": "maxPriority",
+          "type": 9
+        },
+        {
+          "id": "19:820734385169806301",
+          "name": "gasLimit",
+          "type": 6
+        },
+        {
+          "id": "20:8776705765765963577",
+          "name": "maxFee",
+          "type": 9
+        },
+        {
+          "id": "21:3953079023825921261",
+          "name": "maxTotalFee",
+          "type": 9
+        },
+        {
+          "id": "22:325348852708936148",
+          "name": "estimateTotalFee",
+          "type": 9
+        },
+        {
+          "id": "23:2173075032639070770",
+          "name": "costEnergy",
+          "type": 9
+        },
+        {
+          "id": "24:4750065000268699915",
+          "name": "costEnergyUseTrx",
+          "type": 9
+        },
+        {
+          "id": "25:8889469552311524492",
+          "name": "costBandwidth",
+          "type": 9
+        },
+        {
+          "id": "26:7814308328822144098",
+          "name": "costBandwidthUseTrx",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "24:118648758355469043",
+      "lastPropertyId": "45:4563349405751293106",
+      "name": "WalletTransactionModel",
+      "properties": [
+        {
+          "id": "1:8095797701817112637",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6690550667722377367",
+          "name": "nodeAddr",
+          "type": 9
+        },
+        {
+          "id": "3:150861678517324644",
+          "name": "walletAddr",
+          "type": 9
+        },
+        {
+          "id": "4:4706920698744121784",
+          "name": "txAddr",
+          "type": 30
+        },
+        {
+          "id": "5:3588810383397871297",
+          "name": "txHash",
+          "indexId": "90:6113020862134584920",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:2134145365357739415",
+          "name": "chain",
+          "type": 9
+        },
+        {
+          "id": "7:2075521075629870469",
+          "name": "height",
+          "type": 9
+        },
+        {
+          "id": "8:2900203153182284424",
+          "name": "time",
+          "type": 9
+        },
+        {
+          "id": "9:8843928868416942871",
+          "name": "status",
+          "type": 9
+        },
+        {
+          "id": "10:3983146117717899000",
+          "name": "from",
+          "type": 9
+        },
+        {
+          "id": "11:1572924055866853423",
+          "name": "to",
+          "type": 9
+        },
+        {
+          "id": "12:4628117857408543140",
+          "name": "fee",
+          "type": 9
+        },
+        {
+          "id": "13:4864928409640075934",
+          "name": "feeCny",
+          "type": 9
+        },
+        {
+          "id": "14:585841907364410814",
+          "name": "feeUsd",
+          "type": 9
+        },
+        {
+          "id": "15:8828034228544316758",
+          "name": "confirm",
+          "type": 9
+        },
+        {
+          "id": "16:2905925523516140914",
+          "name": "amount",
+          "type": 9
+        },
+        {
+          "id": "17:4898237359521110327",
+          "name": "tokenName",
+          "type": 9
+        },
+        {
+          "id": "18:5023267452633893125",
+          "name": "send",
+          "type": 1
+        },
+        {
+          "id": "19:5108340080928290805",
+          "name": "timeStamp",
+          "type": 6
+        },
+        {
+          "id": "20:676912891157715088",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "21:9140130863026492265",
+          "name": "blockHash",
+          "type": 9
+        },
+        {
+          "id": "22:2439047675749402173",
+          "name": "nonce",
+          "type": 6
+        },
+        {
+          "id": "23:6273331135740598579",
+          "name": "unique",
+          "type": 9
+        },
+        {
+          "id": "24:2474402635300380764",
+          "name": "lockHeight",
+          "type": 9
+        },
+        {
+          "id": "25:1551747028653794453",
+          "name": "fromToken",
+          "type": 9
+        },
+        {
+          "id": "26:3992973506731328030",
+          "name": "fromAmount",
+          "type": 9
+        },
+        {
+          "id": "27:2965234774335348184",
+          "name": "toToken",
+          "type": 9
+        },
+        {
+          "id": "28:4336285180360271147",
+          "name": "toAmount",
+          "type": 9
+        },
+        {
+          "id": "29:574291069286754382",
+          "name": "approveNum",
+          "type": 9
+        },
+        {
+          "id": "30:6480214834431082212",
+          "name": "token",
+          "type": 9
+        },
+        {
+          "id": "31:1518046290434304477",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "32:4374868247695708106",
+          "name": "energy",
+          "type": 6
+        },
+        {
+          "id": "33:7786219098624617419",
+          "name": "bandwidth",
+          "type": 6
+        },
+        {
+          "id": "40:6031810681275809726",
+          "name": "transactionType",
+          "type": 9
+        },
+        {
+          "id": "41:4884184900466177128",
+          "name": "symbols",
+          "type": 30
+        },
+        {
+          "id": "42:1906546683188573895",
+          "name": "accountId",
+          "indexId": "30:6915171049385557776",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletAccount"
+        },
+        {
+          "id": "43:1508039273075060874",
+          "name": "recordKey",
+          "indexId": "91:2287738219926586067",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "44:1827788955094939730",
+          "name": "aeonPaymentId",
+          "indexId": "87:6751658804086527003",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "AeonPaymentRecordModel"
+        },
+        {
+          "id": "45:4563349405751293106",
+          "name": "memo",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "5:8454878394033230508",
+          "name": "utxoInput",
+          "targetId": "30:8617115614638164594"
+        },
+        {
+          "id": "6:2919586727446027524",
+          "name": "utxoOutput",
+          "targetId": "30:8617115614638164594"
+        },
+        {
+          "id": "7:7831358193118194191",
+          "name": "extra",
+          "targetId": "29:2846206040483519964"
+        }
+      ]
+    },
+    {
+      "id": "29:2846206040483519964",
+      "lastPropertyId": "9:2998530467851601060",
+      "name": "TransactionExtraModel",
+      "properties": [
+        {
+          "id": "1:594006865678295323",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5721170015121827415",
+          "name": "from",
+          "type": 9
+        },
+        {
+          "id": "3:7946945912837069176",
+          "name": "to",
+          "type": 9
+        },
+        {
+          "id": "4:813821703128364243",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "5:904855156616286606",
+          "name": "token",
+          "type": 9
+        },
+        {
+          "id": "6:6207336494504232206",
+          "name": "amount",
+          "type": 9
+        },
+        {
+          "id": "8:6505640780881417694",
+          "name": "transactionId",
+          "indexId": "20:4062955743270772821",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletTransactionModel"
+        },
+        {
+          "id": "9:2998530467851601060",
+          "name": "type",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "30:8617115614638164594",
+      "lastPropertyId": "4:8752262881145612544",
+      "name": "TransactionUtxoModel",
+      "properties": [
+        {
+          "id": "1:8031335346616873469",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8779173057633317044",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "3:7123679392516101070",
+          "name": "amount",
+          "type": 9
+        },
+        {
+          "id": "4:8752262881145612544",
+          "name": "transactionId",
+          "indexId": "21:7958866186221430049",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletTransactionModel"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "33:8885647365091060770",
+      "lastPropertyId": "4:7562711021838112274",
+      "name": "ContractEventManagerEntity",
+      "properties": [
+        {
+          "id": "1:4508129322519514778",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8517649407738496319",
+          "name": "contractAddress",
+          "type": 9
+        },
+        {
+          "id": "3:1488872332979109456",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "4:7562711021838112274",
+          "name": "topic",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "34:8652542344604444863",
+      "lastPropertyId": "19:1955304556485668389",
+      "name": "BridgeRecordTable",
+      "properties": [
+        {
+          "id": "1:430267321290226510",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5388961045074338151",
+          "name": "fromAddress",
+          "type": 9
+        },
+        {
+          "id": "3:316878315646286991",
+          "name": "recipientAddress",
+          "type": 9
+        },
+        {
+          "id": "4:289247230967046355",
+          "name": "tokenInAddress",
+          "type": 9
+        },
+        {
+          "id": "5:1992397637253868608",
+          "name": "chainIn",
+          "type": 9
+        },
+        {
+          "id": "6:6708587382933708638",
+          "name": "tokenOutAddress",
+          "type": 9
+        },
+        {
+          "id": "7:1490258113529357580",
+          "name": "chainOut",
+          "type": 9
+        },
+        {
+          "id": "8:1187929734264298105",
+          "name": "bridgeAddress",
+          "type": 9
+        },
+        {
+          "id": "9:6594711067685307744",
+          "name": "txHash",
+          "indexId": "34:6696636354254254381",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "10:2534247664839244669",
+          "name": "status",
+          "type": 9
+        },
+        {
+          "id": "11:8611800160245524062",
+          "name": "txHashOut",
+          "type": 9
+        },
+        {
+          "id": "12:1123598690621431356",
+          "name": "errorReason",
+          "type": 9
+        },
+        {
+          "id": "13:8320731448386241436",
+          "name": "createdTime",
+          "type": 6
+        },
+        {
+          "id": "14:4764207470571592986",
+          "name": "amountIn",
+          "type": 9
+        },
+        {
+          "id": "15:7755828772099184800",
+          "name": "amountOut",
+          "type": 9
+        },
+        {
+          "id": "16:759654488045966383",
+          "name": "bridgeFee",
+          "type": 9
+        },
+        {
+          "id": "17:1320312112647387832",
+          "name": "networkFee",
+          "type": 9
+        },
+        {
+          "id": "18:3022808785294344983",
+          "name": "chainIdIn",
+          "type": 6
+        },
+        {
+          "id": "19:1955304556485668389",
+          "name": "chainIdOut",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "35:8834696397928975035",
+      "lastPropertyId": "8:3102350974547365607",
+      "name": "SwapRecordRawTable",
+      "properties": [
+        {
+          "id": "1:2325162877446234031",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6718379338352066524",
+          "name": "swapRecordId",
+          "indexId": "35:6794012247317060006",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "SwapRecordTable"
+        },
+        {
+          "id": "3:635717975397304176",
+          "name": "blockNumber",
+          "type": 6
+        },
+        {
+          "id": "4:5935812240685336340",
+          "name": "timestamp",
+          "type": 6
+        },
+        {
+          "id": "5:5497070038713975427",
+          "name": "gasUsed",
+          "type": 6
+        },
+        {
+          "id": "6:4711854365085854379",
+          "name": "gasPriceOrEffectiveFee",
+          "type": 9
+        },
+        {
+          "id": "7:8167036978165572010",
+          "name": "rawPayload",
+          "type": 9
+        },
+        {
+          "id": "8:3102350974547365607",
+          "name": "rawReceipt",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "36:7974256805779291178",
+      "lastPropertyId": "13:4119205835121662671",
+      "name": "SwapRecordTable",
+      "properties": [
+        {
+          "id": "1:7450668328064989595",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7193534234145335784",
+          "name": "rawId",
+          "indexId": "36:329882998980013232",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "SwapRecordRawTable"
+        },
+        {
+          "id": "3:3354791092696004900",
+          "name": "fromAddress",
+          "type": 9
+        },
+        {
+          "id": "4:4536635007385041371",
+          "name": "chain",
+          "type": 9
+        },
+        {
+          "id": "5:4989733158045673488",
+          "name": "txHash",
+          "indexId": "37:7398703781463108762",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "6:3982417209731814014",
+          "name": "status",
+          "type": 9
+        },
+        {
+          "id": "7:2012205705265560946",
+          "name": "createdTime",
+          "type": 6
+        },
+        {
+          "id": "8:7731629360976642994",
+          "name": "routeAddress",
+          "type": 9
+        },
+        {
+          "id": "9:6278516715871598526",
+          "name": "tokenInAddress",
+          "type": 9
+        },
+        {
+          "id": "10:6259402205725304692",
+          "name": "tokenOutAddress",
+          "type": 9
+        },
+        {
+          "id": "11:3902820890271639402",
+          "name": "amountIn",
+          "type": 9
+        },
+        {
+          "id": "12:6958092977093341569",
+          "name": "amountOut",
+          "type": 9
+        },
+        {
+          "id": "13:4119205835121662671",
+          "name": "chainId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "37:1128785091117082473",
+      "lastPropertyId": "15:3615364744096824874",
+      "name": "WalletAddressBook",
+      "properties": [
+        {
+          "id": "1:643961703287150194",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "3:8045052482320363438",
+          "name": "network",
+          "indexId": "39:337256889725991367",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:3916484090467192679",
+          "name": "tokenId",
+          "indexId": "40:3526074890869559552",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "Token"
+        },
+        {
+          "id": "5:7215313873276068884",
+          "name": "tokenSymbol",
+          "indexId": "41:7777099237539892224",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:4958497106787635444",
+          "name": "address",
+          "indexId": "42:903371304229975372",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "7:2465863150516761131",
+          "name": "label",
+          "type": 9
+        },
+        {
+          "id": "8:459641849550326099",
+          "name": "uniqueKey",
+          "indexId": "43:6844573449785300161",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "9:6026955952963238563",
+          "name": "createdAtMs",
+          "type": 6
+        },
+        {
+          "id": "10:4858262395716323294",
+          "name": "updatedAtMs",
+          "type": 6
+        },
+        {
+          "id": "11:5383277480444629499",
+          "name": "tokenContractAddress",
+          "type": 9
+        },
+        {
+          "id": "12:4920923133764979790",
+          "name": "isAutoGeneratedLabel",
+          "type": 1
+        },
+        {
+          "id": "13:1681576944798326893",
+          "name": "hasValidationError",
+          "type": 1
+        },
+        {
+          "id": "14:2618050370600769480",
+          "name": "isEvm",
+          "type": 1
+        },
+        {
+          "id": "15:3615364744096824874",
+          "name": "note",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "38:6739991443755780713",
+      "lastPropertyId": "26:4002221677094069606",
+      "name": "MinerBaseInfo",
+      "properties": [
+        {
+          "id": "1:4048793193725367020",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7927133630106278679",
+          "name": "netId",
+          "type": 9
+        },
+        {
+          "id": "3:788828805350528027",
+          "name": "totalAmount",
+          "type": 6
+        },
+        {
+          "id": "4:5269620395017200291",
+          "name": "balance",
+          "type": 6
+        },
+        {
+          "id": "5:6726385338379342771",
+          "name": "balanceFrozen",
+          "type": 6
+        },
+        {
+          "id": "6:5025275739060336541",
+          "name": "balanceLockup",
+          "type": 6
+        },
+        {
+          "id": "7:2590399867346977302",
+          "name": "testnet",
+          "type": 6
+        },
+        {
+          "id": "8:8946871423066708282",
+          "name": "blocks",
+          "type": 6
+        },
+        {
+          "id": "9:6213287706539931270",
+          "name": "group",
+          "type": 6
+        },
+        {
+          "id": "10:6551009109489327085",
+          "name": "startingBlock",
+          "type": 6
+        },
+        {
+          "id": "11:79659755161046682",
+          "name": "startBlockTime",
+          "type": 6
+        },
+        {
+          "id": "12:6967572471545053891",
+          "name": "highestBlock",
+          "type": 6
+        },
+        {
+          "id": "13:6180116169334893279",
+          "name": "currentBlock",
+          "type": 6
+        },
+        {
+          "id": "14:4577320301523163928",
+          "name": "pulledStates",
+          "type": 6
+        },
+        {
+          "id": "15:8981831613275571997",
+          "name": "blockTime",
+          "type": 6
+        },
+        {
+          "id": "16:6393362779478914206",
+          "name": "lightNode",
+          "type": 6
+        },
+        {
+          "id": "17:6382847234759502723",
+          "name": "communityNode",
+          "type": 6
+        },
+        {
+          "id": "18:2046229163008559760",
+          "name": "witnessNode",
+          "type": 6
+        },
+        {
+          "id": "19:6584843275679915322",
+          "name": "nameDepositMin",
+          "type": 6
+        },
+        {
+          "id": "20:8980347262303204445",
+          "name": "addrPre",
+          "type": 9
+        },
+        {
+          "id": "21:7215409840766714715",
+          "name": "tokenBalance",
+          "type": 9
+        },
+        {
+          "id": "22:6575868136180384958",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "23:7584047055053015421",
+          "name": "contractAddress",
+          "type": 9
+        },
+        {
+          "id": "24:4940975386024005960",
+          "name": "gasFast",
+          "type": 6
+        },
+        {
+          "id": "25:5540020378939249575",
+          "name": "gasNormal",
+          "type": 6
+        },
+        {
+          "id": "26:4002221677094069606",
+          "name": "gasLow",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "39:325911418427879693",
+      "lastPropertyId": "23:5276159983239274385",
+      "name": "MinerBpBuffer",
+      "properties": [
+        {
+          "id": "1:4467812881750957571",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5402639680319404737",
+          "name": "bpId",
+          "type": 9
+        },
+        {
+          "id": "3:3273147729556457139",
+          "name": "bpLevel",
+          "type": 6
+        },
+        {
+          "id": "4:2326741928133320290",
+          "name": "bpModule",
+          "type": 6
+        },
+        {
+          "id": "5:1019862169929719583",
+          "name": "bpIsTrade",
+          "type": 6
+        },
+        {
+          "id": "6:7129744209319701159",
+          "name": "bpType",
+          "type": 6
+        },
+        {
+          "id": "7:685646067680063530",
+          "name": "bpData",
+          "type": 9
+        },
+        {
+          "id": "8:593362700558122517",
+          "name": "bpVersion",
+          "type": 6
+        },
+        {
+          "id": "9:2220480244429644613",
+          "name": "bpState",
+          "type": 6
+        },
+        {
+          "id": "10:258716028857635116",
+          "name": "bpTradeState",
+          "type": 6
+        },
+        {
+          "id": "11:2252696942271086734",
+          "name": "bpAddress",
+          "type": 9
+        },
+        {
+          "id": "12:8350153235525580328",
+          "name": "bpNonce",
+          "type": 6
+        },
+        {
+          "id": "13:5108255432302439638",
+          "name": "bpLayer",
+          "type": 6
+        },
+        {
+          "id": "14:5837569609064371187",
+          "name": "bpTradeData",
+          "type": 9
+        },
+        {
+          "id": "15:9191988699377140921",
+          "name": "bpViewInfo",
+          "type": 9
+        },
+        {
+          "id": "16:5033981806030255898",
+          "name": "bpTradeAmount",
+          "type": 6
+        },
+        {
+          "id": "17:5442512095176199553",
+          "name": "bpRetryCount",
+          "type": 6
+        },
+        {
+          "id": "18:1216834279295851514",
+          "name": "bpExp1",
+          "type": 9
+        },
+        {
+          "id": "19:6973408844235309123",
+          "name": "bpExp2",
+          "type": 9
+        },
+        {
+          "id": "20:7467354905182193766",
+          "name": "bpCreatedTime",
+          "type": 6
+        },
+        {
+          "id": "21:6747108529241185583",
+          "name": "bpUpdatedTime",
+          "type": 6
+        },
+        {
+          "id": "22:2784796133444118365",
+          "name": "erc20Address",
+          "type": 9
+        },
+        {
+          "id": "23:5276159983239274385",
+          "name": "erc20Amount",
+          "type": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "40:3634852876327167472",
+      "lastPropertyId": "23:8828365390467905295",
+      "name": "MinerBpBufferFail",
+      "properties": [
+        {
+          "id": "1:3927960787179343364",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5396889968588717276",
+          "name": "bpId",
+          "type": 9
+        },
+        {
+          "id": "3:4853437601791085527",
+          "name": "bpLevel",
+          "type": 6
+        },
+        {
+          "id": "4:2824496641303660835",
+          "name": "bpModule",
+          "type": 6
+        },
+        {
+          "id": "5:6938735984531871564",
+          "name": "bpIsTrade",
+          "type": 6
+        },
+        {
+          "id": "6:4101783524263756910",
+          "name": "bpType",
+          "type": 6
+        },
+        {
+          "id": "7:1173049476451063206",
+          "name": "bpData",
+          "type": 9
+        },
+        {
+          "id": "8:3335866642310915534",
+          "name": "bpVersion",
+          "type": 6
+        },
+        {
+          "id": "9:1172514901358964986",
+          "name": "bpState",
+          "type": 6
+        },
+        {
+          "id": "10:186395709083980781",
+          "name": "bpTradeState",
+          "type": 6
+        },
+        {
+          "id": "11:4192813040758569989",
+          "name": "bpAddress",
+          "type": 9
+        },
+        {
+          "id": "12:9062447037643935926",
+          "name": "bpNonce",
+          "type": 6
+        },
+        {
+          "id": "13:5473072455873265060",
+          "name": "bpNonceUsed",
+          "type": 6
+        },
+        {
+          "id": "14:2006579329035722190",
+          "name": "bpLayer",
+          "type": 6
+        },
+        {
+          "id": "15:5927147725070594392",
+          "name": "bpTradeData",
+          "type": 9
+        },
+        {
+          "id": "16:4884819577167637929",
+          "name": "bpErrorCode",
+          "type": 6
+        },
+        {
+          "id": "17:813523285146352509",
+          "name": "bpViewInfo",
+          "type": 9
+        },
+        {
+          "id": "18:5786090404714532183",
+          "name": "bpTradeAmount",
+          "type": 6
+        },
+        {
+          "id": "19:1089115457228983904",
+          "name": "bpRetryCount",
+          "type": 6
+        },
+        {
+          "id": "20:8051700064458345427",
+          "name": "bpExp1",
+          "type": 9
+        },
+        {
+          "id": "21:8145820346212074372",
+          "name": "bpExp2",
+          "type": 9
+        },
+        {
+          "id": "22:7185598663875496294",
+          "name": "bpCreatedTime",
+          "type": 6
+        },
+        {
+          "id": "23:8828365390467905295",
+          "name": "bpUpdatedTime",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "41:8862182179740065094",
+      "lastPropertyId": "21:4733681203709835402",
+      "name": "MinerBpBufferSuccess",
+      "properties": [
+        {
+          "id": "1:6540529688329308709",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7759400087068804604",
+          "name": "bpId",
+          "type": 9
+        },
+        {
+          "id": "3:6239868351563802526",
+          "name": "bpLevel",
+          "type": 6
+        },
+        {
+          "id": "4:6474801710975107435",
+          "name": "bpModule",
+          "type": 6
+        },
+        {
+          "id": "5:7672136332752598115",
+          "name": "bpIsTrade",
+          "type": 6
+        },
+        {
+          "id": "6:5726763699203769197",
+          "name": "bpType",
+          "type": 6
+        },
+        {
+          "id": "7:1868849298374593319",
+          "name": "bpData",
+          "type": 9
+        },
+        {
+          "id": "8:2029782118107704133",
+          "name": "bpVersion",
+          "type": 6
+        },
+        {
+          "id": "9:4819341111128008859",
+          "name": "bpState",
+          "type": 6
+        },
+        {
+          "id": "10:1518944659119904883",
+          "name": "bpTradeState",
+          "type": 6
+        },
+        {
+          "id": "11:1173908653944063093",
+          "name": "bpAddress",
+          "type": 9
+        },
+        {
+          "id": "12:2958393686489061735",
+          "name": "bpNonce",
+          "type": 6
+        },
+        {
+          "id": "13:4948338292625448757",
+          "name": "bpLayer",
+          "type": 6
+        },
+        {
+          "id": "14:8181314352957146615",
+          "name": "bpTradeData",
+          "type": 9
+        },
+        {
+          "id": "15:5876314842617876920",
+          "name": "bpViewInfo",
+          "type": 9
+        },
+        {
+          "id": "16:4131233425017477173",
+          "name": "bpTradeAmount",
+          "type": 6
+        },
+        {
+          "id": "17:4792487527957569035",
+          "name": "bpRetryCount",
+          "type": 6
+        },
+        {
+          "id": "18:5642547796840570686",
+          "name": "bpExp1",
+          "type": 9
+        },
+        {
+          "id": "19:3476057618762738574",
+          "name": "bpExp2",
+          "type": 9
+        },
+        {
+          "id": "20:7516585265060579734",
+          "name": "bpCreatedTime",
+          "type": 6
+        },
+        {
+          "id": "21:4733681203709835402",
+          "name": "bpUpdatedTime",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "42:4461129490632454036",
+      "lastPropertyId": "9:7775116285739841935",
+      "name": "MinerComNode",
+      "properties": [
+        {
+          "id": "1:2003138428200690355",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5688896914854663367",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:5167488104033550429",
+          "name": "index",
+          "type": 6
+        },
+        {
+          "id": "4:4942336901235808672",
+          "name": "comNodeName",
+          "type": 9
+        },
+        {
+          "id": "5:5535695342663988025",
+          "name": "comNodeAddress",
+          "type": 9
+        },
+        {
+          "id": "6:2963015812480720631",
+          "name": "pledgeNum",
+          "type": 6
+        },
+        {
+          "id": "7:1069791989676599744",
+          "name": "blockOutReward",
+          "type": 6
+        },
+        {
+          "id": "8:9109717156441003497",
+          "name": "votesNum",
+          "type": 6
+        },
+        {
+          "id": "9:7775116285739841935",
+          "name": "rewardRatio",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "43:4793116653409723803",
+      "lastPropertyId": "15:5987938128531080978",
+      "name": "MinerComNodeDetail",
+      "properties": [
+        {
+          "id": "1:1715343033456363312",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6617880627202390728",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:2677577046331040785",
+          "name": "addrCoin",
+          "type": 9
+        },
+        {
+          "id": "4:2332382428666357911",
+          "name": "deposit",
+          "type": 6
+        },
+        {
+          "id": "5:2550284288604198842",
+          "name": "vote",
+          "type": 6
+        },
+        {
+          "id": "6:7437819136660490918",
+          "name": "lightCount",
+          "type": 6
+        },
+        {
+          "id": "7:6682076728509575462",
+          "name": "rewardRatio",
+          "type": 6
+        },
+        {
+          "id": "8:945083887286271665",
+          "name": "reward",
+          "type": 6
+        },
+        {
+          "id": "9:9036373520028777912",
+          "name": "witnessName",
+          "type": 9
+        },
+        {
+          "id": "10:2069780262247501439",
+          "name": "witnessAddr",
+          "type": 9
+        },
+        {
+          "id": "11:2254845712708692089",
+          "name": "startHeight",
+          "type": 6
+        },
+        {
+          "id": "12:35183926417330242",
+          "name": "frozenReward",
+          "type": 6
+        },
+        {
+          "id": "13:816267774144447142",
+          "name": "contract",
+          "type": 9
+        },
+        {
+          "id": "14:7815010239484847981",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "15:5987938128531080978",
+          "name": "lightNode",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "44:5993630513215910071",
+      "lastPropertyId": "8:6371679722130237415",
+      "name": "MinerComNodeDetailLightNodeList",
+      "properties": [
+        {
+          "id": "1:247011617372441751",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8522011127144981913",
+          "name": "communityAddrCoin",
+          "type": 9
+        },
+        {
+          "id": "3:4448484304074385350",
+          "name": "index",
+          "type": 6
+        },
+        {
+          "id": "4:7899000821770225725",
+          "name": "voteAddress",
+          "type": 9
+        },
+        {
+          "id": "5:3911241308361116015",
+          "name": "blockOutReward",
+          "type": 6
+        },
+        {
+          "id": "6:7494375472132056316",
+          "name": "rewardRatio",
+          "type": 6
+        },
+        {
+          "id": "7:3031252078555403428",
+          "name": "votesNum",
+          "type": 6
+        },
+        {
+          "id": "8:6371679722130237415",
+          "name": "svrId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "45:2146664111750064465",
+      "lastPropertyId": "8:8871572234907025358",
+      "name": "MinerContractToken",
+      "properties": [
+        {
+          "id": "1:5831862754677478568",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2424686880539226561",
+          "name": "tokensContractAddress",
+          "type": 9
+        },
+        {
+          "id": "3:8129293522594476423",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:8809185419644320330",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "5:8185972202566408635",
+          "name": "isAdd",
+          "type": 6
+        },
+        {
+          "id": "6:6918349034072004057",
+          "name": "assets",
+          "type": 9
+        },
+        {
+          "id": "7:6431530719061854316",
+          "name": "decimals",
+          "type": 6
+        },
+        {
+          "id": "8:8871572234907025358",
+          "name": "svrId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "46:6065055303133885408",
+      "lastPropertyId": "6:2598760770127377926",
+      "name": "MinerContractTokensAsset",
+      "properties": [
+        {
+          "id": "1:5760276458954579908",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1791271596042881727",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:1413066248630400811",
+          "name": "addrCoin",
+          "type": 9
+        },
+        {
+          "id": "4:4512000084832593899",
+          "name": "tokensContractAddress",
+          "type": 9
+        },
+        {
+          "id": "5:1225366861478544222",
+          "name": "assets",
+          "type": 9
+        },
+        {
+          "id": "6:2598760770127377926",
+          "name": "assetsFrozen",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "47:717659887147344526",
+      "lastPropertyId": "12:5929913260863131988",
+      "name": "MinerLightNodeDetail",
+      "properties": [
+        {
+          "id": "1:6081667635552974480",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2145152355043420288",
+          "name": "communityName",
+          "type": 9
+        },
+        {
+          "id": "3:804140893105478722",
+          "name": "communityAddr",
+          "type": 9
+        },
+        {
+          "id": "4:1280845431621050055",
+          "name": "contract",
+          "type": 9
+        },
+        {
+          "id": "5:6652327381390172405",
+          "name": "deposit",
+          "type": 6
+        },
+        {
+          "id": "6:3924522230816939838",
+          "name": "frozenReward",
+          "type": 6
+        },
+        {
+          "id": "7:542626901233328995",
+          "name": "lightAddr",
+          "type": 9
+        },
+        {
+          "id": "8:7436719562152413014",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "9:1503932294762809770",
+          "name": "reward",
+          "type": 6
+        },
+        {
+          "id": "10:5425323152389590926",
+          "name": "startHeight",
+          "type": 6
+        },
+        {
+          "id": "11:5126435269390196285",
+          "name": "vote",
+          "type": 6
+        },
+        {
+          "id": "12:5929913260863131988",
+          "name": "svrId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "48:3760120633822466613",
+      "lastPropertyId": "8:1698227939359618119",
+      "name": "MinerMarketData",
+      "properties": [
+        {
+          "id": "1:8254852018231369097",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6014939177059362554",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "3:7264998048791662634",
+          "name": "serverTime",
+          "type": 6
+        },
+        {
+          "id": "4:9052638095658132665",
+          "name": "usdCny",
+          "type": 9
+        },
+        {
+          "id": "5:5057808345152534512",
+          "name": "tbc",
+          "type": 6
+        },
+        {
+          "id": "6:8554544032189309049",
+          "name": "gasFast",
+          "type": 6
+        },
+        {
+          "id": "7:4276869583739242305",
+          "name": "gasLow",
+          "type": 6
+        },
+        {
+          "id": "8:1698227939359618119",
+          "name": "gasNormal",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "49:7150258604418101473",
+      "lastPropertyId": "24:6474752194017036250",
+      "name": "MinerNode",
+      "properties": [
+        {
+          "id": "1:6280946488263450155",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7403482083699105038",
+          "name": "addrCoin",
+          "type": 9
+        },
+        {
+          "id": "3:7133891740457338262",
+          "name": "accountId",
+          "indexId": "44:7242198885913875836",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletAccount"
+        },
+        {
+          "id": "4:1096908145352393124",
+          "name": "addressFrozenStatus",
+          "type": 1
+        },
+        {
+          "id": "5:1358890264670086706",
+          "name": "balanceVote",
+          "type": 6
+        },
+        {
+          "id": "6:7107115528016093972",
+          "name": "index",
+          "type": 6
+        },
+        {
+          "id": "7:1482157006615602475",
+          "name": "mainAddrCoin",
+          "type": 9
+        },
+        {
+          "id": "8:7799216915026204719",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "9:6355648859678378267",
+          "name": "type",
+          "type": 6
+        },
+        {
+          "id": "10:3752671813268859784",
+          "name": "value",
+          "type": 8
+        },
+        {
+          "id": "11:9084801473155860205",
+          "name": "valueFrozen",
+          "type": 8
+        },
+        {
+          "id": "12:552065882712554090",
+          "name": "valueLockup",
+          "type": 8
+        },
+        {
+          "id": "13:3301659221640748832",
+          "name": "nonce",
+          "type": 6
+        },
+        {
+          "id": "14:1192703052540510492",
+          "name": "sNonce",
+          "type": 6
+        },
+        {
+          "id": "15:4305005541207401235",
+          "name": "tokensContractAddress",
+          "type": 9
+        },
+        {
+          "id": "16:8901954910550848184",
+          "name": "valueFrozenCommunity",
+          "type": 6
+        },
+        {
+          "id": "17:8007835021409983680",
+          "name": "valueFrozenLight",
+          "type": 6
+        },
+        {
+          "id": "18:7230055702193749082",
+          "name": "depositIn",
+          "type": 6
+        },
+        {
+          "id": "19:1132399448030986317",
+          "name": "isDelete",
+          "type": 6
+        },
+        {
+          "id": "20:3729968685554812810",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "21:2420601244403931249",
+          "name": "domainList",
+          "type": 9
+        },
+        {
+          "id": "22:4704867841806442878",
+          "name": "currentDomain",
+          "type": 9
+        },
+        {
+          "id": "23:2446163843871030122",
+          "name": "subAddrCoins",
+          "type": 9
+        },
+        {
+          "id": "24:6474752194017036250",
+          "name": "publicKey",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "50:1280940304431541850",
+      "lastPropertyId": "15:8756156095684183805",
+      "name": "MinerNodeDetail",
+      "properties": [
+        {
+          "id": "1:6310400525750208643",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:573262769339670166",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "3:4054182663275468538",
+          "name": "nodeName",
+          "type": 9
+        },
+        {
+          "id": "4:3695898889164691176",
+          "name": "type",
+          "type": 6
+        },
+        {
+          "id": "5:390126788778706094",
+          "name": "voteNum",
+          "type": 8
+        },
+        {
+          "id": "6:8207186785447948010",
+          "name": "peopleNum",
+          "type": 6
+        },
+        {
+          "id": "7:345943592443737931",
+          "name": "ratio",
+          "type": 8
+        },
+        {
+          "id": "8:3101409241269402727",
+          "name": "accumulateReward",
+          "type": 8
+        },
+        {
+          "id": "9:2981853709851085667",
+          "name": "voteAddress",
+          "type": 9
+        },
+        {
+          "id": "10:4003216436519900917",
+          "name": "voteName",
+          "type": 9
+        },
+        {
+          "id": "11:3486139165207893166",
+          "name": "deposit",
+          "type": 8
+        },
+        {
+          "id": "12:665666524866336171",
+          "name": "reward",
+          "type": 8
+        },
+        {
+          "id": "13:1581296024061915980",
+          "name": "startHeight",
+          "type": 8
+        },
+        {
+          "id": "14:4728729514957390800",
+          "name": "addBlockCount",
+          "type": 8
+        },
+        {
+          "id": "15:8756156095684183805",
+          "name": "lastVotedHeight",
+          "type": 8
+        }
+      ],
+      "relations": [
+        {
+          "id": "12:3472854924226888175",
+          "name": "voteInfos",
+          "targetId": "60:4619730196239234273"
+        }
+      ]
+    },
+    {
+      "id": "51:1716057189289356226",
+      "lastPropertyId": "4:487858069486060144",
+      "name": "MinerNodeNonce",
+      "properties": [
+        {
+          "id": "1:8032305699294623756",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6085075449783883392",
+          "name": "addrCoin",
+          "type": 9
+        },
+        {
+          "id": "3:4718163530853001558",
+          "name": "nonce",
+          "type": 6
+        },
+        {
+          "id": "4:487858069486060144",
+          "name": "sNonce",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "52:6324488766754974065",
+      "lastPropertyId": "5:1667934790946125473",
+      "name": "MinerRate",
+      "properties": [
+        {
+          "id": "1:2206602200886069721",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7360543879808028068",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:7714721013133301948",
+          "name": "iCom2USD",
+          "type": 9
+        },
+        {
+          "id": "4:3978768922127990813",
+          "name": "iCom2USDT",
+          "type": 9
+        },
+        {
+          "id": "5:1667934790946125473",
+          "name": "cny2usd",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "53:4494372173891736607",
+      "lastPropertyId": "10:6550943849298884174",
+      "name": "MinerServerSwitch",
+      "properties": [
+        {
+          "id": "1:546242429478343406",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3983335274931421400",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:3509375192933132387",
+          "name": "svrName",
+          "type": 9
+        },
+        {
+          "id": "4:2133614077320109003",
+          "name": "ipAddr",
+          "type": 9
+        },
+        {
+          "id": "5:1999217500522801694",
+          "name": "port",
+          "type": 6
+        },
+        {
+          "id": "6:8883432873164753396",
+          "name": "account",
+          "type": 9
+        },
+        {
+          "id": "7:7215614729008208825",
+          "name": "pwd",
+          "type": 9
+        },
+        {
+          "id": "8:2215644300195781050",
+          "name": "isSelect",
+          "type": 6
+        },
+        {
+          "id": "9:6585146079416689640",
+          "name": "isLocal",
+          "type": 6
+        },
+        {
+          "id": "10:6550943849298884174",
+          "name": "isDelete",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "54:4807857302638169332",
+      "lastPropertyId": "36:163638612256186205",
+      "name": "MinerTransactionRecord",
+      "properties": [
+        {
+          "id": "1:3185966592410484177",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3004544806154224546",
+          "name": "tokensContractAddress",
+          "type": 9
+        },
+        {
+          "id": "3:606413615670637032",
+          "name": "txType",
+          "type": 6
+        },
+        {
+          "id": "4:8384267302883248742",
+          "name": "txVout",
+          "type": 9
+        },
+        {
+          "id": "5:881209937191899286",
+          "name": "time",
+          "type": 6
+        },
+        {
+          "id": "6:8248987419646352367",
+          "name": "txVinAddr",
+          "type": 9
+        },
+        {
+          "id": "7:5174319691201263706",
+          "name": "txVoutAddress",
+          "type": 9
+        },
+        {
+          "id": "8:6235242526983424023",
+          "name": "upchainCode",
+          "type": 6
+        },
+        {
+          "id": "9:6059702423260175928",
+          "name": "nonce",
+          "type": 6
+        },
+        {
+          "id": "10:5776699075317162670",
+          "name": "gas",
+          "type": 9
+        },
+        {
+          "id": "11:9172862856089673472",
+          "name": "txHash",
+          "type": 9
+        },
+        {
+          "id": "12:1748290541422323707",
+          "name": "blockHash",
+          "type": 9
+        },
+        {
+          "id": "13:8372230436724488737",
+          "name": "blockHeight",
+          "type": 6
+        },
+        {
+          "id": "14:152766406464959097",
+          "name": "txPayload",
+          "type": 9
+        },
+        {
+          "id": "15:3836959316912116693",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "16:4822186282011565704",
+          "name": "tvi",
+          "type": 9
+        },
+        {
+          "id": "17:8713510889521488274",
+          "name": "vt",
+          "type": 6
+        },
+        {
+          "id": "18:2745835017862311590",
+          "name": "ct",
+          "type": 6
+        },
+        {
+          "id": "19:553071854772721042",
+          "name": "tokenType",
+          "type": 6
+        },
+        {
+          "id": "20:1641182456695206041",
+          "name": "tokenId",
+          "type": 6
+        },
+        {
+          "id": "21:6138943175135903145",
+          "name": "tokenDecimals",
+          "type": 6
+        },
+        {
+          "id": "22:8848042602861812204",
+          "name": "tokenCompany",
+          "type": 9
+        },
+        {
+          "id": "23:40723300467061336",
+          "name": "tokenName",
+          "type": 9
+        },
+        {
+          "id": "24:2389933593549983319",
+          "name": "price",
+          "type": 6
+        },
+        {
+          "id": "25:394514644148805137",
+          "name": "isMaster",
+          "type": 6
+        },
+        {
+          "id": "26:5186883355694832236",
+          "name": "voutTotalStr",
+          "type": 9
+        },
+        {
+          "id": "27:5183954531892563288",
+          "name": "gasUsed",
+          "type": 6
+        },
+        {
+          "id": "28:3633916897466138545",
+          "name": "gasLimit",
+          "type": 6
+        },
+        {
+          "id": "29:8104326782814313632",
+          "name": "free",
+          "type": 6
+        },
+        {
+          "id": "30:7917882209311416530",
+          "name": "errorCode",
+          "type": 6
+        },
+        {
+          "id": "31:9095875166641019172",
+          "name": "operationType",
+          "type": 6
+        },
+        {
+          "id": "32:4453729644090978325",
+          "name": "operationAddr",
+          "type": 9
+        },
+        {
+          "id": "33:7611978691820940066",
+          "name": "multAddress",
+          "type": 9
+        },
+        {
+          "id": "34:1925703865678006837",
+          "name": "multVins",
+          "type": 9
+        },
+        {
+          "id": "35:5205885013587244443",
+          "name": "multPuk",
+          "type": 9
+        },
+        {
+          "id": "36:163638612256186205",
+          "name": "lockHeight",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "55:6195949051131654673",
+      "lastPropertyId": "18:3946923456671413261",
+      "name": "MinerWaitSignRecord",
+      "properties": [
+        {
+          "id": "1:2650619103601610806",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7174843716291287389",
+          "name": "multiAddres",
+          "type": 9
+        },
+        {
+          "id": "3:7568090355456493011",
+          "name": "txHash",
+          "type": 9
+        },
+        {
+          "id": "4:5423758944125675419",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "5:3313475783744273128",
+          "name": "txType",
+          "type": 6
+        },
+        {
+          "id": "6:1078704843146977903",
+          "name": "time",
+          "type": 6
+        },
+        {
+          "id": "7:4015470620638694922",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "8:2345845189639825991",
+          "name": "txVin",
+          "type": 9
+        },
+        {
+          "id": "9:3087657561769157505",
+          "name": "txVout",
+          "type": 9
+        },
+        {
+          "id": "10:5274161264814667117",
+          "name": "txAmount",
+          "type": 6
+        },
+        {
+          "id": "11:4337798174939827963",
+          "name": "upchainCode",
+          "type": 6
+        },
+        {
+          "id": "12:5036468022064285464",
+          "name": "nonce",
+          "type": 6
+        },
+        {
+          "id": "13:423709178561772131",
+          "name": "gas",
+          "type": 6
+        },
+        {
+          "id": "14:6926720247928794046",
+          "name": "blockHash",
+          "type": 9
+        },
+        {
+          "id": "15:5760429889705964104",
+          "name": "blockHeight",
+          "type": 6
+        },
+        {
+          "id": "16:817052355993266155",
+          "name": "signAddrList",
+          "type": 9
+        },
+        {
+          "id": "17:3687421405900514559",
+          "name": "txSign",
+          "type": 9
+        },
+        {
+          "id": "18:3946923456671413261",
+          "name": "lockCycle",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "56:6660284471080208273",
+      "lastPropertyId": "14:265087774334825706",
+      "name": "MinerWitnessNodeDetail",
+      "properties": [
+        {
+          "id": "1:8862023719062890818",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3899744510149582992",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:4507794258874712745",
+          "name": "addrCoin",
+          "type": 9
+        },
+        {
+          "id": "4:348533720400397697",
+          "name": "vote",
+          "type": 6
+        },
+        {
+          "id": "5:724855048291749205",
+          "name": "deposit",
+          "type": 6
+        },
+        {
+          "id": "6:5195690464578228946",
+          "name": "addBlockCount",
+          "type": 6
+        },
+        {
+          "id": "7:3827773502396599479",
+          "name": "addBlockReward",
+          "type": 6
+        },
+        {
+          "id": "8:6599658800568432706",
+          "name": "rewardRatio",
+          "type": 8
+        },
+        {
+          "id": "9:4741529796149529035",
+          "name": "totalReward",
+          "type": 6
+        },
+        {
+          "id": "10:7243194365394621394",
+          "name": "frozenReward",
+          "type": 6
+        },
+        {
+          "id": "11:3623791977379985051",
+          "name": "communityCount",
+          "type": 6
+        },
+        {
+          "id": "12:1738974520877265791",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "13:4752917289553228103",
+          "name": "communityNode",
+          "type": 9
+        },
+        {
+          "id": "14:265087774334825706",
+          "name": "destroyNum",
+          "type": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "57:428908419709394168",
+      "lastPropertyId": "10:8366844076683958285",
+      "name": "MinerWitnessNodeDetailComNodeList",
+      "properties": [
+        {
+          "id": "1:7505701991105309149",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7812812817581481703",
+          "name": "witnessAddrCoin",
+          "type": 9
+        },
+        {
+          "id": "3:8931849942020479178",
+          "name": "comNodeName",
+          "type": 9
+        },
+        {
+          "id": "4:2065907657670220172",
+          "name": "comNodeAddress",
+          "type": 9
+        },
+        {
+          "id": "5:2804307138891985158",
+          "name": "pledgeNum",
+          "type": 6
+        },
+        {
+          "id": "6:1105593047245956419",
+          "name": "blockOutReward",
+          "type": 6
+        },
+        {
+          "id": "7:2636966230026103140",
+          "name": "comMemberNum",
+          "type": 6
+        },
+        {
+          "id": "8:2792105385761486734",
+          "name": "votesNum",
+          "type": 6
+        },
+        {
+          "id": "9:3480645530688418926",
+          "name": "rewardRatio",
+          "type": 6
+        },
+        {
+          "id": "10:8366844076683958285",
+          "name": "svrId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "58:3557557430538098795",
+      "lastPropertyId": "11:2129939712953730931",
+      "name": "MinerWitnessNodeList",
+      "properties": [
+        {
+          "id": "1:807128321297733188",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5792469603163609584",
+          "name": "svrId",
+          "type": 6
+        },
+        {
+          "id": "3:6394895170479334576",
+          "name": "index",
+          "type": 6
+        },
+        {
+          "id": "4:8855604714358711015",
+          "name": "witnessName",
+          "type": 9
+        },
+        {
+          "id": "5:3159312252114811130",
+          "name": "witnessAddress",
+          "type": 9
+        },
+        {
+          "id": "6:199074810498870292",
+          "name": "pledgeNum",
+          "type": 6
+        },
+        {
+          "id": "7:1809216468310845945",
+          "name": "blockOutNum",
+          "type": 6
+        },
+        {
+          "id": "8:3214447172405091952",
+          "name": "blockOutReward",
+          "type": 6
+        },
+        {
+          "id": "9:5717067598553541887",
+          "name": "rewardRatio",
+          "type": 6
+        },
+        {
+          "id": "10:5038835347527691576",
+          "name": "totalVotes",
+          "type": 6
+        },
+        {
+          "id": "11:2129939712953730931",
+          "name": "witnessType",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "59:8828672031591171773",
+      "lastPropertyId": "5:8451916414007987993",
+      "name": "NodeBasicInfo",
+      "properties": [
+        {
+          "id": "1:679878335897863613",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5771353734474559803",
+          "name": "rewardContractAddr",
+          "type": 9
+        },
+        {
+          "id": "3:350113795500897309",
+          "name": "witnessPledge",
+          "type": 8
+        },
+        {
+          "id": "4:5912472843721172147",
+          "name": "communityPledge",
+          "type": 8
+        },
+        {
+          "id": "5:8451916414007987993",
+          "name": "lightPledge",
+          "type": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "60:4619730196239234273",
+      "lastPropertyId": "10:1073068371498950944",
+      "name": "NodeVotingInfo",
+      "properties": [
+        {
+          "id": "1:7356401573532137377",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1211999652998334012",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "3:1070741595787233988",
+          "name": "voteAddress",
+          "type": 9
+        },
+        {
+          "id": "4:6615848726205272384",
+          "name": "voteName",
+          "type": 9
+        },
+        {
+          "id": "5:8080877378367215388",
+          "name": "voteNum",
+          "type": 8
+        },
+        {
+          "id": "6:3594045733365026587",
+          "name": "peopleNum",
+          "type": 6
+        },
+        {
+          "id": "7:6253270630408424140",
+          "name": "ratio",
+          "type": 8
+        },
+        {
+          "id": "8:5273885766786371170",
+          "name": "accumulateReward",
+          "type": 8
+        },
+        {
+          "id": "9:871088472976522103",
+          "name": "deposit",
+          "type": 8
+        },
+        {
+          "id": "10:1073068371498950944",
+          "name": "reward",
+          "type": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "61:8269564032595663645",
+      "lastPropertyId": "14:3041733623582495453",
+      "name": "SMinerBridgeRecord",
+      "properties": [
+        {
+          "id": "1:1691333056223664812",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2386111510377819001",
+          "name": "txHash",
+          "type": 9
+        },
+        {
+          "id": "3:8975756789717924748",
+          "name": "blockhash",
+          "type": 9
+        },
+        {
+          "id": "4:4534622372713523981",
+          "name": "blockheight",
+          "type": 6
+        },
+        {
+          "id": "5:5900493054316714532",
+          "name": "serverId",
+          "type": 6
+        },
+        {
+          "id": "6:7498154133885821214",
+          "name": "flag",
+          "type": 6
+        },
+        {
+          "id": "7:5042097404590821872",
+          "name": "timestamp",
+          "type": 6
+        },
+        {
+          "id": "8:1782667236693462197",
+          "name": "txinfo",
+          "type": 9
+        },
+        {
+          "id": "9:3212794177568815756",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "10:8972328641444243452",
+          "name": "contractAddress",
+          "type": 9
+        },
+        {
+          "id": "11:8947870814374919306",
+          "name": "upchaincode",
+          "type": 6
+        },
+        {
+          "id": "12:7585017035126801977",
+          "name": "tradeTxHash",
+          "type": 9
+        },
+        {
+          "id": "13:2517847920803808579",
+          "name": "errorCode",
+          "type": 6
+        },
+        {
+          "id": "14:3041733623582495453",
+          "name": "from",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "62:8060751129902222210",
+      "lastPropertyId": "4:1747692402270774225",
+      "name": "PinnedMessage",
+      "properties": [
+        {
+          "id": "1:8247990851029881072",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5217843342060549978",
+          "name": "sessionId",
+          "indexId": "45:4575671187247975952",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:6136969333287214959",
+          "name": "pinnedMessageList",
+          "type": 9
+        },
+        {
+          "id": "4:1747692402270774225",
+          "name": "pinType",
+          "indexId": "46:5609722627945991637",
+          "type": 6,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "63:716543210987654321",
+      "lastPropertyId": "4:716543210987654325",
+      "name": "RecentForward",
+      "properties": [
+        {
+          "id": "1:716543210987654322",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:716543210987654323",
+          "name": "nodeId",
+          "indexId": "47:7150910199159000095",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:716543210987654324",
+          "name": "forwardTime",
+          "type": 10
+        },
+        {
+          "id": "4:716543210987654325",
+          "name": "forwardCount",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "64:7492633200087728957",
+      "lastPropertyId": "4:8903765324665803663",
+      "name": "MediaLocalCacheRecord",
+      "properties": [
+        {
+          "id": "1:349412176707071231",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3049594648628101580",
+          "name": "fileHash",
+          "indexId": "48:9011795115484032711",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:3627234403948542596",
+          "name": "localPath",
+          "type": 9
+        },
+        {
+          "id": "4:8903765324665803663",
+          "name": "thumbnailLocalPath",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "65:5002292917658212661",
+      "lastPropertyId": "20:1775933619802966172",
+      "name": "PendingAttachmentRecord",
+      "properties": [
+        {
+          "id": "1:4850348292626972822",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3559421319295634556",
+          "name": "postId",
+          "indexId": "49:4322004334904609843",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "PendingPostRecord"
+        },
+        {
+          "id": "5:737710760259786052",
+          "name": "thumbnailLocalPath",
+          "type": 9
+        },
+        {
+          "id": "6:702157539493943374",
+          "name": "mimeType",
+          "type": 9
+        },
+        {
+          "id": "7:9104303355374632876",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "8:434970209156350942",
+          "name": "width",
+          "type": 6
+        },
+        {
+          "id": "9:6631660048507124481",
+          "name": "height",
+          "type": 6
+        },
+        {
+          "id": "10:8249289841320042891",
+          "name": "durationMs",
+          "type": 6
+        },
+        {
+          "id": "11:4994646335579553626",
+          "name": "fileHash",
+          "type": 9
+        },
+        {
+          "id": "12:3017225456981411483",
+          "name": "assetId",
+          "type": 9
+        },
+        {
+          "id": "13:2375803484189741239",
+          "name": "compressedPath",
+          "type": 9
+        },
+        {
+          "id": "14:5198544277813897416",
+          "name": "delSignature",
+          "type": 9
+        },
+        {
+          "id": "15:5471617759139020058",
+          "name": "uploadTaskId",
+          "type": 9
+        },
+        {
+          "id": "16:9181185373749953456",
+          "name": "localPath",
+          "type": 9
+        },
+        {
+          "id": "17:2901586666176568721",
+          "name": "isOriginal",
+          "type": 1
+        },
+        {
+          "id": "18:724708237533111324",
+          "name": "uniqueHash",
+          "type": 9
+        },
+        {
+          "id": "19:604469165161332005",
+          "name": "sortOrder",
+          "type": 6
+        },
+        {
+          "id": "20:1775933619802966172",
+          "name": "isAlreadyUploaded",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "67:2535140593853696127",
+      "lastPropertyId": "22:5388148143933372113",
+      "name": "PendingPostRecord",
+      "properties": [
+        {
+          "id": "1:4825887095579224961",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2932093052119341053",
+          "name": "tempId",
+          "indexId": "52:8329181956649458162",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:9073768104533272246",
+          "name": "caption",
+          "type": 9
+        },
+        {
+          "id": "4:4075757836855399225",
+          "name": "privacy",
+          "type": 9
+        },
+        {
+          "id": "5:6881787025770133598",
+          "name": "parentPostId",
+          "type": 9
+        },
+        {
+          "id": "6:2544796258819292128",
+          "name": "retryCount",
+          "type": 6
+        },
+        {
+          "id": "7:8137291884685663357",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "8:8713643426885107957",
+          "name": "lastAttemptAt",
+          "type": 10
+        },
+        {
+          "id": "9:8869293121556281908",
+          "name": "serverId",
+          "type": 9
+        },
+        {
+          "id": "10:2371220631563431126",
+          "name": "postType",
+          "type": 9
+        },
+        {
+          "id": "11:6634005986757653187",
+          "name": "originPostType",
+          "type": 9
+        },
+        {
+          "id": "12:9000680906235109337",
+          "name": "authorId",
+          "type": 9
+        },
+        {
+          "id": "13:3718805524583234582",
+          "name": "locationJson",
+          "type": 9
+        },
+        {
+          "id": "14:1534532269654651403",
+          "name": "allowDownload",
+          "type": 1
+        },
+        {
+          "id": "15:3786106225905779828",
+          "name": "allowTransferToCloud",
+          "type": 1
+        },
+        {
+          "id": "16:513468479219387187",
+          "name": "editTargetPostId",
+          "type": 9
+        },
+        {
+          "id": "17:959394011812314799",
+          "name": "baseVersion",
+          "type": 6
+        },
+        {
+          "id": "18:7586927286934795325",
+          "name": "originalFilesJson",
+          "type": 9
+        },
+        {
+          "id": "19:5722583244059171724",
+          "name": "rpcAttemptedAt",
+          "type": 10
+        },
+        {
+          "id": "20:8630048233109360193",
+          "name": "cloudAttachmentIds",
+          "type": 30
+        },
+        {
+          "id": "21:6169511429390536421",
+          "name": "livestreamId",
+          "type": 6
+        },
+        {
+          "id": "22:5388148143933372113",
+          "name": "livestreamJson",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "68:7501637030614442216",
+      "lastPropertyId": "9:6731109391734034377",
+      "name": "SyncTaskEntity",
+      "properties": [
+        {
+          "id": "1:8124309408819470922",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7391617885168929214",
+          "name": "hash",
+          "type": 9
+        },
+        {
+          "id": "3:8129002213503079380",
+          "name": "fileHash",
+          "type": 9
+        },
+        {
+          "id": "4:163260925835231893",
+          "name": "parentRemoteId",
+          "type": 9
+        },
+        {
+          "id": "5:6086523139866208722",
+          "name": "payload",
+          "type": 9
+        },
+        {
+          "id": "6:1989520458427048158",
+          "name": "statusValue",
+          "type": 6
+        },
+        {
+          "id": "7:4881172297954433350",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "8:2697150884017142389",
+          "name": "retryCount",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "69:8282917364829100001",
+      "lastPropertyId": "15:8439584568720336026",
+      "name": "Dapp",
+      "properties": [
+        {
+          "id": "1:8282917364829100011",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8282917364829100012",
+          "name": "dappId",
+          "indexId": "53:6050236554622842684",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "3:8282917364829100013",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:8282917364829100014",
+          "name": "prefix",
+          "type": 9
+        },
+        {
+          "id": "5:8282917364829100015",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "6:8282917364829100016",
+          "name": "iconUrl",
+          "type": 9
+        },
+        {
+          "id": "7:8282917364829100017",
+          "name": "sourceUrl",
+          "type": 9
+        },
+        {
+          "id": "8:8282917364829100018",
+          "name": "usersCount7d",
+          "type": 6
+        },
+        {
+          "id": "9:8282917364829100023",
+          "name": "lastAccessedAt",
+          "type": 10
+        },
+        {
+          "id": "10:8282917364829100024",
+          "name": "category",
+          "type": 6
+        },
+        {
+          "id": "11:8282917364829100025",
+          "name": "isUsed",
+          "type": 1
+        },
+        {
+          "id": "12:8282917364829100026",
+          "name": "auditTime",
+          "type": 6
+        },
+        {
+          "id": "13:8282917364829100027",
+          "name": "collectTime",
+          "type": 10
+        },
+        {
+          "id": "14:7438822232822423746",
+          "name": "codeUrlType",
+          "type": 6
+        },
+        {
+          "id": "15:8439584568720336026",
+          "name": "version",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "70:6248738419691452773",
+      "lastPropertyId": "7:6485290002733500731",
+      "name": "RedpacketFreeGasLimitTable",
+      "properties": [
+        {
+          "id": "1:4897690806650405272",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6730738150621914558",
+          "name": "walletId",
+          "type": 6
+        },
+        {
+          "id": "3:7562225322888699667",
+          "name": "walletAccount",
+          "type": 9
+        },
+        {
+          "id": "4:7324844922936951437",
+          "name": "network",
+          "type": 9
+        },
+        {
+          "id": "5:3906776521369408633",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "6:6642102607469592090",
+          "name": "freeGasLimitConfig",
+          "type": 9
+        },
+        {
+          "id": "7:6485290002733500731",
+          "name": "timeStamp",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "71:3675327663989638002",
+      "lastPropertyId": "3:5886969752236031507",
+      "name": "SearchesRecent",
+      "properties": [
+        {
+          "id": "1:5341765686679542110",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8122758505301848029",
+          "name": "query",
+          "type": 9
+        },
+        {
+          "id": "3:5886969752236031507",
+          "name": "createdAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "72:5446214009374338140",
+      "lastPropertyId": "7:7008617567379653912",
+      "name": "PostCacheRecord",
+      "properties": [
+        {
+          "id": "1:6775282904175487113",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7757163623515729805",
+          "name": "postId",
+          "indexId": "54:5511977780098177805",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:9098446118625145420",
+          "name": "feedType",
+          "indexId": "55:8852226019350566130",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:9140268439230541124",
+          "name": "orderIndex",
+          "indexId": "56:2109957609630668780",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:7293852885918712888",
+          "name": "postData",
+          "type": 23
+        },
+        {
+          "id": "6:5406532516055286985",
+          "name": "cachedAt",
+          "type": 10
+        },
+        {
+          "id": "7:7008617567379653912",
+          "name": "locationId",
+          "indexId": "70:1833650002366689911",
+          "type": 9,
+          "flags": 2048
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "73:1812741604087622543",
+      "lastPropertyId": "3:3029717600033500035",
+      "name": "DraftAssetRecord",
+      "properties": [
+        {
+          "id": "1:66618649540515335",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5474876646084011888",
+          "name": "assetId",
+          "type": 9
+        },
+        {
+          "id": "3:3029717600033500035",
+          "name": "draftId",
+          "indexId": "57:4129738025092730708",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "DraftPostRecord"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "74:6829643484205817032",
+      "lastPropertyId": "10:2226661408450055765",
+      "name": "DraftPostRecord",
+      "properties": [
+        {
+          "id": "1:8932366293195668476",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7685298805370459058",
+          "name": "draftId",
+          "indexId": "58:271720906773665612",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:8582522813461401928",
+          "name": "caption",
+          "type": 9
+        },
+        {
+          "id": "4:4118112388175183313",
+          "name": "privacy",
+          "type": 9
+        },
+        {
+          "id": "5:4212422422987064836",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "6:5362228946685428835",
+          "name": "locationJson",
+          "type": 9
+        },
+        {
+          "id": "7:8048269426283277260",
+          "name": "allowDownload",
+          "type": 1
+        },
+        {
+          "id": "8:4680645391494608907",
+          "name": "allowTransferToCloud",
+          "type": 1
+        },
+        {
+          "id": "9:8870987350410190318",
+          "name": "cloudAttachmentIds",
+          "type": 30
+        },
+        {
+          "id": "10:2226661408450055765",
+          "name": "livestreamJson",
+          "type": 9
+        }
+      ],
+      "relations": [
+        {
+          "id": "13:120207094297627169",
+          "name": "assetIds",
+          "targetId": "73:1812741604087622543"
+        }
+      ]
+    },
+    {
+      "id": "75:5830856087274840859",
+      "lastPropertyId": "9:8103221079773648994",
+      "name": "PostTranslateRecord",
+      "properties": [
+        {
+          "id": "1:230847946395892493",
+          "name": "obId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7808163331620110176",
+          "name": "postId",
+          "indexId": "60:1525268226467664074",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:5583773556562424149",
+          "name": "sourceLanguage",
+          "type": 9
+        },
+        {
+          "id": "4:8856330908489088031",
+          "name": "targetLanguage",
+          "type": 9
+        },
+        {
+          "id": "5:4569590954410076612",
+          "name": "translatedText",
+          "type": 9
+        },
+        {
+          "id": "6:5134185204793720379",
+          "name": "serviceUsed",
+          "type": 9
+        },
+        {
+          "id": "8:3019704958268454036",
+          "name": "cachedAt",
+          "type": 10
+        },
+        {
+          "id": "9:8103221079773648994",
+          "name": "sourceContent",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "76:409824655335398332",
+      "lastPropertyId": "14:2263072788049951837",
+      "name": "WalletNetwork",
+      "properties": [
+        {
+          "id": "1:8212762446956844499",
+          "name": "dbId",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7517562676191320874",
+          "name": "id",
+          "indexId": "61:7028972881130265147",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:937314417936310518",
+          "name": "netName",
+          "type": 9
+        },
+        {
+          "id": "4:7787026013467169115",
+          "name": "symbol",
+          "type": 9
+        },
+        {
+          "id": "5:4280375599466465121",
+          "name": "blockchainType",
+          "type": 9
+        },
+        {
+          "id": "6:6390045052399832812",
+          "name": "chainId",
+          "type": 6
+        },
+        {
+          "id": "7:1123892669155389673",
+          "name": "isEIP1559",
+          "type": 1
+        },
+        {
+          "id": "8:7655088709621278294",
+          "name": "gasUnitMultiplier",
+          "type": 8
+        },
+        {
+          "id": "9:8280511980757859656",
+          "name": "gasUnitName",
+          "type": 9
+        },
+        {
+          "id": "10:6835557697934956966",
+          "name": "segwitTypes",
+          "type": 30
+        },
+        {
+          "id": "11:1504916113887081247",
+          "name": "explorerTxUrl",
+          "type": 9
+        },
+        {
+          "id": "12:2292372656086540120",
+          "name": "testnetExplorerTxUrl",
+          "type": 9
+        },
+        {
+          "id": "13:4879943285963228379",
+          "name": "aliases",
+          "type": 30
+        },
+        {
+          "id": "14:2263072788049951837",
+          "name": "iconUrl",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "77:8282917364829100200",
+      "lastPropertyId": "16:8282917364829100216",
+      "name": "OfflineDappDownloadTaskRecord",
+      "properties": [
+        {
+          "id": "1:8282917364829100201",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8282917364829100202",
+          "name": "taskId",
+          "indexId": "62:5244155539188280816",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:8282917364829100203",
+          "name": "dappId",
+          "indexId": "63:1734766269188425797",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "4:8282917364829100204",
+          "name": "packageId",
+          "type": 9
+        },
+        {
+          "id": "5:8282917364829100205",
+          "name": "url",
+          "type": 9
+        },
+        {
+          "id": "6:8282917364829100206",
+          "name": "tempFilePath",
+          "type": 9
+        },
+        {
+          "id": "7:8282917364829100207",
+          "name": "downloadedBytes",
+          "type": 6
+        },
+        {
+          "id": "8:8282917364829100208",
+          "name": "totalBytes",
+          "type": 6
+        },
+        {
+          "id": "9:8282917364829100209",
+          "name": "statusIndex",
+          "indexId": "64:6089066076619993488",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "10:8282917364829100210",
+          "name": "supportsRange",
+          "type": 1
+        },
+        {
+          "id": "11:8282917364829100211",
+          "name": "etag",
+          "type": 9
+        },
+        {
+          "id": "12:8282917364829100212",
+          "name": "lastModified",
+          "type": 9
+        },
+        {
+          "id": "13:8282917364829100213",
+          "name": "statusCode",
+          "type": 6
+        },
+        {
+          "id": "14:8282917364829100214",
+          "name": "errorMessage",
+          "type": 9
+        },
+        {
+          "id": "15:8282917364829100215",
+          "name": "createdAt",
+          "type": 6
+        },
+        {
+          "id": "16:8282917364829100216",
+          "name": "updatedAt",
+          "indexId": "65:7129723124505622463",
+          "type": 6,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "78:8282917364829100300",
+      "lastPropertyId": "13:8282917364829100313",
+      "name": "OfflineDappPackageRecord",
+      "properties": [
+        {
+          "id": "1:8282917364829100301",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8282917364829100302",
+          "name": "dappId",
+          "indexId": "66:2655644685087211185",
+          "type": 6,
+          "flags": 40
+        },
+        {
+          "id": "3:8282917364829100303",
+          "name": "packageId",
+          "type": 9
+        },
+        {
+          "id": "4:8282917364829100304",
+          "name": "packageUrl",
+          "type": 9
+        },
+        {
+          "id": "5:8282917364829100305",
+          "name": "entryFile",
+          "type": 9
+        },
+        {
+          "id": "6:8282917364829100306",
+          "name": "packageSize",
+          "type": 6
+        },
+        {
+          "id": "7:8282917364829100307",
+          "name": "zipPath",
+          "type": 9
+        },
+        {
+          "id": "8:8282917364829100308",
+          "name": "extractDir",
+          "type": 9
+        },
+        {
+          "id": "9:8282917364829100309",
+          "name": "localUrl",
+          "type": 9
+        },
+        {
+          "id": "10:8282917364829100310",
+          "name": "statusIndex",
+          "indexId": "67:279277199006734477",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "11:8282917364829100311",
+          "name": "errorMessage",
+          "type": 9
+        },
+        {
+          "id": "12:8282917364829100312",
+          "name": "createdAt",
+          "type": 6
+        },
+        {
+          "id": "13:8282917364829100313",
+          "name": "updatedAt",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "79:5198472631704942865",
+      "lastPropertyId": "9:1070723193116225195",
+      "name": "SecretRoom",
+      "properties": [
+        {
+          "id": "1:7349026154683301191",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2651874309946175824",
+          "name": "srId",
+          "indexId": "68:3897866875167520842",
+          "type": 6,
+          "flags": 32808
+        },
+        {
+          "id": "3:8815602394176253046",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:4129736852061847759",
+          "name": "password",
+          "indexId": "69:7640060016044933256",
+          "type": 9,
+          "flags": 4096
+        },
+        {
+          "id": "5:8912746538092145637",
+          "name": "hide",
+          "type": 1
+        },
+        {
+          "id": "6:527892048565420468",
+          "name": "newMessageNotify",
+          "type": 1
+        },
+        {
+          "id": "7:1576007133904639885",
+          "name": "voiceVideoNotify",
+          "type": 1
+        },
+        {
+          "id": "8:7072319311622519501",
+          "name": "notifyType",
+          "type": 6
+        },
+        {
+          "id": "9:1070723193116225195",
+          "name": "lastNotifyTimeMs",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "80:3167041138485230712",
+      "lastPropertyId": "33:1494092066845043152",
+      "name": "CloudExternal",
+      "properties": [
+        {
+          "id": "1:617765310260339332",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:9079443232032221602",
+          "name": "remoteId",
+          "type": 9
+        },
+        {
+          "id": "3:8675835022114631960",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6315098179803371545",
+          "name": "ownerId",
+          "type": 9
+        },
+        {
+          "id": "5:7460175135886288157",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "6:5233425678651076474",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "7:6828308619598381954",
+          "name": "space",
+          "type": 9
+        },
+        {
+          "id": "8:3452260964788142194",
+          "name": "fullPath",
+          "type": 9
+        },
+        {
+          "id": "9:8724114976438277727",
+          "name": "createdAt",
+          "type": 6
+        },
+        {
+          "id": "10:2958285801570273665",
+          "name": "updatedAt",
+          "type": 6
+        },
+        {
+          "id": "11:3085532678176528315",
+          "name": "folderId",
+          "type": 9
+        },
+        {
+          "id": "12:4704152388889296273",
+          "name": "fileHash",
+          "type": 9
+        },
+        {
+          "id": "13:3840968515013115758",
+          "name": "uniqueHash",
+          "type": 9
+        },
+        {
+          "id": "14:5752898005869617167",
+          "name": "fileType",
+          "type": 9
+        },
+        {
+          "id": "15:3991846904069349476",
+          "name": "fileExt",
+          "type": 9
+        },
+        {
+          "id": "16:5821062219066768760",
+          "name": "fileMimeType",
+          "type": 9
+        },
+        {
+          "id": "17:3926992507898985639",
+          "name": "fileVideoResolution",
+          "type": 9
+        },
+        {
+          "id": "18:8239732942732863820",
+          "name": "fileSize",
+          "type": 6
+        },
+        {
+          "id": "19:6218009297990180548",
+          "name": "recentAccessedAt",
+          "type": 6
+        },
+        {
+          "id": "20:8392935273079234541",
+          "name": "deletedAt",
+          "type": 6
+        },
+        {
+          "id": "21:8398898008223468849",
+          "name": "deletedBy",
+          "type": 9
+        },
+        {
+          "id": "23:8143772993620654865",
+          "name": "favorite",
+          "type": 1
+        },
+        {
+          "id": "24:5186095814471951515",
+          "name": "platform",
+          "type": 6
+        },
+        {
+          "id": "25:8113829129008014282",
+          "name": "childFolderCount",
+          "type": 6
+        },
+        {
+          "id": "26:6318035542356334375",
+          "name": "childFileCount",
+          "type": 6
+        },
+        {
+          "id": "27:2282916342243899340",
+          "name": "metadata",
+          "type": 9
+        },
+        {
+          "id": "28:7058680404109753705",
+          "name": "favoritedAt",
+          "type": 6
+        },
+        {
+          "id": "29:4711599496617670625",
+          "name": "source",
+          "type": 9
+        },
+        {
+          "id": "30:2500964967650911771",
+          "name": "sourceId",
+          "type": 9
+        },
+        {
+          "id": "31:7950951004705796502",
+          "name": "link",
+          "type": 9
+        },
+        {
+          "id": "32:4447182311666659963",
+          "name": "conversationId",
+          "type": 9
+        },
+        {
+          "id": "33:1494092066845043152",
+          "name": "folderScope",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "81:5755118422472566443",
+      "lastPropertyId": "6:5776471941742178170",
+      "name": "CloudVideoEntity",
+      "properties": [
+        {
+          "id": "1:9054207206691364490",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4332675683554089087",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:4608263458155839775",
+          "name": "hash",
+          "type": 9
+        },
+        {
+          "id": "4:1728603764311998896",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "5:3136465711353803995",
+          "name": "ext",
+          "type": 9
+        },
+        {
+          "id": "6:5776471941742178170",
+          "name": "extra",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "82:3939454995530523570",
+      "lastPropertyId": "1:1706978712742614866",
+      "name": "WalletFeatureConfig",
+      "properties": [
+        {
+          "id": "1:1706978712742614866",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "83:8612679509152237175",
+      "lastPropertyId": "5:3036682937118150730",
+      "name": "WalletFeatureItem",
+      "properties": [
+        {
+          "id": "1:4126727961406081452",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4459381312288183323",
+          "name": "key",
+          "indexId": "72:5998881587490957973",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:3240886565923406443",
+          "name": "level",
+          "type": 9
+        },
+        {
+          "id": "4:3293730515809861195",
+          "name": "status",
+          "type": 9
+        },
+        {
+          "id": "5:3036682937118150730",
+          "name": "configId",
+          "indexId": "73:7171853669244185222",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletFeatureConfig"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "84:1799807017943138008",
+      "lastPropertyId": "20:7772120116868710068",
+      "name": "Conversation",
+      "properties": [
+        {
+          "id": "1:7023158110810688168",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8746018765653946759",
+          "name": "sessionId",
+          "indexId": "74:5318369796489148643",
+          "type": 9,
+          "flags": 32808
+        },
+        {
+          "id": "3:7162372870116709789",
+          "name": "type",
+          "type": 6
+        },
+        {
+          "id": "4:2504778916157684342",
+          "name": "secretRoomId",
+          "indexId": "75:1560507806866948942",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:2647328578544741486",
+          "name": "lastTime",
+          "type": 6
+        },
+        {
+          "id": "6:3507497830513591970",
+          "name": "isTop",
+          "type": 1
+        },
+        {
+          "id": "7:1727638083699748287",
+          "name": "hideState",
+          "type": 6
+        },
+        {
+          "id": "8:7708850846011505054",
+          "name": "relationType",
+          "type": 6
+        },
+        {
+          "id": "9:4083070927784221828",
+          "name": "realRelationType",
+          "type": 6
+        },
+        {
+          "id": "10:5593029694355198304",
+          "name": "notDisturbType",
+          "type": 6
+        },
+        {
+          "id": "11:3125095631529658965",
+          "name": "disappearingDays",
+          "type": 6
+        },
+        {
+          "id": "12:8381585015935040790",
+          "name": "accountStatus",
+          "type": 6
+        },
+        {
+          "id": "13:8128505804725080289",
+          "name": "groupState",
+          "type": 6
+        },
+        {
+          "id": "14:2746368065334143075",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "15:2541819278050478411",
+          "name": "avatars",
+          "type": 30
+        },
+        {
+          "id": "16:6035168573244114975",
+          "name": "domain",
+          "type": 9
+        },
+        {
+          "id": "17:7071611177268820068",
+          "name": "lastMessageId",
+          "indexId": "76:3438338116216695857",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "Message"
+        },
+        {
+          "id": "18:6957128070421556261",
+          "name": "markUnreadCount",
+          "type": 6
+        },
+        {
+          "id": "19:8278719803986143975",
+          "name": "subscribeNotifyType",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "85:3621057004470000248",
+      "lastPropertyId": "27:3597460324343819734",
+      "name": "AeonPaymentRecordModel",
+      "properties": [
+        {
+          "id": "1:1392584113562367521",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3150397741284469230",
+          "name": "transactionId",
+          "indexId": "77:536476007992968226",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletTransactionModel"
+        },
+        {
+          "id": "3:6888230544826666449",
+          "name": "txHash",
+          "indexId": "78:2886637798351675704",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "4:4192589211946997981",
+          "name": "merchantOrderNo",
+          "indexId": "79:7623739853019188850",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "5:8339277746611084073",
+          "name": "orderNo",
+          "type": 9
+        },
+        {
+          "id": "6:625818321953360967",
+          "name": "merchantName",
+          "type": 9
+        },
+        {
+          "id": "7:6008324166759719507",
+          "name": "merchantAccount",
+          "type": 9
+        },
+        {
+          "id": "8:2547849735133549767",
+          "name": "bankName",
+          "type": 9
+        },
+        {
+          "id": "9:5541689466460306799",
+          "name": "fiatAmount",
+          "type": 9
+        },
+        {
+          "id": "10:5280465812238543342",
+          "name": "fiatCurrency",
+          "type": 9
+        },
+        {
+          "id": "11:8782270976670363761",
+          "name": "cryptoAmount",
+          "type": 9
+        },
+        {
+          "id": "12:4776721406937418267",
+          "name": "cryptoSymbol",
+          "type": 9
+        },
+        {
+          "id": "13:8468277299511676795",
+          "name": "network",
+          "type": 9
+        },
+        {
+          "id": "14:3854935259123405175",
+          "name": "networkCode",
+          "type": 9
+        },
+        {
+          "id": "15:4708447102841057625",
+          "name": "chainId",
+          "type": 9
+        },
+        {
+          "id": "16:6864016249953014066",
+          "name": "mpcAddress",
+          "type": 9
+        },
+        {
+          "id": "17:3993003168065576427",
+          "name": "orderStatus",
+          "type": 9
+        },
+        {
+          "id": "18:1909874768945982928",
+          "name": "payerWalletAddress",
+          "type": 9
+        },
+        {
+          "id": "19:8517204971865100485",
+          "name": "qrCode",
+          "type": 9
+        },
+        {
+          "id": "20:7830554488568249654",
+          "name": "tokenAddress",
+          "type": 9
+        },
+        {
+          "id": "21:9019993819480267074",
+          "name": "bankCode",
+          "type": 9
+        },
+        {
+          "id": "22:1865451904540935466",
+          "name": "failReason",
+          "type": 9
+        },
+        {
+          "id": "23:2420525842385469597",
+          "name": "refundHash",
+          "type": 9
+        },
+        {
+          "id": "24:5088278100960230292",
+          "name": "createdAtMs",
+          "type": 6
+        },
+        {
+          "id": "25:5011614382430070988",
+          "name": "completedAtMs",
+          "type": 6
+        },
+        {
+          "id": "26:7092927131999544539",
+          "name": "confirmTimeOnChainMs",
+          "type": 6
+        },
+        {
+          "id": "27:3597460324343819734",
+          "name": "confirmTimeOnProviderMs",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "86:5815145828595838695",
+      "lastPropertyId": "2:8745648971406269316",
+      "name": "Token",
+      "properties": [
+        {
+          "id": "1:1751356087270255733",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8745648971406269316",
+          "name": "symbol",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "87:15005618434667328",
+      "lastPropertyId": "21:5621628625097238644",
+      "name": "TokenDeployment",
+      "properties": [
+        {
+          "id": "1:8352711782265510496",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4047021713897308408",
+          "name": "coinInfoId",
+          "indexId": "80:813743314105310688",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "Token"
+        },
+        {
+          "id": "3:3538806289254179959",
+          "name": "walletNetworkId",
+          "indexId": "81:4727472933781802582",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletNetwork"
+        },
+        {
+          "id": "4:6370947186928005015",
+          "name": "networkId",
+          "indexId": "82:2325136393730339247",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "5:833184878114099597",
+          "name": "contractAddress",
+          "indexId": "83:7967143739932996709",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "6:5254771606350813474",
+          "name": "decimals",
+          "type": 6
+        },
+        {
+          "id": "7:8005300755604067754",
+          "name": "isNative",
+          "type": 1
+        },
+        {
+          "id": "8:2419333371174902038",
+          "name": "isVerified",
+          "type": 1
+        },
+        {
+          "id": "9:1689692302568343165",
+          "name": "isCustomImport",
+          "type": 1
+        },
+        {
+          "id": "10:4099211303025838928",
+          "name": "iconUrl",
+          "type": 9
+        },
+        {
+          "id": "11:1316760571938249140",
+          "name": "priceUsd",
+          "type": 9
+        },
+        {
+          "id": "12:8061308996518851235",
+          "name": "totalSupply",
+          "type": 9
+        },
+        {
+          "id": "13:6425618022698032740",
+          "name": "changePercent24Hr",
+          "type": 9
+        },
+        {
+          "id": "14:1699026765807470236",
+          "name": "highPriceUsd",
+          "type": 9
+        },
+        {
+          "id": "15:7601321637255058342",
+          "name": "lowPriceUsd",
+          "type": 9
+        },
+        {
+          "id": "16:4522598305462129646",
+          "name": "priceCnyToUsd",
+          "type": 9
+        },
+        {
+          "id": "17:4334346442372601824",
+          "name": "volumeUsd24Hr",
+          "type": 9
+        },
+        {
+          "id": "18:1304067702174613007",
+          "name": "bipCoinType",
+          "type": 6
+        },
+        {
+          "id": "19:7136037410596497541",
+          "name": "isDefault",
+          "type": 1
+        },
+        {
+          "id": "20:9056133198306271474",
+          "name": "isVisible",
+          "type": 1
+        },
+        {
+          "id": "21:5621628625097238644",
+          "name": "name",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "88:7111871639010005684",
+      "lastPropertyId": "11:152507328069346958",
+      "name": "WalletAsset",
+      "properties": [
+        {
+          "id": "1:3995931871397924379",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5163555153075986139",
+          "name": "accountId",
+          "indexId": "84:2571365077464525543",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletAccount"
+        },
+        {
+          "id": "3:5109406077307215347",
+          "name": "tokenDeploymentId",
+          "indexId": "85:6932074408687180067",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "TokenDeployment"
+        },
+        {
+          "id": "4:3873748635623374189",
+          "name": "address",
+          "indexId": "86:758287613044306493",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "5:5245341028113958659",
+          "name": "amount",
+          "type": 9
+        },
+        {
+          "id": "6:5805649490195590028",
+          "name": "segwitType",
+          "type": 9
+        },
+        {
+          "id": "7:6891497102234018392",
+          "name": "isMultiSignAddress",
+          "type": 1
+        },
+        {
+          "id": "8:5322150055026005701",
+          "name": "isVisible",
+          "type": 1
+        },
+        {
+          "id": "9:2066209738524773298",
+          "name": "isManualAdd",
+          "type": 1
+        },
+        {
+          "id": "10:676027580203140702",
+          "name": "updateAt",
+          "type": 9
+        },
+        {
+          "id": "11:152507328069346958",
+          "name": "createAt",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "89:8986136013648930657",
+      "lastPropertyId": "39:6887133087682536394",
+      "name": "BridgeWalletTransactionTable",
+      "properties": [
+        {
+          "id": "1:2051583022686969516",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8545499651586851176",
+          "name": "recordKey",
+          "indexId": "88:8959238578025232793",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:8661354034474261043",
+          "name": "txAddr",
+          "type": 30
+        },
+        {
+          "id": "4:365734418734466562",
+          "name": "sendHash",
+          "type": 9
+        },
+        {
+          "id": "5:4654993634430626723",
+          "name": "sendFromAddress",
+          "type": 9
+        },
+        {
+          "id": "6:4874738204831948514",
+          "name": "sendToAddress",
+          "type": 9
+        },
+        {
+          "id": "7:1111823951560769384",
+          "name": "sendChain",
+          "type": 9
+        },
+        {
+          "id": "8:6242765852892750776",
+          "name": "sendStatus",
+          "type": 9
+        },
+        {
+          "id": "9:8138094974767012967",
+          "name": "sendTime",
+          "type": 6
+        },
+        {
+          "id": "10:5543321591397687602",
+          "name": "sendGasFee",
+          "type": 9
+        },
+        {
+          "id": "11:497105230518874274",
+          "name": "sendBalance",
+          "type": 9
+        },
+        {
+          "id": "12:8671029357180290634",
+          "name": "sendToken",
+          "type": 9
+        },
+        {
+          "id": "13:4988702395230803815",
+          "name": "sendSymbol",
+          "type": 9
+        },
+        {
+          "id": "14:1522844004137399133",
+          "name": "receiveHash",
+          "type": 9
+        },
+        {
+          "id": "15:9059101158467833407",
+          "name": "receiveFromAddress",
+          "type": 9
+        },
+        {
+          "id": "16:4206582226843954982",
+          "name": "receiveToAddress",
+          "type": 9
+        },
+        {
+          "id": "17:6052514019871455766",
+          "name": "receiveChain",
+          "type": 9
+        },
+        {
+          "id": "18:2279941417963082110",
+          "name": "receiveStatus",
+          "type": 9
+        },
+        {
+          "id": "19:2731526390584104045",
+          "name": "receiveTime",
+          "type": 6
+        },
+        {
+          "id": "20:6911494530191832839",
+          "name": "receiveGasFee",
+          "type": 9
+        },
+        {
+          "id": "21:5100682348559858428",
+          "name": "receiveBalance",
+          "type": 9
+        },
+        {
+          "id": "22:7290296620911714989",
+          "name": "receiveToken",
+          "type": 9
+        },
+        {
+          "id": "23:2622608802895610645",
+          "name": "receiveSymbol",
+          "type": 9
+        },
+        {
+          "id": "24:7380635003843505406",
+          "name": "createdAt",
+          "type": 9
+        },
+        {
+          "id": "25:6651615163292588907",
+          "name": "createdAtMillis",
+          "type": 6
+        },
+        {
+          "id": "26:7142227541521609153",
+          "name": "bridgerFee",
+          "type": 9
+        },
+        {
+          "id": "27:9215383790495136367",
+          "name": "provider",
+          "type": 9
+        },
+        {
+          "id": "28:8389246160761698987",
+          "name": "orderId",
+          "type": 9
+        },
+        {
+          "id": "29:5482468009600113958",
+          "name": "rate",
+          "type": 9
+        },
+        {
+          "id": "30:1408659127129891816",
+          "name": "providerFeeUsd",
+          "type": 9
+        },
+        {
+          "id": "31:2770829912663812521",
+          "name": "iteratorFeeUsd",
+          "type": 9
+        },
+        {
+          "id": "32:1819803386384362812",
+          "name": "serviceFeeUsd",
+          "type": 9
+        },
+        {
+          "id": "33:8082547919425277759",
+          "name": "networkFeeUsd",
+          "type": 9
+        },
+        {
+          "id": "34:1218355329723209256",
+          "name": "totalFeeUsd",
+          "type": 9
+        },
+        {
+          "id": "35:4831226830220695035",
+          "name": "accountId",
+          "indexId": "89:7369327911255590104",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "WalletAccount"
+        },
+        {
+          "id": "36:8458018422819458867",
+          "name": "swapResponseJson",
+          "type": 9
+        },
+        {
+          "id": "37:2467488945582927920",
+          "name": "responseJson",
+          "type": 9
+        },
+        {
+          "id": "38:4552054768031747180",
+          "name": "refundBalance",
+          "type": 9
+        },
+        {
+          "id": "39:6887133087682536394",
+          "name": "refundSymbol",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "90:8732996154562275381",
+      "lastPropertyId": "4:2711319246771359042",
+      "name": "DeviceNoticeSetting",
+      "properties": [
+        {
+          "id": "1:5958627115111664026",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7202374728975019213",
+          "name": "deviceId",
+          "indexId": "95:2940349666165814421",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:3293724442637377523",
+          "name": "serviceDoNotDisturb",
+          "type": 1
+        },
+        {
+          "id": "4:2711319246771359042",
+          "name": "payDoNotDisturb",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "91:5250535331101953113",
+      "lastPropertyId": "11:8897826426828210545",
+      "name": "Notice",
+      "properties": [
+        {
+          "id": "1:1019919981556877434",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1603084069106622165",
+          "name": "noticeId",
+          "indexId": "104:3928062626330143629",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "3:2338164353703803581",
+          "name": "category",
+          "indexId": "105:5155714787170899909",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "4:2943728401622606956",
+          "name": "type",
+          "type": 6
+        },
+        {
+          "id": "5:3994558261066706590",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "6:7392500494856069102",
+          "name": "content",
+          "type": 9
+        },
+        {
+          "id": "7:8920036731169223712",
+          "name": "contentBytes",
+          "type": 27
+        },
+        {
+          "id": "9:2590700656338343811",
+          "name": "transactionAddress",
+          "type": 9
+        },
+        {
+          "id": "10:2093979353859397813",
+          "name": "isRead",
+          "type": 6
+        },
+        {
+          "id": "11:8897826426828210545",
+          "name": "uuid",
+          "indexId": "106:3801531164789474077",
+          "type": 9,
+          "flags": 2048
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "92:486406999502152521",
+      "lastPropertyId": "11:2622913521645926189",
+      "name": "UserNoticeSettings",
+      "properties": [
+        {
+          "id": "1:8204680663193225621",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4984204443198780178",
+          "name": "serviceEnable",
+          "type": 1
+        },
+        {
+          "id": "3:1772732564196968096",
+          "name": "serviceTop",
+          "type": 1
+        },
+        {
+          "id": "4:5849929417780166209",
+          "name": "serviceDomain",
+          "type": 1
+        },
+        {
+          "id": "5:1069492435336769260",
+          "name": "serviceMultiSign",
+          "type": 1
+        },
+        {
+          "id": "6:4376552354643595457",
+          "name": "serviceVip",
+          "type": 1
+        },
+        {
+          "id": "7:3811743363691133741",
+          "name": "serviceSecretRoom",
+          "type": 1
+        },
+        {
+          "id": "8:1016919133759011962",
+          "name": "serviceRedPacket",
+          "type": 1
+        },
+        {
+          "id": "9:2212440684225327261",
+          "name": "serviceTransfer",
+          "type": 1
+        },
+        {
+          "id": "10:8548386831379253868",
+          "name": "payEnable",
+          "type": 1
+        },
+        {
+          "id": "11:2622913521645926189",
+          "name": "payTop",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "93:3047894486725406184",
+      "lastPropertyId": "6:2750622162299897266",
+      "name": "GroupVoteState",
+      "properties": [
+        {
+          "id": "1:8172928562041918781",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5266474530715039143",
+          "name": "voteId",
+          "indexId": "97:4136176507399337831",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:7556024091352817705",
+          "name": "gId",
+          "indexId": "98:2838417285189306330",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:5785244565571411377",
+          "name": "serverMsgId",
+          "indexId": "99:7949990373900921924",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:2270279107103774464",
+          "name": "ver",
+          "type": 6
+        },
+        {
+          "id": "6:2750622162299897266",
+          "name": "stateJson",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "94:2452875553476286118",
+      "lastPropertyId": "10:216064397170310116",
+      "name": "GroupTopic",
+      "properties": [
+        {
+          "id": "1:2124166611039076318",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:219334676100661119",
+          "name": "uuid",
+          "indexId": "100:5897240191084137657",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:214336769111006619",
+          "name": "gId",
+          "indexId": "101:3233064696108653500",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "4:219066111043316769",
+          "name": "topicId",
+          "type": 6
+        },
+        {
+          "id": "5:219011167061043376",
+          "name": "topicName",
+          "type": 9
+        },
+        {
+          "id": "6:217049016336101176",
+          "name": "status",
+          "type": 6
+        },
+        {
+          "id": "7:214331619016100677",
+          "name": "minVisibleId",
+          "type": 6
+        },
+        {
+          "id": "8:210610439037111676",
+          "name": "readMaxId",
+          "type": 6
+        },
+        {
+          "id": "9:210439371106011676",
+          "name": "createTime",
+          "type": 6
+        },
+        {
+          "id": "10:216064397170310116",
+          "name": "updateTime",
+          "type": 6
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "94:2452875553476286118",
+  "lastIndexId": "106:3801531164789474077",
+  "lastRelationId": "13:120207094297627169",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [
+    7238612331630604321,
+    9196207411943785761,
+    2874960269542193005,
+    8629798494327420730,
+    3503259882685246788,
+    2292367260234664898,
+    8849994898458046139,
+    8266763108773213193
+  ],
+  "retiredIndexUids": [
+    8826045336065416498,
+    8344072484844591875,
+    6626194264805697299,
+    6639526106524211287,
+    1472215648816464072,
+    4082259112601065165,
+    8365755561341053367,
+    4761977783122860360,
+    150568262136100610,
+    6740209697467378532,
+    7847021454137866898
+  ],
+  "retiredPropertyUids": [
+    4156205340949916828,
+    4662981624762764394,
+    8382699182633680077,
+    6240180838289406737,
+    2023969293440226679,
+    1550133018839306859,
+    4666071762863884829,
+    36960964268564151,
+    3774444606403891263,
+    8066522201985918570,
+    4210333888088259370,
+    3251516434046795889,
+    5552201223450769880,
+    1430389618406626232,
+    6203410078896457495,
+    4274601953020795594,
+    3336688953093495323,
+    8515041757152938617,
+    2709039211218595908,
+    7674968613095167018,
+    7931615939315435317,
+    4367058637498502011,
+    5003882319930216686,
+    2098647022040715481,
+    2972781737613273470,
+    4928881420834983988,
+    7612943704391045512,
+    4177089557153610312,
+    6379998235021484198,
+    6507107449615308254,
+    3639813065681199867,
+    7407968111789803292,
+    2419381961595332509,
+    270126638760530690,
+    62220002430246589,
+    6786627276761322971,
+    408775867334490790,
+    7094418113126158048,
+    7875916642803071675,
+    6668752358956393234,
+    631102545111936399,
+    841633748153080039,
+    8261287117715546817,
+    6951773002085234202,
+    7138586965762505833,
+    2843192143022496050,
+    5240895892962546521,
+    5086702327840847559,
+    5909169472586247179,
+    3363829849427729665,
+    7910508080264989457,
+    3173323807481513289,
+    8981408735347395059,
+    8849817969067202273,
+    3406636381793422630,
+    231423594886893592,
+    8407850759673081887,
+    830479592178595465,
+    8068346800979247473,
+    4544654042508294115,
+    4212812669757836886,
+    2658251311041932729,
+    1107971305796025644,
+    4231374683040182659,
+    2858595403849101573,
+    169599864443376438,
+    4022260151458339296,
+    6849861642530236816,
+    1975900564466411612,
+    3774843999032295930,
+    3325076361896555523,
+    551715492185757245,
+    8107844367125689292,
+    5841557925179181247,
+    1207098618318021196,
+    1989884963423945443,
+    1360189862297401945,
+    866364478148224156,
+    3735051681489947117,
+    5216469021880944240,
+    6212547697047423520,
+    2744481325609299429,
+    5295074359338226793,
+    414287487205076059,
+    5164827783938161804,
+    7573203475007978619,
+    5667860650221359386,
+    424926013450196188,
+    2093144140741665201,
+    8029880363467081293,
+    3194756281490765837,
+    282404292765172292,
+    6623422415773027695,
+    4695320251490960894,
+    4462967400101595210,
+    1563834719138350066,
+    7806414816641145663,
+    3722482343564453236,
+    8075729978919896613,
+    2104377674202189528,
+    3042014095768129875,
+    1927782043876058933,
+    4545359149201126975,
+    2648350760375070738,
+    7495121794708857528,
+    6731109391734034377,
+    7401513664747969542,
+    2842725955699488110,
+    3642793739526006147,
+    8949141016071912110,
+    1119791731210827260,
+    2271092958928281926,
+    6365673046148999178,
+    8306031502333523899,
+    7363355296308654168,
+    8571815572999490767,
+    4256372974186931087,
+    6028592878247854726,
+    7772120116868710068
+  ],
+  "retiredRelationUids": [
+    8306444049608390375,
+    1154331388564874715,
+    2195722351764865375,
+    2861254562532990156,
+    8182069631074399367,
+    7115269392042955276
+  ],
+  "version": 1
+}

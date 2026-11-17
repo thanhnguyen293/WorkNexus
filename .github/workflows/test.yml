@@ -125,3 +125,42 @@ jobs:
         run: |
           flutter create --platforms=windows --project-name work_nexus .
           flutter build windows --debug
+
+  # The MCP server in mcp/ (Node, no native modules): its tests on every
+  # desktop it ships to, and a check that the bundled copy the app ships
+  # (assets/mcp/worknexus-mcp.mjs) is what the sources build to.
+  mcp:
+    name: MCP server (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Linux, os: ubuntu-latest }
+          - { name: Windows, os: windows-latest }
+          - { name: macOS, os: macos-latest }
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # node:sqlite needs Node 22.13+.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Bundled copy is up to date
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run check-bundle

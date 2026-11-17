@@ -1,0 +1,28 @@
+{
+  "name": "worknexus-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for WorkNexus ZenTao chat and TBChat",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --no-warnings --test \"test/*.test.js\"",
+    "build": "node scripts/build.mjs",
+    "check-bundle": "node scripts/build.mjs --check"
+  },
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "ws": "^8.23.0",
+    "zod": "^4.6.7"
+  },
+  "bin": {
+    "worknexus-mcp": "src/server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  }
+}
