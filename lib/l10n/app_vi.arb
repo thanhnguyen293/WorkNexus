@@ -1899,5 +1899,8 @@
   "chatAiRewriteNeedsDraft": "Gõ tin nhắn để AI viết lại",
   "chatAiRewriteNoMentions": "Viết lại sẽ làm mất các lượt nhắc (@) trong tin này",
   "chatAiRewriting": "Đang viết lại…",
-  "chatAiScopeLabel": "Tin nhắn cần tóm tắt"
+  "chatAiScopeLabel": "Tin nhắn cần tóm tắt",
+  "chatStickerSuggestions": "Gửi bằng sticker",
+  "chatStickerReplies": "Trả lời bằng sticker",
+  "chatStickerSuggestionsClose": "Ẩn gợi ý sticker"
 }
