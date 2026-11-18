@@ -5,15 +5,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/data/datasources/chat_local_api_server.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_local_api.dart';
 
-/// The localhost endpoint local AI tools send chat messages through: only
-/// with the token from the discovery file, never from a browser, and only
-/// while running.
+/// The localhost endpoint local AI tools use chat through: only with the
+/// token from the discovery file, never from a browser, and only while
+/// running.
 void main() {
   late Directory dir;
   late ChatLocalApiServer server;
   late List<Map<String, Object?>> sent;
   late Result<void> nextResult;
+  late List<Map<String, Object?>> calls;
+  late Result<ChatHistoryStep> nextStep;
+  late Result<ChatAttachmentFile> nextFile;
 
   Future<Result<void>> send({
     required String accountId,
@@ -29,6 +33,38 @@ void main() {
     });
     return nextResult;
   }
+
+  Future<Result<ChatHistoryStep>> loadOlder({
+    required String accountId,
+    required String chatGid,
+    required int pageSize,
+  }) async {
+    calls.add({
+      'accountId': accountId,
+      'chatGid': chatGid,
+      'pageSize': pageSize,
+    });
+    return nextStep;
+  }
+
+  Future<Result<ChatAttachmentFile>> attachment({
+    required String accountId,
+    required String chatGid,
+    required int messageId,
+  }) async {
+    calls.add({
+      'accountId': accountId,
+      'chatGid': chatGid,
+      'messageId': messageId,
+    });
+    return nextFile;
+  }
+
+  ChatLocalApiHandlers handlers() => ChatLocalApiHandlers(
+    send: send,
+    loadOlder: loadOlder,
+    attachment: attachment,
+  );
 
   File discovery() =>
       File('${dir.path}/${ChatLocalApiServer.discoveryFileName}');
@@ -68,8 +104,11 @@ void main() {
     dir = await Directory.systemTemp.createTemp('wn_local_api');
     sent = [];
     nextResult = const Ok(null);
+    calls = [];
+    nextStep = const Ok((loaded: 0, reachesStart: true));
+    nextFile = const Err(NotFoundFailure('none'));
     server = ChatLocalApiServer(directory: () async => dir);
-    await server.start(send);
+    await server.start(handlers());
   });
 
   tearDown(() async {
@@ -186,8 +225,83 @@ void main() {
       final first = (await readDiscovery())['token'];
       await server.stop();
       expect(await discovery().exists(), isFalse);
-      await server.start(send);
+      await server.start(handlers());
       expect((await readDiscovery())['token'], isNot(first));
     },
   );
+
+  test('loads one older page, 100 messages unless asked', () async {
+    final token = (await readDiscovery())['token']! as String;
+    nextStep = const Ok((loaded: 80, reachesStart: false));
+    final (status, body) = await call(
+      'POST',
+      '/v1/chat/load-older',
+      token: token,
+      body: {'accountId': 'a', 'chatGid': 'g'},
+    );
+    expect(status, HttpStatus.ok);
+    expect(body, {'ok': true, 'loaded': 80, 'reachesStart': false});
+    expect(calls.single, {'accountId': 'a', 'chatGid': 'g', 'pageSize': 100});
+    expect(
+      (await call(
+        'POST',
+        '/v1/chat/load-older',
+        token: token,
+        body: {'accountId': 'a', 'chatGid': 'g', 'pageSize': 0},
+      )).$1,
+      HttpStatus.badRequest,
+    );
+  });
+
+  test('returns where an attachment was downloaded to', () async {
+    final token = (await readDiscovery())['token']! as String;
+    nextFile = const Ok((
+      path: '/cache/a.png',
+      name: 'a.png',
+      size: 12,
+      mimeType: 'image/png',
+      isImage: true,
+    ));
+    final (status, body) = await call(
+      'POST',
+      '/v1/chat/attachment',
+      token: token,
+      body: {'accountId': 'a', 'chatGid': 'g', 'messageId': 7},
+    );
+    expect(status, HttpStatus.ok);
+    expect(body, {
+      'ok': true,
+      'path': '/cache/a.png',
+      'name': 'a.png',
+      'size': 12,
+      'mimeType': 'image/png',
+      'isImage': true,
+    });
+    expect(calls.single['messageId'], 7);
+  });
+
+  test('maps attachment failures to 404 / 400 / 502', () async {
+    final token = (await readDiscovery())['token']! as String;
+    Future<int> status() async => (await call(
+      'POST',
+      '/v1/chat/attachment',
+      token: token,
+      body: {'accountId': 'a', 'chatGid': 'g', 'messageId': 7},
+    )).$1;
+    nextFile = const Err(NotFoundFailure('gone'));
+    expect(await status(), HttpStatus.notFound);
+    nextFile = const Err(ValidationFailure('no file'));
+    expect(await status(), HttpStatus.badRequest);
+    nextFile = const Err(NetworkFailure('offline'));
+    expect(await status(), HttpStatus.badGateway);
+    expect(
+      (await call(
+        'POST',
+        '/v1/chat/attachment',
+        token: token,
+        body: {'accountId': 'a', 'chatGid': 'g', 'messageId': '7'},
+      )).$1,
+      HttpStatus.badRequest,
+    );
+  });
 }

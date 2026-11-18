@@ -12,9 +12,9 @@ class ServerChatLocalApi implements ChatLocalApi {
   final ChatLocalApiServer _server;
 
   @override
-  Future<Result<void>> start(LocalTextSend send) async {
+  Future<Result<void>> start(ChatLocalApiHandlers handlers) async {
     try {
-      await _server.start(send);
+      await _server.start(handlers);
       return const Ok(null);
     } on SocketException catch (e) {
       return Err(NetworkFailure('Could not open the local chat API', cause: e));
