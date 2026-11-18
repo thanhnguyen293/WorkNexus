@@ -514,7 +514,13 @@ class _FakeChatRepository implements ChatRepository {
 void main() {
   late _FakeChatRepository repo;
 
-  setUp(() => repo = _FakeChatRepository());
+  /// What a paste finds on the clipboard: only text, unless a test says.
+  late Future<List<ClipboardFile>?> Function() clipboard;
+
+  setUp(() {
+    repo = _FakeChatRepository();
+    clipboard = () async => null;
+  });
 
   Future<void> pumpChat(
     WidgetTester tester, {
@@ -537,6 +543,7 @@ void main() {
             ),
           chatRepositoryProvider.overrideWithValue(repo),
           chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
+          chatClipboardFilesProvider.overrideWithValue(() => clipboard()),
           chatAccountsProvider.overrideWithValue(const [
             Account(
               id: 'acc',
@@ -997,20 +1004,7 @@ void main() {
   testWidgets('a pasted image waits in the input, not in a preview, and '
       'stays with its chat', (tester) async {
     final image = Uint8List.fromList([1, 2, 3]);
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('pasteboard'),
-      (call) async => switch (call.method) {
-        'files' => const <String>[],
-        'image' => image,
-        _ => null,
-      },
-    );
-    addTearDown(
-      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        const MethodChannel('pasteboard'),
-        null,
-      ),
-    );
+    clipboard = () async => [(name: 'pasted-1.png', bytes: image)];
     await pumpChat(tester);
     await openTeamChat(tester);
     await tester.tap(

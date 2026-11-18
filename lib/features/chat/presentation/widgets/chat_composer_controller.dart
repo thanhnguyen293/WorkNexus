@@ -7,10 +7,12 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/quill_delta.dart';
 
 import '../../domain/usecases/build_message_text.dart';
-import '../../domain/value_objects/markdown_format.dart';
 import '../providers/chat_composer_draft_provider.dart';
 import 'chat_mention_embed.dart';
 import 'chat_mention_text_controller.dart';
+
+// The Markdown toolbar's formats, as methods of the controller.
+export 'chat_composer_formatting.dart';
 
 /// What is being typed in the composer, written out as the message's text
 /// when it is sent (see [BuildMessageText]). With Markdown on it is rich text
@@ -175,55 +177,6 @@ class ChatComposerController implements Listenable {
       ChangeSource.local,
     );
   }
-
-  /// Whether the selection has [format] (indent and clear never "are on").
-  bool isOn(MarkdownFormat format) {
-    final attribute = _attribute(format);
-    if (attribute == null) return false;
-    final current = quill.getSelectionStyle().attributes[attribute.key];
-    return current?.value == attribute.value;
-  }
-
-  /// Applies [format] to the selection, or takes it off when it is on.
-  void apply(MarkdownFormat format) {
-    switch (format) {
-      case MarkdownFormat.indent:
-        quill.indentSelection(true);
-      case MarkdownFormat.outdent:
-        quill.indentSelection(false);
-      case MarkdownFormat.clear:
-        final keys = {
-          for (final style in quill.getAllSelectionStyles())
-            ...style.attributes.keys,
-        };
-        for (final key in keys) {
-          if (Attribute.fromKeyValue(key, null) case final attribute?) {
-            quill.formatSelection(attribute);
-          }
-        }
-      default:
-        final attribute = _attribute(format)!;
-        quill.formatSelection(
-          isOn(format) ? Attribute.clone(attribute, null) : attribute,
-        );
-    }
-  }
-
-  static Attribute<Object?>? _attribute(MarkdownFormat format) =>
-      switch (format) {
-        MarkdownFormat.bold => Attribute.bold,
-        MarkdownFormat.italic => Attribute.italic,
-        MarkdownFormat.underline => Attribute.underline,
-        MarkdownFormat.strikethrough => Attribute.strikeThrough,
-        MarkdownFormat.code => Attribute.inlineCode,
-        MarkdownFormat.heading => Attribute.h1,
-        MarkdownFormat.quote => Attribute.blockQuote,
-        MarkdownFormat.bulletList => Attribute.ul,
-        MarkdownFormat.numberedList => Attribute.ol,
-        MarkdownFormat.indent ||
-        MarkdownFormat.outdent ||
-        MarkdownFormat.clear => null,
-      };
 
   /// [plain] as a document: its operations and the closing line break.
   Delta get _plainDelta {
