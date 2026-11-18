@@ -27,7 +27,11 @@ class LocalMcpSetupRepository implements McpSetupRepository {
       // The asset is missing from this build.
       return Err(NotFoundFailure('This build has no MCP server', cause: e));
     }
-    final node = await probe.find();
+    final nodes = await probe.findAll();
+    // The first one recent enough, even if an older one comes first in PATH.
+    final node =
+        nodes.where((n) => McpSetup.supports(n.version)).firstOrNull ??
+        nodes.firstOrNull;
     return Ok(
       McpSetup(
         scriptPath: script,
@@ -35,5 +39,17 @@ class LocalMcpSetupRepository implements McpSetupRepository {
         nodeVersion: node?.version,
       ),
     );
+  }
+
+  @override
+  Future<Result<void>> refreshInstalledScript() async {
+    try {
+      await installer.refresh();
+      return const Ok(null);
+    } on FileSystemException catch (e) {
+      return Err(StorageFailure('Could not update the MCP server', cause: e));
+    } on FlutterError catch (e) {
+      return Err(NotFoundFailure('This build has no MCP server', cause: e));
+    }
   }
 }

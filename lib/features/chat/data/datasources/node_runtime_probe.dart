@@ -28,15 +28,31 @@ class NodeRuntimeProbe {
     '/usr/bin/node',
   ];
 
-  /// The first `node` found and its `--version`, or null.
-  Future<({String path, String version})?> find() async {
-    for (final path in await _candidates()) {
-      final version = (await _run(path, ['--version']))?.trim();
-      if (version != null && version.startsWith('v')) {
-        return (path: path, version: version);
-      }
+  /// Every `node` that runs, with its `--version`, in the order the user's
+  /// `PATH` would pick them, then the usual install places.
+  Future<List<({String path, String version})>> findAll() async {
+    final found = <({String path, String version})>[];
+    final seen = <String>{};
+    for (final candidate in await _candidates()) {
+      final version = (await _run(candidate, ['--version']))?.trim();
+      if (version == null || !version.startsWith('v')) continue;
+      final path = await _stablePath(candidate);
+      if (seen.add(path)) found.add((path: path, version: version));
     }
-    return null;
+    return found;
+  }
+
+  /// Where a version manager's shim or per-shell link really runs node from.
+  /// An fnm "multishell" link lives in a temporary folder that is gone after
+  /// a restart; an asdf / mise shim picks the version by the folder it runs
+  /// in, which for an AI tool is not the user's project. Any other path —
+  /// Homebrew's `bin/node` link included, which survives upgrades unlike
+  /// the versioned folder it points into — is kept as it is.
+  Future<String> _stablePath(String path) async {
+    final p = path.replaceAll(r'\', '/');
+    if (!p.contains('fnm_multishells') && !p.contains('/shims/')) return path;
+    final real = (await _run(path, ['-p', 'process.execPath']))?.trim();
+    return real != null && real.isNotEmpty ? real : path;
   }
 
   Future<List<String>> _candidates() async {
