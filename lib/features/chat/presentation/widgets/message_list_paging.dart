@@ -10,6 +10,7 @@ import '../../domain/entities/chat_message.dart';
 import '../providers/chat_controller.dart';
 import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
+import 'list_extent_estimate.dart';
 import 'message_jump.dart';
 import 'message_list.dart';
 import 'message_list_anchor.dart';
@@ -20,6 +21,9 @@ import 'message_list_anchor.dart';
 mixin MessageListPaging on ConsumerState<MessageList> {
   ScrollController get scroll;
   MessageJump get jump;
+
+  /// The list's length estimate, forgotten when a window replaces its rows.
+  ListExtentEstimate get extent;
 
   /// The rows of the last build, for finding a message to jump to.
   List<Object> get rows;
@@ -147,7 +151,8 @@ mixin MessageListPaging on ConsumerState<MessageList> {
   /// Rows added at the bottom of a reversed list push the ones being read
   /// up; [update] adds them, then the row being read is put back in place.
   void _holdPlace(VoidCallback update) {
-    _anchor = MessageListAnchor.capture(scroll, rows);
+    // A jumped-to row being held centred keeps the place itself.
+    if (jump.target == null) _anchor = MessageListAnchor.capture(scroll, rows);
     update();
   }
 
@@ -165,8 +170,10 @@ mixin MessageListPaging on ConsumerState<MessageList> {
 
   /// Leaves a jump window for the newest messages, scrolled to the bottom.
   void backToLatest() {
+    jump.release();
     ref.read(chatMessageWindowProvider(widget.thread).notifier).state =
         const LiveWindow(ChatController.pageSize);
+    extent.reset();
     setState(resetPaging);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && scroll.hasClients) scroll.jumpTo(0);
@@ -187,7 +194,7 @@ mixin MessageListPaging on ConsumerState<MessageList> {
           .watchMessage(t.accountId, t.chatGid, serverId)
           .first;
       if (localMsg != null && localMsg.index != null && localMsg.index! > 0) {
-        setState(resetPaging);
+        _replaceWindow(serverId);
         final idx = localMsg.index!;
         ref.read(chatMessageWindowProvider(t).notifier).state = AroundWindow(
           from: math.max(1, idx - 25),
@@ -202,7 +209,7 @@ mixin MessageListPaging on ConsumerState<MessageList> {
             .loadAround(t.accountId, t.chatGid, serverId);
         if (!mounted || widget.thread != t) return;
         if (around case Ok(value: final span?)) {
-          setState(resetPaging);
+          _replaceWindow(serverId);
           ref.read(chatMessageWindowProvider(t).notifier).state = AroundWindow(
             from: span.from,
             to: span.to,
@@ -216,6 +223,7 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     }
     if (!mounted || widget.thread != t) return;
     if (target == null) {
+      jump.release();
       showChatSnack(
         context,
         AppL10n.of(context).chatJumpNotFound,
@@ -223,17 +231,21 @@ mixin MessageListPaging on ConsumerState<MessageList> {
       );
       return;
     }
-    final found = await jump.reveal(
-      scroll,
-      gid: target.gid,
-      rows: () => rows,
-      rebuild: () => setState(() {}),
-    );
+    final found = await jump.reveal(scroll, serverId: serverId, rows: rows);
     if (!mounted || !found) return;
     await MessageJump.flash(
       ref.read(chatHighlightedMessageProvider(t).notifier),
       serverId,
     );
+  }
+
+  /// Before a window around message [serverId] replaces the rows: the jump
+  /// is aimed first, so the frame that brings them shows it centred rather
+  /// than the new rows where the old ones were.
+  void _replaceWindow(int serverId) {
+    jump.aim(serverId);
+    extent.reset();
+    setState(resetPaging);
   }
 
   /// Loads older pages until message [serverId] is shown, within

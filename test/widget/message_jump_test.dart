@@ -6,10 +6,15 @@ import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/list_extent_estimate.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_jump.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/message_jump_sliver.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/steady_extent_child_delegate.dart';
 
 /// A row that, when [grows], gets taller a moment after it is first built —
 /// as one with an image or a card does the first time it is shown.
+/// How many times each row's state was created: a row rebuilt from scratch
+/// (its images and cards loading again) shows up here.
+final _created = <String, int>{};
+
 class _Row extends StatefulWidget {
   const _Row({super.key, required this.label, required this.grows});
 
@@ -27,6 +32,7 @@ class _RowState extends State<_Row> {
   @override
   void initState() {
     super.initState();
+    _created.update(widget.label, (n) => n + 1, ifAbsent: () => 1);
     if (widget.grows) {
       _grow = Timer(const Duration(milliseconds: 600), () {
         if (mounted) setState(() => _height = 220);
@@ -58,7 +64,7 @@ ChatMessage _message(int i) => ChatMessage(
 );
 
 void main() {
-  const target = 'm150';
+  const target = 150;
   late List<ChatMessage> rows;
   late MessageJump jump;
   late ScrollController scroll;
@@ -75,21 +81,29 @@ void main() {
               child: StatefulBuilder(
                 builder: (context, setState) {
                   rebuild = setState;
-                  return ListView.custom(
+                  return CustomScrollView(
                     controller: scroll,
                     reverse: true,
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    childrenDelegate: SteadyExtentChildDelegate(
-                      (context, i) => _Row(
-                        key: rows[i].gid == jump.targetGid
-                            ? jump.anchor
-                            : ValueKey(rows[i].gid),
-                        label: rows[i].gid,
-                        grows: grows.contains(rows[i].gid),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        sliver: MessageJumpSliver(
+                          jump: jump,
+                          rows: rows,
+                          sliver: SliverList(
+                            delegate: SteadyExtentChildDelegate(
+                              (context, i) => _Row(
+                                key: ValueKey(rows[i].gid),
+                                label: rows[i].gid,
+                                grows: grows.contains(rows[i].gid),
+                              ),
+                              estimate: extent,
+                              childCount: rows.length,
+                            ),
+                          ),
+                        ),
                       ),
-                      estimate: extent,
-                      childCount: rows.length,
-                    ),
+                    ],
                   );
                 },
               ),
@@ -98,24 +112,20 @@ void main() {
         ),
       );
 
-  Future<bool> reveal(WidgetTester tester) async {
-    final found = jump.reveal(
-      scroll,
-      gid: target,
-      rows: () => rows,
-      rebuild: () => rebuild(() {}),
-    );
+  Future<bool> reveal(WidgetTester tester, {int id = target}) async {
+    final found = jump.reveal(scroll, serverId: id, rows: rows);
     await tester.pumpAndSettle();
     return found;
   }
 
-  void expectCentred(WidgetTester tester) {
-    final row = tester.getRect(find.text(target));
-    final list = tester.getRect(find.byType(ListView));
+  void expectCentred(WidgetTester tester, {int id = target}) {
+    final row = tester.getRect(find.text('m$id'));
+    final list = tester.getRect(find.byType(CustomScrollView));
     expect(row.center.dy, moreOrLessEquals(list.center.dy, epsilon: 2));
   }
 
   setUp(() {
+    _created.clear();
     // Newest first, as the reversed chat list holds them.
     rows = [for (var i = 299; i >= 0; i--) _message(i)];
     jump = MessageJump();
@@ -147,6 +157,43 @@ void main() {
     await tester.pump();
     await tester.pumpAndSettle();
     expectCentred(tester);
+  });
+
+  testWidgets('a far row is centred in the first frame, none on the way', (
+    tester,
+  ) async {
+    await pumpList(tester);
+    unawaited(jump.reveal(scroll, serverId: target, rows: rows));
+    await tester.pump();
+    expectCentred(tester);
+    // Rows between the newest and the target were never built.
+    expect(_created.containsKey('m100'), isFalse);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('aimed before its rows arrive, they show it centred at once', (
+    tester,
+  ) async {
+    final all = rows;
+    rows = all.sublist(0, 40);
+    await pumpList(tester);
+    jump.aim(target);
+    await tester.pump();
+    // The old rows stay shown while the window loads.
+    expect(find.text('m299'), findsOneWidget);
+
+    rebuild(() => rows = all.sublist(120, 180));
+    await tester.pump();
+    expectCentred(tester);
+    expect(await reveal(tester), isTrue);
+    expectCentred(tester);
+  });
+
+  testWidgets('a row nearby glides there and keeps its state', (tester) async {
+    await pumpList(tester);
+    expect(await reveal(tester, id: 290), isTrue);
+    expectCentred(tester, id: 290);
+    expect(_created['m290'], 1);
   });
 
   testWidgets('lets go once the user scrolls', (tester) async {

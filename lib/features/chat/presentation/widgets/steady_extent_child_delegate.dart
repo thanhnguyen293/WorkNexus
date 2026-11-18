@@ -4,7 +4,7 @@ import 'list_extent_estimate.dart';
 
 /// A [SliverChildBuilderDelegate] whose length estimate comes from a
 /// [ListExtentEstimate], so the scrollbar thumb stays steady over rows of
-/// very different heights. Pass it to `ListView.custom`.
+/// very different heights. Pass it to `ListView.custom` or a `SliverList`.
 ///
 /// The [estimate] outlives the delegate (a new one is built with every
 /// frame of the owning widget): keep it in that widget's state.
