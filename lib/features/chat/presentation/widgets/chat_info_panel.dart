@@ -5,24 +5,26 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radii.dart';
-import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
 import 'chat_group_avatar_dialog.dart';
 import 'chat_info_files_section.dart';
+import 'chat_info_panel_link.dart';
 import 'chat_info_storage_card.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Beside the chat: who the other person is (one-to-one) or what the group
@@ -54,6 +56,13 @@ class ChatInfoPanel extends ConsumerWidget {
     final withPeer = oneToOne && !chat.isMyCloud;
     final peer = withPeer ? users[chat.peerUserId] : null;
     final title = chatTitle(context, chat, users);
+    final titleStyle = context.typography.titleLg.copyWith(
+      color: c.textPrimary,
+      fontWeight: FontWeight.w600,
+    );
+    final subtitleStyle = context.typography.secondary.copyWith(
+      color: c.textSecondary,
+    );
     final owner = users.values
         .where((u) => u.account == chat.ownerAccount)
         .firstOrNull;
@@ -135,157 +144,126 @@ class ChatInfoPanel extends ConsumerWidget {
           (ChatLayoutScope.of(context).infoRoom
               ? null
               : () => closeChatSidePanel(ref, thread)),
-      child: ListView(
-        padding: EdgeInsets.all(s.xl),
-        children: [
-          Center(
-            child: ChatAvatar(
-              name: title,
-              imageUrl: avatar.imageUrl,
-              label: avatar.label,
-              background: avatar.background,
-              icon: avatar.icon,
-              presence: withPeer
-                  ? chatPresenceOf(users, chat.peerUserId)
-                  : null,
-              verified: withPeer
-                  ? chatVerifiedBadge(context, users, chat.peerUserId)
-                  : null,
-              diameter: s.xl6 * 2,
-            ),
-          ),
-          if (!oneToOne && ref.watch(chatCanPinProvider(thread)))
+      // Pointing anywhere on the panel shows all of it while it is hidden.
+      child: PrivacyRevealRegion(
+        child: ListView(
+          padding: EdgeInsets.all(s.xl),
+          children: [
             Center(
-              child: AppButton.textNeutral(
-                size: AppButtonSize.extraSmall,
-                icon: LucideIcons.camera300,
-                onPressed: () => ChatGroupAvatarDialog.show(
-                  context,
-                  thread: thread,
-                  chat: chat,
-                  title: title,
+              child: ChatPrivacyMask(
+                part: ChatPrivacyPart.identity,
+                mask: ChatAvatar(
+                  name: '',
+                  masked: true,
+                  icon: oneToOne ? null : LucideIcons.users300,
+                  diameter: s.xl6 * 2,
                 ),
-                child: Text(l.chatChangeGroupAvatar),
+                child: ChatAvatar(
+                  name: title,
+                  imageUrl: avatar.imageUrl,
+                  label: avatar.label,
+                  background: avatar.background,
+                  icon: avatar.icon,
+                  presence: withPeer
+                      ? chatPresenceOf(users, chat.peerUserId)
+                      : null,
+                  verified: withPeer
+                      ? chatVerifiedBadge(context, users, chat.peerUserId)
+                      : null,
+                  diameter: s.xl6 * 2,
+                ),
               ),
             ),
-          SizedBox(height: s.xl),
-          SelectableText(
-            title,
-            textAlign: TextAlign.center,
-            style: context.typography.titleLg.copyWith(
-              color: c.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (subtitle != null)
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: context.typography.secondary.copyWith(
-                color: c.textSecondary,
+            if (!oneToOne && ref.watch(chatCanPinProvider(thread)))
+              Center(
+                child: AppButton.textNeutral(
+                  size: AppButtonSize.extraSmall,
+                  icon: LucideIcons.camera300,
+                  onPressed: () => ChatGroupAvatarDialog.show(
+                    context,
+                    thread: thread,
+                    chat: chat,
+                    title: title,
+                  ),
+                  child: Text(l.chatChangeGroupAvatar),
+                ),
+              ),
+            SizedBox(height: s.xl),
+            ChatPrivacyMask(
+              part: ChatPrivacyPart.identity,
+              mask: Text(
+                kPrivacyMaskText,
+                textAlign: TextAlign.center,
+                style: titleStyle,
+              ),
+              child: SelectableText(
+                title,
+                textAlign: TextAlign.center,
+                style: titleStyle,
               ),
             ),
-          SizedBox(height: s.xl4),
-          if (details.isNotEmpty)
-            ChatPanelCard(
-              child: Column(
-                children: [
-                  for (final (i, row) in details.indexed)
-                    Padding(
-                      padding: EdgeInsets.only(top: i == 0 ? 0 : s.lg),
-                      child: row,
-                    ),
-                ],
+            if (subtitle != null)
+              // The peer's account names them as much as the title does.
+              ChatPrivacyMask(
+                part: ChatPrivacyPart.identity,
+                mask: Text(
+                  // Only the account starts with "@"; a count or status stays.
+                  subtitle.startsWith('@') ? kPrivacyMaskText : subtitle,
+                  textAlign: TextAlign.center,
+                  style: subtitleStyle,
+                ),
+                child: Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: subtitleStyle,
+                ),
               ),
-            ),
-          _PanelLink(
-            icon: LucideIcons.pin300,
-            label: l.chatPinnedMessages,
-            count: chat.pinnedMessageIds.length,
-            onTap: () => toggleChatSidePanel(
-              ref,
-              thread,
-              ChatSidePanel.pinned,
-              infoRoom: ChatLayoutScope.of(context).infoRoom,
-            ),
-          ),
-          if (!oneToOne)
-            _PanelLink(
-              icon: LucideIcons.users300,
-              label: l.chatMembersTitle,
-              count: switch (members) {
-                Ok(:final value) => value,
-                _ => null,
-              },
+            SizedBox(height: s.xl4),
+            if (details.isNotEmpty)
+              ChatPrivacyFade(
+                part: ChatPrivacyPart.identity,
+                child: ChatPanelCard(
+                  child: Column(
+                    children: [
+                      for (final (i, row) in details.indexed)
+                        Padding(
+                          padding: EdgeInsets.only(top: i == 0 ? 0 : s.lg),
+                          child: row,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ChatInfoPanelLink(
+              icon: LucideIcons.pin300,
+              label: l.chatPinnedMessages,
+              count: chat.pinnedMessageIds.length,
               onTap: () => toggleChatSidePanel(
                 ref,
                 thread,
-                ChatSidePanel.members,
+                ChatSidePanel.pinned,
                 infoRoom: ChatLayoutScope.of(context).infoRoom,
               ),
             ),
-          ChatInfoFilesSection(thread: thread),
-          ChatInfoStorageCard(thread: thread),
-        ],
-      ),
-    );
-  }
-}
-
-/// A card that opens a sub-panel of the info: icon, label, count, chevron.
-class _PanelLink extends StatelessWidget {
-  const _PanelLink({
-    required this.icon,
-    required this.label,
-    required this.count,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-
-  /// Null while unknown.
-  final int? count;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    return ChatPanelCard(
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: s.xl),
-        visualDensity: VisualDensity.compact,
-        horizontalTitleGap: s.lg,
-        minLeadingWidth: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(context.radii.lg),
-        ),
-        // The details rows' size, so the card icons line up as one set.
-        leading: Icon(icon, size: context.sizes.iconLg, color: c.accent),
-        title: Text(
-          label,
-          style: context.typography.bodyStrong.copyWith(color: c.textPrimary),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (count case final n?)
-              Text(
-                '$n',
-                style: context.typography.bodyStrong.copyWith(
-                  color: c.textSecondary,
+            if (!oneToOne)
+              ChatInfoPanelLink(
+                icon: LucideIcons.users300,
+                label: l.chatMembersTitle,
+                count: switch (members) {
+                  Ok(:final value) => value,
+                  _ => null,
+                },
+                onTap: () => toggleChatSidePanel(
+                  ref,
+                  thread,
+                  ChatSidePanel.members,
+                  infoRoom: ChatLayoutScope.of(context).infoRoom,
                 ),
               ),
-            Icon(
-              LucideIcons.chevronRight300,
-              size: context.sizes.iconLg,
-              color: c.textTertiary,
-            ),
+            ChatPrivacyFade(child: ChatInfoFilesSection(thread: thread)),
+            ChatInfoStorageCard(thread: thread),
           ],
         ),
-        onTap: onTap,
       ),
     );
   }

@@ -16,6 +16,7 @@ import '../providers/chat_providers.dart';
 import 'chat_layout.dart';
 import 'chat_message_card.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_snack.dart';
 import 'pinned_card_preview.dart';
@@ -104,39 +105,42 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
             )
           : messages.isEmpty && _failed
           ? AppStateView.error(compact: true, onRetry: () => _retry(missing))
-          : ListView(
-              padding: EdgeInsets.all(context.spacing.xl3),
-              children: [
-                for (final m in messages)
-                  _PinnedCard(
-                    key: ValueKey(m.gid),
-                    thread: t,
-                    message: m,
-                    users: widget.users,
-                  ),
-                if (_failed)
-                  Padding(
-                    padding: EdgeInsets.only(top: context.spacing.md),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: AppInlineNote(
-                            text: l.stateLoadFailedTitle,
-                            isError: true,
-                          ),
-                        ),
-                        AppButton.textNeutral(
-                          size: AppButtonSize.extraSmall,
-                          icon: LucideIcons.refreshCw300,
-                          onPressed: () => _retry(missing),
-                          child: Text(l.retry),
-                        ),
-                      ],
+          // One fade for every pin: pointing anywhere on the list shows all.
+          : ChatPrivacyFade(
+              child: ListView(
+                padding: EdgeInsets.all(context.spacing.xl3),
+                children: [
+                  for (final m in messages)
+                    _PinnedCard(
+                      key: ValueKey(m.gid),
+                      thread: t,
+                      message: m,
+                      users: widget.users,
                     ),
-                  )
-                else if (waiting)
-                  const AppInlineSpinner(),
-              ],
+                  if (_failed)
+                    Padding(
+                      padding: EdgeInsets.only(top: context.spacing.md),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: AppInlineNote(
+                              text: l.stateLoadFailedTitle,
+                              isError: true,
+                            ),
+                          ),
+                          AppButton.textNeutral(
+                            size: AppButtonSize.extraSmall,
+                            icon: LucideIcons.refreshCw300,
+                            onPressed: () => _retry(missing),
+                            child: Text(l.retry),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (waiting)
+                    const AppInlineSpinner(),
+                ],
+              ),
             ),
     );
   }

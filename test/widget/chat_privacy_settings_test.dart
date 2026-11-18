@@ -36,11 +36,23 @@ Future<ProviderContainer> _pump(WidgetTester tester, Widget body) async {
   return container;
 }
 
-double _opacityOver(WidgetTester tester, String text) => tester
-    .widget<Opacity>(
-      find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
-    )
-    .opacity;
+/// Whether the [PrivacyFade] over the widget holding [text] washes it out:
+/// any filter but the identity.
+bool _fadedOver(WidgetTester tester, String text) =>
+    tester
+        .widget<ColorFiltered>(
+          find.ancestor(
+            of: find.text(text),
+            matching: find.byType(ColorFiltered),
+          ),
+        )
+        .colorFilter !=
+    const ColorFilter.matrix(<double>[
+      1, 0, 0, 0, 0, //
+      0, 1, 0, 0, 0, //
+      0, 0, 1, 0, 0, //
+      0, 0, 0, 1, 0, //
+    ]);
 
 void main() {
   testWidgets('the mode switch turns hiding on; the parts only change '
@@ -73,7 +85,7 @@ void main() {
       ),
     );
     expect(find.text('Alice'), findsOneWidget);
-    expect(_opacityOver(tester, 'msg'), 1);
+    expect(_fadedOver(tester, 'msg'), isFalse);
 
     final settings = container.read(appSettingsProvider.notifier);
     settings.setChatPrivacy(const ChatPrivacy(enabled: true));
@@ -81,7 +93,7 @@ void main() {
     expect(find.text('Alice'), findsNothing);
     expect(find.text(kPrivacyMaskText), findsOneWidget);
     expect(find.text('24 members'), findsOneWidget, reason: 'no part');
-    expect(_opacityOver(tester, 'msg'), lessThan(0.5));
+    expect(_fadedOver(tester, 'msg'), isTrue);
 
     settings.setChatPrivacy(
       const ChatPrivacy(enabled: true, hideIdentities: false),

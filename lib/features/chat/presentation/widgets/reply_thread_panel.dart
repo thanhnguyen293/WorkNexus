@@ -79,45 +79,53 @@ class ReplyThreadPanel extends ConsumerWidget {
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(context.spacing.xl3),
-              children: [
-                if (root == null && rootAsync.isLoading)
-                  const AppInlineSpinner()
-                else if (root == null && rootAsync.hasError)
-                  AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
-                else if (root == null)
-                  AppInlineNote(text: l.chatReplyMissing)
-                else
-                  ChatMessageCard(
-                    message: root,
-                    users: users,
-                    label: l.chatThread,
-                    labelIcon: LucideIcons.messagesSquare300,
-                    body: MessageBody(accountId: chat.accountId, message: root),
-                    onViewOriginal: () => jumpToChatMessage(ref, chat, rootId),
-                    trailing: AppIconButton(
-                      icon: LucideIcons.reply300,
-                      tooltip: l.chatReply,
-                      size: AppIconButtonSize.small,
-                      onPressed: () => reply(root),
-                    ),
-                  ),
-                if (replies.isNotEmpty) ...[
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: context.spacing.lg),
-                    child: Text(
-                      l.chatReplies(replies.length),
-                      style: context.typography.captionStrong.copyWith(
-                        color: c.textSecondary,
+            // One fade for the root and every reply: pointing anywhere on
+            // the thread shows all of it.
+            child: ChatPrivacyFade(
+              child: ListView(
+                padding: EdgeInsets.all(context.spacing.xl3),
+                children: [
+                  if (root == null && rootAsync.isLoading)
+                    const AppInlineSpinner()
+                  else if (root == null && rootAsync.hasError)
+                    AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
+                  else if (root == null)
+                    AppInlineNote(text: l.chatReplyMissing)
+                  else
+                    ChatMessageCard(
+                      message: root,
+                      users: users,
+                      label: l.chatThread,
+                      labelIcon: LucideIcons.messagesSquare300,
+                      body: MessageBody(
+                        accountId: chat.accountId,
+                        message: root,
+                      ),
+                      onViewOriginal: () =>
+                          jumpToChatMessage(ref, chat, rootId),
+                      trailing: AppIconButton(
+                        icon: LucideIcons.reply300,
+                        tooltip: l.chatReply,
+                        size: AppIconButtonSize.small,
+                        onPressed: () => reply(root),
                       ),
                     ),
-                  ),
-                  // Replies to replies keep their quote so the chain is clear.
-                  for (final r in replies)
-                    ChatPrivacyFade(
-                      key: ValueKey(r.gid),
-                      child: MessageBubble(
+                  if (replies.isNotEmpty) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: context.spacing.lg,
+                      ),
+                      child: Text(
+                        l.chatReplies(replies.length),
+                        style: context.typography.captionStrong.copyWith(
+                          color: c.textSecondary,
+                        ),
+                      ),
+                    ),
+                    // Replies to replies keep their quote so the chain is clear.
+                    for (final r in replies)
+                      MessageBubble(
+                        key: ValueKey(r.gid),
                         chat: chat,
                         message: r,
                         users: users,
@@ -125,9 +133,9 @@ class ReplyThreadPanel extends ConsumerWidget {
                         onOpenThread: (_) {},
                         onReply: reply,
                       ),
-                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],

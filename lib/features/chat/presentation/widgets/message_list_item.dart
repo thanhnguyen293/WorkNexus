@@ -14,7 +14,6 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_notice.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_mask.dart';
 import 'chat_separator.dart';
 import 'chat_style.dart';
 import 'message_bubble.dart';
@@ -142,10 +141,7 @@ class MessageListItem extends ConsumerWidget {
         // The bubble's own space above it, and the next one's below it.
         gapAbove: firstOfRun ? style.groupGap : style.runGap,
         gapBelow: lastOfRun ? style.groupGap : style.runGap,
-        child: Padding(
-          padding: side,
-          child: ChatPrivacyFade(child: bubble),
-        ),
+        child: Padding(padding: side, child: bubble),
       ),
     );
   }
