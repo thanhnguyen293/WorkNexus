@@ -1899,7 +1899,7 @@
   "chatAiSummaryCopied": "Đã chép bản tóm tắt",
   "chatAiFailed": "AI không trả lời được: {error}",
   "chatAiNote": "Do AI viết từ các tin nhắn · hãy kiểm tra trước khi tin dùng",
-  "chatAiCompose": "AI hỗ trợ soạn tin",
+  "chatAiTools": "Công cụ AI",
   "chatAiSuggestReplies": "Gợi ý trả lời",
   "chatAiSuggesting": "Đang nghĩ câu trả lời…",
   "chatAiSuggestionHint": "Chọn một câu để đưa vào ô soạn, sửa rồi gửi",
@@ -1914,5 +1914,7 @@
   "chatStickerSuggestions": "Gửi bằng sticker",
   "chatStickerReplies": "Trả lời bằng sticker",
   "chatStickerSuggestionsClose": "Ẩn gợi ý sticker",
+  "chatStickerSuggestionsSetting": "Gợi ý sticker",
+  "chatStickerSuggestionsSettingHint": "Hiện sticker gợi ý trên ô nhập tin: theo nội dung đang gõ, và khi chưa gõ gì thì gợi ý sticker để trả lời tin mới nhất của người khác.",
   "chatAiSummaryLanguage": "Ngôn ngữ tóm tắt"
 }

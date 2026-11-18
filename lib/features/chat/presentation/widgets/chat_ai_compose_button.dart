@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/widgets/app_context_menu.dart';
 import '../../../../core/widgets/opencode_not_linked_dialog.dart';
@@ -12,12 +13,14 @@ import '../providers/chat_ai_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer_controller.dart';
 import 'chat_composer_toolbar.dart';
+import 'chat_panels.dart';
 import 'chat_snack.dart';
 
-/// The composer's ✨ tool: asks the AI for replies to the latest messages
-/// (shown above the input to pick from), or rewrites what is typed — clearer,
-/// more formal, friendlier or shorter. With nothing typed it asks for replies
-/// at once, as that is the only choice.
+/// The composer's ✨ tool, the one place for the chat's AI help: asks the
+/// AI for replies to the latest messages (shown above the input to pick
+/// from), rewrites what is typed — clearer, more formal, friendlier or
+/// shorter —, opens the chat summary beside the chat, and turns the sticker
+/// suggestions over the input on or off.
 class ChatAiComposeButton extends ConsumerWidget {
   const ChatAiComposeButton({
     super.key,
@@ -57,38 +60,66 @@ class ChatAiComposeButton extends ConsumerWidget {
             )
           : ChatComposerToolButton(
               icon: LucideIcons.sparkles300,
-              tooltip: l.chatAiCompose,
+              tooltip: l.chatAiTools,
               onPressed: () => _openMenu(anchor, ref),
             ),
     );
   }
 
   Future<void> _openMenu(BuildContext anchor, WidgetRef ref) async {
-    // With nothing typed, replies are all there is to ask for: no menu of
-    // one.
-    if (text.isBlank) return _suggest(anchor, ref);
     final l = AppL10n.of(anchor);
+    final settings = ref.read(appSettingsProvider.notifier);
+    final stickersOn = ref.read(appSettingsProvider).chatStickerSuggestions;
+    final drafted = !text.isBlank;
+    final items = <(AppMenuEntry, Future<void> Function())>[
+      (
+        AppMenuEntry(
+          icon: LucideIcons.messageSquareText300,
+          label: l.chatAiSuggestReplies,
+        ),
+        () => _suggest(anchor, ref),
+      ),
+      // Rewriting needs something typed.
+      if (drafted)
+        for (final (i, tone) in _tones.indexed)
+          (
+            AppMenuEntry(
+              icon: LucideIcons.wandSparkles300,
+              label: _toneLabel(l, tone),
+              dividerBefore: i == 0,
+            ),
+            () => _rewrite(anchor, ref, tone),
+          ),
+      // The summary is of the chat itself, not of a reply thread.
+      if (!draftKey.inThread)
+        (
+          AppMenuEntry(
+            icon: LucideIcons.scrollText300,
+            label: l.chatAiOpenAssistant,
+            dividerBefore: true,
+          ),
+          () async =>
+              openChatSidePanel(ref, draftKey.chat, ChatSidePanel.assistant),
+        ),
+      (
+        AppMenuEntry(
+          icon: LucideIcons.sticker300,
+          label: l.chatStickerSuggestionsSetting,
+          checked: stickersOn,
+          dividerBefore: draftKey.inThread,
+        ),
+        () async => settings.setChatStickerSuggestions(!stickersOn),
+      ),
+    ];
     final box = anchor.findRenderObject() as RenderBox?;
     final at = box?.localToGlobal(Offset.zero) ?? Offset.zero;
     final picked = await showAppContextMenu(
       anchor,
       at: at,
-      entries: [
-        AppMenuEntry(
-          icon: LucideIcons.messageSquareText300,
-          label: l.chatAiSuggestReplies,
-        ),
-        for (final (i, tone) in _tones.indexed)
-          AppMenuEntry(
-            icon: LucideIcons.wandSparkles300,
-            label: _toneLabel(l, tone),
-            dividerBefore: i == 0,
-          ),
-      ],
+      entries: [for (final (entry, _) in items) entry],
     );
     if (picked == null || !anchor.mounted) return;
-    if (picked == 0) return _suggest(anchor, ref);
-    await _rewrite(anchor, ref, _tones[picked - 1]);
+    await items[picked].$2();
   }
 
   Future<void> _suggest(BuildContext context, WidgetRef ref) async {

@@ -3045,7 +3045,7 @@
     }
   },
   "chatAiNote": "Written by AI from the messages · check before relying on it",
-  "chatAiCompose": "AI writing help",
+  "chatAiTools": "AI tools",
   "chatAiSuggestReplies": "Suggest replies",
   "chatAiSuggesting": "Thinking of replies…",
   "chatAiSuggestionHint": "Pick one to edit it before sending",
@@ -3060,5 +3060,7 @@
   "chatStickerSuggestions": "Send as a sticker",
   "chatStickerReplies": "Reply with a sticker",
   "chatStickerSuggestionsClose": "Hide sticker suggestions",
+  "chatStickerSuggestionsSetting": "Sticker suggestions",
+  "chatStickerSuggestionsSettingHint": "Over the message box, suggest stickers for what you type and, while nothing is typed, stickers to answer someone's latest message.",
   "chatAiSummaryLanguage": "Summary language"
 }

@@ -18,8 +18,8 @@ import 'chat_send_code_button.dart';
 import 'chat_sticker_suggestions_bar.dart';
 
 /// The composer's tool row (above the input): send image, attach file,
-/// mention someone, emoji, send code, AI writing help and the Markdown
-/// toggle — with the replies the AI suggested, when asked, and stickers for
+/// mention someone, emoji, send code, the AI tools (replies, rewrites, the
+/// summary, sticker suggestions) and the Markdown toggle — with the replies the AI suggested, when asked, and stickers for
 /// what is typed (or to answer with), above it.
 class ChatComposerTools extends StatelessWidget {
   const ChatComposerTools({

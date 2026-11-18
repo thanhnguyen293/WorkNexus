@@ -171,6 +171,10 @@ class Settings extends Table {
   BoolColumn get chatReactions =>
       boolean().withDefault(const Constant(false))();
 
+  /// Whether stickers are suggested over the chat composer.
+  BoolColumn get chatStickerSuggestions =>
+      boolean().withDefault(const Constant(true))();
+
   /// Most disk space chat attachments may use, in MB.
   IntColumn get chatCacheLimitMb =>
       integer().withDefault(const Constant(2048))();
@@ -617,7 +621,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 62;
+  int get schemaVersion => 63;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -959,6 +963,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(settings, column);
           }
         }
+      }
+      if (from < 63 &&
+          !await _hasColumn('settings', 'chat_sticker_suggestions')) {
+        await m.addColumn(settings, settings.chatStickerSuggestions);
       }
     },
   );

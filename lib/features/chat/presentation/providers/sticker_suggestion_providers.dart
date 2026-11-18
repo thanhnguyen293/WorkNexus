@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import '../../../../core/settings/app_settings.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../../domain/usecases/suggest_reply_stickers.dart';
@@ -8,8 +9,12 @@ import '../../domain/usecases/suggest_stickers.dart';
 import 'chat_providers.dart';
 import 'sticker_providers.dart';
 
-/// Every sticker that can be suggested: the ones tagged with an emoji.
+/// Every sticker that can be suggested: the ones tagged with an emoji —
+/// none while the user has sticker suggestions turned off.
 final _taggedStickersProvider = Provider.autoDispose<List<ChatSticker>>((ref) {
+  if (!ref.watch(appSettingsProvider.select((s) => s.chatStickerSuggestions))) {
+    return const [];
+  }
   final all = ref.watch(chatStickersProvider).value?.valueOrNull ?? const [];
   return [
     for (final s in all)
