@@ -132,3 +132,22 @@ const List<(String, String)> kStickerSymbolEmoji = [
   (r'^-_+-$', '😑😒'),
   (r'^\+1$', '👍'),
 ];
+
+/// A number sent as the whole message, as Vietnamese chat uses them — `1`
+/// is yes, seen, got it; `0` is no — and the emoji of the stickers that say
+/// it. Only a number standing alone counts: `còn 1 bug` is not a yes.
+const Map<String, String> kStickerNumberEmoji = {
+  '1': '👌👍👀',
+  '0': '🙅🤷',
+  '100': '💯🤩',
+  '10/10': '🤩👍',
+};
+
+/// Stickers answering a number someone sent alone: a `1` (got it) is
+/// thanked with a thumbs up, a `0` (no) gets a pleading look.
+const Map<String, String> kStickerNumberReplyEmoji = {
+  '1': '👌👍😊',
+  '0': '🥺😅',
+  '100': '🤩👍',
+  '10/10': '🤩👍',
+};

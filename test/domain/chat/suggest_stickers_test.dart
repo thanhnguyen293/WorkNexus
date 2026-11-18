@@ -28,6 +28,9 @@ final _heart = _sticker('heart', '❤️');
 final _coder = _sticker('coder', '👨‍💻');
 final _think = _sticker('think', '🤔');
 final _shock = _sticker('shock', '😱😳');
+final _seen = _sticker('seen', '👀');
+final _nope = _sticker('nope', '🙅');
+final _plead = _sticker('plead', '🥺');
 final _untagged = _sticker('mine', '');
 final _all = [
   _laugh,
@@ -39,6 +42,9 @@ final _all = [
   _coder,
   _think,
   _shock,
+  _seen,
+  _nope,
+  _plead,
   _untagged,
 ];
 
@@ -109,6 +115,15 @@ void main() {
       expect(suggest('.', _all).stickers, isEmpty);
     });
 
+    test('a number typed alone says yes or no, and is replaced', () {
+      final yes = suggest('1', _all);
+      expect(yes.stickers.take(2), [_ok, _seen]);
+      expect(yes.replacesDraft, isTrue);
+      expect(suggest(' 0 ', _all).stickers.first, _nope);
+      // Inside a sentence a number is only a number.
+      expect(suggest('còn 1 bug', _all).stickers, isEmpty);
+    });
+
     test('a question mark ending a sentence adds a thinking sticker', () {
       final result = suggest('xong chưa?', _all);
       expect(result.stickers, contains(_think));
@@ -117,7 +132,8 @@ void main() {
 
     test('a longer draft keeps its text when a sticker is sent', () {
       final result = suggest('ok anh để em xem', _all);
-      expect(result.stickers.first, _ok);
+      // "xem" (look) is the last word, so its sticker leads.
+      expect(result.stickers.take(2), [_seen, _ok]);
       expect(result.replacesDraft, isFalse);
     });
 
@@ -144,6 +160,11 @@ void main() {
     test('a lone question mark is answered with a thinking sticker', () {
       expect(suggest(_message('?'), _all, now: now).first, _think);
       expect(suggest(_message('=))'), _all, now: now).first, _laugh);
+    });
+
+    test('a lone 1 is answered with a thumbs up, a 0 with a plea', () {
+      expect(suggest(_message('1'), _all, now: now).first, _ok);
+      expect(suggest(_message('0'), _all, now: now).first, _plead);
     });
 
     test('an emoji sent alone is echoed', () {

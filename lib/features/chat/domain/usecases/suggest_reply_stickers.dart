@@ -5,9 +5,10 @@ import '../value_objects/sticker_keywords.dart';
 import 'sticker_matching.dart';
 
 /// Stickers to answer the latest message with, when it is someone else's
-/// and recent: what it says ([kStickerReplyEmoji] — thanks is answered with a
-/// smile) picks them, and an emoji or emoticon in it (`=))`, `?`) is echoed. Nothing for the user's
-/// own message, a notice, or one older than [maxAge].
+/// and recent: what it says picks them ([kStickerReplyEmoji] — thanks is
+/// answered with a smile; [kStickerNumberReplyEmoji] — a lone `1` with a
+/// thumbs up), and an emoji or emoticon in it (`=))`, `?`) is echoed.
+/// Nothing for the user's own message, a notice, or one older than [maxAge].
 class SuggestReplyStickers {
   const SuggestReplyStickers({
     this.max = 6,
@@ -41,6 +42,7 @@ class SuggestReplyStickers {
     final words = StickerMatching.words(text);
     final keys = StickerMatching.keysIn(words, kStickerReplyEmoji.keys);
     final targets = [
+      ...StickerMatching.wholeIn(text, kStickerNumberReplyEmoji),
       for (final key in keys)
         ...StickerMatching.emojiIn(kStickerReplyEmoji[key]!),
       ...StickerMatching.emojiIn(text),
