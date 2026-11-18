@@ -62,6 +62,14 @@ abstract final class StickerMatching {
     return found;
   }
 
+  /// The emoji [lexicon] gives [text] when it is one of its entries as a
+  /// whole (`1`, `0`: [kStickerNumberEmoji]); none otherwise.
+  static List<String> wholeIn(String text, Map<String, String> lexicon) =>
+      switch (lexicon[text.trim()]) {
+        final emoji? => emojiIn(emoji),
+        null => const [],
+      };
+
   /// The emoji of [sticker], one by one.
   static List<String> stickerEmoji(ChatSticker sticker) =>
       emojiIn(sticker.emoji);

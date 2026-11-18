@@ -9,7 +9,8 @@ typedef StickerSuggestions = ({List<ChatSticker> stickers, bool replacesDraft});
 
 /// Suggests stickers for a draft, the way messengers do while you type: the
 /// emoji in it, the words it ends with ([kStickerKeywordEmoji]) and its
-/// punctuation or emoticons ([kStickerSymbolEmoji]: `?`, `=))`) pick
+/// punctuation or emoticons ([kStickerSymbolEmoji]: `?`, `=))`) and a
+/// number typed alone ([kStickerNumberEmoji]: `1` yes, `0` no) pick
 /// stickers carrying those emoji; a sticker's own words (`ship it`) pick it
 /// first. Only short drafts get suggestions — a long message is not about to
 /// become a sticker.
@@ -25,6 +26,7 @@ class SuggestStickers {
     final words = StickerMatching.words(draft);
     final typed = StickerMatching.emojiIn(draft);
     final symbols = StickerMatching.symbolsIn(draft);
+    final number = StickerMatching.wholeIn(draft, kStickerNumberEmoji);
     final count = words.isEmpty ? 0 : words.split(' ').length;
     if ((count == 0 && typed.isEmpty && symbols.isEmpty) || count > maxWords) {
       return none;
@@ -32,6 +34,7 @@ class SuggestStickers {
 
     final keys = StickerMatching.keysIn(words, kStickerKeywordEmoji.keys);
     final targets = [
+      ...number,
       ...typed,
       // Typed on its own (`?`, `=))`) it is the point; ending a sentence it
       // only colours it, after what the words say.
@@ -60,7 +63,10 @@ class SuggestStickers {
     return (
       stickers: ranked,
       replacesDraft:
-          words.isEmpty || keys.contains(words) || hits.contains(words),
+          words.isEmpty ||
+          number.isNotEmpty ||
+          keys.contains(words) ||
+          hits.contains(words),
     );
   }
 }
