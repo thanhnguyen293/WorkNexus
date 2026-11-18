@@ -221,7 +221,7 @@ và asset; chưa có adapter Jira.
   cấu hình cho Claude Code, Claude Desktop và client khác, đã điền đường dẫn
   thật trên máy. Cần Node.js 22.13 trở lên.
 - Gửi tin đi qua chính phiên chat của WorkNexus, qua một endpoint localhost
-  **mặc định tắt** ("Cho công cụ AI trên máy gửi tin"): chỉ 127.0.0.1, có
+  **mặc định tắt** ("Cho công cụ AI trên máy dùng chat"): chỉ 127.0.0.1, có
   token, từ chối request từ trình duyệt.
 
 ### Giao diện và workflow

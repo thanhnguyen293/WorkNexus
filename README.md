@@ -222,7 +222,7 @@ placeholder; no Jira adapter is implemented yet.
   command / config entry for Claude Code, Claude Desktop and other clients,
   with this computer's paths filled in. It needs Node.js 22.13+.
 - Sending goes through WorkNexus' own chat session, over a localhost endpoint
-  that is **off by default** ("Let local AI tools send messages"): 127.0.0.1
+  that is **off by default** ("Let local AI tools use chat"): 127.0.0.1
   only, token-protected, browsers refused.
 
 ### Appearance and workflow settings

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // MCP server (stdio) exposing TBChat (local DB, read-only) and ZenTao chat
 // (read: WorkNexus local DB or ZenTao server; send: WorkNexus local API or ZenTao server).
+import fs from 'node:fs';
+import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -56,12 +58,13 @@ server.registerTool(
 server.registerTool(
   'read_messages',
   {
-    description: 'Read messages of one conversation in chronological order (the most recent `limit` messages, optionally before a time).',
+    description: 'Read messages of one conversation in chronological order (the most recent `limit` messages, optionally before a time). ZenTao via WorkNexus: when fewer are stored than asked, WorkNexus fetches older ones from the server first (if its local API is on); `history` in the result says what happened. To page further back, pass the oldest `time` as `before`. Messages with `attachment` can be opened with get_attachment.',
     inputSchema: {
       app: App,
       conversation: z.string().describe('Conversation name or id as returned by list_conversations (TBChat: sessionId; ZenTao: gid)'),
       limit: z.number().int().min(1).max(500).default(50),
       before: z.string().optional().describe('ISO date/time; only messages strictly before it'),
+      loadMore: z.boolean().default(true).describe('ZenTao via WorkNexus: let WorkNexus fetch older messages from the server when too few are stored'),
       account: z.string().optional(),
     },
   },
@@ -95,6 +98,47 @@ server.registerTool(
     },
   },
   run(({ app, ...a }) => zentaoSender().sendMessage(a)),
+);
+
+// What get_attachment returns inline: images an MCP client can show, and small text files.
+const MAX_INLINE_IMAGE = 5 * 1024 * 1024;
+const MAX_INLINE_TEXT = 256 * 1024;
+const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' };
+const TEXT_EXTENSIONS = new Set(['txt', 'md', 'csv', 'tsv', 'json', 'log', 'xml', 'yaml', 'yml', 'ini', 'toml', 'html', 'css',
+  'js', 'mjs', 'ts', 'tsx', 'jsx', 'dart', 'py', 'java', 'kt', 'swift', 'go', 'rs', 'c', 'h', 'cpp', 'cs', 'php', 'rb', 'sh', 'sql', 'diff', 'patch']);
+
+function attachmentContent(file) {
+  const ext = path.extname(file.name || file.path).slice(1).toLowerCase();
+  const size = fs.statSync(file.path).size;
+  const meta = { type: 'text', text: JSON.stringify(file, null, 2) };
+  const imageType = file.isImage ? (IMAGE_TYPES[ext] ?? Object.values(IMAGE_TYPES).find((t) => t === file.mimeType)) : null;
+  if (imageType && size <= MAX_INLINE_IMAGE) {
+    return [meta, { type: 'image', data: fs.readFileSync(file.path).toString('base64'), mimeType: imageType }];
+  }
+  if (!file.isImage && size <= MAX_INLINE_TEXT && (file.mimeType?.startsWith('text/') || TEXT_EXTENSIONS.has(ext))) {
+    return [meta, { type: 'text', text: fs.readFileSync(file.path, 'utf8') }];
+  }
+  return [meta, { type: 'text', text: `Not shown inline (${file.isImage ? 'image type or size' : 'binary or large file'}); open it at ${file.path}.` }];
+}
+
+server.registerTool(
+  'get_attachment',
+  {
+    description: 'Open the file or image of a ZenTao message (one read_messages marks with `attachment`), downloaded through WorkNexus: images come back as images, small text files as text, anything else as a local file path. Needs WorkNexus running with "Let local AI tools use chat" on.',
+    inputSchema: {
+      app: z.literal('zentao').describe('Only "zentao" (through WorkNexus) is supported'),
+      conversation: z.string().describe('Conversation name or gid'),
+      messageId: z.number().int().positive().describe('The message `id` from read_messages or search_messages'),
+      account: z.string().optional().describe('WorkNexus ZenTao account handle or id, when it has several'),
+    },
+  },
+  async ({ app, ...a }) => {
+    try {
+      return { content: attachmentContent(await worknexus.getAttachment(a)) };
+    } catch (e) {
+      return { isError: true, content: [{ type: 'text', text: String(e?.message ?? e) }] };
+    }
+  },
 );
 
 await server.connect(new StdioServerTransport());

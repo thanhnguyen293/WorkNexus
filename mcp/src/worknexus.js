@@ -31,7 +31,7 @@ export function findDatabase() {
   return candidatePaths().find((p) => fs.existsSync(p)) ?? null;
 }
 
-// Written beside the DB by WorkNexus while "Let local AI tools send messages" is on.
+// Written beside the DB by WorkNexus while "Let local AI tools use chat" is on.
 const LOCAL_API_FILE = 'chat_local_api.json';
 
 /** Port + token of WorkNexus' local chat API, or null when it is off / not installed. */
@@ -171,6 +171,8 @@ class Ctx {
       from: `${this.userName(m.senderId)}${fromMe ? ' (me)' : ''}`,
       type: m.contentType,
       text: messageText({ contentType: m.contentType, content: m.content }),
+      // get_attachment fetches these by `id`.
+      ...(!m.deleted && m.serverId && (m.contentType === 'image' || m.contentType === 'file') ? { attachment: m.contentType } : {}),
       ...(m.deleted ? { deleted: true } : {}),
       ...(m.sendState !== 'sent' ? { sendState: m.sendState } : {}),
     };
@@ -207,17 +209,86 @@ export function listConversations({ account, limit = 50 } = {}) {
   });
 }
 
-export function readMessages({ account, conversation, limit = 50, before } = {}) {
-  return withDb((db) => {
+// How far read_messages pages back through WorkNexus in one call: 20 pages of up to 200.
+const MAX_HISTORY_PAGES = 20;
+const MAX_PAGE_SIZE = 200;
+
+/**
+ * Timeline messages stored before `beforeSec` (the run of history that reaches the newest
+ * message, as WorkNexus shows it — not pinned messages or reply parents stored on their own),
+ * and whether the stored timeline holds the chat's first message.
+ */
+function timelineState(db, accountId, gid, beforeSec) {
+  const row = db.prepare(`
+    SELECT COUNT(*) FILTER (WHERE sent_at < ?) AS n, MIN(message_index) AS first
+    FROM chat_messages WHERE account_id = ? AND cgid = ? AND detached = 0`).get(beforeSec, accountId, gid);
+  return { count: Number(row.n), reachesStart: row.first != null && Number(row.first) <= 1 };
+}
+
+/**
+ * Asks WorkNexus to store older pages until `limit` timeline messages before `beforeSec` are
+ * stored or the chat's start is reached. Null when its local API is off.
+ */
+async function loadOlderUntilEnough(target, beforeSec, limit) {
+  const info = localApiInfo();
+  if (!info) return null;
+  let loaded = 0;
+  let state = await withDb((db) => timelineState(db, target.accountId, target.gid, beforeSec));
+  for (let page = 0; page < MAX_HISTORY_PAGES && state.count < limit && !state.reachesStart; page++) {
+    const res = await callApi(info, '/v1/chat/load-older', {
+      accountId: target.accountId,
+      chatGid: target.gid,
+      // A `before` older than everything stored needs whole pages until it is reached.
+      pageSize: state.count === 0 ? MAX_PAGE_SIZE : Math.min(MAX_PAGE_SIZE, Math.max(50, limit - state.count)),
+    });
+    loaded += res.loaded ?? 0;
+    const reachesStart = res.reachesStart === true;
+    state = await withDb((db) => timelineState(db, target.accountId, target.gid, beforeSec));
+    if (reachesStart) {
+      state.reachesStart = true;
+      break;
+    }
+  }
+  return { loadedFromServer: loaded, reachesStart: state.reachesStart, enough: state.count >= limit || state.reachesStart };
+}
+
+/**
+ * The most recent `limit` messages before `before`, oldest first. With WorkNexus' local API on
+ * and fewer stored than asked, WorkNexus first fetches older pages from the server (`loadMore`).
+ */
+export async function readMessages({ account, conversation, limit = 50, before, loadMore = true } = {}) {
+  const beforeSec = before ? Math.floor(Date.parse(before) / 1000) : Number.MAX_SAFE_INTEGER;
+  if (Number.isNaN(beforeSec)) throw new Error(`"${before}" is not an ISO date/time.`);
+  const target = await withDb((db) => {
     const ctx = new Ctx(db, account);
     const c = ctx.resolve(conversation);
-    const beforeSec = before ? Math.floor(Date.parse(before) / 1000) : Number.MAX_SAFE_INTEGER;
+    return { accountId: ctx.account.id, gid: c.gid, ...timelineState(db, ctx.account.id, c.gid, beforeSec) };
+  });
+  let history = null;
+  if (target.count < limit && !target.reachesStart) {
+    history = loadMore ? await loadOlderUntilEnough(target, beforeSec, limit) : null;
+    history ??= {
+      enough: false,
+      note: loadMore
+        ? 'Fewer messages are stored than asked. To let WorkNexus fetch older ones, turn on "Let local AI tools use chat" in WorkNexus (Quick Settings › Chat › AI tools) while it is running.'
+        : 'Fewer messages are stored than asked; call again with loadMore to fetch older ones.',
+    };
+  }
+  return withDb((db) => {
+    const ctx = new Ctx(db, target.accountId);
+    const c = ctx.resolve(target.gid);
     const rows = db.prepare(`
       SELECT ${MSG_COLUMNS} FROM chat_messages
       WHERE account_id = ? AND cgid = ? AND sent_at < ?
       ORDER BY sent_at DESC, server_id DESC LIMIT ?`).all(ctx.account.id, c.gid, beforeSec, limit);
     const name = ctx.chatName(c);
-    return { ...ctx.meta(), conversation: name, gid: c.gid, messages: rows.reverse().map((m) => ctx.view(m, new Map([[c.gid, name]]))) };
+    return {
+      ...ctx.meta(),
+      conversation: name,
+      gid: c.gid,
+      ...(history ? { history } : {}),
+      messages: rows.reverse().map((m) => ctx.view(m, new Map([[c.gid, name]]))),
+    };
   });
 }
 
@@ -243,23 +314,49 @@ export function searchMessages({ account, query, conversation, limit = 50 } = {}
   });
 }
 
-/** Sends through WorkNexus' logged-in chat session (its local API), so no ZenTao password is needed here. */
-export async function sendMessage({ account, conversation, text }) {
+/** Posts to WorkNexus' local chat API; its JSON answer, or an error saying what went wrong. */
+async function callApi(info, urlPath, body) {
+  let res;
+  try {
+    res = await postJson(info, urlPath, body);
+  } catch (e) {
+    throw new Error(`Could not reach WorkNexus (is it running?): ${e.message}`);
+  }
+  if (res.status !== 200) throw new Error(`WorkNexus refused the request (HTTP ${res.status}): ${res.json.error ?? 'unknown error'}`);
+  return res.json;
+}
+
+function requireApi(what) {
   const info = localApiInfo();
   if (!info) {
-    throw new Error('WorkNexus local chat API is off. In WorkNexus open Quick Settings › Chat › AI tools and turn on "Let local AI tools send messages" (WorkNexus must be running).');
+    throw new Error(`WorkNexus local chat API is off, so it cannot ${what}. In WorkNexus open Quick Settings › Chat › AI tools and turn on "Let local AI tools use chat" (WorkNexus must be running).`);
   }
-  const target = await withDb((db) => {
+  return info;
+}
+
+function chatTarget(account, conversation) {
+  return withDb((db) => {
     const ctx = new Ctx(db, account);
     const c = ctx.resolve(conversation);
     return { accountId: ctx.account.id, gid: c.gid, name: ctx.chatName(c) };
   });
-  let res;
-  try {
-    res = await postJson(info, '/v1/chat/send', { accountId: target.accountId, chatGid: target.gid, text });
-  } catch (e) {
-    throw new Error(`Could not reach WorkNexus (is it running?): ${e.message}`);
-  }
-  if (res.status !== 200) throw new Error(`WorkNexus refused the message (HTTP ${res.status}): ${res.json.error ?? 'unknown error'}`);
+}
+
+/** Sends through WorkNexus' logged-in chat session (its local API), so no ZenTao password is needed here. */
+export async function sendMessage({ account, conversation, text }) {
+  const info = requireApi('send messages');
+  const target = await chatTarget(account, conversation);
+  await callApi(info, '/v1/chat/send', { accountId: target.accountId, chatGid: target.gid, text });
   return { sent: true, via: 'worknexus', conversation: target.name, gid: target.gid };
+}
+
+/**
+ * Has WorkNexus download the file or image of message `messageId` (the `id` read_messages
+ * returns) into its cache; returns where it is: `{path, name, size, mimeType, isImage}`.
+ */
+export async function getAttachment({ account, conversation, messageId }) {
+  const info = requireApi('download files and images');
+  const target = await chatTarget(account, conversation);
+  const file = await callApi(info, '/v1/chat/attachment', { accountId: target.accountId, chatGid: target.gid, messageId: Number(messageId) });
+  return { conversation: target.name, gid: target.gid, messageId: Number(messageId), path: file.path, name: file.name, size: file.size, mimeType: file.mimeType ?? null, isImage: file.isImage === true };
 }

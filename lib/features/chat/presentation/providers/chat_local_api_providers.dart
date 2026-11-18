@@ -7,6 +7,8 @@ import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../domain/repositories/chat_local_api.dart';
+import '../../domain/usecases/fetch_message_attachment.dart';
+import '../../domain/usecases/load_older_timeline_page.dart';
 import '../../domain/usecases/send_text_message.dart';
 import 'chat_providers.dart';
 
@@ -19,10 +21,15 @@ final chatLocalApiProvider = Provider<ChatLocalApi>(
 /// off. Messages go through [SendTextMessage], as if typed in the composer.
 final chatLocalApiRunnerProvider = Provider<void>((ref) {
   final api = ref.watch(chatLocalApiProvider);
-  final send = SendTextMessage(ref.watch(chatRepositoryProvider));
+  final repository = ref.watch(chatRepositoryProvider);
+  final handlers = ChatLocalApiHandlers(
+    send: SendTextMessage(repository).call,
+    loadOlder: LoadOlderTimelinePage(repository).call,
+    attachment: FetchMessageAttachment(repository).call,
+  );
 
   Future<void> apply(bool on) async {
-    final result = on ? await api.start(send.call) : await api.stop();
+    final result = on ? await api.start(handlers) : await api.stop();
     if (result case Err(:final failure)) {
       appTalker.error('Local chat API: ${failure.message}', failure.cause);
     }
