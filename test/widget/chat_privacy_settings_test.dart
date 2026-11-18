@@ -36,11 +36,15 @@ Future<ProviderContainer> _pump(WidgetTester tester, Widget body) async {
   return container;
 }
 
-/// Whether the [PrivacyFade] over the widget holding [text] fades it.
+/// Whether the [PrivacyFade] over the widget holding [text] fades it (or is
+/// fading it: the opacity it eases to).
 bool _fadedOver(WidgetTester tester, String text) =>
     tester
-        .widget<Opacity>(
-          find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
+        .widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.text(text),
+            matching: find.byType(AnimatedOpacity),
+          ),
         )
         .opacity <
     1;
@@ -80,7 +84,7 @@ void main() {
 
     final settings = container.read(appSettingsProvider.notifier);
     settings.setChatPrivacy(const ChatPrivacy(enabled: true));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Alice'), findsNothing);
     expect(find.text(kPrivacyMaskText), findsOneWidget);
     expect(find.text('24 members'), findsOneWidget, reason: 'no part');
@@ -89,7 +93,7 @@ void main() {
     settings.setChatPrivacy(
       const ChatPrivacy(enabled: true, hideIdentities: false),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Alice'), findsOneWidget);
   });
 

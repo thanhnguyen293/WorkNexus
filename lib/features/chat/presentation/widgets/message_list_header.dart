@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -50,4 +52,21 @@ class MessageListHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What an empty chat shows over its list: a spinner while a page loads,
+/// else that there are no messages.
+class MessageListEmpty extends StatelessWidget {
+  const MessageListEmpty({super.key, required this.loading});
+
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) => loading
+      ? const AppStateView.loading(compact: true)
+      : AppStateView.empty(
+          compact: true,
+          icon: LucideIcons.messagesSquare300,
+          title: AppL10n.of(context).chatNoMessages,
+        );
 }

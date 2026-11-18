@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/privacy_mask.dart';
@@ -178,7 +179,8 @@ class ConversationTile extends StatelessWidget {
 
 /// The row's own ink layer. The list pane paints an opaque surface between
 /// the tile and the app's Material, which would hide the InkWell's hover and
-/// splash; a local Material carries them (and the selection fill) instead.
+/// splash; a local Material carries them instead, over the selection fill,
+/// which eases between rows as the open chat changes.
 class _TileInk extends StatelessWidget {
   const _TileInk({
     required this.selected,
@@ -193,16 +195,21 @@ class _TileInk extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Material(
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: AppMotion.of(context, AppMotion.fast),
+    curve: AppMotion.enter,
     color: selected
         ? context.colors.selectionFill
         : highlighted
         ? context.colors.hoverFill
         : Colors.transparent,
-    child: InkWell(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: onTap,
-      child: child,
+    child: Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        mouseCursor: WidgetStateMouseCursor.clickable,
+        onTap: onTap,
+        child: child,
+      ),
     ),
   );
 }
