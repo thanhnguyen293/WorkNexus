@@ -36,26 +36,29 @@ class ChatAiComposeButton extends ConsumerWidget {
     final l = AppL10n.of(context);
     // Watched so the names are loaded by the time a run starts.
     ref.watch(chatAiPeopleProvider(draftKey.chat.accountId));
-    if (ref.watch(chatDraftRewriteProvider(draftKey))) {
-      return Tooltip(
-        message: l.chatAiRewriting,
-        child: SizedBox.square(
-          dimension: context.sizes.controlLg,
-          child: Center(
-            child: SizedBox.square(
-              dimension: context.sizes.iconMd,
-              child: const CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        ),
-      );
-    }
+    final rewriting = ref.watch(chatDraftRewriteProvider(draftKey));
+    // The Builder stays while a rewrite runs, only its child changes: its
+    // context is the one the rewrite reports back through, so it must stay
+    // mounted until the answer comes.
     return Builder(
-      builder: (anchor) => ChatComposerToolButton(
-        icon: LucideIcons.sparkles300,
-        tooltip: l.chatAiCompose,
-        onPressed: () => _openMenu(anchor, ref),
-      ),
+      builder: (anchor) => rewriting
+          ? Tooltip(
+              message: l.chatAiRewriting,
+              child: SizedBox.square(
+                dimension: context.sizes.controlLg,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: context.sizes.iconMd,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            )
+          : ChatComposerToolButton(
+              icon: LucideIcons.sparkles300,
+              tooltip: l.chatAiCompose,
+              onPressed: () => _openMenu(anchor, ref),
+            ),
     );
   }
 

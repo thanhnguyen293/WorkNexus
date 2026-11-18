@@ -70,6 +70,9 @@ class SuggestChatReplies {
 String repliesPrompt(String transcript, String selfName, int count) =>
     'You help $selfName answer in a team chat. Read the latest messages and '
     'write $count different short replies $selfName could send next.\n'
+    'Lines from "$selfName" are $selfName\'s own messages. When the last '
+    'message is $selfName\'s own, write follow-ups $selfName could add, not '
+    'answers to it.\n'
     'Use the language the conversation is written in, and match its tone. '
     'Be natural, specific and brief (under 25 words each). Make them differ '
     '(for example: agree, ask a follow-up question, give a status).\n'
