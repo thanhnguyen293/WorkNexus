@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/privacy_mask.dart';
 import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_privacy_providers.dart';
@@ -54,16 +55,24 @@ class ChatPrivacyText extends StatelessWidget {
   }
 }
 
-/// Fades a message almost out while the privacy mode hides messages;
-/// pointing at it shows it.
+/// Washes [child] out into the surface while the privacy mode hides [part]
+/// (messages, unless told otherwise); pointing at it, or at the
+/// [PrivacyRevealRegion] around it, shows it. Meant for a whole list at
+/// once — the messages, a panel's cards — not for each item.
 class ChatPrivacyFade extends ConsumerWidget {
-  const ChatPrivacyFade({super.key, required this.child});
+  const ChatPrivacyFade({
+    super.key,
+    this.part = ChatPrivacyPart.message,
+    required this.child,
+  });
 
+  final ChatPrivacyPart part;
   final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => PrivacyFade(
-    faded: ref.watch(chatPrivacyHiddenProvider(ChatPrivacyPart.message)),
+    faded: ref.watch(chatPrivacyHiddenProvider(part)),
+    color: context.colors.surface,
     child: child,
   );
 }

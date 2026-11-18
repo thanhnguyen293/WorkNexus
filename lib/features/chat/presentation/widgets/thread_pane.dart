@@ -24,6 +24,7 @@ import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_members_panel.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_read_only_bar.dart';
 import 'chat_side_panel_host.dart';
 import 'chat_snack.dart';
@@ -104,65 +105,74 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
     // desktop_drop hands a drop to every target under the pointer.
     final canSend = ref.watch(chatCanSendProvider(t));
     // Both drop areas show their hints while files hover over either.
+    // Pointing anywhere on the chat shows all of it while it is hidden; the
+    // input keeps focus as the user types, so focus shows nothing.
     final messages = FileDropZones(
-      child: Column(
-        children: [
-          ChatThreadHeader(thread: t, chat: chat, users: users),
-          if (searching) ChatThreadSearchBar(thread: t),
-          // Searching, the pinned bar would only push the matches down.
-          if (pinned.isNotEmpty && !searching)
-            PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
-          ChatAiCatchUpBanner(thread: t),
-          Expanded(
-            // Sits over the persistent background while messages load
-            // and scroll.
-            child: FileDropTarget(
-              enabled: canSend,
-              hint: AppL10n.of(context).dropFilesToSend,
-              onDrop: (files) => sendChatFiles(
-                context,
-                ref,
-                draftKey: (chat: t, inThread: false),
-                files: files,
-              ),
-              child: Stack(
-                children: [
-                  ChatTextScale(
-                    child: MessageList(
-                      // The background is reused across chats; the list is
-                      // not.
-                      key: ValueKey(t),
-                      thread: t,
-                      showSenders: chat?.type != ChatType.one2one,
-                    ),
+      child: PrivacyRevealRegion(
+        revealOnFocus: false,
+        child: Column(
+          children: [
+            ChatThreadHeader(thread: t, chat: chat, users: users),
+            if (searching) ChatThreadSearchBar(thread: t),
+            // Searching, the pinned bar would only push the matches down.
+            if (pinned.isNotEmpty && !searching)
+              PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+            ChatAiCatchUpBanner(thread: t),
+            Expanded(
+              // Sits over the persistent background while messages load
+              // and scroll.
+              child: FileDropTarget(
+                enabled: canSend,
+                hint: AppL10n.of(context).dropFilesToSend,
+                onDrop: (files) => sendChatFiles(
+                  context,
+                  ref,
+                  draftKey: (chat: t, inThread: false),
+                  files: files,
+                ),
+                child: ChatPrivacyFade(
+                  child: Stack(
+                    children: [
+                      ChatTextScale(
+                        child: MessageList(
+                          // The background is reused across chats; the list
+                          // is not.
+                          key: ValueKey(t),
+                          thread: t,
+                          showSenders: chat?.type != ChatType.one2one,
+                        ),
+                      ),
+                      // A video scrolled out of view plays on over the list.
+                      Positioned.fill(child: ChatFloatingVideo(thread: t)),
+                    ],
                   ),
-                  // A video scrolled out of view plays on over the list.
-                  Positioned.fill(child: ChatFloatingVideo(thread: t)),
-                ],
+                ),
               ),
             ),
-          ),
-          if (canSend)
-            ChatTextScale(
-              child: ChatComposer(
-                thread: t,
-                hint: chat == null
-                    ? null
-                    : AppL10n.of(context).chatMessageTo(
-                        // No reveal on hover here: it is only a hint.
-                        ref.watch(
-                              chatPrivacyHiddenProvider(
-                                ChatPrivacyPart.identity,
-                              ),
-                            )
-                            ? kPrivacyMaskText
-                            : chatTitle(context, chat, users),
-                      ),
+            if (canSend)
+              ChatTextScale(
+                child: ChatComposer(
+                  thread: t,
+                  hint: chat == null
+                      ? null
+                      : AppL10n.of(context).chatMessageTo(
+                          // No reveal on hover here: it is only a hint.
+                          ref.watch(
+                                chatPrivacyHiddenProvider(
+                                  ChatPrivacyPart.identity,
+                                ),
+                              )
+                              ? kPrivacyMaskText
+                              : chatTitle(context, chat, users),
+                        ),
+                ),
+              )
+            else
+              ChatReadOnlyBar(
+                adminsOnly: chat?.committers.trim() == r'$ADMINS',
               ),
-            )
-          else
-            ChatReadOnlyBar(adminsOnly: chat?.committers.trim() == r'$ADMINS'),
-        ],
+          ],
+        ),
       ),
     );
     final Widget? panel = openThread != null
