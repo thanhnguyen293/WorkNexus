@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_profile_tap.dart';
 import 'chat_style.dart';
 
@@ -36,12 +38,21 @@ class MessageAvatarSlot extends StatelessWidget {
               accountId: accountId,
               userId: senderId,
               name: name,
-              child: ChatAvatar(
-                name: name,
-                imageUrl: chatAvatarUrl(users, senderId),
-                verified: chatVerifiedBadge(context, users, senderId),
-                shape: style.avatarShape,
-                diameter: style.avatarSize,
+              child: ChatPrivacyMask(
+                part: ChatPrivacyPart.identity,
+                mask: ChatAvatar(
+                  name: '',
+                  masked: true,
+                  shape: style.avatarShape,
+                  diameter: style.avatarSize,
+                ),
+                child: ChatAvatar(
+                  name: name,
+                  imageUrl: chatAvatarUrl(users, senderId),
+                  verified: chatVerifiedBadge(context, users, senderId),
+                  shape: style.avatarShape,
+                  diameter: style.avatarSize,
+                ),
               ),
             )
           : null,

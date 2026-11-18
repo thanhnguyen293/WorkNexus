@@ -197,7 +197,7 @@ class _HiddenBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
-      color: context.colors.skeleton,
+      color: chatPrivacyCoverColor(context),
       borderRadius: BorderRadius.circular(context.radii.md),
     ),
   );
