@@ -101,8 +101,9 @@ class ChatComposerTools extends StatelessWidget {
 }
 
 /// Right of the input: 👍 sends a like while the input is empty; once there
-/// is text it becomes the send button.
-class ChatComposerSendButton extends StatelessWidget {
+/// is text it becomes the send button. Rebuilt only when the input turns
+/// empty or not, not on every key.
+class ChatComposerSendButton extends StatefulWidget {
   const ChatComposerSendButton({
     super.key,
     required this.text,
@@ -115,46 +116,74 @@ class ChatComposerSendButton extends StatelessWidget {
   final VoidCallback onLike;
 
   @override
+  State<ChatComposerSendButton> createState() => _ChatComposerSendButtonState();
+}
+
+class _ChatComposerSendButtonState extends State<ChatComposerSendButton> {
+  late bool _ready;
+
+  @override
+  void initState() {
+    super.initState();
+    _ready = !widget.text.isBlank;
+    widget.text.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(ChatComposerSendButton old) {
+    super.didUpdateWidget(old);
+    if (old.text == widget.text) return;
+    old.text.removeListener(_changed);
+    widget.text.addListener(_changed);
+    _changed();
+  }
+
+  @override
+  void dispose() {
+    widget.text.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    final ready = !widget.text.isBlank;
+    if (ready != _ready) setState(() => _ready = ready);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = AppL10n.of(context);
-    return ListenableBuilder(
-      listenable: text,
-      builder: (context, _) {
-        final ready = !text.isBlank;
-        final box = BoxConstraints.tightFor(
-          width: context.sizes.controlLg,
-          height: context.sizes.controlLg,
-        );
-        return ready
-            ? IconButton(
-                tooltip: '${l.chatSend} · ${l.chatSendHint}',
-                onPressed: onSend,
-                padding: EdgeInsets.zero,
-                constraints: box,
-                style: IconButton.styleFrom(
-                  backgroundColor: c.accent,
-                  foregroundColor: c.onAccent,
-                ),
-                icon: Icon(LucideIcons.send500, size: context.sizes.iconLg),
-              )
-            // The emoji itself, as it is what gets sent.
-            : IconButton(
-                tooltip: l.chatSendLike,
-                onPressed: onLike,
-                padding: EdgeInsets.zero,
-                constraints: box,
-                mouseCursor: WidgetStateMouseCursor.clickable,
-                icon: Text(
-                  '👍',
-                  style: context.typography.titleLg.copyWith(
-                    fontSize: context.spacing.xl5,
-                    height: 1,
-                  ),
-                ),
-              );
-      },
+    final box = BoxConstraints.tightFor(
+      width: context.sizes.controlLg,
+      height: context.sizes.controlLg,
     );
+    return _ready
+        ? IconButton(
+            tooltip: '${l.chatSend} · ${l.chatSendHint}',
+            onPressed: widget.onSend,
+            padding: EdgeInsets.zero,
+            constraints: box,
+            style: IconButton.styleFrom(
+              backgroundColor: c.accent,
+              foregroundColor: c.onAccent,
+            ),
+            icon: Icon(LucideIcons.send500, size: context.sizes.iconLg),
+          )
+        // The emoji itself, as it is what gets sent.
+        : IconButton(
+            tooltip: l.chatSendLike,
+            onPressed: widget.onLike,
+            padding: EdgeInsets.zero,
+            constraints: box,
+            mouseCursor: WidgetStateMouseCursor.clickable,
+            icon: Text(
+              '👍',
+              style: context.typography.titleLg.copyWith(
+                fontSize: context.spacing.xl5,
+                height: 1,
+              ),
+            ),
+          );
   }
 }
 

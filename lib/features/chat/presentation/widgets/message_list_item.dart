@@ -57,7 +57,7 @@ bool chatSameRun(Object? other, ChatMessage message) =>
 
 /// One row of the list built by [chatListItems]: a day divider, a time
 /// marker or a message. Takes only what the row shows — not the whole list —
-/// so an unchanged row can keep its widget (see `MessageRowCache`).
+/// so an unchanged row can keep its widget (see `ListRowWidgetCache`).
 class MessageListItem extends ConsumerWidget {
   const MessageListItem({
     super.key,
