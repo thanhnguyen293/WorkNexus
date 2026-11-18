@@ -2285,7 +2285,7 @@
   },
   "chatPrivacy": "Privacy",
   "chatPrivacyMode": "Privacy mode",
-  "chatPrivacyModeHint": "Blurs chats on screen until you point at them, for a shared screen or a look over your shoulder. Nothing stored or sent changes. Shortcut: {shortcut}.",
+  "chatPrivacyModeHint": "Hides chats on screen until you point at them, for a shared screen or a look over your shoulder: names and previews turn into dots, avatars into a placeholder, messages fade out. Nothing stored or sent changes. Shortcut: {shortcut}.",
   "@chatPrivacyModeHint": {
     "placeholders": {
       "shortcut": {
@@ -2293,12 +2293,12 @@
       }
     }
   },
-  "chatBlurPreviews": "Blur message previews",
-  "chatBlurPreviewsHint": "The last message under each chat in the list.",
-  "chatBlurIdentities": "Blur chat names and avatars",
-  "chatBlurIdentitiesHint": "In the chat list and at the top of the open chat.",
-  "chatBlurMessages": "Blur messages",
-  "chatBlurMessagesHint": "Every message in the open chat and in threads.",
+  "chatHidePreviews": "Hide message previews",
+  "chatHidePreviewsHint": "The last message under each chat in the list shows as dots.",
+  "chatHideIdentities": "Hide chat names and avatars",
+  "chatHideIdentitiesHint": "In the chat list, at the top of the open chat and in its message box.",
+  "chatHideMessages": "Fade out messages",
+  "chatHideMessagesHint": "Every message in the open chat, its threads and pins.",
   "chatSendTypingStatus": "Show when I'm typing",
   "chatSendTypingStatusHint": "People in one-to-one and group chats see when you are typing a message.",
   "chatLocalApiSection": "AI tools",

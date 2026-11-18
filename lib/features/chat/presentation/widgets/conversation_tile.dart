@@ -4,13 +4,14 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../core/widgets/unread_badge.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
-import 'chat_privacy_blur.dart';
+import 'chat_privacy_mask.dart';
 import 'conversation_preview_line.dart';
 
 /// One row of the chat list: avatar, title, last message, time and unread.
@@ -82,8 +83,17 @@ class ConversationTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ChatPrivacyBlur(
+            ChatPrivacyMask(
               part: ChatPrivacyPart.identity,
+              mask: ChatAvatar(
+                name: '',
+                masked: true,
+                icon: chat.type == ChatType.one2one
+                    ? null
+                    : LucideIcons.users300,
+                presence: presence,
+                verified: verified,
+              ),
               child: avatarWidget,
             ),
             SizedBox(width: context.spacing.lg),
@@ -94,18 +104,14 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ChatPrivacyBlur(
+                        child: ChatPrivacyText(
+                          title,
                           part: ChatPrivacyPart.identity,
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.typography.body.copyWith(
-                              color: c.textPrimary,
-                              fontWeight: unread
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                            ),
+                          style: context.typography.body.copyWith(
+                            color: c.textPrimary,
+                            fontWeight: unread
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
                         ),
                       ),
@@ -122,8 +128,15 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ChatPrivacyBlur(
+                        child: ChatPrivacyMask(
                           part: ChatPrivacyPart.preview,
+                          mask: Text(
+                            kPrivacyMaskText,
+                            maxLines: 1,
+                            style: context.typography.bodySm.copyWith(
+                              color: c.textSecondary,
+                            ),
+                          ),
                           child: ConversationPreviewLine(
                             chat: chat,
                             lastSender: lastSender,

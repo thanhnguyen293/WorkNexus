@@ -151,7 +151,8 @@ class Settings extends Table {
   BoolColumn get chatSendTypingStatus =>
       boolean().withDefault(const Constant(true))();
 
-  /// The chat privacy mode (blurring chats on screen) and the parts it blurs.
+  /// The chat privacy mode (hiding chats on screen) and the parts it hides
+  /// (`ChatPrivacy`). The `blur` names are from its first take, which blurred.
   BoolColumn get chatPrivacyMode =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get chatBlurPreviews =>

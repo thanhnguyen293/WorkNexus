@@ -10,12 +10,11 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/build_reply_thread.dart';
-import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_notice.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_blur.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_separator.dart';
 import 'chat_style.dart';
 import 'message_bubble.dart';
@@ -145,7 +144,7 @@ class MessageListItem extends ConsumerWidget {
         gapBelow: lastOfRun ? style.groupGap : style.runGap,
         child: Padding(
           padding: side,
-          child: ChatPrivacyBlur(part: ChatPrivacyPart.message, child: bubble),
+          child: ChatPrivacyFade(child: bubble),
         ),
       ),
     );
