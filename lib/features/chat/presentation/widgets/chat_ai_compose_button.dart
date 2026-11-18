@@ -16,7 +16,8 @@ import 'chat_snack.dart';
 
 /// The composer's ✨ tool: asks the AI for replies to the latest messages
 /// (shown above the input to pick from), or rewrites what is typed — clearer,
-/// more formal, friendlier or shorter.
+/// more formal, friendlier or shorter. With nothing typed it asks for replies
+/// at once, as that is the only choice.
 class ChatAiComposeButton extends ConsumerWidget {
   const ChatAiComposeButton({
     super.key,
@@ -63,10 +64,12 @@ class ChatAiComposeButton extends ConsumerWidget {
   }
 
   Future<void> _openMenu(BuildContext anchor, WidgetRef ref) async {
+    // With nothing typed, replies are all there is to ask for: no menu of
+    // one.
+    if (text.isBlank) return _suggest(anchor, ref);
     final l = AppL10n.of(anchor);
     final box = anchor.findRenderObject() as RenderBox?;
     final at = box?.localToGlobal(Offset.zero) ?? Offset.zero;
-    final hasDraft = !text.isBlank;
     final picked = await showAppContextMenu(
       anchor,
       at: at,
@@ -75,13 +78,12 @@ class ChatAiComposeButton extends ConsumerWidget {
           icon: LucideIcons.messageSquareText300,
           label: l.chatAiSuggestReplies,
         ),
-        if (hasDraft)
-          for (final (i, tone) in _tones.indexed)
-            AppMenuEntry(
-              icon: LucideIcons.wandSparkles300,
-              label: _toneLabel(l, tone),
-              dividerBefore: i == 0,
-            ),
+        for (final (i, tone) in _tones.indexed)
+          AppMenuEntry(
+            icon: LucideIcons.wandSparkles300,
+            label: _toneLabel(l, tone),
+            dividerBefore: i == 0,
+          ),
       ],
     );
     if (picked == null || !anchor.mounted) return;
