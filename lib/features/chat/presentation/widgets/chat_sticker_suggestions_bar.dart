@@ -5,12 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_sticker.dart';
 import '../providers/chat_providers.dart';
@@ -19,6 +16,7 @@ import '../providers/sticker_suggestion_providers.dart';
 import 'chat_composer_controller.dart';
 import 'chat_snack.dart';
 import 'chat_sticker_image.dart';
+import 'chat_suggestion_tray.dart';
 
 /// How long typing settles before the stickers follow it.
 const _kSettle = Duration(milliseconds: 200);
@@ -133,7 +131,7 @@ class _ChatStickerSuggestionsBarState
   }
 }
 
-/// The label, the stickers in a scrolling row and a close button.
+/// The stickers in a scrolling row, in the suggestion tray.
 class _Strip extends StatelessWidget {
   const _Strip({
     required this.label,
@@ -149,46 +147,25 @@ class _Strip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final s = context.spacing;
     final tile = context.sizes.stateTile;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(s.xl, s.sm, s.md, 0),
-      child: Row(
-        children: [
-          Icon(
-            LucideIcons.sticker300,
-            size: context.sizes.iconSm,
-            color: c.accent,
+    return ChatSuggestionTray(
+      icon: LucideIcons.sticker300,
+      label: label,
+      closeTooltip: AppL10n.of(context).chatStickerSuggestionsClose,
+      onClose: onClose,
+      child: SizedBox(
+        height: tile + 2 * s.xxs,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: stickers.length,
+          separatorBuilder: (_, _) => SizedBox(width: s.sm),
+          itemBuilder: (context, i) => _StickerTile(
+            sticker: stickers[i],
+            size: tile,
+            onTap: () => onPick(stickers[i]),
           ),
-          SizedBox(width: s.sm),
-          Text(
-            label,
-            style: context.typography.caption.copyWith(color: c.textSecondary),
-          ),
-          SizedBox(width: s.md),
-          Expanded(
-            child: SizedBox(
-              height: tile + s.sm,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: stickers.length,
-                separatorBuilder: (_, _) => SizedBox(width: s.xs),
-                itemBuilder: (context, i) => _StickerTile(
-                  sticker: stickers[i],
-                  size: tile,
-                  onTap: () => onPick(stickers[i]),
-                ),
-              ),
-            ),
-          ),
-          AppIconButton(
-            icon: LucideIcons.x300,
-            tooltip: AppL10n.of(context).chatStickerSuggestionsClose,
-            size: AppIconButtonSize.small,
-            onPressed: onClose,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -213,6 +190,7 @@ class _StickerTile extends StatelessWidget {
       message: sticker.emoji,
       child: InkWell(
         borderRadius: radius,
+        mouseCursor: WidgetStateMouseCursor.clickable,
         onTap: onTap,
         child: Padding(
           padding: EdgeInsets.all(context.spacing.xxs),
