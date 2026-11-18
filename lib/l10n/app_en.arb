@@ -2955,5 +2955,77 @@
     }
   },
   "translatedViaDefault": "Translated · via OpenCode's default model",
-  "chatTranslatedByDefault": "Translated by OpenCode's default model"
+  "chatTranslatedByDefault": "Translated by OpenCode's default model",
+  "chatAiAssistant": "AI assistant",
+  "chatAiOpenAssistant": "Summarize with AI",
+  "chatAiCatchUp": "{count} new messages since you last looked",
+  "@chatAiCatchUp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatAiCatchUpAction": "Summarize",
+  "chatAiDismiss": "Dismiss",
+  "chatAiScopeUnread": "Unread",
+  "chatAiSummaryIntro": "Get the gist of the conversation: key points, decisions, who does what and what is still open.",
+  "chatAiSummarize": "Summarize",
+  "chatAiSummarizing": "Summarizing…",
+  "chatAiOverview": "Overview",
+  "chatAiKeyPoints": "Key points",
+  "chatAiDecisions": "Decisions",
+  "chatAiActionItems": "Action items",
+  "chatAiOpenQuestions": "Open questions",
+  "chatAiDue": "Due {due}",
+  "@chatAiDue": {
+    "placeholders": {
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiSummaryFooter": "{count} messages · {model}",
+  "@chatAiSummaryFooter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiSummaryFooterNoModel": "{count} messages summarized",
+  "@chatAiSummaryFooterNoModel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatAiRegenerate": "Summarize again",
+  "chatAiCopySummary": "Copy summary",
+  "chatAiSummaryCopied": "Summary copied",
+  "chatAiFailed": "The AI couldn't answer: {error}",
+  "@chatAiFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAiNote": "Written by AI from the messages · check before relying on it",
+  "chatAiCompose": "AI writing help",
+  "chatAiSuggestReplies": "Suggest replies",
+  "chatAiSuggesting": "Thinking of replies…",
+  "chatAiSuggestionHint": "Pick one to edit it before sending",
+  "chatAiRewriteClearer": "Make it clearer",
+  "chatAiRewriteFormal": "More formal",
+  "chatAiRewriteFriendly": "Friendlier",
+  "chatAiRewriteShorter": "Shorter",
+  "chatAiRewriteNeedsDraft": "Type a message for the AI to rewrite",
+  "chatAiRewriteNoMentions": "Rewriting would drop the @mentions in this message",
+  "chatAiRewriting": "Rewriting…",
+  "chatAiScopeLabel": "Messages to summarize"
 }

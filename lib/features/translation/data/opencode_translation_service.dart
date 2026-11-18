@@ -130,7 +130,7 @@ class OpenCodeTranslationService implements TranslationService {
           targetLang: language.code,
           translatedTitle: parsed['title']?.toString() ?? source.title,
           translatedBody: parsed['body']?.toString() ?? source.body,
-          model: chosenModel ?? 'opencode default',
+          model: chosenModel ?? kOpenCodeDefaultModel,
           templateVersion: _templateVersion,
           createdAt: DateTime.now(),
         ),
@@ -147,6 +147,20 @@ class OpenCodeTranslationService implements TranslationService {
     required String targetLang,
     String? model,
   }) async {
+    final language = translationLanguageFor(targetLang);
+    return complete(
+      key: key,
+      prompt: textPrompt(text, language.englishName),
+      model: model,
+    );
+  }
+
+  @override
+  Future<Result<TextTranslation>> complete({
+    required String key,
+    required String prompt,
+    String? model,
+  }) async {
     final path = await _runner.resolve('opencode', override: binaryOverride);
     if (path == null) {
       return const Err(AgentFailure('opencode not found on PATH'));
@@ -155,8 +169,6 @@ class OpenCodeTranslationService implements TranslationService {
         ? Platform.environment['USERPROFILE']
         : Platform.environment['HOME'];
     final chosenModel = _firstNonEmpty(model, this.model);
-    final language = translationLanguageFor(targetLang);
-    final prompt = textPrompt(text, language.englishName);
     try {
       final run = await _run(
         ticketId: key,
@@ -178,7 +190,7 @@ class OpenCodeTranslationService implements TranslationService {
       if (out.isEmpty) return Err(ParseFailure(_unparsableMessage(run)));
       return Ok(TextTranslation(out, model: chosenModel));
     } catch (e) {
-      return Err(AgentFailure('OpenCode translation failed: $e', cause: e));
+      return Err(AgentFailure('OpenCode failed: $e', cause: e));
     }
   }
 

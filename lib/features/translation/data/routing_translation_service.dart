@@ -71,6 +71,21 @@ class RoutingTranslationService implements TranslationService {
   }
 
   @override
+  Future<Result<TextTranslation>> complete({
+    required String key,
+    required String prompt,
+    String? model,
+  }) async {
+    final backend = await _pick();
+    _inFlight[key] = backend;
+    try {
+      return await backend.complete(key: key, prompt: prompt, model: model);
+    } finally {
+      _inFlight.remove(key);
+    }
+  }
+
+  @override
   Future<void> cancel(String ticketId) async =>
       _inFlight[ticketId]?.cancel(ticketId);
 }
