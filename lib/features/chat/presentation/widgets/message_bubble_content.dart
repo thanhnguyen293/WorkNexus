@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
+import 'chat_privacy_mask.dart';
 import 'message_body.dart';
 import 'message_fit_cards.dart';
 import 'message_link_previews.dart';
@@ -62,7 +63,11 @@ class MessageBubbleContent extends StatelessWidget {
             footer: footerRow,
           )
         : _column([...content, ?footerRow]);
-    return pinned ? _Pinned(footer: footer, child: sized) : sized;
+    // The bubble stays solid under it, so faded words leave no hole to
+    // the wallpaper.
+    return ChatPrivacyFade(
+      child: pinned ? _Pinned(footer: footer, child: sized) : sized,
+    );
   }
 
   static Widget _column(List<Widget> children) => Column(

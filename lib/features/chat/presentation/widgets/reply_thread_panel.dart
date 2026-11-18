@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -14,7 +15,6 @@ import '../../domain/usecases/build_reply_thread.dart';
 import '../providers/chat_providers.dart';
 import 'chat_message_card.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'message_body.dart';
 import 'message_bubble.dart';
@@ -79,9 +79,8 @@ class ReplyThreadPanel extends ConsumerWidget {
       child: Column(
         children: [
           Expanded(
-            // One fade for the root and every reply: pointing anywhere on
-            // the thread shows all of it.
-            child: ChatPrivacyFade(
+            // Pointing anywhere on the thread shows all of it.
+            child: PrivacyRevealRegion(
               child: ListView(
                 padding: EdgeInsets.all(context.spacing.xl3),
                 children: [

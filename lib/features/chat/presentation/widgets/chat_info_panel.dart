@@ -96,6 +96,7 @@ class ChatInfoPanel extends ConsumerWidget {
                 const {},
           ),
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
       if (peer?.email case final email?)
         ChatDetailRow(
@@ -103,6 +104,7 @@ class ChatInfoPanel extends ConsumerWidget {
           label: l.chatEmail,
           value: email,
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
       if (peer?.mobile case final mobile?)
         ChatDetailRow(
@@ -110,6 +112,7 @@ class ChatInfoPanel extends ConsumerWidget {
           label: l.chatMobile,
           value: mobile,
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
       if (peer?.phone case final phone?)
         ChatDetailRow(
@@ -117,6 +120,7 @@ class ChatInfoPanel extends ConsumerWidget {
           label: l.chatPhone,
           value: phone,
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
       if (!oneToOne && chat.ownerAccount != null)
         ChatDetailRow(
@@ -124,6 +128,7 @@ class ChatInfoPanel extends ConsumerWidget {
           label: l.chatOwner,
           value: owner?.realname ?? chat.ownerAccount ?? '',
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
       if (!oneToOne && created != null)
         ChatDetailRow(
@@ -133,6 +138,7 @@ class ChatInfoPanel extends ConsumerWidget {
             Localizations.localeOf(context).toString(),
           ).format(created),
           spaced: false,
+          privacyPart: ChatPrivacyPart.identity,
         ),
     ];
 
@@ -220,18 +226,15 @@ class ChatInfoPanel extends ConsumerWidget {
               ),
             SizedBox(height: s.xl4),
             if (details.isNotEmpty)
-              ChatPrivacyFade(
-                part: ChatPrivacyPart.identity,
-                child: ChatPanelCard(
-                  child: Column(
-                    children: [
-                      for (final (i, row) in details.indexed)
-                        Padding(
-                          padding: EdgeInsets.only(top: i == 0 ? 0 : s.lg),
-                          child: row,
-                        ),
-                    ],
-                  ),
+              ChatPanelCard(
+                child: Column(
+                  children: [
+                    for (final (i, row) in details.indexed)
+                      Padding(
+                        padding: EdgeInsets.only(top: i == 0 ? 0 : s.lg),
+                        child: row,
+                      ),
+                  ],
                 ),
               ),
             ChatInfoPanelLink(
@@ -260,7 +263,7 @@ class ChatInfoPanel extends ConsumerWidget {
                   infoRoom: ChatLayoutScope.of(context).infoRoom,
                 ),
               ),
-            ChatPrivacyFade(child: ChatInfoFilesSection(thread: thread)),
+            ChatInfoFilesSection(thread: thread),
             ChatInfoStorageCard(thread: thread),
           ],
         ),
