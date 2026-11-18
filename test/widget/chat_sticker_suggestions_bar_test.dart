@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
@@ -51,36 +52,42 @@ void main() {
     text = ChatComposerController();
   });
 
-  Future<void> pump(WidgetTester tester, {ChatMessage? latest}) =>
-      tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            chatStickersProvider.overrideWith(
-              (ref) async => const Ok([_laugh, _smile]),
-            ),
-            chatLatestMessageProvider.overrideWith(
-              (ref, key) => Stream.value(latest),
-            ),
-            stickerControllerProvider.overrideWithValue(stickers),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppL10n.localizationsDelegates,
-            supportedLocales: AppL10n.supportedLocales,
-            theme: buildAppTheme(
-              variant: AppThemeVariant.light,
-              surface: SurfaceStyle.outline,
-              density: AppDensity.comfortable,
-            ),
-            home: Scaffold(
-              body: ChatStickerSuggestionsBar(
-                draftKey: _key,
-                text: text,
-                focus: FocusNode(),
-              ),
-            ),
+  Future<void> pump(
+    WidgetTester tester, {
+    ChatMessage? latest,
+    bool suggestions = true,
+  }) => tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        initialAppSettingsProvider.overrideWithValue(
+          AppSettings(chatStickerSuggestions: suggestions),
+        ),
+        chatStickersProvider.overrideWith(
+          (ref) async => const Ok([_laugh, _smile]),
+        ),
+        chatLatestMessageProvider.overrideWith(
+          (ref, key) => Stream.value(latest),
+        ),
+        stickerControllerProvider.overrideWithValue(stickers),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildAppTheme(
+          variant: AppThemeVariant.light,
+          surface: SurfaceStyle.outline,
+          density: AppDensity.comfortable,
+        ),
+        home: Scaffold(
+          body: ChatStickerSuggestionsBar(
+            draftKey: _key,
+            text: text,
+            focus: FocusNode(),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('answers a thanks with a smile while nothing is typed', (
     tester,
@@ -126,5 +133,30 @@ void main() {
     verify(() => stickers.send(_thread, _laugh)).called(1);
     // The sticker said all of it.
     expect(text.isBlank, isTrue);
+  });
+
+  testWidgets('suggests nothing while sticker suggestions are off', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      suggestions: false,
+      latest: ChatMessage(
+        accountId: 'a',
+        gid: 'm1',
+        chatGid: 'c',
+        senderId: 2,
+        sentAt: DateTime.now(),
+        content: const TextContent('Cảm ơn em nhé'),
+        isMine: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Reply with a sticker'), findsNothing);
+
+    text.insertText('haha');
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump();
+    expect(find.text('Send as a sticker'), findsNothing);
   });
 }

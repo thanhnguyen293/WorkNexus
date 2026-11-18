@@ -20,9 +20,7 @@ import '../providers/chat_search_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_info_dialog.dart';
 import 'chat_labels.dart';
-import 'chat_layout.dart';
 import 'chat_mute_toggle.dart';
-import 'chat_panels.dart';
 import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 
@@ -170,20 +168,6 @@ class ChatThreadHeader extends ConsumerWidget {
             ),
           ),
           if (chat case final chat?) ...[
-            AppIconButton(
-              icon: LucideIcons.sparkles300,
-              tooltip: l.chatAiOpenAssistant,
-              selected:
-                  ref.watch(chatSidePanelProvider(thread)) ==
-                  ChatSidePanel.assistant,
-              onPressed: () => toggleChatSidePanel(
-                ref,
-                thread,
-                ChatSidePanel.assistant,
-                infoRoom: ChatLayoutScope.of(context).infoRoom,
-              ),
-            ),
-            SizedBox(width: context.spacing.xs),
             AppIconButton(
               icon: LucideIcons.search300,
               tooltip: l.chatSearchMessages,

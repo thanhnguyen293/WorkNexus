@@ -313,6 +313,17 @@ void main() {
     expect(appSettingsFromRow((await db.getSettings())!).chatLocalApi, isTrue);
   });
 
+  test('sticker suggestions persist and are on by default', () async {
+    expect(const AppSettings().chatStickerSuggestions, isTrue);
+    await db.saveSettings(
+      appSettingsToCompanion(const AppSettings(chatStickerSuggestions: false)),
+    );
+    expect(
+      appSettingsFromRow((await db.getSettings())!).chatStickerSuggestions,
+      isFalse,
+    );
+  });
+
   test('the Docs reader look persists, and null follows the app', () async {
     await db.saveSettings(
       appSettingsToCompanion(

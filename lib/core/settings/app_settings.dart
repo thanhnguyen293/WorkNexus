@@ -71,6 +71,7 @@ class AppSettings {
     this.chatPrivacy = const ChatPrivacy(),
     this.chatLocalApi = false,
     this.chatReactions = false,
+    this.chatStickerSuggestions = true,
     this.chatCacheLimitMb = 2048,
     this.chatAutoDownloadVideos = true,
     this.chatAutoDownloadVideoMb = 20,
@@ -173,6 +174,10 @@ class AppSettings {
   /// is a message like any other, as the official client shows it.
   final bool chatReactions;
 
+  /// Suggest stickers over the composer: for what is being typed, and to
+  /// answer someone else's newest message while nothing is typed.
+  final bool chatStickerSuggestions;
+
   /// Most disk space downloaded chat attachments may use, in MB.
   final int chatCacheLimitMb;
 
@@ -224,6 +229,7 @@ class AppSettings {
     ChatPrivacy? chatPrivacy,
     bool? chatLocalApi,
     bool? chatReactions,
+    bool? chatStickerSuggestions,
     int? chatCacheLimitMb,
     bool? chatAutoDownloadVideos,
     int? chatAutoDownloadVideoMb,
@@ -266,6 +272,8 @@ class AppSettings {
       chatPrivacy: chatPrivacy ?? this.chatPrivacy,
       chatLocalApi: chatLocalApi ?? this.chatLocalApi,
       chatReactions: chatReactions ?? this.chatReactions,
+      chatStickerSuggestions:
+          chatStickerSuggestions ?? this.chatStickerSuggestions,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
       chatAutoDownloadVideos:
           chatAutoDownloadVideos ?? this.chatAutoDownloadVideos,
@@ -370,6 +378,8 @@ class AppSettingsController extends Notifier<AppSettings> {
   void setChatPrivacy(ChatPrivacy p) => _set(state.copyWith(chatPrivacy: p));
   void setChatLocalApi(bool on) => _set(state.copyWith(chatLocalApi: on));
   void setChatReactions(bool on) => _set(state.copyWith(chatReactions: on));
+  void setChatStickerSuggestions(bool on) =>
+      _set(state.copyWith(chatStickerSuggestions: on));
   void setChatCacheLimitMb(int mb) =>
       _set(state.copyWith(chatCacheLimitMb: mb));
   void setChatAutoDownloadVideos(bool on) =>
