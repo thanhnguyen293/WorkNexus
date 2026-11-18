@@ -6,6 +6,7 @@ import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_summary.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_ai_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_ai_catch_up_banner.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_assistant_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_summary_view.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 import 'package:work_nexus/l10n/app_localizations_en.dart';
@@ -91,5 +92,27 @@ void main() {
     await tester.tap(find.byTooltip('Dismiss'));
     await tester.pump();
     expect(find.text('Summarize'), findsNothing);
+  });
+
+  testWidgets('summaries follow the app language until another is picked', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(const ChatAssistantPanel(thread: _thread)));
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatAssistantPanel)),
+    );
+
+    expect(find.text('Summary language'), findsOneWidget);
+    // The app is in English, so are summaries.
+    expect(find.text('English'), findsOneWidget);
+    expect(container.read(chatSummaryLanguageProvider), isNull);
+
+    await tester.tap(find.byTooltip('Summary language'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('日本語').last);
+    await tester.pumpAndSettle();
+
+    expect(container.read(chatSummaryLanguageProvider), 'ja');
+    expect(find.text('日本語'), findsOneWidget);
   });
 }

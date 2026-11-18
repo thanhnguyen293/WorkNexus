@@ -58,6 +58,12 @@ final chatOffersCatchUpProvider = Provider.autoDispose
           !ref.watch(chatCatchUpDismissedProvider(key));
     });
 
+/// The language summaries are written in (a code from
+/// `kTranslationLanguages`), picked in the assistant panel; null writes them
+/// in the app's language. Kept while the app runs, for every chat, so a
+/// reader who wants summaries in another language picks it once.
+final chatSummaryLanguageProvider = StateProvider<String?>((ref) => null);
+
 /// Which messages a summary covers: the ones that were unread, or the
 /// latest [count].
 typedef ChatSummaryScope = ({bool unread, int count});

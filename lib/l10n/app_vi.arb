@@ -1902,5 +1902,6 @@
   "chatAiScopeLabel": "Tin nhắn cần tóm tắt",
   "chatStickerSuggestions": "Gửi bằng sticker",
   "chatStickerReplies": "Trả lời bằng sticker",
-  "chatStickerSuggestionsClose": "Ẩn gợi ý sticker"
+  "chatStickerSuggestionsClose": "Ẩn gợi ý sticker",
+  "chatAiSummaryLanguage": "Ngôn ngữ tóm tắt"
 }
