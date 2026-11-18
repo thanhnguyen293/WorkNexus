@@ -162,15 +162,18 @@
   "vietnamese": "Vietnamese",
   "description": "Description",
   "comments": "Comments",
-  "translate": "Translate with OpenCode",
-  "retranslate": "Re-translate with OpenCode",
-  "translating": "Translating with OpenCode…",
+  "translate": "Translate with {provider}",
+  "retranslate": "Re-translate with {provider}",
+  "translating": "Translating with {provider}…",
   "notTranslated": "Not translated",
   "translated": "Translated",
   "translationLanguage": "Translation language",
-  "runOpenCodeToTranslate": "Run OpenCode to generate a {language} version.",
-  "@runOpenCodeToTranslate": {
+  "runAiToTranslate": "Translate with {provider} to get a {language} version.",
+  "@runAiToTranslate": {
     "placeholders": {
+      "provider": {
+        "type": "String"
+      },
       "language": {
         "type": "String"
       }
@@ -2276,11 +2279,35 @@
   "mcpSetupTitle": "Connect an AI tool",
   "mcpSetupIntro": "WorkNexus comes with an MCP server: add it to Claude or another MCP-capable assistant, and it can list, read and search your ZenTao chats (and TBChat, when installed), send messages, load older history and open files and images.",
   "mcpSetupNodeFound": "Node.js {version} at {path}",
-  "@mcpSetupNodeFound": {"placeholders": {"version": {"type": "String"}, "path": {"type": "String"}}},
+  "@mcpSetupNodeFound": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "mcpSetupNodeOld": "Node.js {version} is too old: the MCP server needs {min} or newer.",
-  "@mcpSetupNodeOld": {"placeholders": {"version": {"type": "String"}, "min": {"type": "String"}}},
+  "@mcpSetupNodeOld": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "min": {
+        "type": "String"
+      }
+    }
+  },
   "mcpSetupNodeMissing": "Node.js was not found. Install Node.js {min} or newer, then open this guide again.",
-  "@mcpSetupNodeMissing": {"placeholders": {"min": {"type": "String"}}},
+  "@mcpSetupNodeMissing": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
   "mcpSetupNodeVersionManager": "This Node.js belongs to one version of a version manager (nvm, fnm, asdf, …). If you switch away from or remove that version, the AI tool can no longer start the server: open this guide again and register it with the new path.",
   "mcpSetupGetNode": "Get Node.js",
   "mcpSetupFailed": "Could not prepare the MCP server",
@@ -2288,7 +2315,13 @@
   "mcpSetupClaudeCodeHint": "Run in a terminal, then start a new Claude Code session.",
   "mcpSetupClaudeDesktop": "Claude Desktop",
   "mcpSetupClaudeDesktopHint": "Add to {file} (merge into its \"mcpServers\" if it has one), then restart Claude Desktop.",
-  "@mcpSetupClaudeDesktopHint": {"placeholders": {"file": {"type": "String"}}},
+  "@mcpSetupClaudeDesktopHint": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
   "mcpSetupOtherClient": "Other MCP clients",
   "mcpSetupOtherClientHint": "Cursor, Windsurf and others take the same entry in their MCP settings.",
   "mcpSetupSendNote": "Reading what WorkNexus already stored works right away. To let the assistant send messages, load older history and open files and images, also turn on \"Let local AI tools use chat\" below. WorkNexus must be running for that.",
@@ -2578,7 +2611,6 @@
   "viewCalendar": "Calendar",
   "viewGantt": "Gantt",
   "sprints": "Executions",
-  "docs": "Docs",
   "roleProjectManagement": "Project management",
   "roleCodeHosting": "Code hosting",
   "roleCodeHostingCi": "Code hosting & CI",
@@ -2732,10 +2764,25 @@
   "zentaoNoModules": "This product has no modules.",
   "zentaoModulesUnavailable": "Couldn't load the modules",
   "boardShownOfTotal": "{shown} of {total} shown",
-  "@boardShownOfTotal": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "@boardShownOfTotal": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "boardFoldColumn": "Fold column",
   "boardOpenColumn": "Open {column}",
-  "@boardOpenColumn": {"placeholders": {"column": {"type": "String"}}},
+  "@boardOpenColumn": {
+    "placeholders": {
+      "column": {
+        "type": "String"
+      }
+    }
+  },
   "removeFilter": "Remove filter",
   "zentaoOtherExecutions": "Other executions…",
   "zentaoOtherProducts": "Other products…",
@@ -2877,5 +2924,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "@translate": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "@retranslate": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "@translating": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "translatedVia": "Translated · via {model}",
+  "@translatedVia": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "translatedViaDefault": "Translated · via OpenCode's default model",
+  "chatTranslatedByDefault": "Translated by OpenCode's default model"
 }

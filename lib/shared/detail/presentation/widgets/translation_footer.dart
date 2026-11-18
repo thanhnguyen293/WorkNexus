@@ -29,11 +29,17 @@ class TranslationFooter extends ConsumerWidget {
       appSettingsProvider.select((s) => s.translationLang),
     );
 
+    final backend =
+        ref.watch(translationBackendNameProvider) ?? l.translationApiCustom;
+
     final (AppButtonVariant variant, String label) = switch (state) {
-      TranslationState.loading => (AppButtonVariant.filled, l.translating),
+      TranslationState.loading => (
+        AppButtonVariant.filled,
+        l.translating(backend),
+      ),
       TranslationState.error => (AppButtonVariant.error, l.retry),
-      TranslationState.none => (AppButtonVariant.filled, l.translate),
-      _ => (AppButtonVariant.filledNeutral, l.retranslate),
+      TranslationState.none => (AppButtonVariant.filled, l.translate(backend)),
+      _ => (AppButtonVariant.filledNeutral, l.retranslate(backend)),
     };
 
     return Container(
@@ -52,7 +58,7 @@ class TranslationFooter extends ConsumerWidget {
             isLoading: loading,
             onPressed: loading
                 ? null
-                : () => translateWithOpenCode(context, ref, ticketId),
+                : () => translateTicket(context, ref, ticketId),
             child: Text(label),
           ),
           // A run can outlast the user's patience (a queued model, a wedged
@@ -90,8 +96,9 @@ class TranslationFooter extends ConsumerWidget {
   }
 }
 
-/// Runs a translation through OpenCode, first making sure it is linked.
-Future<void> translateWithOpenCode(
+/// Runs a translation with the backend in use, first making sure it can run
+/// (an API key, or a linked OpenCode).
+Future<void> translateTicket(
   BuildContext context,
   WidgetRef ref,
   String ticketId,

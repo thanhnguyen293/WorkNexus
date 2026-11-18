@@ -12,6 +12,10 @@ import '../domain/adapters/translation_service.dart';
 import '../domain/entities/translation_record.dart';
 import '../domain/repositories/translation_repository.dart';
 import '../domain/usecases/resolve_translation_state.dart';
+import '../domain/value_objects/translation_api_preset.dart';
+import 'translation_api_providers.dart';
+
+export '../domain/entities/translation_record.dart' show kOpenCodeDefaultModel;
 
 part 'translation_providers.freezed.dart';
 
@@ -134,6 +138,24 @@ final translationStatusProvider = Provider.autoDispose
       );
       return (state: state, record: record);
     });
+
+/// Who translates right now: the API preset whose key is in use, or OpenCode
+/// when there is none (or it is switched off).
+final translationBackendProvider = Provider.autoDispose<TranslationApiPreset>((
+  ref,
+) {
+  final api = ref.watch(translationApiConfigProvider).asData?.value.valueOrNull;
+  return api != null && api.isUsable
+      ? TranslationApiPreset.byId(api.presetId)
+      : TranslationApiPreset.openCode;
+});
+
+/// The name of [translationBackendProvider] for labels ("Translate with
+/// Google Gemini"); null for a custom endpoint, which the UI names itself.
+final translationBackendNameProvider = Provider.autoDispose<String?>((ref) {
+  final backend = ref.watch(translationBackendProvider);
+  return backend == TranslationApiPreset.custom ? null : backend.name;
+});
 
 /// The `provider/model` ids OpenCode can translate with, for the Settings
 /// picker. Empty when the CLI can't be asked, in which case the picker says so

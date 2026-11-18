@@ -12,8 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/translation_languages.dart';
 import '../../../../core/widgets/translation_language_control.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/value_objects/translation_api_preset.dart';
-import '../translation_api_providers.dart';
+import '../translation_providers.dart';
 import 'translation_api_form.dart';
 
 /// One collapsible settings card for everything translation: the target
@@ -37,11 +36,9 @@ class _TranslationSettingsCardState
     final lang = ref.watch(
       appSettingsProvider.select((s) => s.translationLang),
     );
-    final saved = ref.watch(translationApiConfigProvider).asData?.value;
-    final api = saved?.valueOrNull;
-    final backend = api != null && api.isUsable
-        ? _presetName(context, TranslationApiPreset.byId(api.presetId))
-        : 'OpenCode';
+    final backend =
+        ref.watch(translationBackendNameProvider) ??
+        AppL10n.of(context).translationApiCustom;
     final summary = '${translationLanguageFor(lang).nativeName} · $backend';
 
     // A Material, not a filled Container, so the header's InkWell hover
@@ -74,11 +71,6 @@ class _TranslationSettingsCardState
     );
   }
 }
-
-String _presetName(BuildContext context, TranslationApiPreset preset) =>
-    preset == TranslationApiPreset.custom
-    ? AppL10n.of(context).translationApiCustom
-    : preset.name;
 
 class _Header extends StatelessWidget {
   const _Header({
