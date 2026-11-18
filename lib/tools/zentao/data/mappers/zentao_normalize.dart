@@ -294,6 +294,7 @@ TicketProviderEntity _zentaoTaskEntity(ZenTaoEntity e) =>
               assignee: assigneeHandle(child.assignedTo) == null
                   ? null
                   : accountName(child.assignedTo),
+              parentId: (child.parent ?? 0) > 0 ? '${child.parent}' : null,
             ),
       ],
     );

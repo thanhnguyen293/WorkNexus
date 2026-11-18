@@ -59,6 +59,20 @@
   "project": "Project",
   "parentTask": "Parent task",
   "subtasks": "Subtasks",
+  "subtaskCountNested": "{direct} · {total} total",
+  "@subtaskCountNested": {
+    "description": "Subtask header count when subtasks have their own: direct subtasks, then all levels.",
+    "placeholders": {
+      "direct": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "subtaskExpand": "Show subtasks",
+  "subtaskCollapse": "Hide subtasks",
   "relatedBugs": "Related bugs",
   "relatedBugsLoadFailed": "Couldn't load the related bugs from ZenTao.",
   "insertImage": "Insert image",

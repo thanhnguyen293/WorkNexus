@@ -176,7 +176,7 @@ sealed class TicketProviderEntity with _$TicketProviderEntity {
       _$TicketProviderEntityFromJson(json);
 }
 
-/// One subtask of a parent task, as listed on the parent.
+/// One subtask of a parent task (any level below it), as listed on the parent.
 @freezed
 abstract class TicketSubtask with _$TicketSubtask {
   const factory TicketSubtask({
@@ -185,6 +185,10 @@ abstract class TicketSubtask with _$TicketSubtask {
     required UnifiedStatus status,
     int? priority,
     String? assignee,
+    // The subtask's own parent: ZenTao lists every descendant of a task
+    // flat, so this is what nests a grandchild under its parent. Null in
+    // items stored before it was kept (they render as direct subtasks).
+    String? parentId,
   }) = _TicketSubtask;
 
   factory TicketSubtask.fromJson(Map<String, dynamic> json) =>

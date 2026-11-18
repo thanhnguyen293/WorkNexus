@@ -472,4 +472,33 @@ void main() {
       ),
     ]);
   });
+
+  test('each listed subtask keeps its own parent, to nest grandchildren', () {
+    final t = normalizeZenTao(
+      ZenTaoEntity.fromJson({
+        'id': 14429,
+        'name': 'Multi-sign',
+        'isParent': 1,
+        'children': [
+          {'id': 14520, 'name': 'Flow 1', 'status': 'wait', 'parent': 14429},
+          {
+            'id': 14528,
+            'name': 'Flow 1 · UI',
+            'status': 'wait',
+            'parent': 14520,
+          },
+          {'id': 14530, 'name': 'No parent field', 'status': 'wait'},
+        ],
+      }),
+      type: ZenTaoType.task,
+      accountId: 'ztB',
+      baseUrl: 'https://z',
+    );
+
+    final entity = t.providerEntity! as ZenTaoTaskEntity;
+    expect(
+      [for (final s in entity.subtasks) s.parentId],
+      ['14429', '14520', null],
+    );
+  });
 }
