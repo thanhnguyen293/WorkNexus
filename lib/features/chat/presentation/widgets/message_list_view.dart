@@ -10,9 +10,9 @@ import '../providers/chat_providers.dart';
 import 'chat_style.dart';
 import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
+import 'list_row_widget_cache.dart';
 import 'message_jump.dart';
 import 'message_list_item.dart';
-import 'message_row_cache.dart';
 import 'steady_extent_child_delegate.dart';
 
 /// The typing row's key; no message gid looks like it.
@@ -56,7 +56,7 @@ class MessageListView extends StatelessWidget {
   final bool typingActive;
   final ListExtentEstimate extent;
   final MessageJump jump;
-  final MessageRowCache rowCache;
+  final ListRowWidgetCache rowCache;
   final Widget header;
   final bool Function(ScrollMetrics metrics) onMetrics;
   final VoidCallback onMouseDown;

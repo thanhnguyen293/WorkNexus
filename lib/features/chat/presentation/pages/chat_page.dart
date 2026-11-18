@@ -69,10 +69,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       // Settled: a later request for the same certificate asks again.
       _askedFingerprint = null;
     }
-    final chatGid = ref.watch(selectedChatGidProvider(accountId));
-    final thread = chatGid == null
-        ? null
-        : (accountId: accountId, chatGid: chatGid);
     return ColoredBox(
       color: context.colors.background,
       child: Column(
@@ -103,20 +99,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                   onViewProfile: widget.onViewProfile,
                                 ),
                               ),
-                            Expanded(
-                              child: ChatBackground(
-                                child: chatGid == null
-                                    ? Center(
-                                        child: AppInlineNote(
-                                          text: l.chatSelectConversation,
-                                        ),
-                                      )
-                                    : ThreadPane(
-                                        key: ValueKey('$accountId/$chatGid'),
-                                        thread: thread!,
-                                      ),
-                              ),
-                            ),
+                            Expanded(child: _OpenChat(accountId: accountId)),
                           ],
                         ),
                       );
@@ -125,6 +108,31 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The open chat over the shared background. Watches which chat is open by
+/// itself, so switching chats rebuilds this pane and not the chat list.
+class _OpenChat extends ConsumerWidget {
+  const _OpenChat({required this.accountId});
+
+  final String accountId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chatGid = ref.watch(selectedChatGidProvider(accountId));
+    return ChatBackground(
+      child: chatGid == null
+          ? Center(
+              child: AppInlineNote(
+                text: AppL10n.of(context).chatSelectConversation,
+              ),
+            )
+          : ThreadPane(
+              key: ValueKey('$accountId/$chatGid'),
+              thread: (accountId: accountId, chatGid: chatGid),
+            ),
     );
   }
 }
