@@ -7,8 +7,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/unread_badge.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/value_objects/chat_presence.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_privacy_blur.dart';
 import 'conversation_preview_line.dart';
 
 /// One row of the chat list: avatar, title, last message, time and unread.
@@ -80,7 +82,10 @@ class ConversationTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            avatarWidget,
+            ChatPrivacyBlur(
+              part: ChatPrivacyPart.identity,
+              child: avatarWidget,
+            ),
             SizedBox(width: context.spacing.lg),
             Expanded(
               child: Column(
@@ -89,15 +94,18 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.typography.body.copyWith(
-                            color: c.textPrimary,
-                            fontWeight: unread
-                                ? FontWeight.w600
-                                : FontWeight.w500,
+                        child: ChatPrivacyBlur(
+                          part: ChatPrivacyPart.identity,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.typography.body.copyWith(
+                              color: c.textPrimary,
+                              fontWeight: unread
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
                           ),
                         ),
                       ),
@@ -114,10 +122,13 @@ class ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ConversationPreviewLine(
-                          chat: chat,
-                          lastSender: lastSender,
-                          typing: typing,
+                        child: ChatPrivacyBlur(
+                          part: ChatPrivacyPart.preview,
+                          child: ConversationPreviewLine(
+                            chat: chat,
+                            lastSender: lastSender,
+                            typing: typing,
+                          ),
                         ),
                       ),
                       if (chat.muted) ...[
