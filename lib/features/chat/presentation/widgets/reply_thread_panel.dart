@@ -11,11 +11,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/build_reply_thread.dart';
-import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import 'chat_message_card.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_blur.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'message_body.dart';
 import 'message_bubble.dart';
@@ -116,9 +115,8 @@ class ReplyThreadPanel extends ConsumerWidget {
                   ),
                   // Replies to replies keep their quote so the chain is clear.
                   for (final r in replies)
-                    ChatPrivacyBlur(
+                    ChatPrivacyFade(
                       key: ValueKey(r.gid),
-                      part: ChatPrivacyPart.message,
                       child: MessageBubble(
                         chat: chat,
                         message: r,

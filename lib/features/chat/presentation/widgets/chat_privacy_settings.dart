@@ -6,8 +6,8 @@ import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'chat_privacy_shortcut.dart';
 
-/// A Quick Settings section: the privacy mode (blurring chats on screen) with
-/// the parts it blurs, and whether chat peers see when the user is typing.
+/// A Quick Settings section: the privacy mode (hiding chats on screen) with
+/// the parts it hides, and whether chat peers see when the user is typing.
 class ChatPrivacySettings extends ConsumerWidget {
   const ChatPrivacySettings({super.key});
 
@@ -33,30 +33,30 @@ class ChatPrivacySettings extends ConsumerWidget {
               settings.setChatPrivacy(privacy.copyWith(enabled: v)),
         ),
         QuickSettingsSwitchField(
-          label: l.chatBlurPreviews,
-          hint: l.chatBlurPreviewsHint,
-          value: privacy.blurPreviews,
+          label: l.chatHidePreviews,
+          hint: l.chatHidePreviewsHint,
+          value: privacy.hidePreviews,
           onChanged: on
               ? (v) =>
-                    settings.setChatPrivacy(privacy.copyWith(blurPreviews: v))
+                    settings.setChatPrivacy(privacy.copyWith(hidePreviews: v))
               : null,
         ),
         QuickSettingsSwitchField(
-          label: l.chatBlurIdentities,
-          hint: l.chatBlurIdentitiesHint,
-          value: privacy.blurIdentities,
+          label: l.chatHideIdentities,
+          hint: l.chatHideIdentitiesHint,
+          value: privacy.hideIdentities,
           onChanged: on
               ? (v) =>
-                    settings.setChatPrivacy(privacy.copyWith(blurIdentities: v))
+                    settings.setChatPrivacy(privacy.copyWith(hideIdentities: v))
               : null,
         ),
         QuickSettingsSwitchField(
-          label: l.chatBlurMessages,
-          hint: l.chatBlurMessagesHint,
-          value: privacy.blurMessages,
+          label: l.chatHideMessages,
+          hint: l.chatHideMessagesHint,
+          value: privacy.hideMessages,
           onChanged: on
               ? (v) =>
-                    settings.setChatPrivacy(privacy.copyWith(blurMessages: v))
+                    settings.setChatPrivacy(privacy.copyWith(hideMessages: v))
               : null,
         ),
         QuickSettingsSwitchField(

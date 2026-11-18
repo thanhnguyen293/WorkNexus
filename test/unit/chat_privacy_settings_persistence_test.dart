@@ -26,8 +26,8 @@ void main() {
   test('the mode and the parts it blurs survive a restart', () async {
     const privacy = ChatPrivacy(
       enabled: true,
-      blurPreviews: false,
-      blurMessages: false,
+      hidePreviews: false,
+      hideMessages: false,
     );
     expect(await roundTrip(privacy), privacy);
     expect(await roundTrip(const ChatPrivacy()), const ChatPrivacy());

@@ -13,12 +13,11 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
-import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_blur.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_snack.dart';
 
@@ -102,8 +101,7 @@ class _PinnedMessageBarState extends ConsumerState<PinnedMessageBar> {
                         color: c.textPrimary,
                       ),
                     ),
-                    ChatPrivacyBlur(
-                      part: ChatPrivacyPart.message,
+                    ChatPrivacyFade(
                       child: Text(
                         preview ?? '…',
                         maxLines: 1,

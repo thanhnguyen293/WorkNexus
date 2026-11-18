@@ -23,7 +23,7 @@ import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_mute_toggle.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_blur.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
@@ -86,8 +86,15 @@ class ChatThreadHeader extends ConsumerWidget {
                     ),
               child: Row(
                 children: [
-                  ChatPrivacyBlur(
+                  ChatPrivacyMask(
                     part: ChatPrivacyPart.identity,
+                    mask: ChatAvatar(
+                      name: '',
+                      masked: true,
+                      icon: oneToOne ? null : LucideIcons.users300,
+                      presence: presence,
+                      size: ChatAvatarSize.large,
+                    ),
                     child: ChatAvatar(
                       name: title,
                       imageUrl: avatar?.imageUrl,
@@ -107,16 +114,12 @@ class ChatThreadHeader extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ChatPrivacyBlur(
+                        ChatPrivacyText(
+                          title,
                           part: ChatPrivacyPart.identity,
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.typography.titleLg.copyWith(
-                              color: c.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          style: context.typography.titleLg.copyWith(
+                            color: c.textPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (subtitle != null)
@@ -145,10 +148,13 @@ class ChatThreadHeader extends ConsumerWidget {
                                 ),
                               SizedBox(width: context.spacing.xs),
                               Flexible(
-                                child: Text(
+                                // The peer's account names them as much as
+                                // the title does; a count or status does not.
+                                child: ChatPrivacyText(
                                   subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  part: subtitle == peer?.account
+                                      ? ChatPrivacyPart.identity
+                                      : null,
                                   style: context.typography.secondary.copyWith(
                                     color: c.textSecondary,
                                   ),

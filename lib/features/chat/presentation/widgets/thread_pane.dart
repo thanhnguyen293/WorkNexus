@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/widgets/file_drop_target.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_ai_providers.dart';
+import '../providers/chat_privacy_providers.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
 import 'chat_ai_catch_up_banner.dart';
@@ -145,9 +148,16 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
                 thread: t,
                 hint: chat == null
                     ? null
-                    : AppL10n.of(
-                        context,
-                      ).chatMessageTo(chatTitle(context, chat, users)),
+                    : AppL10n.of(context).chatMessageTo(
+                        // No reveal on hover here: it is only a hint.
+                        ref.watch(
+                              chatPrivacyHiddenProvider(
+                                ChatPrivacyPart.identity,
+                              ),
+                            )
+                            ? kPrivacyMaskText
+                            : chatTitle(context, chat, users),
+                      ),
               ),
             )
           else

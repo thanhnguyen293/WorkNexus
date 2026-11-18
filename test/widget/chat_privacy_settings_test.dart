@@ -6,8 +6,9 @@ import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/settings/chat_privacy.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/privacy_mask.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_privacy_part.dart';
-import 'package:work_nexus/features/chat/presentation/widgets/chat_privacy_blur.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_privacy_mask.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_privacy_settings.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_privacy_shortcut.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
@@ -35,49 +36,58 @@ Future<ProviderContainer> _pump(WidgetTester tester, Widget body) async {
   return container;
 }
 
-bool _blurredOver(WidgetTester tester, String text) => tester
-    .widget<ImageFiltered>(
-      find.ancestor(of: find.text(text), matching: find.byType(ImageFiltered)),
+double _opacityOver(WidgetTester tester, String text) => tester
+    .widget<Opacity>(
+      find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
     )
-    .enabled;
+    .opacity;
 
 void main() {
-  testWidgets('the mode switch turns blurring on; the parts only change '
+  testWidgets('the mode switch turns hiding on; the parts only change '
       'while it is on', (tester) async {
     final container = await _pump(tester, const ChatPrivacySettings());
     ChatPrivacy privacy() => container.read(appSettingsProvider).chatPrivacy;
 
-    await tester.tap(find.text('Blur messages'));
+    await tester.tap(find.text('Fade out messages'));
     await tester.pump();
-    expect(privacy().blurMessages, isTrue, reason: 'disabled while off');
+    expect(privacy().hideMessages, isTrue, reason: 'disabled while off');
 
     await tester.tap(find.text('Privacy mode'));
     await tester.pump();
     expect(privacy().enabled, isTrue);
 
-    await tester.tap(find.text('Blur messages'));
+    await tester.tap(find.text('Fade out messages'));
     await tester.pump();
-    expect(privacy(), const ChatPrivacy(enabled: true, blurMessages: false));
+    expect(privacy(), const ChatPrivacy(enabled: true, hideMessages: false));
   });
 
-  testWidgets('a chat part blurs as the settings say', (tester) async {
+  testWidgets('chat parts hide as the settings say', (tester) async {
     final container = await _pump(
       tester,
       const Column(
         children: [
-          ChatPrivacyBlur(part: ChatPrivacyPart.preview, child: Text('last')),
-          ChatPrivacyBlur(part: ChatPrivacyPart.message, child: Text('msg')),
+          ChatPrivacyText('Alice', part: ChatPrivacyPart.identity),
+          ChatPrivacyText('24 members', part: null),
+          ChatPrivacyFade(child: Text('msg')),
         ],
       ),
     );
-    expect(_blurredOver(tester, 'last'), isFalse);
+    expect(find.text('Alice'), findsOneWidget);
+    expect(_opacityOver(tester, 'msg'), 1);
 
-    container
-        .read(appSettingsProvider.notifier)
-        .setChatPrivacy(const ChatPrivacy(enabled: true, blurMessages: false));
+    final settings = container.read(appSettingsProvider.notifier);
+    settings.setChatPrivacy(const ChatPrivacy(enabled: true));
     await tester.pump();
-    expect(_blurredOver(tester, 'last'), isTrue);
-    expect(_blurredOver(tester, 'msg'), isFalse);
+    expect(find.text('Alice'), findsNothing);
+    expect(find.text(kPrivacyMaskText), findsOneWidget);
+    expect(find.text('24 members'), findsOneWidget, reason: 'no part');
+    expect(_opacityOver(tester, 'msg'), lessThan(0.5));
+
+    settings.setChatPrivacy(
+      const ChatPrivacy(enabled: true, hideIdentities: false),
+    );
+    await tester.pump();
+    expect(find.text('Alice'), findsOneWidget);
   });
 
   testWidgets('Ctrl+Shift+H flips the mode and keeps the picked parts', (
@@ -86,7 +96,7 @@ void main() {
     final container = await _pump(tester, const ChatPrivacyShortcut());
     container
         .read(appSettingsProvider.notifier)
-        .setChatPrivacy(const ChatPrivacy(blurPreviews: false));
+        .setChatPrivacy(const ChatPrivacy(hidePreviews: false));
     ChatPrivacy privacy() => container.read(appSettingsProvider).chatPrivacy;
 
     Future<void> press() async {
@@ -99,7 +109,7 @@ void main() {
     }
 
     await press();
-    expect(privacy(), const ChatPrivacy(enabled: true, blurPreviews: false));
+    expect(privacy(), const ChatPrivacy(enabled: true, hidePreviews: false));
 
     await press();
     expect(privacy().enabled, isFalse);

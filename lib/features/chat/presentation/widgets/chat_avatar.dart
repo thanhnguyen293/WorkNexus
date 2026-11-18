@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
@@ -36,7 +37,12 @@ class ChatAvatar extends StatelessWidget {
     this.background,
     this.icon,
     this.verified,
+    this.masked = false,
   });
+
+  /// Draws a plain placeholder ([icon], else a person) instead of the
+  /// picture or initials: the privacy mode hiding who a chat is with.
+  final bool masked;
 
   /// Draws a "verified" check (a leading role, see [chatVerifiedBadge]) at
   /// the top right; hovering it explains it.
@@ -87,7 +93,9 @@ class ChatAvatar extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           shape == ChatAvatarShape.circle ? diameter / 2 : diameter * 0.12,
         ),
-        child: url == null || url.isEmpty
+        child: masked
+            ? _Placeholder(icon: icon, diameter: diameter)
+            : url == null || url.isEmpty
             ? initials
             : CachedNetworkImage(
                 imageUrl: url,
@@ -177,6 +185,26 @@ Color _avatarHue(AppColors c, String name) {
     hash = (hash * 31 + unit) & 0x7fffffff;
   }
   return hues[hash % hues.length];
+}
+
+/// A neutral avatar that says nothing about whose it is.
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.icon, required this.diameter});
+
+  final IconData? icon;
+  final double diameter;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: context.colors.surfaceSubtle,
+    child: Center(
+      child: Icon(
+        icon ?? LucideIcons.user300,
+        size: diameter * 0.5,
+        color: context.colors.textTertiary,
+      ),
+    ),
+  );
 }
 
 class _Initials extends StatelessWidget {
