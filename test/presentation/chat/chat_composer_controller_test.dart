@@ -91,4 +91,50 @@ void main() {
       {'insert': '\n'},
     ]);
   });
+
+  group('draft', () {
+    test('is null while blank', () {
+      expect(c.draft, isNull);
+      c.insertText('  ');
+      expect(c.draft, isNull);
+    });
+
+    test('puts back formatted text, mentions and the selection', () {
+      c.insertText('say hi @d');
+      c.insertMention(7, 9, id: 41, name: 'Dyno');
+      select(4, 6);
+      c.apply(MarkdownFormat.bold);
+      final draft = c.draft!;
+
+      final back = ChatComposerController(markdown: true, draft: draft);
+      addTearDown(back.dispose);
+      expect(back.messageText, 'say **hi** [@Dyno](@#41) ');
+      expect(
+        back.quill.selection,
+        const TextSelection(baseOffset: 4, extentOffset: 6),
+      );
+    });
+
+    test('plain: keeps mentions and a closing line break', () {
+      c.markdown = false;
+      c.insertText('@d');
+      c.insertMention(0, 2, id: 41, name: 'Dyno');
+      c.insertText('\n');
+      final back = ChatComposerController(draft: c.draft);
+      addTearDown(back.dispose);
+      expect(back.plain.text, '@Dyno \n');
+      expect(back.plain.mentions, [(start: 0, end: 5, id: 41)]);
+      expect(back.plain.selection, const TextSelection.collapsed(offset: 7));
+    });
+
+    test('carried into the mode the composer opens in', () {
+      c.insertText('hi @d');
+      c.insertMention(3, 5, id: 41, name: 'Dyno');
+      final back = ChatComposerController(draft: c.draft);
+      addTearDown(back.dispose);
+      expect(back.markdown, isFalse);
+      expect(back.plain.text, 'hi @Dyno ');
+      expect(back.messageText, 'hi [@Dyno](@#41) ');
+    });
+  });
 }

@@ -14,11 +14,36 @@ import '../providers/chat_providers.dart';
 import 'chat_labels.dart';
 import 'reply_media_thumb.dart';
 
-/// Above the composer input: which message is being replied to — sender and
-/// a one-line preview — with a button to cancel the reply.
+/// Above the composer input while composer [draftKey] is replying: which
+/// message — sender and a one-line preview — with a button to cancel.
 class ReplyDraftBanner extends ConsumerWidget {
   const ReplyDraftBanner({
     super.key,
+    required this.draftKey,
+    required this.onCancel,
+  });
+
+  final ChatComposerKey draftKey;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final message = ref.watch(chatReplyDraftProvider(draftKey));
+    if (message == null) return const SizedBox.shrink();
+    final s = context.spacing;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, 0),
+      child: _ReplyDraftCard(
+        message: message,
+        accountId: draftKey.chat.accountId,
+        onCancel: onCancel,
+      ),
+    );
+  }
+}
+
+class _ReplyDraftCard extends ConsumerWidget {
+  const _ReplyDraftCard({
     required this.message,
     required this.accountId,
     required this.onCancel,
