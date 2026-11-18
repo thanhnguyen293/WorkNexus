@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import '../../domain/value_objects/message_content.dart';
 import '../providers/chat_providers.dart';
 import 'chat_layout.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_shared_files.dart';
 import 'chat_side_panel_frame.dart';
 
@@ -57,9 +61,15 @@ class ChatInfoFilesSection extends ConsumerWidget {
           onSeeAll: media.isEmpty ? null : seeAll,
           child: media.isEmpty
               ? AppInlineNote(text: l.chatNoMedia)
-              : ChatMediaGrid(
-                  accountId: thread.accountId,
-                  media: media.take(_kPreviewMedia).toList(),
+              : ChatPrivacyMask(
+                  part: ChatPrivacyPart.message,
+                  mask: _HiddenMediaGrid(
+                    count: media.take(_kPreviewMedia).length,
+                  ),
+                  child: ChatMediaGrid(
+                    accountId: thread.accountId,
+                    media: media.take(_kPreviewMedia).toList(),
+                  ),
                 ),
         ),
         _Card(
@@ -72,7 +82,14 @@ class ChatInfoFilesSection extends ConsumerWidget {
                 AppInlineNote(text: l.chatNoFiles)
               else
                 for (final m in files.take(_kPreviewFiles))
-                  ChatFileRow(message: m, file: m.content as FileContent),
+                  ChatPrivacyMask(
+                    part: ChatPrivacyPart.message,
+                    mask: const _HiddenFileRow(),
+                    child: ChatFileRow(
+                      message: m,
+                      file: m.content as FileContent,
+                    ),
+                  ),
             ],
           ),
         ),
@@ -126,4 +143,62 @@ class _Card extends StatelessWidget {
       ),
     );
   }
+}
+
+/// [ChatMediaGrid]'s layout with empty tiles: how many pictures there are,
+/// not what they show.
+class _HiddenMediaGrid extends StatelessWidget {
+  const _HiddenMediaGrid({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.spacing;
+    return GridView.count(
+      crossAxisCount: 4,
+      mainAxisSpacing: s.xs,
+      crossAxisSpacing: s.xs,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [for (var i = 0; i < count; i++) const _HiddenBox()],
+    );
+  }
+}
+
+/// A [ChatFileRow] that names nothing: a blank badge and dots.
+class _HiddenFileRow extends StatelessWidget {
+  const _HiddenFileRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.spacing;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: s.sm),
+      child: Row(
+        children: [
+          SizedBox.square(dimension: s.xl6, child: const _HiddenBox()),
+          SizedBox(width: s.lg),
+          Text(
+            kPrivacyMaskText,
+            style: context.typography.body.copyWith(
+              color: context.colors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HiddenBox extends StatelessWidget {
+  const _HiddenBox();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: context.colors.skeleton,
+      borderRadius: BorderRadius.circular(context.radii.md),
+    ),
+  );
 }

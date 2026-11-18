@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
@@ -16,7 +17,6 @@ import '../providers/chat_providers.dart';
 import 'chat_layout.dart';
 import 'chat_message_card.dart';
 import 'chat_panels.dart';
-import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_snack.dart';
 import 'pinned_card_preview.dart';
@@ -105,8 +105,8 @@ class _PinnedMessagesPanelState extends ConsumerState<PinnedMessagesPanel> {
             )
           : messages.isEmpty && _failed
           ? AppStateView.error(compact: true, onRetry: () => _retry(missing))
-          // One fade for every pin: pointing anywhere on the list shows all.
-          : ChatPrivacyFade(
+          // Pointing anywhere on the pins shows all of them.
+          : PrivacyRevealRegion(
               child: ListView(
                 padding: EdgeInsets.all(context.spacing.xl3),
                 children: [

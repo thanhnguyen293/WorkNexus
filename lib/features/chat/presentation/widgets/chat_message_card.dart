@@ -11,6 +11,7 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
 
 /// A message set apart beside the chat — a pinned message, a thread's root:
@@ -89,7 +90,7 @@ class ChatMessageCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: s.lg),
-          body,
+          ChatPrivacyFade(child: body),
           SizedBox(height: s.lg),
           _SentAtFooter(sentAt: message.sentAt, onViewOriginal: onViewOriginal),
         ],

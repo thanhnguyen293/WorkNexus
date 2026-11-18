@@ -36,23 +36,14 @@ Future<ProviderContainer> _pump(WidgetTester tester, Widget body) async {
   return container;
 }
 
-/// Whether the [PrivacyFade] over the widget holding [text] washes it out:
-/// any filter but the identity.
+/// Whether the [PrivacyFade] over the widget holding [text] fades it.
 bool _fadedOver(WidgetTester tester, String text) =>
     tester
-        .widget<ColorFiltered>(
-          find.ancestor(
-            of: find.text(text),
-            matching: find.byType(ColorFiltered),
-          ),
+        .widget<Opacity>(
+          find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
         )
-        .colorFilter !=
-    const ColorFilter.matrix(<double>[
-      1, 0, 0, 0, 0, //
-      0, 1, 0, 0, 0, //
-      0, 0, 1, 0, 0, //
-      0, 0, 0, 1, 0, //
-    ]);
+        .opacity <
+    1;
 
 void main() {
   testWidgets('the mode switch turns hiding on; the parts only change '

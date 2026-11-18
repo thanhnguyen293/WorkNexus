@@ -14,6 +14,7 @@ import 'chat_file_body.dart';
 import 'chat_image_body.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
+import 'chat_privacy_mask.dart';
 import 'chat_user_profile_dialog.dart';
 import 'mention_text.dart';
 import 'notification_body.dart';
@@ -70,7 +71,7 @@ class MessageBody extends StatelessWidget {
         ),
       );
     }
-    return switch (message.content) {
+    final body = switch (message.content) {
       final TextContent content => ChatTextBody(
         accountId: accountId,
         text: content.text,
@@ -125,6 +126,15 @@ class MessageBody extends StatelessWidget {
           fontStyle: FontStyle.italic,
         ),
       ),
+    };
+    // A picture is covered whole while the privacy mode hides messages; the
+    // rest fades with the bubble's insides (see MessageBubbleContent).
+    return switch (message.content) {
+      ImageContent() || EmojiContent() => ChatPrivacyCover(child: body),
+      final FileContent file when isVideoFile(file) => ChatPrivacyCover(
+        child: body,
+      ),
+      _ => body,
     };
   }
 }

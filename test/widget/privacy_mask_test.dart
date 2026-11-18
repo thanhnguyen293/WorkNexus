@@ -3,23 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/widgets/privacy_mask.dart';
 
-/// Whether the [PrivacyFade] over the widget holding [text] washes it out:
-/// any filter but the identity.
+/// Whether the [PrivacyFade] over the widget holding [text] fades it.
 bool _fadedOver(WidgetTester tester, String text) =>
     tester
-        .widget<ColorFiltered>(
-          find.ancestor(
-            of: find.text(text),
-            matching: find.byType(ColorFiltered),
-          ),
+        .widget<Opacity>(
+          find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
         )
-        .colorFilter !=
-    const ColorFilter.matrix(<double>[
-      1, 0, 0, 0, 0, //
-      0, 1, 0, 0, 0, //
-      0, 0, 1, 0, 0, //
-      0, 0, 0, 1, 0, //
-    ]);
+        .opacity <
+    1;
 
 Future<TestGesture> _hover(WidgetTester tester, Finder target) async {
   final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -33,8 +24,6 @@ Future<TestGesture> _hover(WidgetTester tester, Finder target) async {
 Widget _app(Widget child) => MaterialApp(
   home: Scaffold(body: Center(child: child)),
 );
-
-const _surface = Color(0xFF202020);
 
 const _name = PrivacyMask(
   masked: true,
@@ -77,15 +66,13 @@ void main() {
     expect(find.text('Alice'), findsNothing);
   });
 
-  testWidgets('a fade washes the message out without changing it', (
-    tester,
-  ) async {
+  testWidgets('a fade dims the message without changing it', (tester) async {
     await tester.pumpWidget(
       _app(
         const Column(
           children: [
-            PrivacyFade(faded: true, color: _surface, child: Text('secret')),
-            PrivacyFade(faded: false, color: _surface, child: Text('plain')),
+            PrivacyFade(faded: true, child: Text('secret')),
+            PrivacyFade(faded: false, child: Text('plain')),
           ],
         ),
       ),
@@ -101,7 +88,6 @@ void main() {
       _app(
         PrivacyFade(
           faded: true,
-          color: _surface,
           child: Focus(focusNode: focus, child: const Text('secret')),
         ),
       ),
@@ -146,7 +132,6 @@ void main() {
     Widget field(bool faded) => _app(
       PrivacyFade(
         faded: faded,
-        color: _surface,
         child: SizedBox(width: 200, child: TextField(controller: controller)),
       ),
     );
@@ -167,11 +152,7 @@ void main() {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PrivacyFade(
-                faded: true,
-                color: _surface,
-                child: Text('secret'),
-              ),
+              const PrivacyFade(faded: true, child: Text('secret')),
               Focus(focusNode: focus, child: const Text('input')),
             ],
           ),
@@ -185,5 +166,32 @@ void main() {
 
     await _hover(tester, find.text('secret'));
     expect(_fadedOver(tester, 'secret'), isFalse);
+  });
+
+  testWidgets('a cover hides a picture under a solid box, kept built', (
+    tester,
+  ) async {
+    Widget picture(bool covered) => _app(
+      PrivacyCover(
+        covered: covered,
+        color: const Color(0xFF808080),
+        child: const SizedBox(width: 80, height: 60, child: Text('photo')),
+      ),
+    );
+    final box = find.descendant(
+      of: find.byType(PrivacyCover),
+      matching: find.byType(DecoratedBox),
+    );
+    await tester.pumpWidget(picture(false));
+    expect(box, findsNothing);
+    final state = tester.element(find.text('photo'));
+
+    await tester.pumpWidget(picture(true));
+    expect(box, findsOneWidget);
+    expect(tester.getSize(box), const Size(80, 60));
+    expect(tester.element(find.text('photo')), same(state));
+
+    await _hover(tester, find.byType(PrivacyCover));
+    expect(box, findsNothing);
   });
 }

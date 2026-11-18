@@ -4,18 +4,9 @@ import 'package:flutter/widgets.dart';
 /// the length of the real text shows.
 const String kPrivacyMaskText = '••••••';
 
-/// How much of a hidden message's own colour is kept, the rest being the
-/// fade colour: enough to see that a message is there and how long it is,
-/// too little to read it at a glance.
-const double _kFadedKeep = 0.12;
-
-/// Leaves every colour as it is.
-const List<double> _kIdentity = [
-  1, 0, 0, 0, 0, //
-  0, 1, 0, 0, 0, //
-  0, 0, 1, 0, 0, //
-  0, 0, 0, 1, 0, //
-];
+/// How much of a hidden message still shows: enough to see that a message is
+/// there and how long it is, too little to read it at a glance.
+const double _kFadedOpacity = 0.15;
 
 /// An area whose [PrivacyMask]s and [PrivacyFade]s all show the real content
 /// together while the pointer is over it or keyboard focus is inside it — a
@@ -118,64 +109,97 @@ class _MaskLayer extends StatelessWidget {
       : child;
 }
 
-/// Washes [child] out towards [color] while [faded], unless its
-/// [PrivacyRevealRegion] is hovered or focused. Opacity stays as it is, so a
-/// bubble stays solid over the wallpaper while its text and pictures all but
-/// vanish into it; what is transparent (the wallpaper between bubbles) stays
-/// untouched. Only paints differently: the child, its state (a playing video,
-/// a text selection) and its layout stay as they are. One fade over a whole
-/// list costs a single layer.
+/// Fades [child] almost out while [faded], unless its [PrivacyRevealRegion]
+/// is hovered or focused. For content on a solid background (a bubble's
+/// text): over the wallpaper it would let the wallpaper show through. Only
+/// paints differently: the child, its state (a text selection) and its
+/// layout stay as they are.
 class PrivacyFade extends StatelessWidget {
-  const PrivacyFade({
-    super.key,
-    required this.faded,
-    required this.color,
-    required this.child,
-  });
+  const PrivacyFade({super.key, required this.faded, required this.child});
 
   final bool faded;
-
-  /// What the content fades into — the surface it sits on.
-  final Color color;
   final Widget child;
 
   @override
   Widget build(BuildContext context) =>
-      _inRegion(context, _FadeLayer(faded: faded, color: color, child: child));
+      _inRegion(context, _FadeLayer(faded: faded, child: child));
 }
 
 class _FadeLayer extends StatelessWidget {
-  const _FadeLayer({
-    required this.faded,
-    required this.color,
-    required this.child,
-  });
+  const _FadeLayer({required this.faded, required this.child});
 
   final bool faded;
-  final Color color;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final on = faded && !(PrivacyRevealRegion.revealedOf(context) ?? false);
-    // Always filtered, the identity when shown: swapping the widget out
-    // would rebuild [child] and lose its state.
-    return ColorFiltered(
-      colorFilter: ColorFilter.matrix(on ? _washTowards(color) : _kIdentity),
-      child: child,
-    );
+    return Opacity(opacity: on ? _kFadedOpacity : 1, child: child);
   }
 }
 
-/// Keeps [_kFadedKeep] of each colour and fills the rest with [color],
-/// leaving alpha alone.
-List<double> _washTowards(Color color) {
-  const k = _kFadedKeep;
-  double fill(double channel) => (1 - k) * channel * 255;
-  return [
-    k, 0, 0, 0, fill(color.r), //
-    0, k, 0, 0, fill(color.g), //
-    0, 0, k, 0, fill(color.b), //
-    0, 0, 0, 1, 0, //
-  ];
+/// Lays a solid [color] box over [child] while [covered], unless its
+/// [PrivacyRevealRegion] is hovered or focused — for a picture, which a fade
+/// would only dim. [child] stays built under it, so a video keeps playing
+/// and a picture need not load again.
+class PrivacyCover extends StatelessWidget {
+  const PrivacyCover({
+    super.key,
+    required this.covered,
+    required this.color,
+    this.borderRadius = BorderRadius.zero,
+    required this.child,
+  });
+
+  final bool covered;
+  final Color color;
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => _inRegion(
+    context,
+    _CoverLayer(
+      covered: covered,
+      color: color,
+      borderRadius: borderRadius,
+      child: child,
+    ),
+  );
+}
+
+class _CoverLayer extends StatelessWidget {
+  const _CoverLayer({
+    required this.covered,
+    required this.color,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final bool covered;
+  final Color color;
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final on = covered && !(PrivacyRevealRegion.revealedOf(context) ?? false);
+    return Stack(
+      children: [
+        child,
+        // Last, so adding it never moves [child] and loses its state.
+        if (on)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: borderRadius,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
