@@ -2,6 +2,10 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'translation_record.freezed.dart';
 
+/// The [TranslationRecord.model] of a translation OpenCode made with its own
+/// default model, which it does not name.
+const kOpenCodeDefaultModel = 'opencode default';
+
 /// A cached, successful translation of a ticket's title + body.
 ///
 /// The cache is keyed on [sourceHash]; when the ticket's current content hash

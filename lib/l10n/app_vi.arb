@@ -131,20 +131,13 @@
   "vietnamese": "Tiếng Việt",
   "description": "Mô tả",
   "comments": "Bình luận",
-  "translate": "Dịch bằng OpenCode",
-  "retranslate": "Dịch lại bằng OpenCode",
-  "translating": "Đang dịch bằng OpenCode…",
+  "translate": "Dịch bằng {provider}",
+  "retranslate": "Dịch lại bằng {provider}",
+  "translating": "Đang dịch bằng {provider}…",
   "notTranslated": "Chưa dịch",
   "translated": "Đã dịch",
   "translationLanguage": "Ngôn ngữ dịch",
-  "runOpenCodeToTranslate": "Chạy OpenCode để tạo bản dịch {language}.",
-  "@runOpenCodeToTranslate": {
-    "placeholders": {
-      "language": {
-        "type": "String"
-      }
-    }
-  },
+  "runAiToTranslate": "Dịch bằng {provider} để có bản {language}.",
   "translationOutdated": "Bản dịch cũ",
   "translationOutdatedBanner": "Bản gốc đã thay đổi kể từ lần dịch trước. Đang hiển thị bản dịch cũ.",
   "translationFailed": "Dịch thất bại",
@@ -1666,7 +1659,6 @@
   "viewCalendar": "Lịch",
   "viewGantt": "Gantt",
   "sprints": "Bản thực thi",
-  "docs": "Tài liệu",
   "roleProjectManagement": "Quản lý dự án",
   "roleCodeHosting": "Lưu trữ mã nguồn",
   "roleCodeHostingCi": "Lưu trữ mã nguồn & CI",
@@ -1870,5 +1862,8 @@
   "miniAppCookiesOpenPrivacy": "Mở cài đặt Quyền riêng tư",
   "miniAppCookiesReadFailed": "Không đọc được cookie của trình duyệt này.",
   "miniAppCookiesRetry": "Thử lại",
-  "miniAppCookiesExpiredTooltip": "Cookie đăng nhập đã hết hạn: nhập lại từ {browser}"
+  "miniAppCookiesExpiredTooltip": "Cookie đăng nhập đã hết hạn: nhập lại từ {browser}",
+  "translatedVia": "Đã dịch · qua {model}",
+  "translatedViaDefault": "Đã dịch · qua model mặc định của OpenCode",
+  "chatTranslatedByDefault": "Dịch bởi model mặc định của OpenCode"
 }

@@ -62,7 +62,11 @@ class MessageTranslationView extends ConsumerWidget {
     };
     final byline = pending != null || shown == null
         ? null
-        : l.chatTranslatedBy(shown.model ?? 'OpenCode');
+        : switch (shown.model) {
+            final model? => l.chatTranslatedBy(model),
+            // Only OpenCode leaves the model unnamed: its own default ran.
+            null => l.chatTranslatedByDefault,
+          };
     return Padding(
       padding: EdgeInsets.only(top: s.sm),
       child: DecoratedBox(

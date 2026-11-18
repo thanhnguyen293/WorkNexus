@@ -34,7 +34,7 @@ class TranslationTab extends ConsumerWidget {
     final status = ref.watch(translationStatusProvider(ticket.id));
     final state = status.state;
     final record = status.record;
-    // Why the last run failed (a CLI/auth/model message from OpenCode), so the
+    // Why the last run failed (a CLI/auth/model message from the backend), so the
     // banner explains the actual problem instead of guessing at one.
     final failure = ref.watch(
       translationControllerProvider.select((m) => m[ticket.id]?.error),
@@ -48,6 +48,8 @@ class TranslationTab extends ConsumerWidget {
     final lang = translationLanguageFor(
       ref.watch(appSettingsProvider.select((s) => s.translationLang)),
     );
+    final backend =
+        ref.watch(translationBackendNameProvider) ?? l.translationApiCustom;
 
     Widget banner(Color hue, String text) => Container(
       margin: EdgeInsets.only(bottom: context.spacing.xl2),
@@ -87,7 +89,7 @@ class TranslationTab extends ConsumerWidget {
                 ),
                 SizedBox(height: context.spacing.sm),
                 Text(
-                  l.runOpenCodeToTranslate(lang.nativeName),
+                  l.runAiToTranslate(backend, lang.nativeName),
                   textAlign: TextAlign.center,
                   style: context.typography.paragraphSm.copyWith(
                     color: c.textSecondary,
@@ -104,7 +106,7 @@ class TranslationTab extends ConsumerWidget {
                 ),
                 SizedBox(width: context.spacing.lg),
                 Text(
-                  l.translating,
+                  l.translating(backend),
                   style: context.typography.secondary.copyWith(
                     fontWeight: FontWeight.w500,
                     color: c.textPrimary,
@@ -172,7 +174,9 @@ class TranslationTab extends ConsumerWidget {
                   ),
                   SizedBox(width: context.spacing.sm),
                   Text(
-                    '${l.translated} · via OpenCode',
+                    record.model == kOpenCodeDefaultModel
+                        ? l.translatedViaDefault
+                        : l.translatedVia(record.model),
                     style: context.typography.caption.copyWith(
                       color: c.textTertiary,
                     ),
