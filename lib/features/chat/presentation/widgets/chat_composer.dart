@@ -132,7 +132,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   }
 
   Future<void> _paste() async {
-    final files = await readClipboardAttachments();
+    final files = await ref.read(chatClipboardFilesProvider)();
     if (!mounted) return;
     if (files != null) return _stage(files);
     final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;

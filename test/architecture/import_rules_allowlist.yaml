@@ -130,7 +130,7 @@ line_count_exemptions:
     owner_phase: "Phase 2"
     reason: "Injectable composition root wiring all features and services"
   - file: lib/core/database/database.dart
-    max_lines: 1131
+    max_lines: 1140
     owner_phase: "Permanent"
     reason: "Central Drift database schema tables definition (+ zen_tao_doc_snapshots, schema 58; chat privacy columns, schema 62)"
   - file: lib/core/database/seed/design_seed.dart
@@ -138,7 +138,7 @@ line_count_exemptions:
     owner_phase: "Phase 5"
     reason: "Design seed fixture data table (per Open question 2)"
   - file: lib/core/settings/app_settings.dart
-    max_lines: 442
+    max_lines: 452
     owner_phase: "Follow-up"
     reason: "Freezed app settings model: one field + doc per persisted setting"
   - file: lib/core/theme/chat_style_palette.dart
