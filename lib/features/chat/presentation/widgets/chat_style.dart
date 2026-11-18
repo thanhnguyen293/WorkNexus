@@ -51,8 +51,21 @@ class ChatStyle {
         (s) => (s.chatAppearance, s.chatPrimaryBubbles),
       ),
     );
-    return ChatStyle.of(appearance, context, primaryBubbles: primary);
+    // One instance per theme: every bubble asks on every build, and the
+    // message list reuses a row's widget only while its style is identical.
+    final styles = _byTheme[Theme.of(context)] ??= {};
+    return styles[(appearance, primary)] ??= ChatStyle.of(
+      appearance,
+      context,
+      primaryBubbles: primary,
+    );
   }
+
+  /// [watch]'s styles, kept with the [ThemeData] they were made from (a
+  /// style reads nothing else from the context) and gone with it.
+  static final _byTheme = Expando<Map<(ChatAppearance, bool), ChatStyle>>(
+    'chatStyles',
+  );
 
   /// [primaryBubbles] gives the messenger styles' own bubbles the app's
   /// accent (the default style already follows the theme).

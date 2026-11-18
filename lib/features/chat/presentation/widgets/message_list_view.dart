@@ -12,6 +12,7 @@ import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
 import 'message_jump.dart';
 import 'message_list_item.dart';
+import 'message_row_cache.dart';
 import 'steady_extent_child_delegate.dart';
 
 /// The typing row's key; no message gid looks like it.
@@ -36,6 +37,7 @@ class MessageListView extends StatelessWidget {
     required this.typingActive,
     required this.extent,
     required this.jump,
+    required this.rowCache,
     required this.header,
     required this.onMetrics,
     required this.onMouseDown,
@@ -54,6 +56,7 @@ class MessageListView extends StatelessWidget {
   final bool typingActive;
   final ListExtentEstimate extent;
   final MessageJump jump;
+  final MessageRowCache rowCache;
   final Widget header;
   final bool Function(ScrollMetrics metrics) onMetrics;
   final VoidCallback onMouseDown;
@@ -69,6 +72,54 @@ class MessageListView extends StatelessWidget {
         else if (item is ChatTypingItem)
           _kTypingKey: i,
     };
+    rowCache.retain(rows.keys.toSet());
+    Widget row(BuildContext context, int i) {
+      if (i == items.length) return header;
+      final item = items[i];
+      if (item is ChatTypingItem) {
+        return ChatTypingBubble(
+          key: const ValueKey(_kTypingKey),
+          thread: thread,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+          active: typingActive,
+        );
+      }
+      if (item is! ChatMessage) {
+        return MessageListItem(
+          thread: thread,
+          item: item,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+        );
+      }
+      final first = !chatSameRun(
+        i + 1 < items.length ? items[i + 1] : null,
+        item,
+      );
+      final last = !chatSameRun(i > 0 ? items[i - 1] : null, item);
+      final summary = summaries[item.serverId];
+      final anchor = item.gid == jump.targetGid ? jump.anchor : null;
+      return rowCache.row(
+        item.gid,
+        [item, first, last, summary, anchor, style, users, showSenders, thread],
+        () => MessageListItem(
+          key: ValueKey(item.gid),
+          thread: thread,
+          item: item,
+          style: style,
+          users: users,
+          showSenders: showSenders,
+          firstOfRun: first,
+          lastOfRun: last,
+          summary: summary,
+          anchor: anchor,
+        ),
+      );
+    }
+
     return Listener(
       onPointerDown: (e) {
         // The user takes over: a jumped-to row stops being held centred.
@@ -91,35 +142,7 @@ class MessageListView extends StatelessWidget {
             // spans the full width.
             padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
             childrenDelegate: SteadyExtentChildDelegate(
-              (context, i) => i == items.length
-                  ? header
-                  : items[i] is ChatTypingItem
-                  ? ChatTypingBubble(
-                      key: const ValueKey(_kTypingKey),
-                      thread: thread,
-                      style: style,
-                      users: users,
-                      showSenders: showSenders,
-                      active: typingActive,
-                    )
-                  : MessageListItem(
-                      key: switch (items[i]) {
-                        final ChatMessage m => ValueKey(m.gid),
-                        _ => null,
-                      },
-                      anchor: switch (items[i]) {
-                        final ChatMessage m when m.gid == jump.targetGid =>
-                          jump.anchor,
-                        _ => null,
-                      },
-                      thread: thread,
-                      items: items,
-                      index: i,
-                      style: style,
-                      users: users,
-                      summaries: summaries,
-                      showSenders: showSenders,
-                    ),
+              row,
               estimate: extent,
               childCount: items.length + 1,
               findChildIndexCallback: (key) =>

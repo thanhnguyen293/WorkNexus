@@ -19,6 +19,7 @@ import 'message_list_header.dart';
 import 'message_list_item.dart';
 import 'message_list_paging.dart';
 import 'message_list_view.dart';
+import 'message_row_cache.dart';
 import 'scroll_to_latest_button.dart';
 
 /// The messages of one chat, newest at the bottom. Earlier messages load on
@@ -57,6 +58,7 @@ class _MessageListState extends ConsumerState<MessageList>
   final _scroll = ScrollController();
   final _extent = ListExtentEstimate();
   final _jump = MessageJump();
+  final _rowCache = MessageRowCache();
 
   /// Scrolled up far enough to show the jump-to-latest button.
   bool _away = false;
@@ -89,6 +91,7 @@ class _MessageListState extends ConsumerState<MessageList>
       _away = false;
       _unseen = 0;
       _extent.reset();
+      _rowCache.clear();
     }
   }
 
@@ -255,6 +258,7 @@ class _MessageListState extends ConsumerState<MessageList>
       typingActive: !_away,
       extent: _extent,
       jump: _jump,
+      rowCache: _rowCache,
       header: MessageListHeader(
         reachedStart: reachedStart,
         isEmpty: messages.isEmpty,
