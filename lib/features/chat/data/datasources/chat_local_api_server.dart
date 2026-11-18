@@ -234,13 +234,21 @@ class ChatLocalApiServer {
     return diff == 0;
   }
 
-  /// The body, or null when it is larger than [_maxBodyBytes].
+  /// The body, or null when it is larger than [_maxBodyBytes]. An oversized
+  /// body is still read to its end (and dropped): answering while it is
+  /// unread makes Windows reset the connection, so the client never gets
+  /// the 413.
   Future<List<int>?> _readBody(HttpRequest request) async {
     final out = BytesBuilder(copy: false);
+    var tooLarge = false;
     await for (final chunk in request) {
+      if (tooLarge) continue;
       out.add(chunk);
-      if (out.length > _maxBodyBytes) return null;
+      if (out.length > _maxBodyBytes) {
+        tooLarge = true;
+        out.clear();
+      }
     }
-    return out.takeBytes();
+    return tooLarge ? null : out.takeBytes();
   }
 }
