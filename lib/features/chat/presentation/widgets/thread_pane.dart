@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
+import '../../../../core/widgets/app_entrance.dart';
 import '../../../../core/widgets/file_drop_target.dart';
 import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -139,13 +140,19 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
                       ),
                       child: Stack(
                         children: [
-                          ChatTextScale(
-                            child: MessageList(
-                              // The background is reused across chats; the list
-                              // is not.
-                              key: ValueKey(t),
-                              thread: t,
-                              showSenders: chat?.type != ChatType.one2one,
+                          // Only the messages fade in as a chat opens: the
+                          // header, input and side panel look alike from chat
+                          // to chat, and fading them reads as a flicker.
+                          AppEntrance(
+                            key: ValueKey(t),
+                            child: ChatTextScale(
+                              child: MessageList(
+                                // The background is reused across chats; the
+                                // list is not.
+                                key: ValueKey(t),
+                                thread: t,
+                                showSenders: chat?.type != ChatType.one2one,
+                              ),
                             ),
                           ),
                           // A video scrolled out of view plays on over the list.

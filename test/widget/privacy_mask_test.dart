@@ -58,6 +58,30 @@ void main() {
     expect(find.text('Bob'), findsOneWidget);
   });
 
+  testWidgets('a centered title stays centered inside a mask', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 400,
+            // A list stretches its rows, as the chat info panel's does.
+            child: ListView(
+              children: const [
+                PrivacyMask(
+                  masked: false,
+                  mask: Text(kPrivacyMaskText, textAlign: TextAlign.center),
+                  child: Text('Team', textAlign: TextAlign.center),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    // As wide as the list, so its own centering puts the words mid-way.
+    expect(tester.getSize(find.text('Team')).width, 400);
+  });
+
   testWidgets('pointing at a mask shows the text until the pointer leaves', (
     tester,
   ) async {
