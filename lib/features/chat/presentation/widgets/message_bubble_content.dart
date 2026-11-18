@@ -38,21 +38,31 @@ class MessageBubbleContent extends StatelessWidget {
     final s = context.spacing;
     final footer = this.footer;
     final pinned = timeAtEnd && footer != null;
+    // The bubble stays solid under the faded words, so they leave no hole to
+    // the wallpaper. A picture is not faded: its grey cover must show, so
+    // only the words around it are.
+    final picture = isChatPicture(message.content);
+    Widget words(Widget child) =>
+        picture ? ChatPrivacyFade(child: child) : child;
     final content = [
       if (name case final name?)
-        Padding(
-          padding: EdgeInsets.only(bottom: s.xxs),
-          child: name,
+        words(
+          Padding(
+            padding: EdgeInsets.only(bottom: s.xxs),
+            child: name,
+          ),
         ),
-      ?quote,
+      if (quote case final quote?) words(quote),
       MessageBody(accountId: accountId, message: message),
-      MessageTranslationView(accountId: accountId, gid: message.gid),
+      words(MessageTranslationView(accountId: accountId, gid: message.gid)),
     ];
     final footerRow = footer == null
         ? null
-        : Padding(
-            padding: EdgeInsets.only(top: s.xs),
-            child: pinned ? _Ghost(footer) : footer,
+        : words(
+            Padding(
+              padding: EdgeInsets.only(top: s.xs),
+              child: pinned ? _Ghost(footer) : footer,
+            ),
           );
     // Compact previews of the links, under the text, as wide as the bubble:
     // it is sized to its widest content, and they then take that width.
@@ -63,11 +73,8 @@ class MessageBubbleContent extends StatelessWidget {
             footer: footerRow,
           )
         : _column([...content, ?footerRow]);
-    // The bubble stays solid under it, so faded words leave no hole to
-    // the wallpaper.
-    return ChatPrivacyFade(
-      child: pinned ? _Pinned(footer: footer, child: sized) : sized,
-    );
+    final whole = pinned ? _Pinned(footer: words(footer), child: sized) : sized;
+    return picture ? whole : ChatPrivacyFade(child: whole);
   }
 
   static Widget _column(List<Widget> children) => Column(

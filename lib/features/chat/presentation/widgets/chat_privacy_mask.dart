@@ -77,6 +77,13 @@ class ChatPrivacyFade extends ConsumerWidget {
   );
 }
 
+/// The grey a hidden picture shows as. Opaque — the skeleton tints alone are
+/// see-through — and a step off the surface, so the box still reads.
+Color chatPrivacyCoverColor(BuildContext context) => Color.alphaBlend(
+  context.colors.skeletonHighlight,
+  context.colors.surfaceSubtle,
+);
+
 /// Covers a picture (an image, a video, a sticker) with a plain grey box
 /// while the privacy mode hides messages; pointing at it, or at the
 /// [PrivacyRevealRegion] around it, shows it.
@@ -88,7 +95,7 @@ class ChatPrivacyCover extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => PrivacyCover(
     covered: ref.watch(chatPrivacyHiddenProvider(ChatPrivacyPart.message)),
-    color: context.colors.skeleton,
+    color: chatPrivacyCoverColor(context),
     borderRadius: BorderRadius.circular(context.radii.md),
     child: child,
   );

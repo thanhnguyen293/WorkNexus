@@ -9,10 +9,12 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_privacy_mask.dart';
 import 'chat_side_panel_frame.dart';
+import 'message_body.dart';
 
 /// A message set apart beside the chat — a pinned message, a thread's root:
 /// who sent it and what the card is ([label]), the message ([body]), then
@@ -52,10 +54,14 @@ class ChatMessageCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              ChatAvatar(
-                name: chatUserName(context, users, sender),
-                imageUrl: chatAvatarUrl(users, sender),
-                verified: chatVerifiedBadge(context, users, sender),
+              ChatPrivacyMask(
+                part: ChatPrivacyPart.identity,
+                mask: const ChatAvatar(name: '', masked: true),
+                child: ChatAvatar(
+                  name: chatUserName(context, users, sender),
+                  imageUrl: chatAvatarUrl(users, sender),
+                  verified: chatVerifiedBadge(context, users, sender),
+                ),
               ),
               SizedBox(width: s.lg),
               Expanded(
@@ -90,7 +96,11 @@ class ChatMessageCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: s.lg),
-          ChatPrivacyFade(child: body),
+          // A picture keeps its grey cover unfaded (see MessageBody).
+          if (isChatPicture(message.content))
+            body
+          else
+            ChatPrivacyFade(child: body),
           SizedBox(height: s.lg),
           _SentAtFooter(sentAt: message.sentAt, onViewOriginal: onViewOriginal),
         ],

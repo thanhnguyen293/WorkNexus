@@ -129,15 +129,19 @@ class MessageBody extends StatelessWidget {
     };
     // A picture is covered whole while the privacy mode hides messages; the
     // rest fades with the bubble's insides (see MessageBubbleContent).
-    return switch (message.content) {
-      ImageContent() || EmojiContent() => ChatPrivacyCover(child: body),
-      final FileContent file when isVideoFile(file) => ChatPrivacyCover(
-        child: body,
-      ),
-      _ => body,
-    };
+    return isChatPicture(message.content)
+        ? ChatPrivacyCover(child: body)
+        : body;
   }
 }
+
+/// Whether [content] draws as a picture (an image, a video, a big emoji):
+/// the privacy mode covers it in grey rather than fading it.
+bool isChatPicture(MessageContent content) => switch (content) {
+  ImageContent() || EmojiContent() => true,
+  final FileContent file => isVideoFile(file),
+  _ => false,
+};
 
 /// Message text — Markdown or plain with mentions and links. Link previews
 /// show under the bubble (`MessageLinkPreviews`).

@@ -123,4 +123,39 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     expect(privacy().enabled, isFalse);
   });
+
+  testWidgets('a hidden picture sits under an opaque box', (tester) async {
+    // Regression: the skeleton tint alone is see-through, which left the
+    // picture readable under its "cover".
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(appSettingsProvider.notifier)
+        .setChatPrivacy(const ChatPrivacy(enabled: true));
+    for (final variant in AppThemeVariant.values) {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: buildAppTheme(
+              variant: variant,
+              surface: SurfaceStyle.outline,
+              density: AppDensity.comfortable,
+            ),
+            home: const ChatPrivacyCover(
+              child: SizedBox(width: 80, height: 60),
+            ),
+          ),
+        ),
+      );
+      final box = tester.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byType(ChatPrivacyCover),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      final color = (box.decoration as BoxDecoration).color;
+      expect(color?.a, 1, reason: '$variant');
+    }
+  });
 }
