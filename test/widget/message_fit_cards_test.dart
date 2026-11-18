@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_fit_cards.dart';
@@ -37,7 +36,7 @@ Future<void> _pump(WidgetTester tester, Widget content, {double card = 80}) =>
             constraints: const BoxConstraints(maxWidth: 400),
             child: MessageFitCards(
               content: KeyedSubtree(key: _contentKey, child: content),
-              cards: Container(
+              cards: ColoredBox(
                 key: _cardKey,
                 color: Colors.blue,
                 child: SizedBox(width: card, height: 30),
