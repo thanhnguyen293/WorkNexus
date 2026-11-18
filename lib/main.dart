@@ -23,6 +23,7 @@ import 'core/platform/app_icon_service.dart';
 import 'core/platform/app_name_providers.dart';
 import 'core/platform/app_name_service.dart';
 import 'core/platform/desktop_app_lifecycle.dart';
+import 'core/platform/desktop_notifier.dart';
 import 'core/platform/desktop_single_instance_service.dart';
 import 'core/platform/desktop_tray_service.dart';
 import 'core/platform/desktop_window_service.dart';
@@ -81,9 +82,17 @@ Future<void> main(List<String> arguments) async {
   await lifecycle.initialize(initialSettings.locale);
   // The icon the user chose, over the window and the tray the lines above
   // made; not awaited, the first frame does not need it.
-  final appIcon = AppIconService(setTrayIcon: lifecycle.setTrayIcon);
+  // Notifications follow them too, so a toast carries the same name and icon.
+  final notifier = getIt<DesktopNotifier>();
+  final appIcon = AppIconService(
+    setTrayIcon: lifecycle.setTrayIcon,
+    setNotificationIcon: notifier.useAppIcon,
+  );
   unawaited(appIcon.apply());
-  final appName = AppNameService(setTrayToolTip: lifecycle.setTrayToolTip);
+  final appName = AppNameService(
+    setTrayToolTip: lifecycle.setTrayToolTip,
+    setNotificationName: notifier.useAppName,
+  );
   unawaited(appName.apply());
 
   runApp(

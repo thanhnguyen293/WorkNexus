@@ -7,13 +7,16 @@ void main() {
   late Directory dir;
   late AppNameService service;
   final toolTips = <String?>[];
+  final notificationNames = <String?>[];
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('app_name_');
     toolTips.clear();
+    notificationNames.clear();
     service = AppNameService(
       file: () async => File('${dir.path}/sub/app_name.txt'),
       setTrayToolTip: (name) async => toolTips.add(name),
+      setNotificationName: (name) async => notificationNames.add(name),
     );
   });
   tearDown(() => dir.deleteSync(recursive: true));
@@ -26,6 +29,12 @@ void main() {
     await service.rename('  Acme Board ');
     expect(await service.current(), 'Acme Board');
     expect(toolTips.last, 'Acme Board');
+  });
+
+  test('notifications carry the name too, and the own one after', () async {
+    await service.rename('Acme Board');
+    await service.rename('');
+    expect(notificationNames, ['Acme Board', null]);
   });
 
   test('a blank name gives the own name back', () async {

@@ -8,15 +8,19 @@ import '../config/app_config.dart';
 import '../debug/app_talker.dart';
 
 /// The name the user gave the app, shown in place of [AppConfig.appName]: the
-/// window's title (taskbar button hover, Alt-Tab), the tray's tooltip and the
-/// app's own title bar. Kept in a text file in the support folder.
+/// window's title (taskbar button hover, Alt-Tab), the tray's tooltip, the
+/// app's own title bar and, on Windows, its system notifications. Kept in a
+/// text file in the support folder.
 ///
-/// What the executable carries (its file name, Task Manager, Start menu) and
-/// the name on a system notification are fixed at build or install time, so
-/// they keep the default.
+/// What the executable carries (its file name, Task Manager, Start menu), and
+/// the name on a macOS or Linux notification, are fixed at build or install
+/// time, so they keep the default.
 class AppNameService {
-  AppNameService({Future<File> Function()? file, this._setTrayToolTip})
-    : _file = file ?? _supportFile;
+  AppNameService({
+    Future<File> Function()? file,
+    this._setTrayToolTip,
+    this._setNotificationName,
+  }) : _file = file ?? _supportFile;
 
   static bool get supported =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
@@ -26,6 +30,7 @@ class AppNameService {
 
   final Future<File> Function() _file;
   final Future<void> Function(String? name)? _setTrayToolTip;
+  final Future<void> Function(String? name)? _setNotificationName;
 
   static Future<File> _supportFile() async =>
       File('${(await getApplicationSupportDirectory()).path}/app_name.txt');
@@ -60,7 +65,7 @@ class AppNameService {
     return true;
   }
 
-  /// Puts the name in use on the window and the tray. Failing to is a
+  /// Puts the name in use on the window, the tray and notifications. Failing to is a
   /// cosmetic loss, never an error.
   Future<void> apply() async {
     if (!supported) return;
@@ -77,6 +82,10 @@ class AppNameService {
       () => windowManager.setTitle(name ?? AppConfig.appName),
     );
     await _tryApply('tray tooltip', () async => _setTrayToolTip?.call(name));
+    await _tryApply(
+      'notifications',
+      () async => _setNotificationName?.call(name),
+    );
   }
 
   static Future<void> _tryApply(
