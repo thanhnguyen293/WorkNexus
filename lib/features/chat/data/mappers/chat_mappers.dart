@@ -45,6 +45,15 @@ ChatConversationsCompanion conversationFromXxd(
     committers: chat.containsKey('committers')
         ? Value('${chat['committers'] ?? ''}')
         : const Value.absent(),
+    category: chat.containsKey('category')
+        ? Value('${chat['category'] ?? ''}')
+        : const Value.absent(),
+    adminInvite: chat.containsKey('adminInvite')
+        ? Value(flagOf(chat['adminInvite']))
+        : const Value.absent(),
+    isPublic: chat.containsKey('public')
+        ? Value(flagOf(chat['public']))
+        : const Value.absent(),
     ownedBy: Value(_text(chat['ownedBy'])),
     starred: chat.containsKey('star')
         ? Value(
@@ -241,6 +250,9 @@ ChatConversation conversationFromRow(
     pinnedMessageIds: _pinnedIds(row.pinnedJson),
     adminIds: _pinnedIds(row.adminsJson),
     committers: row.committers,
+    category: row.category,
+    adminInvite: row.adminInvite,
+    isPublic: row.isPublic,
     ownerAccount: row.ownedBy,
     avatarJson: row.avatarJson,
     createdAt: row.createdAt,
@@ -301,3 +313,7 @@ DateTime? _date(Object? v) {
   if (n == null || n <= 0) return null;
   return DateTime.fromMillisecondsSinceEpoch(n < 100000000000 ? n * 1000 : n);
 }
+
+/// xxd sends flags as `true`, `1`, `'1'` (ZenTao's enum('0','1')) or their
+/// opposites.
+bool flagOf(Object? v) => v == true || v == 1 || v == '1';

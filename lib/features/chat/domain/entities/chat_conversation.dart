@@ -41,6 +41,15 @@ abstract class ChatConversation with _$ChatConversation {
     /// Who may send, as xxd stores it; see `CanSendToChat`.
     @Default('') String committers,
 
+    /// The user's own category the chat is filed under ('' for none).
+    @Default('') String category,
+
+    /// Only the owner and admins may add people (xxd `adminInvite`).
+    @Default(false) bool adminInvite,
+
+    /// Anyone may find and join the group (xxd `public`).
+    @Default(false) bool isPublic,
+
     /// Group owner's account and creation time (groups only).
     String? ownerAccount,
 

@@ -321,6 +321,15 @@ class ChatConversations extends Table {
   TextColumn get committers => text().withDefault(const Constant(''))();
 
   /// Account of the group's owner, and when the chat was created.
+  /// The user's own category for the chat ('' for none).
+  TextColumn get category => text().withDefault(const Constant(''))();
+
+  /// xxd `adminInvite`: only the owner and admins may add people.
+  BoolColumn get adminInvite => boolean().withDefault(const Constant(false))();
+
+  /// xxd `public`: anyone may find and join the group.
+  BoolColumn get isPublic => boolean().withDefault(const Constant(false))();
+
   TextColumn get ownedBy => text().nullable()();
   DateTimeColumn get createdAt => dateTime().nullable()();
 
@@ -621,7 +630,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 63;
+  int get schemaVersion => 65;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -967,6 +976,19 @@ class AppDatabase extends _$AppDatabase {
       if (from < 63 &&
           !await _hasColumn('settings', 'chat_sticker_suggestions')) {
         await m.addColumn(settings, settings.chatStickerSuggestions);
+      }
+      if (from < 64) {
+        for (final (name, column) in [
+          ('admin_invite', chatConversations.adminInvite),
+          ('is_public', chatConversations.isPublic),
+        ]) {
+          if (!await _hasColumn('chat_conversations', name)) {
+            await m.addColumn(chatConversations, column);
+          }
+        }
+      }
+      if (from < 65 && !await _hasColumn('chat_conversations', 'category')) {
+        await m.addColumn(chatConversations, chatConversations.category);
       }
     },
   );

@@ -29,6 +29,7 @@ class NewChatPeople extends ConsumerStatefulWidget {
     required this.loading,
     required this.failed,
     required this.onRetry,
+    this.excluded = const {},
   });
 
   final String accountId;
@@ -41,6 +42,9 @@ class NewChatPeople extends ConsumerStatefulWidget {
   final bool loading;
   final bool failed;
   final VoidCallback onRetry;
+
+  /// People not offered (already in the group being added to).
+  final Set<int> excluded;
 
   @override
   ConsumerState<NewChatPeople> createState() => _NewChatPeopleState();
@@ -68,7 +72,10 @@ class _NewChatPeopleState extends ConsumerState<NewChatPeople> {
         final q = value.text.trim().toLowerCase();
         final everyone = [
           for (final u in users.values)
-            if (u.userId != self && !u.deleted) u,
+            if (u.userId != self &&
+                !u.deleted &&
+                !widget.excluded.contains(u.userId))
+              u,
         ];
         final people =
             [

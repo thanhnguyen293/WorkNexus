@@ -128,6 +128,43 @@ void main() {
             },
         ],
         'chatstar' => {'gid': params[1], 'star': params[0]},
+        'chatrename' => {'gid': params[0], 'name': params[1]},
+        'chatdismiss' => {'gid': params[0], 'dismissDate': _t0 + 1000},
+        'chatinvite' => {
+          'gid': params[0],
+          'type': 'group',
+          'name': 'Group',
+          'members': [40, ...(params[1]! as List)],
+          'adminInvite': '1',
+          'public': true,
+        },
+        'chatsetconfig' => {
+          'gid': params[0],
+          ...(params[1]! as Map<String, Object?>),
+        },
+        'chatsetcategory' => {'gids': params[0], 'category': params[1]},
+        'chataddadmins' => {'gid': params[0], 'admins': params[1]},
+        'chatchangeownership' => {
+          'gid': params[0],
+          'type': 'group',
+          'name': 'Group',
+          'ownedBy': 'u${params[1]}',
+        },
+        'chatleave' => {
+          'gid': params[0],
+          'type': 'group',
+          'name': 'Group',
+          'members': [41],
+        },
+        // As if someone else's kick also removed this account (40).
+        'chatkick' => {
+          'gid': params[0],
+          'type': 'group',
+          'name': 'Group',
+          'members': [
+            {'id': 41},
+          ],
+        },
         'userupdate' => {'id': 40, ...(params.first! as Map)},
         'chatgetmessageinfo' => {'lastMessage': 120, 'messageCount': 120},
         'chatsetlastreadmessagebyindex' => {'gid': params[0], 'id': params[1]},
@@ -416,6 +453,171 @@ void main() {
     await eventually(
       repo.watchConversations(_acc),
       (l) => !byGid(l, last)!.starred,
+    );
+  });
+
+  test('renaming and dismissing a group follow the replies', () async {
+    await repo.connect(_acc);
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final gid = chats.last.gid;
+
+    expect(await repo.renameGroupChat(_acc, gid, 'Renamed'), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatrename')['params'],
+      [gid, 'Renamed'],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)?.name == 'Renamed',
+    );
+
+    expect(await repo.dismissGroupChat(_acc, gid), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatdismiss')['params'],
+      [gid],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)?.archived ?? false,
+    );
+  });
+
+  test('adding and removing members follow the replies', () async {
+    await repo.connect(_acc);
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final gid = chats.last.gid;
+
+    expect(await repo.addGroupMembers(_acc, gid, [41, 42]), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatinvite')['params'],
+      [
+        gid,
+        [41, 42],
+      ],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)?.name == 'Group' && !byGid(l, gid)!.archived,
+    );
+    final invited = byGid(await repo.watchConversations(_acc).first, gid)!;
+    expect(invited.adminInvite, isTrue);
+    expect(invited.isPublic, isTrue);
+
+    expect(await repo.removeGroupMembers(_acc, gid, [40]), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatkick')['params'],
+      [
+        gid,
+        [40],
+      ],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)?.archived ?? false,
+    );
+  });
+
+  test('group settings, admins and owner follow the replies', () async {
+    await repo.connect(_acc);
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final gid = chats.last.gid;
+
+    expect(
+      await repo.setGroupSettings(
+        _acc,
+        gid,
+        isPublic: true,
+        adminInvite: false,
+        committers: r'$ADMINS',
+      ),
+      isA<Ok<void>>(),
+    );
+    expect(
+      server.requests.lastWhere(
+        (r) => r['method'] == 'chatsetconfig',
+      )['params'],
+      [
+        gid,
+        {'public': true, 'adminInvite': false, 'committers': r'$ADMINS'},
+      ],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)!.isPublic && byGid(l, gid)!.committers == r'$ADMINS',
+    );
+
+    expect(
+      await repo.setGroupAdmins(_acc, gid, [41], admin: true),
+      isA<Ok<void>>(),
+    );
+    expect(
+      server.requests.lastWhere(
+        (r) => r['method'] == 'chataddadmins',
+      )['params'],
+      [
+        gid,
+        [41],
+        40,
+      ],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)!.adminIds.contains(41),
+    );
+
+    expect(await repo.transferGroupOwnership(_acc, gid, 41), isA<Ok<void>>());
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)!.ownerAccount == 'u41',
+    );
+  });
+
+  test('filing chats under a category follows the reply', () async {
+    await repo.connect(_acc);
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final gids = [for (final c in chats) c.gid];
+
+    expect(await repo.setChatCategory(_acc, gids, 'Work'), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere(
+        (r) => r['method'] == 'chatsetcategory',
+      )['params'],
+      [gids, 'Work'],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.every((c) => c.category == 'Work'),
+    );
+  });
+
+  test('leaving a group takes it off the list', () async {
+    await repo.connect(_acc);
+    final chats = await eventually(
+      repo.watchConversations(_acc),
+      (l) => l.length == 2,
+    );
+    final gid = chats.last.gid;
+
+    expect(await repo.leaveGroupChat(_acc, gid), isA<Ok<void>>());
+    expect(
+      server.requests.lastWhere((r) => r['method'] == 'chatleave')['params'],
+      [gid],
+    );
+    await eventually(
+      repo.watchConversations(_acc),
+      (l) => byGid(l, gid)?.archived ?? false,
     );
   });
 

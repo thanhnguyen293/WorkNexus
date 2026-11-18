@@ -137,6 +137,82 @@ class ChatPacketIngestor {
             jsonEncode(data['avatar']),
           );
         }
+      // Members joined or left: the reply is the group itself. This account
+      // leaving or being removed takes the group off its list, as the
+      // official client does.
+      case 'chatinvite' || 'chatkick' || 'chatleave':
+        if (data is! Map || data['gid'] is! String) break;
+        final chat = Map<String, Object?>.from(data);
+        await _storeChats(accountId, [chat]);
+        // Ids or user objects, depending on the server.
+        final members = {
+          if (chat['members'] case final List<Object?> list)
+            for (final m in list)
+              ?(m is Map ? num.tryParse('${m['id']}') : num.tryParse('$m'))
+                  ?.toInt(),
+        };
+        if (selfUserId != null &&
+            members.isNotEmpty &&
+            !members.contains(selfUserId)) {
+          await _local.setArchived(
+            accountId,
+            chat['gid']! as String,
+            archived: true,
+          );
+        }
+      // The group's settings changed (`chatsetconfig`), or one of them on
+      // older servers; each carries only what it changed.
+      case 'chatsetconfig' || 'chatsetcommitters' || 'chatsetvisibility':
+        if (data is! Map || data['gid'] is! String) break;
+        await _local.setGroupSettings(
+          accountId,
+          data['gid']! as String,
+          committers: data.containsKey('committers')
+              ? '${data['committers'] ?? ''}'
+              : null,
+          isPublic: data.containsKey('public') ? flagOf(data['public']) : null,
+          adminInvite: data.containsKey('adminInvite')
+              ? flagOf(data['adminInvite'])
+              : null,
+        );
+      // Also pushed when the user files chats from another client.
+      case 'chatsetcategory':
+        if (data is Map && data['gids'] is List) {
+          await _local.setCategory(accountId, [
+            for (final g in data['gids']! as List<Object?>)
+              if (g is String) g,
+          ], '${data['category'] ?? ''}');
+        }
+      case 'chataddadmins' || 'chatremoveadmins':
+        if (data is Map && data['gid'] is String) {
+          await _local.setAdmins(
+            accountId,
+            data['gid']! as String,
+            pinnedJsonOf(data['admins']),
+          );
+        }
+      // The whole group, with its new owner.
+      case 'chatchangeownership':
+        if (data is Map && data['gid'] is String) {
+          await _storeChats(accountId, [Map<String, Object?>.from(data)]);
+        }
+      case 'chatrename':
+        if (data is Map && data['gid'] is String && data['name'] is String) {
+          await _local.setChatName(
+            accountId,
+            data['gid']! as String,
+            data['name']! as String,
+          );
+        }
+      // A dismissed group is archived, as the chat list maps `dismissDate`.
+      case 'chatdismiss':
+        if (data is Map && data['gid'] is String) {
+          await _local.setArchived(
+            accountId,
+            data['gid']! as String,
+            archived: (num.tryParse('${data['dismissDate']}') ?? 1) > 0,
+          );
+        }
       // ZenTao's notifications and xuanbot replies (official client: kh).
       case 'syncnotifications':
         if (selfUserId == null) break;
