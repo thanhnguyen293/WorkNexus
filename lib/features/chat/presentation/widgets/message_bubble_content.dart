@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/chat_message.dart';
 import 'message_body.dart';
+import 'message_fit_cards.dart';
 import 'message_link_previews.dart';
 import 'message_translation_view.dart';
 
@@ -36,34 +37,39 @@ class MessageBubbleContent extends StatelessWidget {
     final s = context.spacing;
     final footer = this.footer;
     final pinned = timeAtEnd && footer != null;
-    final column = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (name case final name?)
-          Padding(
-            padding: EdgeInsets.only(bottom: s.xxs),
-            child: name,
-          ),
-        ?quote,
-        MessageBody(accountId: accountId, message: message),
-        MessageTranslationView(accountId: accountId, gid: message.gid),
-        // Compact previews of the links, under the text.
-        MessageLinkPreviews(message: message),
-        if (footer != null)
-          Padding(
+    final content = [
+      if (name case final name?)
+        Padding(
+          padding: EdgeInsets.only(bottom: s.xxs),
+          child: name,
+        ),
+      ?quote,
+      MessageBody(accountId: accountId, message: message),
+      MessageTranslationView(accountId: accountId, gid: message.gid),
+    ];
+    final footerRow = footer == null
+        ? null
+        : Padding(
             padding: EdgeInsets.only(top: s.xs),
             child: pinned ? _Ghost(footer) : footer,
-          ),
-      ],
-    );
-    // The cards under the text are as wide as the bubble: it is sized to its
-    // widest content, and they then take that width.
+          );
+    // Compact previews of the links, under the text, as wide as the bubble:
+    // it is sized to its widest content, and they then take that width.
     final sized = messageHasLinkPreviews(message)
-        ? IntrinsicWidth(child: column)
-        : column;
+        ? MessageFitCards(
+            content: _column(content),
+            cards: MessageLinkPreviews(message: message),
+            footer: footerRow,
+          )
+        : _column([...content, ?footerRow]);
     return pinned ? _Pinned(footer: footer, child: sized) : sized;
   }
+
+  static Widget _column(List<Widget> children) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: children,
+  );
 }
 
 /// [child] with [footer] pinned to its bottom-end corner.
