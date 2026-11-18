@@ -3027,5 +3027,8 @@
   "chatAiRewriteNeedsDraft": "Type a message for the AI to rewrite",
   "chatAiRewriteNoMentions": "Rewriting would drop the @mentions in this message",
   "chatAiRewriting": "Rewriting…",
-  "chatAiScopeLabel": "Messages to summarize"
+  "chatAiScopeLabel": "Messages to summarize",
+  "chatStickerSuggestions": "Send as a sticker",
+  "chatStickerReplies": "Reply with a sticker",
+  "chatStickerSuggestionsClose": "Hide sticker suggestions"
 }

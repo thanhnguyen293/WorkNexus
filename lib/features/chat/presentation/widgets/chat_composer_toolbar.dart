@@ -15,10 +15,12 @@ import 'chat_composer_controller.dart';
 import 'chat_emoji_picker.dart';
 import 'chat_reply_suggestions_bar.dart';
 import 'chat_send_code_button.dart';
+import 'chat_sticker_suggestions_bar.dart';
 
 /// The composer's tool row (above the input): send image, attach file,
 /// mention someone, emoji, send code, AI writing help and the Markdown
-/// toggle — with the replies the AI suggested, when asked, above it.
+/// toggle — with the replies the AI suggested, when asked, and stickers for
+/// what is typed (or to answer with), above it.
 class ChatComposerTools extends StatelessWidget {
   const ChatComposerTools({
     super.key,
@@ -86,6 +88,12 @@ class ChatComposerTools extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ChatReplySuggestionsBar(draftKey: draftKey, text: text, focus: focus),
+        ChatStickerSuggestionsBar(
+          draftKey: draftKey,
+          text: text,
+          focus: focus,
+          threadRootId: threadRootId,
+        ),
         tools,
       ],
     );
