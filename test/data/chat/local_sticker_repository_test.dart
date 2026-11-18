@@ -58,6 +58,21 @@ void main() {
     expect(File(added.location).existsSync(), isFalse);
   });
 
+  test("bundled stickers carry their set's tags", () async {
+    final all = (await repo.stickers()).valueOrNull ?? const [];
+    final thanks = all.singleWhere(
+      (s) => s.pack == 'WorkNexus' && s.name == 'cam_on.png',
+    );
+    expect(thanks.emoji, startsWith('🙏'));
+    expect(thanks.keywords, contains('cam on'));
+    // Tagged by emoji alone.
+    final laugh = all.singleWhere(
+      (s) => s.pack == 'Pepe' && s.name == '033.webp',
+    );
+    expect(laugh.emoji, '😂🤣');
+    expect(laugh.keywords, isEmpty);
+  });
+
   test('bundled stickers cannot be removed', () async {
     final bundled = switch (await repo.stickers()) {
       Ok(:final value) => value.first,
@@ -74,8 +89,8 @@ void main() {
         'tg:Peepo',
         title: 'Peepo Pepe',
         stickers: [
-          (name: '001.webp', bytes: png),
-          (name: '002.webp', bytes: png),
+          (name: '001.webp', bytes: png, emoji: '😂'),
+          (name: '002.webp', bytes: png, emoji: ''),
         ],
       );
       expect(added, isA<Ok<void>>());
@@ -87,6 +102,8 @@ void main() {
       final set = all.where((s) => s.pack == 'tg:Peepo').toList();
       expect(set.map((s) => s.name), ['001.webp', '002.webp']);
       expect(set.every((s) => s.custom && s.packTitle == 'Peepo Pepe'), isTrue);
+      // Each sticker keeps the emoji Telegram gave it.
+      expect(set.map((s) => s.emoji), ['😂', '']);
       // Not mixed into the user's own stickers.
       expect(all.where((s) => s.custom && s.pack.isEmpty), isEmpty);
       expect(await repo.bytes(set.first), isA<Ok<Uint8List>>());
@@ -99,14 +116,14 @@ void main() {
       'tg:Peepo',
       title: 'Old',
       stickers: [
-        (name: '001.webp', bytes: png),
-        (name: '002.webp', bytes: png),
+        (name: '001.webp', bytes: png, emoji: ''),
+        (name: '002.webp', bytes: png, emoji: ''),
       ],
     );
     await repo.addPack(
       'tg:Peepo',
       title: 'New',
-      stickers: [(name: '001.webp', bytes: png)],
+      stickers: [(name: '001.webp', bytes: png, emoji: '')],
     );
     var all = (await repo.stickers()).valueOrNull ?? const [];
     final kept = all.where((s) => s.pack == 'tg:Peepo').toList();

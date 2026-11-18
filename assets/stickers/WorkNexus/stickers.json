@@ -1,0 +1,133 @@
+{
+  "cam_on.png": {
+    "emoji": "🙏😊",
+    "keywords": [
+      "cam on",
+      "thanks",
+      "thank you",
+      "tks"
+    ]
+  },
+  "cho_chut.png": {
+    "emoji": "⏳",
+    "keywords": [
+      "cho chut",
+      "doi chut",
+      "wait"
+    ]
+  },
+  "co_lam_duoc_khong.png": {
+    "emoji": "🤔",
+    "keywords": [
+      "co lam duoc khong",
+      "lam duoc khong"
+    ]
+  },
+  "da_fix.png": {
+    "emoji": "✅🛠️",
+    "keywords": [
+      "da fix",
+      "fixed",
+      "fix roi"
+    ]
+  },
+  "da_xong.png": {
+    "emoji": "✅",
+    "keywords": [
+      "da xong",
+      "xong roi",
+      "done"
+    ]
+  },
+  "dang_lam.png": {
+    "emoji": "👨‍💻💻",
+    "keywords": [
+      "dang lam",
+      "working on it"
+    ]
+  },
+  "gap.png": {
+    "emoji": "🚨",
+    "keywords": [
+      "gap",
+      "urgent",
+      "khan"
+    ]
+  },
+  "gui_ten_ai_lam.png": {
+    "emoji": "🙋",
+    "keywords": [
+      "gui ten ai lam",
+      "ai lam"
+    ]
+  },
+  "hieu_roi.png": {
+    "emoji": "👌",
+    "keywords": [
+      "hieu roi",
+      "got it",
+      "understood"
+    ]
+  },
+  "hop_thoi.png": {
+    "emoji": "📅",
+    "keywords": [
+      "hop thoi",
+      "hop",
+      "meeting"
+    ]
+  },
+  "ko_can_biet.png": {
+    "emoji": "🙅",
+    "keywords": [
+      "khong can biet",
+      "ko can biet"
+    ]
+  },
+  "ko_quan_tam.png": {
+    "emoji": "🤷",
+    "keywords": [
+      "khong quan tam",
+      "ko quan tam",
+      "whatever"
+    ]
+  },
+  "lgtm.png": {
+    "emoji": "👍",
+    "keywords": [
+      "lgtm",
+      "looks good"
+    ]
+  },
+  "ok.png": {
+    "emoji": "👌👍",
+    "keywords": [
+      "ok",
+      "oke",
+      "okay"
+    ]
+  },
+  "ship_it.png": {
+    "emoji": "🚀",
+    "keywords": [
+      "ship it",
+      "ship",
+      "deploy",
+      "release"
+    ]
+  },
+  "thay_vo.png": {
+    "emoji": "👀",
+    "keywords": [
+      "thay vo"
+    ]
+  },
+  "tuyet_voi.png": {
+    "emoji": "🤩",
+    "keywords": [
+      "tuyet voi",
+      "great",
+      "awesome"
+    ]
+  }
+}
