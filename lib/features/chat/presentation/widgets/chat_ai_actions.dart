@@ -7,10 +7,11 @@ import '../providers/chat_ai_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_panels.dart';
 
-/// The language AI answers meant for the user are written in: the app's.
-String chatAiLanguageName(BuildContext context) => translationLanguageFor(
-  Localizations.localeOf(context).languageCode,
-).englishName;
+/// The language summaries are written in: the one picked in the assistant
+/// panel, else the app's.
+String chatSummaryLanguageCode(BuildContext context, WidgetRef ref) =>
+    ref.watch(chatSummaryLanguageProvider) ??
+    translationLanguageFor(Localizations.localeOf(context).languageCode).code;
 
 /// Opens the assistant beside chat [thread] and summarizes [scope] there,
 /// once an AI backend is set up (otherwise explaining how to set one up).
@@ -25,7 +26,10 @@ Future<void> summarizeChat(
 }) async {
   openChatSidePanel(ref, thread, ChatSidePanel.assistant);
   ref.read(chatSummaryScopeProvider(thread).notifier).state = scope;
-  final languageName = chatAiLanguageName(context);
+  final languageName = translationLanguageFor(
+    ref.read(chatSummaryLanguageProvider) ??
+        Localizations.localeOf(context).languageCode,
+  ).englishName;
   final people = ref.read(chatAiPeopleProvider(thread.accountId));
   final summary = ref.read(chatSummaryProvider(thread).notifier);
   if (!await ensureOpenCodeLinked(context, ref)) return;

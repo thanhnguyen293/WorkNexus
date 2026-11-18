@@ -3030,5 +3030,6 @@
   "chatAiScopeLabel": "Messages to summarize",
   "chatStickerSuggestions": "Send as a sticker",
   "chatStickerReplies": "Reply with a sticker",
-  "chatStickerSuggestionsClose": "Hide sticker suggestions"
+  "chatStickerSuggestionsClose": "Hide sticker suggestions",
+  "chatAiSummaryLanguage": "Summary language"
 }

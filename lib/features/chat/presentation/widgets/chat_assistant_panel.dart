@@ -9,6 +9,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_segmented_tabs.dart';
 import '../../../../core/widgets/inline_status.dart';
+import '../../../../core/widgets/translation_language_control.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_ai_providers.dart';
 import '../providers/chat_providers.dart';
@@ -58,6 +59,31 @@ class ChatAssistantPanel extends ConsumerWidget {
           ),
           SizedBox(height: s.sm),
           _ScopePicker(thread: thread, scope: scope),
+          SizedBox(height: s.lg),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.chatAiSummaryLanguage,
+                  style: context.typography.captionStrong.copyWith(
+                    color: c.textSecondary,
+                  ),
+                ),
+              ),
+              TranslationLanguageControl(
+                value: chatSummaryLanguageCode(context, ref),
+                tooltip: l.chatAiSummaryLanguage,
+                onChanged: (code) {
+                  ref.read(chatSummaryLanguageProvider.notifier).state = code;
+                  // A summary on screen is written again in the new
+                  // language; before one, the pick waits for Summarize.
+                  if ((summary?.hasValue ?? false) && !loading) {
+                    summarizeChat(context, ref, thread, scope);
+                  }
+                },
+              ),
+            ],
+          ),
           SizedBox(height: s.xl),
           Row(
             children: [
