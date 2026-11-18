@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import '../theme/app_motion.dart';
+
 /// What a hidden name or preview reads as: a fixed run of dots, so not even
 /// the length of the real text shows.
 const String kPrivacyMaskText = '••••••';
@@ -103,10 +105,22 @@ class _MaskLayer extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) =>
-      masked && !(PrivacyRevealRegion.revealedOf(context) ?? false)
-      ? mask
-      : child;
+  Widget build(BuildContext context) {
+    final hidden =
+        masked && !(PrivacyRevealRegion.revealedOf(context) ?? false);
+    // Dots and text crossfade, both pinned to the start so the text does not
+    // slide while the two widths differ.
+    return AnimatedSwitcher(
+      duration: AppMotion.of(context, AppMotion.base),
+      switchInCurve: AppMotion.enter,
+      switchOutCurve: AppMotion.exit,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [...previous, ?current],
+      ),
+      child: KeyedSubtree(key: ValueKey(hidden), child: hidden ? mask : child),
+    );
+  }
 }
 
 /// Fades [child] almost out while [faded], unless its [PrivacyRevealRegion]
@@ -134,7 +148,14 @@ class _FadeLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = faded && !(PrivacyRevealRegion.revealedOf(context) ?? false);
-    return Opacity(opacity: on ? _kFadedOpacity : 1, child: child);
+    // At rest (fully shown) it adds no layer: an opacity of 1 paints the
+    // child as it is.
+    return AnimatedOpacity(
+      opacity: on ? _kFadedOpacity : 1,
+      duration: AppMotion.of(context, AppMotion.base),
+      curve: AppMotion.enter,
+      child: child,
+    );
   }
 }
 
@@ -187,10 +208,14 @@ class _CoverLayer extends StatelessWidget {
     return Stack(
       children: [
         child,
-        // Last, so adding it never moves [child] and loses its state.
-        if (on)
-          Positioned.fill(
-            child: IgnorePointer(
+        // Last, so it never moves [child] and loses its state. Always there,
+        // to ease in and out; fully clear it paints nothing.
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: on ? 1 : 0,
+              duration: AppMotion.of(context, AppMotion.base),
+              curve: AppMotion.enter,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: color,
@@ -199,6 +224,7 @@ class _CoverLayer extends StatelessWidget {
               ),
             ),
           ),
+        ),
       ],
     );
   }

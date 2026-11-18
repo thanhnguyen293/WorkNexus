@@ -38,6 +38,7 @@ class MessageListView extends StatelessWidget {
     required this.extent,
     required this.jump,
     required this.rowCache,
+    required this.arrivals,
     required this.header,
     required this.onMetrics,
     required this.onMouseDown,
@@ -57,6 +58,10 @@ class MessageListView extends StatelessWidget {
   final ListExtentEstimate extent;
   final MessageJump jump;
   final ListRowWidgetCache rowCache;
+
+  /// Gids of messages that just arrived; a row built for one eases in, once
+  /// (the gid is taken out as its row is built).
+  final Set<String> arrivals;
   final Widget header;
   final bool Function(ScrollMetrics metrics) onMetrics;
   final VoidCallback onMouseDown;
@@ -102,9 +107,21 @@ class MessageListView extends StatelessWidget {
       final last = !chatSameRun(i > 0 ? items[i - 1] : null, item);
       final summary = summaries[item.serverId];
       final anchor = item.gid == jump.targetGid ? jump.anchor : null;
+      final arriving = arrivals.remove(item.gid);
       return rowCache.row(
         item.gid,
-        [item, first, last, summary, anchor, style, users, showSenders, thread],
+        [
+          item,
+          first,
+          last,
+          summary,
+          anchor,
+          arriving,
+          style,
+          users,
+          showSenders,
+          thread,
+        ],
         () => MessageListItem(
           key: ValueKey(item.gid),
           thread: thread,
@@ -116,6 +133,7 @@ class MessageListView extends StatelessWidget {
           lastOfRun: last,
           summary: summary,
           anchor: anchor,
+          arriving: arriving,
         ),
       );
     }

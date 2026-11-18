@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_entrance.dart';
 
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -70,6 +71,7 @@ class MessageListItem extends ConsumerWidget {
     this.lastOfRun = true,
     this.summary,
     this.anchor,
+    this.arriving = false,
   });
 
   final ChatThreadKey thread;
@@ -87,6 +89,10 @@ class MessageListItem extends ConsumerWidget {
 
   /// Set on the row a jump is scrolling to, so it can be found once built.
   final GlobalKey? anchor;
+
+  /// The message just arrived: its row opens and fades in (see
+  /// [AppEntrance]); read only when the row is first built.
+  final bool arriving;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -145,7 +151,11 @@ class MessageListItem extends ConsumerWidget {
         // The bubble's own space above it, and the next one's below it.
         gapAbove: firstOfRun ? style.groupGap : style.runGap,
         gapBelow: lastOfRun ? style.groupGap : style.runGap,
-        child: Padding(padding: side, child: bubble),
+        child: AppEntrance(
+          animate: arriving,
+          grow: true,
+          child: Padding(padding: side, child: bubble),
+        ),
       ),
     );
   }

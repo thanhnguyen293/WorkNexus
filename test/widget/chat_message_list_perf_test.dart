@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/app_entrance.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
@@ -204,5 +205,50 @@ void main() {
     // Only rows scrolling into view are built; the ones on screen are not
     // rebuilt when the jump-to-latest button shows.
     expect(rebuilt, lessThan(25));
+  });
+
+  testWidgets('a message that arrives eases in; the loaded ones do not', (
+    tester,
+  ) async {
+    var shown = [for (var i = 0; i < 50; i++) _message(i)];
+    await pumpList(tester, shown);
+    // An entrance's own fade, around a bubble (names and avatars inside it
+    // have fades of their own, for the privacy mode).
+    // Not skipping offstage: the row opens from no height at all.
+    final easing = find.descendant(
+      of: find.byType(AppEntrance, skipOffstage: false),
+      matching: find.ancestor(
+        of: find.byType(MessageBubble, skipOffstage: false),
+        matching: find.byType(FadeTransition, skipOffstage: false),
+      ),
+    );
+    expect(easing, findsNothing);
+
+    shown = [...shown, _message(50)];
+    repo.messages.add(shown);
+    await tester.pump();
+    await tester.pump();
+    expect(easing, findsOneWidget);
+    expect(
+      find.descendant(
+        of: easing,
+        matching: find.byType(MessageBubble, skipOffstage: false),
+      ),
+      findsOneWidget,
+    );
+
+    // Its frames cost about what any other frame does: one row moves.
+    final watch = Stopwatch()..start();
+    var frames = 0;
+    while (tester.binding.hasScheduledFrame && frames < 60) {
+      await tester.pump(const Duration(milliseconds: 16));
+      frames++;
+    }
+    watch.stop();
+    debugPrint(
+      'PERF arrival: $frames frames, '
+      '${(watch.elapsedMicroseconds / frames / 1000).toStringAsFixed(2)} '
+      'ms per frame',
+    );
   });
 }

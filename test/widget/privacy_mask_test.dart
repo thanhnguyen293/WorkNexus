@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/widgets/privacy_mask.dart';
 
-/// Whether the [PrivacyFade] over the widget holding [text] fades it.
+/// Whether the [PrivacyFade] over the widget holding [text] fades it (or is
+/// fading it: the opacity it eases to).
 bool _fadedOver(WidgetTester tester, String text) =>
     tester
-        .widget<Opacity>(
-          find.ancestor(of: find.text(text), matching: find.byType(Opacity)),
+        .widget<AnimatedOpacity>(
+          find.ancestor(
+            of: find.text(text),
+            matching: find.byType(AnimatedOpacity),
+          ),
         )
         .opacity <
     1;
@@ -17,7 +21,7 @@ Future<TestGesture> _hover(WidgetTester tester, Finder target) async {
   addTearDown(mouse.removePointer);
   await mouse.addPointer(location: Offset.zero);
   await mouse.moveTo(tester.getCenter(target));
-  await tester.pump();
+  await tester.pumpAndSettle();
   return mouse;
 }
 
@@ -62,7 +66,7 @@ void main() {
     expect(find.text('Alice'), findsOneWidget);
 
     await mouse.moveTo(const Offset(1, 1));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Alice'), findsNothing);
   });
 
@@ -182,16 +186,24 @@ void main() {
       of: find.byType(PrivacyCover),
       matching: find.byType(DecoratedBox),
     );
+    // The box eases in and out; this is the opacity it eases to.
+    bool covered() =>
+        tester
+            .widget<AnimatedOpacity>(
+              find.ancestor(of: box, matching: find.byType(AnimatedOpacity)),
+            )
+            .opacity ==
+        1;
     await tester.pumpWidget(picture(false));
-    expect(box, findsNothing);
+    expect(covered(), isFalse);
     final state = tester.element(find.text('photo'));
 
     await tester.pumpWidget(picture(true));
-    expect(box, findsOneWidget);
+    expect(covered(), isTrue);
     expect(tester.getSize(box), const Size(80, 60));
     expect(tester.element(find.text('photo')), same(state));
 
     await _hover(tester, find.byType(PrivacyCover));
-    expect(box, findsNothing);
+    expect(covered(), isFalse);
   });
 }

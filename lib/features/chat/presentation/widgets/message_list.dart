@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_state_view.dart';
 import '../../../../core/widgets/inline_status.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
@@ -60,6 +58,10 @@ class _MessageListState extends ConsumerState<MessageList>
   final _jump = MessageJump();
   final _rowCache = ListRowWidgetCache();
 
+  /// Messages that arrived while the list was shown, not yet built: their
+  /// rows ease in (taken by the list as it builds them).
+  final _arrivals = <String>{};
+
   /// Scrolled up far enough to show the jump-to-latest button.
   bool _away = false;
 
@@ -92,6 +94,7 @@ class _MessageListState extends ConsumerState<MessageList>
       _unseen = 0;
       _extent.reset();
       _rowCache.clear();
+      _arrivals.clear();
     }
   }
 
@@ -188,6 +191,10 @@ class _MessageListState extends ConsumerState<MessageList>
     final at = after.indexWhere((m) => m.gid == newest);
     if (at < 0) return;
     final arrived = after.sublist(at + 1);
+    _arrivals.addAll(arrived.map((m) => m.gid));
+    // Only rows built in the coming frame ease in: one far off screen comes
+    // into view later as it is.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _arrivals.clear());
     final self = ref.read(chatSelfUserIdProvider(t.accountId)).value;
     if (arrived.any((m) => m.senderId == self)) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToLatest());
@@ -259,6 +266,7 @@ class _MessageListState extends ConsumerState<MessageList>
       extent: _extent,
       jump: _jump,
       rowCache: _rowCache,
+      arrivals: _arrivals,
       header: MessageListHeader(
         reachedStart: reachedStart,
         isEmpty: messages.isEmpty,
@@ -270,21 +278,12 @@ class _MessageListState extends ConsumerState<MessageList>
       onMouseUp: _onMouseUp,
     );
     final s = context.spacing;
-    final l = AppL10n.of(context);
     return Stack(
       children: [
         list,
         // In the list it would scroll with it: over it, centred in the pane.
         if (messages.isEmpty && !loadFailed)
-          Positioned.fill(
-            child: loadingOlder
-                ? const AppStateView.loading(compact: true)
-                : AppStateView.empty(
-                    compact: true,
-                    icon: LucideIcons.messagesSquare300,
-                    title: l.chatNoMessages,
-                  ),
-          ),
+          Positioned.fill(child: MessageListEmpty(loading: loadingOlder)),
         Positioned(
           right: s.xl5,
           bottom: s.xl3,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/widgets/hover_surface.dart';
 import 'bubble_tail.dart';
 
@@ -49,8 +50,8 @@ class MessageBubbleBox extends StatelessWidget {
         final kind = tail;
         if (kind == null) {
           return AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeOut,
+            duration: AppMotion.of(context, AppMotion.fast),
+            curve: AppMotion.enter,
             decoration: BoxDecoration(
               color: color,
               border: border == null ? null : Border.fromBorderSide(side),
@@ -67,8 +68,8 @@ class MessageBubbleBox extends StatelessWidget {
             right: mine ? BubbleTail.width : 0,
           ),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeOut,
+            duration: AppMotion.of(context, AppMotion.fast),
+            curve: AppMotion.enter,
             decoration: ShapeDecoration(
               color: color,
               shape: TailedBubbleBorder(
