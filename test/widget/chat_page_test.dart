@@ -29,14 +29,18 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_staged_files_provider.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_trust_preview.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/attachment_preview_dialog.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_controller.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_info_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_list_tabs.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_members_panel.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_search_field.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_staged_files.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_header.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_thread_search_bar.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_typing_bubble.dart';
@@ -919,6 +923,106 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(repo.calls, contains('send g1 first line'));
+  });
+
+  testWidgets('each chat keeps its unsent text and files until sent', (
+    tester,
+  ) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    ChatComposerController field() => tester
+        .widget<ChatComposerField>(find.byType(ChatComposerField).last)
+        .controller;
+    field().insertText('draft for the team');
+    await tester.pump();
+    // A pasted or dropped image waits in the input (which then hides the
+    // text) until sent.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const team = (chat: (accountId: 'acc', chatGid: 'g1'), inThread: false);
+    final image = (name: 'pasted-1.png', bytes: Uint8List.fromList([1, 2]));
+    container.read(chatStagedFilesProvider(team).notifier).state = [image];
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsNothing);
+    expect(field().isBlank, isTrue, reason: 'the other chat has its own');
+
+    await openTeamChat(tester);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+    expect(container.read(chatStagedFilesProvider(team)), [image]);
+    container.read(chatStagedFilesProvider(team).notifier).state = const [];
+    await tester.pumpAndSettle();
+    expect(field().plainText, 'draft for the team');
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ChatComposerField).last,
+        matching: find.byType(TextField),
+      ),
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(repo.calls, contains('send g1 draft for the team'));
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    await openTeamChat(tester);
+    expect(field().isBlank, isTrue, reason: 'sending empties the draft');
+  });
+
+  testWidgets('a pasted image waits in the input, not in a preview, and '
+      'stays with its chat', (tester) async {
+    final image = Uint8List.fromList([1, 2, 3]);
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('pasteboard'),
+      (call) async => switch (call.method) {
+        'files' => const <String>[],
+        'image' => image,
+        _ => null,
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('pasteboard'),
+        null,
+      ),
+    );
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ChatComposerField).last,
+        matching: find.byType(TextField),
+      ),
+    );
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AttachmentPreviewDialog), findsNothing);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const team = (chat: (accountId: 'acc', chatGid: 'g1'), inThread: false);
+    final held = container.read(chatStagedFilesProvider(team));
+    expect(held.single.name, startsWith('pasted-'));
+    expect(held.single.bytes, image);
+
+    await tester.tap(find.text('Dyno').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatStagedFiles), findsNothing);
+    await openTeamChat(tester);
+    expect(find.byType(ChatStagedFiles), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(container.read(chatStagedFilesProvider(team)), isEmpty);
+    expect(repo.calls.where((c) => c.startsWith('send')), isEmpty);
   });
 
   testWidgets('typing is announced, and sending ends it', (tester) async {

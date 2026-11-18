@@ -6,11 +6,11 @@ import '../../../../core/error/result.dart';
 import '../../../../core/settings/app_settings.dart';
 import '../../../../core/theme/app_borders.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/util/dropped_files.dart';
 import '../../../../core/widgets/file_drop_target.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/usecases/is_single_emoji.dart';
+import '../providers/chat_composer_draft_provider.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_staged_files_provider.dart';
 import '../providers/chat_typing_providers.dart';
@@ -27,10 +27,9 @@ import 'chat_text_send.dart';
 import 'mention_autocomplete.dart';
 import 'reply_draft_banner.dart';
 
-/// Message input: Enter sends, Shift+Enter adds a line; pasted files or
-/// images are sent as attachments; dropped ones wait in the input (which then
-/// takes no text) until sent. A message picked with "reply" shows above
-/// the input and the next send answers it; in a reply thread
+/// Message input: Enter sends, Shift+Enter adds a line; pasted or dropped
+/// files wait in it (which then takes no text) until sent. "Reply" on a
+/// message shows it above and the next send answers it; in a reply thread
 /// ([threadRootId]) sends answer its root unless another message is picked.
 class ChatComposer extends ConsumerStatefulWidget {
   const ChatComposer({
@@ -49,8 +48,11 @@ class ChatComposer extends ConsumerStatefulWidget {
 }
 
 class _ChatComposerState extends ConsumerState<ChatComposer> {
+  /// Where the unsent text waits while another chat is open.
+  late final _draft = ref.read(chatComposerDraftProvider(_draftKey).notifier);
   late final _text = ChatComposerController(
     markdown: ref.read(appSettingsProvider).chatSendMarkdown,
+    draft: _draft.state,
   );
   final _focus = FocusNode();
   final _mentions = MentionAutocomplete();
@@ -63,6 +65,9 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     _text.addListener(() {
       _mentions.update(_text.value);
       _typing.changed(_text.value.text);
+      // Kept as it changes, not on dispose: a composer rebuilt for the same
+      // chat starts before the old one is gone.
+      _draft.state = _text.draft;
     });
   }
 
@@ -119,7 +124,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     if (key == LogicalKeyboardKey.keyV &&
         (keys.isMetaPressed || keys.isControlPressed)) {
       // The clipboard can only be inspected asynchronously, so paste is taken
-      // over: attachments are sent, plain text is inserted by hand.
+      // over: attachments wait in the input, plain text is inserted by hand.
       _paste();
       return KeyEventResult.handled;
     }
@@ -128,10 +133,8 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
   Future<void> _paste() async {
     final files = await readClipboardAttachments();
-    if (files != null) {
-      if (files.isNotEmpty) await _confirmAndSend(files);
-      return;
-    }
+    if (!mounted) return;
+    if (files != null) return _stage(files);
     final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
     if (text == null || text.isEmpty || !mounted) return;
     _text.insertText(text);
@@ -154,6 +157,11 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     );
     if (mounted) _focus.requestFocus();
   }
+
+  /// Holds [files] in the input until sent or removed.
+  void _stage(List<DroppedFile> files) => ref
+      .read(chatStagedFilesProvider(_draftKey).notifier)
+      .update((held) => [...held, ...files]);
 
   /// Sends files that waited in the input, then goes back to typing.
   Future<void> _sendStaged(List<DroppedFile> files) async {
@@ -216,7 +224,6 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final s = context.spacing;
     ref.listen(
       appSettingsProvider.select((s) => s.chatSendMarkdown),
       (_, on) => _text.markdown = on,
@@ -224,14 +231,12 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
     ref.listen(chatReplyDraftProvider(_draftKey), (_, next) {
       if (next != null) _focus.requestFocus();
     });
-    final draft = ref.watch(chatReplyDraftProvider(_draftKey));
     final staged = chatStagedFilesProvider(_draftKey);
     final hasStaged = ref.watch(staged.select((f) => f.isNotEmpty));
     // Zalo-style: a flat full-width bar, tools above the input line.
     return FileDropTarget(
       hint: AppL10n.of(context).dropFilesToStage,
-      onDrop: (files) async =>
-          ref.read(staged.notifier).state = [...ref.read(staged), ...files],
+      onDrop: (files) async => _stage(files),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: c.surface,
@@ -252,18 +257,13 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
               focus: _focus,
             ),
             Divider(height: 1, thickness: 1, color: c.border),
-            if (draft != null)
-              Padding(
-                padding: EdgeInsets.fromLTRB(s.xl, s.md, s.xl, 0),
-                child: ReplyDraftBanner(
-                  message: draft,
-                  accountId: widget.thread.accountId,
-                  onCancel: () {
-                    _cancelReply();
-                    _focus.requestFocus();
-                  },
-                ),
-              ),
+            ReplyDraftBanner(
+              draftKey: _draftKey,
+              onCancel: () {
+                _cancelReply();
+                _focus.requestFocus();
+              },
+            ),
             if (hasStaged)
               ChatStagedFiles(
                 draftKey: _draftKey,
