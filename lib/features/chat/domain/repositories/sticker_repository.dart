@@ -3,8 +3,9 @@ import 'dart:typed_data';
 import '../../../../core/error/result.dart';
 import '../entities/chat_sticker.dart';
 
-/// A sticker file to keep: its name and image.
-typedef StickerFile = ({String name, Uint8List bytes});
+/// A sticker file to keep: its name, image and the emoji it stands for
+/// (empty when the set gave none).
+typedef StickerFile = ({String name, Uint8List bytes, String emoji});
 
 /// Sticker sets bundled with the app, imported sets and the user's own
 /// stickers.

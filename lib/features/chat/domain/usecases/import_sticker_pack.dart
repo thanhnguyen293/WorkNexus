@@ -92,7 +92,11 @@ class ImportStickerPack {
       switch (result) {
         case Ok(value: (:final bytes, :final still)):
           final number = '${i + 1}'.padLeft(3, '0');
-          files.add((name: '$number.webp', bytes: bytes));
+          files.add((
+            name: '$number.webp',
+            bytes: bytes,
+            emoji: set.stickers[i].emoji,
+          ));
           if (still) stills++;
         case Err(:final failure):
           failed++;

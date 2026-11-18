@@ -25,5 +25,14 @@ abstract class ChatSticker with _$ChatSticker {
     required String name,
     required String location,
     @Default(false) bool custom,
+
+    /// The emoji it stands for, most fitting first (`😂🤣`): from the
+    /// Telegram set it was imported from, or the bundled set's tags. Empty
+    /// for the user's own stickers, which are then never suggested.
+    @Default('') String emoji,
+
+    /// Words it is suggested for besides its emoji, folded (lower case, no
+    /// diacritics): `cam on`, `ship it`.
+    @Default(<String>[]) List<String> keywords,
   }) = _ChatSticker;
 }

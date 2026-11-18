@@ -15,10 +15,14 @@ const String kStickerAssetRoot = 'assets/stickers/';
 
 const _imageExtensions = {'png', 'gif', 'webp', 'jpg', 'jpeg'};
 
-/// Bundled sets come from the asset manifest; the user's own stickers are
-/// files in [directory], named `<epoch ms>_<name>` so the newest sort first;
-/// an imported set is a folder under `packs/` holding its images and a
-/// `pack.json` with its id and title.
+/// What a bundled sticker is tagged with.
+typedef _Tags = ({String emoji, List<String> keywords});
+
+/// Bundled sets come from the asset manifest, each with a `stickers.json`
+/// tagging its stickers (see [_tagsOf]); the user's own stickers are files in
+/// [directory], named `<epoch ms>_<name>` so the newest sort first; an
+/// imported set is a folder under `packs/` holding its images and a
+/// `pack.json` with its id, title and each sticker's emoji.
 class LocalStickerRepository implements StickerRepository {
   LocalStickerRepository({
     required this._bundle,
@@ -48,21 +52,63 @@ class LocalStickerRepository implements StickerRepository {
 
   Future<List<ChatSticker>> _bundled() async {
     final manifest = await AssetManifest.loadFromAssetBundle(_bundle);
+    final assets = manifest.listAssets();
     final keys =
-        manifest
-            .listAssets()
+        assets
             .where((k) => k.startsWith(kStickerAssetRoot) && _isImage(k))
             .toList()
           ..sort();
+    final tagFiles = [
+      for (final key in assets)
+        if (key.startsWith(kStickerAssetRoot) && key.endsWith('/$_tagsFile'))
+          key,
+    ];
+    final tags = {
+      for (final (i, json) in (await Future.wait(
+        // Not cached: the files are tiny, and a cached load that never
+        // finished (a widget test's clock) would hold every later one.
+        tagFiles.map((key) => _bundle.loadString(key, cache: false)),
+      )).indexed)
+        tagFiles[i].substring(kStickerAssetRoot.length).split('/').first:
+            _tagsOf(jsonDecode(json)),
+    };
     return [
       for (final key in keys)
         if (key.substring(kStickerAssetRoot.length).split('/') case [
           final pack,
           final name,
         ])
-          ChatSticker(id: key, pack: pack, name: name, location: key),
+          ChatSticker(
+            id: key,
+            pack: pack,
+            name: name,
+            location: key,
+            emoji: tags[pack]?[name]?.emoji ?? '',
+            keywords: tags[pack]?[name]?.keywords ?? const [],
+          ),
     ];
   }
+
+  /// A set's tags by file name. Each is the emoji a sticker stands for
+  /// (`"001.webp": "😂🤣"`) or, with words to suggest it for too,
+  /// `{"emoji": "🙏", "keywords": ["cam on", "thanks"]}`.
+  static Map<String, _Tags> _tagsOf(Object? json) => {
+    if (json is Map)
+      for (final MapEntry(:key, :value) in json.entries)
+        if (key is String)
+          key: switch (value) {
+            final String emoji => (emoji: emoji, keywords: const <String>[]),
+            {'emoji': final String emoji} => (
+              emoji: emoji,
+              keywords: [
+                if (value['keywords'] case final List<Object?> words)
+                  for (final word in words)
+                    if (word is String) word,
+              ],
+            ),
+            _ => (emoji: '', keywords: const <String>[]),
+          },
+  };
 
   Future<List<ChatSticker>> _custom() async {
     final dir = await _directory();
@@ -102,6 +148,7 @@ class LocalStickerRepository implements StickerRepository {
     if (json is! Map || json['id'] is! String) return const [];
     final pack = json['id'] as String;
     final title = json['title'] is String ? json['title'] as String : pack;
+    final emoji = json['emoji'] is Map ? json['emoji'] as Map : const {};
     final files =
         folder
             .listSync()
@@ -118,6 +165,9 @@ class LocalStickerRepository implements StickerRepository {
           name: f.uri.pathSegments.last,
           location: f.path,
           custom: true,
+          emoji: emoji[f.uri.pathSegments.last] is String
+              ? emoji[f.uri.pathSegments.last] as String
+              : '',
         ),
     ];
   }
@@ -211,13 +261,16 @@ class LocalStickerRepository implements StickerRepository {
       );
       if (staging.existsSync()) await staging.delete(recursive: true);
       await staging.create(recursive: true);
+      final emoji = <String, String>{};
       for (final sticker in stickers) {
         final safe = sticker.name.replaceAll(RegExp(r'[^\w.\-]'), '_');
         await File('${staging.path}$sep$safe').writeAsBytes(sticker.bytes);
+        if (sticker.emoji.isNotEmpty) emoji[safe] = sticker.emoji;
       }
-      await File(
-        '${staging.path}$sep$_packMeta',
-      ).writeAsString(jsonEncode({'id': pack, 'title': title}), flush: true);
+      await File('${staging.path}$sep$_packMeta').writeAsString(
+        jsonEncode({'id': pack, 'title': title, 'emoji': emoji}),
+        flush: true,
+      );
       if (target.existsSync()) await target.delete(recursive: true);
       await staging.rename(target.path);
       return const Ok(null);
@@ -268,6 +321,9 @@ class LocalStickerRepository implements StickerRepository {
   );
 
   static const _packMeta = 'pack.json';
+
+  /// A bundled set's tags, beside its images.
+  static const _tagsFile = 'stickers.json';
 
   /// Holds the id of the set last picked from; not an image, so never listed.
   static const _lastPackName = 'last_pack';
