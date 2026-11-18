@@ -1,4 +1,5 @@
 import '../entities/chat_sticker.dart';
+import '../value_objects/sticker_keywords.dart';
 import 'fold_search_text.dart';
 
 /// Shared by the sticker suggestions: folding, finding words in text and
@@ -35,6 +36,30 @@ abstract final class StickerMatching {
         if (padded.lastIndexOf(' $key ') case final at when at >= 0) (key, at),
     ]..sort((a, b) => b.$2.compareTo(a.$2));
     return [for (final (key, _) in found) key];
+  }
+
+  static final _symbols = [
+    for (final (pattern, emoji) in kStickerSymbolEmoji)
+      (RegExp(pattern), emojiIn(emoji)),
+  ];
+
+  /// What the punctuation and emoticons in [text] stand for
+  /// ([kStickerSymbolEmoji]), the last typed first: tokens of their own
+  /// (`?`, `=))`) and the run a message ends with (`không??`).
+  static List<String> symbolsIn(String text) {
+    final tokens = text.trim().split(RegExp(r'\s+'));
+    final last = tokens.isEmpty ? '' : tokens.last;
+    final ending = RegExp(r'[?!.…]+$').firstMatch(last)?[0];
+    final found = <String>[];
+    for (final token in [?ending, ...tokens.reversed]) {
+      for (final (pattern, emoji) in _symbols) {
+        if (pattern.hasMatch(token)) {
+          found.addAll(emoji);
+          break;
+        }
+      }
+    }
+    return found;
   }
 
   /// The emoji of [sticker], one by one.

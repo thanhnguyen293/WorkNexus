@@ -109,3 +109,26 @@ const Map<String, String> kStickerReplyEmoji = {
   'cafe': '☕',
   'coffee': '☕',
 };
+
+/// Punctuation and emoticons people type on their own (`?`, `!!`, `...`,
+/// `:)`, `=))`, `<3`), as patterns matched against a whole token, and the
+/// emoji of the stickers they stand for. `=))` is how Vietnamese chat
+/// laughs.
+const List<(String, String)> kStickerSymbolEmoji = [
+  (r'^[?!]*(\?!|!\?)[?!]*$', '😱😳'),
+  (r'^\?+$', '🤔😳'),
+  (r'^!+$', '😮😱'),
+  (r'^(\.{2,}|…+)$', '😐😶🤔'),
+  (r'^[:=]-?\){2,}$', '😂🤣'),
+  (r'^[:=]-?\)$', '🙂😊'),
+  (r'^([:=;]-?[dD]+|[xX][dD]+)$', '😆😂'),
+  (r"^(:'\(+|[tT]_+[tT])$", '😭😢'),
+  (r'^[:=]-?\(+$', '😢😞'),
+  (r'^;-?\)+$', '😏😉'),
+  (r'^[:=]-?[pP]+$', '😛😜'),
+  (r'^[:=]-?[oO0]+$', '😮😲'),
+  (r'^<3+$', '❤️😍'),
+  (r'^\^+_*\^+$', '😊😄'),
+  (r'^-_+-$', '😑😒'),
+  (r'^\+1$', '👍'),
+];
