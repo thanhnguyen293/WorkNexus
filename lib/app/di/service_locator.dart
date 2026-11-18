@@ -71,6 +71,7 @@ import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
 import '../../features/chat/data/repositories/server_chat_local_api.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
+import '../../features/chat/domain/repositories/chat_ai_text_generator.dart';
 import '../../features/chat/domain/repositories/chat_local_api.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/repositories/link_preview_repository.dart';
@@ -79,6 +80,9 @@ import '../../features/chat/domain/repositories/message_translation_repository.d
 import '../../features/chat/domain/repositories/sticker_pack_source.dart';
 import '../../features/chat/domain/repositories/sticker_repository.dart';
 import '../../features/chat/domain/repositories/wallpaper_repository.dart';
+import '../../features/chat/domain/usecases/rewrite_chat_draft.dart';
+import '../../features/chat/domain/usecases/suggest_chat_replies.dart';
+import '../../features/chat/domain/usecases/summarize_chat.dart';
 import '../../features/chat/domain/usecases/translate_chat_message.dart';
 import '../../features/connections/data/local_connection_repository.dart';
 import '../../features/connections/data/repositories/drift_local_cache_repository.dart';
@@ -165,6 +169,7 @@ import '../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 import '../../tools/zentao/domain/usecases/update_zentao_profile.dart';
 import 'provider_adapter_registry_impl.dart';
 import 'service_locator.config.dart';
+import 'translation_chat_ai_text_generator.dart';
 
 export '../../core/di/locator.dart';
 
@@ -374,6 +379,21 @@ abstract class ServiceModule {
     MessageTranslationRepository repository,
     TranslationService service,
   ) => TranslateChatMessage(repository, service);
+
+  @lazySingleton
+  ChatAiTextGenerator chatAiTextGenerator(TranslationService service) =>
+      TranslationChatAiTextGenerator(service);
+
+  @lazySingleton
+  SummarizeChat summarizeChat(ChatAiTextGenerator ai) => SummarizeChat(ai);
+
+  @lazySingleton
+  SuggestChatReplies suggestChatReplies(ChatAiTextGenerator ai) =>
+      SuggestChatReplies(ai);
+
+  @lazySingleton
+  RewriteChatDraft rewriteChatDraft(ChatAiTextGenerator ai) =>
+      RewriteChatDraft(ai);
 
   @lazySingleton
   StickerRepository stickerRepository(StickerConverter converter) =>

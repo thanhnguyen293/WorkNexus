@@ -6,8 +6,11 @@ import '../../../../core/widgets/file_drop_target.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../providers/chat_ai_providers.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
+import 'chat_ai_catch_up_banner.dart';
+import 'chat_assistant_panel.dart';
 import 'chat_composer.dart';
 import 'chat_emoji_side_panel.dart';
 import 'chat_file_send.dart';
@@ -50,6 +53,17 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
   Future<void> _open() async {
     final controller = ref.read(chatControllerProvider);
     final t = widget.thread;
+    // What was unread before opening marks it read, for the AI catch-up.
+    final unread = ref
+        .read(chatConversationsProvider(t.accountId))
+        .asData
+        ?.value
+        .where((c) => c.gid == t.chatGid)
+        .firstOrNull
+        ?.unreadCount;
+    if (unread != null) {
+      ref.read(chatUnreadOnOpenProvider(t).notifier).state = unread;
+    }
     // Membership may have changed since the count was kept.
     ref.invalidate(chatMemberCountProvider(t));
     final refreshed = await controller.refresh(t.accountId, t.chatGid);
@@ -95,6 +109,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
           // Searching, the pinned bar would only push the matches down.
           if (pinned.isNotEmpty && !searching)
             PinnedMessageBar(thread: t, pinnedIds: pinned, users: users),
+          ChatAiCatchUpBanner(thread: t),
           Expanded(
             // Sits over the persistent background while messages load
             // and scroll.
@@ -166,6 +181,7 @@ class _ThreadPaneState extends ConsumerState<ThreadPane> {
               users: users,
             ),
             ChatSidePanel.emoji => ChatEmojiSidePanel(thread: t),
+            ChatSidePanel.assistant => ChatAssistantPanel(thread: t),
             null => null,
           };
     return ChatSidePanelHost(

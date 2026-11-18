@@ -9,8 +9,10 @@ class TicketSource {
   final String body;
 }
 
-/// A free-form text translation and the model that produced it — which may
-/// differ from the one asked for when the user's API key is in charge.
+/// Free-form text from the model (a translation, or the answer to a prompt
+/// passed to [TranslationService.complete]) and the model that produced it —
+/// which may differ from the one asked for when the user's API key is in
+/// charge.
 class TextTranslation {
   const TextTranslation(this.text, {this.model});
 
@@ -50,6 +52,16 @@ abstract class TranslationService {
     required String key,
     required String text,
     required String targetLang,
+    String? model,
+  });
+
+  /// Answers a free-form [prompt] (a chat summary, reply ideas, a rewrite)
+  /// with the same backend and model that translate, so every AI feature
+  /// runs on the one the user set up. [key] identifies the run so [cancel]
+  /// can stop it.
+  Future<Result<TextTranslation>> complete({
+    required String key,
+    required String prompt,
     String? model,
   });
 

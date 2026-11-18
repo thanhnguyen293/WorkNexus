@@ -79,6 +79,13 @@ class _Marker implements TranslationService {
     required String targetLang,
     String? model,
   }) async => Ok(TextTranslation(name));
+
+  @override
+  Future<Result<TextTranslation>> complete({
+    required String key,
+    required String prompt,
+    String? model,
+  }) async => Ok(TextTranslation(name));
 }
 
 void main() {
@@ -106,6 +113,17 @@ void main() {
       expect((adapter.last!.data as Map)['model'], 'm-1');
     },
   );
+
+  test('complete sends the prompt as is and returns the reply', () async {
+    final adapter = _Adapter(200, _reply(' Three points. '));
+    final result = await service(
+      adapter,
+    ).complete(key: 'k', prompt: 'Summarize this');
+
+    expect(result.valueOrNull?.text, 'Three points.');
+    final messages = (adapter.last!.data as Map)['messages'] as List;
+    expect((messages.single as Map)['content'], 'Summarize this');
+  });
 
   test('a ticket reply wrapped in a code fence is parsed', () async {
     final adapter = _Adapter(

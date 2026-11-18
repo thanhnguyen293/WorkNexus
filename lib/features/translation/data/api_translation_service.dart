@@ -75,12 +75,17 @@ class ApiTranslationService implements TranslationService {
     String? model,
   }) async {
     final language = translationLanguageFor(targetLang);
+    return complete(key: key, prompt: textPrompt(text, language.englishName));
+  }
+
+  @override
+  Future<Result<TextTranslation>> complete({
+    required String key,
+    required String prompt,
+    String? model,
+  }) async {
     final config = await _config();
-    final reply = await _complete(
-      key,
-      config,
-      textPrompt(text, language.englishName),
-    );
+    final reply = await _complete(key, config, prompt);
     return reply.fold((out) {
       final trimmed = out.trim();
       return trimmed.isEmpty

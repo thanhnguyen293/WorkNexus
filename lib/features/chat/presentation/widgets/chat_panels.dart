@@ -52,6 +52,13 @@ void toggleChatSidePanel(
   ref.read(openReplyThreadProvider(chat).notifier).state = null;
 }
 
+/// Opens [panel] beside chat [chat] (closing a reply thread), leaving it
+/// open when it already is.
+void openChatSidePanel(WidgetRef ref, ChatThreadKey chat, ChatSidePanel panel) {
+  ref.read(chatSidePanelProvider(chat).notifier).state = panel;
+  ref.read(openReplyThreadProvider(chat).notifier).state = null;
+}
+
 /// From pinned messages or files back to the chat info.
 void backToChatInfo(
   WidgetRef ref,
