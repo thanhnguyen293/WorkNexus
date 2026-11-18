@@ -9,8 +9,10 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_privacy_blur.dart';
 import 'chat_side_panel_frame.dart';
 
 /// A message set apart beside the chat — a pinned message, a thread's root:
@@ -89,7 +91,7 @@ class ChatMessageCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: s.lg),
-          body,
+          ChatPrivacyBlur(part: ChatPrivacyPart.message, child: body),
           SizedBox(height: s.lg),
           _SentAtFooter(sentAt: message.sentAt, onViewOriginal: onViewOriginal),
         ],

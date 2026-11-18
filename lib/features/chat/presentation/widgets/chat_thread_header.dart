@@ -14,6 +14,7 @@ import '../../../../core/widgets/hover_surface.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../../domain/value_objects/chat_privacy_part.dart';
 import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
 import 'chat_avatar.dart';
@@ -22,6 +23,7 @@ import 'chat_labels.dart';
 import 'chat_layout.dart';
 import 'chat_mute_toggle.dart';
 import 'chat_panels.dart';
+import 'chat_privacy_blur.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Top of an open chat: avatar, title and, for groups, the member count (for
@@ -84,17 +86,20 @@ class ChatThreadHeader extends ConsumerWidget {
                     ),
               child: Row(
                 children: [
-                  ChatAvatar(
-                    name: title,
-                    imageUrl: avatar?.imageUrl,
-                    label: avatar?.label,
-                    background: avatar?.background,
-                    icon: avatar?.icon,
-                    presence: presence,
-                    verified: withPeer
-                        ? chatVerifiedBadge(context, users, chat?.peerUserId)
-                        : null,
-                    size: ChatAvatarSize.large,
+                  ChatPrivacyBlur(
+                    part: ChatPrivacyPart.identity,
+                    child: ChatAvatar(
+                      name: title,
+                      imageUrl: avatar?.imageUrl,
+                      label: avatar?.label,
+                      background: avatar?.background,
+                      icon: avatar?.icon,
+                      presence: presence,
+                      verified: withPeer
+                          ? chatVerifiedBadge(context, users, chat?.peerUserId)
+                          : null,
+                      size: ChatAvatarSize.large,
+                    ),
                   ),
                   SizedBox(width: context.spacing.xl),
                   Expanded(
@@ -102,13 +107,16 @@ class ChatThreadHeader extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.typography.titleLg.copyWith(
-                            color: c.textPrimary,
-                            fontWeight: FontWeight.w600,
+                        ChatPrivacyBlur(
+                          part: ChatPrivacyPart.identity,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.typography.titleLg.copyWith(
+                              color: c.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         if (subtitle != null)

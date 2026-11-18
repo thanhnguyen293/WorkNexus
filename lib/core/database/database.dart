@@ -151,6 +151,16 @@ class Settings extends Table {
   BoolColumn get chatSendTypingStatus =>
       boolean().withDefault(const Constant(true))();
 
+  /// The chat privacy mode (blurring chats on screen) and the parts it blurs.
+  BoolColumn get chatPrivacyMode =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get chatBlurPreviews =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get chatBlurIdentities =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get chatBlurMessages =>
+      boolean().withDefault(const Constant(true))();
+
   /// Whether local tools (an AI assistant's MCP server) may send chat
   /// messages through this app's session. Off by default.
   BoolColumn get chatLocalApi => boolean().withDefault(const Constant(false))();
@@ -606,7 +616,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 61;
+  int get schemaVersion => 62;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -936,6 +946,18 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 61 && !await _hasColumn('settings', 'chat_local_api')) {
         await m.addColumn(settings, settings.chatLocalApi);
+      }
+      if (from < 62) {
+        for (final (name, column) in [
+          ('chat_privacy_mode', settings.chatPrivacyMode),
+          ('chat_blur_previews', settings.chatBlurPreviews),
+          ('chat_blur_identities', settings.chatBlurIdentities),
+          ('chat_blur_messages', settings.chatBlurMessages),
+        ]) {
+          if (!await _hasColumn('settings', name)) {
+            await m.addColumn(settings, column);
+          }
+        }
       }
     },
   );

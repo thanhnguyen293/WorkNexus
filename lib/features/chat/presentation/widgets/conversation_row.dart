@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/privacy_blur.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
@@ -64,7 +65,11 @@ class ConversationRow extends ConsumerWidget {
                 chat.gid,
       ),
     );
-    return _RevealWhenHighlighted(highlighted: highlighted, child: row);
+    // Pointing anywhere on the row shows all of it while it is blurred.
+    return _RevealWhenHighlighted(
+      highlighted: highlighted,
+      child: PrivacyRevealRegion(child: row),
+    );
   }
 }
 

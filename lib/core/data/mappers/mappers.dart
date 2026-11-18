@@ -17,6 +17,7 @@ import '../../domain/value_objects/provider_type.dart';
 import '../../domain/value_objects/unified_status.dart';
 import '../../settings/app_settings.dart';
 import '../../settings/chat_appearance.dart';
+import '../../settings/chat_privacy.dart';
 import '../../settings/pinned_execution.dart';
 import '../../theme/app_palette.dart';
 
@@ -252,6 +253,12 @@ AppSettings appSettingsFromRow(SettingRow r) => AppSettings(
   chatNotifications: r.chatNotifications,
   chatNotifyWhileViewing: r.chatNotifyWhileViewing,
   chatSendTypingStatus: r.chatSendTypingStatus,
+  chatPrivacy: ChatPrivacy(
+    enabled: r.chatPrivacyMode,
+    blurPreviews: r.chatBlurPreviews,
+    blurIdentities: r.chatBlurIdentities,
+    blurMessages: r.chatBlurMessages,
+  ),
   chatLocalApi: r.chatLocalApi,
   chatReactions: r.chatReactions,
   chatCacheLimitMb: r.chatCacheLimitMb,
@@ -292,6 +299,10 @@ SettingsCompanion appSettingsToCompanion(AppSettings s) => SettingsCompanion(
   chatNotifications: Value(s.chatNotifications),
   chatNotifyWhileViewing: Value(s.chatNotifyWhileViewing),
   chatSendTypingStatus: Value(s.chatSendTypingStatus),
+  chatPrivacyMode: Value(s.chatPrivacy.enabled),
+  chatBlurPreviews: Value(s.chatPrivacy.blurPreviews),
+  chatBlurIdentities: Value(s.chatPrivacy.blurIdentities),
+  chatBlurMessages: Value(s.chatPrivacy.blurMessages),
   chatLocalApi: Value(s.chatLocalApi),
   chatReactions: Value(s.chatReactions),
   chatCacheLimitMb: Value(s.chatCacheLimitMb),

@@ -6,6 +6,7 @@ import '../theme/app_radii.dart';
 import '../theme/fonts.dart';
 import '../util/translation_languages.dart';
 import 'chat_appearance.dart';
+import 'chat_privacy.dart';
 import 'pinned_execution.dart';
 
 /// How the ticket detail panel arranges its body.
@@ -67,6 +68,7 @@ class AppSettings {
     this.chatNotifications = true,
     this.chatNotifyWhileViewing = true,
     this.chatSendTypingStatus = true,
+    this.chatPrivacy = const ChatPrivacy(),
     this.chatLocalApi = false,
     this.chatReactions = false,
     this.chatCacheLimitMb = 2048,
@@ -159,6 +161,9 @@ class AppSettings {
   /// Tell chat peers while the user is typing to them.
   final bool chatSendTypingStatus;
 
+  /// Blurring chats on screen; see [ChatPrivacy].
+  final ChatPrivacy chatPrivacy;
+
   /// Let local tools (an AI assistant's MCP server) send chat messages
   /// through this app's session, over a localhost endpoint.
   final bool chatLocalApi;
@@ -216,6 +221,7 @@ class AppSettings {
     bool? chatNotifications,
     bool? chatNotifyWhileViewing,
     bool? chatSendTypingStatus,
+    ChatPrivacy? chatPrivacy,
     bool? chatLocalApi,
     bool? chatReactions,
     int? chatCacheLimitMb,
@@ -257,6 +263,7 @@ class AppSettings {
       chatNotifyWhileViewing:
           chatNotifyWhileViewing ?? this.chatNotifyWhileViewing,
       chatSendTypingStatus: chatSendTypingStatus ?? this.chatSendTypingStatus,
+      chatPrivacy: chatPrivacy ?? this.chatPrivacy,
       chatLocalApi: chatLocalApi ?? this.chatLocalApi,
       chatReactions: chatReactions ?? this.chatReactions,
       chatCacheLimitMb: chatCacheLimitMb ?? this.chatCacheLimitMb,
@@ -360,6 +367,7 @@ class AppSettingsController extends Notifier<AppSettings> {
       _set(state.copyWith(chatNotifyWhileViewing: on));
   void setChatSendTypingStatus(bool on) =>
       _set(state.copyWith(chatSendTypingStatus: on));
+  void setChatPrivacy(ChatPrivacy p) => _set(state.copyWith(chatPrivacy: p));
   void setChatLocalApi(bool on) => _set(state.copyWith(chatLocalApi: on));
   void setChatReactions(bool on) => _set(state.copyWith(chatReactions: on));
   void setChatCacheLimitMb(int mb) =>
