@@ -24,7 +24,6 @@ class QuickSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final s = context.spacing;
-    final radius = BorderRadius.circular(context.radii.lg);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -37,24 +36,39 @@ class QuickSettingsSection extends StatelessWidget {
             ),
           ),
         ),
-        Material(
-          color: c.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: radius,
-            side: context.hairlineSide,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                if (i > 0) Divider(height: 1, thickness: 1, color: c.border),
-                children[i],
-              ],
-            ],
-          ),
-        ),
+        QuickSettingsCard(children: children),
       ],
+    );
+  }
+}
+
+/// The card of a [QuickSettingsSection] without its heading: rows split by
+/// hairlines, each row's hover clipped to the card's rounded corners. Also
+/// for a few settings inside a dialog.
+class QuickSettingsCard extends StatelessWidget {
+  const QuickSettingsCard({required this.children, super.key});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        side: context.hairlineSide,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: c.border),
+            children[i],
+          ],
+        ],
+      ),
     );
   }
 }

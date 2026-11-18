@@ -122,6 +122,29 @@ class _FakeChatRepository implements ChatRepository {
   }) async => const Ok(null);
 
   @override
+  Future<Result<void>> renameGroupChat(String a, String c, String n) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> dismissGroupChat(String a, String c) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> leaveGroupChat(String a, String c) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> addGroupMembers(String a, String c, List<int> u) async =>
+      const Ok(null);
+
+  @override
+  Future<Result<void>> removeGroupMembers(
+    String a,
+    String c,
+    List<int> u,
+  ) async => const Ok(null);
+
+  @override
   Future<Result<void>> setMyAvatar(
     String a,
     Uint8List image, {
@@ -136,7 +159,39 @@ class _FakeChatRepository implements ChatRepository {
     String a, {
     required String name,
     required List<int> memberIds,
+    bool isPublic = false,
   }) async => const Ok('new');
+
+  @override
+  Future<Result<void>> setChatCategory(
+    String a,
+    List<String> g,
+    String c,
+  ) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setGroupSettings(
+    String a,
+    String c, {
+    required bool isPublic,
+    required bool adminInvite,
+    required String committers,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> setGroupAdmins(
+    String a,
+    String c,
+    List<int> u, {
+    required bool admin,
+  }) async => const Ok(null);
+
+  @override
+  Future<Result<void>> transferGroupOwnership(
+    String a,
+    String c,
+    int u,
+  ) async => const Ok(null);
 
   @override
   Future<Result<Duration>> videoDuration(String a, MessageContent v) async =>

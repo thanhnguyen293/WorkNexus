@@ -16,6 +16,9 @@ const _chat = ChatConversationRow(
   muted: false,
   adminsJson: '[]',
   committers: '',
+  category: '',
+  adminInvite: false,
+  isPublic: false,
 );
 
 ChatMessageRow _last(int sender) => ChatMessageRow(

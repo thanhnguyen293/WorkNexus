@@ -12,6 +12,7 @@ import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
+import '../providers/chat_category_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_account_picker.dart';
 import 'chat_labels.dart';
@@ -47,13 +48,13 @@ class ConversationListPane extends ConsumerWidget {
         ref.watch(chatUsersProvider(accountId)).asData?.value ??
         const <int, ChatUser>{};
     final query = ref.watch(chatSearchProvider).trim().toLowerCase();
-    final tab = ref.watch(chatListTabProvider);
+    final filter = ref.watch(chatListFilterProvider);
 
     final visible =
         [
               // `value`: a failed refresh keeps the chats already listed.
               for (final chat in chatsAsync.value ?? const <ChatConversation>[])
-                if (!chat.hidden && !chat.archived && tab.matches(chat))
+                if (filter.matches(chat))
                   (chat: chat, title: chatTitle(context, chat, users)),
             ]
             .where(

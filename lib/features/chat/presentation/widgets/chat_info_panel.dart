@@ -7,17 +7,19 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/privacy_mask.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/value_objects/chat_presence.dart';
 import '../../domain/value_objects/chat_privacy_part.dart';
+import '../providers/chat_group_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_detail_row.dart';
-import 'chat_group_avatar_dialog.dart';
+import 'chat_group_actions.dart';
+import 'chat_group_edit_controls.dart';
+import 'chat_group_settings_dialog.dart';
 import 'chat_info_files_section.dart';
 import 'chat_info_panel_link.dart';
 import 'chat_info_storage_card.dart';
@@ -164,36 +166,27 @@ class ChatInfoPanel extends ConsumerWidget {
                   icon: oneToOne ? null : LucideIcons.users300,
                   diameter: s.xl6 * 2,
                 ),
-                child: ChatAvatar(
-                  name: title,
-                  imageUrl: avatar.imageUrl,
-                  label: avatar.label,
-                  background: avatar.background,
-                  icon: avatar.icon,
-                  presence: withPeer
-                      ? chatPresenceOf(users, chat.peerUserId)
-                      : null,
-                  verified: withPeer
-                      ? chatVerifiedBadge(context, users, chat.peerUserId)
-                      : null,
-                  diameter: s.xl6 * 2,
+                child: ChatGroupAvatarEditor(
+                  thread: thread,
+                  chat: chat,
+                  title: title,
+                  child: ChatAvatar(
+                    name: title,
+                    imageUrl: avatar.imageUrl,
+                    label: avatar.label,
+                    background: avatar.background,
+                    icon: avatar.icon,
+                    presence: withPeer
+                        ? chatPresenceOf(users, chat.peerUserId)
+                        : null,
+                    verified: withPeer
+                        ? chatVerifiedBadge(context, users, chat.peerUserId)
+                        : null,
+                    diameter: s.xl6 * 2,
+                  ),
                 ),
               ),
             ),
-            if (!oneToOne && ref.watch(chatCanPinProvider(thread)))
-              Center(
-                child: AppButton.textNeutral(
-                  size: AppButtonSize.extraSmall,
-                  icon: LucideIcons.camera300,
-                  onPressed: () => ChatGroupAvatarDialog.show(
-                    context,
-                    thread: thread,
-                    chat: chat,
-                    title: title,
-                  ),
-                  child: Text(l.chatChangeGroupAvatar),
-                ),
-              ),
             SizedBox(height: s.xl),
             ChatPrivacyMask(
               part: ChatPrivacyPart.identity,
@@ -202,10 +195,14 @@ class ChatInfoPanel extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: titleStyle,
               ),
-              child: SelectableText(
-                title,
-                textAlign: TextAlign.center,
-                style: titleStyle,
+              child: ChatGroupTitleEditor(
+                thread: thread,
+                chat: chat,
+                child: SelectableText(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: titleStyle,
+                ),
               ),
             ),
             if (subtitle != null)
@@ -263,8 +260,26 @@ class ChatInfoPanel extends ConsumerWidget {
                   infoRoom: ChatLayoutScope.of(context).infoRoom,
                 ),
               ),
+            if (ref.watch(chatGroupRightsProvider(thread)).editSettings)
+              ChatInfoPanelLink(
+                icon: LucideIcons.settings2300,
+                label: l.chatGroupSettings,
+                count: null,
+                onTap: () => ChatGroupSettingsDialog.show(
+                  context,
+                  thread: thread,
+                  chat: chat,
+                ),
+              ),
             ChatInfoFilesSection(thread: thread),
             ChatInfoStorageCard(thread: thread),
+            if (!oneToOne)
+              ChatGroupExitButton(
+                thread: thread,
+                chat: chat,
+                title: title,
+                onExited: onClose,
+              ),
           ],
         ),
       ),

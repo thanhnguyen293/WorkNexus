@@ -17,6 +17,8 @@ class ChatTabChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.unread = 0,
+    this.icon,
+    this.onSecondaryTapUp,
   });
 
   final String label;
@@ -24,32 +26,51 @@ class ChatTabChip extends StatelessWidget {
   final VoidCallback onTap;
   final int unread;
 
+  /// Before the label (a category chip's folder).
+  final IconData? icon;
+
+  /// Right-click: the chip's own menu, if it has one.
+  final GestureTapUpCallback? onSecondaryTapUp;
+
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return HoverSurface(
-      onTap: onTap,
-      selected: selected,
-      height: context.sizes.controlSm,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
-      color: selected ? c.selectionFill : null,
-      borderRadius: BorderRadius.circular(context.radii.md),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: context.typography.secondary.copyWith(
-              color: selected ? c.accent : c.textSecondary,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+    // Its label's width wherever it sits: `alignment` would otherwise
+    // stretch it across a Wrap or a dialog.
+    return IntrinsicWidth(
+      child: HoverSurface(
+        onTap: onTap,
+        onSecondaryTapUp: onSecondaryTapUp,
+        selected: selected,
+        height: context.sizes.controlSm,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: context.spacing.lg),
+        color: selected ? c.selectionFill : null,
+        borderRadius: BorderRadius.circular(context.radii.md),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon case final icon?) ...[
+              Icon(
+                icon,
+                size: context.sizes.iconMd,
+                color: selected ? c.accent : c.textSecondary,
+              ),
+              SizedBox(width: context.spacing.sm),
+            ],
+            Text(
+              label,
+              style: context.typography.secondary.copyWith(
+                color: selected ? c.accent : c.textSecondary,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              ),
             ),
-          ),
-          if (unread > 0) ...[
-            SizedBox(width: context.spacing.sm),
-            UnreadBadge(count: unread),
+            if (unread > 0) ...[
+              SizedBox(width: context.spacing.sm),
+              UnreadBadge(count: unread),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

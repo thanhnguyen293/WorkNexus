@@ -176,9 +176,9 @@ class ChatAvatar extends StatelessWidget {
 /// How strongly an initials avatar is tinted with its hue.
 const double _kInitialsTint = 0.22;
 
-/// The avatar hue for [name]: one of the theme's semantic colours, picked by
-/// a stable hash of the name (String.hashCode can differ between runs).
-Color _avatarHue(AppColors c, String name) {
+/// The hue for [name] (an avatar's, a category tag's): one of the theme's
+/// semantic colours, picked by a stable hash of the name (String.hashCode can differ between runs).
+Color chatNameHue(AppColors c, String name) {
   final hues = [c.accent, c.success, c.warning, c.info, c.caution, c.error];
   var hash = 0;
   for (final unit in name.codeUnits) {
@@ -238,7 +238,7 @@ class _Initials extends StatelessWidget {
     // A hue of its own per name (stable across launches), so an avatar is
     // told apart from its neighbours and from the selected row's tint.
     // Opaque: a tinted fill would let the chat wallpaper show through.
-    final hue = _avatarHue(c, name);
+    final hue = chatNameHue(c, name);
     final fill =
         background ??
         Color.alphaBlend(hue.withValues(alpha: _kInitialsTint), c.surface);

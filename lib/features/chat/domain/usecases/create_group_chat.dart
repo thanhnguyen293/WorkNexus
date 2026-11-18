@@ -13,6 +13,7 @@ class CreateGroupChat {
     required String accountId,
     required String name,
     required List<int> memberIds,
+    bool isPublic = false,
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) {
@@ -25,6 +26,7 @@ class CreateGroupChat {
       accountId,
       name: trimmed,
       memberIds: memberIds.toSet().toList(),
+      isPublic: isPublic,
     );
   }
 }

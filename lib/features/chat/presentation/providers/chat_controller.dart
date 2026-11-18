@@ -9,7 +9,6 @@ import '../../domain/usecases/build_reply_thread.dart';
 import '../../domain/usecases/can_send_to_chat.dart';
 import '../../domain/usecases/connect_chat.dart';
 import '../../domain/usecases/create_group_chat.dart';
-
 import '../../domain/usecases/fetch_chat_messages.dart';
 import '../../domain/usecases/find_linked_ticket.dart';
 import '../../domain/usecases/forward_chat_message.dart';
@@ -134,10 +133,12 @@ class ChatController {
     String accountId, {
     required String name,
     required List<int> memberIds,
+    bool isPublic = false,
   }) => CreateGroupChat(_repository)(
     accountId: accountId,
     name: name,
     memberIds: memberIds,
+    isPublic: isPublic,
   );
 
   /// Sets a group's picture (pass-through; CLAUDE.md 2.4).

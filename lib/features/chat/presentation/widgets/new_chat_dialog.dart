@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../core/widgets/app_input_decoration.dart';
+import '../../../../core/widgets/quick_settings_parts.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
@@ -39,6 +40,9 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
   final _name = TextEditingController();
   final _selected = <int>[];
   bool _busy = false;
+
+  /// The group being made is public: anyone may find and join it.
+  bool _public = false;
 
   /// The directory load's outcome; null while it runs.
   Result<void>? _directory;
@@ -80,6 +84,7 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
             id,
             name: _name.text.trim().isEmpty ? _defaultName(users) : _name.text,
             memberIds: _selected,
+            isPublic: _public,
           );
     if (!mounted) return;
     switch (result) {
@@ -167,6 +172,17 @@ class _NewChatDialogState extends ConsumerState<NewChatDialog> {
                     hint: '${l.chatGroupName} · ${_defaultName(users)}',
                     prefixIcon: LucideIcons.users300,
                   ),
+                ),
+                SizedBox(height: s.md),
+                QuickSettingsCard(
+                  children: [
+                    QuickSettingsSwitchField(
+                      label: l.chatPublicGroup,
+                      hint: l.chatPublicGroupHint,
+                      value: _public,
+                      onChanged: (v) => setState(() => _public = v),
+                    ),
+                  ],
                 ),
                 SizedBox(height: s.xl),
               ],

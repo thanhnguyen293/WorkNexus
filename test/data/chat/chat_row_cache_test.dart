@@ -33,6 +33,9 @@ ChatConversationRow _chat({String name = 'Team'}) => ChatConversationRow(
   muted: false,
   adminsJson: '[]',
   committers: '',
+  category: '',
+  adminInvite: false,
+  isPublic: false,
 );
 
 void main() {

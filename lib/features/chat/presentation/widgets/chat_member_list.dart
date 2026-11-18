@@ -10,11 +10,13 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/usecases/order_chat_roles.dart';
 import '../providers/chat_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_labels.dart';
+import 'chat_member_menu_button.dart';
 import 'chat_role_tabs.dart';
 import 'chat_side_panel_frame.dart';
 import 'chat_user_profile_dialog.dart';
@@ -26,12 +28,17 @@ class ChatMemberList extends ConsumerStatefulWidget {
     super.key,
     required this.chat,
     required this.users,
+    this.conversation,
     this.ownerAccount,
   });
 
   final ChatThreadKey chat;
   final Map<int, ChatUser> users;
   final String? ownerAccount;
+
+  /// The group: marks its admins and, for its owner, offers each member's
+  /// actions.
+  final ChatConversation? conversation;
 
   @override
   ConsumerState<ChatMemberList> createState() => _ChatMemberListState();
@@ -50,6 +57,7 @@ class _ChatMemberListState extends ConsumerState<ChatMemberList> {
     final s = context.spacing;
     final roleNames =
         ref.watch(chatRoleNamesProvider(chat.accountId)).value ?? const {};
+    final self = ref.watch(chatSelfUserIdProvider(chat.accountId)).value;
     // One height for every row (a medium avatar and its padding).
     final rowHeight = s.xl6 * 0.9 + s.sm * 2;
     return switch (ref.watch(chatMembersProvider(chat))) {
@@ -96,6 +104,8 @@ class _ChatMemberListState extends ConsumerState<ChatMemberList> {
                     id: shown[i],
                     owner: _isOwner(shown[i]),
                     roleNames: roleNames,
+                    group: widget.conversation,
+                    self: self,
                   ),
                 );
               },
@@ -128,6 +138,8 @@ class _MemberRow extends StatelessWidget {
     required this.id,
     required this.owner,
     required this.roleNames,
+    required this.group,
+    required this.self,
   });
 
   final ChatThreadKey chat;
@@ -135,6 +147,9 @@ class _MemberRow extends StatelessWidget {
   final int id;
   final bool owner;
   final Map<String, String> roleNames;
+
+  final ChatConversation? group;
+  final int? self;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +204,19 @@ class _MemberRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (owner) TintedPill(color: c.accent, label: l.chatOwner),
+            if (owner)
+              TintedPill(color: c.accent, label: l.chatOwner)
+            else if (group?.adminIds.contains(id) ?? false)
+              TintedPill(color: c.info, label: l.chatAdminBadge),
+            if (group case final group? when !owner && id != self) ...[
+              SizedBox(width: s.xs),
+              ChatMemberMenuButton(
+                thread: chat,
+                chat: group,
+                userId: id,
+                name: chatUserName(context, users, id),
+              ),
+            ],
           ],
         ),
       ),
