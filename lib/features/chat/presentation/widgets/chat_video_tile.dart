@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:video_player/video_player.dart';
 
 import '../../../../core/error/result.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_snack.dart';
@@ -17,6 +15,7 @@ import 'chat_snack.dart';
 import 'chat_video_dialog.dart';
 import 'chat_video_dock_watcher.dart';
 import 'chat_video_overlays.dart';
+import 'chat_video_picture.dart';
 import 'chat_video_tile_parts.dart';
 
 /// A video as a 16:9 frame: its preview image (when one can be made), the
@@ -170,7 +169,6 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     final s = context.spacing;
     final gid = widget.uploadGid;
     // Played here only while docked: floating, the mini player shows it.
@@ -181,20 +179,6 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
             !playback.floating
         ? playback.player
         : null;
-    final frame = switch (ref.watch(
-      gid == null
-          ? chatVideoThumbnailProvider((
-              accountId: widget.accountId,
-              video: widget.file,
-            ))
-          : chatPendingVideoThumbnailProvider((
-              gid: gid,
-              name: widget.file.name,
-            )),
-    )) {
-      AsyncData(value: Ok(:final value)) => value,
-      _ => null,
-    };
     // Nothing on the server to measure or download yet.
     final duration = gid != null
         ? null
@@ -215,17 +199,12 @@ class _ChatVideoTileState extends ConsumerState<ChatVideoTile> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Black until a frame is ready, as a player would be.
-            ColoredBox(color: c.scrim),
-            if (player != null)
-              Center(
-                child: AspectRatio(
-                  aspectRatio: player.value.aspectRatio,
-                  child: VideoPlayer(player),
-                ),
-              )
-            else if (frame != null)
-              Image.memory(frame, fit: BoxFit.cover),
+            ChatVideoPicture(
+              accountId: widget.accountId,
+              file: widget.file,
+              uploadGid: gid,
+              player: player,
+            ),
             // The whole frame plays / pauses (a sent video only).
             if (gid == null)
               Material(
