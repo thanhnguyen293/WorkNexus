@@ -70,7 +70,6 @@ class MessageListItem extends ConsumerWidget {
     this.firstOfRun = true,
     this.lastOfRun = true,
     this.summary,
-    this.anchor,
     this.arriving = false,
   });
 
@@ -86,9 +85,6 @@ class MessageListItem extends ConsumerWidget {
 
   /// Set when the message is the root of a reply thread.
   final ThreadSummary? summary;
-
-  /// Set on the row a jump is scrolling to, so it can be found once built.
-  final GlobalKey? anchor;
 
   /// The message just arrived: its row opens and fades in (see
   /// [AppEntrance]); read only when the row is first built.
@@ -111,17 +107,14 @@ class MessageListItem extends ConsumerWidget {
     }
     final message = item as ChatMessage;
     if (message.isNotice) {
-      return KeyedSubtree(
-        key: anchor,
-        child: _Highlight(
-          thread: thread,
-          serverId: message.serverId,
-          gapAbove: style.groupGap,
-          gapBelow: style.groupGap,
-          child: Padding(
-            padding: side,
-            child: ChatNotice(style: style, message: message),
-          ),
+      return _Highlight(
+        thread: thread,
+        serverId: message.serverId,
+        gapAbove: style.groupGap,
+        gapBelow: style.groupGap,
+        child: Padding(
+          padding: side,
+          child: ChatNotice(style: style, message: message),
         ),
       );
     }
@@ -143,19 +136,16 @@ class MessageListItem extends ConsumerWidget {
                   .state =
               m,
     );
-    return KeyedSubtree(
-      key: anchor,
-      child: _Highlight(
-        thread: t,
-        serverId: message.serverId,
-        // The bubble's own space above it, and the next one's below it.
-        gapAbove: firstOfRun ? style.groupGap : style.runGap,
-        gapBelow: lastOfRun ? style.groupGap : style.runGap,
-        child: AppEntrance(
-          animate: arriving,
-          grow: true,
-          child: Padding(padding: side, child: bubble),
-        ),
+    return _Highlight(
+      thread: t,
+      serverId: message.serverId,
+      // The bubble's own space above it, and the next one's below it.
+      gapAbove: firstOfRun ? style.groupGap : style.runGap,
+      gapBelow: lastOfRun ? style.groupGap : style.runGap,
+      child: AppEntrance(
+        animate: arriving,
+        grow: true,
+        child: Padding(padding: side, child: bubble),
       ),
     );
   }

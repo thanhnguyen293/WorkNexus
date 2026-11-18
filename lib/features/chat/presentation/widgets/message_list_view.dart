@@ -12,6 +12,7 @@ import 'chat_typing_bubble.dart';
 import 'list_extent_estimate.dart';
 import 'list_row_widget_cache.dart';
 import 'message_jump.dart';
+import 'message_jump_sliver.dart';
 import 'message_list_item.dart';
 import 'steady_extent_child_delegate.dart';
 
@@ -106,7 +107,6 @@ class MessageListView extends StatelessWidget {
       );
       final last = !chatSameRun(i > 0 ? items[i - 1] : null, item);
       final summary = summaries[item.serverId];
-      final anchor = item.gid == jump.targetGid ? jump.anchor : null;
       final arriving = arrivals.remove(item.gid);
       return rowCache.row(
         item.gid,
@@ -115,7 +115,6 @@ class MessageListView extends StatelessWidget {
           first,
           last,
           summary,
-          anchor,
           arriving,
           style,
           users,
@@ -132,7 +131,6 @@ class MessageListView extends StatelessWidget {
           firstOfRun: first,
           lastOfRun: last,
           summary: summary,
-          anchor: anchor,
           arriving: arriving,
         ),
       );
@@ -152,20 +150,30 @@ class MessageListView extends StatelessWidget {
         onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
-          child: ListView.custom(
+          child: CustomScrollView(
             scrollCacheExtent: const ScrollCacheExtent.pixels(_kCacheExtent),
             controller: scroll,
             reverse: true,
-            // Rows add their own side margins, so a highlighted row's tint
-            // spans the full width.
-            padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
-            childrenDelegate: SteadyExtentChildDelegate(
-              row,
-              estimate: extent,
-              childCount: items.length + 1,
-              findChildIndexCallback: (key) =>
-                  key is ValueKey<String> ? rows[key.value] : null,
-            ),
+            slivers: [
+              SliverPadding(
+                // Rows add their own side margins, so a highlighted row's
+                // tint spans the full width.
+                padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
+                sliver: MessageJumpSliver(
+                  jump: jump,
+                  rows: items,
+                  sliver: SliverList(
+                    delegate: SteadyExtentChildDelegate(
+                      row,
+                      estimate: extent,
+                      childCount: items.length + 1,
+                      findChildIndexCallback: (key) =>
+                          key is ValueKey<String> ? rows[key.value] : null,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -20,11 +20,9 @@ import 'message_list_paging.dart';
 import 'message_list_view.dart';
 import 'scroll_to_latest_button.dart';
 
-/// The messages of one chat, newest at the bottom. Earlier messages load on
-/// their own as the user scrolls near the top — and, in a window jumped to
-/// far back, later ones near the bottom. New messages are marked read once
-/// they are on screen: right away at the bottom, or when the user scrolls
-/// back down from older ones.
+/// The messages of one chat, newest at the bottom. Earlier messages load as
+/// the user nears the top (in a window jumped to far back, later ones near
+/// the bottom). New ones are marked read once on screen.
 class MessageList extends ConsumerStatefulWidget {
   const MessageList({
     super.key,
@@ -80,8 +78,12 @@ class _MessageListState extends ConsumerState<MessageList>
   List<Object> get rows => _items;
 
   @override
+  ListExtentEstimate get extent => _extent;
+
+  @override
   void dispose() {
     _scroll.dispose();
+    _jump.dispose();
     super.dispose();
   }
 
@@ -89,6 +91,7 @@ class _MessageListState extends ConsumerState<MessageList>
   void didUpdateWidget(MessageList oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.thread != widget.thread) {
+      _jump.release();
       resetPaging();
       _away = false;
       _unseen = 0;
@@ -115,8 +118,10 @@ class _MessageListState extends ConsumerState<MessageList>
         if (!away) _markReadIfSeen();
       });
     }
+    // Not while a jump looks for its row: it is about to move the list.
     final idle =
         !mouseDown &&
+        !_jump.seeking &&
         !loadFailed &&
         !ref.read(chatMessagesProvider(widget.thread)).isLoading;
     if (idle &&
@@ -160,8 +165,7 @@ class _MessageListState extends ConsumerState<MessageList>
           ?.unreadCount ??
       0;
 
-  /// Marks the chat read while its newest messages are on screen — not while
-  /// the user reads older ones, nor in a window jumped far back.
+  /// Marks the chat read while its newest messages are on screen.
   void _markReadIfSeen() {
     if (_away || window is AroundWindow) return;
     final t = widget.thread;
@@ -171,14 +175,12 @@ class _MessageListState extends ConsumerState<MessageList>
     ref.read(chatControllerProvider).markRead(t.accountId, t.chatGid);
   }
 
-  /// Newer messages at the bottom: count them while the user reads older
-  /// ones, or follow them down when the user sent one (from any device).
-  /// Not in a jump window: rows it adds at the bottom are older history.
+  /// Newer messages: counted while the user reads older ones, followed down
+  /// when the user sent one. Not in a jump window (that is older history).
   void _onMessages(List<ChatMessage> before, List<ChatMessage> after) {
     onShownChanged(before, after);
-    // Scroll events seen while these were loading were ignored; with rows
-    // that may not change the list's height (a jump window replacing the
-    // newest page), none may follow — so look at where the list is now.
+    // Scroll events seen while these loaded were ignored, and rows of the
+    // same height (a jump window) bring none: look at the list now.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _scroll.hasClients) _onScrollMetrics(_scroll.position);
     });
@@ -211,9 +213,8 @@ class _MessageListState extends ConsumerState<MessageList>
       (previous, next) =>
           _onMessages(previous?.value ?? const [], next.value ?? const []),
     );
-    // Not from the message rows: a full live page keeps its length as new
-    // ones push old ones out, and the chat's last-message index moves only
-    // after the rows are stored — so unread is known here, not there.
+    // Not from the rows: a full live page keeps its length as new ones push
+    // old ones out — unread is known here, not there.
     ref.listen(chatConversationsProvider(t.accountId).select(_unreadOf), (
       _,
       unread,
@@ -227,7 +228,7 @@ class _MessageListState extends ConsumerState<MessageList>
         (_) => MessageJump.take(chatJumpRequestProvider(t), ref, jumpTo),
       );
     }
-    // Kept alive for [_onMessages], which reads it.
+    // Kept alive for [_onMessages]. A jump window: nobody types into it.
     ref.watch(chatSelfUserIdProvider(t.accountId));
     final inWindow = ref.watch(chatMessageWindowProvider(t)) is AroundWindow;
     final messagesAsync = ref.watch(chatMessagesProvider(t));
@@ -249,7 +250,6 @@ class _MessageListState extends ConsumerState<MessageList>
     }
     final summaries = ref.watch(chatThreadSummariesProvider(t));
     final style = ChatStyle.watch(ref, context);
-    // A jump window is older history: nobody types into it.
     final items = _items = [
       if (!inWindow) const ChatTypingItem(),
       ...chatListItems(messages, style.separatorGap),
