@@ -15,6 +15,7 @@ import 'package:work_nexus/core/navigation/navigation_providers.dart';
 import 'package:work_nexus/core/theme/app_motion.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/app_entrance.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_cache_usage.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
@@ -33,6 +34,7 @@ import 'package:work_nexus/features/chat/presentation/providers/chat_staged_file
 import 'package:work_nexus/features/chat/presentation/providers/chat_trust_preview.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/attachment_preview_dialog.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_composer.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_controller.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_files_panel.dart';
@@ -715,6 +717,25 @@ void main() {
       reason: 'not built and painted again on every switch',
     );
     expect(tester.state(find.byType(MessageList)), isNot(same(list)));
+  });
+
+  testWidgets('switching chats fades the messages in, not the header or '
+      'the input', (tester) async {
+    await pumpChat(tester);
+    await openTeamChat(tester);
+    await tester.tap(find.text('Dyno').first);
+    // Mid-way through the switch.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    bool fading(Finder f) => find
+        .ancestor(of: f, matching: find.byType(AppEntrance))
+        .evaluate()
+        .isNotEmpty;
+    expect(fading(find.byType(MessageList)), isTrue);
+    expect(fading(find.byType(ChatThreadHeader)), isFalse);
+    expect(fading(find.byType(ChatComposer)), isFalse);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('the header bell mutes this chat, not every notification', (

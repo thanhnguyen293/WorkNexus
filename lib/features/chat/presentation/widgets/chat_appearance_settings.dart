@@ -30,8 +30,8 @@ String chatAppearanceLabel(AppL10n l, ChatAppearance a) => switch (a) {
 
 /// The chat's look, as a Quick Settings section: a preview card per style,
 /// the wallpaper shared by every style, for the messenger styles whether own
-/// bubbles use the app's accent, whether emoji replies read as reactions,
-/// and whether stickers are suggested over the composer. Picks apply at once.
+/// bubbles use the app's accent, and whether emoji replies read as
+/// reactions. Picks apply at once.
 class ChatAppearanceSettings extends ConsumerWidget {
   const ChatAppearanceSettings({super.key});
 
@@ -39,14 +39,9 @@ class ChatAppearanceSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
     final s = context.spacing;
-    final (current, primary, reactions, stickers) = ref.watch(
+    final (current, primary, reactions) = ref.watch(
       appSettingsProvider.select(
-        (s) => (
-          s.chatAppearance,
-          s.chatPrimaryBubbles,
-          s.chatReactions,
-          s.chatStickerSuggestions,
-        ),
+        (s) => (s.chatAppearance, s.chatPrimaryBubbles, s.chatReactions),
       ),
     );
     final settings = ref.read(appSettingsProvider.notifier);
@@ -99,12 +94,6 @@ class ChatAppearanceSettings extends ConsumerWidget {
           hint: l.chatReactionsHint,
           value: reactions,
           onChanged: settings.setChatReactions,
-        ),
-        QuickSettingsSwitchField(
-          label: l.chatStickerSuggestionsSetting,
-          hint: l.chatStickerSuggestionsSettingHint,
-          value: stickers,
-          onChanged: settings.setChatStickerSuggestions,
         ),
       ],
     );

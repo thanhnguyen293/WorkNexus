@@ -109,13 +109,16 @@ class _MaskLayer extends StatelessWidget {
     final hidden =
         masked && !(PrivacyRevealRegion.revealedOf(context) ?? false);
     // Dots and text crossfade, both pinned to the start so the text does not
-    // slide while the two widths differ.
+    // slide while the two widths differ. They get the constraints the mask
+    // gets, as they would without it: loosened, a centered title shrinks to
+    // its text and sits at the start.
     return AnimatedSwitcher(
       duration: AppMotion.of(context, AppMotion.base),
       switchInCurve: AppMotion.enter,
       switchOutCurve: AppMotion.exit,
       layoutBuilder: (current, previous) => Stack(
         alignment: AlignmentDirectional.centerStart,
+        fit: StackFit.passthrough,
         children: [...previous, ?current],
       ),
       child: KeyedSubtree(key: ValueKey(hidden), child: hidden ? mask : child),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/app_entrance.dart';
 import '../../../../core/widgets/inline_status.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_connection_status.dart';
@@ -113,9 +112,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 }
 
-/// The open chat over the shared background, fading in as it opens. Watches
-/// which chat is open by itself, so switching chats rebuilds this pane and
-/// not the chat list.
+/// The open chat over the shared background. Watches which chat is open by
+/// itself, so switching chats rebuilds this pane and not the chat list. Only
+/// its messages fade in (see ThreadPane): the header, the input and the
+/// side panel stand still.
 class _OpenChat extends ConsumerWidget {
   const _OpenChat({required this.accountId});
 
@@ -131,12 +131,9 @@ class _OpenChat extends ConsumerWidget {
                 text: AppL10n.of(context).chatSelectConversation,
               ),
             )
-          // Keyed per chat, so each one opened fades in over the background.
-          : AppEntrance(
+          : ThreadPane(
               key: ValueKey('$accountId/$chatGid'),
-              child: ThreadPane(
-                thread: (accountId: accountId, chatGid: chatGid),
-              ),
+              thread: (accountId: accountId, chatGid: chatGid),
             ),
     );
   }
