@@ -8,6 +8,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../config/app_config.dart';
 import '../debug/app_talker.dart';
 
+/// Runs a command to completion; [Process.run] outside tests.
+typedef ProcessRunner =
+    Future<ProcessResult> Function(String executable, List<String> arguments);
+
 /// OS notifications (Notification Center, Windows toasts, freedesktop) so
 /// the rest of the app never imports the plugin. [taps] emits the payload of
 /// a notification the user clicked.
@@ -15,10 +19,21 @@ class DesktopNotifier {
   DesktopNotifier({
     FlutterLocalNotificationsPlugin? plugin,
     BaseCacheManager? imageCache,
+    @visibleForTesting bool? isWindows,
+    @visibleForTesting ProcessRunner? runProcess,
   }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin(),
-       _cache = imageCache ?? DefaultCacheManager();
+       _cache = imageCache ?? DefaultCacheManager(),
+       _isWindows = isWindows ?? (!kIsWeb && Platform.isWindows),
+       _runProcess = runProcess ?? Process.run;
 
   final FlutterLocalNotificationsPlugin _plugin;
+  final bool _isWindows;
+  final ProcessRunner _runProcess;
+
+  /// The name and icon a Windows toast shows beside its text: the ones the
+  /// user gave the app ([useAppName], [useAppIcon]), the build's own otherwise.
+  String _appName = AppConfig.appName;
+  String? _customIconPath;
 
   /// cached_network_image's default cache, so a picture the chat already
   /// showed is not downloaded again.
@@ -52,10 +67,10 @@ class DesktopNotifier {
           // Dock badge of unread chats (AppIconBadge) when it is not given.
           macOS: const DarwinInitializationSettings(),
           windows: WindowsInitializationSettings(
-            appName: AppConfig.appName,
+            appName: _appName,
             appUserModelId: AppConfig.windowsAppId,
             guid: AppConfig.windowsGuid,
-            iconPath: _windowsIconPath(),
+            iconPath: _iconPath(),
           ),
           linux: const LinuxInitializationSettings(defaultActionName: 'Open'),
         ),
@@ -69,6 +84,63 @@ class DesktopNotifier {
     } catch (e, st) {
       appTalker.handle(e, st, 'Notifications: initialize failed');
       return false;
+    }
+  }
+
+  /// Shows [name] on Windows toasts in place of the build's own (null gives
+  /// that back). The plugin registers the app's name and icon once, when it
+  /// starts; a change after that is written to the same registry entry, which
+  /// Windows reads for each toast. macOS and Linux take the name and icon
+  /// from the installed app itself.
+  Future<void> useAppName(String? name) async {
+    if (!_isWindows) return;
+    _appName = name ?? AppConfig.appName;
+    await _refreshRegistration();
+  }
+
+  /// Shows the picture at [iconPath] on Windows toasts in place of the
+  /// bundled icon (null gives that back); see [useAppName].
+  Future<void> useAppIcon(String? iconPath) async {
+    if (!_isWindows) return;
+    _customIconPath = iconPath;
+    await _refreshRegistration();
+  }
+
+  Future<void> _refreshRegistration() async {
+    final ready = _ready;
+    // Not started yet: initializing registers what was just set.
+    if (ready == null || !await ready) return;
+    await _writeRegistration();
+  }
+
+  /// `HKCU\Software\Classes\AppUserModelId\<id>`, the entry the plugin
+  /// fills with the toast's name and icon.
+  Future<void> _writeRegistration() async {
+    const entry =
+        'HKCU\\Software\\Classes\\AppUserModelId\\${AppConfig.windowsAppId}';
+    final icon = _iconPath();
+    final values = {'DisplayName': _appName, 'IconUri': ?icon};
+    for (final MapEntry(key: name, :value) in values.entries) {
+      try {
+        final run = await _runProcess('reg', [
+          'add',
+          entry,
+          '/v',
+          name,
+          '/t',
+          'REG_SZ',
+          '/d',
+          value,
+          '/f',
+        ]);
+        if (run.exitCode != 0) {
+          appTalker.warning(
+            'Notifications: writing $name failed: ${run.stderr}',
+          );
+        }
+      } on Object catch (e, st) {
+        appTalker.handle(e, st, 'Notifications: writing $name failed');
+      }
     }
   }
 
@@ -191,6 +263,17 @@ class DesktopNotifier {
         ],
       ),
     );
+  }
+
+  /// The icon beside the app name on a Windows toast: the user's picture,
+  /// the bundled one otherwise. Windows reads it as a plain path, so it is
+  /// written with backslashes only.
+  String? _iconPath() {
+    final custom = _customIconPath;
+    if (custom != null && File(custom).existsSync()) {
+      return File(custom).absolute.path.replaceAll('/', r'\');
+    }
+    return _windowsIconPath();
   }
 
   /// The bundled app icon, shown beside the app name on a Windows toast; null

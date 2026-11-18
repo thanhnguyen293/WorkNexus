@@ -9,7 +9,8 @@ import '../debug/app_talker.dart';
 import 'app_icon_image.dart';
 
 /// The app's own icon, which the user can replace with a picture of theirs:
-/// the window's (title bar, taskbar button, Alt-Tab) and the tray's. The one
+/// the window's (title bar, taskbar button, Alt-Tab), the tray's and the one
+/// on system notifications. The one
 /// kept — a square PNG and the `.ico` the tray takes — lives in the app's
 /// support folder, so the original can be moved or deleted.
 ///
@@ -20,6 +21,7 @@ class AppIconService {
     Future<Directory> Function()? folder,
     MethodChannel? channel,
     this._setTrayIcon,
+    this._setNotificationIcon,
   }) : _folder = folder ?? _supportFolder,
        _channel = channel ?? const MethodChannel('worknexus/app_icon');
 
@@ -31,6 +33,7 @@ class AppIconService {
   final Future<Directory> Function() _folder;
   final MethodChannel _channel;
   final Future<void> Function(String? iconPath)? _setTrayIcon;
+  final Future<void> Function(String? pngPath)? _setNotificationIcon;
 
   static Future<Directory> _supportFolder() async =>
       Directory('${(await getApplicationSupportDirectory()).path}/app_icon');
@@ -87,8 +90,8 @@ class AppIconService {
     await apply();
   }
 
-  /// Puts the icon in use (the app's own when there is none) on the window
-  /// and the tray. Failing to is a cosmetic loss, never an error.
+  /// Puts the icon in use (the app's own when there is none) on the window,
+  /// the tray and notifications. Failing to is a cosmetic loss, never an error.
   Future<void> apply() async {
     if (!supported) return;
     try {
@@ -107,6 +110,7 @@ class AppIconService {
       await _setTrayIcon?.call(
         png?.path.replaceFirst(RegExp(r'\.png$'), '.ico'),
       );
+      await _setNotificationIcon?.call(png?.path);
     } on Object catch (error, stackTrace) {
       appTalker.handle(error, stackTrace, 'App icon: apply failed');
     }
