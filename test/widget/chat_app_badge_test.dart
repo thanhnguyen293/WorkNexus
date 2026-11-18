@@ -6,6 +6,7 @@ import 'package:work_nexus/core/platform/app_icon_badge.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
+import 'package:work_nexus/features/chat/presentation/providers/mcp_setup_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_app_badge.dart';
 
 class _MockBadge extends Mock implements AppIconBadge {}
@@ -35,6 +36,7 @@ void main() {
           appIconBadgeProvider.overrideWithValue(badge),
           chatBadgeUnreadProvider.overrideWithValue(3),
           chatAutoConnectProvider.overrideWith((ref) {}),
+          mcpScriptRefreshProvider.overrideWith((ref) {}),
         ],
         child: MaterialApp(
           theme: buildAppTheme(
@@ -65,6 +67,7 @@ void main() {
           appIconBadgeProvider.overrideWithValue(badge),
           chatBadgeUnreadProvider.overrideWithValue(0),
           chatAutoConnectProvider.overrideWith((ref) => connects++),
+          mcpScriptRefreshProvider.overrideWith((ref) {}),
         ],
         child: MaterialApp(
           theme: buildAppTheme(

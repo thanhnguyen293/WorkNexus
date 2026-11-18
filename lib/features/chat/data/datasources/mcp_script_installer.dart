@@ -20,15 +20,25 @@ class McpScriptInstaller {
 
   /// The installed script's path. Rewrites it only when this build bundles a
   /// different version, so a tool running it is not disturbed for nothing.
-  Future<String> install() async {
+  Future<String> install() async => _write(await _file());
+
+  /// Brings a copy installed earlier up to this build's version, so AI tools
+  /// registered before an app update run the new server; null (and nothing
+  /// written) when the user never set one up.
+  Future<String?> refresh() async {
+    final file = await _file();
+    return await file.exists() ? _write(file) : null;
+  }
+
+  Future<File> _file() async => File('${(await directory()).path}/$fileName');
+
+  Future<String> _write(File file) async {
     final data = await bundle.load(asset);
     final bytes = data.buffer.asUint8List(
       data.offsetInBytes,
       data.lengthInBytes,
     );
-    final dir = await directory();
-    await dir.create(recursive: true);
-    final file = File('${dir.path}/$fileName');
+    await file.parent.create(recursive: true);
     if (await file.exists() && listEquals(await file.readAsBytes(), bytes)) {
       return file.path;
     }

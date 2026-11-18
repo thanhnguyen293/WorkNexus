@@ -1417,6 +1417,7 @@
   "mcpSetupNodeFound": "Node.js {version} tại {path}",
   "mcpSetupNodeOld": "Node.js {version} quá cũ: MCP server cần bản {min} trở lên.",
   "mcpSetupNodeMissing": "Không tìm thấy Node.js. Cài Node.js {min} trở lên rồi mở lại hướng dẫn này.",
+  "mcpSetupNodeVersionManager": "Node.js này thuộc một phiên bản của trình quản lý phiên bản (nvm, fnm, asdf, …). Nếu đổi sang hoặc gỡ phiên bản đó, công cụ AI sẽ không chạy được server nữa: mở lại hướng dẫn này và đăng ký lại với đường dẫn mới.",
   "mcpSetupGetNode": "Tải Node.js",
   "mcpSetupFailed": "Không chuẩn bị được MCP server",
   "mcpSetupClaudeCode": "Claude Code",

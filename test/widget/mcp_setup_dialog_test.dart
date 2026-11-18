@@ -56,6 +56,21 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Get Node.js'), findsNothing);
+    expect(find.textContaining('version manager'), findsNothing);
+  });
+
+  testWidgets('warns when Node.js comes from a version manager', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const McpSetup(
+        scriptPath: '/s.mjs',
+        nodePath: '/Users/me/.nvm/versions/node/v22.14.0/bin/node',
+        nodeVersion: 'v22.14.0',
+      ),
+    );
+    expect(find.textContaining('version manager'), findsOneWidget);
   });
 
   testWidgets('offers to get Node.js when none is found', (tester) async {

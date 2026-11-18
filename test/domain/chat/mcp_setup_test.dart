@@ -8,6 +8,7 @@ import 'package:work_nexus/features/chat/domain/entities/mcp_setup.dart';
 import 'package:work_nexus/features/chat/domain/repositories/mcp_setup_repository.dart';
 import 'package:work_nexus/features/chat/domain/usecases/build_mcp_client_configs.dart';
 import 'package:work_nexus/features/chat/domain/usecases/prepare_mcp_setup.dart';
+import 'package:work_nexus/features/chat/domain/usecases/refresh_mcp_script.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/mcp_client_config.dart';
 
 class _MockRepo extends Mock implements McpSetupRepository {}
@@ -28,6 +29,46 @@ void main() {
     test('is false without a readable version', () {
       expect(supported(null), isFalse);
       expect(supported('garbage'), isFalse);
+    });
+  });
+
+  group('McpSetup.nodeFromVersionManager', () {
+    bool managed(String? path) =>
+        McpSetup(scriptPath: '/s', nodePath: path).nodeFromVersionManager;
+
+    test('spots one version of nvm, fnm, asdf, mise, nodenv', () {
+      expect(managed('/Users/me/.nvm/versions/node/v22.14.0/bin/node'), isTrue);
+      expect(
+        managed(
+          '/Users/me/.local/share/fnm/node-versions/v22/installation/bin/node',
+        ),
+        isTrue,
+      );
+      expect(
+        managed('/Users/me/.local/state/fnm_multishells/1_2/bin/node'),
+        isTrue,
+      );
+      expect(
+        managed('/Users/me/.asdf/installs/nodejs/22.14.0/bin/node'),
+        isTrue,
+      );
+      expect(
+        managed('/Users/me/.local/share/mise/installs/node/22/bin/node'),
+        isTrue,
+      );
+      expect(managed('/Users/me/.nodenv/versions/22.14.0/bin/node'), isTrue);
+      expect(
+        managed(r'C:\Users\me\AppData\Roaming\nvm\v22.14.0\node.exe'),
+        isTrue,
+      );
+    });
+
+    test('leaves system and Homebrew installs alone', () {
+      expect(managed('/opt/homebrew/bin/node'), isFalse);
+      expect(managed('/usr/local/bin/node'), isFalse);
+      expect(managed(r'C:\Program Files\nodejs\node.exe'), isFalse);
+      expect(managed('/Users/me/.volta/bin/node'), isFalse);
+      expect(managed(null), isFalse);
     });
   });
 
@@ -114,5 +155,13 @@ void main() {
       ).thenAnswer((_) async => const Err(StorageFailure('disk full')));
       expect(await PrepareMcpSetup(repo)(), isA<Err<McpSetup>>());
     });
+  });
+
+  test('RefreshMcpScript passes on what the repository does', () async {
+    final repo = _MockRepo();
+    when(
+      repo.refreshInstalledScript,
+    ).thenAnswer((_) async => const Err(StorageFailure('read-only')));
+    expect(await RefreshMcpScript(repo)(), isA<Err<void>>());
   });
 }

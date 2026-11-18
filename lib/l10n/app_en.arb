@@ -2281,6 +2281,7 @@
   "@mcpSetupNodeOld": {"placeholders": {"version": {"type": "String"}, "min": {"type": "String"}}},
   "mcpSetupNodeMissing": "Node.js was not found. Install Node.js {min} or newer, then open this guide again.",
   "@mcpSetupNodeMissing": {"placeholders": {"min": {"type": "String"}}},
+  "mcpSetupNodeVersionManager": "This Node.js belongs to one version of a version manager (nvm, fnm, asdf, …). If you switch away from or remove that version, the AI tool can no longer start the server: open this guide again and register it with the new path.",
   "mcpSetupGetNode": "Get Node.js",
   "mcpSetupFailed": "Could not prepare the MCP server",
   "mcpSetupClaudeCode": "Claude Code",

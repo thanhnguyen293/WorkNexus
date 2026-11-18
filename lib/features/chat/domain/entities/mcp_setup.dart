@@ -23,8 +23,30 @@ abstract class McpSetup with _$McpSetup {
   static const minNode = (major: 22, minor: 13);
 
   /// Whether [nodeVersion] is [minNode] or newer.
-  bool get nodeSupported {
-    final match = RegExp(r'^v?(\d+)\.(\d+)').firstMatch(nodeVersion ?? '');
+  bool get nodeSupported => supports(nodeVersion);
+
+  /// Whether [nodePath] belongs to one version of a Node.js version manager
+  /// (nvm, fnm, asdf, mise, nodenv, nvm-windows): switching or removing that version
+  /// breaks the registered command, so the guide says to register it again.
+  bool get nodeFromVersionManager {
+    final path = nodePath?.replaceAll(r'\', '/').toLowerCase();
+    if (path == null) return false;
+    return _versionManagerDirs.any(path.contains) ||
+        RegExp(r'/nvm/v\d').hasMatch(path);
+  }
+
+  static const _versionManagerDirs = [
+    '/.nvm/versions/',
+    'fnm_multishells',
+    '/fnm/node-versions/',
+    '/.asdf/installs/',
+    '/mise/installs/',
+    '/.nodenv/versions/',
+  ];
+
+  /// Whether Node.js [version] (`v22.13.0`) is [minNode] or newer.
+  static bool supports(String? version) {
+    final match = RegExp(r'^v?(\d+)\.(\d+)').firstMatch(version ?? '');
     if (match == null) return false;
     final major = int.parse(match[1] ?? '0');
     final minor = int.parse(match[2] ?? '0');
