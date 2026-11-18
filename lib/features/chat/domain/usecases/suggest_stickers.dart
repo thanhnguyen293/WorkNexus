@@ -8,7 +8,8 @@ import 'sticker_matching.dart';
 typedef StickerSuggestions = ({List<ChatSticker> stickers, bool replacesDraft});
 
 /// Suggests stickers for a draft, the way messengers do while you type: the
-/// emoji in it and the words it ends with ([kStickerKeywordEmoji]) pick
+/// emoji in it, the words it ends with ([kStickerKeywordEmoji]) and its
+/// punctuation or emoticons ([kStickerSymbolEmoji]: `?`, `=))`) pick
 /// stickers carrying those emoji; a sticker's own words (`ship it`) pick it
 /// first. Only short drafts get suggestions — a long message is not about to
 /// become a sticker.
@@ -23,14 +24,21 @@ class SuggestStickers {
   StickerSuggestions call(String draft, List<ChatSticker> stickers) {
     final words = StickerMatching.words(draft);
     final typed = StickerMatching.emojiIn(draft);
+    final symbols = StickerMatching.symbolsIn(draft);
     final count = words.isEmpty ? 0 : words.split(' ').length;
-    if ((count == 0 && typed.isEmpty) || count > maxWords) return none;
+    if ((count == 0 && typed.isEmpty && symbols.isEmpty) || count > maxWords) {
+      return none;
+    }
 
     final keys = StickerMatching.keysIn(words, kStickerKeywordEmoji.keys);
     final targets = [
       ...typed,
+      // Typed on its own (`?`, `=))`) it is the point; ending a sentence it
+      // only colours it, after what the words say.
+      if (count == 0) ...symbols,
       for (final key in keys)
         ...StickerMatching.emojiIn(kStickerKeywordEmoji[key]!),
+      if (count > 0) ...symbols,
     ];
     // A sticker named for the very words typed beats any emoji match.
     final bonus = <ChatSticker, int>{};

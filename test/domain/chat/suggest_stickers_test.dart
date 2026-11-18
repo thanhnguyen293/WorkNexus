@@ -26,8 +26,21 @@ final _smile = _sticker('smile', '😊');
 final _ok = _sticker('ok', '👌👍');
 final _heart = _sticker('heart', '❤️');
 final _coder = _sticker('coder', '👨‍💻');
+final _think = _sticker('think', '🤔');
+final _shock = _sticker('shock', '😱😳');
 final _untagged = _sticker('mine', '');
-final _all = [_laugh, _rofl, _thanks, _smile, _ok, _heart, _coder, _untagged];
+final _all = [
+  _laugh,
+  _rofl,
+  _thanks,
+  _smile,
+  _ok,
+  _heart,
+  _coder,
+  _think,
+  _shock,
+  _untagged,
+];
 
 ChatMessage _message(
   String text, {
@@ -86,6 +99,22 @@ void main() {
       expect(suggest('đang code 👨‍💻', _all).stickers.first, _coder);
     });
 
+    test('punctuation and emoticons typed alone pick stickers', () {
+      final question = suggest('???', _all);
+      expect(question.stickers.first, _think);
+      expect(question.replacesDraft, isTrue);
+      expect(suggest('?!', _all).stickers.first, _shock);
+      expect(suggest('=)))', _all).stickers.first, _laugh);
+      expect(suggest('<3', _all).stickers, [_heart]);
+      expect(suggest('.', _all).stickers, isEmpty);
+    });
+
+    test('a question mark ending a sentence adds a thinking sticker', () {
+      final result = suggest('xong chưa?', _all);
+      expect(result.stickers, contains(_think));
+      expect(result.replacesDraft, isFalse);
+    });
+
     test('a longer draft keeps its text when a sticker is sent', () {
       final result = suggest('ok anh để em xem', _all);
       expect(result.stickers.first, _ok);
@@ -110,6 +139,11 @@ void main() {
     test('thanks is answered with a smile, not thanks back', () {
       final stickers = suggest(_message('Cảm ơn anh nhé'), _all, now: now);
       expect(stickers.first, _smile);
+    });
+
+    test('a lone question mark is answered with a thinking sticker', () {
+      expect(suggest(_message('?'), _all, now: now).first, _think);
+      expect(suggest(_message('=))'), _all, now: now).first, _laugh);
     });
 
     test('an emoji sent alone is echoed', () {

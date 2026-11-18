@@ -6,7 +6,7 @@ import 'sticker_matching.dart';
 
 /// Stickers to answer the latest message with, when it is someone else's
 /// and recent: what it says ([kStickerReplyEmoji] — thanks is answered with a
-/// smile) picks them, and an emoji in it is echoed. Nothing for the user's
+/// smile) picks them, and an emoji or emoticon in it (`=))`, `?`) is echoed. Nothing for the user's
 /// own message, a notice, or one older than [maxAge].
 class SuggestReplyStickers {
   const SuggestReplyStickers({
@@ -44,6 +44,7 @@ class SuggestReplyStickers {
       for (final key in keys)
         ...StickerMatching.emojiIn(kStickerReplyEmoji[key]!),
       ...StickerMatching.emojiIn(text),
+      ...StickerMatching.symbolsIn(text),
     ];
     return StickerMatching.rank(stickers, targets, max: max);
   }
