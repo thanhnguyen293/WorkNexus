@@ -168,8 +168,11 @@ void main() {
 
   setUp(() => repo = _Repo());
 
-  Future<void> pumpChat(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1400, 900);
+  Future<void> pumpChat(
+    WidgetTester tester, {
+    Size size = const Size(1400, 900),
+  }) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -270,5 +273,41 @@ void main() {
     );
     // The text field itself; not the send button's subtree (87 before).
     expect(perKey, lessThan(60));
+  });
+
+  testWidgets('measure a side panel sliding over the chat', (tester) async {
+    // No room beside the messages: the panel slides over them.
+    await pumpChat(tester, size: const Size(1000, 900));
+    await tester.tap(find.text('Team 2'));
+    await tester.pumpAndSettle();
+    final watch = Stopwatch();
+    // A side panel sliding in: the frames after the one that builds it.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    container
+        .read(chatSidePanelProvider((accountId: 'acc', chatGid: 'g2')).notifier)
+        .state = ChatSidePanel
+        .files;
+    watch
+      ..reset()
+      ..start();
+    await tester.pump();
+    final built = watch.elapsedMicroseconds / 1000;
+    watch
+      ..reset()
+      ..start();
+    var frames = 0;
+    while (tester.binding.hasScheduledFrame && frames < 60) {
+      await tester.pump(const Duration(milliseconds: 16));
+      frames++;
+    }
+    watch.stop();
+    debugPrint(
+      'PERF side panel: built in ${built.toStringAsFixed(1)} ms, then '
+      '$frames frames at '
+      '${(watch.elapsedMicroseconds / frames / 1000).toStringAsFixed(2)} '
+      'ms each',
+    );
   });
 }
