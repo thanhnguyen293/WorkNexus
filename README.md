@@ -258,7 +258,7 @@ is not part of the default detail tab strip yet.
 
 | Area | Choice |
 |---|---|
-| Language / UI | Flutter 3.44.8 · Dart 3.12.2 (via **fvm**) |
+| Language / UI | Flutter 3.47.9 · Dart 3.13.7 (via **fvm**) |
 | State management | **Riverpod 3** with immutable **freezed** state |
 | Dependency injection | **get_it** + **injectable** in one composition root |
 | Local database | **drift** / SQLite with reactive `.watch()` streams |
@@ -327,7 +327,7 @@ lib/
 
 ### Prerequisites
 
-- **[fvm](https://fvm.app/)** with Flutter **3.44.8** / Dart **3.12.2**.
+- **[fvm](https://fvm.app/)** with Flutter **3.47.9** / Dart **3.13.7**.
 - **macOS** with Xcode command-line tools (primary desktop target).
 - Provider credentials:
   - ZenTao server URL, account, and password.

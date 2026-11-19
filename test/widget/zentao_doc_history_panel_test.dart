@@ -156,40 +156,38 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.macOS),
   );
 
-  testWidgets(
-    'a document without history still opens its popover',
-    (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            zentaoDocHistorySyncProvider.overrideWith((ref, key) async {}),
-            zentaoDocHistoryProvider.overrideWith(
-              (ref, key) => Stream.value(const <ZenTaoDocAction>[]),
-            ),
-          ],
-          child: MaterialApp(
-            locale: const Locale('en'),
-            theme: buildAppTheme(
-              variant: AppThemeVariant.light,
-              surface: SurfaceStyle.outline,
-              density: AppDensity.comfortable,
-            ),
-            localizationsDelegates: AppL10n.localizationsDelegates,
-            supportedLocales: AppL10n.supportedLocales,
-            home: const Scaffold(
-              body: Align(
-                alignment: Alignment.topRight,
-                child: ZenTaoDocHistoryButton(account: _account, docId: '1'),
-              ),
+  testWidgets('a document without history still opens its popover', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          zentaoDocHistorySyncProvider.overrideWith((ref, key) async {}),
+          zentaoDocHistoryProvider.overrideWith(
+            (ref, key) => Stream.value(const <ZenTaoDocAction>[]),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          home: const Scaffold(
+            body: Align(
+              alignment: Alignment.topRight,
+              child: ZenTaoDocHistoryButton(account: _account, docId: '1'),
             ),
           ),
         ),
-      );
-      await tester.tap(find.byTooltip('History'));
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      expect(find.text('No history yet'), findsOneWidget);
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
-  );
+      ),
+    );
+    await tester.tap(find.byTooltip('History'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('No history yet'), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 }
