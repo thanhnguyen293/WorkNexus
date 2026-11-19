@@ -10,8 +10,7 @@ import 'panic_switch_save.dart';
 /// The debounce choices offered, in seconds.
 const _debounceChoices = [15, 30, 60, 120, 300];
 
-/// The Official tab's last rows: reacting at all, hiding WorkNexus and the
-/// debounce.
+/// The Official tab's last row: the debounce.
 class PanicBehaviourSections extends ConsumerWidget {
   const PanicBehaviourSections({super.key, required this.config});
 
@@ -24,22 +23,6 @@ class PanicBehaviourSections extends ConsumerWidget {
         savePanicSwitch(context, ref, change);
     return Column(
       children: [
-        AppExpandableCardSection(
-          title: l.panicSwitchReceiveLabel,
-          hint: l.panicSwitchReceiveHint,
-          trailing: Switch(
-            value: config.enabled,
-            onChanged: (v) => save((c) => c.copyWith(enabled: v)),
-          ),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchHideSelfLabel,
-          hint: l.panicSwitchHideSelfHint,
-          trailing: Switch(
-            value: config.hideSelf,
-            onChanged: (v) => save((c) => c.copyWith(hideSelf: v)),
-          ),
-        ),
         AppExpandableCardSection(
           title: l.panicSwitchDebounceLabel,
           hint: l.panicSwitchDebounceHint,

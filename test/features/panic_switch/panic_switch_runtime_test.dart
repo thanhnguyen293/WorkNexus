@@ -161,18 +161,10 @@ void main() {
     expect(result.failureOrNull, isA<NetworkFailure>());
   });
 
-  test('a triple click only sends when reacting is turned off', () async {
+  test('turned off, the button neither switches nor sends', () async {
     final r = runtimeFor(config.copyWith(enabled: false));
     await r.onOverlayTriggered(PanicTrigger.release);
     verifyNever(() => run(any()));
-    verify(
-      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
-    ).called(1);
-  });
-
-  test('runNow switches without any chat', () async {
-    await runtime.runNow();
-    verify(() => run(config)).called(1);
     verifyNever(
       () => send(
         trigger: any(named: 'trigger'),

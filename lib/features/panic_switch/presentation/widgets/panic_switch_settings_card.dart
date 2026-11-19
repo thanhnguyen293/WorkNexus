@@ -14,6 +14,7 @@ import '../providers/panic_switch_providers.dart';
 import 'panic_button_tab.dart';
 import 'panic_demo_tab.dart';
 import 'panic_release_tab.dart';
+import 'panic_switch_save.dart';
 
 /// Settings' "Thầy vô" card, in three tabs so none reads as one long list:
 /// "Official" (the team group), "Demo" (a chat of your own) and "Floating
@@ -59,17 +60,29 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
     return AppExpandableCard(
       icon: LucideIcons.siren300,
       title: l.panicSwitchTitle,
-      summary: config.demoMode
+      summary: !config.enabled
+          ? l.panicSwitchSummaryOff
+          : config.demoMode
           ? l.panicSwitchSummaryWithDemo(summary)
           : summary,
       sections: [
-        _ModeTabs(
-          config: config,
-          accountId: account.id,
-          team: team ?? l.panicSwitchTeamFallback,
-          chats: chats,
-          canRaise: ref.watch(appSwitcherProvider).canRaiseApps,
+        AppExpandableCardSection(
+          title: l.panicSwitchEnabledLabel,
+          hint: l.panicSwitchEnabledHint,
+          trailing: Switch(
+            value: config.enabled,
+            onChanged: (v) =>
+                savePanicSwitch(context, ref, (c) => c.copyWith(enabled: v)),
+          ),
         ),
+        if (config.enabled)
+          _ModeTabs(
+            config: config,
+            accountId: account.id,
+            team: team ?? l.panicSwitchTeamFallback,
+            chats: chats,
+            canRaise: ref.watch(appSwitcherProvider).canRaiseApps,
+          ),
       ],
     );
   }
