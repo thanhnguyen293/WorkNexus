@@ -85,11 +85,13 @@ ChatMessage _message(int i) => ChatMessage(
   senderId: 1 + (i ~/ 3) % 5,
   isMine: (i ~/ 3) % 5 == 0,
   sentAt: _start.add(Duration(minutes: i)),
-  content: MessageContent.text(
-    i % 7 == 0
-        ? '**Release $i** notes:\n- fixed the build\n- `code` here'
-        : 'Message number $i with some words to wrap across the bubble',
-  ),
+  content: i % 11 == 5
+      ? MessageContent.code('{"payload": "${'x' * 400}"}\n' * 4)
+      : MessageContent.text(
+          i % 7 == 0
+              ? '**Release $i** notes:\n- fixed the build\n- `code` here'
+              : 'Message number $i with some words to wrap across the bubble',
+        ),
 );
 
 /// Every element whose widget is a [T], by element, with its widget now.
@@ -250,5 +252,37 @@ void main() {
       '${(watch.elapsedMicroseconds / frames / 1000).toStringAsFixed(2)} '
       'ms per frame',
     );
+  });
+
+  testWidgets('resizing the window keeps the rows and where the reader is', (
+    tester,
+  ) async {
+    await pumpList(tester, [for (var i = 0; i < 50; i++) _message(i)]);
+    final list = find.byType(Scrollable).first;
+    await tester.drag(list, const Offset(0, 600));
+    await tester.pumpAndSettle();
+    final scroll = tester.state<ScrollableState>(list).position;
+    final pixels = scroll.pixels;
+    expect(pixels, greaterThan(0));
+    final before = _snapshot<MessageBubble>(tester).keys.toSet();
+    // A drag of the window's edge: a new width every frame.
+    for (var w = 1000.0; w >= 700; w -= 15) {
+      tester.view.physicalSize = Size(w, 900);
+      await tester.pump();
+      expect(find.byType(MessageBubble), findsWidgets, reason: 'at $w');
+    }
+    for (var w = 700.0; w <= 1000; w += 15) {
+      tester.view.physicalSize = Size(w, 900);
+      await tester.pump();
+      expect(find.byType(MessageBubble), findsWidgets, reason: 'at $w');
+    }
+    await tester.pumpAndSettle();
+    final after = _snapshot<MessageBubble>(tester).keys.toSet();
+    debugPrint(
+      'RESIZE: pixels $pixels -> ${scroll.pixels}, '
+      '${before.difference(after).length} rows dropped of ${before.length}',
+    );
+    expect(after.containsAll(before), isTrue, reason: 'rows remounted');
+    expect(scroll.pixels, closeTo(pixels, 1));
   });
 }

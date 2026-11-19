@@ -5,6 +5,7 @@ import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
 import 'package:work_nexus/core/widgets/app_entrance.dart';
 import 'package:work_nexus/core/widgets/privacy_mask.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/chat_layout.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_side_panel_host.dart';
 
 /// [child] in an app, with the platform asking for less motion or not.
@@ -35,6 +36,27 @@ Widget _host(Widget? panel, {bool reduced = false}) => _app(
   ),
   reduced: reduced,
 );
+
+/// Counts how often it is created, standing in for the message list.
+class _Counted extends StatefulWidget {
+  const _Counted(this.created);
+
+  final List<int> created;
+
+  @override
+  State<_Counted> createState() => _CountedState();
+}
+
+class _CountedState extends State<_Counted> {
+  @override
+  void initState() {
+    super.initState();
+    widget.created.add(1);
+  }
+
+  @override
+  Widget build(BuildContext context) => const Text('messages');
+}
 
 void main() {
   testWidgets('an entrance fades its child in once', (tester) async {
@@ -114,5 +136,33 @@ void main() {
     await tester.pump();
     expect(find.text('Alice'), findsNothing);
     expect(find.text(kPrivacyMaskText), findsOneWidget);
+  });
+
+  testWidgets('the messages keep their state as the window is resized across '
+      'the width where a panel moves beside them', (tester) async {
+    final created = <int>[];
+    Widget host({required bool infoRoom, Widget? panel}) => _app(
+      ChatLayoutScope(
+        layout: ChatLayout(infoRoom: infoRoom, compactList: false),
+        child: ChatSidePanelHost(
+          messages: _Counted(created),
+          panel: panel,
+          onDismiss: () {},
+        ),
+      ),
+    );
+    for (final panel in [null, const Text('panel')]) {
+      await tester.pumpWidget(host(infoRoom: true, panel: panel));
+      await tester.pumpAndSettle();
+      created.clear();
+      for (var i = 0; i < 4; i++) {
+        await tester.pumpWidget(
+          host(infoRoom: i.isEven ? false : true, panel: panel),
+        );
+        await tester.pump();
+      }
+      expect(created, isEmpty, reason: 'rebuilt from scratch');
+      expect(find.text('messages'), findsOneWidget);
+    }
   });
 }

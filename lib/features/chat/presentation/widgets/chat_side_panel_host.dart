@@ -60,6 +60,12 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
   /// The panel on screen: the open one, or the one sliding out.
   late Widget? _shown = widget.panel;
 
+  /// Keeps the messages' state when the layout swaps a Row (panel beside)
+  /// for a Stack (panel over): dragging the window across that width would
+  /// otherwise rebuild the message list from scratch on every crossing —
+  /// replaying its fade-in and losing its scroll position, a flicker.
+  final _messagesKey = GlobalKey(debugLabel: 'chat messages');
+
   @override
   void didUpdateWidget(ChatSidePanelHost old) {
     super.didUpdateWidget(old);
@@ -93,13 +99,15 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
     final panel = _shown;
     final closing = widget.panel == null;
     final infoRoom = ChatLayoutScope.of(context).infoRoom;
-    // [messages] stays the first child whether or not a panel is open: moved
-    // in the tree, the message list would be rebuilt from scratch — losing
-    // its scroll position and any jump it is making.
+    // [messages] stays the first child whether or not a panel is open, and
+    // keeps its key across both layouts: moved in the tree, the message list
+    // would be rebuilt from scratch — losing its scroll position and any
+    // jump it is making.
+    final messages = KeyedSubtree(key: _messagesKey, child: widget.messages);
     if (infoRoom) {
       return Row(
         children: [
-          Expanded(child: widget.messages),
+          Expanded(child: messages),
           // Slid toward the window's edge, so nothing needs clipping.
           if (panel != null)
             SlideTransition(
@@ -115,7 +123,7 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
     final c = context.colors;
     return Stack(
       children: [
-        widget.messages,
+        messages,
         if (panel != null) ...[
           Positioned.fill(
             // Sliding out, it no longer takes clicks meant for the messages.

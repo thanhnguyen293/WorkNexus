@@ -69,6 +69,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       // Settled: a later request for the same certificate asks again.
       _askedFingerprint = null;
     }
+    // Built once per page build, not in the LayoutBuilder: the same widget
+    // each frame of a window resize lets the open chat skip rebuilding.
+    final openChat = _OpenChat(accountId: accountId);
     return ColoredBox(
       color: context.colors.background,
       child: Column(
@@ -99,7 +102,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                   onViewProfile: widget.onViewProfile,
                                 ),
                               ),
-                            Expanded(child: _OpenChat(accountId: accountId)),
+                            Expanded(child: openChat),
                           ],
                         ),
                       );
