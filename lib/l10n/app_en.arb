@@ -3116,8 +3116,8 @@
   "panicSwitchSummary": "{group} · {count} people can set it off",
   "@panicSwitchSummary": {"placeholders": {"group": {"type": "String"}, "count": {"type": "int"}}},
   "panicSwitchNoGroup": "Team group not found",
-  "panicSwitchReceiveLabel": "Switch apps when it goes off",
-  "panicSwitchReceiveHint": "Off: this computer never switches apps, not even when you press the button yourself.",
+  "panicSwitchEnabledLabel": "Turn on Thầy vô",
+  "panicSwitchEnabledHint": "Off: on this computer the floating button is gone, nothing is sent and arriving stickers are ignored.",
   "panicSwitchOverlayLabel": "Show the floating button",
   "panicSwitchOverlayHint": "It sits above every app. Drag it to move it.",
   "panicSwitchGroupPick": "Pick a chat",
@@ -3128,8 +3128,6 @@
   "panicSwitchTargetLabel": "Apps to open",
   "panicSwitchTargetHint": "Tick as many as you like. Every other open app is hidden.",
   "panicSwitchAppsFailed": "Could not list the apps on this computer.",
-  "panicSwitchHideSelfLabel": "Hide WorkNexus too",
-  "panicSwitchHideSelfHint": "Hidden on macOS, minimised on Windows and Linux.",
   "panicSwitchDebounceLabel": "Don't go off again within",
   "panicSwitchDebounceHint": "Sending and switching both happen at most once in this time.",
   "panicSwitchSeconds": "{seconds}s",
@@ -3140,10 +3138,6 @@
   "panicSwitchNoMatches": "No matches",
   "panicSwitchLoadFailed": "Could not load these settings",
   "panicSwitchSelfChat": "Send to myself (try it out)",
-  "panicSwitchTryLabel": "Try it on this computer",
-  "panicSwitchTryHint": "Runs the steps above now, without sending anything to anyone. Works even with the chat server down.",
-  "panicSwitchTryButton": "Try",
-  "panicSwitchTryFailed": "Some steps did not work",
   "panicSwitchAnySender": "Anyone in the chat",
   "panicSwitchSummaryAnyone": "{chat} · anyone can set it off",
   "@panicSwitchSummaryAnyone": {"placeholders": {"chat": {"type": "String"}}},
@@ -3190,5 +3184,6 @@
   "panicSwitchTabButton": "Floating button",
   "settingsGeneral": "General",
   "updateDownloadingPercent": "Downloading the update… {percent}%",
-  "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}}
+  "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
+  "panicSwitchSummaryOff": "Off on this computer"
 }

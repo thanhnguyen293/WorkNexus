@@ -86,25 +86,14 @@ class PanicSwitchRuntime {
     );
     if (!send) return const Ok(null);
     _lastSentAt[trigger] = now;
-    Result<void> switched = const Ok(null);
-    if (config.enabled) {
-      _lastTriggeredAt[trigger] = now;
-      switched = await _run(config);
-    }
+    _lastTriggeredAt[trigger] = now;
+    final switched = await _run(config);
     final sent = await _send(
       trigger: trigger,
       accountId: account.id,
       chatGid: chatGid,
     );
     return switched.isErr ? switched : sent;
-  }
-
-  /// Switches apps now, as the sticker would, without any chat: the
-  /// "Try it" button in Settings.
-  Future<Result<void>> runNow() async {
-    final config = _config();
-    if (config == null) return const Ok(null);
-    return _run(config);
   }
 
   /// Puts the floating button up as [look] says, or takes it down (null).
@@ -139,7 +128,7 @@ final panicSwitchRuntimeProvider = Provider<PanicSwitchRuntime>(
 final panicOverlayLookProvider = Provider<PanicButtonLook?>((ref) {
   if (ref.watch(panicSwitchAccountProvider) == null) return null;
   final config = ref.watch(panicSwitchConfigProvider).asData?.value;
-  if (config == null || !config.overlayVisible) return null;
+  if (config == null || !config.enabled || !config.overlayVisible) return null;
   final hasChat = PanicTrigger.values.any((t) => config.chatFor(t) != null);
   return hasChat ? config.overlayLook : null;
 });
