@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../providers/chat_info_panel_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_snack.dart';
 
@@ -25,18 +26,37 @@ void jumpToChatMessage(WidgetRef ref, ChatThreadKey chat, int messageId) {
     ..state = messageId;
 }
 
+/// Whether the info panel rests beside the chat: there is room for it
+/// ([infoRoom]) and the user has not hidden it. Rebuilds on a change.
+bool watchChatInfoDocked(WidgetRef ref, {required bool infoRoom}) =>
+    infoRoom && (ref.watch(chatInfoPanelVisibleProvider).value ?? true);
+
+/// [watchChatInfoDocked] for callbacks.
+bool readChatInfoDocked(WidgetRef ref, {required bool infoRoom}) =>
+    infoRoom && (ref.read(chatInfoPanelVisibleProvider).value ?? true);
+
 /// The panel shown beside chat [chat]: the one the user opened, else the
-/// info panel when there is room for it ([infoRoom]).
+/// info panel when it rests there (see [watchChatInfoDocked]).
 ChatSidePanel? effectiveSidePanel(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
 }) =>
     ref.watch(chatSidePanelProvider(chat)) ??
-    (infoRoom ? ChatSidePanel.info : null);
+    (watchChatInfoDocked(ref, infoRoom: infoRoom) ? ChatSidePanel.info : null);
+
+/// Whether the info panel is on screen for chat [chat] (a reply thread
+/// takes its place while open).
+bool watchChatInfoShown(
+  WidgetRef ref,
+  ChatThreadKey chat, {
+  required bool infoRoom,
+}) =>
+    ref.watch(openReplyThreadProvider(chat)) == null &&
+    effectiveSidePanel(ref, chat, infoRoom: infoRoom) == ChatSidePanel.info;
 
 /// Opens [panel] beside chat [chat] (closing a reply thread), or closes it
-/// when it is already open. With room, the info panel is always there, so
+/// when it is already open. While the info panel rests beside the chat,
 /// "closing" anything returns to it.
 void toggleChatSidePanel(
   WidgetRef ref,
@@ -44,12 +64,42 @@ void toggleChatSidePanel(
   ChatSidePanel panel, {
   required bool infoRoom,
 }) {
+  final docked = readChatInfoDocked(ref, infoRoom: infoRoom);
   final notifier = ref.read(chatSidePanelProvider(chat).notifier);
-  final shown = notifier.state ?? (infoRoom ? ChatSidePanel.info : null);
-  notifier.state = shown == panel || (infoRoom && panel == ChatSidePanel.info)
+  final shown = notifier.state ?? (docked ? ChatSidePanel.info : null);
+  notifier.state = shown == panel || (docked && panel == ChatSidePanel.info)
       ? null
       : panel;
   ref.read(openReplyThreadProvider(chat).notifier).state = null;
+}
+
+/// The header's info button. With room it shows or hides the info panel
+/// beside the chat and remembers that; without room the panel slides over
+/// the messages for the moment, leaving the remembered choice as it was.
+Future<Result<void>> toggleChatInfo(
+  WidgetRef ref,
+  ChatThreadKey chat, {
+  required bool infoRoom,
+}) async {
+  if (!infoRoom) {
+    toggleChatSidePanel(ref, chat, ChatSidePanel.info, infoRoom: false);
+    return const Ok(null);
+  }
+  final panel = ref.read(chatSidePanelProvider(chat).notifier);
+  final thread = ref.read(openReplyThreadProvider(chat).notifier);
+  final docked = readChatInfoDocked(ref, infoRoom: true);
+  final shown =
+      thread.state == null &&
+      (panel.state ?? (docked ? ChatSidePanel.info : null)) ==
+          ChatSidePanel.info;
+  if (!shown) {
+    // Whatever stood in its place gives way.
+    panel.state = null;
+    thread.state = null;
+  } else if (panel.state == ChatSidePanel.info) {
+    panel.state = null;
+  }
+  return ref.read(chatInfoPanelVisibleProvider.notifier).setVisible(!shown);
 }
 
 /// Opens [panel] beside chat [chat] (closing a reply thread), leaving it
@@ -64,11 +114,10 @@ void backToChatInfo(
   WidgetRef ref,
   ChatThreadKey chat, {
   required bool infoRoom,
-}) => ref.read(chatSidePanelProvider(chat).notifier).state = infoRoom
-    ? null
-    : ChatSidePanel.info;
+}) => ref.read(chatSidePanelProvider(chat).notifier).state =
+    readChatInfoDocked(ref, infoRoom: infoRoom) ? null : ChatSidePanel.info;
 
-/// Closes the panel beside chat [chat] (with room, the info panel stays).
+/// Closes the panel beside chat [chat] (a resting info panel stays).
 void closeChatSidePanel(WidgetRef ref, ChatThreadKey chat) =>
     ref.read(chatSidePanelProvider(chat).notifier).state = null;
 
