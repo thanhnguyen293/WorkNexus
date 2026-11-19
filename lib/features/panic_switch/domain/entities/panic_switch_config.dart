@@ -54,8 +54,12 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     @Default(PanicSwitchConstants.defaultDebounceSeconds) int debounceSeconds,
   }) = _PanicSwitchConfig;
 
-  PanicButtonLook get overlayLook =>
-      (size: overlaySize, opacity: overlayOpacity, gesture: overlayGesture);
+  PanicButtonLook get overlayLook => (
+    size: overlaySize,
+    opacity: overlayOpacity,
+    gesture: overlayGesture,
+    demo: chatFor(PanicTrigger.demo) != null,
+  );
 
   /// Where [trigger]'s sticker is sent and listened for; null when it is off.
   String? chatFor(PanicTrigger trigger) => switch (trigger) {

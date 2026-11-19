@@ -51,7 +51,8 @@ final class PanicSwitchChannel {
         image: image,
         width: CGFloat((args?["size"] as? NSNumber)?.doubleValue ?? 120),
         opacity: CGFloat((args?["opacity"] as? NSNumber)?.doubleValue ?? 1),
-        gesture: args?["gesture"] as? String ?? "triple"
+        gesture: args?["gesture"] as? String ?? "triple",
+        demoLabel: args?["demoLabel"] as? String
       )
       result(nil)
     case "hideOverlay":

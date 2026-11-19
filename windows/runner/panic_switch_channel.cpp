@@ -255,7 +255,14 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
           if (const auto* v = arg("gesture")) {
             if (const auto* g = std::get_if<std::string>(v)) gesture = *g;
           }
-          if (!image || !overlay_->Show(*image, width, opacity, gesture)) {
+          std::wstring demo_label;
+          if (const auto* v = arg("demoLabel")) {
+            if (const auto* d = std::get_if<std::string>(v)) {
+              demo_label = Utf16FromUtf8(*d);
+            }
+          }
+          if (!image ||
+              !overlay_->Show(*image, width, opacity, gesture, demo_label)) {
             return result->Error("overlay_failed", "Could not show the button");
           }
           result->Success();
