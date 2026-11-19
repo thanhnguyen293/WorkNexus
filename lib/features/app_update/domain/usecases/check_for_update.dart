@@ -2,6 +2,8 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/available_update.dart';
 import '../repositories/update_repository.dart';
+import '../value_objects/app_version.dart';
+import 'collect_release_notes.dart';
 
 class CheckForUpdate {
   const CheckForUpdate(this._repository);
@@ -10,72 +12,43 @@ class CheckForUpdate {
 
   Future<Result<AvailableUpdate?>> call() async {
     final result = await _repository.fetchLatestStableRelease();
-    return result.fold((snapshot) {
-      if (snapshot == null) return const Ok(null);
+    if (result case Err(:final failure)) return Err(failure);
+    final snapshot = result.valueOrNull;
+    if (snapshot == null) return const Ok(null);
 
-      final current = _Version.parse(snapshot.currentVersion);
-      final latest = _Version.parse(snapshot.latestVersion);
-      if (current == null || latest == null) {
-        return const Err(
-          ParseFailure('GitHub returned an invalid stable release version'),
-        );
-      }
-      // The datasource already rejects `prerelease: true` from the API.
-      // If the tag name still carries a pre-release suffix (e.g. the maintainer
-      // tagged `v1.1.0-alpha.1` but set `prerelease: false` on GitHub), treat
-      // it as "no stable update available" rather than a hard error.
-      if (latest.isPrerelease) return const Ok(null);
-      if (latest.compareTo(current) <= 0) return const Ok(null);
-
-      return Ok(
-        AvailableUpdate(
-          currentVersion: snapshot.currentVersion,
-          latestVersion: snapshot.latestVersion,
-          releaseUrl: snapshot.releaseUrl,
-          releaseNotes: snapshot.releaseNotes,
-          downloadUrl: snapshot.downloadUrl,
-          sha256: snapshot.sha256,
-        ),
+    final current = AppVersion.parse(snapshot.currentVersion);
+    final latest = AppVersion.parse(snapshot.latestVersion);
+    if (current == null || latest == null) {
+      return const Err(
+        ParseFailure('GitHub returned an invalid stable release version'),
       );
-    }, Err<AvailableUpdate?>.new);
-  }
-}
+    }
+    // The datasource already rejects `prerelease: true` from the API.
+    // If the tag name still carries a pre-release suffix (e.g. the maintainer
+    // tagged `v1.1.0-alpha.1` but set `prerelease: false` on GitHub), treat
+    // it as "no stable update available" rather than a hard error.
+    if (latest.isPrerelease) return const Ok(null);
+    if (latest.compareTo(current) <= 0) return const Ok(null);
 
-class _Version implements Comparable<_Version> {
-  const _Version(this.major, this.minor, this.patch, this.prerelease);
+    // The notes of every release since the running one, not only the
+    // latest's: jumping from 1.0 to 1.9 shows what all of them brought. The
+    // latest's own notes stay when the others cannot be read.
+    final since = (await CollectReleaseNotes(_repository)(
+      after: snapshot.currentVersion,
+      upTo: snapshot.latestVersion,
+    )).valueOrNull;
 
-  final int major;
-  final int minor;
-  final int patch;
-  final String? prerelease;
-
-  bool get isPrerelease => prerelease != null;
-
-  static final _pattern = RegExp(
-    r'^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-    r'(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$',
-  );
-
-  static _Version? parse(String value) {
-    final match = _pattern.firstMatch(value);
-    if (match == null) return null;
-    final major = int.tryParse(match[1]!);
-    final minor = int.tryParse(match[2]!);
-    final patch = int.tryParse(match[3]!);
-    if (major == null || minor == null || patch == null) return null;
-    return _Version(major, minor, patch, match[4]);
-  }
-
-  @override
-  int compareTo(_Version other) {
-    final majorComparison = major.compareTo(other.major);
-    if (majorComparison != 0) return majorComparison;
-    final minorComparison = minor.compareTo(other.minor);
-    if (minorComparison != 0) return minorComparison;
-    final patchComparison = patch.compareTo(other.patch);
-    if (patchComparison != 0) return patchComparison;
-    if (prerelease == null) return other.prerelease == null ? 0 : 1;
-    if (other.prerelease == null) return -1;
-    return prerelease!.compareTo(other.prerelease!);
+    return Ok(
+      AvailableUpdate(
+        currentVersion: snapshot.currentVersion,
+        latestVersion: snapshot.latestVersion,
+        releaseUrl: snapshot.releaseUrl,
+        releaseNotes: since == null || since.isEmpty
+            ? snapshot.releaseNotes
+            : since,
+        downloadUrl: snapshot.downloadUrl,
+        sha256: snapshot.sha256,
+      ),
+    );
   }
 }

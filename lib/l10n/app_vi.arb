@@ -2026,5 +2026,6 @@
   "panicSwitchTabButton": "Nút nổi",
   "settingsGeneral": "Chung",
   "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%",
-  "panicSwitchSummaryOff": "Đang tắt trên máy này"
+  "panicSwitchSummaryOff": "Đang tắt trên máy này",
+  "whatsNewTitle": "Có gì mới trong {version}"
 }
