@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/panic_switch_config.dart';
 import '../providers/panic_switch_providers.dart';
+import 'panic_check_row.dart';
 import 'panic_switch_save.dart';
 
 /// The team group's members, each ticked when their sticker may set the
@@ -41,7 +41,7 @@ class PanicSenderList extends ConsumerWidget {
           child: ListView(
             shrinkWrap: true,
             children: [
-              _CheckRow(
+              PanicCheckRow(
                 label: l.panicSwitchAnySender,
                 picked: config.anySender,
                 onToggle: () => savePanicSwitch(
@@ -52,7 +52,7 @@ class PanicSenderList extends ConsumerWidget {
               ),
               if (!config.anySender)
                 for (final user in users)
-                  _CheckRow(
+                  PanicCheckRow(
                     label: user.realname.isEmpty ? user.account : user.realname,
                     detail: user.account,
                     picked: config.allowedSenderIds.contains(user.userId),
@@ -74,54 +74,6 @@ class PanicSenderList extends ConsumerWidget {
           ),
         ),
         (_) => _Note(l.panicSwitchSendersFailed),
-      ),
-    );
-  }
-}
-
-class _CheckRow extends StatelessWidget {
-  const _CheckRow({
-    required this.label,
-    required this.picked,
-    required this.onToggle,
-    this.detail,
-  });
-
-  final String label;
-  final String? detail;
-  final bool picked;
-  final VoidCallback onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final s = context.spacing;
-    return InkWell(
-      mouseCursor: WidgetStateMouseCursor.clickable,
-      onTap: onToggle,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: s.xs, vertical: s.xxs),
-        child: Row(
-          spacing: s.md,
-          children: [
-            Checkbox(value: picked, onChanged: (_) => onToggle()),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.typography.body.copyWith(color: c.textPrimary),
-              ),
-            ),
-            if (detail case final detail?)
-              Text(
-                detail,
-                style: context.typography.caption.copyWith(
-                  color: c.textTertiary,
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
