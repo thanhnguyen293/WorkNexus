@@ -8,6 +8,7 @@ import '../../../../core/error/result.dart';
 import '../../../chat/domain/entities/chat_message.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/pick_default_panic_group.dart';
+import '../../domain/value_objects/panic_trigger.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
 import '../providers/panic_switch_runtime.dart';
@@ -28,7 +29,7 @@ class PanicSwitchListener extends ConsumerStatefulWidget {
 
 class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
   StreamSubscription<ChatMessage>? _incoming;
-  StreamSubscription<void>? _triggers;
+  StreamSubscription<PanicTrigger>? _triggers;
 
   @override
   void initState() {
@@ -36,7 +37,7 @@ class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
     final runtime = ref.read(panicSwitchRuntimeProvider);
     _incoming = runtime.incoming.listen((m) => _log(runtime.onIncoming(m)));
     _triggers = runtime.overlay.triggers.listen(
-      (_) => _log(runtime.onOverlayTriggered()),
+      (trigger) => _log(runtime.onOverlayTriggered(trigger)),
     );
     ref.listenManual<bool>(
       panicOverlayVisibleProvider,

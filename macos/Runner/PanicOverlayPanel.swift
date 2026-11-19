@@ -2,11 +2,12 @@ import Cocoa
 
 /// The panic switch's floating button: a borderless panel above every app and
 /// Space (full-screen ones too) that never takes focus. Drag to move; three
-/// clicks in a row call `onTrigger`. Where it was left is remembered.
+/// left clicks in a row call `onTrigger(false)`, three right clicks
+/// `onTrigger(true)` (the demo trigger). Where it was left is remembered.
 final class PanicOverlayPanel: NSPanel {
   private static let width: CGFloat = 120
 
-  init(onTrigger: @escaping () -> Void) {
+  init(onTrigger: @escaping (Bool) -> Void) {
     super.init(
       contentRect: NSRect(x: 0, y: 0, width: Self.width, height: Self.width),
       styleMask: [.borderless, .nonactivatingPanel],
@@ -41,11 +42,11 @@ final class PanicOverlayPanel: NSPanel {
 }
 
 private final class OverlayView: NSImageView {
-  private let onTrigger: () -> Void
+  private let onTrigger: (Bool) -> Void
   private var dragStart: NSPoint?
   private var dragged = false
 
-  init(onTrigger: @escaping () -> Void) {
+  init(onTrigger: @escaping (Bool) -> Void) {
     self.onTrigger = onTrigger
     super.init(frame: .zero)
     imageScaling = .scaleProportionallyUpOrDown
@@ -73,7 +74,14 @@ private final class OverlayView: NSImageView {
   }
 
   override func mouseUp(with event: NSEvent) {
-    if !dragged && event.clickCount == 3 { onTrigger() }
+    if !dragged && event.clickCount == 3 { onTrigger(false) }
     dragStart = nil
+  }
+
+  // Swallowed so no context menu opens; the up event carries the count.
+  override func rightMouseDown(with event: NSEvent) {}
+
+  override func rightMouseUp(with event: NSEvent) {
+    if event.clickCount == 3 { onTrigger(true) }
   }
 }
