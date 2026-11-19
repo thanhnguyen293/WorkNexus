@@ -258,7 +258,7 @@ strip mặc định của panel chi tiết.
 
 | Mảng | Lựa chọn |
 |---|---|
-| Ngôn ngữ / UI | Flutter 3.44.8 · Dart 3.12.2 (qua **fvm**) |
+| Ngôn ngữ / UI | Flutter 3.47.9 · Dart 3.13.7 (qua **fvm**) |
 | State management | **Riverpod 3** với state bất biến bằng **freezed** |
 | Dependency injection | **get_it** + **injectable** trong một composition root |
 | CSDL cục bộ | **drift** / SQLite với stream `.watch()` reactive |
@@ -327,7 +327,7 @@ lib/
 
 ### Yêu cầu
 
-- **[fvm](https://fvm.app/)** với Flutter **3.44.8** / Dart **3.12.2**.
+- **[fvm](https://fvm.app/)** với Flutter **3.47.9** / Dart **3.13.7**.
 - **macOS** kèm Xcode command-line tools (desktop target chính).
 - Thông tin đăng nhập cho provider:
   - ZenTao: server URL, account và mật khẩu.

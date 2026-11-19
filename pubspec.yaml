@@ -113,7 +113,7 @@ dependencies:
   windows_single_instance: 1.2.0
   uuid: 4.6.0
   collection: 1.19.1
-  intl: 0.20.2
+  intl: 0.20.3
 
   # ZenTao chat (xuanxuan/xxd) protocol: AES-256-CBC socket frames + md5 auth.
   pointycastle: 4.0.0
