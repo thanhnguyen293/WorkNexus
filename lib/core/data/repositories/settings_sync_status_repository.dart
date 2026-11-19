@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart';
-
+import '../../database/app_settings_kv_store.dart';
 import '../../database/database.dart';
 import '../../domain/repositories/sync_status_repository.dart';
 import '../../domain/value_objects/account_sync_status.dart';
@@ -9,24 +8,11 @@ import '../../domain/value_objects/account_sync_status.dart';
 /// Implements [SyncStatusRepository] by keeping an active in-memory stream per
 /// account and persisting `lastSyncedAt` in SQLite under `sync.last_synced_at.<id>`.
 class SettingsSyncStatusRepository implements SyncStatusRepository {
-  SettingsSyncStatusRepository(this._db);
+  SettingsSyncStatusRepository(AppDatabase db) : _kv = AppSettingsKvStore(db);
 
-  final AppDatabase _db;
+  final AppSettingsKvStore _kv;
   final Map<String, StreamController<AccountSyncStatus>> _controllers = {};
   final Map<String, AccountSyncStatus> _lastStatuses = {};
-  bool _tableEnsured = false;
-
-  Future<void> _ensureTable() async {
-    if (_tableEnsured) return;
-    await _db.customStatement('''
-      CREATE TABLE IF NOT EXISTS app_settings_kv (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-    ''');
-    _tableEnsured = true;
-  }
 
   String _keyFor(String accountId) => 'sync.last_synced_at.$accountId';
 
@@ -55,16 +41,9 @@ class SettingsSyncStatusRepository implements SyncStatusRepository {
     if (cached != null) return cached;
 
     try {
-      await _ensureTable();
-      final rows = await _db
-          .customSelect(
-            'SELECT value FROM app_settings_kv WHERE key = ?',
-            variables: [Variable<String>(_keyFor(accountId))],
-          )
-          .get();
-
-      if (rows.isNotEmpty) {
-        final millis = int.tryParse(rows.first.read<String>('value'));
+      final stored = await _kv.read(_keyFor(accountId));
+      if (stored != null) {
+        final millis = int.tryParse(stored);
         if (millis != null) {
           // A status reported during the read is newer than the stored one.
           return _lastStatuses[accountId] ??= AccountSyncStatus.idle(
@@ -90,19 +69,9 @@ class SettingsSyncStatusRepository implements SyncStatusRepository {
     if (status case SyncIdle(:final lastSyncedAt?)) {
       unawaited(() async {
         try {
-          await _ensureTable();
-          final now = DateTime.now().millisecondsSinceEpoch;
-          await _db.customStatement(
-            '''
-            INSERT INTO app_settings_kv (key, value, updated_at)
-            VALUES (?, ?, ?)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at;
-            ''',
-            [
-              _keyFor(accountId),
-              lastSyncedAt.millisecondsSinceEpoch.toString(),
-              now,
-            ],
+          await _kv.write(
+            _keyFor(accountId),
+            lastSyncedAt.millisecondsSinceEpoch.toString(),
           );
         } catch (_) {}
       }());

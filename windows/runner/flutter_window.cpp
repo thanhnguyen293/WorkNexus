@@ -109,6 +109,8 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetUpBadgeChannel();
   SetUpAppIconChannel();
+  panic_switch_ = std::make_unique<PanicSwitchChannel>(
+      flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   // Dart shows the window itself, maximized when it was left maximized; Show()
@@ -129,6 +131,7 @@ bool FlutterWindow::OnCreate() {
 void FlutterWindow::OnDestroy() {
   badge_channel_ = nullptr;
   app_icon_channel_ = nullptr;
+  panic_switch_ = nullptr;
   if (app_icon_large_) {
     DestroyIcon(app_icon_large_);
     app_icon_large_ = nullptr;
