@@ -2029,5 +2029,6 @@
   "panicSwitchDemoChatFallback": "đoạn chat demo của bạn",
   "panicSwitchDemoShared": "Các app sẽ mở được cài ở tab Chính thức, nút nổi ở tab Nút nổi.",
   "panicSwitchMenuDemo": "Demo",
-  "panicSwitchTabButton": "Nút nổi"
+  "panicSwitchTabButton": "Nút nổi",
+  "settingsGeneral": "Chung"
 }
