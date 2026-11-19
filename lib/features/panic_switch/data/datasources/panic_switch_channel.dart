@@ -35,8 +35,8 @@ class PanicSwitchChannel {
   Future<void> activate(String id) =>
       _channel.invokeMethod<void>('activate', {'id': id});
 
-  Future<void> hide(String id) =>
-      _channel.invokeMethod<void>('hide', {'id': id});
+  Future<void> hideOthers(List<String> keep) =>
+      _channel.invokeMethod<void>('hideOthers', {'keep': keep});
 
   Future<void> hideSelf() => _channel.invokeMethod<void>('hideSelf');
 
