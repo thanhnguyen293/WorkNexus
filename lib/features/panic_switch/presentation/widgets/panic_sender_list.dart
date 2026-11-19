@@ -9,8 +9,8 @@ import '../../domain/entities/panic_switch_config.dart';
 import '../providers/panic_switch_providers.dart';
 import 'panic_switch_save.dart';
 
-/// The chosen group's members, each ticked when their sticker may set the
-/// switch off on this computer.
+/// The team group's members, each ticked when their sticker may set the
+/// switch off on this computer. (The demo chat accepts anyone.)
 class PanicSenderList extends ConsumerWidget {
   const PanicSenderList({
     super.key,
@@ -27,9 +27,8 @@ class PanicSenderList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppL10n.of(context);
-    final chatGid = config.receiveChatGid;
+    final chatGid = config.chatGid;
     if (chatGid == null) return _Note(l.panicSwitchSendersNeedGroup);
-    if (config.sendsToSelf) return _Note(l.panicSwitchSelfChatNote);
     final members = ref.watch(
       panicGroupMembersProvider((accountId: accountId, chatGid: chatGid)),
     );

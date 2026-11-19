@@ -37,8 +37,9 @@ final class PanicSwitchChannel {
         let image = NSImage(data: data)
       else { return result(Self.badArgs) }
       if overlay == nil {
-        overlay = PanicOverlayPanel { [weak self] in
-          self?.channel.invokeMethod("overlayTriggered", arguments: nil)
+        overlay = PanicOverlayPanel { [weak self] demo in
+          self?.channel.invokeMethod(
+            "overlayTriggered", arguments: demo ? "demo" : "release")
         }
       }
       overlay?.show(image: image)

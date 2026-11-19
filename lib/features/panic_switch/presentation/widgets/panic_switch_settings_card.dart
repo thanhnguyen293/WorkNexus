@@ -51,20 +51,20 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
     String? titleOf(String? gid) =>
         chats.where((c) => c.chat.gid == gid).firstOrNull?.title;
     final team = titleOf(config.chatGid);
-    final listening = titleOf(config.receiveChatGid);
+    final summary = team == null
+        ? l.panicSwitchNoGroup
+        : config.anySender
+        ? l.panicSwitchSummaryAnyone(team)
+        : l.panicSwitchSummary(team, config.allowedSenderIds.length);
     void save(PanicSwitchConfig Function(PanicSwitchConfig) change) =>
         savePanicSwitch(context, ref, change);
 
     return AppExpandableCard(
       icon: LucideIcons.siren300,
       title: l.panicSwitchTitle,
-      summary: config.testMode
-          ? l.panicSwitchSummaryTestMode
-          : listening == null
-          ? l.panicSwitchNoGroup
-          : config.anySender
-          ? l.panicSwitchSummaryAnyone(listening)
-          : l.panicSwitchSummary(listening, config.allowedSenderIds.length),
+      summary: config.demoMode
+          ? l.panicSwitchSummaryWithDemo(summary)
+          : summary,
       sections: [
         AppExpandableCardSection(
           title: l.panicSwitchOverlayLabel,
@@ -80,29 +80,25 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
           trailing: Text(team ?? l.panicSwitchNoGroup),
         ),
         AppExpandableCardSection(
-          title: l.panicSwitchTestModeLabel,
-          hint: l.panicSwitchTestModeHint,
+          title: l.panicSwitchDemoModeLabel,
+          hint: l.panicSwitchDemoModeHint,
           trailing: Switch(
-            value: config.testMode,
-            onChanged: (v) => save((c) => c.copyWith(testMode: v)),
+            value: config.demoMode,
+            onChanged: (v) => save((c) => c.copyWith(demoMode: v)),
           ),
         ),
-        if (config.testMode)
+        if (config.demoMode)
           AppExpandableCardSection(
-            title: l.panicSwitchTestChatLabel,
-            hint: l.panicSwitchTestChatHint,
+            title: l.panicSwitchDemoChatLabel,
+            hint: l.panicSwitchDemoChatHint,
             child: PanicChatPicker(
               chats: chats,
-              value: config.testChatGid,
-              // Senders allowed in one chat mean nothing in another.
+              value: config.demoChatGid,
               onChanged: (p) => save(
-                (c) => c.testChatGid == p.chat.gid
-                    ? c
-                    : c.copyWith(
-                        testChatGid: p.chat.gid,
-                        testChatIsSelf: p.chat.isMyCloud,
-                        allowedSenderIds: const [],
-                      ),
+                (c) => c.copyWith(
+                  demoChatGid: p.chat.gid,
+                  demoChatIsSelf: p.chat.isMyCloud,
+                ),
               ),
             ),
           ),
