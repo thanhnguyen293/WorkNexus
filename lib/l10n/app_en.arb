@@ -3187,5 +3187,6 @@
   "panicSwitchDemoChatFallback": "your demo chat",
   "panicSwitchDemoShared": "The apps to open are set in the Official tab, the button in the Floating button tab.",
   "panicSwitchMenuDemo": "Demo",
-  "panicSwitchTabButton": "Floating button"
+  "panicSwitchTabButton": "Floating button",
+  "settingsGeneral": "General"
 }

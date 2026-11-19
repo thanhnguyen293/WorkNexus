@@ -278,7 +278,7 @@ void main() {
     });
 
     testWidgets(
-      'settings nav pane lists Settings and Integrations with the account count',
+      'settings nav pane lists the settings pages and Integrations with the account count',
       (tester) async {
         final navNotifier = _TestNavController();
 
@@ -303,7 +303,7 @@ void main() {
           SettingsSection.integrations,
         );
 
-        await tester.tap(find.text('Settings'));
+        await tester.tap(find.text('General'));
         await tester.pumpAndSettle();
         expect(
           navNotifier.currentState.settingsSection,
