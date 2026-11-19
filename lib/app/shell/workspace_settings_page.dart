@@ -4,6 +4,7 @@ import '../../core/widgets/app_page.dart';
 import '../../features/app_update/presentation/widgets/update_settings_card.dart';
 import '../../features/connections/presentation/widgets/local_cache_card.dart';
 import '../../features/mini_apps/presentation/widgets/mini_app_settings_card.dart';
+import '../../features/panic_switch/presentation/widgets/panic_switch_settings_card.dart';
 import '../../features/translation/presentation/widgets/translation_settings_card.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -18,6 +19,7 @@ class WorkspaceSettingsPage extends StatelessWidget {
     children: const [
       TranslationSettingsCard(),
       MiniAppSettingsCard(),
+      PanicSwitchSettingsCard(),
       UpdateSettingsCard(),
       LocalCacheCard(),
     ],

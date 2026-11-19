@@ -14,6 +14,7 @@ import '../../core/data/repositories/local_comment_repository.dart';
 import '../../core/data/repositories/local_ticket_repository.dart';
 import '../../core/data/repositories/local_workspace_repository.dart';
 import '../../core/data/repositories/settings_sync_status_repository.dart';
+import '../../core/database/app_settings_kv_store.dart';
 import '../../core/database/database.dart';
 import '../../core/debug/app_talker.dart';
 import '../../core/di/locator.dart';
@@ -126,6 +127,19 @@ import '../../features/notifications/data/datasources/notification_local_datasou
 import '../../features/notifications/data/repositories/zentao_notification_repository.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../../features/notifications/domain/usecases/refresh_notifications.dart';
+import '../../features/panic_switch/data/datasources/panic_switch_channel.dart';
+import '../../features/panic_switch/data/datasources/panic_switch_settings_store.dart';
+import '../../features/panic_switch/data/repositories/asset_panic_sticker_source.dart';
+import '../../features/panic_switch/data/repositories/channel_app_switcher.dart';
+import '../../features/panic_switch/data/repositories/channel_panic_overlay.dart';
+import '../../features/panic_switch/data/repositories/linux_app_switcher.dart';
+import '../../features/panic_switch/data/repositories/local_panic_switch_config_repository.dart';
+import '../../features/panic_switch/domain/repositories/app_switcher.dart';
+import '../../features/panic_switch/domain/repositories/panic_overlay.dart';
+import '../../features/panic_switch/domain/repositories/panic_sticker_source.dart';
+import '../../features/panic_switch/domain/repositories/panic_switch_config_repository.dart';
+import '../../features/panic_switch/domain/usecases/run_panic_switch.dart';
+import '../../features/panic_switch/domain/usecases/send_panic_sticker.dart';
 import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
 import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
@@ -405,6 +419,36 @@ abstract class ServiceModule {
 
   @lazySingleton
   StickerPackSource get stickerPackSource => TelegramStickerSource();
+
+  @lazySingleton
+  PanicSwitchChannel get panicSwitchChannel => PanicSwitchChannel();
+
+  @lazySingleton
+  PanicSwitchConfigRepository panicSwitchConfigRepository(AppDatabase db) =>
+      LocalPanicSwitchConfigRepository(
+        PanicSwitchSettingsStore(AppSettingsKvStore(db)),
+      );
+
+  @lazySingleton
+  AppSwitcher appSwitcher(PanicSwitchChannel channel) =>
+      Platform.isLinux ? const LinuxAppSwitcher() : ChannelAppSwitcher(channel);
+
+  @lazySingleton
+  PanicOverlay panicOverlay(PanicSwitchChannel channel) =>
+      ChannelPanicOverlay(channel);
+
+  @lazySingleton
+  PanicStickerSource get panicStickerSource =>
+      AssetPanicStickerSource(rootBundle);
+
+  @lazySingleton
+  SendPanicSticker sendPanicSticker(
+    ChatRepository chats,
+    PanicStickerSource sticker,
+  ) => SendPanicSticker(chats, sticker);
+
+  @lazySingleton
+  RunPanicSwitch runPanicSwitch(AppSwitcher apps) => RunPanicSwitch(apps);
 
   @lazySingleton
   StickerConverter get stickerConverter => const WebpStickerConverter();

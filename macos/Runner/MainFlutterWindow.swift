@@ -3,6 +3,8 @@ import FlutterMacOS
 import window_manager
 
 class MainFlutterWindow: NSWindow {
+  private var panicSwitch: PanicSwitchChannel?
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -25,6 +27,9 @@ class MainFlutterWindow: NSWindow {
       NSApp.dockTile.badgeLabel = label.isEmpty ? nil : label
       result(nil)
     }
+
+    // The panic switch ("Thầy vô"): app switching and the floating button.
+    panicSwitch = PanicSwitchChannel(messenger: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }
