@@ -41,6 +41,9 @@ void main() {
   setUp(() {
     repository = _MockUpdateRepository();
     when(
+      repository.fetchStableReleaseNotes,
+    ).thenAnswer((_) async => const Ok([]));
+    when(
       () => repository.fetchLatestStableRelease(),
     ).thenAnswer((_) async => const Ok(_release));
     when(

@@ -52,6 +52,9 @@ MockUpdateRepository mockUpdateRepository() {
     () => repository.download(any(), onProgress: any(named: 'onProgress')),
   ).thenAnswer((_) async => const Ok('/staged'));
   when(() => repository.install(any())).thenAnswer((_) async => const Ok(null));
+  when(
+    repository.fetchStableReleaseNotes,
+  ).thenAnswer((_) async => const Ok([]));
   return repository;
 }
 
