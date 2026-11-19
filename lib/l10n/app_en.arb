@@ -3124,7 +3124,7 @@
   "panicSwitchGroupPick": "Pick a chat",
   "panicSwitchSendersLabel": "Who can set it off",
   "panicSwitchSendersHint": "Whose sticker switches apps here: anyone in the chat, or only the people ticked.",
-  "panicSwitchSendersNeedGroup": "Pick the chat to listen in first.",
+  "panicSwitchSendersNeedGroup": "Pick the test chat first.",
   "panicSwitchSendersFailed": "Could not load the chat's members.",
   "panicSwitchTargetLabel": "App to open",
   "panicSwitchTargetHint": "Brought to the front, or started when it is not running.",
@@ -3154,10 +3154,9 @@
   "@panicSwitchSummaryAnyone": {"placeholders": {"chat": {"type": "String"}}},
   "panicSwitchTeamGroupHint": "Where the sticker is sent and listened for, outside test mode.",
   "panicSwitchTestModeLabel": "Test mode",
-  "panicSwitchTestModeHint": "Pick a chat to send the sticker to and one to listen in, instead of the team group, to try it without bothering anyone.",
-  "panicSwitchTestSendLabel": "Send the sticker to",
-  "panicSwitchTestSendHint": "\"Send to myself\" switches apps on this computer as soon as you click.",
-  "panicSwitchTestReceiveLabel": "Listen for the sticker in",
-  "panicSwitchTestReceiveHint": "A sticker sent here switches apps on this computer.",
-  "panicSwitchSummaryTestMode": "Test mode is on"
+  "panicSwitchTestModeHint": "Use a chat of your choice instead of the team group, for both sending and listening, to try it without bothering anyone.",
+  "panicSwitchSummaryTestMode": "Test mode is on",
+  "panicSwitchTestChatLabel": "Test chat",
+  "panicSwitchTestChatHint": "The sticker is sent here and listened for here. \"Send to myself\" switches apps on this computer as soon as you click.",
+  "panicSwitchSelfChatNote": "Sent to yourself: clicking the button switches apps on this computer right away."
 }

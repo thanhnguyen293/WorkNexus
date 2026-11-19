@@ -87,44 +87,25 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
             onChanged: (v) => save((c) => c.copyWith(testMode: v)),
           ),
         ),
-        if (config.testMode) ...[
+        if (config.testMode)
           AppExpandableCardSection(
-            title: l.panicSwitchTestSendLabel,
-            hint: l.panicSwitchTestSendHint,
+            title: l.panicSwitchTestChatLabel,
+            hint: l.panicSwitchTestChatHint,
             child: PanicChatPicker(
               chats: chats,
-              value: config.testSendChatGid,
-              onChanged: (p) => save(
-                (c) => c.copyWith(
-                  testSendChatGid: p.chat.gid,
-                  testSendToSelf: p.chat.isMyCloud,
-                ),
-              ),
-            ),
-          ),
-          AppExpandableCardSection(
-            title: l.panicSwitchTestReceiveLabel,
-            hint: l.panicSwitchTestReceiveHint,
-            child: PanicChatPicker(
-              // Your own messages never arrive as incoming: My Cloud would
-              // never set it off.
-              chats: [
-                for (final c in chats)
-                  if (!c.chat.isMyCloud) c,
-              ],
-              value: config.testReceiveChatGid,
+              value: config.testChatGid,
               // Senders allowed in one chat mean nothing in another.
               onChanged: (p) => save(
-                (c) => c.testReceiveChatGid == p.chat.gid
+                (c) => c.testChatGid == p.chat.gid
                     ? c
                     : c.copyWith(
-                        testReceiveChatGid: p.chat.gid,
+                        testChatGid: p.chat.gid,
+                        testChatIsSelf: p.chat.isMyCloud,
                         allowedSenderIds: const [],
                       ),
               ),
             ),
           ),
-        ],
         AppExpandableCardSection(
           title: l.panicSwitchReceiveLabel,
           hint: l.panicSwitchReceiveHint,
