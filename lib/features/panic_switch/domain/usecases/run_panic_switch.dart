@@ -21,7 +21,8 @@ class RunPanicSwitch {
     for (final app in config.appsToOpen.reversed) {
       keep(await _apps.activate(app));
     }
-    if (config.hideSelf) keep(await _apps.hideSelf());
+    // WorkNexus is never one of the apps to open, so it hides too.
+    keep(await _apps.hideSelf());
 
     final failure = first;
     return failure == null ? const Ok(null) : Err(failure);

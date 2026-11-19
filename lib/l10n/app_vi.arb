@@ -1964,8 +1964,8 @@
   "panicSwitchTitle": "Thầy vô",
   "panicSwitchSummary": "{group} · {count} người được kích hoạt",
   "panicSwitchNoGroup": "Chưa tìm thấy nhóm của team",
-  "panicSwitchReceiveLabel": "Tự chuyển app khi có tín hiệu",
-  "panicSwitchReceiveHint": "Tắt thì máy này không bao giờ chuyển app, kể cả khi chính bạn bấm nút.",
+  "panicSwitchEnabledLabel": "Bật Thầy vô",
+  "panicSwitchEnabledHint": "Tắt thì trên máy này nút nổi biến mất, không gửi được và cũng không phản ứng khi nhận sticker.",
   "panicSwitchOverlayLabel": "Hiện nút nổi",
   "panicSwitchOverlayHint": "Nút nằm trên mọi app. Kéo để di chuyển.",
   "panicSwitchGroupPick": "Chọn đoạn chat",
@@ -1976,8 +1976,6 @@
   "panicSwitchTargetLabel": "Các app sẽ mở",
   "panicSwitchTargetHint": "Tick bao nhiêu app cũng được. Mọi app khác đang mở sẽ bị ẩn.",
   "panicSwitchAppsFailed": "Không lấy được danh sách app trên máy.",
-  "panicSwitchHideSelfLabel": "Ẩn luôn WorkNexus",
-  "panicSwitchHideSelfHint": "Ẩn trên macOS, thu nhỏ trên Windows và Linux.",
   "panicSwitchDebounceLabel": "Không kích hoạt lại trong",
   "panicSwitchDebounceHint": "Cả gửi lẫn chuyển app chỉ xảy ra tối đa 1 lần trong khoảng này.",
   "panicSwitchSeconds": "{seconds} giây",
@@ -1987,10 +1985,6 @@
   "panicSwitchNoMatches": "Không có kết quả",
   "panicSwitchLoadFailed": "Không tải được cài đặt này",
   "panicSwitchSelfChat": "Gửi cho chính tôi (thử)",
-  "panicSwitchTryLabel": "Thử trên máy này",
-  "panicSwitchTryHint": "Chạy ngay các bước trên mà không gửi gì cho ai. Dùng được cả khi chat server down.",
-  "panicSwitchTryButton": "Chạy thử",
-  "panicSwitchTryFailed": "Có bước không chạy được",
   "panicSwitchAnySender": "Bất kì ai trong đoạn chat",
   "panicSwitchSummaryAnyone": "{chat} · ai cũng kích hoạt được",
   "panicSwitchDemoModeLabel": "Bật chế độ demo",
@@ -2031,5 +2025,6 @@
   "panicSwitchMenuDemo": "Demo",
   "panicSwitchTabButton": "Nút nổi",
   "settingsGeneral": "Chung",
-  "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%"
+  "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%",
+  "panicSwitchSummaryOff": "Đang tắt trên máy này"
 }
