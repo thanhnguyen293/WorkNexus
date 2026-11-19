@@ -10,11 +10,12 @@ import '../../core/theme/app_sizes.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/hover_surface.dart';
+import '../../features/panic_switch/presentation/providers/panic_switch_providers.dart';
 import '../../features/workspace_overview/presentation/providers/overview_providers.dart';
 import '../../l10n/app_localizations.dart';
 
-/// The Settings place's column beside the rail: the app's settings and the
-/// connected accounts, with how many there are.
+/// The Settings place's column beside the rail: a page per group of the
+/// app's settings, then the connected accounts with how many there are.
 class SettingsNavPane extends ConsumerWidget {
   const SettingsNavPane({super.key});
 
@@ -23,7 +24,8 @@ class SettingsNavPane extends ConsumerWidget {
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
-    final section = ref.watch(appNavProvider.select((n) => n.settingsSection));
+    final current = ref.watch(appNavProvider.select((n) => n.settingsSection));
+    final panicSwitch = ref.watch(panicSwitchAccountProvider) != null;
     final accounts = ref.watch(workspaceAccountsProvider);
     final nav = ref.read(appNavProvider.notifier);
 
@@ -42,17 +44,41 @@ class SettingsNavPane extends ConsumerWidget {
             child: Column(
               spacing: s.xxs,
               children: [
-                _SettingsNavRow(
-                  label: l.settings,
-                  icon: LucideIcons.slidersHorizontal300,
-                  selected: section == SettingsSection.general,
-                  onTap: () => nav.selectSettings(SettingsSection.general),
-                ),
+                for (final (section, label, icon) in [
+                  (
+                    SettingsSection.general,
+                    l.settingsGeneral,
+                    LucideIcons.slidersHorizontal300,
+                  ),
+                  (
+                    SettingsSection.translation,
+                    l.translationSection,
+                    LucideIcons.languages300,
+                  ),
+                  (
+                    SettingsSection.miniApps,
+                    l.miniAppSettingsTitle,
+                    LucideIcons.appWindow300,
+                  ),
+                  // Only for users of the ZenTao the feature is offered for.
+                  if (panicSwitch)
+                    (
+                      SettingsSection.panicSwitch,
+                      l.panicSwitchTitle,
+                      LucideIcons.siren300,
+                    ),
+                ])
+                  _SettingsNavRow(
+                    label: label,
+                    icon: icon,
+                    selected: section == current,
+                    onTap: () => nav.selectSettings(section),
+                  ),
                 _SettingsNavRow(
                   label: l.integrations,
                   icon: LucideIcons.plug300,
                   count: accounts.length,
-                  selected: section == SettingsSection.integrations,
+                  selected: current == SettingsSection.integrations,
                   onTap: () => nav.selectSettings(SettingsSection.integrations),
                 ),
               ],

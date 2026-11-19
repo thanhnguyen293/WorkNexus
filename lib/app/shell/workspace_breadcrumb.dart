@@ -73,8 +73,13 @@ class _WorkspaceBreadcrumbState extends ConsumerState<WorkspaceBreadcrumb> {
           ChatTarget() => _segments(context, [l.chat]),
           SettingsTarget() => _segments(context, [
             l.settings,
-            if (nav.settingsSection == SettingsSection.integrations)
-              l.integrations,
+            switch (nav.settingsSection) {
+              SettingsSection.general => l.settingsGeneral,
+              SettingsSection.translation => l.translationSection,
+              SettingsSection.miniApps => l.miniAppSettingsTitle,
+              SettingsSection.panicSwitch => l.panicSwitchTitle,
+              SettingsSection.integrations => l.integrations,
+            },
           ]),
           AccountTarget(:final accountId) => _buildAccountSegments(
             context,
