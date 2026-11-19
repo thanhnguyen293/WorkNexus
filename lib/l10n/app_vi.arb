@@ -2030,5 +2030,6 @@
   "panicSwitchDemoShared": "Các app sẽ mở được cài ở tab Chính thức, nút nổi ở tab Nút nổi.",
   "panicSwitchMenuDemo": "Demo",
   "panicSwitchTabButton": "Nút nổi",
-  "settingsGeneral": "Chung"
+  "settingsGeneral": "Chung",
+  "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%"
 }
