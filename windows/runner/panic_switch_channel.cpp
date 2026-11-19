@@ -159,8 +159,10 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
       messenger, "worknexus/panic_switch",
       &flutter::StandardMethodCodec::GetInstance());
-  overlay_ = std::make_unique<PanicOverlayWindow>([this]() {
-    channel_->InvokeMethod("overlayTriggered", nullptr);
+  overlay_ = std::make_unique<PanicOverlayWindow>([this](bool demo) {
+    channel_->InvokeMethod(
+        "overlayTriggered",
+        std::make_unique<EncodableValue>(demo ? "demo" : "release"));
   });
   channel_->SetMethodCallHandler(
       [this](const flutter::MethodCall<EncodableValue>& call,

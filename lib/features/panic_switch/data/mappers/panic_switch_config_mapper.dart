@@ -11,9 +11,9 @@ abstract final class PanicSwitchConfigMapper {
     'enabled': c.enabled,
     'overlayVisible': c.overlayVisible,
     'chatGid': c.chatGid,
-    'testMode': c.testMode,
-    'testChatGid': c.testChatGid,
-    'testChatIsSelf': c.testChatIsSelf,
+    'demoMode': c.demoMode,
+    'demoChatGid': c.demoChatGid,
+    'demoChatIsSelf': c.demoChatIsSelf,
     'anySender': c.anySender,
     'allowedSenderIds': c.allowedSenderIds,
     'targetApp': c.targetApp == null ? null : _app(c.targetApp!),
@@ -25,30 +25,33 @@ abstract final class PanicSwitchConfigMapper {
   static PanicSwitchConfig fromJson(String source) {
     final json = jsonDecode(source);
     if (json is! Map<String, dynamic>) return const PanicSwitchConfig();
-    // Before test mode, "send to myself" was saved as the one chat
-    // (`chatIsSelf`); it is test mode's send chat now, and the team group is
-    // looked up again.
+    // Demo mode was test mode (`test…` keys). Before that, "send to myself"
+    // was saved as the one chat (`chatIsSelf`); it is the demo chat now, and
+    // the team group is looked up again.
     final legacySelf = json['chatIsSelf'] == true;
     final legacySelfGid = legacySelf ? json['chatGid'] as String? : null;
     // Test mode had a chat to send to and one to listen in; the listening one
     // is kept (the one people picked a group for), else the sending one.
     final send = json['testSendChatGid'] as String? ?? legacySelfGid;
-    final testChatGid =
+    final demoChatGid =
+        json['demoChatGid'] as String? ??
         json['testChatGid'] as String? ??
         json['testReceiveChatGid'] as String? ??
         send;
-    final testChatIsSelf =
+    final demoChatIsSelf =
+        json['demoChatIsSelf'] as bool? ??
         json['testChatIsSelf'] as bool? ??
-        (testChatGid != null &&
-            testChatGid == send &&
+        (demoChatGid != null &&
+            demoChatGid == send &&
             (json['testSendToSelf'] == true || legacySelf));
     return PanicSwitchConfig(
       enabled: json['enabled'] as bool? ?? true,
       overlayVisible: json['overlayVisible'] as bool? ?? true,
       chatGid: legacySelf ? null : json['chatGid'] as String?,
-      testMode: json['testMode'] as bool? ?? legacySelf,
-      testChatGid: testChatGid,
-      testChatIsSelf: testChatIsSelf,
+      demoMode:
+          json['demoMode'] as bool? ?? json['testMode'] as bool? ?? legacySelf,
+      demoChatGid: demoChatGid,
+      demoChatIsSelf: demoChatIsSelf,
       anySender: json['anySender'] as bool? ?? true,
       allowedSenderIds: [
         for (final id in json['allowedSenderIds'] as List? ?? const [])

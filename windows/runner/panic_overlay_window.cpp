@@ -88,7 +88,7 @@ HBITMAP DecodeScaled(const std::vector<uint8_t>& image, int width, SIZE* size) {
 
 }  // namespace
 
-PanicOverlayWindow::PanicOverlayWindow(std::function<void()> on_trigger)
+PanicOverlayWindow::PanicOverlayWindow(std::function<void(bool demo)> on_trigger)
     : on_trigger_(std::move(on_trigger)) {}
 
 PanicOverlayWindow::~PanicOverlayWindow() {
@@ -205,10 +205,15 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       pressed_ = false;
       ReleaseCapture();
       if (dragged_) {
-        clicks_ = 0;
+        clicks_[0] = 0;
       } else {
-        OnClick();
+        OnClick(false);
       }
+      return 0;
+    case WM_RBUTTONDOWN:
+      return 0;
+    case WM_RBUTTONUP:
+      OnClick(true);
       return 0;
     case WM_CAPTURECHANGED:
       pressed_ = false;
@@ -217,14 +222,15 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
   return DefWindowProc(window, message, wparam, lparam);
 }
 
-void PanicOverlayWindow::OnClick() {
+void PanicOverlayWindow::OnClick(bool demo) {
+  const int b = demo ? 1 : 0;
   const DWORD now = GetTickCount();
-  clicks_ = (clicks_ > 0 && now - last_click_ <= GetDoubleClickTime())
-                ? clicks_ + 1
-                : 1;
-  last_click_ = now;
-  if (clicks_ >= 3) {
-    clicks_ = 0;
-    if (on_trigger_) on_trigger_();
+  clicks_[b] = (clicks_[b] > 0 && now - last_click_[b] <= GetDoubleClickTime())
+                   ? clicks_[b] + 1
+                   : 1;
+  last_click_[b] = now;
+  if (clicks_[b] >= 3) {
+    clicks_[b] = 0;
+    if (on_trigger_) on_trigger_(demo);
   }
 }

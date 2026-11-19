@@ -4,6 +4,7 @@ import 'package:work_nexus/features/chat/domain/value_objects/message_content.da
 import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
 import 'package:work_nexus/features/panic_switch/domain/panic_switch_constants.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/should_trigger_panic.dart';
+import 'package:work_nexus/features/panic_switch/domain/value_objects/panic_trigger.dart';
 
 void main() {
   const useCase = ShouldTriggerPanic();
@@ -33,14 +34,19 @@ void main() {
         MessageContent.image(fileId: 1, name: name, size: 10, time: 0),
   );
 
-  bool run(ChatMessage m, {PanicSwitchConfig c = config, DateTime? last}) =>
-      useCase(
-        message: m,
-        config: c,
-        accountId: 'a1',
-        now: now,
-        lastTriggeredAt: last,
-      );
+  bool run(
+    ChatMessage m, {
+    PanicSwitchConfig c = config,
+    DateTime? last,
+    PanicTrigger trigger = PanicTrigger.release,
+  }) => useCase(
+    trigger: trigger,
+    message: m,
+    config: c,
+    accountId: 'a1',
+    now: now,
+    lastTriggeredAt: last,
+  );
 
   test('fires for the sticker from an allowed sender in the group', () {
     expect(run(message()), isTrue);
@@ -82,10 +88,61 @@ void main() {
     );
   });
 
-  test('listens in the test chat while test mode is on', () {
-    final test = config.copyWith(testMode: true, testChatGid: 'dm');
-    expect(run(message(chatGid: 'dm'), c: test), isTrue);
-    expect(run(message(), c: test), isFalse);
+  test('demo mode adds the demo trigger; the team group keeps working', () {
+    final demo = config.copyWith(demoMode: true, demoChatGid: 'dm');
+    const d = PanicTrigger.demo;
+    final demoSticker = message(
+      chatGid: 'dm',
+      senderId: 42,
+      name: PanicSwitchConstants.demoStickerFileName,
+    );
+    // The release trigger is unchanged by demo mode.
+    expect(run(message(), c: demo), isTrue);
+    // The demo sticker in the demo chat, from anyone.
+    expect(run(demoSticker, c: demo, trigger: d), isTrue);
+    // Each sticker only sets off its own trigger, in its own chat.
+    expect(
+      run(
+        message(chatGid: 'dm'),
+        c: demo,
+        trigger: d,
+      ),
+      isFalse,
+    );
+    expect(run(demoSticker, c: demo), isFalse);
+    expect(
+      run(
+        message(name: PanicSwitchConstants.demoStickerFileName),
+        c: demo,
+        trigger: d,
+      ),
+      isFalse,
+    );
+    // Off without demo mode.
+    expect(
+      run(
+        demoSticker,
+        c: config.copyWith(demoChatGid: 'dm'),
+        trigger: d,
+      ),
+      isFalse,
+    );
+  });
+
+  test('tells the two stickers apart', () {
+    MessageContent image(String name) =>
+        MessageContent.image(fileId: 1, name: name, size: 1, time: 0);
+    expect(
+      ShouldTriggerPanic.triggerOf(image(PanicSwitchConstants.stickerFileName)),
+      PanicTrigger.release,
+    );
+    expect(
+      ShouldTriggerPanic.triggerOf(
+        image(PanicSwitchConstants.demoStickerFileName),
+      ),
+      PanicTrigger.demo,
+    );
+    expect(ShouldTriggerPanic.triggerOf(image('cat.png')), isNull);
   });
 
   test('lets anyone in the chat set it off by default', () {
