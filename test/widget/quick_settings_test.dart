@@ -493,7 +493,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Settings'), findsOneWidget);
+    // The Settings place opens on its General page (updates, storage).
+    expect(find.text('General'), findsOneWidget);
     expect(find.text('APPEARANCE'), findsNothing);
   });
 }
