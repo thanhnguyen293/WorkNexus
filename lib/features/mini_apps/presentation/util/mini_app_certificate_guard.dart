@@ -46,6 +46,26 @@ class MiniAppCertificateGuard {
   /// Windows only: the other web views report the error themselves.
   static bool get supported => defaultTargetPlatform == TargetPlatform.windows;
 
+  /// Where a site's certificate can be trusted ahead of time: Windows, by
+  /// this guard, and macOS, by the web view's server trust answer
+  /// ([trustsChallenge]).
+  static bool get canTrust =>
+      supported || defaultTargetPlatform == TargetPlatform.macOS;
+
+  /// On macOS: whether a server trust challenge for [host]:[port] is let
+  /// through because the user trusted that site, or the mini app's own site
+  /// [home] (whose page calls the others, as on Windows). Null [port] is 443.
+  static bool trustsChallenge({
+    required String host,
+    required int? port,
+    required String? home,
+    required Iterable<String> trusted,
+  }) {
+    final origin = 'https://$host:${port == null || port <= 0 ? 443 : port}';
+    final set = trusted.toSet();
+    return set.contains(origin) || (home != null && set.contains(home));
+  }
+
   /// How long a page that stopped loading has to finish before it is looked at.
   static const settleDelay = Duration(milliseconds: 400);
 
