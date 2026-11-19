@@ -1972,7 +1972,7 @@
   "panicSwitchGroupPick": "Chọn đoạn chat",
   "panicSwitchSendersLabel": "Ai được kích hoạt",
   "panicSwitchSendersHint": "Sticker của ai sẽ làm máy này chuyển app: bất kì ai trong đoạn chat, hoặc chỉ những người được chọn.",
-  "panicSwitchSendersNeedGroup": "Hãy chọn đoạn chat để lắng nghe trước.",
+  "panicSwitchSendersNeedGroup": "Hãy chọn đoạn chat thử trước.",
   "panicSwitchSendersFailed": "Không tải được thành viên của đoạn chat.",
   "panicSwitchTargetLabel": "App sẽ mở",
   "panicSwitchTargetHint": "Đưa lên trước, hoặc khởi động nếu chưa chạy.",
@@ -2000,10 +2000,9 @@
   "panicSwitchSummaryAnyone": "{chat} · ai cũng kích hoạt được",
   "panicSwitchTeamGroupHint": "Nơi gửi và lắng nghe sticker khi không ở chế độ thử.",
   "panicSwitchTestModeLabel": "Chế độ thử",
-  "panicSwitchTestModeHint": "Chọn riêng đoạn chat để gửi và để lắng nghe sticker thay cho nhóm của team, thử mà không làm phiền ai.",
-  "panicSwitchTestSendLabel": "Gửi sticker vào",
-  "panicSwitchTestSendHint": "Chọn \"Gửi cho chính tôi\" để máy này chuyển app ngay khi bấm.",
-  "panicSwitchTestReceiveLabel": "Lắng nghe sticker ở",
-  "panicSwitchTestReceiveHint": "Sticker gửi vào đây sẽ làm máy này chuyển app.",
-  "panicSwitchSummaryTestMode": "Đang bật chế độ thử"
+  "panicSwitchTestModeHint": "Dùng một đoạn chat tuỳ chọn thay cho nhóm của team, cho cả gửi lẫn lắng nghe, để thử mà không làm phiền ai.",
+  "panicSwitchSummaryTestMode": "Đang bật chế độ thử",
+  "panicSwitchTestChatLabel": "Đoạn chat thử",
+  "panicSwitchTestChatHint": "Sticker được gửi vào và lắng nghe ở đây. Chọn \"Gửi cho chính tôi\" để máy này chuyển app ngay khi bấm.",
+  "panicSwitchSelfChatNote": "Gửi cho chính bạn: bấm nút là máy này chuyển app ngay."
 }
