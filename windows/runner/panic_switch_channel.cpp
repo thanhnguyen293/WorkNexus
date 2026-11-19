@@ -6,9 +6,11 @@
 #include <windows.h>
 
 #include <algorithm>
+#include <cwchar>
 #include <cwctype>
 #include <iterator>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -203,14 +205,32 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
             return result->Error("open_failed", "Could not start the app");
           }
           result->Success();
-        } else if (method == "hide") {
-          const std::string* id = StringArg(call, "id");
-          if (!id) return result->Error("bad_args", "Missing id");
-          const auto windows = AppWindows();
-          const auto it = windows.find(Lower(Utf16FromUtf8(*id)));
-          if (it != windows.end()) {
-            // Async: a hung app must not stall WorkNexus.
-            for (HWND window : it->second) ShowWindowAsync(window, SW_MINIMIZE);
+        } else if (method == "hideOthers") {
+          // Minimises every app window but the kept apps' and the desktop's.
+          std::set<std::wstring> keep;
+          const auto* args = std::get_if<EncodableMap>(call.arguments());
+          const auto it =
+              args ? args->find(EncodableValue("keep")) : EncodableMap::const_iterator();
+          if (args && it != args->end()) {
+            if (const auto* ids = std::get_if<EncodableList>(&it->second)) {
+              for (const auto& id : *ids) {
+                if (const auto* s = std::get_if<std::string>(&id)) {
+                  keep.insert(Lower(Utf16FromUtf8(*s)));
+                }
+              }
+            }
+          }
+          for (const auto& [exe, windows] : AppWindows()) {
+            if (keep.count(exe)) continue;
+            for (HWND window : windows) {
+              wchar_t cls[32] = {};
+              GetClassNameW(window, cls, static_cast<int>(std::size(cls)));
+              if (wcscmp(cls, L"Progman") == 0 || wcscmp(cls, L"WorkerW") == 0) {
+                continue;
+              }
+              // Async: a hung app must not stall WorkNexus.
+              ShowWindowAsync(window, SW_MINIMIZE);
+            }
           }
           result->Success();
         } else if (method == "showOverlay") {

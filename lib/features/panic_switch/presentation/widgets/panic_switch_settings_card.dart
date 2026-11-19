@@ -94,12 +94,8 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
             child: PanicChatPicker(
               chats: chats,
               value: config.demoChatGid,
-              onChanged: (p) => save(
-                (c) => c.copyWith(
-                  demoChatGid: p.chat.gid,
-                  demoChatIsSelf: p.chat.isMyCloud,
-                ),
-              ),
+              onChanged: (p) =>
+                  save((c) => c.copyWith(demoChatGid: p.chat.gid)),
             ),
           ),
         AppExpandableCardSection(
@@ -120,12 +116,7 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
           hint: !canRaise
               ? '${l.panicSwitchTargetHint} ${l.panicSwitchWaylandNote}'
               : l.panicSwitchTargetHint,
-          child: PanicTargetAppPicker(config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchHideLabel,
-          hint: l.panicSwitchHideHint,
-          child: PanicHiddenAppsPicker(config: config),
+          child: PanicOpenAppsPicker(config: config),
         ),
         AppExpandableCardSection(
           title: l.panicSwitchTryLabel,
