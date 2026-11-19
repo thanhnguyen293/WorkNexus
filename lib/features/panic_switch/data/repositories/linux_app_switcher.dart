@@ -8,7 +8,7 @@ import '../../domain/repositories/app_switcher.dart';
 import '../datasources/linux_desktop_apps.dart';
 
 /// [AppSwitcher] on Linux, best effort. On X11 `wmctrl` raises a running app
-/// and `xdotool` minimises one. Wayland lets no app raise or hide another's
+/// and lists the windows, and `xdotool` minimises them. Wayland lets no app raise or hide another's
 /// windows, so there the app is only (re)launched with `gtk-launch` — a
 /// single-instance app usually comes forward — and hiding does nothing.
 class LinuxAppSwitcher implements AppSwitcher {
@@ -53,21 +53,30 @@ class LinuxAppSwitcher implements AppSwitcher {
   }
 
   @override
-  Future<Result<void>> hide(AppRef app) async {
+  Future<Result<void>> hideOthers(List<AppRef> keep) async {
     if (!isX11) return const Ok(null);
     try {
-      final wmClass = (await _apps.find(app.id))?.wmClass ?? app.id;
-      await _run('xdotool', [
-        'search',
-        '--onlyvisible',
-        '--class',
-        wmClass,
-        'windowminimize',
-        '%@',
-      ]);
+      final kept = <String>{
+        for (final app in keep)
+          ((await _apps.find(app.id))?.wmClass ?? app.id).toLowerCase(),
+      };
+      // `wmctrl -l -x -p`: id, desktop, pid, WM_CLASS ("instance.Class"),
+      // host, title. Desktop -1 is sticky (panels, the floating button).
+      final listed = await Process.run('wmctrl', ['-l', '-x', '-p']);
+      if (listed.exitCode != 0) {
+        return const Err(UnexpectedFailure('Could not list the windows'));
+      }
+      for (final line in (listed.stdout as String).split('\n')) {
+        final cols = line.split(RegExp(r'\s+'));
+        if (cols.length < 4 || cols[1] == '-1') continue;
+        if (int.tryParse(cols[2]) == pid) continue;
+        final wmClass = cols[3].toLowerCase();
+        if (kept.any((k) => wmClass.split('.').contains(k))) continue;
+        await _run('xdotool', ['windowminimize', cols[0]]);
+      }
       return const Ok(null);
     } on Object catch (e) {
-      return Err(UnexpectedFailure('Could not hide ${app.name}', cause: e));
+      return Err(UnexpectedFailure('Could not hide the other apps', cause: e));
     }
   }
 

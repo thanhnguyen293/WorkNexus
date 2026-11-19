@@ -23,11 +23,16 @@ final class PanicSwitchChannel {
     case "activate":
       guard let id = args?["id"] as? String else { return result(Self.badArgs) }
       Self.activate(bundleId: id, result: result)
-    case "hide":
-      guard let id = args?["id"] as? String else { return result(Self.badArgs) }
-      for app in NSRunningApplication.runningApplications(withBundleIdentifier: id) {
+    case "hideOthers":
+      // Every app with a Dock icon but WorkNexus and the ones kept.
+      let keep = Set((args?["keep"] as? [String]) ?? [])
+      let me = NSRunningApplication.current.processIdentifier
+      for app in NSWorkspace.shared.runningApplications
+      where app.activationPolicy == .regular && app.processIdentifier != me {
+        if let id = app.bundleIdentifier, keep.contains(id) { continue }
         app.hide()
       }
+      result(nil)
       result(nil)
     case "hideSelf":
       NSApp.hide(nil)

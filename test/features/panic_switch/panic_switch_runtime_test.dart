@@ -141,14 +141,7 @@ void main() {
     );
   });
 
-  test('sent to yourself, also switches apps here', () async {
-    const self = PanicSwitchConfig(
-      demoMode: true,
-      demoChatGid: 'cloud',
-      demoChatIsSelf: true,
-    );
-    final r = runtimeFor(self);
-
+  test('a triple click switches apps here too, then sends', () async {
     when(
       () => send(
         trigger: any(named: 'trigger'),
@@ -157,15 +150,24 @@ void main() {
       ),
     ).thenAnswer((_) async => const Err(NetworkFailure('server down')));
 
-    final result = await r.onOverlayTriggered(PanicTrigger.demo);
+    final result = await runtime.onOverlayTriggered(PanicTrigger.release);
 
     // Switched even though the chat server is down; the send failure is
     // still reported.
-    verify(() => run(self)).called(1);
-    verify(
-      () => send(trigger: PanicTrigger.demo, accountId: 'a1', chatGid: 'cloud'),
-    ).called(1);
+    verifyInOrder([
+      () => run(config),
+      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
+    ]);
     expect(result.failureOrNull, isA<NetworkFailure>());
+  });
+
+  test('a triple click only sends when reacting is turned off', () async {
+    final r = runtimeFor(config.copyWith(enabled: false));
+    await r.onOverlayTriggered(PanicTrigger.release);
+    verifyNever(() => run(any()));
+    verify(
+      () => send(trigger: PanicTrigger.release, accountId: 'a1', chatGid: 'g1'),
+    ).called(1);
   });
 
   test('runNow switches without any chat', () async {

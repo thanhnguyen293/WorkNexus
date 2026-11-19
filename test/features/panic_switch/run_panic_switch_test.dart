@@ -17,27 +17,39 @@ void main() {
   const slack = AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack');
   late _MockSwitcher apps;
 
-  setUpAll(() => registerFallbackValue(studio));
+  setUpAll(() {
+    registerFallbackValue(studio);
+    registerFallbackValue(<AppRef>[]);
+  });
 
   setUp(() {
     apps = _MockSwitcher();
     when(() => apps.activate(any())).thenAnswer((_) async => const Ok(null));
-    when(() => apps.hide(any())).thenAnswer((_) async => const Ok(null));
+    when(() => apps.hideOthers(any())).thenAnswer((_) async => const Ok(null));
     when(() => apps.hideSelf()).thenAnswer((_) async => const Ok(null));
   });
 
-  test('activates the target, hides the others, then itself', () async {
-    final result = await RunPanicSwitch(apps)(
-      const PanicSwitchConfig(targetApp: studio, appsToHide: [slack, studio]),
-    );
+  test(
+    'hides all but the apps to open, opens them first-on-top, then itself',
+    () async {
+      final result = await RunPanicSwitch(apps)(
+        const PanicSwitchConfig(appsToOpen: [studio, slack]),
+      );
 
-    expect(result.isOk, isTrue);
-    verifyInOrder([
-      () => apps.activate(studio),
-      () => apps.hide(slack),
-      () => apps.hideSelf(),
-    ]);
-    verifyNever(() => apps.hide(studio));
+      expect(result.isOk, isTrue);
+      verifyInOrder([
+        () => apps.hideOthers([studio, slack]),
+        () => apps.activate(slack),
+        () => apps.activate(studio),
+        () => apps.hideSelf(),
+      ]);
+    },
+  );
+
+  test('with no app to open, still hides everything else', () async {
+    await RunPanicSwitch(apps)(const PanicSwitchConfig());
+    verify(() => apps.hideOthers([])).called(1);
+    verifyNever(() => apps.activate(any()));
   });
 
   test('keeps going after a failure and returns it', () async {
@@ -46,11 +58,11 @@ void main() {
     ).thenAnswer((_) async => const Err(UnexpectedFailure('no')));
 
     final result = await RunPanicSwitch(apps)(
-      const PanicSwitchConfig(targetApp: studio, appsToHide: [slack]),
+      const PanicSwitchConfig(appsToOpen: [studio]),
     );
 
     expect(result.failureOrNull, isA<UnexpectedFailure>());
-    verify(() => apps.hide(slack)).called(1);
+    verify(() => apps.hideOthers([studio])).called(1);
     verify(() => apps.hideSelf()).called(1);
   });
 

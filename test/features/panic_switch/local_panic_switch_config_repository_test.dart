@@ -32,14 +32,12 @@ void main() {
       chatGid: 'g1',
       demoMode: true,
       demoChatGid: 'cloud',
-      demoChatIsSelf: true,
       anySender: false,
       allowedSenderIds: [3, 7],
-      targetApp: AppRef(
-        id: 'com.google.android.studio',
-        name: 'Android Studio',
-      ),
-      appsToHide: [AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack')],
+      appsToOpen: [
+        AppRef(id: 'com.google.android.studio', name: 'Android Studio'),
+        AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack'),
+      ],
       hideSelf: false,
       debounceSeconds: 90,
     );
@@ -56,7 +54,6 @@ void main() {
     expect(config.chatGid, isNull);
     expect(config.demoMode, isTrue);
     expect(config.demoChatGid, '40&40');
-    expect(config.demoChatIsSelf, isTrue);
   });
 
   test('keeps the listening chat of the old two-chat test mode', () {
@@ -67,7 +64,15 @@ void main() {
 
     expect(config.demoMode, isTrue);
     expect(config.demoChatGid, 'g9');
-    expect(config.demoChatIsSelf, isFalse);
+  });
+
+  test('turns the old target app into the apps to open', () {
+    final config = PanicSwitchConfigMapper.fromJson(
+      '{"targetApp":{"id":"a.b","name":"AB"},'
+      '"appsToHide":[{"id":"c.d","name":"CD"}]}',
+    );
+
+    expect(config.appsToOpen, const [AppRef(id: 'a.b', name: 'AB')]);
   });
 
   test('turns the saved test mode into demo mode', () {
@@ -79,6 +84,5 @@ void main() {
     expect(config.chatGid, 'g1');
     expect(config.demoMode, isTrue);
     expect(config.demoChatGid, 'g9');
-    expect(config.demoChatIsSelf, isFalse);
   });
 }

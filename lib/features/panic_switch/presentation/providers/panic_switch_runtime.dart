@@ -66,8 +66,9 @@ class PanicSwitchRuntime {
     return _run(config);
   }
 
-  /// Sends [trigger]'s sticker to its chat, at most once per debounce time;
-  /// sent to yourself, also switches apps here.
+  /// Sends [trigger]'s sticker to its chat and switches apps here too, at
+  /// most once per debounce time. Switching comes first, so it works even
+  /// with the chat server down; a send failure is still reported.
   Future<Result<void>> onOverlayTriggered(PanicTrigger trigger) async {
     final account = _account();
     final config = _config();
@@ -84,12 +85,6 @@ class PanicSwitchRuntime {
     );
     if (!send) return const Ok(null);
     _lastSentAt[trigger] = now;
-    if (!config.sendsToSelf(trigger)) {
-      return _send(trigger: trigger, accountId: account.id, chatGid: chatGid);
-    }
-    // Your own messages never come back as incoming, so trying it on
-    // yourself switches here first — even with the chat server down — and
-    // the sticker is sent after.
     Result<void> switched = const Ok(null);
     if (config.enabled) {
       _lastTriggeredAt[trigger] = now;
