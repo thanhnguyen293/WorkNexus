@@ -11,11 +11,13 @@ import '../../domain/entities/panic_switch_config.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
+import 'panic_button_tab.dart';
 import 'panic_demo_tab.dart';
 import 'panic_release_tab.dart';
 
-/// Settings' "Thầy vô" card, in two tabs so neither reads as one long list:
-/// "Official" (the team group) and "Demo" (a chat of your own). Shown only to
+/// Settings' "Thầy vô" card, in three tabs so none reads as one long list:
+/// "Official" (the team group), "Demo" (a chat of your own) and "Floating
+/// button". Shown only to
 /// users of the ZenTao the feature is offered for.
 class PanicSwitchSettingsCard extends ConsumerWidget {
   const PanicSwitchSettingsCard({super.key});
@@ -73,7 +75,7 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
   }
 }
 
-/// The two tabs and the open one's settings.
+/// The tabs and the open one's settings.
 class _ModeTabs extends StatefulWidget {
   const _ModeTabs({
     required this.config,
@@ -94,7 +96,7 @@ class _ModeTabs extends StatefulWidget {
 }
 
 class _ModeTabsState extends State<_ModeTabs> {
-  var _demo = false;
+  var _tab = _Tab.release;
 
   @override
   Widget build(BuildContext context) {
@@ -111,32 +113,39 @@ class _ModeTabsState extends State<_ModeTabs> {
             padding: EdgeInsets.all(s.xl2),
             child: AppSegmentedTabs(
               tabs: [
-                AppSegmentedTab(
-                  label: l.panicSwitchTabRelease,
-                  active: !_demo,
-                  onTap: () => setState(() => _demo = false),
-                ),
-                AppSegmentedTab(
-                  label: widget.config.demoMode
-                      ? l.panicSwitchTabDemoOn
-                      : l.panicSwitchTabDemo,
-                  active: _demo,
-                  onTap: () => setState(() => _demo = true),
-                ),
+                for (final tab in _Tab.values)
+                  AppSegmentedTab(
+                    label: switch (tab) {
+                      _Tab.release => l.panicSwitchTabRelease,
+                      _Tab.demo =>
+                        widget.config.demoMode
+                            ? l.panicSwitchTabDemoOn
+                            : l.panicSwitchTabDemo,
+                      _Tab.button => l.panicSwitchTabButton,
+                    },
+                    active: _tab == tab,
+                    onTap: () => setState(() => _tab = tab),
+                  ),
               ],
             ),
           ),
-          if (_demo)
-            PanicDemoTab(config: widget.config, chats: widget.chats)
-          else
-            PanicReleaseTab(
+          switch (_tab) {
+            _Tab.release => PanicReleaseTab(
               config: widget.config,
               accountId: widget.accountId,
               team: widget.team,
               canRaise: widget.canRaise,
             ),
+            _Tab.demo => PanicDemoTab(
+              config: widget.config,
+              chats: widget.chats,
+            ),
+            _Tab.button => PanicButtonTab(config: widget.config),
+          },
         ],
       ),
     );
   }
 }
+
+enum _Tab { release, demo, button }
