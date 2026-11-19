@@ -38,12 +38,12 @@ class _CodeBlockState extends State<CodeBlock> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final lines = widget.code.split('\n');
-    final limit = widget.collapsedLines;
-    final collapsible = limit != null && lines.length > limit;
-    final shown = collapsible && !_expanded
-        ? lines.take(limit).join('\n')
-        : widget.code;
+    final pad = context.spacing.lg;
+    final style = context.typography.mono.copyWith(
+      fontSize: widget.fontSize,
+      color: c.textPrimary,
+      height: 1.45,
+    );
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
@@ -52,39 +52,83 @@ class _CodeBlockState extends State<CodeBlock> {
         borderRadius: BorderRadius.circular(context.radii.sm),
         border: Border.all(color: c.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(context.spacing.lg),
-                child: SelectableText(
-                  shown,
-                  style: context.typography.mono.copyWith(
-                    fontSize: widget.fontSize,
-                    color: c.textPrimary,
-                    height: 1.45,
-                  ),
+      // Lines are counted as shown, wrapped to the block's width: one long
+      // line (a pasted JSON body) can fill the screen as much as many short
+      // ones.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final limit = widget.collapsedLines;
+          final rows = limit == null
+              ? null
+              : _wrappedRows(
+                  context,
+                  style,
+                  width: constraints.maxWidth - pad * 2,
+                );
+          final collapsible = rows != null && rows.count > limit!;
+          final collapsed = collapsible && !_expanded;
+          final lines = widget.code.split('\n');
+          // Past [limit] lines nothing would show anyway; dropping them
+          // keeps a long paste from laying out in full.
+          final shown = collapsed && lines.length > limit
+              ? lines.take(limit).join('\n')
+              : widget.code;
+          Widget text = SelectableText(shown, style: style);
+          if (collapsed) {
+            text = SizedBox(
+              height: rows.height * limit,
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  minHeight: 0,
+                  maxHeight: double.infinity,
+                  child: text,
                 ),
               ),
-              Positioned(
-                top: context.spacing.xs,
-                right: context.spacing.xs,
-                child: CodeCopyButton(widget.code),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                children: [
+                  Padding(padding: EdgeInsets.all(pad), child: text),
+                  Positioned(
+                    top: context.spacing.xs,
+                    right: context.spacing.xs,
+                    child: CodeCopyButton(widget.code),
+                  ),
+                ],
               ),
+              if (collapsible)
+                _ToggleBar(
+                  expanded: _expanded,
+                  lineCount: rows.count,
+                  onTap: () => setState(() => _expanded = !_expanded),
+                ),
             ],
-          ),
-          if (collapsible)
-            _ToggleBar(
-              expanded: _expanded,
-              lineCount: lines.length,
-              onTap: () => setState(() => _expanded = !_expanded),
-            ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  /// How many rows the code takes at [width], and the height of one.
+  ({int count, double height}) _wrappedRows(
+    BuildContext context,
+    TextStyle style, {
+    required double width,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: widget.code, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout(maxWidth: width.isFinite && width > 0 ? width : double.infinity);
+    final metrics = painter.computeLineMetrics();
+    painter.dispose();
+    if (metrics.isEmpty) return (count: 0, height: 0);
+    return (count: metrics.length, height: metrics.first.height);
   }
 }
 
