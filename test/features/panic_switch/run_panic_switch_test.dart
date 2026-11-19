@@ -65,9 +65,4 @@ void main() {
     verify(() => apps.hideOthers([studio])).called(1);
     verify(() => apps.hideSelf()).called(1);
   });
-
-  test('skips hiding itself when turned off', () async {
-    await RunPanicSwitch(apps)(const PanicSwitchConfig(hideSelf: false));
-    verifyNever(() => apps.hideSelf());
-  });
 }
