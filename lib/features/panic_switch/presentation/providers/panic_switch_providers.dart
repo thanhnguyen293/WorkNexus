@@ -6,19 +6,19 @@ import '../../../../app/di/service_locator.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/result.dart';
-import '../../../chat/domain/entities/chat_conversation.dart';
-import '../../../chat/domain/entities/chat_user.dart';
-import '../../../chat/domain/repositories/chat_repository.dart';
 import '../../domain/entities/app_ref.dart';
+import '../../domain/entities/panic_conversation.dart';
+import '../../domain/entities/panic_member.dart';
 import '../../domain/repositories/app_switcher.dart';
+import '../../domain/repositories/panic_chat_gateway.dart';
 import '../../domain/usecases/find_panic_switch_account.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/load_panic_group_members.dart';
 
-/// Chat, reached through its domain interface: the panic switch only reads
-/// groups and members and listens for messages.
-final panicChatRepositoryProvider = Provider<ChatRepository>(
-  (ref) => getIt<ChatRepository>(),
+/// Chat, reached through the switch's own port: it only reads groups and
+/// members, listens for messages and sends the sticker.
+final panicChatGatewayProvider = Provider<PanicChatGateway>(
+  (ref) => getIt<PanicChatGateway>(),
 );
 
 /// The ZenTao account the switch works through; null keeps the feature off.
@@ -29,15 +29,15 @@ final panicSwitchAccountProvider = Provider<Account?>(
 );
 
 final _panicConversationsProvider = StreamProvider.autoDispose
-    .family<List<ChatConversation>, String>(
+    .family<List<PanicConversation>, String>(
       (ref, accountId) =>
-          ref.watch(panicChatRepositoryProvider).watchConversations(accountId),
+          ref.watch(panicChatGatewayProvider).watchConversations(accountId),
     );
 
 final _panicUsersProvider = StreamProvider.autoDispose
-    .family<Map<int, ChatUser>, String>(
+    .family<Map<int, PanicMember>, String>(
       (ref, accountId) => ref
-          .watch(panicChatRepositoryProvider)
+          .watch(panicChatGatewayProvider)
           .watchUsers(accountId)
           .map((users) => {for (final u in users) u.userId: u}),
     );
@@ -63,10 +63,11 @@ typedef PanicGroupKey = ({String accountId, String chatGid});
 
 /// The members of the chosen group who could send the sticker.
 final panicGroupMembersProvider = FutureProvider.autoDispose
-    .family<Result<List<ChatUser>>, PanicGroupKey>(
-      (ref, key) => LoadPanicGroupMembers(
-        ref.watch(panicChatRepositoryProvider),
-      )(accountId: key.accountId, chatGid: key.chatGid),
+    .family<Result<List<PanicMember>>, PanicGroupKey>(
+      (ref, key) => LoadPanicGroupMembers(ref.watch(panicChatGatewayProvider))(
+        accountId: key.accountId,
+        chatGid: key.chatGid,
+      ),
     );
 
 final appSwitcherProvider = Provider<AppSwitcher>(

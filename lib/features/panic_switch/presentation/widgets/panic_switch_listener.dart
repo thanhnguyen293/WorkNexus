@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/result.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../chat/domain/entities/chat_message.dart';
+import '../../domain/entities/panic_incoming_message.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/pick_default_panic_group.dart';
 import '../../domain/value_objects/panic_button_look.dart';
@@ -30,7 +30,7 @@ class PanicSwitchListener extends ConsumerStatefulWidget {
 }
 
 class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
-  StreamSubscription<ChatMessage>? _incoming;
+  StreamSubscription<PanicIncomingMessage>? _incoming;
   StreamSubscription<PanicTrigger>? _triggers;
 
   /// The right-click menu's demo item, in the app's language; null until the

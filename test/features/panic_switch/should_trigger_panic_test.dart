@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
-import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/panic_switch/domain/entities/panic_incoming_message.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
 import 'package:work_nexus/features/panic_switch/domain/panic_switch_constants.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/should_trigger_panic.dart';
@@ -15,27 +14,23 @@ void main() {
     allowedSenderIds: [7],
   );
 
-  ChatMessage message({
+  PanicIncomingMessage message({
     String chatGid = 'g1',
     int senderId = 7,
     bool isMine = false,
-    String name = PanicSwitchConstants.stickerFileName,
+    String? name = PanicSwitchConstants.stickerFileName,
     DateTime? sentAt,
-    MessageContent? content,
-  }) => ChatMessage(
+  }) => PanicIncomingMessage(
     accountId: 'a1',
-    gid: 'm1',
     chatGid: chatGid,
     senderId: senderId,
     sentAt: sentAt ?? now,
     isMine: isMine,
-    content:
-        content ??
-        MessageContent.image(fileId: 1, name: name, size: 10, time: 0),
+    imageName: name,
   );
 
   bool run(
-    ChatMessage m, {
+    PanicIncomingMessage m, {
     PanicSwitchConfig c = config,
     DateTime? last,
     PanicTrigger trigger = PanicTrigger.release,
@@ -61,12 +56,8 @@ void main() {
     expect(run(message(senderId: 8)), isFalse);
     expect(run(message(isMine: true)), isFalse);
     expect(run(message(name: 'cat.png')), isFalse);
-    expect(
-      run(
-        message(content: const MessageContent.text('worknexus-thayvo-v1.png')),
-      ),
-      isFalse,
-    );
+    // Not an image: a text naming the sticker does nothing.
+    expect(run(message(name: null)), isFalse);
   });
 
   test('ignores stale messages but tolerates a little clock skew', () {
@@ -130,19 +121,16 @@ void main() {
   });
 
   test('tells the two stickers apart', () {
-    MessageContent image(String name) =>
-        MessageContent.image(fileId: 1, name: name, size: 1, time: 0);
     expect(
-      ShouldTriggerPanic.triggerOf(image(PanicSwitchConstants.stickerFileName)),
+      ShouldTriggerPanic.triggerOf(PanicSwitchConstants.stickerFileName),
       PanicTrigger.release,
     );
     expect(
-      ShouldTriggerPanic.triggerOf(
-        image(PanicSwitchConstants.demoStickerFileName),
-      ),
+      ShouldTriggerPanic.triggerOf(PanicSwitchConstants.demoStickerFileName),
       PanicTrigger.demo,
     );
-    expect(ShouldTriggerPanic.triggerOf(image('cat.png')), isNull);
+    expect(ShouldTriggerPanic.triggerOf('cat.png'), isNull);
+    expect(ShouldTriggerPanic.triggerOf(null), isNull);
   });
 
   test('lets anyone in the chat set it off by default', () {

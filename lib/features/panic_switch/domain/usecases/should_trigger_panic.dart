@@ -1,5 +1,4 @@
-import '../../../chat/domain/entities/chat_message.dart';
-import '../../../chat/domain/value_objects/message_content.dart';
+import '../entities/panic_incoming_message.dart';
 import '../entities/panic_switch_config.dart';
 import '../panic_switch_constants.dart';
 import '../value_objects/debounce_gate.dart';
@@ -14,7 +13,7 @@ class ShouldTriggerPanic {
 
   bool call({
     required PanicTrigger trigger,
-    required ChatMessage message,
+    required PanicIncomingMessage message,
     required PanicSwitchConfig config,
     required String accountId,
     required DateTime now,
@@ -32,7 +31,7 @@ class ShouldTriggerPanic {
         !config.allowedSenderIds.contains(message.senderId)) {
       return false;
     }
-    if (triggerOf(message.content) != trigger) return false;
+    if (triggerOf(message.imageName) != trigger) return false;
     // Both ways: the sender's clock may run a little ahead of this one.
     if (now.difference(message.sentAt).abs() >
         PanicSwitchConstants.freshWindow) {
@@ -45,9 +44,7 @@ class ShouldTriggerPanic {
     );
   }
 
-  /// The trigger [content] is the sticker of, if any.
-  static PanicTrigger? triggerOf(MessageContent content) => switch (content) {
-    ImageContent(:final name) => PanicTrigger.ofSticker(name),
-    _ => null,
-  };
+  /// The trigger an image named [imageName] is the sticker of, if any.
+  static PanicTrigger? triggerOf(String? imageName) =>
+      imageName == null ? null : PanicTrigger.ofSticker(imageName);
 }

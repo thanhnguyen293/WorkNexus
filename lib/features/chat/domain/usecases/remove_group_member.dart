@@ -1,14 +1,14 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 
 /// Removes someone from a group chat. As in the official client, only the
 /// group's owner may, and never themself.
 class RemoveGroupMember {
   const RemoveGroupMember(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   /// Whether the signed-in user may remove members at all.
   bool canRemove(ChatConversation chat, {required String? selfAccount}) =>

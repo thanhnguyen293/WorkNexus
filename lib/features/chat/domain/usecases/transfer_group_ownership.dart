@@ -1,14 +1,14 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 
 /// Hands a group over to another member, who becomes its owner. Only the
 /// current owner may.
 class TransferGroupOwnership {
   const TransferGroupOwnership(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   bool canTransfer(ChatConversation chat, {required String? selfAccount}) =>
       chat.type == ChatType.group &&

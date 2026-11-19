@@ -1,7 +1,7 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 import 'can_send_to_chat.dart';
 
 /// Adds people to a group chat. As in the official client: the owner and
@@ -11,7 +11,7 @@ import 'can_send_to_chat.dart';
 class AddGroupMembers {
   const AddGroupMembers(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
   final _canSend = const CanSendToChat();
 
   bool canAdd(

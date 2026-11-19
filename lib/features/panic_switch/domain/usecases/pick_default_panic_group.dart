@@ -1,4 +1,4 @@
-import '../../../chat/domain/entities/chat_conversation.dart';
+import '../entities/panic_conversation.dart';
 import '../panic_switch_constants.dart';
 
 /// The group to use before the user picks one: the one named
@@ -7,10 +7,10 @@ import '../panic_switch_constants.dart';
 class PickDefaultPanicGroup {
   const PickDefaultPanicGroup();
 
-  String? call(List<ChatConversation> conversations) {
+  String? call(List<PanicConversation> conversations) {
     final wanted = _key(PanicSwitchConstants.defaultGroupName);
     for (final c in conversations) {
-      if (c.type == ChatType.group && _key(c.name) == wanted) {
+      if (c.kind == PanicChatKind.group && _key(c.name) == wanted) {
         return c.gid;
       }
     }

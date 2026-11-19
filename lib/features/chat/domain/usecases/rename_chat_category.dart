@@ -1,7 +1,7 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 
 /// Renames a category by refiling every chat in it, as xxd keeps a category
 /// only as a name on each chat. An empty [to] deletes the category: its
@@ -9,7 +9,7 @@ import '../repositories/chat_repository.dart';
 class RenameChatCategory {
   const RenameChatCategory(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   Future<Result<void>> call(
     String accountId,

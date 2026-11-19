@@ -1,6 +1,6 @@
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_conversation.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../../domain/repositories/chat_group_repository.dart';
 import '../../domain/usecases/add_group_members.dart';
 import '../../domain/usecases/dismiss_group_chat.dart';
 import '../../domain/usecases/leave_group_chat.dart';
@@ -15,7 +15,7 @@ import '../../domain/value_objects/chat_committers.dart';
 /// members, admins and ownership — and leaving it. Each delegates to one use case; widgets show the
 /// returned [Result] (CLAUDE.md 2.4, 11.3).
 class ChatGroupController {
-  ChatGroupController(ChatRepository repository)
+  ChatGroupController(ChatGroupRepository repository)
     : _rename = RenameGroupChat(repository),
       _dismiss = DismissGroupChat(repository),
       _add = AddGroupMembers(repository),

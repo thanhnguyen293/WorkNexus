@@ -1,7 +1,7 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 
 /// Renames a group chat. As in the official client, only the group's owner
 /// and admins may, and not once the group is dismissed (the server checks
@@ -9,7 +9,7 @@ import '../repositories/chat_repository.dart';
 class RenameGroupChat {
   const RenameGroupChat(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   bool canRename(
     ChatConversation chat, {

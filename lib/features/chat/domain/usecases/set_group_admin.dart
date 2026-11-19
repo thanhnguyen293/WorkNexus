@@ -1,14 +1,14 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 
 /// Makes a member an admin of a group, or a plain member again. As in the
 /// official client, only the group's owner may, and not for themself.
 class SetGroupAdmin {
   const SetGroupAdmin(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   bool canSetAdmins(ChatConversation chat, {required String? selfAccount}) =>
       chat.type == ChatType.group &&

@@ -464,7 +464,10 @@ void main() {
     );
     final gid = chats.last.gid;
 
-    expect(await repo.renameGroupChat(_acc, gid, 'Renamed'), isA<Ok<void>>());
+    expect(
+      await repo.groups.renameGroupChat(_acc, gid, 'Renamed'),
+      isA<Ok<void>>(),
+    );
     expect(
       server.requests.lastWhere((r) => r['method'] == 'chatrename')['params'],
       [gid, 'Renamed'],
@@ -474,7 +477,7 @@ void main() {
       (l) => byGid(l, gid)?.name == 'Renamed',
     );
 
-    expect(await repo.dismissGroupChat(_acc, gid), isA<Ok<void>>());
+    expect(await repo.groups.dismissGroupChat(_acc, gid), isA<Ok<void>>());
     expect(
       server.requests.lastWhere((r) => r['method'] == 'chatdismiss')['params'],
       [gid],
@@ -493,7 +496,10 @@ void main() {
     );
     final gid = chats.last.gid;
 
-    expect(await repo.addGroupMembers(_acc, gid, [41, 42]), isA<Ok<void>>());
+    expect(
+      await repo.groups.addGroupMembers(_acc, gid, [41, 42]),
+      isA<Ok<void>>(),
+    );
     expect(
       server.requests.lastWhere((r) => r['method'] == 'chatinvite')['params'],
       [
@@ -509,7 +515,10 @@ void main() {
     expect(invited.adminInvite, isTrue);
     expect(invited.isPublic, isTrue);
 
-    expect(await repo.removeGroupMembers(_acc, gid, [40]), isA<Ok<void>>());
+    expect(
+      await repo.groups.removeGroupMembers(_acc, gid, [40]),
+      isA<Ok<void>>(),
+    );
     expect(
       server.requests.lastWhere((r) => r['method'] == 'chatkick')['params'],
       [
@@ -532,7 +541,7 @@ void main() {
     final gid = chats.last.gid;
 
     expect(
-      await repo.setGroupSettings(
+      await repo.groups.setGroupSettings(
         _acc,
         gid,
         isPublic: true,
@@ -556,7 +565,7 @@ void main() {
     );
 
     expect(
-      await repo.setGroupAdmins(_acc, gid, [41], admin: true),
+      await repo.groups.setGroupAdmins(_acc, gid, [41], admin: true),
       isA<Ok<void>>(),
     );
     expect(
@@ -574,7 +583,10 @@ void main() {
       (l) => byGid(l, gid)!.adminIds.contains(41),
     );
 
-    expect(await repo.transferGroupOwnership(_acc, gid, 41), isA<Ok<void>>());
+    expect(
+      await repo.groups.transferGroupOwnership(_acc, gid, 41),
+      isA<Ok<void>>(),
+    );
     await eventually(
       repo.watchConversations(_acc),
       (l) => byGid(l, gid)!.ownerAccount == 'u41',
@@ -589,7 +601,10 @@ void main() {
     );
     final gids = [for (final c in chats) c.gid];
 
-    expect(await repo.setChatCategory(_acc, gids, 'Work'), isA<Ok<void>>());
+    expect(
+      await repo.groups.setChatCategory(_acc, gids, 'Work'),
+      isA<Ok<void>>(),
+    );
     expect(
       server.requests.lastWhere(
         (r) => r['method'] == 'chatsetcategory',
@@ -610,7 +625,7 @@ void main() {
     );
     final gid = chats.last.gid;
 
-    expect(await repo.leaveGroupChat(_acc, gid), isA<Ok<void>>());
+    expect(await repo.groups.leaveGroupChat(_acc, gid), isA<Ok<void>>());
     expect(
       server.requests.lastWhere((r) => r['method'] == 'chatleave')['params'],
       [gid],

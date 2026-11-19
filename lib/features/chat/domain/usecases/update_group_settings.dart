@@ -1,7 +1,7 @@
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../entities/chat_conversation.dart';
-import '../repositories/chat_repository.dart';
+import '../repositories/chat_group_repository.dart';
 import '../value_objects/chat_committers.dart';
 
 /// Changes a group's settings: whether it is public, whether only its owner
@@ -10,7 +10,7 @@ import '../value_objects/chat_committers.dart';
 class UpdateGroupSettings {
   const UpdateGroupSettings(this._repository);
 
-  final ChatRepository _repository;
+  final ChatGroupRepository _repository;
 
   bool canEdit(
     ChatConversation chat, {
