@@ -14,6 +14,7 @@ import 'package:work_nexus/features/panic_switch/domain/usecases/load_panic_grou
 import 'package:work_nexus/features/panic_switch/domain/usecases/pick_default_panic_group.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/send_panic_sticker.dart';
 import 'package:work_nexus/features/panic_switch/domain/usecases/should_send_panic.dart';
+import 'package:work_nexus/features/panic_switch/domain/value_objects/panic_trigger.dart';
 
 class _MockChats extends Mock implements ChatRepository {}
 
@@ -48,6 +49,7 @@ void main() {
       ).thenAnswer((_) async => const Ok(null));
 
       final result = await SendPanicSticker(chats, sticker)(
+        trigger: PanicTrigger.release,
         accountId: 'a1',
         chatGid: 'g1',
       );
@@ -71,6 +73,7 @@ void main() {
       ).thenAnswer((_) async => const Err(StorageFailure('missing')));
 
       final result = await SendPanicSticker(chats, sticker)(
+        trigger: PanicTrigger.release,
         accountId: 'a1',
         chatGid: 'g1',
       );
@@ -96,12 +99,30 @@ void main() {
     const should = ShouldSendPanic();
     final now = DateTime(2026, 11, 18);
     const config = PanicSwitchConfig(chatGid: 'g1');
-    expect(should(config: const PanicSwitchConfig(), now: now), isFalse);
-    expect(should(config: config, now: now), isTrue);
-    // Test mode sends to its own chat, which must be picked.
-    expect(should(config: config.copyWith(testMode: true), now: now), isFalse);
+    const r = PanicTrigger.release;
+    const d = PanicTrigger.demo;
+    expect(
+      should(trigger: r, config: const PanicSwitchConfig(), now: now),
+      isFalse,
+    );
+    expect(should(trigger: r, config: config, now: now), isTrue);
+    // The demo needs demo mode and its own chat.
+    expect(should(trigger: d, config: config, now: now), isFalse);
+    expect(
+      should(trigger: d, config: config.copyWith(demoMode: true), now: now),
+      isFalse,
+    );
     expect(
       should(
+        trigger: d,
+        config: config.copyWith(demoMode: true, demoChatGid: 'dm'),
+        now: now,
+      ),
+      isTrue,
+    );
+    expect(
+      should(
+        trigger: r,
         config: config,
         now: now,
         lastSentAt: now.subtract(const Duration(seconds: 30)),

@@ -24,9 +24,9 @@ struct PanicSwitch {
   double press_x = 0;
   double press_y = 0;
 
-  // Clicks in a row, for the triple click.
-  int clicks = 0;
-  gint64 last_click_us = 0;
+  // Clicks in a row, for the triple click, of each button (left, right).
+  int clicks[2] = {0, 0};
+  gint64 last_click_us[2] = {0, 0};
 };
 
 PanicSwitch* g_panic_switch = nullptr;
@@ -59,29 +59,40 @@ gboolean on_motion(GtkWidget*, GdkEventMotion* event, gpointer data) {
   // The window manager moves it: the only way that also works on Wayland.
   self->dragged = true;
   self->pressed = false;
-  self->clicks = 0;
+  self->clicks[0] = 0;
   gtk_window_begin_move_drag(GTK_WINDOW(self->window), 1,
                              static_cast<gint>(event->x_root),
                              static_cast<gint>(event->y_root), event->time);
   return TRUE;
 }
 
+// Counts a click; three in a row of the left button send "release", of the
+// right button "demo".
+void count_click(PanicSwitch* self, bool demo) {
+  const int b = demo ? 1 : 0;
+  const gint64 now = g_get_monotonic_time();
+  self->clicks[b] = (self->clicks[b] > 0 &&
+                     now - self->last_click_us[b] <=
+                         static_cast<gint64>(DoubleClickMs()) * 1000)
+                        ? self->clicks[b] + 1
+                        : 1;
+  self->last_click_us[b] = now;
+  if (self->clicks[b] < 3) return;
+  self->clicks[b] = 0;
+  g_autoptr(FlValue) which = fl_value_new_string(demo ? "demo" : "release");
+  fl_method_channel_invoke_method(self->channel, "overlayTriggered", which,
+                                  nullptr, nullptr, nullptr);
+}
+
 gboolean on_release(GtkWidget*, GdkEventButton* event, gpointer data) {
   auto* self = static_cast<PanicSwitch*>(data);
+  if (event->button == 3) {
+    count_click(self, true);
+    return TRUE;
+  }
   if (event->button != 1 || !self->pressed) return TRUE;
   self->pressed = false;
-  const gint64 now = g_get_monotonic_time();
-  self->clicks =
-      (self->clicks > 0 &&
-       now - self->last_click_us <= static_cast<gint64>(DoubleClickMs()) * 1000)
-          ? self->clicks + 1
-          : 1;
-  self->last_click_us = now;
-  if (self->clicks >= 3) {
-    self->clicks = 0;
-    fl_method_channel_invoke_method(self->channel, "overlayTriggered", nullptr,
-                                    nullptr, nullptr, nullptr);
-  }
+  count_click(self, false);
   return TRUE;
 }
 

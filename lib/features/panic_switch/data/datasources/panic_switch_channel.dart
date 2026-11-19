@@ -7,15 +7,19 @@ class PanicSwitchChannel {
   PanicSwitchChannel({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('worknexus/panic_switch') {
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'overlayTriggered') _triggers.add(null);
+      if (call.method == 'overlayTriggered') {
+        // Older runners sent no argument: the left-button trigger.
+        _triggers.add(call.arguments as String? ?? 'release');
+      }
     });
   }
 
   final MethodChannel _channel;
-  final _triggers = StreamController<void>.broadcast();
+  final _triggers = StreamController<String>.broadcast();
 
-  /// Triple clicks on the floating button.
-  Stream<void> get triggers => _triggers.stream;
+  /// Triple clicks on the floating button: `release` (left button) or `demo`
+  /// (right button).
+  Stream<String> get triggers => _triggers.stream;
 
   Future<List<({String id, String name})>> listApps() async {
     final apps = await _channel.invokeListMethod<Map<Object?, Object?>>(
