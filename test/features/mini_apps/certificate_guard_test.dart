@@ -146,4 +146,27 @@ void main() {
     await guard.onTrustChanged(const []);
     expect(sent, [true, false]);
   }, variant: _windows);
+
+  group('trustsChallenge (macOS)', () {
+    bool trusts(String host, int? port, {String? home}) =>
+        MiniAppCertificateGuard.trustsChallenge(
+          host: host,
+          port: port,
+          home: home,
+          trusted: const ['https://dash.lan:8443', 'https://app.lan:443'],
+        );
+
+    test('lets a trusted site through, port included', () {
+      expect(trusts('dash.lan', 8443), isTrue);
+      expect(trusts('dash.lan', 443), isFalse);
+      expect(trusts('app.lan', null), isTrue);
+      expect(trusts('app.lan', 0), isTrue);
+    });
+
+    test("lets the trusted mini app's page call other servers", () {
+      expect(trusts('api.lan', 9000, home: 'https://app.lan:443'), isTrue);
+      expect(trusts('api.lan', 9000, home: 'https://other.lan:443'), isFalse);
+      expect(trusts('api.lan', 9000), isFalse);
+    });
+  });
 }
