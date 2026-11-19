@@ -6,14 +6,14 @@ import '../../../../core/widgets/app_expandable_card.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/panic_switch_config.dart';
 import 'panic_app_checklist.dart';
+import 'panic_behaviour_sections.dart';
 import 'panic_labels.dart';
-import 'panic_more_settings.dart';
 import 'panic_sender_list.dart';
 import 'panic_steps.dart';
 import 'panic_try_button.dart';
 
 /// The "Official" tab: the team group trigger — how it works, the apps to
-/// open, who may set it off, and the rest folded away.
+/// open, who may set it off, and how this computer reacts.
 class PanicReleaseTab extends StatelessWidget {
   const PanicReleaseTab({
     super.key,
@@ -68,7 +68,7 @@ class PanicReleaseTab extends StatelessWidget {
           hint: l.panicSwitchTryHint,
           trailing: const PanicTryButton(),
         ),
-        PanicMoreSettings(config: config),
+        PanicBehaviourSections(config: config),
       ],
     );
   }
