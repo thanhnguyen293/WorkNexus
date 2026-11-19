@@ -37,6 +37,9 @@ class _AppExpandableCardState extends State<AppExpandableCard> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    if (AppExpandableCardScope.isFlat(context)) {
+      return AppFlatCard(children: widget.sections);
+    }
     // A Material, not a filled Container, so the header's InkWell hover
     // paints on top of the card's fill.
     return Material(
@@ -185,6 +188,54 @@ class AppExpandableCardSection extends StatelessWidget {
           ),
           if (child != null) ...[SizedBox(height: context.spacing.lg), child],
         ],
+      ),
+    );
+  }
+}
+
+/// Shows the [AppExpandableCard]s below it flat: no header, always open —
+/// for a card that has a settings page to itself, whose title already names
+/// it.
+class AppExpandableCardScope extends InheritedWidget {
+  const AppExpandableCardScope({
+    super.key,
+    this.flat = true,
+    required super.child,
+  });
+
+  final bool flat;
+
+  static bool isFlat(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<AppExpandableCardScope>()
+          ?.flat ??
+      false;
+
+  @override
+  bool updateShouldNotify(AppExpandableCardScope old) => flat != old.flat;
+}
+
+/// A settings card's frame without a header: [children] (usually
+/// [AppExpandableCardSection]s) in the card's rounded, outlined surface. The
+/// first section's hairline falls on the card's own edge.
+class AppFlatCard extends StatelessWidget {
+  const AppFlatCard({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        side: BorderSide(color: c.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }

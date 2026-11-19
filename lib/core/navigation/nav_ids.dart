@@ -6,8 +6,14 @@ extension type const ViewModeId(String value) {}
 /// The dashboard's pages. Members is not in any menu until the feature exists.
 enum WorkspaceSection { overview, members }
 
-/// The pages of the rail's Settings place: the app's settings and the
-/// connected accounts.
-enum SettingsSection { general, integrations }
+/// The pages of the rail's Settings place: one per group of the app's
+/// settings, then the connected accounts.
+enum SettingsSection {
+  general,
+  translation,
+  miniApps,
+  panicSwitch,
+  integrations,
+}
 
 enum QuickScope { all, assignedToMe, reviewRequested }

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/util/translation_languages.dart';
+import '../../../../core/widgets/app_expandable_card.dart';
 import '../../../../core/widgets/translation_language_control.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../translation_providers.dart';
@@ -40,6 +41,9 @@ class _TranslationSettingsCardState
         ref.watch(translationBackendNameProvider) ??
         AppL10n.of(context).translationApiCustom;
     final summary = '${translationLanguageFor(lang).nativeName} · $backend';
+    if (AppExpandableCardScope.isFlat(context)) {
+      return AppFlatCard(children: [_Body(lang: lang)]);
+    }
 
     // A Material, not a filled Container, so the header's InkWell hover
     // paints on top of the card's fill.
