@@ -83,7 +83,7 @@ void main() {
   });
 
   test('listens in the test chat while test mode is on', () {
-    final test = config.copyWith(testMode: true, testReceiveChatGid: 'dm');
+    final test = config.copyWith(testMode: true, testChatGid: 'dm');
     expect(run(message(chatGid: 'dm'), c: test), isTrue);
     expect(run(message(), c: test), isFalse);
   });

@@ -29,6 +29,7 @@ class PanicSenderList extends ConsumerWidget {
     final l = AppL10n.of(context);
     final chatGid = config.receiveChatGid;
     if (chatGid == null) return _Note(l.panicSwitchSendersNeedGroup);
+    if (config.sendsToSelf) return _Note(l.panicSwitchSelfChatNote);
     final members = ref.watch(
       panicGroupMembersProvider((accountId: accountId, chatGid: chatGid)),
     );

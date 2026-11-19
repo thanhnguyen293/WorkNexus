@@ -12,9 +12,8 @@ abstract final class PanicSwitchConfigMapper {
     'overlayVisible': c.overlayVisible,
     'chatGid': c.chatGid,
     'testMode': c.testMode,
-    'testSendChatGid': c.testSendChatGid,
-    'testSendToSelf': c.testSendToSelf,
-    'testReceiveChatGid': c.testReceiveChatGid,
+    'testChatGid': c.testChatGid,
+    'testChatIsSelf': c.testChatIsSelf,
     'anySender': c.anySender,
     'allowedSenderIds': c.allowedSenderIds,
     'targetApp': c.targetApp == null ? null : _app(c.targetApp!),
@@ -31,14 +30,25 @@ abstract final class PanicSwitchConfigMapper {
     // looked up again.
     final legacySelf = json['chatIsSelf'] == true;
     final legacySelfGid = legacySelf ? json['chatGid'] as String? : null;
+    // Test mode had a chat to send to and one to listen in; the listening one
+    // is kept (the one people picked a group for), else the sending one.
+    final send = json['testSendChatGid'] as String? ?? legacySelfGid;
+    final testChatGid =
+        json['testChatGid'] as String? ??
+        json['testReceiveChatGid'] as String? ??
+        send;
+    final testChatIsSelf =
+        json['testChatIsSelf'] as bool? ??
+        (testChatGid != null &&
+            testChatGid == send &&
+            (json['testSendToSelf'] == true || legacySelf));
     return PanicSwitchConfig(
       enabled: json['enabled'] as bool? ?? true,
       overlayVisible: json['overlayVisible'] as bool? ?? true,
       chatGid: legacySelf ? null : json['chatGid'] as String?,
       testMode: json['testMode'] as bool? ?? legacySelf,
-      testSendChatGid: json['testSendChatGid'] as String? ?? legacySelfGid,
-      testSendToSelf: json['testSendToSelf'] as bool? ?? legacySelf,
-      testReceiveChatGid: json['testReceiveChatGid'] as String?,
+      testChatGid: testChatGid,
+      testChatIsSelf: testChatIsSelf,
       anySender: json['anySender'] as bool? ?? true,
       allowedSenderIds: [
         for (final id in json['allowedSenderIds'] as List? ?? const [])

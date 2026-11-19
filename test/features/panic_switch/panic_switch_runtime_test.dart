@@ -96,8 +96,8 @@ void main() {
   test('sent to yourself, also switches apps here', () async {
     const self = PanicSwitchConfig(
       testMode: true,
-      testSendChatGid: 'cloud',
-      testSendToSelf: true,
+      testChatGid: 'cloud',
+      testChatIsSelf: true,
     );
     final r = PanicSwitchRuntime(
       account: () => account,

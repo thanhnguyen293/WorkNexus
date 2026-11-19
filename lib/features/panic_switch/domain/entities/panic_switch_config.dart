@@ -22,17 +22,16 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     /// by name (`PickDefaultPanicGroup`), null until found.
     String? chatGid,
 
-    /// Test mode: the sticker goes to [testSendChatGid] and is listened for in
-    /// [testReceiveChatGid] instead of the team's group, to try the switch
-    /// without bothering anyone.
+    /// Test mode: the sticker is sent to and listened for in [testChatGid]
+    /// instead of the team's group, to try the switch without bothering
+    /// anyone.
     @Default(false) bool testMode,
-    String? testSendChatGid,
+    String? testChatGid,
 
-    /// [testSendChatGid] is the user's own chat ("My Cloud"): sending there
+    /// [testChatGid] is the user's own chat ("My Cloud"): sending there
     /// switches apps on this computer, as the user's own messages never come
     /// back as incoming.
-    @Default(false) bool testSendToSelf,
-    String? testReceiveChatGid,
+    @Default(false) bool testChatIsSelf,
 
     /// Anyone in the chat (but you) may set the switch off here; when off,
     /// only [allowedSenderIds] may.
@@ -54,11 +53,11 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
   }) = _PanicSwitchConfig;
 
   /// Where the floating button sends the sticker.
-  String? get sendChatGid => testMode ? testSendChatGid : chatGid;
+  String? get sendChatGid => testMode ? testChatGid : chatGid;
 
   /// Sending switches apps on this computer too (test mode, to yourself).
-  bool get sendsToSelf => testMode && testSendToSelf;
+  bool get sendsToSelf => testMode && testChatIsSelf;
 
   /// Where an arriving sticker sets the switch off.
-  String? get receiveChatGid => testMode ? testReceiveChatGid : chatGid;
+  String? get receiveChatGid => testMode ? testChatGid : chatGid;
 }

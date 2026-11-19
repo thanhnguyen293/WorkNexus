@@ -31,9 +31,8 @@ void main() {
       overlayVisible: false,
       chatGid: 'g1',
       testMode: true,
-      testSendChatGid: 'cloud',
-      testSendToSelf: true,
-      testReceiveChatGid: 'dm',
+      testChatGid: 'cloud',
+      testChatIsSelf: true,
       anySender: false,
       allowedSenderIds: [3, 7],
       targetApp: AppRef(
@@ -56,7 +55,17 @@ void main() {
 
     expect(config.chatGid, isNull);
     expect(config.testMode, isTrue);
-    expect(config.testSendChatGid, '40&40');
-    expect(config.testSendToSelf, isTrue);
+    expect(config.testChatGid, '40&40');
+    expect(config.testChatIsSelf, isTrue);
+  });
+
+  test('keeps the listening chat of the old two-chat test mode', () {
+    final config = PanicSwitchConfigMapper.fromJson(
+      '{"testMode":true,"testSendChatGid":"40&40","testSendToSelf":true,'
+      '"testReceiveChatGid":"g9"}',
+    );
+
+    expect(config.testChatGid, 'g9');
+    expect(config.testChatIsSelf, isFalse);
   });
 }
