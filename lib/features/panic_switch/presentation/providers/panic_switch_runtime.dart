@@ -11,6 +11,7 @@ import '../../domain/usecases/run_panic_switch.dart';
 import '../../domain/usecases/send_panic_sticker.dart';
 import '../../domain/usecases/should_send_panic.dart';
 import '../../domain/usecases/should_trigger_panic.dart';
+import '../../domain/value_objects/panic_button_look.dart';
 import '../../domain/value_objects/panic_trigger.dart';
 import 'panic_switch_config_controller.dart';
 import 'panic_switch_providers.dart';
@@ -106,11 +107,11 @@ class PanicSwitchRuntime {
     return _run(config);
   }
 
-  /// Puts the floating button up or takes it down.
-  Future<Result<void>> showOverlay(bool visible) async {
-    if (!visible) return overlay.hide();
+  /// Puts the floating button up as [look] says, or takes it down (null).
+  Future<Result<void>> showOverlay(PanicButtonLook? look) async {
+    if (look == null) return overlay.hide();
     return switch (await _sticker.bytes()) {
-      Ok(:final value) => overlay.show(value),
+      Ok(:final value) => overlay.show(value, look),
       Err(:final failure) => Err(failure),
     };
   }
@@ -128,13 +129,13 @@ final panicSwitchRuntimeProvider = Provider<PanicSwitchRuntime>(
   ),
 );
 
-/// Whether the floating button should be on screen: wanted, with a chat to
-/// send to (the team's group or the demo chat), for a user of the ZenTao the
-/// feature is offered for.
-final panicOverlayVisibleProvider = Provider<bool>((ref) {
-  if (ref.watch(panicSwitchAccountProvider) == null) return false;
+/// How the floating button should be on screen, or null to take it down: it
+/// is wanted, with a chat to send to (the team's group or the demo chat), for
+/// a user of the ZenTao the feature is offered for.
+final panicOverlayLookProvider = Provider<PanicButtonLook?>((ref) {
+  if (ref.watch(panicSwitchAccountProvider) == null) return null;
   final config = ref.watch(panicSwitchConfigProvider).asData?.value;
-  return config != null &&
-      config.overlayVisible &&
-      PanicTrigger.values.any((t) => config.chatFor(t) != null);
+  if (config == null || !config.overlayVisible) return null;
+  final hasChat = PanicTrigger.values.any((t) => config.chatFor(t) != null);
+  return hasChat ? config.overlayLook : null;
 });

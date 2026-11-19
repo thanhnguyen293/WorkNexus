@@ -16,8 +16,11 @@ namespace {
 
 constexpr wchar_t kClassName[] = L"WORKNEXUS_PANIC_OVERLAY";
 
-// The button's width in pixels at 100% scaling.
+// The window's size before the first Show.
 constexpr int kWidth = 120;
+
+// A press at least this long (ms) is a long press.
+constexpr DWORD kHoldMs = 800;
 
 // How far (in pixels) the cursor may move before a press becomes a drag.
 constexpr int kDragSlop = 3;
@@ -114,13 +117,15 @@ bool PanicOverlayWindow::EnsureWindow() {
   return window_ != nullptr;
 }
 
-bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image) {
+bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image, int width,
+                              double opacity, const std::string& gesture) {
   if (!EnsureWindow()) return false;
+  gesture_ = gesture;
   const UINT dpi = FlutterDesktopGetDpiForMonitor(
       MonitorFromWindow(window_, MONITOR_DEFAULTTOPRIMARY));
-  const int width = MulDiv(kWidth, dpi ? dpi : 96, 96);
   SIZE size = {};
-  HBITMAP bitmap = DecodeScaled(image, width, &size);
+  HBITMAP bitmap =
+      DecodeScaled(image, MulDiv(width, dpi ? dpi : 96, 96), &size);
   if (!bitmap) return false;
 
   RECT bounds = {};
@@ -139,7 +144,9 @@ bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image) {
   HDC memory = CreateCompatibleDC(screen);
   HGDIOBJ previous = SelectObject(memory, bitmap);
   POINT source = {0, 0};
-  BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+  const BYTE alpha =
+      static_cast<BYTE>(std::clamp(opacity, 0.0, 1.0) * 255.0 + 0.5);
+  BLENDFUNCTION blend = {AC_SRC_OVER, 0, alpha, AC_SRC_ALPHA};
   UpdateLayeredWindow(window_, screen, &origin, &size, memory, &source, 0,
                       &blend, ULW_ALPHA);
   SelectObject(memory, previous);
@@ -182,6 +189,7 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       window_at_press_ = {bounds.left, bounds.top};
       pressed_ = true;
       dragged_ = false;
+      pressed_at_[0] = GetTickCount();
       SetCapture(window);
       return 0;
     }
@@ -211,6 +219,7 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       }
       return 0;
     case WM_RBUTTONDOWN:
+      pressed_at_[1] = GetTickCount();
       return 0;
     case WM_RBUTTONUP:
       OnClick(true);
@@ -225,11 +234,18 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
 void PanicOverlayWindow::OnClick(bool demo) {
   const int b = demo ? 1 : 0;
   const DWORD now = GetTickCount();
+  if (gesture_ == "hold") {
+    const bool held = pressed_at_[b] != 0 && now - pressed_at_[b] >= kHoldMs;
+    pressed_at_[b] = 0;
+    if (held && on_trigger_) on_trigger_(demo);
+    return;
+  }
+  const int needed = gesture_ == "double" ? 2 : 3;
   clicks_[b] = (clicks_[b] > 0 && now - last_click_[b] <= GetDoubleClickTime())
                    ? clicks_[b] + 1
                    : 1;
   last_click_[b] = now;
-  if (clicks_[b] >= 3) {
+  if (clicks_[b] >= needed) {
     clicks_[b] = 0;
     if (on_trigger_) on_trigger_(demo);
   }

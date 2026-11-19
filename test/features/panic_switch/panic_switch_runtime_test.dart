@@ -187,7 +187,10 @@ void main() {
     final source = _MockSticker();
     final image = Uint8List.fromList([1, 2, 3]);
     when(source.bytes).thenAnswer((_) async => Ok(image));
-    when(() => overlay.show(image)).thenAnswer((_) async => const Ok(null));
+    final look = config.overlayLook;
+    when(
+      () => overlay.show(image, look),
+    ).thenAnswer((_) async => const Ok(null));
     final r = PanicSwitchRuntime(
       account: () => account,
       config: () => config,
@@ -198,7 +201,11 @@ void main() {
       incoming: const Stream.empty(),
     );
 
-    expect((await r.showOverlay(true)).isOk, isTrue);
-    verify(() => overlay.show(image)).called(1);
+    expect((await r.showOverlay(look)).isOk, isTrue);
+    verify(() => overlay.show(image, look)).called(1);
+
+    when(overlay.hide).thenAnswer((_) async => const Ok(null));
+    await r.showOverlay(null);
+    verify(overlay.hide).called(1);
   });
 }

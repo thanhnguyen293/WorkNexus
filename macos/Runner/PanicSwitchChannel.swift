@@ -47,7 +47,12 @@ final class PanicSwitchChannel {
             "overlayTriggered", arguments: demo ? "demo" : "release")
         }
       }
-      overlay?.show(image: image)
+      overlay?.show(
+        image: image,
+        width: CGFloat((args?["size"] as? NSNumber)?.doubleValue ?? 120),
+        opacity: CGFloat((args?["opacity"] as? NSNumber)?.doubleValue ?? 1),
+        gesture: args?["gesture"] as? String ?? "triple"
+      )
       result(nil)
     case "hideOverlay":
       overlay?.orderOut(nil)
