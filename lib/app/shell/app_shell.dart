@@ -21,6 +21,7 @@ import '../../features/connections/presentation/widgets/local_cache_quick_settin
 import '../../features/connections/presentation/widgets/zentao_profile_startup.dart';
 import '../../features/notifications/presentation/widgets/notification_alerts.dart';
 import '../../features/notifications/presentation/widgets/notifications_panel.dart';
+import '../../features/panic_switch/presentation/widgets/panic_switch_listener.dart';
 import '../../shared/board/presentation/widgets/board_filter_keep_alive.dart';
 import '../../shared/detail/presentation/detail_overlay.dart';
 import 'account_sync_at_launch.dart';
@@ -81,60 +82,62 @@ class AppShell extends ConsumerWidget {
     // A mini app, like the editor, takes the whole area beside the rail.
     final miniAppOnScreen = ref.watch(miniAppOnScreenProvider);
 
-    return AccountSyncAtLaunch(
-      child: ChatAtLaunch(
-        child: BoardFilterKeepAlive(
-          child: TicketLinkHandler(
-            child: ChatNotificationListener(
-              child: NotificationAlerts(
-                child: ChatAppBadge(
-                  child: StickerImportListener(
-                    child: Scaffold(
-                      backgroundColor: c.background,
-                      body: NewTicketShortcut(
-                        child: Column(
-                          children: [
-                            TitleBar(assignedCount: assigned),
-                            Expanded(
-                              child: Stack(
-                                children: [
-                                  const ZenTaoProfileStartup(),
-                                  const ChatPrivacyShortcut(),
-                                  Row(
-                                    children: [
-                                      const AppNavRail(),
-                                      // Mounted throughout, so each place's
-                                      // column outlives the editor or a mini
-                                      // app taking the area.
-                                      ToolPaneHost(
-                                        nav: nav,
-                                        hidden:
-                                            editor != null || miniAppOnScreen,
-                                      ),
-                                      const Expanded(child: Viewport()),
-                                    ],
-                                  ),
-                                  NotificationsPanel(
-                                    leftInset: AppNavRail.widthOf(context),
-                                  ),
-                                  const DetailOverlay(),
-                                  const QuickSettingsSidePanel(
-                                    generalSections: [
-                                      LocalCacheQuickSettings(),
-                                    ],
-                                    chatSections: [
-                                      ChatAppearanceSettings(),
-                                      ChatAutoDownloadSettings(),
-                                      ChatNotificationSettings(),
-                                      ChatPrivacySettings(),
-                                      ChatLocalApiSettings(),
-                                    ],
-                                  ),
-                                  const TalkerDebugOverlay(),
-                                ],
+    return PanicSwitchListener(
+      child: AccountSyncAtLaunch(
+        child: ChatAtLaunch(
+          child: BoardFilterKeepAlive(
+            child: TicketLinkHandler(
+              child: ChatNotificationListener(
+                child: NotificationAlerts(
+                  child: ChatAppBadge(
+                    child: StickerImportListener(
+                      child: Scaffold(
+                        backgroundColor: c.background,
+                        body: NewTicketShortcut(
+                          child: Column(
+                            children: [
+                              TitleBar(assignedCount: assigned),
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    const ZenTaoProfileStartup(),
+                                    const ChatPrivacyShortcut(),
+                                    Row(
+                                      children: [
+                                        const AppNavRail(),
+                                        // Mounted throughout, so each place's
+                                        // column outlives the editor or a mini
+                                        // app taking the area.
+                                        ToolPaneHost(
+                                          nav: nav,
+                                          hidden:
+                                              editor != null || miniAppOnScreen,
+                                        ),
+                                        const Expanded(child: Viewport()),
+                                      ],
+                                    ),
+                                    NotificationsPanel(
+                                      leftInset: AppNavRail.widthOf(context),
+                                    ),
+                                    const DetailOverlay(),
+                                    const QuickSettingsSidePanel(
+                                      generalSections: [
+                                        LocalCacheQuickSettings(),
+                                      ],
+                                      chatSections: [
+                                        ChatAppearanceSettings(),
+                                        ChatAutoDownloadSettings(),
+                                        ChatNotificationSettings(),
+                                        ChatPrivacySettings(),
+                                        ChatLocalApiSettings(),
+                                      ],
+                                    ),
+                                    const TalkerDebugOverlay(),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

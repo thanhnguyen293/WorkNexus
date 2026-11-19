@@ -101,6 +101,11 @@ class DesktopWindowService {
     await windowManager.hide();
   }
 
+  Future<void> minimize() async {
+    if (!isDesktop) return;
+    await windowManager.minimize();
+  }
+
   Future<void> preventClose(bool prevent) async {
     if (!isDesktop) return;
     await windowManager.setPreventClose(prevent);

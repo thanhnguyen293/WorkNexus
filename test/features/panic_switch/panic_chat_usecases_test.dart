@@ -1,0 +1,163 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:work_nexus/core/error/failure.dart';
+import 'package:work_nexus/core/error/result.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
+import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
+import 'package:work_nexus/features/panic_switch/domain/panic_switch_constants.dart';
+import 'package:work_nexus/features/panic_switch/domain/repositories/panic_sticker_source.dart';
+import 'package:work_nexus/features/panic_switch/domain/usecases/list_panic_chats.dart';
+import 'package:work_nexus/features/panic_switch/domain/usecases/load_panic_group_members.dart';
+import 'package:work_nexus/features/panic_switch/domain/usecases/pick_default_panic_group.dart';
+import 'package:work_nexus/features/panic_switch/domain/usecases/send_panic_sticker.dart';
+import 'package:work_nexus/features/panic_switch/domain/usecases/should_send_panic.dart';
+
+class _MockChats extends Mock implements ChatRepository {}
+
+class _MockSticker extends Mock implements PanicStickerSource {}
+
+ChatConversation _chat(String gid, String name, ChatType type) =>
+    ChatConversation(accountId: 'a1', gid: gid, type: type, name: name);
+
+ChatUser _user(int id, String name) =>
+    ChatUser(accountId: 'a1', userId: id, account: 'u$id', realname: name);
+
+void main() {
+  late _MockChats chats;
+
+  setUpAll(() => registerFallbackValue(Uint8List(0)));
+
+  setUp(() => chats = _MockChats());
+
+  group('SendPanicSticker', () {
+    test('sends the sticker bytes under the reserved name', () async {
+      final sticker = _MockSticker();
+      final bytes = Uint8List.fromList([1, 2]);
+      when(sticker.bytes).thenAnswer((_) async => Ok(bytes));
+      when(
+        () => chats.sendFile(
+          any(),
+          any(),
+          name: any(named: 'name'),
+          bytes: any(named: 'bytes'),
+          mimeType: any(named: 'mimeType'),
+        ),
+      ).thenAnswer((_) async => const Ok(null));
+
+      final result = await SendPanicSticker(chats, sticker)(
+        accountId: 'a1',
+        chatGid: 'g1',
+      );
+
+      expect(result.isOk, isTrue);
+      verify(
+        () => chats.sendFile(
+          'a1',
+          'g1',
+          name: PanicSwitchConstants.stickerFileName,
+          bytes: bytes,
+          mimeType: 'image/png',
+        ),
+      ).called(1);
+    });
+
+    test('returns the failure when the sticker cannot be loaded', () async {
+      final sticker = _MockSticker();
+      when(
+        sticker.bytes,
+      ).thenAnswer((_) async => const Err(StorageFailure('missing')));
+
+      final result = await SendPanicSticker(chats, sticker)(
+        accountId: 'a1',
+        chatGid: 'g1',
+      );
+
+      expect(result.failureOrNull, isA<StorageFailure>());
+    });
+  });
+
+  test('PickDefaultPanicGroup finds the team group by name', () {
+    const pick = PickDefaultPanicGroup();
+    expect(
+      pick([
+        _chat('dm', 'VN Mobile Tester', ChatType.one2one),
+        _chat('g2', ' vn mobile tester ', ChatType.group),
+      ]),
+      'g2',
+    );
+    expect(pick([_chat('g3', 'VN Mobile+Tester', ChatType.group)]), 'g3');
+    expect(pick([_chat('g1', 'Other', ChatType.group)]), isNull);
+  });
+
+  test('ShouldSendPanic needs a group and respects the debounce', () {
+    const should = ShouldSendPanic();
+    final now = DateTime(2026, 11, 18);
+    const config = PanicSwitchConfig(chatGid: 'g1');
+    expect(should(config: const PanicSwitchConfig(), now: now), isFalse);
+    expect(should(config: config, now: now), isTrue);
+    // Test mode sends to its own chat, which must be picked.
+    expect(should(config: config.copyWith(testMode: true), now: now), isFalse);
+    expect(
+      should(
+        config: config,
+        now: now,
+        lastSentAt: now.subtract(const Duration(seconds: 30)),
+      ),
+      isFalse,
+    );
+  });
+
+  test('ListPanicChats offers yourself, then groups and direct chats', () {
+    final chats = const ListPanicChats()(
+      [
+        _chat('g2', 'beta', ChatType.group),
+        const ChatConversation(
+          accountId: 'a1',
+          gid: 'dm',
+          type: ChatType.one2one,
+          name: '',
+          peerUserId: 2,
+        ),
+        _chat('bot', 'Bot', ChatType.bot),
+        const ChatConversation(
+          accountId: 'a1',
+          gid: 'cloud',
+          type: ChatType.one2one,
+          name: '',
+          peerUserId: 1,
+          isMyCloud: true,
+        ),
+        _chat('g1', 'Alpha', ChatType.group),
+      ],
+      {1: _user(1, 'Me'), 2: _user(2, 'Zoe')},
+      selfTitle: 'Myself',
+    );
+
+    expect(chats.map((c) => (c.chat.gid, c.title)), [
+      ('cloud', 'Myself'),
+      ('g1', 'Alpha'),
+      ('g2', 'beta'),
+      ('dm', 'Zoe'),
+    ]);
+  });
+
+  test('LoadPanicGroupMembers names the members, without the user', () async {
+    when(() => chats.watchUsers('a1')).thenAnswer(
+      (_) => Stream.value([_user(1, 'Me'), _user(2, 'Zoe'), _user(3, 'An')]),
+    );
+    when(() => chats.watchSelfUserId('a1')).thenAnswer((_) => Stream.value(1));
+    when(
+      () => chats.members('a1', 'g1'),
+    ).thenAnswer((_) async => const Ok([1, 2, 3, 9]));
+
+    final result = await LoadPanicGroupMembers(chats)(
+      accountId: 'a1',
+      chatGid: 'g1',
+    );
+
+    expect(result.valueOrNull?.map((u) => u.userId), [3, 2]);
+  });
+}

@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "panic_switch_channel.h"
 #include "win32_window.h"
 
 // A window that does nothing but host a Flutter view.
@@ -50,6 +51,9 @@ class FlutterWindow : public Win32Window {
 
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       app_icon_channel_;
+
+  // The panic switch ("Thay vo"): app switching and the floating button.
+  std::unique_ptr<PanicSwitchChannel> panic_switch_;
 
   // The window icons the user chose (title bar / Alt-Tab and taskbar); null
   // while the window has the icon of the executable.
