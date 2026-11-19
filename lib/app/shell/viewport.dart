@@ -171,6 +171,9 @@ class _ViewportState extends ConsumerState<Viewport> {
     final key = 'settings:${section.name}';
     final Widget page = switch (section) {
       SettingsSection.general => const WorkspaceSettingsPage(),
+      SettingsSection.translation => SettingsCardPage.translation(context),
+      SettingsSection.miniApps => SettingsCardPage.miniApps(context),
+      SettingsSection.panicSwitch => SettingsCardPage.panicSwitch(context),
       SettingsSection.integrations => IntegrationsPage(
         accounts: const ActiveWorkspaceAccounts(),
         onConnect: () => ConnectAccountDialog.show(context),
