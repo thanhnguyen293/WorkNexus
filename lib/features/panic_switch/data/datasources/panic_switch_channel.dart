@@ -17,8 +17,8 @@ class PanicSwitchChannel {
   final MethodChannel _channel;
   final _triggers = StreamController<String>.broadcast();
 
-  /// The floating button's gesture made: `release` (left button) or `demo`
-  /// (right button).
+  /// The floating button went off: `release` (its gesture) or `demo` (picked
+  /// from its right-click menu).
   Stream<String> get triggers => _triggers.stream;
 
   Future<List<({String id, String name})>> listApps() async {
@@ -45,11 +45,13 @@ class PanicSwitchChannel {
     required int size,
     required double opacity,
     required String gesture,
+    String? demoLabel,
   }) => _channel.invokeMethod<void>('showOverlay', {
     'image': image,
     'size': size,
     'opacity': opacity,
     'gesture': gesture,
+    'demoLabel': ?demoLabel,
   });
 
   Future<void> hideOverlay() => _channel.invokeMethod<void>('hideOverlay');

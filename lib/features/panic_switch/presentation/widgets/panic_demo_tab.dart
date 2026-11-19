@@ -9,7 +9,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/panic_switch_config.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import 'panic_chat_picker.dart';
-import 'panic_labels.dart';
 import 'panic_steps.dart';
 import 'panic_switch_save.dart';
 
@@ -38,10 +37,7 @@ class PanicDemoTab extends ConsumerWidget {
           child: PanicSteps(
             title: l.panicSwitchHowTitle,
             steps: [
-              (
-                LucideIcons.mousePointerClick300,
-                l.panicSwitchDemoStep1(gestureLabel(l, config.overlayGesture)),
-              ),
+              (LucideIcons.mousePointerClick300, l.panicSwitchDemoStep1),
               (
                 LucideIcons.send300,
                 l.panicSwitchDemoStep2(chat ?? l.panicSwitchDemoChatFallback),
