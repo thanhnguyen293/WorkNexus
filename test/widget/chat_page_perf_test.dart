@@ -13,11 +13,13 @@ import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart'
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/entities/message_reaction.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_group_repository.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_group_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_typing_providers.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_composer_field.dart';
@@ -54,7 +56,7 @@ ChatConversation _chat(int i, {int last = 49}) => ChatConversation(
 );
 
 /// Forty group chats of fifty messages each.
-class _Repo extends Fake implements ChatRepository {
+class _Repo extends Fake implements ChatRepository, ChatGroupRepository {
   final chats = StreamController<List<ChatConversation>>.broadcast();
   List<ChatConversation> listed = [for (var i = 0; i < 40; i++) _chat(i)];
 
@@ -180,6 +182,7 @@ void main() {
         overrides: [
           chatOpenProvider.overrideWithValue(true),
           chatRepositoryProvider.overrideWithValue(repo),
+          chatGroupRepositoryProvider.overrideWithValue(repo),
           chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
           chatAccountsProvider.overrideWithValue(const [
             Account(
