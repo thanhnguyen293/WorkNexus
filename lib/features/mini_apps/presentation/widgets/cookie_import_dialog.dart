@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -15,6 +16,7 @@ import '../../domain/entities/cookie_source.dart';
 import '../providers/cookie_import_controller.dart';
 import '../util/cookie_browser_name.dart';
 import 'cookie_import_feedback.dart';
+import 'cookie_notes.dart';
 import 'cookie_site_picker.dart';
 
 /// Imports cookies from a browser: pick the browser profile, then the sites
@@ -133,20 +135,38 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
           children: [
             if (sources.isLoading)
               const _Spinner()
+            else if (sources.hasError && list.isEmpty)
+              CookieErrorNote(
+                message: l.miniAppCookiesLookupFailed,
+                onRetry: () => ref.invalidate(cookieSourcesProvider),
+              )
             else if (source == null)
-              _Note(l.miniAppCookiesNoBrowser)
+              CookieNote(l.miniAppCookiesNoBrowser)
             else ...[
               _SourcePicker(sources: list, value: source, onChanged: _choose),
               if (sites == null || sites.isLoading) ...[
-                if (source.browser.isChromium)
-                  _Note(
+                // Only macOS asks before giving out a Chromium cookie key.
+                if (source.browser.isChromium &&
+                    defaultTargetPlatform == TargetPlatform.macOS)
+                  CookieNote(
                     l.miniAppCookiesKeychainHint(
                       cookieBrowserName(source.browser),
                     ),
                   ),
                 const _Spinner(),
               ] else if (sites.error case final Failure failure)
-                _ReadError(source: source, failure: failure)
+                CookieErrorNote(
+                  message: cookieFailureMessage(
+                    l,
+                    source,
+                    failure,
+                    otherwise: l.miniAppCookiesReadFailed,
+                  ),
+                  onRetry: () => ref.invalidate(cookieSitesProvider(source)),
+                  onOpenPrivacy: needsFullDiskAccess(source, failure)
+                      ? openFullDiskAccessSettings
+                      : null,
+                )
               else
                 Flexible(
                   child: CookieSitePicker(
@@ -200,67 +220,6 @@ class _SourcePicker extends StatelessWidget {
       ),
     ],
   );
-}
-
-/// Why the profile's cookies could not be read, and the way past it.
-class _ReadError extends ConsumerWidget {
-  const _ReadError({required this.source, required this.failure});
-
-  final CookieSource source;
-  final Failure failure;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppL10n.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: context.spacing.md,
-      children: [
-        _Note(
-          failure is AuthFailure || failure is ExpiredFailure
-              ? cookieFailureMessage(l, source, failure)
-              : l.miniAppCookiesReadFailed,
-          error: true,
-        ),
-        Row(
-          spacing: context.spacing.md,
-          children: [
-            if (needsFullDiskAccess(source, failure))
-              AppButton.outlinedNeutral(
-                size: AppButtonSize.small,
-                icon: LucideIcons.shieldCheck300,
-                onPressed: openFullDiskAccessSettings,
-                child: Text(l.miniAppCookiesOpenPrivacy),
-              ),
-            AppButton.outlinedNeutral(
-              size: AppButtonSize.small,
-              icon: LucideIcons.refreshCw300,
-              onPressed: () => ref.invalidate(cookieSitesProvider(source)),
-              child: Text(l.miniAppCookiesRetry),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Note extends StatelessWidget {
-  const _Note(this.text, {this.error = false});
-
-  final String text;
-  final bool error;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Text(
-      text,
-      style: context.typography.caption.copyWith(
-        color: error ? c.error : c.textSecondary,
-      ),
-    );
-  }
 }
 
 class _Spinner extends StatelessWidget {

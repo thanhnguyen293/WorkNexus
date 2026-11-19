@@ -10,42 +10,30 @@ typedef FirefoxProfile = ({String path, String name});
 
 /// Firefox's cookies, kept unencrypted in each profile's `cookies.sqlite`.
 class FirefoxCookieReader {
-  const FirefoxCookieReader({this._root});
+  const FirefoxCookieReader({this._roots});
 
-  final String? _root;
+  final List<String>? _roots;
 
-  /// Where Firefox keeps its profiles on this system.
-  static String? defaultRoot() {
-    final env = Platform.environment;
-    if (Platform.isMacOS) {
-      return joinPath([
-        env['HOME'] ?? '',
-        'Library/Application Support/Firefox',
-      ]);
-    }
-    if (Platform.isWindows) {
-      final appData = env['APPDATA'];
-      return appData == null ? null : joinPath([appData, 'Mozilla', 'Firefox']);
-    }
-    if (Platform.isLinux) {
-      return joinPath([env['HOME'] ?? '', '.mozilla/firefox']);
-    }
-    return null;
-  }
-
-  /// The profiles listed in `profiles.ini` that have cookies.
+  /// The `profiles.ini` profiles that have cookies, from every place Firefox
+  /// may keep them here.
   Future<List<FirefoxProfile>> profiles() async {
-    final root = _root ?? defaultRoot();
-    if (root == null) return const [];
-    final ini = File(joinPath([root, 'profiles.ini']));
-    if (!await ini.exists()) return const [];
+    final roots =
+        _roots ??
+        firefoxRoots(
+          os: Platform.operatingSystem,
+          environment: Platform.environment,
+        );
     final found = <FirefoxProfile>[];
-    for (final section in parseProfilesIni(await ini.readAsString())) {
-      final path = section.relative
-          ? joinPath([root, section.path])
-          : section.path;
-      if (await File(joinPath([path, 'cookies.sqlite'])).exists()) {
-        found.add((path: path, name: section.name));
+    for (final root in roots) {
+      final ini = File(joinPath([root, 'profiles.ini']));
+      if (!await ini.exists()) continue;
+      for (final section in parseProfilesIni(await ini.readAsString())) {
+        final path = section.relative
+            ? joinPath([root, section.path])
+            : section.path;
+        if (await File(joinPath([path, 'cookies.sqlite'])).exists()) {
+          found.add((path: path, name: section.name));
+        }
       }
     }
     return found;
@@ -75,6 +63,53 @@ class FirefoxCookieReader {
         ),
     ],
   );
+}
+
+/// Where Firefox may keep its profiles on [os] (as `Platform.operatingSystem`
+/// names it): its classic folder, and those of the Microsoft Store, Snap and
+/// Flatpak builds and of Firefox's newer XDG layout on Linux.
+List<String> firefoxRoots({
+  required String os,
+  required Map<String, String> environment,
+}) {
+  String? dir(String name) {
+    final value = environment[name];
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  final home = dir('HOME');
+  switch (os) {
+    case 'macos':
+      return [
+        if (home != null)
+          joinPath([home, 'Library/Application Support/Firefox']),
+      ];
+    case 'windows':
+      final roaming = dir('APPDATA');
+      final local = dir('LOCALAPPDATA');
+      return [
+        if (roaming != null) joinPath([roaming, 'Mozilla/Firefox']),
+        if (local != null)
+          joinPath([
+            local,
+            'Packages/Mozilla.Firefox_n80bbvh6b1yt2',
+            'LocalCache/Roaming/Mozilla/Firefox',
+          ]),
+      ];
+    case 'linux':
+      final config =
+          dir('XDG_CONFIG_HOME') ??
+          (home == null ? null : joinPath([home, '.config']));
+      return [
+        if (home != null) ...[
+          joinPath([home, '.mozilla/firefox']),
+          joinPath([home, 'snap/firefox/common/.mozilla/firefox']),
+          joinPath([home, '.var/app/org.mozilla.firefox/.mozilla/firefox']),
+        ],
+        if (config != null) joinPath([config, 'mozilla/firefox']),
+      ];
+  }
+  return const [];
 }
 
 /// One `[ProfileN]` section of `profiles.ini`.

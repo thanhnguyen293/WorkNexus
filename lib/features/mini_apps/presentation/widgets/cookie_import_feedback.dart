@@ -8,22 +8,32 @@ import '../../../../core/widgets/app_snack.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/cookie_source.dart';
 import '../../domain/value_objects/cookie_browser.dart';
+import '../../domain/value_objects/cookie_read_problem.dart';
 import '../util/cookie_browser_name.dart';
 
-/// Why [source]'s cookies could not be read or imported, in the user's words.
-String cookieFailureMessage(AppL10n l, CookieSource source, Failure failure) =>
-    switch (failure) {
-      AuthFailure() when source.browser == CookieBrowser.safari =>
-        l.miniAppCookiesSafariAccess,
-      AuthFailure() => l.miniAppCookiesKeychainDenied(
-        cookieBrowserName(source.browser),
-      ),
-      ExpiredFailure() => l.miniAppCookiesKeychainTimeout(
-        cookieBrowserName(source.browser),
-      ),
-      NotFoundFailure() => l.miniAppCookiesNone,
-      _ => l.miniAppCookiesFailed,
-    };
+/// Why [source]'s cookies could not be read or imported, in the user's words;
+/// [otherwise] (or a generic line) when there is nothing more specific to say.
+String cookieFailureMessage(
+  AppL10n l,
+  CookieSource source,
+  Failure failure, {
+  String? otherwise,
+}) => switch (failure) {
+  AuthFailure() when source.browser == CookieBrowser.safari =>
+    l.miniAppCookiesSafariAccess,
+  AuthFailure() => l.miniAppCookiesKeychainDenied(
+    cookieBrowserName(source.browser),
+  ),
+  ExpiredFailure() => l.miniAppCookiesKeychainTimeout(
+    cookieBrowserName(source.browser),
+  ),
+  StorageFailure(cause: CookieReadProblem.browserBusy) =>
+    l.miniAppCookiesBrowserBusy(cookieBrowserName(source.browser)),
+  StorageFailure(cause: CookieReadProblem.appBoundEncryption) =>
+    l.miniAppCookiesAppBound(cookieBrowserName(source.browser)),
+  NotFoundFailure() => l.miniAppCookiesNone,
+  _ => otherwise ?? l.miniAppCookiesFailed,
+};
 
 /// Whether the way past [failure] is the Privacy settings (Safari's Full Disk
 /// Access).

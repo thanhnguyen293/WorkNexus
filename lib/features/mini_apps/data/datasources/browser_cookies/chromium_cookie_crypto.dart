@@ -9,10 +9,18 @@ import 'package:pointycastle/key_derivators/api.dart';
 import 'package:pointycastle/key_derivators/pbkdf2.dart';
 import 'package:pointycastle/macs/hmac.dart';
 
+/// Turns a Chromium cookie's `encrypted_value` back into its value.
+abstract interface class CookieDecrypter {
+  /// The value Chromium wrote as [encrypted]. From database version 24 on it
+  /// starts with the SHA-256 of the cookie's domain, which [hasDomainHash]
+  /// drops. Null for a value it cannot decrypt (another scheme or key).
+  String? decrypt(Uint8List encrypted, {required bool hasDomainHash});
+}
+
 /// How Chromium on macOS and Linux encrypts a cookie's value: AES-128-CBC
 /// under a key derived from a password it keeps in the system keychain, with
 /// a fixed salt and IV. Values start with `v10` (or `v11` on Linux).
-class ChromiumCookieCrypto {
+class ChromiumCookieCrypto implements CookieDecrypter {
   ChromiumCookieCrypto(this._key);
 
   /// The key Chromium derives from its keychain [password].
@@ -26,9 +34,7 @@ class ChromiumCookieCrypto {
 
   static const _block = 16;
 
-  /// The value Chromium wrote as [encrypted]. From database version 24 on it
-  /// starts with the SHA-256 of the cookie's domain, which [hasDomainHash]
-  /// drops. Null for a value it cannot decrypt (another scheme or key).
+  @override
   String? decrypt(Uint8List encrypted, {required bool hasDomainHash}) {
     if (encrypted.length < 3 + _block) return null;
     final prefix = ascii.decode(encrypted.sublist(0, 3), allowInvalid: true);
