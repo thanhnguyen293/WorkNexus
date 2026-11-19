@@ -18,6 +18,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.onChanged,
     this.tooltip,
     this.fontFamilyOf,
+    this.enabledOf,
     super.key,
   });
 
@@ -27,6 +28,9 @@ class AppDropdown<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final String? tooltip;
   final String? Function(BuildContext context, T value)? fontFamilyOf;
+
+  /// Whether a choice can be picked; a disabled one is listed, faded.
+  final bool Function(T value)? enabledOf;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,7 @@ class AppDropdown<T> extends StatelessWidget {
         for (final option in values)
           PopupMenuItem<T>(
             value: option,
+            enabled: enabledOf?.call(option) ?? true,
             child: Row(
               children: [
                 Expanded(
@@ -51,7 +56,9 @@ class AppDropdown<T> extends StatelessWidget {
                     labelOf(option),
                     style: context.typography.subtitle.copyWith(
                       fontFamily: fontFamilyOf?.call(context, option),
-                      color: c.textPrimary,
+                      color: enabledOf?.call(option) ?? true
+                          ? c.textPrimary
+                          : c.textTertiary,
                     ),
                   ),
                 ),

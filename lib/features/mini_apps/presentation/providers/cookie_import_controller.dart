@@ -45,23 +45,33 @@ final cookieSourcesProvider = FutureProvider.autoDispose<List<CookieSource>>(
         Ok(:final value) => value,
         Err(:final failure) => throw failure,
       },
+  // A failed lookup is not transient: only "Try again" looks again.
+  retry: (_, _) => null,
 );
 
 /// [CookieSource]'s cookies grouped into sites, the mini apps' first. Fails
 /// with the read's failure, e.g. an AuthFailure when the system refused.
 final cookieSitesProvider = FutureProvider.autoDispose
-    .family<List<CookieSite>, CookieSource>((ref, source) async {
-      final apps = await ref.watch(miniAppsProvider.future);
-      final read = await ref.read(browserCookieRepositoryProvider).read(source);
-      return switch (read) {
-        Ok(:final value) => const GroupCookiesBySite()(
-          value,
-          miniAppUrls: [for (final a in apps) a.url],
-          now: DateTime.now(),
-        ),
-        Err(:final failure) => throw failure,
-      };
-    });
+    .family<List<CookieSite>, CookieSource>(
+      (ref, source) async {
+        final apps = await ref.watch(miniAppsProvider.future);
+        final read = await ref
+            .read(browserCookieRepositoryProvider)
+            .read(source);
+        return switch (read) {
+          Ok(:final value) => const GroupCookiesBySite()(
+            value,
+            miniAppUrls: [for (final a in apps) a.url],
+            now: DateTime.now(),
+          ),
+          Err(:final failure) => throw failure,
+        };
+      },
+      // A locked or unreadable cookie file stays so until the user acts: no
+      // automatic retries (they read the browser's files every few seconds
+      // for as long as the dialog is open). "Try again" reads again.
+      retry: (_, _) => null,
+    );
 
 /// The imported sites and whether their sign-in is still in the web view.
 /// Importing reloads the open mini apps of those sites, so they show the

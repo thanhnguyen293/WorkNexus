@@ -3206,5 +3206,8 @@
   "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
   "panicSwitchSummaryOff": "Off on this computer",
   "whatsNewTitle": "What's new in {version}",
-  "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}}
+  "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}},
+  "miniAppCookiesBrowserUnsupported": "{browser} \u2014 not supported on Windows",
+  "@miniAppCookiesBrowserUnsupported": {"placeholders": {"browser": {"type": "String"}}},
+  "miniAppCookiesOnlyChrome": "Only Chrome was found, and importing from Chrome is not supported on Windows: Chrome encrypts its cookies so that only Chrome can read them. Sign in to the site in Edge or Firefox, then import from there."
 }

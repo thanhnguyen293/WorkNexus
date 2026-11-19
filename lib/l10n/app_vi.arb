@@ -2032,5 +2032,7 @@
   "settingsGeneral": "Chung",
   "updateDownloadingPercent": "Đang tải bản cập nhật… {percent}%",
   "panicSwitchSummaryOff": "Đang tắt trên máy này",
-  "whatsNewTitle": "Có gì mới trong {version}"
+  "whatsNewTitle": "Có gì mới trong {version}",
+  "miniAppCookiesBrowserUnsupported": "{browser} — không hỗ trợ trên Windows",
+  "miniAppCookiesOnlyChrome": "Chỉ tìm thấy Chrome, mà Windows không hỗ trợ import từ Chrome: Chrome mã hoá cookie để chỉ chính Chrome đọc được. Hãy đăng nhập trang đó bằng Edge hoặc Firefox rồi import từ trình duyệt đó."
 }
