@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
-import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_group_repository.dart';
 import 'package:work_nexus/features/chat/domain/usecases/list_chat_categories.dart';
 import 'package:work_nexus/features/chat/domain/usecases/rename_chat_category.dart';
 import 'package:work_nexus/features/chat/domain/usecases/set_chat_category.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_list_filter.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_list_tab.dart';
 
-class _Repo extends Mock implements ChatRepository {}
+class _Repo extends Mock implements ChatGroupRepository {}
 
 ChatConversation _chat(
   String gid, {

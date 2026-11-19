@@ -1,10 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/di/service_locator.dart';
+import '../../domain/repositories/chat_group_repository.dart';
 import 'chat_group_controller.dart';
 import 'chat_providers.dart';
 
+/// Group management and categories, through their domain interface.
+final chatGroupRepositoryProvider = Provider<ChatGroupRepository>(
+  (ref) => getIt<ChatGroupRepository>(),
+);
+
 final chatGroupControllerProvider = Provider<ChatGroupController>(
-  (ref) => ChatGroupController(ref.watch(chatRepositoryProvider)),
+  (ref) => ChatGroupController(ref.watch(chatGroupRepositoryProvider)),
 );
 
 /// What the signed-in user may do to a group as a whole.

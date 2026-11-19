@@ -77,6 +77,7 @@ import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
 import '../../features/chat/data/repositories/server_chat_local_api.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
 import '../../features/chat/domain/repositories/chat_ai_text_generator.dart';
+import '../../features/chat/domain/repositories/chat_group_repository.dart';
 import '../../features/chat/domain/repositories/chat_info_panel_preference.dart';
 import '../../features/chat/domain/repositories/chat_local_api.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
@@ -95,56 +96,10 @@ import '../../features/connections/data/repositories/drift_local_cache_repositor
 import '../../features/connections/domain/repositories/connection_repository.dart';
 import '../../features/connections/domain/repositories/local_cache_repository.dart';
 import '../../features/connections/domain/usecases/clear_local_cache.dart';
-import '../../features/mini_apps/data/datasources/browser_cookies/chromium_cookie_reader.dart';
-import '../../features/mini_apps/data/datasources/browser_cookies/firefox_cookie_reader.dart';
-import '../../features/mini_apps/data/datasources/browser_cookies/safari_cookie_reader.dart';
-import '../../features/mini_apps/data/datasources/cookie_import_store.dart';
-import '../../features/mini_apps/data/datasources/favicon_fetcher.dart';
-import '../../features/mini_apps/data/datasources/mini_app_icon_storage.dart';
-import '../../features/mini_apps/data/datasources/mini_app_local_datasource.dart';
-import '../../features/mini_apps/data/datasources/mini_app_permission_local_datasource.dart';
-import '../../features/mini_apps/data/datasources/trusted_certificate_store.dart';
-import '../../features/mini_apps/data/datasources/web_profile_datasource.dart';
-import '../../features/mini_apps/data/datasources/web_view_cookie_datasource.dart';
-import '../../features/mini_apps/data/repositories/local_browser_cookie_repository.dart';
-import '../../features/mini_apps/data/repositories/local_cookie_import_repository.dart';
-import '../../features/mini_apps/data/repositories/local_mini_app_browsing_data_repository.dart';
-import '../../features/mini_apps/data/repositories/local_mini_app_permission_repository.dart';
-import '../../features/mini_apps/data/repositories/local_mini_app_repository.dart';
-import '../../features/mini_apps/data/repositories/local_trusted_certificate_repository.dart';
-import '../../features/mini_apps/data/repositories/local_web_view_cookie_repository.dart';
-import '../../features/mini_apps/domain/repositories/browser_cookie_repository.dart';
-import '../../features/mini_apps/domain/repositories/cookie_import_repository.dart';
-import '../../features/mini_apps/domain/repositories/mini_app_browsing_data_repository.dart';
-import '../../features/mini_apps/domain/repositories/mini_app_permission_repository.dart';
-import '../../features/mini_apps/domain/repositories/mini_app_repository.dart';
-import '../../features/mini_apps/domain/repositories/trusted_certificate_repository.dart';
-import '../../features/mini_apps/domain/repositories/web_view_cookie_repository.dart';
-import '../../features/mini_apps/domain/usecases/add_mini_app.dart';
-import '../../features/mini_apps/domain/usecases/check_cookie_imports.dart';
-import '../../features/mini_apps/domain/usecases/import_browser_cookies.dart';
-import '../../features/mini_apps/domain/usecases/is_pinned_certificate.dart';
-import '../../features/mini_apps/domain/usecases/move_mini_app.dart';
-import '../../features/mini_apps/domain/usecases/refresh_mini_app_icon.dart';
-import '../../features/mini_apps/domain/usecases/resolve_mini_app_permission.dart';
-import '../../features/mini_apps/domain/usecases/update_mini_app.dart';
 import '../../features/notifications/data/datasources/notification_local_datasource.dart';
 import '../../features/notifications/data/repositories/zentao_notification_repository.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
 import '../../features/notifications/domain/usecases/refresh_notifications.dart';
-import '../../features/panic_switch/data/datasources/panic_switch_channel.dart';
-import '../../features/panic_switch/data/datasources/panic_switch_settings_store.dart';
-import '../../features/panic_switch/data/repositories/asset_panic_sticker_source.dart';
-import '../../features/panic_switch/data/repositories/channel_app_switcher.dart';
-import '../../features/panic_switch/data/repositories/channel_panic_overlay.dart';
-import '../../features/panic_switch/data/repositories/linux_app_switcher.dart';
-import '../../features/panic_switch/data/repositories/local_panic_switch_config_repository.dart';
-import '../../features/panic_switch/domain/repositories/app_switcher.dart';
-import '../../features/panic_switch/domain/repositories/panic_overlay.dart';
-import '../../features/panic_switch/domain/repositories/panic_sticker_source.dart';
-import '../../features/panic_switch/domain/repositories/panic_switch_config_repository.dart';
-import '../../features/panic_switch/domain/usecases/run_panic_switch.dart';
-import '../../features/panic_switch/domain/usecases/send_panic_sticker.dart';
 import '../../features/ticket_editor/data/datasources/ticket_draft_local_datasource.dart';
 import '../../features/ticket_editor/data/repositories/local_ticket_draft_repository.dart';
 import '../../features/ticket_editor/domain/repositories/ticket_draft_repository.dart';
@@ -186,6 +141,7 @@ import '../../tools/zentao/domain/repositories/zentao_team_members.dart';
 import '../../tools/zentao/domain/repositories/zentao_view_pages.dart';
 import '../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
 import '../../tools/zentao/domain/usecases/update_zentao_profile.dart';
+import 'app_support_path.dart';
 import 'provider_adapter_registry_impl.dart';
 import 'service_locator.config.dart';
 import 'translation_chat_ai_text_generator.dart';
@@ -206,10 +162,6 @@ Future<void> configureDependencies(String environment) async =>
 /// (e.g. [AppDatabase]) and injectable supplies it; no member locates a
 /// dependency itself. The database is environment-split so tests get an
 /// in-memory instance without touching the production wiring.
-/// The path of [name] in the app's support folder.
-Future<String> _support(String name) async =>
-    '${(await getApplicationSupportDirectory()).path}/$name';
-
 @module
 abstract class ServiceModule {
   @lazySingleton
@@ -253,17 +205,9 @@ abstract class ServiceModule {
   @lazySingleton
   AutoUpdatePreference autoUpdatePreference() => LocalAutoUpdatePreference(
     AutoUpdateMarkerFile(
-      file: () async => File(await _support('auto_update.txt')),
+      file: () async => File(await appSupportPath('auto_update.txt')),
     ),
   );
-
-  @lazySingleton
-  TrustedCertificateRepository trustedCertificateRepository() =>
-      LocalTrustedCertificateRepository(
-        TrustedCertificateStore(
-          file: () async => File(await _support('trusted_certificates.json')),
-        ),
-      );
 
   @lazySingleton
   CheckForUpdate checkForUpdate(UpdateRepository repository) =>
@@ -375,17 +319,27 @@ abstract class ServiceModule {
       LocalSavedFilterRepository(db);
 
   @lazySingleton
-  ChatRepository chatRepository(AppDatabase db, CredentialStore credentials) =>
-      XxdChatRepository(
-        local: ChatLocalDatasource(db),
-        credentials: credentials,
-        openConnection: (c) => XxdConnection(
-          credentials: c,
-          http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
-        ),
-        http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
-        onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
-      );
+  XxdChatRepository xxdChatRepository(
+    AppDatabase db,
+    CredentialStore credentials,
+  ) => XxdChatRepository(
+    local: ChatLocalDatasource(db),
+    credentials: credentials,
+    openConnection: (c) => XxdConnection(
+      credentials: c,
+      http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
+    ),
+    http: const XxdHttpDatasource(clientVersion: kXxdClientVersion),
+    onError: (error, stack) => appTalker.handle(error, stack, 'chat'),
+  );
+
+  @lazySingleton
+  ChatRepository chatRepository(XxdChatRepository impl) => impl;
+
+  /// Group management shares the chat repository's sessions.
+  @lazySingleton
+  ChatGroupRepository chatGroupRepository(XxdChatRepository impl) =>
+      impl.groups;
 
   @lazySingleton
   ChatLocalApi chatLocalApi() => ServerChatLocalApi(
@@ -396,7 +350,7 @@ abstract class ServiceModule {
   McpSetupRepository mcpSetupRepository() => LocalMcpSetupRepository(
     installer: McpScriptInstaller(
       bundle: rootBundle,
-      directory: () async => Directory(await _support('mcp')),
+      directory: () async => Directory(await appSupportPath('mcp')),
     ),
     probe: NodeRuntimeProbe(),
   );
@@ -430,42 +384,12 @@ abstract class ServiceModule {
   StickerRepository stickerRepository(StickerConverter converter) =>
       LocalStickerRepository(
         bundle: rootBundle,
-        directory: () async => Directory(await _support('stickers')),
+        directory: () async => Directory(await appSupportPath('stickers')),
         converter: converter,
       );
 
   @lazySingleton
   StickerPackSource get stickerPackSource => TelegramStickerSource();
-
-  @lazySingleton
-  PanicSwitchChannel get panicSwitchChannel => PanicSwitchChannel();
-
-  @lazySingleton
-  PanicSwitchConfigRepository panicSwitchConfigRepository(AppDatabase db) =>
-      LocalPanicSwitchConfigRepository(
-        PanicSwitchSettingsStore(AppSettingsKvStore(db)),
-      );
-
-  @lazySingleton
-  AppSwitcher appSwitcher(PanicSwitchChannel channel) =>
-      Platform.isLinux ? const LinuxAppSwitcher() : ChannelAppSwitcher(channel);
-
-  @lazySingleton
-  PanicOverlay panicOverlay(PanicSwitchChannel channel) =>
-      ChannelPanicOverlay(channel);
-
-  @lazySingleton
-  PanicStickerSource get panicStickerSource =>
-      AssetPanicStickerSource(rootBundle);
-
-  @lazySingleton
-  SendPanicSticker sendPanicSticker(
-    ChatRepository chats,
-    PanicStickerSource sticker,
-  ) => SendPanicSticker(chats, sticker);
-
-  @lazySingleton
-  RunPanicSwitch runPanicSwitch(AppSwitcher apps) => RunPanicSwitch(apps);
 
   @lazySingleton
   StickerConverter get stickerConverter => const WebpStickerConverter();
@@ -476,7 +400,7 @@ abstract class ServiceModule {
 
   @lazySingleton
   WallpaperRepository get wallpaperRepository => LocalWallpaperRepository(
-    directory: () async => Directory(await _support('wallpapers')),
+    directory: () async => Directory(await appSupportPath('wallpapers')),
   );
 
   @lazySingleton
@@ -620,85 +544,8 @@ abstract class ServiceModule {
   ) => RefreshNotifications(repository);
 
   @lazySingleton
-  MiniAppRepository miniAppRepository(AppDatabase db) => LocalMiniAppRepository(
-    MiniAppLocalDatasource(db),
-    MiniAppIconStorage(() async => Directory(await _support('mini_app_icons'))),
-    FaviconFetcher(),
-  );
-
-  @lazySingleton
-  RefreshMiniAppIcon refreshMiniAppIcon(MiniAppRepository repository) =>
-      RefreshMiniAppIcon(repository);
-
-  @lazySingleton
-  AddMiniApp addMiniApp(
-    MiniAppRepository repository,
-    RefreshMiniAppIcon refreshIcon,
-  ) => AddMiniApp(repository, refreshIcon);
-
-  @lazySingleton
-  MiniAppPermissionRepository miniAppPermissionRepository(AppDatabase db) =>
-      LocalMiniAppPermissionRepository(MiniAppPermissionLocalDatasource(db));
-
-  @lazySingleton
-  ResolveMiniAppPermission resolveMiniAppPermission(
-    MiniAppPermissionRepository repository,
-  ) => ResolveMiniAppPermission(repository);
-
-  @lazySingleton
-  UpdateMiniApp updateMiniApp(
-    MiniAppRepository repository,
-    RefreshMiniAppIcon refreshIcon,
-  ) => UpdateMiniApp(repository, refreshIcon);
-
-  @lazySingleton
-  MoveMiniApp moveMiniApp(MiniAppRepository repository) =>
-      MoveMiniApp(repository);
-
-  @lazySingleton
-  MiniAppBrowsingDataRepository miniAppBrowsingDataRepository() =>
-      const LocalMiniAppBrowsingDataRepository(WebProfileDatasource());
-
-  @lazySingleton
-  BrowserCookieRepository browserCookieRepository() =>
-      LocalBrowserCookieRepository(
-        chromium: ChromiumCookieReader(),
-        firefox: const FirefoxCookieReader(),
-        safari: const SafariCookieReader(),
-      );
-
-  @lazySingleton
-  WebViewCookieRepository webViewCookieRepository() =>
-      const LocalWebViewCookieRepository(WebViewCookieDatasource());
-
-  @lazySingleton
-  CookieImportRepository cookieImportRepository() =>
-      LocalCookieImportRepository(
-        CookieImportStore(
-          file: () async => File(await _support('cookie_imports.json')),
-        ),
-      );
-
-  @lazySingleton
-  ImportBrowserCookies importBrowserCookies(
-    BrowserCookieRepository browsers,
-    WebViewCookieRepository webView,
-    CookieImportRepository imports,
-  ) => ImportBrowserCookies(browsers, webView, imports);
-
-  @lazySingleton
   PinnedCertificateRepository pinnedCertificateRepository(AppDatabase db) =>
       ChatPinnedCertificateRepository(ChatLocalDatasource(db));
-
-  @lazySingleton
-  IsPinnedCertificate isPinnedCertificate(PinnedCertificateRepository pins) =>
-      IsPinnedCertificate(pins);
-
-  @lazySingleton
-  CheckCookieImports checkCookieImports(
-    CookieImportRepository imports,
-    WebViewCookieRepository webView,
-  ) => CheckCookieImports(imports, webView);
 
   @lazySingleton
   TicketDraftRepository ticketDraftRepository(AppDatabase db) =>

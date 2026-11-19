@@ -1,5 +1,5 @@
 import '../../../../core/error/result.dart';
-import '../../../chat/domain/repositories/chat_repository.dart';
+import '../repositories/panic_chat_gateway.dart';
 import '../repositories/panic_sticker_source.dart';
 import '../value_objects/panic_trigger.dart';
 
@@ -8,7 +8,7 @@ import '../value_objects/panic_trigger.dart';
 class SendPanicSticker {
   const SendPanicSticker(this._chats, this._sticker);
 
-  final ChatRepository _chats;
+  final PanicChatGateway _chats;
   final PanicStickerSource _sticker;
 
   Future<Result<void>> call({

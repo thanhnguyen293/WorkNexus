@@ -1,15 +1,15 @@
 import '../../../../core/error/result.dart';
-import '../../../chat/domain/entities/chat_user.dart';
-import '../../../chat/domain/repositories/chat_repository.dart';
+import '../entities/panic_member.dart';
+import '../repositories/panic_chat_gateway.dart';
 
 /// The members of a group who could send the sticker: everyone but the user,
 /// by name.
 class LoadPanicGroupMembers {
   const LoadPanicGroupMembers(this._chats);
 
-  final ChatRepository _chats;
+  final PanicChatGateway _chats;
 
-  Future<Result<List<ChatUser>>> call({
+  Future<Result<List<PanicMember>>> call({
     required String accountId,
     required String chatGid,
   }) async {
@@ -28,6 +28,5 @@ class LoadPanicGroupMembers {
     );
   }
 
-  static String _name(ChatUser u) =>
-      (u.realname.isEmpty ? u.account : u.realname).toLowerCase();
+  static String _name(PanicMember u) => u.displayName.toLowerCase();
 }

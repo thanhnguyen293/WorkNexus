@@ -131,7 +131,7 @@ class ChatPacketIngestor {
         }
       case 'chatsetavatar':
         if (data is Map && data['gid'] is String && data['avatar'] is Map) {
-          await _local.setChatAvatar(
+          await _local.groups.setChatAvatar(
             accountId,
             data['gid']! as String,
             jsonEncode(data['avatar']),
@@ -154,7 +154,7 @@ class ChatPacketIngestor {
         if (selfUserId != null &&
             members.isNotEmpty &&
             !members.contains(selfUserId)) {
-          await _local.setArchived(
+          await _local.groups.setArchived(
             accountId,
             chat['gid']! as String,
             archived: true,
@@ -164,7 +164,7 @@ class ChatPacketIngestor {
       // older servers; each carries only what it changed.
       case 'chatsetconfig' || 'chatsetcommitters' || 'chatsetvisibility':
         if (data is! Map || data['gid'] is! String) break;
-        await _local.setGroupSettings(
+        await _local.groups.setGroupSettings(
           accountId,
           data['gid']! as String,
           committers: data.containsKey('committers')
@@ -178,14 +178,14 @@ class ChatPacketIngestor {
       // Also pushed when the user files chats from another client.
       case 'chatsetcategory':
         if (data is Map && data['gids'] is List) {
-          await _local.setCategory(accountId, [
+          await _local.groups.setCategory(accountId, [
             for (final g in data['gids']! as List<Object?>)
               if (g is String) g,
           ], '${data['category'] ?? ''}');
         }
       case 'chataddadmins' || 'chatremoveadmins':
         if (data is Map && data['gid'] is String) {
-          await _local.setAdmins(
+          await _local.groups.setAdmins(
             accountId,
             data['gid']! as String,
             pinnedJsonOf(data['admins']),
@@ -198,7 +198,7 @@ class ChatPacketIngestor {
         }
       case 'chatrename':
         if (data is Map && data['gid'] is String && data['name'] is String) {
-          await _local.setChatName(
+          await _local.groups.setChatName(
             accountId,
             data['gid']! as String,
             data['name']! as String,
@@ -207,7 +207,7 @@ class ChatPacketIngestor {
       // A dismissed group is archived, as the chat list maps `dismissDate`.
       case 'chatdismiss':
         if (data is Map && data['gid'] is String) {
-          await _local.setArchived(
+          await _local.groups.setArchived(
             accountId,
             data['gid']! as String,
             archived: (num.tryParse('${data['dismissDate']}') ?? 1) > 0,

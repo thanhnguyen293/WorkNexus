@@ -126,13 +126,13 @@ line_count_exemptions:
 
   # Non-UI files over 400 lines (rule 9.3)
   - file: lib/app/di/service_locator.dart
-    max_lines: 664
+    max_lines: 572
     owner_phase: "Phase 2"
-    reason: "Injectable composition root wiring all features and services"
+    reason: "Injectable composition root wiring all features and services (panic switch and mini apps wired in their own modules)"
   - file: lib/core/database/database.dart
-    max_lines: 1140
+    max_lines: 1162
     owner_phase: "Permanent"
-    reason: "Central Drift database schema tables definition (+ zen_tao_doc_snapshots, schema 58; chat privacy columns, schema 62)"
+    reason: "Central Drift database schema tables definition (+ zen_tao_doc_snapshots, schema 58; chat privacy columns, schema 62; group settings + category columns, schema 65). build.yaml points drift at this file only, so tables stay here"
   - file: lib/core/database/seed/design_seed.dart
     max_lines: 960
     owner_phase: "Phase 5"
@@ -162,9 +162,9 @@ line_count_exemptions:
     owner_phase: "Follow-up"
     reason: "Chat attachment loading and caching"
   - file: lib/features/chat/data/repositories/xxd_chat_repository.dart
-    max_lines: 1158
+    max_lines: 1167
     owner_phase: "Follow-up"
-    reason: "Chat repository implementation"
+    reason: "Chat repository implementation (group management split out to xxd_chat_group_repository.dart)"
   - file: lib/features/chat/domain/value_objects/emojione_shortnames.dart
     max_lines: 4300
     owner_phase: "Permanent"

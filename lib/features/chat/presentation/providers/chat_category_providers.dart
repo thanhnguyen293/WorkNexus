@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/error/result.dart';
 import '../../domain/entities/chat_conversation.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../../domain/repositories/chat_group_repository.dart';
 import '../../domain/usecases/list_chat_categories.dart';
 import '../../domain/usecases/rename_chat_category.dart';
 import '../../domain/usecases/set_chat_category.dart';
 import '../../domain/value_objects/chat_list_filter.dart';
+import 'chat_group_providers.dart';
 import 'chat_providers.dart';
 
 /// Filing chats under the user's own categories. Each command delegates to
 /// one use case (CLAUDE.md 2.4).
 class ChatCategoryController {
-  ChatCategoryController(ChatRepository repository)
+  ChatCategoryController(ChatGroupRepository repository)
     : _set = SetChatCategory(repository),
       _rename = RenameChatCategory(repository);
 
@@ -39,7 +40,7 @@ class ChatCategoryController {
 }
 
 final chatCategoryControllerProvider = Provider<ChatCategoryController>(
-  (ref) => ChatCategoryController(ref.watch(chatRepositoryProvider)),
+  (ref) => ChatCategoryController(ref.watch(chatGroupRepositoryProvider)),
 );
 
 /// The categories the chat list is narrowed to (none: any).

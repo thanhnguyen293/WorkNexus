@@ -5,8 +5,7 @@ import 'package:work_nexus/core/domain/entities/account.dart';
 import 'package:work_nexus/core/domain/value_objects/provider_type.dart';
 import 'package:work_nexus/core/error/failure.dart';
 import 'package:work_nexus/core/error/result.dart';
-import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
-import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
+import 'package:work_nexus/features/panic_switch/domain/entities/panic_incoming_message.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
 import 'package:work_nexus/features/panic_switch/domain/panic_switch_constants.dart';
 import 'package:work_nexus/features/panic_switch/domain/repositories/panic_overlay.dart';
@@ -66,17 +65,16 @@ void main() {
     );
   });
 
-  ChatMessage sticker({
+  PanicIncomingMessage sticker({
     String chatGid = 'g1',
     String name = PanicSwitchConstants.stickerFileName,
-  }) => ChatMessage(
+  }) => PanicIncomingMessage(
     accountId: 'a1',
-    gid: 'm',
     chatGid: chatGid,
     senderId: 7,
     sentAt: now,
     isMine: false,
-    content: MessageContent.image(fileId: 1, name: name, size: 1, time: 0),
+    imageName: name,
   );
 
   PanicSwitchRuntime runtimeFor(PanicSwitchConfig c) => PanicSwitchRuntime(

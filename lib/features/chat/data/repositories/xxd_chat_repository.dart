@@ -17,6 +17,7 @@ import '../../domain/entities/chat_conversation.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/chat_user.dart';
 import '../../domain/entities/message_reaction.dart';
+import '../../domain/repositories/chat_group_repository.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/parse_message_content.dart';
 import '../../domain/value_objects/chat_avatar_crop.dart';
@@ -46,6 +47,7 @@ import 'chat_saved_copies.dart';
 import 'chat_sender.dart';
 import 'chat_session.dart';
 import 'chat_typing_channel.dart';
+import 'xxd_chat_group_repository.dart';
 
 /// Opens an [XxdConnection] for the given credentials (injected for tests).
 typedef XxdConnectionFactory = XxdConnection Function(XxdCredentials);
@@ -108,6 +110,12 @@ class XxdChatRepository implements ChatRepository {
     now: _now,
   );
   final _sessions = <String, ChatSession>{};
+
+  /// Group management and categories, over this repository's sessions.
+  late final ChatGroupRepository groups = XxdChatGroupRepository(
+    session: (accountId) => _sessions[accountId],
+    send: _requestAndStore,
+  );
   late final _typing = ChatTypingChannel(members);
 
   /// Presence picked by the user. Sign-in always says `online`, so a
@@ -977,177 +985,6 @@ class XxdChatRepository implements ChatRepository {
       Ok() => Ok(gid),
       Err(:final failure) => Err(failure),
     };
-  }
-
-  @override
-  Future<Result<void>> renameGroupChat(
-    String accountId,
-    String chatGid,
-    String name,
-  ) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The reply (`{gid, name}`, also pushed to the other members) renames
-    // it locally.
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatRename', params: [chatGid, name]),
-    );
-  }
-
-  @override
-  Future<Result<void>> dismissGroupChat(
-    String accountId,
-    String chatGid,
-  ) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The reply carries `dismissDate`, which takes it off the chat list.
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatDismiss', params: [chatGid]),
-    );
-  }
-
-  @override
-  Future<Result<void>> addGroupMembers(
-    String accountId,
-    String chatGid,
-    List<int> userIds,
-  ) => _changeMembers(accountId, 'chatInvite', chatGid, userIds);
-
-  @override
-  Future<Result<void>> removeGroupMembers(
-    String accountId,
-    String chatGid,
-    List<int> userIds,
-  ) => _changeMembers(accountId, 'chatKick', chatGid, userIds);
-
-  @override
-  Future<Result<void>> leaveGroupChat(String accountId, String chatGid) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The reply is the group without this account, which takes it off the
-    // chat list (see the ingestor).
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatLeave', params: [chatGid]),
-    );
-  }
-
-  @override
-  Future<Result<void>> setChatCategory(
-    String accountId,
-    List<String> chatGids,
-    String category,
-  ) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The reply (`{gids, category}`) refiles them locally.
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatSetCategory', params: [chatGids, category]),
-    );
-  }
-
-  @override
-  Future<Result<void>> setGroupSettings(
-    String accountId,
-    String chatGid, {
-    required bool isPublic,
-    required bool adminInvite,
-    required String committers,
-  }) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    final result = await _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(
-        'chatSetConfig',
-        params: [
-          chatGid,
-          {
-            'public': isPublic,
-            'adminInvite': adminInvite,
-            'committers': committers,
-          },
-        ],
-      ),
-    );
-    if (result is Ok) return result;
-    // Servers older than `chatSetConfig` (the official client checks the
-    // version) take the two settings one by one and have no `adminInvite`.
-    final visibility = await _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatSetVisibility', params: [chatGid, isPublic]),
-    );
-    if (visibility is Err) return result;
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatSetCommitters', params: [chatGid, committers]),
-    );
-  }
-
-  @override
-  Future<Result<void>> setGroupAdmins(
-    String accountId,
-    String chatGid,
-    List<int> userIds, {
-    required bool admin,
-  }) async {
-    final session = _sessions[accountId];
-    final self = session?.selfUserId;
-    if (session == null || self == null) {
-      return const Err(NetworkFailure('Chat is offline'));
-    }
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(
-        admin ? 'chatAddAdmins' : 'chatRemoveAdmins',
-        params: [chatGid, userIds, self],
-      ),
-    );
-  }
-
-  @override
-  Future<Result<void>> transferGroupOwnership(
-    String accountId,
-    String chatGid,
-    int userId,
-  ) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    // The reply is the whole group with its new owner.
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest('chatChangeOwnership', params: [chatGid, userId]),
-    );
-  }
-
-  /// `chatInvite` / `chatKick`: the reply is the group with its new members,
-  /// also pushed to them.
-  Future<Result<void>> _changeMembers(
-    String accountId,
-    String method,
-    String chatGid,
-    List<int> userIds,
-  ) async {
-    final session = _sessions[accountId];
-    if (session == null) return const Err(NetworkFailure('Chat is offline'));
-    return _requestAndStore(
-      accountId,
-      session,
-      XxdRequest(method, params: [chatGid, userIds]),
-    );
   }
 
   @override

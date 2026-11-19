@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/database.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/usecases/fold_search_text.dart';
+import 'chat_group_local_datasource.dart';
 import 'chat_timeline_datasource.dart';
 
 export 'chat_timeline_datasource.dart' show MessageLink;
@@ -26,6 +27,9 @@ class ChatLocalDatasource {
 
   /// Queries over a chat's timeline and jump windows.
   late final timeline = ChatTimelineDatasource(_db);
+
+  /// Writes to a group's own state: name, picture, settings, admins.
+  late final groups = ChatGroupLocalDatasource(_db);
 
   static const _fold = FoldSearchText();
 
@@ -224,62 +228,6 @@ class ChatLocalDatasource {
             (u) => u.accountId.equals(accountId) & u.userId.equals(userId),
           ))
           .write(ChatUsersCompanion(avatar: Value(avatar)));
-
-  /// Sets a chat's avatar (xxd JSON).
-  Future<void> setChatAvatar(String accountId, String gid, String json) =>
-      (_db.update(_db.chatConversations)
-            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
-          .write(ChatConversationsCompanion(avatarJson: Value(json)));
-
-  /// Renames a chat.
-  Future<void> setChatName(String accountId, String gid, String name) =>
-      (_db.update(_db.chatConversations)
-            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
-          .write(ChatConversationsCompanion(name: Value(name)));
-
-  /// Archives a chat (or a dismissed group), taking it off the chat list.
-  Future<void> setArchived(
-    String accountId,
-    String gid, {
-    required bool archived,
-  }) =>
-      (_db.update(_db.chatConversations)
-            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
-          .write(ChatConversationsCompanion(archived: Value(archived)));
-
-  /// Updates a group's settings; a null one is left as it is.
-  Future<void> setGroupSettings(
-    String accountId,
-    String gid, {
-    String? committers,
-    bool? isPublic,
-    bool? adminInvite,
-  }) =>
-      (_db.update(
-        _db.chatConversations,
-      )..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid))).write(
-        ChatConversationsCompanion(
-          committers: Value.absentIfNull(committers),
-          isPublic: Value.absentIfNull(isPublic),
-          adminInvite: Value.absentIfNull(adminInvite),
-        ),
-      );
-
-  /// Files chats [gids] under [category] ('' for none).
-  Future<void> setCategory(
-    String accountId,
-    List<String> gids,
-    String category,
-  ) =>
-      (_db.update(_db.chatConversations)
-            ..where((c) => c.accountId.equals(accountId) & c.gid.isIn(gids)))
-          .write(ChatConversationsCompanion(category: Value(category)));
-
-  /// Replaces a group's admin ids ([adminsJson] is a JSON array).
-  Future<void> setAdmins(String accountId, String gid, String adminsJson) =>
-      (_db.update(_db.chatConversations)
-            ..where((c) => c.accountId.equals(accountId) & c.gid.equals(gid)))
-          .write(ChatConversationsCompanion(adminsJson: Value(adminsJson)));
 
   /// Replaces a chat's pinned message ids ([pinnedJson] is a JSON array).
   Future<void> setPinned(String accountId, String gid, String pinnedJson) =>

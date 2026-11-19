@@ -21,6 +21,7 @@ import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart'
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_user.dart';
 import 'package:work_nexus/features/chat/domain/entities/message_reaction.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_group_repository.dart';
 import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_avatar_crop.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_connection_status.dart';
@@ -29,6 +30,7 @@ import 'package:work_nexus/features/chat/domain/value_objects/chat_timeline_exte
 import 'package:work_nexus/features/chat/domain/value_objects/chat_typing_signal.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/pages/chat_page.dart';
+import 'package:work_nexus/features/chat/presentation/providers/chat_group_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_providers.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_staged_files_provider.dart';
 import 'package:work_nexus/features/chat/presentation/providers/chat_trust_preview.dart';
@@ -56,7 +58,7 @@ import 'package:work_nexus/features/chat/presentation/widgets/scroll_to_latest_b
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 /// In-memory [ChatRepository] that records the commands it receives.
-class _FakeChatRepository implements ChatRepository {
+class _FakeChatRepository implements ChatRepository, ChatGroupRepository {
   ChatConnectionStatus status = const ChatConnectionStatus.online(
     selfUserId: 40,
   );
@@ -597,6 +599,7 @@ void main() {
               (ref) => kChatTrustPreviewRequest,
             ),
           chatRepositoryProvider.overrideWithValue(repo),
+          chatGroupRepositoryProvider.overrideWithValue(repo),
           chatTypingClockProvider.overrideWithValue(tester.binding.clock.now),
           chatClipboardFilesProvider.overrideWithValue(() => clipboard()),
           chatAccountsProvider.overrideWithValue(const [

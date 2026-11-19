@@ -2,13 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_conversation.dart';
-import 'package:work_nexus/features/chat/domain/repositories/chat_repository.dart';
+import 'package:work_nexus/features/chat/domain/repositories/chat_group_repository.dart';
 import 'package:work_nexus/features/chat/domain/usecases/set_group_admin.dart';
 import 'package:work_nexus/features/chat/domain/usecases/transfer_group_ownership.dart';
 import 'package:work_nexus/features/chat/domain/usecases/update_group_settings.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/chat_committers.dart';
 
-class _Repo extends Mock implements ChatRepository {}
+class _Repo extends Mock implements ChatGroupRepository {}
 
 void main() {
   late _Repo repo;

@@ -57,10 +57,10 @@ class PanicSenderList extends ConsumerWidget {
               // that is.
               for (final user in users)
                 PanicCheckRow(
-                  label: user.realname.isEmpty ? user.account : user.realname,
+                  label: user.displayName,
                   detail: user.account,
                   leading: UserAvatar(
-                    name: user.realname.isEmpty ? user.account : user.realname,
+                    name: user.displayName,
                     imageUrl: user.avatarUrl,
                     diameter: context.sizes.iconLg,
                   ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/di/service_locator.dart';
 import '../../../../core/domain/entities/account.dart';
 import '../../../../core/error/result.dart';
-import '../../../chat/domain/entities/chat_message.dart';
+import '../../domain/entities/panic_incoming_message.dart';
 import '../../domain/entities/panic_switch_config.dart';
 import '../../domain/repositories/panic_overlay.dart';
 import '../../domain/repositories/panic_sticker_source.dart';
@@ -41,15 +41,15 @@ class PanicSwitchRuntime {
   final PanicOverlay overlay;
 
   /// Messages from other people as they arrive.
-  final Stream<ChatMessage> incoming;
+  final Stream<PanicIncomingMessage> incoming;
   final _lastTriggeredAt = <PanicTrigger, DateTime>{};
   final _lastSentAt = <PanicTrigger, DateTime>{};
 
   /// Switches apps when [message] is a sticker this computer listens for.
-  Future<Result<void>> onIncoming(ChatMessage message) async {
+  Future<Result<void>> onIncoming(PanicIncomingMessage message) async {
     final account = _account();
     final config = _config();
-    final trigger = ShouldTriggerPanic.triggerOf(message.content);
+    final trigger = ShouldTriggerPanic.triggerOf(message.imageName);
     if (account == null || config == null || trigger == null) {
       return const Ok(null);
     }
@@ -118,7 +118,7 @@ final panicSwitchRuntimeProvider = Provider<PanicSwitchRuntime>(
     send: getIt<SendPanicSticker>(),
     overlay: getIt<PanicOverlay>(),
     sticker: getIt<PanicStickerSource>(),
-    incoming: ref.read(panicChatRepositoryProvider).watchIncoming(),
+    incoming: ref.read(panicChatGatewayProvider).watchIncoming(),
   ),
 );
 
