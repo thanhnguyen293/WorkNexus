@@ -44,6 +44,23 @@ void main() {
     expect(shown(tester).split('\n'), hasLength(10));
   });
 
+  testWidgets('one very long line collapses too, as it wraps', (tester) async {
+    // A command with a long JSON body: few line breaks, many rows on screen.
+    final long =
+        "curl \\\n  -d '${List.filled(400, '{"a":1}').join(',')}' \\\n  host";
+    await pump(tester, long, collapsed: 10);
+
+    expect(find.textContaining('Show all'), findsOneWidget);
+    final box = tester.getSize(find.byType(CodeBlock));
+    await tester.tap(find.textContaining('Show all'));
+    await tester.pump();
+    expect(
+      tester.getSize(find.byType(CodeBlock)).height,
+      greaterThan(box.height),
+    );
+    expect(shown(tester), long);
+  });
+
   testWidgets('short code and uncapped blocks show in full, no toggle', (
     tester,
   ) async {
