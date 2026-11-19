@@ -3188,5 +3188,7 @@
   "panicSwitchDemoShared": "The apps to open are set in the Official tab, the button in the Floating button tab.",
   "panicSwitchMenuDemo": "Demo",
   "panicSwitchTabButton": "Floating button",
-  "settingsGeneral": "General"
+  "settingsGeneral": "General",
+  "updateDownloadingPercent": "Downloading the update… {percent}%",
+  "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}}
 }
