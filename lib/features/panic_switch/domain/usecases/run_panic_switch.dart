@@ -3,9 +3,10 @@ import '../../../../core/error/result.dart';
 import '../entities/panic_switch_config.dart';
 import '../repositories/app_switcher.dart';
 
-/// Does what the switch is set to: brings the target app forward, hides the
-/// chosen apps, then WorkNexus itself. Each step runs even when an earlier
-/// one fails — a half-done switch beats none; the first failure is returned.
+/// Does what the switch is set to: hides every app but the ones to open,
+/// opens those (the first ends up in front), then hides WorkNexus itself.
+/// Each step runs even when an earlier one fails — a half-done switch beats
+/// none; the first failure is returned.
 class RunPanicSwitch {
   const RunPanicSwitch(this._apps);
 
@@ -15,11 +16,10 @@ class RunPanicSwitch {
     Failure? first;
     void keep(Result<void> result) => first ??= result.failureOrNull;
 
-    final target = config.targetApp;
-    if (target != null) keep(await _apps.activate(target));
-    for (final app in config.appsToHide) {
-      if (app.id == target?.id) continue;
-      keep(await _apps.hide(app));
+    keep(await _apps.hideOthers(config.appsToOpen));
+    // The last one opened is in front, so open the first last.
+    for (final app in config.appsToOpen.reversed) {
+      keep(await _apps.activate(app));
     }
     if (config.hideSelf) keep(await _apps.hideSelf());
 

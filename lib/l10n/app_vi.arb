@@ -1967,18 +1967,15 @@
   "panicSwitchReceiveLabel": "Phản ứng khi nhận sticker",
   "panicSwitchReceiveHint": "Khi sticker \"Thầy vô\" được gửi tới bởi người được phép bên dưới, máy này sẽ chuyển app.",
   "panicSwitchOverlayLabel": "Nút nổi",
-  "panicSwitchOverlayHint": "Nút nằm trên mọi app: bấm chuột trái 3 lần để gửi sticker vào nhóm team; khi bật chế độ demo, bấm chuột phải 3 lần để gửi sticker demo. Kéo để di chuyển.",
+  "panicSwitchOverlayHint": "Nút nằm trên mọi app: bấm chuột trái 3 lần để gửi sticker vào nhóm team; khi bật chế độ demo, bấm chuột phải 3 lần để gửi sticker demo. Cả hai cách đều làm máy này chuyển app luôn. Kéo để di chuyển.",
   "panicSwitchGroupLabel": "Nhóm của team",
   "panicSwitchGroupPick": "Chọn đoạn chat",
   "panicSwitchSendersLabel": "Ai được kích hoạt",
   "panicSwitchSendersHint": "Sticker của ai trong nhóm team sẽ làm máy này chuyển app: bất kì ai trong nhóm, hoặc chỉ những người được chọn. Ở chế độ demo, ai trong đoạn chat demo cũng kích hoạt được.",
   "panicSwitchSendersNeedGroup": "Chưa tìm thấy nhóm của team.",
   "panicSwitchSendersFailed": "Không tải được thành viên của đoạn chat.",
-  "panicSwitchTargetLabel": "App sẽ mở",
-  "panicSwitchTargetHint": "Đưa lên trước, hoặc khởi động nếu chưa chạy.",
-  "panicSwitchPickApp": "Chọn app",
-  "panicSwitchHideLabel": "App sẽ ẩn",
-  "panicSwitchHideHint": "Ẩn cùng lúc (thu nhỏ trên Windows và Linux).",
+  "panicSwitchTargetLabel": "Các app sẽ mở",
+  "panicSwitchTargetHint": "Mở hoặc đưa lên trước, app đầu tiên nằm trên cùng. Mọi app khác đang chạy sẽ bị ẩn (thu nhỏ trên Windows và Linux).",
   "panicSwitchAddApp": "Thêm app",
   "panicSwitchAppsFailed": "Không lấy được danh sách app trên máy.",
   "panicSwitchHideSelfLabel": "Ẩn luôn WorkNexus",
@@ -2003,5 +2000,5 @@
   "panicSwitchDemoModeHint": "Một trigger thứ hai chạy song song với nhóm team: bấm chuột phải 3 lần vào nút nổi để gửi sticker demo vào đoạn chat bên dưới. Máy nào bật chế độ demo với đoạn chat đó sẽ chuyển app; nhóm team vẫn hoạt động như thường.",
   "panicSwitchSummaryWithDemo": "{summary} · đang bật demo",
   "panicSwitchDemoChatLabel": "Đoạn chat demo",
-  "panicSwitchDemoChatHint": "Sticker demo được gửi vào và lắng nghe ở đây. Chọn \"Gửi cho chính tôi\" để máy này chuyển app ngay khi bấm chuột phải 3 lần."
+  "panicSwitchDemoChatHint": "Sticker demo được gửi vào và lắng nghe ở đây."
 }

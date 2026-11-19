@@ -13,8 +13,8 @@ abstract interface class AppSwitcher {
   /// Brings [app] to the front, starting it when it is not running.
   Future<Result<void>> activate(AppRef app);
 
-  /// Hides (or minimises) [app]'s windows; nothing when it is not running.
-  Future<Result<void>> hide(AppRef app);
+  /// Hides (or minimises) every running app but [keep] and WorkNexus.
+  Future<Result<void>> hideOthers(List<AppRef> keep);
 
   /// Hides WorkNexus.
   Future<Result<void>> hideSelf();
