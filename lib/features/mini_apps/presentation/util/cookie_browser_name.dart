@@ -8,4 +8,7 @@ String cookieBrowserName(CookieBrowser browser) => switch (browser) {
   CookieBrowser.arc => 'Arc',
   CookieBrowser.firefox => 'Firefox',
   CookieBrowser.safari => 'Safari',
+  CookieBrowser.chromium => 'Chromium',
+  CookieBrowser.vivaldi => 'Vivaldi',
+  CookieBrowser.opera => 'Opera',
 };

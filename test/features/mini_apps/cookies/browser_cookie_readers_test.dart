@@ -120,7 +120,8 @@ void main() {
         db.close();
         var asked = 0;
         final reader = ChromiumCookieReader(
-          home: tmp.path,
+          environment: {'HOME': tmp.path},
+          os: 'macos',
           run: (cmd, args, _) async {
             asked++;
             return ProcessResult(0, 0, 'pw\n', '');
@@ -150,7 +151,8 @@ void main() {
       )..createSync(recursive: true);
       File('${profile.path}/Cookies').writeAsStringSync('');
       final reader = ChromiumCookieReader(
-        home: tmp.path,
+        environment: {'HOME': tmp.path},
+        os: 'macos',
         run: (_, _, _) async => ProcessResult(0, 51, '', 'denied'),
       );
 
@@ -169,7 +171,8 @@ void main() {
         File('${profile.path}/Cookies').writeAsStringSync('');
         Duration? waited;
         final reader = ChromiumCookieReader(
-          home: tmp.path,
+          environment: {'HOME': tmp.path},
+          os: 'macos',
           keychainTimeout: const Duration(seconds: 5),
           run: (_, _, timeout) {
             waited = timeout;
@@ -244,7 +247,7 @@ Path=/abs/work
           '1800000000, 1, 1, 2)',
         )
         ..close();
-      final reader = FirefoxCookieReader(root: tmp.path);
+      final reader = FirefoxCookieReader(roots: [tmp.path]);
 
       final profile = (await reader.profiles()).single;
       final cookie = (await reader.read(profile.path)).single;

@@ -8,15 +8,14 @@ import '../../../domain/entities/browser_cookie.dart';
 import '../../../domain/value_objects/cookie_browser.dart';
 import '../../../domain/value_objects/cookie_same_site.dart';
 import 'chromium_cookie_crypto.dart';
+import 'chromium_gcm_cookie_crypto.dart';
+import 'chromium_installs.dart';
 import 'join_path.dart';
 import 'sqlite_snapshot.dart';
+import 'windows_dpapi.dart';
 
 /// A Chromium profile: its folder and the name the browser shows for it.
 typedef ChromiumProfile = ({String path, String name});
-
-/// Where a Chromium browser keeps its data on macOS, and the keychain item
-/// holding its cookie password.
-typedef _Install = ({String dataDir, String keychainService});
 
 /// Runs a command, giving up after [timeout] with a [TimeoutException].
 typedef RunCommand =
@@ -48,65 +47,76 @@ Future<ProcessResult> runKilledAfterTimeout(
   return ProcessResult(process.pid, code, await out, await err);
 }
 
-/// The cookies of Chromium browsers on macOS. Reading the keychain password
-/// makes macOS ask the user once; the key is then kept for the session.
+/// The cookies of Chromium browsers on macOS and Windows.
 ///
-/// Not offered on Windows: since Chrome 127 its cookies there are bound to
-/// Chrome itself and no other app can decrypt them.
+/// On macOS the key comes from the keychain, which asks the user once; it is
+/// then kept for the session. On Windows it sits DPAPI-protected in the
+/// browser's `Local State`; Chrome's own cookies there are app-bound (since
+/// Chrome 127) and only Chrome can decrypt them, which [read] reports as an
+/// [AppBoundEncryptionException].
 class ChromiumCookieReader {
   ChromiumCookieReader({
-    this._home,
+    Map<String, String>? environment,
+    String? os,
     this._run = runKilledAfterTimeout,
+    this._unprotect = windowsUnprotect,
     this._keychainTimeout = const Duration(seconds: 90),
-  });
+  }) : _environment = environment ?? Platform.environment,
+       _os = os ?? Platform.operatingSystem;
 
-  final String? _home;
+  final Map<String, String> _environment;
+  final String _os;
   final RunCommand _run;
+  final Unprotect _unprotect;
 
   /// How long the keychain prompt is waited on. It can open where the user
   /// does not see it (on another Space while the app is full screen, behind
   /// the window), and the import would otherwise wait on it for good.
   final Duration _keychainTimeout;
-  final _keys = <CookieBrowser, ChromiumCookieCrypto>{};
 
-  static _Install? _install(CookieBrowser browser) => switch (browser) {
-    CookieBrowser.chrome => (
-      dataDir: 'Google/Chrome',
-      keychainService: 'Chrome Safe Storage',
-    ),
-    CookieBrowser.edge => (
-      dataDir: 'Microsoft Edge',
-      keychainService: 'Microsoft Edge Safe Storage',
-    ),
-    CookieBrowser.brave => (
-      dataDir: 'BraveSoftware/Brave-Browser',
-      keychainService: 'Brave Safe Storage',
-    ),
-    CookieBrowser.arc => (
-      dataDir: 'Arc/User Data',
-      keychainService: 'Arc Safe Storage',
-    ),
-    CookieBrowser.firefox || CookieBrowser.safari => null,
-  };
+  /// Keys by keychain item (macOS) or data folder (Windows).
+  final _keys = <String, CookieDecrypter>{};
 
-  String? _dataDir(CookieBrowser browser) {
-    final install = _install(browser);
-    if (install == null || !Platform.isMacOS) return null;
-    final home = _home ?? Platform.environment['HOME'] ?? '';
-    return joinPath([home, 'Library/Application Support', install.dataDir]);
+  /// The folders [browser] keeps its data in here, each release channel's.
+  Future<List<String>> _dataDirs(CookieBrowser browser) async => [
+    ...chromiumDataDirs(browser, os: _os, environment: _environment),
+    if (browser == CookieBrowser.arc && _os == 'windows')
+      ...await _arcOnWindows(),
+  ];
+
+  Future<List<String>> _arcOnWindows() async {
+    final local = _environment['LOCALAPPDATA'];
+    if (local == null || local.isEmpty) return const [];
+    final packages = Directory(joinPath([local, 'Packages']));
+    if (!await packages.exists()) return const [];
+    return [
+      await for (final entry in packages.list())
+        if (entry is Directory &&
+            _name(entry.path).startsWith(arcWindowsPackagePrefix))
+          joinPath([entry.path, arcWindowsDataDir]),
+    ];
   }
+
+  static String _name(String path) => path.split(RegExp(r'[\\/]')).last;
 
   /// [browser]'s profiles that have cookies, named as it names them.
   Future<List<ChromiumProfile>> profiles(CookieBrowser browser) async {
-    final dir = _dataDir(browser);
-    if (dir == null || !await Directory(dir).exists()) return const [];
-    final names = await _profileNames(dir);
     final found = <ChromiumProfile>[];
-    await for (final entry in Directory(dir).list()) {
-      if (entry is! Directory) continue;
-      if (await _cookieFile(entry.path) == null) continue;
-      final folder = entry.path.split(Platform.pathSeparator).last;
-      found.add((path: entry.path, name: names[folder] ?? folder));
+    for (final dir in await _dataDirs(browser)) {
+      if (!await Directory(dir).exists()) continue;
+      final names = await _profileNames(dir);
+      // Opera keeps its one profile's files right in its data folder, whose
+      // subfolders (`Network`, …) are then not profiles.
+      if (await _cookieFile(dir) != null) {
+        found.add((path: dir, name: names[_name(dir)] ?? 'Default'));
+        continue;
+      }
+      await for (final entry in Directory(dir).list()) {
+        if (entry is! Directory) continue;
+        if (await _cookieFile(entry.path) == null) continue;
+        final folder = _name(entry.path);
+        found.add((path: entry.path, name: names[folder] ?? folder));
+      }
     }
     return found..sort((a, b) => a.name.compareTo(b.name));
   }
@@ -145,7 +155,8 @@ class ChromiumCookieReader {
   }
 
   /// Every cookie in the profile at [profilePath]. Throws a
-  /// [KeychainDeniedException] when the keychain refuses the password.
+  /// [KeychainDeniedException] when the keychain refuses the password, and an
+  /// [AppBoundEncryptionException] when only the browser can decrypt them.
   Future<List<BrowserCookie>> read(
     CookieBrowser browser,
     String profilePath,
@@ -154,23 +165,28 @@ class ChromiumCookieReader {
     if (file == null) {
       throw FileSystemException('No cookies', profilePath);
     }
-    final crypto = _keys[browser] ??= await _keyFor(browser);
+    final crypto = await _keyFor(browser, profilePath);
     // Decrypting thousands of values is too slow for the UI isolate.
-    return Isolate.run(() => _readFile(file, crypto));
+    final read = await Isolate.run(() => _readFile(file, crypto));
+    if (read.cookies.isEmpty && read.appBound > 0) {
+      throw AppBoundEncryptionException(browser);
+    }
+    return read.cookies;
   }
 
-  static Future<List<BrowserCookie>> _readFile(
+  static Future<({List<BrowserCookie> cookies, int appBound})> _readFile(
     String file,
-    ChromiumCookieCrypto crypto,
+    CookieDecrypter crypto,
   ) => readSqliteSnapshot(file, (db) {
     final version = db.select("SELECT value FROM meta WHERE key = 'version'");
     final hasDomainHash =
         (int.tryParse('${version.firstOrNull?['value']}') ?? 0) >= 24;
-    return [
-      for (final row in db.select(
-        'SELECT host_key, name, value, encrypted_value, path, '
-        'expires_utc, is_secure, is_httponly, samesite FROM cookies',
-      ))
+    final rows = db.select(
+      'SELECT host_key, name, value, encrypted_value, path, '
+      'expires_utc, is_secure, is_httponly, samesite FROM cookies',
+    );
+    final cookies = [
+      for (final row in rows)
         if (_value(row['value'], row['encrypted_value'], crypto, hasDomainHash)
             case final value?)
           BrowserCookie(
@@ -189,12 +205,24 @@ class ChromiumCookieReader {
             },
           ),
     ];
+    final appBound = rows
+        .where((row) => _isAppBound(row['encrypted_value']))
+        .length;
+    return (cookies: cookies, appBound: appBound);
   });
+
+  /// A `v20` value: encrypted with Chrome's app-bound key on Windows.
+  static bool _isAppBound(Object? encrypted) =>
+      encrypted is Uint8List &&
+      encrypted.length > 3 &&
+      encrypted[0] == 0x76 && // v
+      encrypted[1] == 0x32 && // 2
+      encrypted[2] == 0x30; // 0
 
   static String? _value(
     Object? plain,
     Object? encrypted,
-    ChromiumCookieCrypto crypto,
+    CookieDecrypter crypto,
     bool hasDomainHash,
   ) {
     if (plain is String && plain.isNotEmpty) return plain;
@@ -202,9 +230,46 @@ class ChromiumCookieReader {
     return crypto.decrypt(encrypted, hasDomainHash: hasDomainHash);
   }
 
-  Future<ChromiumCookieCrypto> _keyFor(CookieBrowser browser) async {
-    final service = _install(browser)?.keychainService;
+  Future<CookieDecrypter> _keyFor(
+    CookieBrowser browser,
+    String profilePath,
+  ) async {
+    if (_os == 'windows') {
+      // Opera's profile is its data folder; others' sit one level down.
+      final dataDir =
+          await File(joinPath([profilePath, 'Local State'])).exists()
+          ? profilePath
+          : Directory(profilePath).parent.path;
+      return _keys[dataDir] ??= await _windowsKey(dataDir);
+    }
+    final service = chromiumKeychainService(browser);
     if (service == null) throw ArgumentError.value(browser, 'browser');
+    return _keys[service] ??= await _keychainKey(service);
+  }
+
+  Future<CookieDecrypter> _windowsKey(String dataDir) async {
+    final state = jsonDecode(
+      await File(joinPath([dataDir, 'Local State'])).readAsString(),
+    );
+    final encoded = switch (state) {
+      {'os_crypt': {'encrypted_key': final String key}} => key,
+      _ => null,
+    };
+    final blob = encoded == null ? null : base64.decode(encoded);
+    // The key is stored as `DPAPI` followed by the protected bytes.
+    if (blob == null ||
+        blob.length <= 5 ||
+        ascii.decode(blob.sublist(0, 5), allowInvalid: true) != 'DPAPI') {
+      throw FormatException('No cookie key in Local State', dataDir);
+    }
+    final key = _unprotect(Uint8List.sublistView(blob, 5));
+    if (key == null) {
+      throw const FormatException('Windows refused the cookie key');
+    }
+    return ChromiumGcmCookieCrypto(key);
+  }
+
+  Future<CookieDecrypter> _keychainKey(String service) async {
     final ProcessResult result;
     try {
       result = await _run('security', [
@@ -240,6 +305,17 @@ class KeychainTimeoutException implements Exception {
 
   @override
   String toString() => 'KeychainTimeoutException($service)';
+}
+
+/// The browser encrypts its cookies with a key only it can get (Chrome's
+/// app-bound encryption on Windows).
+class AppBoundEncryptionException implements Exception {
+  const AppBoundEncryptionException(this.browser);
+
+  final CookieBrowser browser;
+
+  @override
+  String toString() => 'AppBoundEncryptionException(${browser.name})';
 }
 
 /// Chromium counts microseconds from 1601; zero is a session cookie.

@@ -7,12 +7,14 @@ import '../../domain/entities/browser_cookie.dart';
 import '../../domain/entities/cookie_source.dart';
 import '../../domain/repositories/browser_cookie_repository.dart';
 import '../../domain/value_objects/cookie_browser.dart';
+import '../../domain/value_objects/cookie_read_problem.dart';
 import '../datasources/browser_cookies/chromium_cookie_reader.dart';
 import '../datasources/browser_cookies/firefox_cookie_reader.dart';
 import '../datasources/browser_cookies/safari_cookie_reader.dart';
+import '../datasources/browser_cookies/sqlite_snapshot.dart';
 
-/// The browsers' cookies on this device: Chromium browsers and Safari on
-/// macOS, Firefox anywhere.
+/// The browsers' cookies on this device: Chromium browsers on macOS and
+/// Windows, Safari on macOS, Firefox anywhere.
 class LocalBrowserCookieRepository implements BrowserCookieRepository {
   LocalBrowserCookieRepository({
     required this._chromium,
@@ -27,33 +29,49 @@ class LocalBrowserCookieRepository implements BrowserCookieRepository {
   /// errno for a permission the system refused (EPERM, EACCES).
   static const _refused = {1, 13};
 
+  /// Each browser is looked for on its own: one that cannot be looked at
+  /// (a folder the system refuses, a malformed `profiles.ini`) is logged and
+  /// skipped, and fails the lookup only when no other browser was found —
+  /// so it is never mistaken for "no browser here".
   @override
   Future<Result<List<CookieSource>>> sources() async {
-    try {
-      return Ok([
-        for (final browser in CookieBrowser.values.where((b) => b.isChromium))
-          for (final profile in await _chromium.profiles(browser))
+    final found = <CookieSource>[];
+    Object? firstError;
+    Future<void> look(
+      CookieBrowser browser,
+      Future<List<({String path, String name})>> Function() profiles,
+    ) async {
+      try {
+        found.addAll([
+          for (final profile in await profiles())
             CookieSource(
               browser: browser,
               profileId: profile.path,
               profileName: profile.name,
             ),
-        for (final profile in await _firefox.profiles())
-          CookieSource(
-            browser: CookieBrowser.firefox,
-            profileId: profile.path,
-            profileName: profile.name,
-          ),
-        if (_safari.installed)
-          const CookieSource(
-            browser: CookieBrowser.safari,
-            profileId: 'safari',
-            profileName: 'Safari',
-          ),
-      ]);
-    } on Exception catch (e) {
-      return Err(StorageFailure('Could not look for browsers', cause: e));
+        ]);
+      } on Object catch (e) {
+        firstError ??= e;
+        appTalker.warning(
+          'Cookie import: looking for ${browser.name} failed: $e',
+        );
+      }
     }
+
+    for (final browser in CookieBrowser.values.where((b) => b.isChromium)) {
+      await look(browser, () => _chromium.profiles(browser));
+    }
+    await look(CookieBrowser.firefox, _firefox.profiles);
+    await look(
+      CookieBrowser.safari,
+      () async => [if (_safari.installed) (path: 'safari', name: 'Safari')],
+    );
+    if (found.isEmpty && firstError != null) {
+      return Err(
+        StorageFailure('Could not look for browsers', cause: firstError),
+      );
+    }
+    return Ok(found);
   }
 
   @override
@@ -80,6 +98,20 @@ class LocalBrowserCookieRepository implements BrowserCookieRepository {
     } on KeychainTimeoutException catch (e) {
       return Err(
         ExpiredFailure('The keychain prompt went unanswered', cause: e),
+      );
+    } on CookieStoreInUseException {
+      return const Err(
+        StorageFailure(
+          'The browser holds its cookies locked',
+          cause: CookieReadProblem.browserBusy,
+        ),
+      );
+    } on AppBoundEncryptionException {
+      return const Err(
+        StorageFailure(
+          'Only the browser itself can decrypt its cookies',
+          cause: CookieReadProblem.appBoundEncryption,
+        ),
       );
     } on FileSystemException catch (e) {
       if (_refused.contains(e.osError?.errorCode)) {

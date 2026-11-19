@@ -2996,6 +2996,23 @@
   "miniAppCookiesOpenPrivacy": "Open Privacy settings",
   "miniAppCookiesReadFailed": "Could not read this browser's cookies.",
   "miniAppCookiesRetry": "Try again",
+  "miniAppCookiesLookupFailed": "Could not look for browsers on this device.",
+  "miniAppCookiesBrowserBusy": "{browser} is running and keeps its cookies locked. Quit {browser}, then try again.",
+  "@miniAppCookiesBrowserBusy": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
+  "miniAppCookiesAppBound": "{browser} encrypts its cookies so that only {browser} can read them. Import from another browser, such as Firefox.",
+  "@miniAppCookiesAppBound": {
+    "placeholders": {
+      "browser": {
+        "type": "String"
+      }
+    }
+  },
   "miniAppCookiesExpiredTooltip": "Sign-in cookies expired: import them again from {browser}",
   "@miniAppCookiesExpiredTooltip": {
     "placeholders": {

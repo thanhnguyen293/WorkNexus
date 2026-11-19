@@ -83,6 +83,8 @@ dependencies:
   drift: 2.34.4
   # Reads the browsers' own cookie databases for the mini apps' cookie import.
   sqlite3: 3.5.2
+  # Windows DPAPI (CryptUnprotectData) for the Chromium cookie key there.
+  ffi: 2.2.0
   drift_flutter: 0.3.1
 
   # Networking / secure storage.

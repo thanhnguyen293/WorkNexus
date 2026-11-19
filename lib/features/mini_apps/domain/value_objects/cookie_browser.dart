@@ -6,10 +6,13 @@ enum CookieBrowser {
   brave,
   arc,
   firefox,
-  safari;
+  safari,
+  chromium,
+  vivaldi,
+  opera;
 
   bool get isChromium => switch (this) {
-    chrome || edge || brave || arc => true,
+    chrome || edge || brave || arc || chromium || vivaldi || opera => true,
     firefox || safari => false,
   };
 }
