@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/di/service_locator.dart';
@@ -74,4 +76,11 @@ final appSwitcherProvider = Provider<AppSwitcher>(
 /// Apps on this computer to pick from (read again each time Settings opens).
 final panicAppsProvider = FutureProvider.autoDispose<Result<List<AppRef>>>(
   (ref) => ref.watch(appSwitcherProvider).listApps(),
+);
+
+/// An app's icon (PNG bytes), null when it has none. Not auto-disposed: icons
+/// never change while the app runs, and the checklist scrolls rows in and out.
+final panicAppIconProvider = FutureProvider.family<Uint8List?, AppRef>(
+  (ref, app) async =>
+      (await ref.watch(appSwitcherProvider).appIcon(app)).valueOrNull,
 );

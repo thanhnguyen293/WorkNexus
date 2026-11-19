@@ -30,6 +30,10 @@ class ChannelAppSwitcher implements AppSwitcher {
   );
 
   @override
+  Future<Result<Uint8List?>> appIcon(AppRef app) =>
+      _guard('read the icon of ${app.name}', () => _channel.appIcon(app.id));
+
+  @override
   Future<Result<void>> activate(AppRef app) =>
       _guard('open ${app.name}', () => _channel.activate(app.id));
 
