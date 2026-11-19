@@ -182,6 +182,15 @@ void main() {
     );
   });
 
+  test('offers the demo menu only with demo mode and a demo chat', () {
+    expect(config.overlayLook.demo, isFalse);
+    expect(config.copyWith(demoMode: true).overlayLook.demo, isFalse);
+    expect(
+      config.copyWith(demoMode: true, demoChatGid: 'dm').overlayLook.demo,
+      isTrue,
+    );
+  });
+
   test('shows the overlay with the sticker image', () async {
     final overlay = _MockOverlay();
     final source = _MockSticker();
@@ -189,7 +198,7 @@ void main() {
     when(source.bytes).thenAnswer((_) async => Ok(image));
     final look = config.overlayLook;
     when(
-      () => overlay.show(image, look),
+      () => overlay.show(image, look, demoLabel: 'Demo'),
     ).thenAnswer((_) async => const Ok(null));
     final r = PanicSwitchRuntime(
       account: () => account,
@@ -201,11 +210,11 @@ void main() {
       incoming: const Stream.empty(),
     );
 
-    expect((await r.showOverlay(look)).isOk, isTrue);
-    verify(() => overlay.show(image, look)).called(1);
+    expect((await r.showOverlay(look, demoLabel: 'Demo')).isOk, isTrue);
+    verify(() => overlay.show(image, look, demoLabel: 'Demo')).called(1);
 
     when(overlay.hide).thenAnswer((_) async => const Ok(null));
-    await r.showOverlay(null);
+    await r.showOverlay(null, demoLabel: 'Demo');
     verify(overlay.hide).called(1);
   });
 }
