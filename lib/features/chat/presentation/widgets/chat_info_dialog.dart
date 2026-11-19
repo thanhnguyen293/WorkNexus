@@ -8,11 +8,13 @@ import '../../domain/entities/chat_user.dart';
 import '../providers/chat_providers.dart';
 import 'chat_info_panel.dart';
 import 'chat_layout.dart';
+import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
 
 /// Shows who the chat is with / what the group is: the info panel beside the
-/// chat when there is room for it (closing a thread or other panel there),
-/// else the same panel as a dialog.
+/// chat when there is room for it (closing a thread or other panel there,
+/// and opening it for now when the user has hidden it), else the same panel
+/// as a dialog.
 void showChatInfo(
   BuildContext context,
   WidgetRef ref, {
@@ -22,7 +24,8 @@ void showChatInfo(
 }) {
   if (ChatLayoutScope.of(context).infoRoom) {
     ref.read(openReplyThreadProvider(thread).notifier).state = null;
-    ref.read(chatSidePanelProvider(thread).notifier).state = null;
+    ref.read(chatSidePanelProvider(thread).notifier).state =
+        readChatInfoDocked(ref, infoRoom: true) ? null : ChatSidePanel.info;
     return;
   }
   showDialog<void>(

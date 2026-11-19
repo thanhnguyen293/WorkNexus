@@ -146,10 +146,13 @@ class ChatInfoPanel extends ConsumerWidget {
 
     return ChatSidePanelFrame(
       title: l.chatInfo,
-      // With room the info panel stays: it only closes in a narrow window.
+      // Resting beside the chat, it is hidden with the header's info button.
       onClose:
           onClose ??
-          (ChatLayoutScope.of(context).infoRoom
+          (watchChatInfoDocked(
+                ref,
+                infoRoom: ChatLayoutScope.of(context).infoRoom,
+              )
               ? null
               : () => closeChatSidePanel(ref, thread)),
       // Pointing anywhere on the panel shows all of it while it is hidden.

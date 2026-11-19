@@ -1085,6 +1085,8 @@
   "chatNotificationsOn": "Tắt thông báo tin nhắn mới",
   "chatNotificationsOff": "Bật thông báo tin nhắn mới",
   "chatInfo": "Thông tin cuộc trò chuyện",
+  "chatShowInfo": "Hiện thông tin cuộc trò chuyện",
+  "chatHideInfo": "Ẩn thông tin cuộc trò chuyện",
   "chatClosePanel": "Đóng",
   "chatPinnedBarTitle": "Tin nhắn",
   "chatMorePins": "+{count} ghim",

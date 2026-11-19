@@ -19,6 +19,7 @@ import '../providers/chat_providers.dart';
 import '../providers/chat_search_providers.dart';
 import 'chat_avatar.dart';
 import 'chat_info_dialog.dart';
+import 'chat_info_toggle.dart';
 import 'chat_labels.dart';
 import 'chat_mute_toggle.dart';
 import 'chat_privacy_mask.dart';
@@ -182,6 +183,8 @@ class ChatThreadHeader extends ConsumerWidget {
             ),
             SizedBox(width: context.spacing.xs),
             ChatMuteToggle(chat: chat),
+            SizedBox(width: context.spacing.xs),
+            ChatInfoToggle(thread: thread),
           ],
         ],
       ),

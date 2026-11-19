@@ -1517,6 +1517,8 @@
   "chatNotificationsOn": "Mute new message notifications",
   "chatNotificationsOff": "Turn on new message notifications",
   "chatInfo": "Chat info",
+  "chatShowInfo": "Show chat info",
+  "chatHideInfo": "Hide chat info",
   "chatClosePanel": "Close",
   "chatPinnedBarTitle": "Message",
   "chatMorePins": "+{count} pinned",
