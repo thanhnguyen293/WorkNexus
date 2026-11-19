@@ -32,6 +32,9 @@ class PanicSwitchChannel {
     ];
   }
 
+  Future<Uint8List?> appIcon(String id) =>
+      _channel.invokeMethod<Uint8List>('appIcon', {'id': id});
+
   Future<void> activate(String id) =>
       _channel.invokeMethod<void>('activate', {'id': id});
 

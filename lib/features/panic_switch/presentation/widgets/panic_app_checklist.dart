@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_search_field.dart';
 import '../../../../core/widgets/inline_status.dart';
@@ -82,19 +85,50 @@ class _PanicAppChecklistState extends ConsumerState<PanicAppChecklist> {
         else
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: _maxHeight),
-            child: ListView(
+            // Built lazily: the icons are read only for the rows in view.
+            child: ListView.builder(
               shrinkWrap: true,
-              children: [
-                for (final app in shown)
-                  PanicCheckRow(
-                    label: app.name,
-                    picked: pickedIds.contains(app.id),
-                    onToggle: () => _toggle(app),
-                  ),
-              ],
+              itemCount: shown.length,
+              itemBuilder: (context, i) => PanicCheckRow(
+                label: shown[i].name,
+                leading: _AppIcon(shown[i]),
+                picked: pickedIds.contains(shown[i].id),
+                onToggle: () => _toggle(shown[i]),
+              ),
             ),
           ),
       ],
+    );
+  }
+}
+
+/// An app's own icon, or a generic window while it loads or when it has none.
+class _AppIcon extends ConsumerWidget {
+  const _AppIcon(this.app);
+
+  final AppRef app;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final side = context.sizes.iconLg;
+    final bytes = ref.watch(panicAppIconProvider(app)).asData?.value;
+    if (bytes == null) {
+      return Icon(
+        LucideIcons.appWindow300,
+        size: side,
+        color: context.colors.textTertiary,
+      );
+    }
+    return Image.memory(
+      bytes,
+      width: side,
+      height: side,
+      gaplessPlayback: true,
+      errorBuilder: (context, error, stack) => Icon(
+        LucideIcons.appWindow300,
+        size: side,
+        color: context.colors.textTertiary,
+      ),
     );
   }
 }

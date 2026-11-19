@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
@@ -35,6 +36,17 @@ class LinuxAppSwitcher implements AppSwitcher {
       ]);
     } on Object catch (e) {
       return Err(UnexpectedFailure('Could not list the apps', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<Uint8List?>> appIcon(AppRef app) async {
+    try {
+      final entry = await _apps.find(app.id);
+      final file = entry == null ? null : await _apps.iconFile(entry);
+      return Ok(await file?.readAsBytes());
+    } on Object catch (e) {
+      return Err(UnexpectedFailure('Could not read an icon', cause: e));
     }
   }
 
