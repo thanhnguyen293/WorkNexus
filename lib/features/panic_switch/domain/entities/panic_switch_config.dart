@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../panic_switch_constants.dart';
+import '../value_objects/panic_button_look.dart';
 import '../value_objects/panic_trigger.dart';
 import 'app_ref.dart';
 
@@ -18,6 +19,12 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
 
     /// Show the floating button that sends the sticker.
     @Default(true) bool overlayVisible,
+
+    /// The floating button's width (logical pixels), opacity (0–1) and the
+    /// gesture that sets it off.
+    @Default(PanicButtonChoices.defaultSize) int overlaySize,
+    @Default(PanicButtonChoices.defaultOpacity) double overlayOpacity,
+    @Default(PanicGesture.tripleClick) PanicGesture overlayGesture,
 
     /// The team's group: where the release sticker is sent and listened for;
     /// picked by name (`PickDefaultPanicGroup`), null until found.
@@ -46,6 +53,9 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     /// The least time between two triggers, sending or receiving.
     @Default(PanicSwitchConstants.defaultDebounceSeconds) int debounceSeconds,
   }) = _PanicSwitchConfig;
+
+  PanicButtonLook get overlayLook =>
+      (size: overlaySize, opacity: overlayOpacity, gesture: overlayGesture);
 
   /// Where [trigger]'s sticker is sent and listened for; null when it is off.
   String? chatFor(PanicTrigger trigger) => switch (trigger) {

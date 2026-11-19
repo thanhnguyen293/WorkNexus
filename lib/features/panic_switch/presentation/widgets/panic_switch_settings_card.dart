@@ -9,7 +9,10 @@ import '../../domain/entities/panic_switch_config.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
 import 'panic_app_pickers.dart';
+import 'panic_button_group.dart';
 import 'panic_chat_picker.dart';
+import 'panic_group_label.dart';
+import 'panic_how_it_works.dart';
 import 'panic_sender_list.dart';
 import 'panic_switch_save.dart';
 import 'panic_try_button.dart';
@@ -17,9 +20,11 @@ import 'panic_try_button.dart';
 /// The debounce choices offered, in seconds.
 const _debounceChoices = [15, 30, 60, 120, 300];
 
-/// Settings' "Thầy vô" card: the floating button that sends the sticker, and
-/// what this computer does when the sticker arrives. Shown only to users of
-/// the ZenTao the feature is offered for.
+/// Settings' "Thầy vô" card. It opens on how the switch works with the
+/// user's own settings filled in, then groups the settings in the order they
+/// come into play: the floating button, what this computer does, receiving,
+/// demo mode, and the rest. Shown only to users of the ZenTao the feature is
+/// offered for.
 class PanicSwitchSettingsCard extends ConsumerWidget {
   const PanicSwitchSettingsCard({super.key});
 
@@ -51,6 +56,7 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
     String? titleOf(String? gid) =>
         chats.where((c) => c.chat.gid == gid).firstOrNull?.title;
     final team = titleOf(config.chatGid);
+    final demoChat = config.demoMode ? titleOf(config.demoChatGid) : null;
     final summary = team == null
         ? l.panicSwitchNoGroup
         : config.anySender
@@ -66,12 +72,42 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
           ? l.panicSwitchSummaryWithDemo(summary)
           : summary,
       sections: [
+        PanicHowItWorks(
+          gesture: config.overlayGesture,
+          team: team ?? l.panicSwitchTeamFallback,
+          demoChat: demoChat,
+        ),
+        PanicButtonGroup(config: config),
+
+        PanicGroupLabel(l.panicSwitchSectionAction),
         AppExpandableCardSection(
-          title: l.panicSwitchOverlayLabel,
-          hint: l.panicSwitchOverlayHint,
+          title: l.panicSwitchTargetLabel,
+          hint: !canRaise
+              ? '${l.panicSwitchTargetHint} ${l.panicSwitchWaylandNote}'
+              : l.panicSwitchTargetHint,
+          child: PanicOpenAppsPicker(config: config),
+        ),
+        AppExpandableCardSection(
+          title: l.panicSwitchHideSelfLabel,
+          hint: l.panicSwitchHideSelfHint,
           trailing: Switch(
-            value: config.overlayVisible,
-            onChanged: (v) => save((c) => c.copyWith(overlayVisible: v)),
+            value: config.hideSelf,
+            onChanged: (v) => save((c) => c.copyWith(hideSelf: v)),
+          ),
+        ),
+        AppExpandableCardSection(
+          title: l.panicSwitchTryLabel,
+          hint: l.panicSwitchTryHint,
+          trailing: const PanicTryButton(),
+        ),
+
+        PanicGroupLabel(l.panicSwitchSectionReceive),
+        AppExpandableCardSection(
+          title: l.panicSwitchReceiveLabel,
+          hint: l.panicSwitchReceiveHint,
+          trailing: Switch(
+            value: config.enabled,
+            onChanged: (v) => save((c) => c.copyWith(enabled: v)),
           ),
         ),
         AppExpandableCardSection(
@@ -79,6 +115,14 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
           hint: l.panicSwitchTeamGroupHint,
           trailing: Text(team ?? l.panicSwitchNoGroup),
         ),
+        if (config.enabled)
+          AppExpandableCardSection(
+            title: l.panicSwitchSendersLabel,
+            hint: l.panicSwitchSendersHint,
+            child: PanicSenderList(accountId: account.id, config: config),
+          ),
+
+        PanicGroupLabel(l.panicSwitchSectionDemo),
         AppExpandableCardSection(
           title: l.panicSwitchDemoModeLabel,
           hint: l.panicSwitchDemoModeHint,
@@ -98,43 +142,12 @@ class PanicSwitchSettingsCard extends ConsumerWidget {
                   save((c) => c.copyWith(demoChatGid: p.chat.gid)),
             ),
           ),
-        AppExpandableCardSection(
-          title: l.panicSwitchReceiveLabel,
-          hint: l.panicSwitchReceiveHint,
-          trailing: Switch(
-            value: config.enabled,
-            onChanged: (v) => save((c) => c.copyWith(enabled: v)),
-          ),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchSendersLabel,
-          hint: l.panicSwitchSendersHint,
-          child: PanicSenderList(accountId: account.id, config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTargetLabel,
-          hint: !canRaise
-              ? '${l.panicSwitchTargetHint} ${l.panicSwitchWaylandNote}'
-              : l.panicSwitchTargetHint,
-          child: PanicOpenAppsPicker(config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTryLabel,
-          hint: l.panicSwitchTryHint,
-          trailing: const PanicTryButton(),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchHideSelfLabel,
-          hint: l.panicSwitchHideSelfHint,
-          trailing: Switch(
-            value: config.hideSelf,
-            onChanged: (v) => save((c) => c.copyWith(hideSelf: v)),
-          ),
-        ),
+
+        PanicGroupLabel(l.panicSwitchSectionAdvanced),
         AppExpandableCardSection(
           title: l.panicSwitchDebounceLabel,
           hint: l.panicSwitchDebounceHint,
-          trailing: AppSegmentedTabs(
+          child: AppSegmentedTabs(
             tabs: [
               for (final s in _debounceChoices)
                 AppSegmentedTab(

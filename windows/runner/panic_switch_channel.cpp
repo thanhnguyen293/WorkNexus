@@ -235,13 +235,27 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
           result->Success();
         } else if (method == "showOverlay") {
           const auto* args = std::get_if<EncodableMap>(call.arguments());
-          const auto it =
-              args ? args->find(EncodableValue("image")) : EncodableMap::const_iterator();
+          auto arg = [args](const char* key) -> const EncodableValue* {
+            if (!args) return nullptr;
+            const auto it = args->find(EncodableValue(key));
+            return it == args->end() ? nullptr : &it->second;
+          };
+          const auto* image_arg = arg("image");
           const auto* image =
-              args && it != args->end()
-                  ? std::get_if<std::vector<uint8_t>>(&it->second)
-                  : nullptr;
-          if (!image || !overlay_->Show(*image)) {
+              image_arg ? std::get_if<std::vector<uint8_t>>(image_arg) : nullptr;
+          int width = 120;
+          if (const auto* v = arg("size")) {
+            if (const auto* i = std::get_if<int32_t>(v)) width = *i;
+          }
+          double opacity = 1.0;
+          if (const auto* v = arg("opacity")) {
+            if (const auto* d = std::get_if<double>(v)) opacity = *d;
+          }
+          std::string gesture = "triple";
+          if (const auto* v = arg("gesture")) {
+            if (const auto* g = std::get_if<std::string>(v)) gesture = *g;
+          }
+          if (!image || !overlay_->Show(*image, width, opacity, gesture)) {
             return result->Error("overlay_failed", "Could not show the button");
           }
           result->Success();

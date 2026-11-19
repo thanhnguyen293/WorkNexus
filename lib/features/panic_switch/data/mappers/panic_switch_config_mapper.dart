@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../domain/entities/app_ref.dart';
 import '../../domain/entities/panic_switch_config.dart';
 import '../../domain/panic_switch_constants.dart';
+import '../../domain/value_objects/panic_button_look.dart';
 
 /// [PanicSwitchConfig] ↔ the JSON it is stored as. Unknown or missing fields
 /// fall back to the defaults, so older saved settings still load.
@@ -10,6 +11,9 @@ abstract final class PanicSwitchConfigMapper {
   static String toJson(PanicSwitchConfig c) => jsonEncode({
     'enabled': c.enabled,
     'overlayVisible': c.overlayVisible,
+    'overlaySize': c.overlaySize,
+    'overlayOpacity': c.overlayOpacity,
+    'overlayGesture': c.overlayGesture.wire,
     'chatGid': c.chatGid,
     'demoMode': c.demoMode,
     'demoChatGid': c.demoChatGid,
@@ -39,6 +43,12 @@ abstract final class PanicSwitchConfigMapper {
     return PanicSwitchConfig(
       enabled: json['enabled'] as bool? ?? true,
       overlayVisible: json['overlayVisible'] as bool? ?? true,
+      overlaySize:
+          json['overlaySize'] as int? ?? PanicButtonChoices.defaultSize,
+      overlayOpacity:
+          (json['overlayOpacity'] as num?)?.toDouble() ??
+          PanicButtonChoices.defaultOpacity,
+      overlayGesture: PanicGesture.fromWire(json['overlayGesture'] as String?),
       chatGid: legacySelf ? null : json['chatGid'] as String?,
       demoMode:
           json['demoMode'] as bool? ?? json['testMode'] as bool? ?? legacySelf,
