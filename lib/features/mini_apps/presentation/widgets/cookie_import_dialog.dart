@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/cookie_source.dart';
 import '../providers/cookie_import_controller.dart';
 import '../util/cookie_browser_name.dart';
+import '../util/cookie_import_support.dart';
 import 'cookie_import_feedback.dart';
 import 'cookie_notes.dart';
 import 'cookie_site_picker.dart';
@@ -84,9 +85,10 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
     final l = AppL10n.of(context);
     final sources = ref.watch(cookieSourcesProvider);
     final list = sources.asData?.value ?? const <CookieSource>[];
+    final usable = list.where(cookieImportSupported).toList();
     final source =
         _source ??
-        (list.contains(widget.source) ? widget.source : list.firstOrNull);
+        (usable.contains(widget.source) ? widget.source : usable.firstOrNull);
     final sites = source == null
         ? null
         : ref.watch(cookieSitesProvider(source));
@@ -141,7 +143,11 @@ class _CookieImportDialogState extends ConsumerState<CookieImportDialog> {
                 onRetry: () => ref.invalidate(cookieSourcesProvider),
               )
             else if (source == null)
-              CookieNote(l.miniAppCookiesNoBrowser)
+              CookieNote(
+                list.isEmpty
+                    ? l.miniAppCookiesNoBrowser
+                    : l.miniAppCookiesOnlyChrome,
+              )
             else ...[
               _SourcePicker(sources: list, value: source, onChanged: _choose),
               if (sites == null || sites.isLoading) ...[
@@ -194,11 +200,14 @@ class _SourcePicker extends StatelessWidget {
   final CookieSource value;
   final ValueChanged<CookieSource> onChanged;
 
-  static String _label(CookieSource source) {
+  static String _label(AppL10n l, CookieSource source) {
     final browser = cookieBrowserName(source.browser);
-    return source.profileName == browser
+    final name = source.profileName == browser
         ? browser
         : '$browser · ${source.profileName}';
+    return cookieImportSupported(source)
+        ? name
+        : l.miniAppCookiesBrowserUnsupported(name);
   }
 
   @override
@@ -215,7 +224,8 @@ class _SourcePicker extends StatelessWidget {
       AppDropdown<CookieSource>(
         value: value,
         values: sources,
-        labelOf: _label,
+        labelOf: (s) => _label(AppL10n.of(context), s),
+        enabledOf: cookieImportSupported,
         onChanged: onChanged,
       ),
     ],
