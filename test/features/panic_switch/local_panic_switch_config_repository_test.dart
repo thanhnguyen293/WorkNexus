@@ -7,6 +7,7 @@ import 'package:work_nexus/features/panic_switch/data/mappers/panic_switch_confi
 import 'package:work_nexus/features/panic_switch/data/repositories/local_panic_switch_config_repository.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/app_ref.dart';
 import 'package:work_nexus/features/panic_switch/domain/entities/panic_switch_config.dart';
+import 'package:work_nexus/features/panic_switch/domain/value_objects/panic_button_look.dart';
 
 void main() {
   late AppDatabase db;
@@ -29,6 +30,9 @@ void main() {
     const config = PanicSwitchConfig(
       enabled: false,
       overlayVisible: false,
+      overlaySize: 80,
+      overlayOpacity: 0.6,
+      overlayGesture: PanicGesture.hold,
       chatGid: 'g1',
       demoMode: true,
       demoChatGid: 'cloud',
