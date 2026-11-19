@@ -3179,13 +3179,13 @@
   "panicSwitchTabRelease": "Official",
   "panicSwitchTabDemo": "Demo",
   "panicSwitchTabDemoOn": "Demo · on",
-  "panicSwitchMore": "More settings",
   "panicSwitchSearchApps": "Search apps",
   "panicSwitchDemoStep1": "Right-click the floating button and pick \"Demo\".",
   "panicSwitchDemoStep2": "A demo sticker goes to {chat}.",
   "@panicSwitchDemoStep2": {"placeholders": {"chat": {"type": "String"}}},
   "panicSwitchDemoStep3": "Only computers in demo mode on that chat, yours included, switch apps. The team is not bothered.",
   "panicSwitchDemoChatFallback": "your demo chat",
-  "panicSwitchDemoShared": "The apps to open and the floating button are set in the Official tab.",
-  "panicSwitchMenuDemo": "Demo"
+  "panicSwitchDemoShared": "The apps to open are set in the Official tab, the button in the Floating button tab.",
+  "panicSwitchMenuDemo": "Demo",
+  "panicSwitchTabButton": "Floating button"
 }
