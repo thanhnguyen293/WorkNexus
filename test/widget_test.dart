@@ -45,6 +45,10 @@ class _FakeUpdateRepo implements UpdateRepository {
 
   @override
   Future<Result<void>> install(String stagedPath) async => const Ok(null);
+
+  @override
+  Future<Result<List<ReleaseNote>>> fetchStableReleaseNotes() async =>
+      const Ok([]);
 }
 
 class _MockUpdateController extends UpdateController {

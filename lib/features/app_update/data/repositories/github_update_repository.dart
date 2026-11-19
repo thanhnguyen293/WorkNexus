@@ -82,6 +82,24 @@ class GitHubUpdateRepository implements UpdateRepository {
   }
 
   @override
+  Future<Result<List<ReleaseNote>>> fetchStableReleaseNotes() async {
+    try {
+      return Ok([
+        for (final r in await _releases.fetchStableReleaseNotes())
+          (version: r.tagName, notes: r.notes),
+      ]);
+    } on DioException catch (error) {
+      return Err(
+        NetworkFailure('Could not read the release notes', cause: error),
+      );
+    } on FormatException catch (error) {
+      return Err(
+        ParseFailure('Could not read the release notes', cause: error),
+      );
+    }
+  }
+
+  @override
   Future<Result<String>> download(
     AvailableUpdate update, {
     void Function(double progress)? onProgress,
