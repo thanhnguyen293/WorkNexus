@@ -21,12 +21,17 @@ class ChannelPanicOverlay implements PanicOverlay {
   );
 
   @override
-  Future<Result<void>> show(Uint8List image, PanicButtonLook look) => _guard(
+  Future<Result<void>> show(
+    Uint8List image,
+    PanicButtonLook look, {
+    required String demoLabel,
+  }) => _guard(
     () => _channel.showOverlay(
       image,
       size: look.size,
       opacity: look.opacity,
       gesture: look.gesture.wire,
+      demoLabel: look.demo ? demoLabel : null,
     ),
   );
 

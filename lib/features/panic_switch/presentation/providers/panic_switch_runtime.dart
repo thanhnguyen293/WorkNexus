@@ -108,10 +108,14 @@ class PanicSwitchRuntime {
   }
 
   /// Puts the floating button up as [look] says, or takes it down (null).
-  Future<Result<void>> showOverlay(PanicButtonLook? look) async {
+  /// [demoLabel] names the right-click menu's demo item.
+  Future<Result<void>> showOverlay(
+    PanicButtonLook? look, {
+    required String demoLabel,
+  }) async {
     if (look == null) return overlay.hide();
     return switch (await _sticker.bytes()) {
-      Ok(:final value) => overlay.show(value, look),
+      Ok(:final value) => overlay.show(value, look, demoLabel: demoLabel),
       Err(:final failure) => Err(failure),
     };
   }

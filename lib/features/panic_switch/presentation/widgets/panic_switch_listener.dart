@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/debug/app_talker.dart';
 import '../../../../core/error/result.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../chat/domain/entities/chat_message.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/pick_default_panic_group.dart';
@@ -32,6 +33,10 @@ class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
   StreamSubscription<ChatMessage>? _incoming;
   StreamSubscription<PanicTrigger>? _triggers;
 
+  /// The right-click menu's demo item, in the app's language; null until the
+  /// first [didChangeDependencies].
+  String? _demoLabel;
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +45,31 @@ class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
     _triggers = runtime.overlay.triggers.listen(
       (trigger) => _log(runtime.onOverlayTriggered(trigger)),
     );
+  }
+
+  // The menu label needs the localizations, which initState cannot read;
+  // the button is also redrawn when the app's language changes.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final label = AppL10n.of(context).panicSwitchMenuDemo;
+    if (label == _demoLabel) return;
+    final first = _demoLabel == null;
+    _demoLabel = label;
+    final runtime = ref.read(panicSwitchRuntimeProvider);
+    if (!first) {
+      _log(
+        runtime.showOverlay(
+          ref.read(panicOverlayLookProvider),
+          demoLabel: label,
+        ),
+      );
+      return;
+    }
     ref.listenManual<PanicButtonLook?>(
       panicOverlayLookProvider,
-      (_, look) => _log(runtime.showOverlay(look)),
+      (_, look) =>
+          _log(runtime.showOverlay(look, demoLabel: _demoLabel ?? label)),
       fireImmediately: true,
     );
   }

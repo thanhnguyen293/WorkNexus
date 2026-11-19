@@ -118,9 +118,11 @@ bool PanicOverlayWindow::EnsureWindow() {
 }
 
 bool PanicOverlayWindow::Show(const std::vector<uint8_t>& image, int width,
-                              double opacity, const std::string& gesture) {
+                              double opacity, const std::string& gesture,
+                              const std::wstring& demo_label) {
   if (!EnsureWindow()) return false;
   gesture_ = gesture;
+  demo_label_ = demo_label;
   const UINT dpi = FlutterDesktopGetDpiForMonitor(
       MonitorFromWindow(window_, MONITOR_DEFAULTTOPRIMARY));
   SIZE size = {};
@@ -189,7 +191,7 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       window_at_press_ = {bounds.left, bounds.top};
       pressed_ = true;
       dragged_ = false;
-      pressed_at_[0] = GetTickCount();
+      pressed_at_ = GetTickCount();
       SetCapture(window);
       return 0;
     }
@@ -213,16 +215,15 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
       pressed_ = false;
       ReleaseCapture();
       if (dragged_) {
-        clicks_[0] = 0;
+        clicks_ = 0;
       } else {
-        OnClick(false);
+        OnClick();
       }
       return 0;
     case WM_RBUTTONDOWN:
-      pressed_at_[1] = GetTickCount();
       return 0;
     case WM_RBUTTONUP:
-      OnClick(true);
+      ShowDemoMenu(window);
       return 0;
     case WM_CAPTURECHANGED:
       pressed_ = false;
@@ -231,22 +232,39 @@ LRESULT PanicOverlayWindow::HandleMessage(HWND window, UINT message,
   return DefWindowProc(window, message, wparam, lparam);
 }
 
-void PanicOverlayWindow::OnClick(bool demo) {
-  const int b = demo ? 1 : 0;
+void PanicOverlayWindow::OnClick() {
   const DWORD now = GetTickCount();
   if (gesture_ == "hold") {
-    const bool held = pressed_at_[b] != 0 && now - pressed_at_[b] >= kHoldMs;
-    pressed_at_[b] = 0;
-    if (held && on_trigger_) on_trigger_(demo);
+    const bool held = pressed_at_ != 0 && now - pressed_at_ >= kHoldMs;
+    pressed_at_ = 0;
+    if (held && on_trigger_) on_trigger_(false);
     return;
   }
   const int needed = gesture_ == "double" ? 2 : 3;
-  clicks_[b] = (clicks_[b] > 0 && now - last_click_[b] <= GetDoubleClickTime())
-                   ? clicks_[b] + 1
-                   : 1;
-  last_click_[b] = now;
-  if (clicks_[b] >= needed) {
-    clicks_[b] = 0;
-    if (on_trigger_) on_trigger_(demo);
+  clicks_ = (clicks_ > 0 && now - last_click_ <= GetDoubleClickTime())
+                ? clicks_ + 1
+                : 1;
+  last_click_ = now;
+  if (clicks_ >= needed) {
+    clicks_ = 0;
+    if (on_trigger_) on_trigger_(false);
   }
+}
+
+void PanicOverlayWindow::ShowDemoMenu(HWND window) {
+  if (demo_label_.empty()) return;
+  constexpr UINT kDemo = 1;
+  HMENU menu = CreatePopupMenu();
+  if (!menu) return;
+  AppendMenuW(menu, MF_STRING, kDemo, demo_label_.c_str());
+  POINT at = {};
+  GetCursorPos(&at);
+  // The menu only closes on a click elsewhere when its owner is in front.
+  SetForegroundWindow(window);
+  const UINT chosen = static_cast<UINT>(TrackPopupMenu(
+      menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, at.x, at.y, 0,
+      window, nullptr));
+  PostMessage(window, WM_NULL, 0, 0);
+  DestroyMenu(menu);
+  if (chosen == kDemo && on_trigger_) on_trigger_(true);
 }

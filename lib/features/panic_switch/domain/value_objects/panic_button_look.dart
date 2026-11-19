@@ -18,8 +18,14 @@ enum PanicGesture {
 }
 
 /// How the floating button looks and is set off, as the native window draws
-/// it. A record, so an unchanged look compares equal and is not redrawn.
-typedef PanicButtonLook = ({int size, double opacity, PanicGesture gesture});
+/// it; [demo]: a right click offers the demo trigger. A record, so an
+/// unchanged look compares equal and is not redrawn.
+typedef PanicButtonLook = ({
+  int size,
+  double opacity,
+  PanicGesture gesture,
+  bool demo,
+});
 
 /// The choices offered for the floating button.
 abstract final class PanicButtonChoices {

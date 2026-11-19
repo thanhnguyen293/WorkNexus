@@ -25,14 +25,19 @@ struct PanicSwitch {
   double press_x = 0;
   double press_y = 0;
 
-  // Clicks in a row, for the triple click, of each button (left, right).
-  int clicks[2] = {0, 0};
-  gint64 last_click_us[2] = {0, 0};
+  // Clicks in a row, for the double/triple click.
+  int clicks = 0;
+  gint64 last_click_us = 0;
 
-  // When each button went down, for the long press.
-  gint64 pressed_us[2] = {0, 0};
+  // When the button went down, for the long press.
+  gint64 pressed_us = 0;
   // "double", "triple" or "hold".
   std::string gesture = "triple";
+
+  // The right-click menu (demo mode only): made once, relabelled on show.
+  std::string demo_label;
+  GtkWidget* menu = nullptr;
+  GtkWidget* menu_item = nullptr;
 };
 
 // A press at least this long (µs) is a long press.
@@ -47,13 +52,46 @@ gint DoubleClickMs() {
   return ms;
 }
 
+// Tells Dart the button went off: "release" or "demo".
+void send_trigger(PanicSwitch* self, bool demo) {
+  g_autoptr(FlValue) which = fl_value_new_string(demo ? "demo" : "release");
+  fl_method_channel_invoke_method(self->channel, "overlayTriggered", which,
+                                  nullptr, nullptr, nullptr);
+}
+
+void on_demo_chosen(GtkMenuItem*, gpointer data) {
+  send_trigger(static_cast<PanicSwitch*>(data), true);
+}
+
+// Opens the right-click menu with its one item, "Demo"; nothing outside demo
+// mode.
+void show_demo_menu(PanicSwitch* self, GdkEventButton* event) {
+  if (self->demo_label.empty()) return;
+  if (self->menu == nullptr) {
+    self->menu = gtk_menu_new();
+    self->menu_item = gtk_menu_item_new_with_label("");
+    g_signal_connect(self->menu_item, "activate", G_CALLBACK(on_demo_chosen),
+                     self);
+    gtk_menu_shell_append(GTK_MENU_SHELL(self->menu), self->menu_item);
+    gtk_menu_attach_to_widget(GTK_MENU(self->menu), self->window, nullptr);
+  }
+  gtk_menu_item_set_label(GTK_MENU_ITEM(self->menu_item),
+                          self->demo_label.c_str());
+  gtk_widget_show_all(self->menu);
+  gtk_menu_popup_at_pointer(GTK_MENU(self->menu),
+                            reinterpret_cast<GdkEvent*>(event));
+}
+
 gboolean on_press(GtkWidget*, GdkEventButton* event, gpointer data) {
   auto* self = static_cast<PanicSwitch*>(data);
   // GTK also sends 2BUTTON/3BUTTON presses; the release count is ours.
   if (event->type != GDK_BUTTON_PRESS) return TRUE;
-  if (event->button == 3) self->pressed_us[1] = g_get_monotonic_time();
+  if (event->button == 3) {
+    show_demo_menu(self, event);
+    return TRUE;
+  }
   if (event->button != 1) return TRUE;
-  self->pressed_us[0] = g_get_monotonic_time();
+  self->pressed_us = g_get_monotonic_time();
   self->pressed = true;
   self->dragged = false;
   self->press_x = event->x_root;
@@ -71,50 +109,41 @@ gboolean on_motion(GtkWidget*, GdkEventMotion* event, gpointer data) {
   // The window manager moves it: the only way that also works on Wayland.
   self->dragged = true;
   self->pressed = false;
-  self->clicks[0] = 0;
+  self->clicks = 0;
   gtk_window_begin_move_drag(GTK_WINDOW(self->window), 1,
                              static_cast<gint>(event->x_root),
                              static_cast<gint>(event->y_root), event->time);
   return TRUE;
 }
 
-// Counts a click and, on the chosen gesture, sends "release" for the left
-// button or "demo" for the right one.
-void count_click(PanicSwitch* self, bool demo) {
-  const int b = demo ? 1 : 0;
+// Counts a left click; on the chosen gesture sends "release".
+void count_click(PanicSwitch* self) {
   const gint64 now = g_get_monotonic_time();
   bool fires = false;
   if (self->gesture == "hold") {
-    fires = self->pressed_us[b] != 0 && now - self->pressed_us[b] >= kHoldUs;
-    self->pressed_us[b] = 0;
+    fires = self->pressed_us != 0 && now - self->pressed_us >= kHoldUs;
+    self->pressed_us = 0;
   } else {
     const int needed = self->gesture == "double" ? 2 : 3;
-    self->clicks[b] = (self->clicks[b] > 0 &&
-                       now - self->last_click_us[b] <=
-                           static_cast<gint64>(DoubleClickMs()) * 1000)
-                          ? self->clicks[b] + 1
-                          : 1;
-    self->last_click_us[b] = now;
-    if (self->clicks[b] >= needed) {
-      self->clicks[b] = 0;
+    self->clicks = (self->clicks > 0 &&
+                    now - self->last_click_us <=
+                        static_cast<gint64>(DoubleClickMs()) * 1000)
+                       ? self->clicks + 1
+                       : 1;
+    self->last_click_us = now;
+    if (self->clicks >= needed) {
+      self->clicks = 0;
       fires = true;
     }
   }
-  if (!fires) return;
-  g_autoptr(FlValue) which = fl_value_new_string(demo ? "demo" : "release");
-  fl_method_channel_invoke_method(self->channel, "overlayTriggered", which,
-                                  nullptr, nullptr, nullptr);
+  if (fires) send_trigger(self, false);
 }
 
 gboolean on_release(GtkWidget*, GdkEventButton* event, gpointer data) {
   auto* self = static_cast<PanicSwitch*>(data);
-  if (event->button == 3) {
-    count_click(self, true);
-    return TRUE;
-  }
   if (event->button != 1 || !self->pressed) return TRUE;
   self->pressed = false;
-  count_click(self, false);
+  count_click(self);
   return TRUE;
 }
 
@@ -208,6 +237,13 @@ void method_call_cb(FlMethodChannel*, FlMethodCall* call, gpointer data) {
     if (gesture != nullptr && fl_value_get_type(gesture) == FL_VALUE_TYPE_STRING) {
       self->gesture = fl_value_get_string(gesture);
     }
+    FlValue* demo = image != nullptr
+                        ? fl_value_lookup_string(args, "demoLabel")
+                        : nullptr;
+    self->demo_label =
+        demo != nullptr && fl_value_get_type(demo) == FL_VALUE_TYPE_STRING
+            ? fl_value_get_string(demo)
+            : "";
     const int width =
         size != nullptr && fl_value_get_type(size) == FL_VALUE_TYPE_INT
             ? static_cast<int>(fl_value_get_int(size))

@@ -3148,7 +3148,7 @@
   "panicSwitchSummaryAnyone": "{chat} · anyone can set it off",
   "@panicSwitchSummaryAnyone": {"placeholders": {"chat": {"type": "String"}}},
   "panicSwitchDemoModeLabel": "Turn on demo mode",
-  "panicSwitchDemoModeHint": "Uses the same floating button with the right mouse button, and the same apps.",
+  "panicSwitchDemoModeHint": "Uses the same floating button and apps: right-click the button and pick \"Demo\".",
   "panicSwitchSummaryWithDemo": "{summary} · demo mode on",
   "@panicSwitchSummaryWithDemo": {"placeholders": {"summary": {"type": "String"}}},
   "panicSwitchDemoChatLabel": "Demo chat",
@@ -3161,7 +3161,7 @@
   "panicSwitchHowStep3": "Every computer in the group, yours included, opens the chosen apps and hides all the others.",
   "panicSwitchTeamFallback": "the team group",
   "panicSwitchGestureLabel": "Set it off by",
-  "panicSwitchGestureHint": "Left mouse button for Official, right mouse button for Demo.",
+  "panicSwitchGestureHint": "For Official. Demo: right-click the button and pick \"Demo\".",
   "panicSwitchGestureDouble": "Double-click",
   "panicSwitchGestureTriple": "Triple-click",
   "panicSwitchGestureHold": "Press and hold",
@@ -3181,11 +3181,11 @@
   "panicSwitchTabDemoOn": "Demo · on",
   "panicSwitchMore": "More settings",
   "panicSwitchSearchApps": "Search apps",
-  "panicSwitchDemoStep1": "{gesture} the floating button with the right mouse button.",
-  "@panicSwitchDemoStep1": {"placeholders": {"gesture": {"type": "String"}}},
+  "panicSwitchDemoStep1": "Right-click the floating button and pick \"Demo\".",
   "panicSwitchDemoStep2": "A demo sticker goes to {chat}.",
   "@panicSwitchDemoStep2": {"placeholders": {"chat": {"type": "String"}}},
   "panicSwitchDemoStep3": "Only computers in demo mode on that chat, yours included, switch apps. The team is not bothered.",
   "panicSwitchDemoChatFallback": "your demo chat",
-  "panicSwitchDemoShared": "The apps to open and the floating button are set in the Official tab."
+  "panicSwitchDemoShared": "The apps to open and the floating button are set in the Official tab.",
+  "panicSwitchMenuDemo": "Demo"
 }
