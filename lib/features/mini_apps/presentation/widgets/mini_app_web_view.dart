@@ -117,16 +117,28 @@ class _MiniAppWebViewState extends ConsumerState<MiniAppWebView> {
       // A server the system refuses but whose certificate the user already
       // accepted in the app (the ZenTao chat server's self-signed one, which
       // ZenTao's own web chat calls) is let through for that certificate
-      // only. Every other answer stays the web view's own.
+      // only. On macOS a site trusted in its mini app's settings is too.
+      // Every other answer stays the web view's own.
       onReceivedServerTrustAuthRequest: (_, challenge) async {
-        final der =
-            challenge.protectionSpace.sslCertificate?.x509Certificate?.encoded;
-        if (der == null || !await ref.read(isPinnedCertificateProvider)(der)) {
-          return null;
-        }
-        return ServerTrustAuthResponse(
+        final proceed = ServerTrustAuthResponse(
           action: ServerTrustAuthResponseAction.PROCEED,
         );
+        final space = challenge.protectionSpace;
+        final der = space.sslCertificate?.x509Certificate?.encoded;
+        if (der != null && await ref.read(isPinnedCertificateProvider)(der)) {
+          return proceed;
+        }
+        if (defaultTargetPlatform != TargetPlatform.macOS) return null;
+        final trusted = await ref.read(trustedCertificatesProvider.future);
+        final home = MiniAppCertificateGuard.originOf(Uri.tryParse(app.url));
+        return MiniAppCertificateGuard.trustsChallenge(
+              host: space.host,
+              port: space.port,
+              home: home,
+              trusted: [for (final t in trusted) t.origin],
+            )
+            ? proceed
+            : null;
       },
       onPermissionRequest: (_, request) => answerMiniAppPermission(
         context,
