@@ -60,20 +60,35 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
   /// The panel on screen: the open one, or the one sliding out.
   late Widget? _shown = widget.panel;
 
-  /// Keeps the messages' state when the layout swaps a Row (panel beside)
-  /// for a Stack (panel over): dragging the window across that width would
-  /// otherwise rebuild the message list from scratch on every crossing —
-  /// replaying its fade-in and losing its scroll position, a flicker.
+  /// Keep the messages' and the panel's state when the layout swaps a Row
+  /// (panel beside) for a Stack (panel over): dragging the window across
+  /// that width would otherwise rebuild them from scratch on every crossing —
+  /// replaying the list's fade-in and losing its scroll position, a flicker.
   final _messagesKey = GlobalKey(debugLabel: 'chat messages');
+  final _panelKey = GlobalKey(debugLabel: 'chat side panel');
+
+  /// Whether the last build had room for a panel beside the messages.
+  bool? _infoRoom;
 
   @override
   void didUpdateWidget(ChatSidePanelHost old) {
     super.didUpdateWidget(old);
+    // The info panel comes and goes by itself as the window crosses the
+    // width it needs. Sliding it then — out under a fading scrim over the
+    // whole chat — flashes the header, input and background on every
+    // crossing of a resize: it swaps at once instead.
+    final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    final instant = _infoRoom != null && infoRoom != _infoRoom;
     final panel = widget.panel;
     if (panel != null) {
       _shown = panel;
-      if (old.panel == null) _run(_controller.forward);
+      if (old.panel == null) _run(_controller.forward, instant: instant);
     } else if (old.panel != null) {
+      if (instant) {
+        _controller.value = 0;
+        _shown = null;
+        return;
+      }
       _run(_controller.reverse).whenComplete(() {
         // Gone only if it was not opened again meanwhile.
         if (mounted && widget.panel == null) setState(() => _shown = null);
@@ -81,9 +96,10 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
     }
   }
 
-  /// Plays [step], or jumps to its end when the user asked for less motion.
-  TickerFuture _run(TickerFuture Function() step) {
-    if (!AppMotion.reduced(context)) return step();
+  /// Plays [step], or jumps to its end when [instant] or the user asked for
+  /// less motion.
+  TickerFuture _run(TickerFuture Function() step, {bool instant = false}) {
+    if (!instant && !AppMotion.reduced(context)) return step();
     _controller.value = widget.panel == null ? 0 : 1;
     return TickerFuture.complete();
   }
@@ -96,14 +112,17 @@ class _ChatSidePanelHostState extends State<ChatSidePanelHost>
 
   @override
   Widget build(BuildContext context) {
-    final panel = _shown;
     final closing = widget.panel == null;
-    final infoRoom = ChatLayoutScope.of(context).infoRoom;
+    final infoRoom = _infoRoom = ChatLayoutScope.of(context).infoRoom;
     // [messages] stays the first child whether or not a panel is open, and
     // keeps its key across both layouts: moved in the tree, the message list
     // would be rebuilt from scratch — losing its scroll position and any
     // jump it is making.
     final messages = KeyedSubtree(key: _messagesKey, child: widget.messages);
+    final shown = _shown;
+    final panel = shown == null
+        ? null
+        : KeyedSubtree(key: _panelKey, child: shown);
     if (infoRoom) {
       return Row(
         children: [

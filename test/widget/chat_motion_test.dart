@@ -165,4 +165,31 @@ void main() {
       expect(find.text('messages'), findsOneWidget);
     }
   });
+
+  testWidgets('the info panel giving way to a narrower window goes at once, '
+      'with no scrim fading over the chat', (tester) async {
+    Widget host({required bool infoRoom}) => _app(
+      ChatLayoutScope(
+        layout: ChatLayout(infoRoom: infoRoom, compactList: false),
+        child: ChatSidePanelHost(
+          messages: const Text('messages'),
+          // Shown by itself while there is room, like the info panel.
+          panel: infoRoom ? const Text('panel') : null,
+          onDismiss: () {},
+        ),
+      ),
+    );
+    await tester.pumpWidget(host(infoRoom: true));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(host(infoRoom: false));
+    expect(find.text('panel'), findsNothing);
+    expect(find.byType(ModalBarrier), findsNWidgets(1), reason: 'the route\'s');
+
+    await tester.pumpWidget(host(infoRoom: true));
+    expect(_opacityOf(tester, 'panel'), 1);
+    final at = tester.getTopLeft(find.text('panel'));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.text('panel')), at, reason: 'no slide');
+  });
 }
