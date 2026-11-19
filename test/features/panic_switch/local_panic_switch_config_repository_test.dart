@@ -30,9 +30,9 @@ void main() {
       enabled: false,
       overlayVisible: false,
       chatGid: 'g1',
-      testMode: true,
-      testChatGid: 'cloud',
-      testChatIsSelf: true,
+      demoMode: true,
+      demoChatGid: 'cloud',
+      demoChatIsSelf: true,
       anySender: false,
       allowedSenderIds: [3, 7],
       targetApp: AppRef(
@@ -48,15 +48,15 @@ void main() {
     expect((await repository.load()).valueOrNull, config);
   });
 
-  test('moves an old "send to myself" chat into test mode', () {
+  test('moves an old "send to myself" chat into demo mode', () {
     final config = PanicSwitchConfigMapper.fromJson(
       '{"chatGid":"40&40","chatIsSelf":true,"debounceSeconds":60}',
     );
 
     expect(config.chatGid, isNull);
-    expect(config.testMode, isTrue);
-    expect(config.testChatGid, '40&40');
-    expect(config.testChatIsSelf, isTrue);
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, '40&40');
+    expect(config.demoChatIsSelf, isTrue);
   });
 
   test('keeps the listening chat of the old two-chat test mode', () {
@@ -65,7 +65,20 @@ void main() {
       '"testReceiveChatGid":"g9"}',
     );
 
-    expect(config.testChatGid, 'g9');
-    expect(config.testChatIsSelf, isFalse);
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, 'g9');
+    expect(config.demoChatIsSelf, isFalse);
+  });
+
+  test('turns the saved test mode into demo mode', () {
+    final config = PanicSwitchConfigMapper.fromJson(
+      '{"chatGid":"g1","testMode":true,"testChatGid":"g9",'
+      '"testChatIsSelf":false}',
+    );
+
+    expect(config.chatGid, 'g1');
+    expect(config.demoMode, isTrue);
+    expect(config.demoChatGid, 'g9');
+    expect(config.demoChatIsSelf, isFalse);
   });
 }

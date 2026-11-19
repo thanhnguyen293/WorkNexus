@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../../core/error/result.dart';
+import '../value_objects/panic_trigger.dart';
 
 /// The floating button, drawn by the OS above every app.
 abstract interface class PanicOverlay {
@@ -9,6 +10,7 @@ abstract interface class PanicOverlay {
 
   Future<Result<void>> hide();
 
-  /// Fires each time the button is clicked three times in a row.
-  Stream<void> get triggers;
+  /// Fires each time the button is clicked three times in a row: with the
+  /// left button [PanicTrigger.release], the right one [PanicTrigger.demo].
+  Stream<PanicTrigger> get triggers;
 }
