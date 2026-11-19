@@ -1994,7 +1994,7 @@
   "panicSwitchAnySender": "Bất kì ai trong đoạn chat",
   "panicSwitchSummaryAnyone": "{chat} · ai cũng kích hoạt được",
   "panicSwitchDemoModeLabel": "Bật chế độ demo",
-  "panicSwitchDemoModeHint": "Dùng chung nút nổi (bằng chuột phải) và các app sẽ mở.",
+  "panicSwitchDemoModeHint": "Dùng chung nút nổi và các app sẽ mở: bấm chuột phải vào nút rồi chọn \"Demo\".",
   "panicSwitchSummaryWithDemo": "{summary} · đang bật demo",
   "panicSwitchDemoChatLabel": "Đoạn chat demo",
   "panicSwitchDemoChatHint": "Chỉ những máy bật demo với cùng đoạn chat này mới chuyển app.",
@@ -2004,7 +2004,7 @@
   "panicSwitchHowStep3": "Máy của mọi người trong nhóm, kể cả máy bạn, mở các app đã chọn và ẩn hết app khác.",
   "panicSwitchTeamFallback": "nhóm của team",
   "panicSwitchGestureLabel": "Cách kích hoạt",
-  "panicSwitchGestureHint": "Chuột trái cho Chính thức, chuột phải cho Demo.",
+  "panicSwitchGestureHint": "Dùng cho Chính thức. Demo: bấm chuột phải vào nút rồi chọn \"Demo\".",
   "panicSwitchGestureDouble": "Bấm 2 lần",
   "panicSwitchGestureTriple": "Bấm 3 lần",
   "panicSwitchGestureHold": "Nhấn giữ",
@@ -2024,9 +2024,10 @@
   "panicSwitchTabDemoOn": "Demo · đang bật",
   "panicSwitchMore": "Tùy chỉnh thêm",
   "panicSwitchSearchApps": "Tìm app",
-  "panicSwitchDemoStep1": "{gesture} nút nổi bằng chuột phải.",
+  "panicSwitchDemoStep1": "Bấm chuột phải vào nút nổi rồi chọn \"Demo\".",
   "panicSwitchDemoStep2": "Sticker demo được gửi vào {chat}.",
   "panicSwitchDemoStep3": "Chỉ máy bật demo với đoạn chat đó (kể cả máy bạn) chuyển app. Không làm phiền cả team.",
   "panicSwitchDemoChatFallback": "đoạn chat demo của bạn",
-  "panicSwitchDemoShared": "Các app sẽ mở và nút nổi được cài ở tab Chính thức."
+  "panicSwitchDemoShared": "Các app sẽ mở và nút nổi được cài ở tab Chính thức.",
+  "panicSwitchMenuDemo": "Demo"
 }
