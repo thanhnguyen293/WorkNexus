@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_check_mark.dart';
 import '../../../../core/widgets/hover_surface.dart';
 
 /// A tickable row of the "Thầy vô" lists (apps to open, allowed senders): the
@@ -40,14 +41,11 @@ class PanicCheckRow extends StatelessWidget {
       borderRadius: radius,
       border: Border.all(color: Colors.transparent),
       hoverBorder: Border.all(color: c.border),
-      padding: EdgeInsets.symmetric(horizontal: s.sm, vertical: s.xs),
+      padding: EdgeInsets.symmetric(horizontal: s.md, vertical: s.md),
       child: Row(
         spacing: s.md,
         children: [
-          Checkbox(
-            value: picked,
-            onChanged: enabled ? (_) => onToggle() : null,
-          ),
+          AppCheckMark(checked: picked, enabled: enabled),
           ?leading,
           Expanded(
             child: Text(
