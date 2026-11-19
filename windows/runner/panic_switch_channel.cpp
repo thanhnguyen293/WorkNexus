@@ -3,6 +3,9 @@
 #include <dwmapi.h>
 #include <flutter/standard_method_codec.h>
 #include <shellapi.h>
+#include <shlwapi.h>
+#include <wincodec.h>
+#include <wrl/client.h>
 #include <windows.h>
 
 #include <algorithm>
@@ -147,6 +150,50 @@ void ForceForeground(HWND window) {
   if (attached) AttachThreadInput(this_thread, foreground_thread, FALSE);
 }
 
+// |exe|'s large shell icon encoded as PNG; empty when it has none.
+std::vector<uint8_t> IconPng(const std::wstring& exe) {
+  SHFILEINFOW info = {};
+  if (!SHGetFileInfoW(exe.c_str(), 0, &info, sizeof(info),
+                      SHGFI_ICON | SHGFI_LARGEICON) ||
+      !info.hIcon) {
+    return {};
+  }
+  std::vector<uint8_t> png;
+  using Microsoft::WRL::ComPtr;
+  ComPtr<IWICImagingFactory> factory;
+  ComPtr<IWICBitmap> bitmap;
+  ComPtr<IStream> stream;
+  ComPtr<IWICBitmapEncoder> encoder;
+  ComPtr<IWICBitmapFrameEncode> frame;
+  stream.Attach(SHCreateMemStream(nullptr, 0));
+  if (stream &&
+      SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr,
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_PPV_ARGS(&factory))) &&
+      SUCCEEDED(factory->CreateBitmapFromHICON(info.hIcon, &bitmap)) &&
+      SUCCEEDED(factory->CreateEncoder(GUID_ContainerFormatPng, nullptr,
+                                       &encoder)) &&
+      SUCCEEDED(encoder->Initialize(stream.Get(), WICBitmapEncoderNoCache)) &&
+      SUCCEEDED(encoder->CreateNewFrame(&frame, nullptr)) &&
+      SUCCEEDED(frame->Initialize(nullptr)) &&
+      SUCCEEDED(frame->WriteSource(bitmap.Get(), nullptr)) &&
+      SUCCEEDED(frame->Commit()) && SUCCEEDED(encoder->Commit())) {
+    STATSTG stat = {};
+    if (SUCCEEDED(stream->Stat(&stat, STATFLAG_NONAME))) {
+      png.resize(static_cast<size_t>(stat.cbSize.QuadPart));
+      LARGE_INTEGER start = {};
+      ULONG read = 0;
+      if (FAILED(stream->Seek(start, STREAM_SEEK_SET, nullptr)) ||
+          FAILED(stream->Read(png.data(), static_cast<ULONG>(png.size()),
+                              &read))) {
+        png.clear();
+      }
+    }
+  }
+  DestroyIcon(info.hIcon);
+  return png;
+}
+
 const std::string* StringArg(const flutter::MethodCall<EncodableValue>& call,
                              const char* key) {
   const auto* args = std::get_if<EncodableMap>(call.arguments());
@@ -205,6 +252,12 @@ PanicSwitchChannel::PanicSwitchChannel(flutter::BinaryMessenger* messenger) {
             return result->Error("open_failed", "Could not start the app");
           }
           result->Success();
+        } else if (method == "appIcon") {
+          const std::string* id = StringArg(call, "id");
+          if (!id) return result->Error("bad_args", "Missing id");
+          const auto png = IconPng(Utf16FromUtf8(*id));
+          if (png.empty()) return result->Success();
+          result->Success(EncodableValue(png));
         } else if (method == "hideOthers") {
           // Minimises every app window but the kept apps' and the desktop's.
           std::set<std::wstring> keep;

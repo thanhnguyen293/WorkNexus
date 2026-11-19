@@ -23,6 +23,9 @@ final class PanicSwitchChannel {
     case "activate":
       guard let id = args?["id"] as? String else { return result(Self.badArgs) }
       Self.activate(bundleId: id, result: result)
+    case "appIcon":
+      guard let id = args?["id"] as? String else { return result(Self.badArgs) }
+      result(Self.iconPng(bundleId: id).map { FlutterStandardTypedData(bytes: $0) })
     case "hideOthers":
       // Every app with a Dock icon but WorkNexus and the ones kept.
       let keep = Set((args?["keep"] as? [String]) ?? [])
@@ -61,6 +64,26 @@ final class PanicSwitchChannel {
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  /// [bundleId]'s icon as a 64×64 PNG (32 points at 2×); nil when the app
+  /// is not installed.
+  private static func iconPng(bundleId: String) -> Data? {
+    guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+      return nil
+    }
+    let icon = NSWorkspace.shared.icon(forFile: url.path)
+    let side = 64
+    guard let rep = NSBitmapImageRep(
+      bitmapDataPlanes: nil, pixelsWide: side, pixelsHigh: side, bitsPerSample: 8,
+      samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+      bytesPerRow: 0, bitsPerPixel: 0)
+    else { return nil }
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    icon.draw(in: NSRect(x: 0, y: 0, width: side, height: side))
+    NSGraphicsContext.restoreGraphicsState()
+    return rep.representation(using: .png, properties: [:])
   }
 
   private static let badArgs = FlutterError(code: "bad_args", message: "Missing argument", details: nil)
