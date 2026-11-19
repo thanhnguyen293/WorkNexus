@@ -14,7 +14,8 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
   const PanicSwitchConfig._();
 
   const factory PanicSwitchConfig({
-    /// React to the sticker arriving.
+    /// The feature on this computer: off, the button is gone and nothing is
+    /// sent or acted on.
     @Default(true) bool enabled,
 
     /// Show the floating button that sends the sticker.
@@ -46,9 +47,6 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     /// Opened or brought forward when the switch goes off, the first in
     /// front; every other running app is hidden.
     @Default(<AppRef>[]) List<AppRef> appsToOpen,
-
-    /// Also hide WorkNexus itself.
-    @Default(true) bool hideSelf,
 
     /// The least time between two triggers, sending or receiving.
     @Default(PanicSwitchConstants.defaultDebounceSeconds) int debounceSeconds,

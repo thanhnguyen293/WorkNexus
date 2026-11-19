@@ -42,7 +42,6 @@ void main() {
         AppRef(id: 'com.google.android.studio', name: 'Android Studio'),
         AppRef(id: 'com.tinyspeck.slackmacgap', name: 'Slack'),
       ],
-      hideSelf: false,
       debounceSeconds: 90,
     );
 

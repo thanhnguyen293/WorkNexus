@@ -20,7 +20,6 @@ abstract final class PanicSwitchConfigMapper {
     'anySender': c.anySender,
     'allowedSenderIds': c.allowedSenderIds,
     'appsToOpen': [for (final a in c.appsToOpen) _app(a)],
-    'hideSelf': c.hideSelf,
     'debounceSeconds': c.debounceSeconds,
   });
 
@@ -64,7 +63,6 @@ abstract final class PanicSwitchConfigMapper {
         for (final a in json['appsToOpen'] as List? ?? [json['targetApp']])
           ?_readApp(a),
       ],
-      hideSelf: json['hideSelf'] as bool? ?? true,
       debounceSeconds:
           json['debounceSeconds'] as int? ??
           PanicSwitchConstants.defaultDebounceSeconds,

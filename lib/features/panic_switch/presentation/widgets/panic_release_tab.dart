@@ -10,7 +10,6 @@ import 'panic_behaviour_sections.dart';
 import 'panic_labels.dart';
 import 'panic_sender_list.dart';
 import 'panic_steps.dart';
-import 'panic_try_button.dart';
 
 /// The "Official" tab: the team group trigger — how it works, the apps to
 /// open, who may set it off, and how this computer reacts.
@@ -62,11 +61,6 @@ class PanicReleaseTab extends StatelessWidget {
           title: l.panicSwitchSendersLabel,
           hint: l.panicSwitchSendersHint,
           child: PanicSenderList(accountId: accountId, config: config),
-        ),
-        AppExpandableCardSection(
-          title: l.panicSwitchTryLabel,
-          hint: l.panicSwitchTryHint,
-          trailing: const PanicTryButton(),
         ),
         PanicBehaviourSections(config: config),
       ],
