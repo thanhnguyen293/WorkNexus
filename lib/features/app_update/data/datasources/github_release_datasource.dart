@@ -22,18 +22,49 @@ class GitHubReleaseDatasource {
   static const _latestReleaseUrl =
       'https://api.github.com/repos/${AppConfig.githubOwner}/${AppConfig.githubRepo}/releases/latest';
 
+  static const _releasesUrl =
+      'https://api.github.com/repos/${AppConfig.githubOwner}/${AppConfig.githubRepo}/releases?per_page=100';
+
   final Dio _dio;
+
+  /// The newest hundred releases' tags and notes, drafts and pre-releases
+  /// left out.
+  Future<List<({String tagName, String notes})>>
+  fetchStableReleaseNotes() async {
+    final response = await _dio.get<Object?>(
+      _releasesUrl,
+      options: Options(headers: _headers),
+    );
+    final body = response.data;
+    if (body is! List<Object?>) {
+      throw const FormatException('Invalid GitHub releases response');
+    }
+    return [
+      for (final release in body)
+        if (release case {
+          'tag_name': final String tagName,
+          'draft': false,
+          'prerelease': false,
+        } when release is Map<String, dynamic>)
+          (
+            tagName: tagName,
+            notes: release['body'] is String
+                ? (release['body'] as String).trim()
+                : '',
+          ),
+    ];
+  }
+
+  static const _headers = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': AppConfig.appName,
+  };
 
   Future<GitHubRelease?> fetchLatestStableRelease() async {
     final response = await _dio.get<Object?>(
       _latestReleaseUrl,
-      options: Options(
-        headers: const {
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-          'User-Agent': AppConfig.appName,
-        },
-      ),
+      options: Options(headers: _headers),
     );
     final body = response.data;
     if (body is! Map<String, dynamic>) {

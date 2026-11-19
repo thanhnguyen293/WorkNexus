@@ -48,10 +48,13 @@ import '../../features/app_update/data/datasources/macos_update_installer.dart';
 import '../../features/app_update/data/datasources/windows_update_installer.dart';
 import '../../features/app_update/data/repositories/github_update_repository.dart';
 import '../../features/app_update/data/repositories/local_auto_update_preference.dart';
+import '../../features/app_update/data/repositories/local_seen_version_store.dart';
 import '../../features/app_update/domain/repositories/auto_update_preference.dart';
+import '../../features/app_update/domain/repositories/seen_version_store.dart';
 import '../../features/app_update/domain/repositories/update_repository.dart';
 import '../../features/app_update/domain/usecases/check_for_update.dart';
 import '../../features/app_update/domain/usecases/download_update.dart';
+import '../../features/app_update/domain/usecases/find_whats_new.dart';
 import '../../features/app_update/domain/usecases/install_update.dart';
 import '../../features/chat/data/datasources/chat_local_api_server.dart';
 import '../../features/chat/data/datasources/chat_local_datasource.dart';
@@ -271,6 +274,14 @@ abstract class ServiceModule {
   @lazySingleton
   InstallUpdate installUpdate(UpdateRepository repository) =>
       InstallUpdate(repository);
+
+  @lazySingleton
+  SeenVersionStore seenVersionStore(AppDatabase db) =>
+      LocalSeenVersionStore(AppSettingsKvStore(db));
+
+  @lazySingleton
+  FindWhatsNew findWhatsNew(UpdateRepository releases, SeenVersionStore seen) =>
+      FindWhatsNew(releases, seen);
 
   @prod
   @lazySingleton

@@ -3185,5 +3185,7 @@
   "settingsGeneral": "General",
   "updateDownloadingPercent": "Downloading the update… {percent}%",
   "@updateDownloadingPercent": {"placeholders": {"percent": {"type": "int"}}},
-  "panicSwitchSummaryOff": "Off on this computer"
+  "panicSwitchSummaryOff": "Off on this computer",
+  "whatsNewTitle": "What's new in {version}",
+  "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}}
 }
