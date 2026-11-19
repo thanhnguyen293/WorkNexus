@@ -13,11 +13,9 @@ abstract final class PanicSwitchConfigMapper {
     'chatGid': c.chatGid,
     'demoMode': c.demoMode,
     'demoChatGid': c.demoChatGid,
-    'demoChatIsSelf': c.demoChatIsSelf,
     'anySender': c.anySender,
     'allowedSenderIds': c.allowedSenderIds,
-    'targetApp': c.targetApp == null ? null : _app(c.targetApp!),
-    'appsToHide': [for (final a in c.appsToHide) _app(a)],
+    'appsToOpen': [for (final a in c.appsToOpen) _app(a)],
     'hideSelf': c.hideSelf,
     'debounceSeconds': c.debounceSeconds,
   });
@@ -38,12 +36,6 @@ abstract final class PanicSwitchConfigMapper {
         json['testChatGid'] as String? ??
         json['testReceiveChatGid'] as String? ??
         send;
-    final demoChatIsSelf =
-        json['demoChatIsSelf'] as bool? ??
-        json['testChatIsSelf'] as bool? ??
-        (demoChatGid != null &&
-            demoChatGid == send &&
-            (json['testSendToSelf'] == true || legacySelf));
     return PanicSwitchConfig(
       enabled: json['enabled'] as bool? ?? true,
       overlayVisible: json['overlayVisible'] as bool? ?? true,
@@ -51,15 +43,16 @@ abstract final class PanicSwitchConfigMapper {
       demoMode:
           json['demoMode'] as bool? ?? json['testMode'] as bool? ?? legacySelf,
       demoChatGid: demoChatGid,
-      demoChatIsSelf: demoChatIsSelf,
       anySender: json['anySender'] as bool? ?? true,
       allowedSenderIds: [
         for (final id in json['allowedSenderIds'] as List? ?? const [])
           if (id is int) id,
       ],
-      targetApp: _readApp(json['targetApp']),
-      appsToHide: [
-        for (final a in json['appsToHide'] as List? ?? const []) ?_readApp(a),
+      // Before the apps to open, there was one target app (and a list to
+      // hide, which is now everything else).
+      appsToOpen: [
+        for (final a in json['appsToOpen'] as List? ?? [json['targetApp']])
+          ?_readApp(a),
       ],
       hideSelf: json['hideSelf'] as bool? ?? true,
       debounceSeconds:

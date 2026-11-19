@@ -28,11 +28,6 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     @Default(false) bool demoMode,
     String? demoChatGid,
 
-    /// [demoChatGid] is the user's own chat ("My Cloud"): sending there
-    /// switches apps on this computer, as the user's own messages never come
-    /// back as incoming.
-    @Default(false) bool demoChatIsSelf,
-
     /// Anyone in the team's group (but you) may set the switch off here;
     /// when off, only [allowedSenderIds] may. The demo chat accepts anyone.
     @Default(true) bool anySender,
@@ -41,9 +36,9 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     /// [anySender]. Empty = nobody.
     @Default(<int>[]) List<int> allowedSenderIds,
 
-    /// Brought to the front when the switch goes off.
-    AppRef? targetApp,
-    @Default(<AppRef>[]) List<AppRef> appsToHide,
+    /// Opened or brought forward when the switch goes off, the first in
+    /// front; every other running app is hidden.
+    @Default(<AppRef>[]) List<AppRef> appsToOpen,
 
     /// Also hide WorkNexus itself.
     @Default(true) bool hideSelf,
@@ -57,9 +52,4 @@ abstract class PanicSwitchConfig with _$PanicSwitchConfig {
     PanicTrigger.release => chatGid,
     PanicTrigger.demo => demoMode ? demoChatGid : null,
   };
-
-  /// Sending [trigger]'s sticker switches apps on this computer too (the
-  /// demo sent to yourself).
-  bool sendsToSelf(PanicTrigger trigger) =>
-      trigger == PanicTrigger.demo && demoMode && demoChatIsSelf;
 }
