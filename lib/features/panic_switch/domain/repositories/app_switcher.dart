@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../../core/error/result.dart';
 import '../entities/app_ref.dart';
 
@@ -9,6 +11,10 @@ abstract interface class AppSwitcher {
 
   /// Apps the user can pick from: installed and running ones.
   Future<Result<List<AppRef>>> listApps();
+
+  /// [app]'s icon as PNG (or another format Flutter decodes); null when it
+  /// has none that can be shown.
+  Future<Result<Uint8List?>> appIcon(AppRef app);
 
   /// Brings [app] to the front, starting it when it is not running.
   Future<Result<void>> activate(AppRef app);
