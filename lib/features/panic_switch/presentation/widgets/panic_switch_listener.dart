@@ -8,6 +8,7 @@ import '../../../../core/error/result.dart';
 import '../../../chat/domain/entities/chat_message.dart';
 import '../../domain/usecases/list_panic_chats.dart';
 import '../../domain/usecases/pick_default_panic_group.dart';
+import '../../domain/value_objects/panic_button_look.dart';
 import '../../domain/value_objects/panic_trigger.dart';
 import '../providers/panic_switch_config_controller.dart';
 import '../providers/panic_switch_providers.dart';
@@ -39,9 +40,9 @@ class _PanicSwitchListenerState extends ConsumerState<PanicSwitchListener> {
     _triggers = runtime.overlay.triggers.listen(
       (trigger) => _log(runtime.onOverlayTriggered(trigger)),
     );
-    ref.listenManual<bool>(
-      panicOverlayVisibleProvider,
-      (_, visible) => _log(runtime.showOverlay(visible)),
+    ref.listenManual<PanicButtonLook?>(
+      panicOverlayLookProvider,
+      (_, look) => _log(runtime.showOverlay(look)),
       fireImmediately: true,
     );
   }

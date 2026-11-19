@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../domain/repositories/panic_overlay.dart';
+import '../../domain/value_objects/panic_button_look.dart';
 import '../../domain/value_objects/panic_trigger.dart';
 import '../datasources/panic_switch_channel.dart';
 
@@ -20,8 +21,14 @@ class ChannelPanicOverlay implements PanicOverlay {
   );
 
   @override
-  Future<Result<void>> show(Uint8List image) =>
-      _guard(() => _channel.showOverlay(image));
+  Future<Result<void>> show(Uint8List image, PanicButtonLook look) => _guard(
+    () => _channel.showOverlay(
+      image,
+      size: look.size,
+      opacity: look.opacity,
+      gesture: look.gesture.wire,
+    ),
+  );
 
   @override
   Future<Result<void>> hide() => _guard(_channel.hideOverlay);
