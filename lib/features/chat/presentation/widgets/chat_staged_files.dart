@@ -18,7 +18,7 @@ import 'chat_labels.dart';
 /// Stands in for the composer's text input while files dropped on it wait:
 /// their thumbnails, each removable, and the send button. Enter sends, Esc
 /// removes them all; no text can be typed meanwhile.
-class ChatStagedFiles extends ConsumerWidget {
+class ChatStagedFiles extends ConsumerStatefulWidget {
   const ChatStagedFiles({
     super.key,
     required this.draftKey,
@@ -33,7 +33,34 @@ class ChatStagedFiles extends ConsumerWidget {
   final VoidCallback onCleared;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatStagedFiles> createState() => _ChatStagedFilesState();
+}
+
+class _ChatStagedFilesState extends ConsumerState<ChatStagedFiles> {
+  final _focus = FocusNode(debugLabel: 'chat staged files');
+
+  @override
+  void initState() {
+    super.initState();
+    // Takes the keys over from the text input this replaces. `autofocus`
+    // alone is not enough: when the input leaves, focus falls back to what
+    // had it before (another field), and Enter would go there.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final draftKey = widget.draftKey;
+    final onSend = widget.onSend;
+    final onCleared = widget.onCleared;
     final c = context.colors;
     final s = context.spacing;
     final l = AppL10n.of(context);
@@ -63,6 +90,7 @@ class ChatStagedFiles extends ConsumerWidget {
         const SingleActivator(LogicalKeyboardKey.escape): clear,
       },
       child: Focus(
+        focusNode: _focus,
         autofocus: true,
         child: Padding(
           padding: EdgeInsets.fromLTRB(s.xl3, s.md, s.lg, s.md),

@@ -97,4 +97,62 @@ void main() {
     expect(cleared, 1);
     expect(sent, isEmpty);
   });
+
+  testWidgets('Enter sends files pasted while another field had focus before', (
+    tester,
+  ) async {
+    // A screenshot pasted in the composer swaps its text input for the
+    // waiting files; the input's focus then falls back to whatever had it
+    // before (the search box here), and Enter used to go there.
+    container = ProviderContainer();
+    addTearDown(container.dispose);
+    sent = [];
+    final search = FocusNode();
+    final input = FocusNode();
+    addTearDown(search.dispose);
+    addTearDown(input.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: const Locale('en'),
+          theme: buildAppTheme(
+            variant: AppThemeVariant.light,
+            surface: SurfaceStyle.outline,
+            density: AppDensity.comfortable,
+          ),
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) => Column(
+                children: [
+                  TextField(focusNode: search),
+                  if (ref.watch(chatStagedFilesProvider(_key)).isEmpty)
+                    TextField(focusNode: input)
+                  else
+                    ChatStagedFiles(
+                      draftKey: _key,
+                      onSend: sent.add,
+                      onCleared: () {},
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    search.requestFocus();
+    await tester.pump();
+    input.requestFocus();
+    await tester.pump();
+
+    container.read(chatStagedFilesProvider(_key).notifier).state = [a];
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    expect(sent.single.map((f) => f.name), ['a.pdf']);
+  });
 }
