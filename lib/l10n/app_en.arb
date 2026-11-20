@@ -3130,6 +3130,7 @@
   "chatStickerReplies": "Reply with a sticker",
   "chatStickerSuggestionsClose": "Hide sticker suggestions",
   "chatStickerSuggestionsSetting": "Sticker suggestions",
+  "chatAutoReplySuggestionsSetting": "Auto-suggest replies",
   "chatAiSummaryLanguage": "Summary language",
   "panicSwitchTitle": "Thầy vô (boss alert)",
   "panicSwitchSummary": "{group} · {count} people can set it off",

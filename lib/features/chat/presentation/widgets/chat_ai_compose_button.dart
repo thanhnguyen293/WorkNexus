@@ -10,6 +10,7 @@ import '../../../../core/widgets/opencode_not_linked_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/value_objects/chat_draft_tone.dart';
 import '../providers/chat_ai_providers.dart';
+import '../providers/chat_auto_reply_providers.dart';
 import '../providers/chat_providers.dart';
 import 'chat_composer_controller.dart';
 import 'chat_composer_toolbar.dart';
@@ -70,6 +71,8 @@ class ChatAiComposeButton extends ConsumerWidget {
     final l = AppL10n.of(anchor);
     final settings = ref.read(appSettingsProvider.notifier);
     final stickersOn = ref.read(appSettingsProvider).chatStickerSuggestions;
+    final autoReplies = ref.read(chatAutoReplySuggestionsProvider);
+    final autoOn = autoReplies.value ?? false;
     final drafted = !text.isBlank;
     final items = <(AppMenuEntry, Future<void> Function())>[
       (
@@ -79,6 +82,16 @@ class ChatAiComposeButton extends ConsumerWidget {
         ),
         () => _suggest(anchor, ref),
       ),
+      // Only for the chat itself: automatic ideas never answer a thread.
+      if (!draftKey.inThread && autoReplies.hasValue)
+        (
+          AppMenuEntry(
+            icon: LucideIcons.messageSquareDashed300,
+            label: l.chatAutoReplySuggestionsSetting,
+            checked: autoOn,
+          ),
+          () => _setAutoReplies(anchor, ref, on: !autoOn),
+        ),
       // Rewriting needs something typed.
       if (drafted)
         for (final (i, tone) in _tones.indexed)
@@ -129,6 +142,21 @@ class ChatAiComposeButton extends ConsumerWidget {
     );
     if (!await ensureOpenCodeLinked(context, ref)) return;
     await suggestions.suggest(people);
+  }
+
+  Future<void> _setAutoReplies(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool on,
+  }) async {
+    // Turning it on asks to link the AI now, not on a run later.
+    if (on && !await ensureOpenCodeLinked(context, ref)) return;
+    final saved = await ref
+        .read(chatAutoReplySuggestionsProvider.notifier)
+        .setEnabled(on);
+    if (saved case Err(:final failure) when context.mounted) {
+      showChatSnack(context, AppL10n.of(context).chatAiFailed(failure.message));
+    }
   }
 
   Future<void> _rewrite(
