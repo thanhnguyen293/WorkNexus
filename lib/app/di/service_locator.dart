@@ -131,18 +131,13 @@ import '../../shared/sync/data/merge_request_link_fetcher.dart';
 import '../../shared/sync/data/sync_coordinator.dart';
 import '../../tools/github/data/services/github_pr_service_impl.dart';
 import '../../tools/gitlab/data/services/gitlab_mr_service_impl.dart';
-import '../../tools/zentao/data/datasources/zentao_client.dart';
 import '../../tools/zentao/data/repositories/classic_zentao_team_members.dart';
-import '../../tools/zentao/data/repositories/local_zentao_profile_repository.dart';
 import '../../tools/zentao/data/services/zentao_ticket_editor_service.dart';
 import '../../tools/zentao/data/services/zentao_ticket_service_impl.dart';
 import '../../tools/zentao/data/services/zentao_workflow_actions.dart';
-import '../../tools/zentao/domain/repositories/zentao_profile_repository.dart';
 import '../../tools/zentao/domain/repositories/zentao_task_bugs.dart';
 import '../../tools/zentao/domain/repositories/zentao_team_members.dart';
 import '../../tools/zentao/domain/repositories/zentao_view_pages.dart';
-import '../../tools/zentao/domain/usecases/refresh_zentao_profile.dart';
-import '../../tools/zentao/domain/usecases/update_zentao_profile.dart';
 import 'app_support_path.dart';
 import 'provider_adapter_registry_impl.dart';
 import 'service_locator.config.dart';
@@ -268,35 +263,6 @@ abstract class ServiceModule {
   @lazySingleton
   ClearLocalCache clearLocalCache(LocalCacheRepository repository) =>
       ClearLocalCache(repository);
-
-  @lazySingleton
-  ZenTaoProfileRepository zenTaoProfileRepository(
-    AppDatabase db,
-    CredentialStore credentials,
-    SyncCoordinator coordinator,
-  ) => LocalZenTaoProfileRepository(
-    db,
-    credentials,
-    // The sync's pooled client, so the profile refresh shares its session.
-    clientFactory: (account, password) =>
-        switch (coordinator.buildAdapter(account, password)?.rawClient) {
-          final ZenTaoClient pooled => pooled,
-          _ => ZenTaoClient(
-            baseUrl: account.baseUrl ?? '',
-            account: account.handle,
-            password: password,
-          ),
-        },
-  );
-
-  @lazySingleton
-  RefreshZenTaoProfile refreshZenTaoProfile(
-    ZenTaoProfileRepository repository,
-  ) => RefreshZenTaoProfile(repository);
-
-  @lazySingleton
-  UpdateZenTaoProfile updateZenTaoProfile(ZenTaoProfileRepository repository) =>
-      UpdateZenTaoProfile(repository);
 
   @lazySingleton
   TicketRepository ticketRepository(AppDatabase db) =>
