@@ -27,13 +27,15 @@ class ChatDoodlePalette {
     ink: Color(0x1F1D3A1A),
   );
 
+  /// Neutral black, not a dark tint of the day colours: a blue/green cast
+  /// reads as a stain behind the dark theme's grey bubbles.
   static const night = ChatDoodlePalette(
-    base: Color(0xFF0B121B),
+    base: Color(0xFF000000),
     corners: [
-      Color(0xFF14232F),
-      Color(0xFF0B141D),
-      Color(0xFF1A2A2C),
-      Color(0xFF0E1A22),
+      Color(0xFF0B0B0B),
+      Color(0xFF030303),
+      Color(0xFF080808),
+      Color(0xFF050505),
     ],
     ink: Color(0x14FFFFFF),
   );
@@ -103,7 +105,7 @@ class ChatWallpaperTint {
   static const green = ChatWallpaperTint(
     'green',
     day: Color(0xFFA9C08E),
-    night: Color(0xFF0B121B),
+    night: Color(0xFF000000),
   );
 
   static const presets = [

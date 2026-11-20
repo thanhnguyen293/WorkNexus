@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:work_nexus/core/settings/app_settings.dart';
 import 'package:work_nexus/core/settings/chat_wallpaper_color.dart';
 import 'package:work_nexus/core/theme/chat_doodle_palette.dart';
 
@@ -45,6 +46,12 @@ void main() {
         ChatDoodlePalette.forColor('green', Brightness.dark),
         ChatDoodlePalette.night,
       );
+    });
+
+    test('the default pattern is black with doodles in the dark theme', () {
+      expect(ChatWallpaperColor.parse(kChatWallpaperPattern)?.doodles, isTrue);
+      expect(ChatDoodlePalette.night.base, const Color(0xFF000000));
+      expect(ChatWallpaperTint.green.night, const Color(0xFF000000));
     });
 
     test('a preset follows the theme; a picked colour stays as picked', () {
