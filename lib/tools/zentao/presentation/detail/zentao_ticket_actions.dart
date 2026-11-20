@@ -6,6 +6,7 @@ import '../../../../core/domain/entities/provider_entity.dart';
 import '../../../../core/domain/entities/ticket.dart';
 import '../../../../core/domain/value_objects/zentao_action.dart';
 import '../../../../core/navigation/navigation_providers.dart';
+import '../../../../core/navigation/send_to_chat.dart';
 import '../../../../core/navigation/ticket_editor_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -14,6 +15,7 @@ import '../../../../core/widgets/app_icon_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/detail/presentation/widgets/assign_dialog.dart';
 import '../../../../shared/detail/presentation/widgets/detail_action_button.dart';
+import '../../../../shared/detail/presentation/widgets/detail_header_title.dart';
 import '../../domain/usecases/list_zentao_bug_actions.dart';
 import '../../domain/usecases/list_zentao_create_actions.dart';
 import '../../domain/usecases/list_zentao_task_actions.dart';
@@ -25,11 +27,12 @@ import 'zentao_bug_action_dialog.dart';
 import 'zentao_task_action_dialog.dart';
 import 'zentao_task_assign_dialog.dart';
 
-/// ZenTao's own toolbar for a bug or task: Assign, a "⋯" menu, and the one
+/// ZenTao's own toolbar for a bug or task, kept to the buttons used most:
+/// Assign, the status actions ZenTao allows, "Send to chat", and the one
 /// status action that moves the ticket on as the filled main button (see
-/// `ZenTaoActionMenu.primary`). The other status actions ZenTao allows, and
-/// what can be started from the ticket (a copy, a subtask, a bug), wait in
-/// the menu. A story offers Assign only.
+/// `ZenTaoActionMenu.primary`). What is started from the ticket (a copy, a
+/// subtask, a bug) and cancelling a task wait in a "⋯" menu. A story offers
+/// Assign only.
 class ZenTaoActions extends ConsumerWidget {
   const ZenTaoActions({super.key, required this.ticket});
   final Ticket ticket;
@@ -41,6 +44,7 @@ class ZenTaoActions extends ConsumerWidget {
     final bug = kind == 'bug' ? const ListZenTaoBugActions()(ticket) : null;
     final task = kind == 'task' ? const ListZenTaoTaskActions()(ticket) : null;
     final canAssign = bug?.canAssign ?? task?.canAssign ?? true;
+    final url = ticket.url ?? '';
 
     _ZenTaoItem bugItem(ZenTaoBugAction action) => (
       look: zenTaoBugActionLook(l, action),
@@ -64,11 +68,16 @@ class ZenTaoActions extends ConsumerWidget {
       (_, final t?) => taskItem(t),
       _ => null,
     };
-    final more = <_ZenTaoItem>[
+    final others = <_ZenTaoItem>[
       for (final a in bug?.actions ?? const <ZenTaoBugAction>[])
         if (a != bug?.primary) bugItem(a),
       for (final a in task?.actions ?? const <ZenTaoTaskAction>[])
-        if (a != task?.primary) taskItem(a),
+        if (a != task?.primary && a != ZenTaoTaskAction.cancel) taskItem(a),
+    ];
+    final more = <_ZenTaoItem>[
+      // Rarely wanted and undoes the work, so it waits a click further away.
+      if (task?.actions.contains(ZenTaoTaskAction.cancel) ?? false)
+        taskItem(ZenTaoTaskAction.cancel),
       for (final action in const ListZenTaoCreateActions()(ticket))
         (
           look: zenTaoCreateActionLook(l, action),
@@ -95,14 +104,24 @@ class ZenTaoActions extends ConsumerWidget {
                   : AssignDialog(ticket: ticket),
             ),
           ),
-        if (kind == 'task')
+        for (final item in others)
           DetailActionButton(
-            icon: LucideIcons.copy300,
-            label: l.zentaoCopyTask,
-            onTap: () => ref
-                .read(appNavProvider.notifier)
-                .openEditor(_editorRoute(ZenTaoCreateAction.copyTask, ticket)),
+            icon: item.look.icon,
+            label: item.look.label,
+            onTap: item.run,
           ),
+        if ((kind == 'bug' || kind == 'task') && url.isNotEmpty)
+          if (ref.watch(sendToChatProvider) case final sendToChat?)
+            DetailActionButton(
+              icon: LucideIcons.send300,
+              label: l.sendToChat,
+              onTap: () => sendToChat(
+                context,
+                accountId: ticket.accountId,
+                title: ticketTitleWithRef(ticket),
+                link: url,
+              ),
+            ),
         if (more.isNotEmpty) _MoreActionsButton(items: more),
         if (primary != null)
           AppButton.filled(
@@ -119,7 +138,7 @@ class ZenTaoActions extends ConsumerWidget {
 /// One ZenTao action: how it shows and what it does.
 typedef _ZenTaoItem = ({ZenTaoActionLook look, VoidCallback run});
 
-/// The "⋯" button holding the actions that are not the main one.
+/// The "⋯" button holding the actions used now and then.
 class _MoreActionsButton extends StatelessWidget {
   const _MoreActionsButton({required this.items});
 

@@ -18,6 +18,7 @@ import 'core/di/providers.dart';
 import 'core/navigation/open_storage.dart';
 import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
+import 'core/navigation/send_to_chat.dart';
 import 'core/platform/app_icon_providers.dart';
 import 'core/platform/app_icon_service.dart';
 import 'core/platform/app_name_providers.dart';
@@ -31,6 +32,7 @@ import 'core/platform/linux_desktop_entry.dart';
 import 'core/settings/app_settings.dart';
 import 'core/tools/tool_registry_provider.dart';
 import 'features/chat/presentation/widgets/chat_person_chip.dart';
+import 'features/chat/presentation/widgets/send_to_chat_dialog.dart';
 import 'features/translation/domain/repositories/translation_api_config_repository.dart';
 import 'shared/sync/data/sync_coordinator.dart';
 import 'tools/zentao/presentation/util/open_execution_board.dart';
@@ -134,6 +136,8 @@ Future<void> main(List<String> arguments) async {
           (context, {required accountId, required name}) =>
               ChatPersonChatButton(accountId: accountId, name: name),
         ),
+        // A ticket's "Send to chat" opens chat's picker without importing it.
+        sendToChatProvider.overrideWithValue(SendToChatDialog.show),
         personAvatarBuilderProvider.overrideWithValue(
           (context, {required accountId, required name, required diameter}) =>
               ChatPersonAvatar(
