@@ -14,7 +14,9 @@ import 'app/tool_registry.dart';
 import 'core/data/mappers/mappers.dart';
 import 'core/database/database.dart';
 import 'core/database/database_seeder.dart';
+import 'core/di/person_directory_provider.dart';
 import 'core/di/providers.dart';
+import 'core/domain/repositories/person_directory.dart';
 import 'core/navigation/open_storage.dart';
 import 'core/navigation/open_zentao_execution.dart';
 import 'core/navigation/person_chip.dart';
@@ -122,6 +124,9 @@ Future<void> main(List<String> arguments) async {
         // One storage dialog spans chat files and the synced data; features
         // open it without importing each other.
         openStorageProvider.overrideWithValue(StorageDialog.show),
+        // Chat's profile popup asks ZenTao for a colleague's department and
+        // contacts without importing it.
+        personDirectoryProvider.overrideWithValue(getIt<PersonDirectory>()),
         // A bug's Execution field opens the board's task view.
         openZenTaoExecutionProvider.overrideWithValue(openExecutionBoard),
         personChipBuilderProvider.overrideWithValue(

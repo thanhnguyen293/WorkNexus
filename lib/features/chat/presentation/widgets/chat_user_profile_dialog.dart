@@ -5,24 +5,24 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/navigation/open_account_profile.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_sizes.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_dialog_frame.dart';
 import '../../../../core/widgets/app_snack.dart';
-import '../../../../core/widgets/tinted_pill.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../domain/value_objects/chat_presence.dart';
 import '../providers/chat_providers.dart';
 import 'chat_attachments.dart';
 import 'chat_avatar.dart';
 import 'chat_avatar_crop_dialog.dart';
 import 'chat_avatar_upload_status.dart';
-import 'chat_detail_row.dart';
 import 'chat_editable_avatar.dart';
 import 'chat_labels.dart';
 import 'chat_panels.dart';
+import 'chat_profile_details.dart';
+import 'chat_profile_groups.dart';
+import 'chat_profile_header.dart';
+import 'chat_profile_tickets.dart';
 
 export 'chat_profile_tap.dart';
 
@@ -116,126 +116,164 @@ class _ChatUserProfileDialogState extends ConsumerState<ChatUserProfileDialog> {
     final l = AppL10n.of(context);
     final users = ref.watch(chatUsersProvider(widget.accountId)).value ?? {};
     final self = ref.watch(chatSelfUserIdProvider(widget.accountId)).value;
+    final isSelf = widget.userId == self;
     final user = users[widget.userId];
     final name = chatUserName(context, users, widget.userId);
-    return AppDialogFrame(
-      title: l.chatUserProfile,
-      maxWidth: context.sizes.dialogSm,
-      actions: const [],
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(s.xl5, 0, s.xl5, s.xl5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: ChatEditableAvatar(
-                editable: widget.userId == self && !_uploading,
-                tooltip: l.chatChangeMyAvatar,
-                onTap: _changePicture,
-                child: ChatAvatar(
-                  name: name,
-                  imageUrl: user?.avatarUrl,
-                  presence: chatPresenceOf(users, widget.userId),
-                  verified: chatVerifiedBadge(context, users, widget.userId),
-                  diameter: s.xl6 * 2,
-                ),
-              ),
-            ),
-            if (_upload case final upload?) ...[
-              SizedBox(height: s.md),
-              ChatAvatarUploadStatus(upload: upload),
-            ],
-            SizedBox(height: s.xl),
-            SelectableText(
-              name,
-              textAlign: TextAlign.center,
-              style: context.typography.titleLg.copyWith(color: c.textPrimary),
-            ),
-            if (user != null)
-              Text(
-                [
-                  '@${user.account}',
-                  if (user.status != null)
-                    chatPresenceLabel(
-                      context,
-                      ChatPresence.fromStatus(user.status),
-                    ),
-                ].join('  ·  '),
-                textAlign: TextAlign.center,
-                style: context.typography.secondary.copyWith(
-                  color: c.textSecondary,
-                ),
-              ),
-            if (user?.role case final role?) ...[
-              SizedBox(height: s.md),
-              Center(
-                child: TintedPill(
-                  color: c.accent,
-                  large: true,
-                  pill: true,
-                  label: chatRoleLabel(
-                    context,
-                    role,
-                    serverNames:
-                        ref
-                            .watch(chatRoleNamesProvider(widget.accountId))
-                            .value ??
-                        const {},
+    final person = (accountId: widget.accountId, userId: widget.userId);
+    final diameter = s.xl6 * 2.2;
+    return Dialog(
+      backgroundColor: c.surface,
+      surfaceTintColor: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.radii.lg),
+        side: BorderSide(color: c.border),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: context.sizes.dialogSm + s.xl6,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        child: Semantics(
+          container: true,
+          label: l.chatUserProfile,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  // No bounce: overscrolling would drag the banner off the
+                  // card's top edge and show the empty card behind it.
+                  physics: const ClampingScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: s.xl3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ChatProfileHeader(
+                        name: name,
+                        handle: user?.account,
+                        presence: chatPresenceOf(users, widget.userId),
+                        role: _roleLabel(user?.role),
+                        avatarDiameter: diameter,
+                        avatar: ChatEditableAvatar(
+                          editable: isSelf && !_uploading,
+                          tooltip: l.chatChangeMyAvatar,
+                          onTap: _changePicture,
+                          child: ChatAvatar(
+                            name: name,
+                            imageUrl: user?.avatarUrl,
+                            verified: chatVerifiedBadge(
+                              context,
+                              users,
+                              widget.userId,
+                            ),
+                            presence: chatPresenceOf(users, widget.userId),
+                            diameter: diameter,
+                          ),
+                        ),
+                      ),
+                      if (_upload case final upload?) ...[
+                        SizedBox(height: s.md),
+                        ChatAvatarUploadStatus(upload: upload),
+                      ],
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: s.xl5),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ChatProfileDetails(person: person, user: user),
+                            if (!isSelf && self != null)
+                              ChatProfileGroups(person: person),
+                            if (user != null)
+                              ChatProfileTickets(
+                                accountId: widget.accountId,
+                                handle: user.account,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-            if (user?.email case final email?)
-              ChatDetailRow(
-                icon: LucideIcons.mail300,
-                label: l.chatEmail,
-                value: email,
-              ),
-            if (user?.mobile case final mobile?)
-              ChatDetailRow(
-                icon: LucideIcons.smartphone300,
-                label: l.chatMobile,
-                value: mobile,
-              ),
-            if (user?.phone case final phone?)
-              ChatDetailRow(
-                icon: LucideIcons.phone300,
-                label: l.chatPhone,
-                value: phone,
-              ),
-            if (widget.userId == self) ...[
-              SizedBox(height: s.xl5),
-              if (widget.onViewProfile != null) ...[
-                AppButton.outlinedNeutral(
-                  icon: LucideIcons.userRound300,
-                  onPressed: _viewProfile,
-                  child: Text(l.chatViewFullProfile),
+              Divider(height: 1, color: c.border),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: s.xl5,
+                  vertical: s.xl,
                 ),
-                SizedBox(height: s.sm),
-              ],
-              Tooltip(
-                message: l.chatChangeMyAvatarHint,
-                child: AppButton.outlinedNeutral(
-                  icon: LucideIcons.camera300,
-                  isLoading: _uploading,
-                  onPressed: _uploading ? null : _changePicture,
-                  child: Text(l.chatChangeMyAvatar),
-                ),
+                child: isSelf
+                    ? _SelfActions(
+                        uploading: _uploading,
+                        onViewProfile: widget.onViewProfile == null
+                            ? null
+                            : _viewProfile,
+                        onChangePicture: _changePicture,
+                      )
+                    : AppButton.filled(
+                        icon: LucideIcons.messageSquare300,
+                        isLoading: _opening,
+                        onPressed: _opening ? null : _message,
+                        child: Text(l.chatSendMessage),
+                      ),
               ),
             ],
-            if (widget.userId != self) ...[
-              SizedBox(height: s.xl5),
-              AppButton.filled(
-                icon: LucideIcons.messageSquare300,
-                isLoading: _opening,
-                onPressed: _opening ? null : _message,
-                child: Text(l.chatSendMessage),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  String? _roleLabel(String? role) => role == null
+      ? null
+      : chatRoleLabel(
+          context,
+          role,
+          serverNames:
+              ref.watch(chatRoleNamesProvider(widget.accountId)).value ??
+              const {},
+        );
+}
+
+/// Your own profile's actions: open the full profile, change your picture.
+class _SelfActions extends StatelessWidget {
+  const _SelfActions({
+    required this.uploading,
+    required this.onViewProfile,
+    required this.onChangePicture,
+  });
+
+  final bool uploading;
+  final VoidCallback? onViewProfile;
+  final VoidCallback onChangePicture;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppL10n.of(context);
+    return Row(
+      spacing: context.spacing.md,
+      children: [
+        if (onViewProfile case final view?)
+          Expanded(
+            child: AppButton.outlinedNeutral(
+              icon: LucideIcons.userRound300,
+              onPressed: view,
+              child: Text(l.chatViewFullProfile),
+            ),
+          ),
+        Expanded(
+          child: Tooltip(
+            message: l.chatChangeMyAvatarHint,
+            child: AppButton.filled(
+              icon: LucideIcons.camera300,
+              isLoading: uploading,
+              onPressed: uploading ? null : onChangePicture,
+              child: Text(l.chatChangeMyAvatar),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
