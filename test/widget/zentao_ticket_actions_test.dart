@@ -16,6 +16,7 @@ import 'package:work_nexus/core/domain/value_objects/zentao_action.dart';
 import 'package:work_nexus/core/domain/value_objects/zentao_task_action_input.dart';
 import 'package:work_nexus/core/error/result.dart';
 import 'package:work_nexus/core/navigation/navigation_providers.dart';
+import 'package:work_nexus/core/navigation/send_to_chat.dart';
 import 'package:work_nexus/core/navigation/ticket_editor_route.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
@@ -31,6 +32,7 @@ Ticket _ticket(
   String raw, {
   TicketProviderEntity? entity,
   UnifiedStatus status = UnifiedStatus.inprogress,
+  String? url,
 }) => Ticket(
   id: 'zt:12',
   accountId: 'zt',
@@ -45,6 +47,7 @@ Ticket _ticket(
   providerStatus: raw,
   sourceHash: 'h',
   providerEntity: entity,
+  url: url,
 );
 
 void main() {
@@ -63,10 +66,15 @@ void main() {
     ).thenAnswer((_) async => const Ok(null));
   });
 
-  Future<void> pump(WidgetTester tester, Ticket ticket) async {
+  Future<void> pump(
+    WidgetTester tester,
+    Ticket ticket, {
+    SendToChat? sendToChat,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          sendToChatProvider.overrideWithValue(sendToChat),
           zenTaoWorkflowServiceProvider.overrideWithValue(workflow),
           providerUsersProvider.overrideWith(
             (ref, id) async => const <ProviderUser>[],
@@ -102,13 +110,17 @@ void main() {
       _ticket('Task', 'doing', entity: const TicketProviderEntity.zentaoTask()),
     );
 
-    // Finishing moves it on, so it is the main button; the rest wait in "⋯".
+    // Finishing moves it on, so it is the main button; pausing sits beside
+    // it, and what is used now and then waits in "⋯".
     expect(find.widgetWithText(AppButton, 'Finish'), findsOneWidget);
     expect(find.text('Assign'), findsOneWidget);
-    expect(find.text('Pause'), findsNothing);
+    expect(find.text('Pause'), findsOneWidget);
+    for (final label in ['Cancel task', 'Clone task', 'Report bug']) {
+      expect(find.text(label), findsNothing, reason: label);
+    }
 
     await openMore(tester);
-    for (final label in ['Pause', 'Cancel task']) {
+    for (final label in ['Cancel task', 'Clone task', 'Report bug']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('Start'), findsNothing);
@@ -119,7 +131,6 @@ void main() {
     await pump(tester, _ticket('Bug', 'active', status: UnifiedStatus.inbox));
 
     expect(find.widgetWithText(AppButton, 'Confirm'), findsOneWidget);
-    await openMore(tester);
     expect(find.text('Resolve'), findsOneWidget);
   });
 
@@ -298,7 +309,7 @@ void main() {
     expect(container.read(openTicketIdProvider), isNull);
   });
 
-  testWidgets('a task can be cloned via direct action button', (tester) async {
+  testWidgets('a task is cloned from the ⋯ menu', (tester) async {
     await pump(
       tester,
       _ticket(
@@ -308,7 +319,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Clone task'), findsOneWidget);
+    await openMore(tester);
     await tester.tap(find.text('Clone task'));
     await tester.pumpAndSettle();
 
@@ -319,5 +330,62 @@ void main() {
       container.read(ticketEditorProvider),
       const NewTaskRoute(accountId: 'zt', executionId: '31', copyOf: '12'),
     );
+  });
+
+  testWidgets('a bug is sent to chat with its ref, title and link', (
+    tester,
+  ) async {
+    final sent = <({String accountId, String title, String link})>[];
+    await pump(
+      tester,
+      _ticket('Bug', 'active', url: 'https://zt.example/bug-view-12.html'),
+      sendToChat:
+          (
+            context, {
+            required accountId,
+            required title,
+            required link,
+          }) async =>
+              sent.add((accountId: accountId, title: title, link: link)),
+    );
+
+    await tester.tap(find.text('Send to chat'));
+    await tester.pumpAndSettle();
+
+    expect(sent, [
+      (
+        accountId: 'zt',
+        title: '#12 t',
+        link: 'https://zt.example/bug-view-12.html',
+      ),
+    ]);
+  });
+
+  testWidgets('no Send to chat without a link or a chat to send to', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      _ticket('Task', 'doing', entity: const TicketProviderEntity.zentaoTask()),
+      sendToChat:
+          (
+            context, {
+            required accountId,
+            required title,
+            required link,
+          }) async {},
+    );
+    expect(find.text('Send to chat'), findsNothing);
+
+    await pump(
+      tester,
+      _ticket(
+        'Task',
+        'doing',
+        entity: const TicketProviderEntity.zentaoTask(),
+        url: 'https://zt.example/task-view-12.html',
+      ),
+    );
+    expect(find.text('Send to chat'), findsNothing);
   });
 }
