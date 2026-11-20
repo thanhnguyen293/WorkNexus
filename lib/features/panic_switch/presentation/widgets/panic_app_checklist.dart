@@ -59,7 +59,9 @@ class _PanicAppChecklistState extends ConsumerState<PanicAppChecklist> {
     final pickedIds = {for (final a in picked) a.id};
     final loaded = ref.watch(panicAppsProvider);
     final result = loaded.asData?.value;
-    if (result != null && result.isErr) {
+    // A Failure, or the lookup itself threw: either way say so, rather than
+    // an empty "No matches" list.
+    if (loaded.hasError || (result != null && result.isErr)) {
       return AppInlineNote(text: l.panicSwitchAppsFailed, isError: true);
     }
     final q = _query.trim().toLowerCase();
