@@ -69,6 +69,7 @@ import '../../features/chat/data/datasources/xxd/xxd_http_datasource.dart';
 import '../../features/chat/data/repositories/cached_link_preview_repository.dart';
 import '../../features/chat/data/repositories/chat_pinned_certificate_repository.dart';
 import '../../features/chat/data/repositories/keychain_telegram_token_store.dart';
+import '../../features/chat/data/repositories/local_auto_reply_suggestions_preference.dart';
 import '../../features/chat/data/repositories/local_chat_info_panel_preference.dart';
 import '../../features/chat/data/repositories/local_mcp_setup_repository.dart';
 import '../../features/chat/data/repositories/local_message_translation_repository.dart';
@@ -76,6 +77,7 @@ import '../../features/chat/data/repositories/local_sticker_repository.dart';
 import '../../features/chat/data/repositories/local_wallpaper_repository.dart';
 import '../../features/chat/data/repositories/server_chat_local_api.dart';
 import '../../features/chat/data/repositories/xxd_chat_repository.dart';
+import '../../features/chat/domain/repositories/auto_reply_suggestions_preference.dart';
 import '../../features/chat/domain/repositories/chat_ai_text_generator.dart';
 import '../../features/chat/domain/repositories/chat_group_repository.dart';
 import '../../features/chat/domain/repositories/chat_info_panel_preference.dart';
@@ -228,6 +230,11 @@ abstract class ServiceModule {
   @lazySingleton
   ChatInfoPanelPreference chatInfoPanelPreference(AppDatabase db) =>
       LocalChatInfoPanelPreference(AppSettingsKvStore(db));
+
+  @lazySingleton
+  AutoReplySuggestionsPreference autoReplySuggestionsPreference(
+    AppDatabase db,
+  ) => LocalAutoReplySuggestionsPreference(AppSettingsKvStore(db));
 
   @lazySingleton
   FindWhatsNew findWhatsNew(UpdateRepository releases, SeenVersionStore seen) =>

@@ -174,6 +174,11 @@ class ChatReplySuggestionsController
   final ChatComposerKey composer;
   var _run = 0;
   var _busy = false;
+  var _auto = false;
+
+  /// Whether what is shown (or asked for) was asked for on its own, not by
+  /// the user.
+  bool get auto => _auto;
 
   String get _key =>
       'chat-replies:${composer.chat.accountId}:${composer.chat.chatGid}';
@@ -189,11 +194,19 @@ class ChatReplySuggestionsController
     if (_busy) getIt<ChatAiTextGenerator>().cancel(_key);
   }
 
-  Future<void> suggest(ChatAiPeople people) async {
+  /// Asks for replies to the latest [contextMessages] messages. An [auto]
+  /// run that fails closes quietly instead of showing an error the user
+  /// never asked for.
+  Future<void> suggest(
+    ChatAiPeople people, {
+    bool auto = false,
+    int contextMessages = _kReplyContextMessages,
+  }) async {
     final run = ++_run;
     _busy = true;
+    _auto = auto;
     state = const AsyncLoading();
-    final messages = await _latest(ref, composer.chat, _kReplyContextMessages);
+    final messages = await _latest(ref, composer.chat, contextMessages);
     final result = await getIt<SuggestChatReplies>()(
       messages,
       key: _key,
@@ -205,6 +218,7 @@ class ChatReplySuggestionsController
     if (!ref.mounted || run != _run) return;
     state = switch (result) {
       Ok(:final value) => AsyncData(value),
+      Err() when auto => null,
       Err(:final failure) => AsyncError(failure.message, StackTrace.current),
     };
   }
@@ -214,6 +228,7 @@ class ChatReplySuggestionsController
     _stop();
     _run++;
     _busy = false;
+    _auto = false;
     state = null;
   }
 }

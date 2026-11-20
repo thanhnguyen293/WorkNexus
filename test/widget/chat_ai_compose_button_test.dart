@@ -20,7 +20,11 @@ class _CountingSuggestions extends ChatReplySuggestionsController {
   static var asked = 0;
 
   @override
-  Future<void> suggest(ChatAiPeople people) async => asked++;
+  Future<void> suggest(
+    ChatAiPeople people, {
+    bool auto = false,
+    int contextMessages = 20,
+  }) async => asked++;
 }
 
 void main() {

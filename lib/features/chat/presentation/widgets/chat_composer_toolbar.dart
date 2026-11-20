@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/chat_providers.dart';
 import 'chat_ai_compose_button.dart';
+import 'chat_auto_reply_trigger.dart';
 import 'chat_composer_controller.dart';
 import 'chat_emoji_picker.dart';
 import 'chat_reply_suggestions_bar.dart';
@@ -87,6 +88,9 @@ class ChatComposerTools extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Reply ideas on their own answer the chat, not a thread.
+        if (!draftKey.inThread)
+          ChatAutoReplyTrigger(draftKey: draftKey, text: text),
         ChatReplySuggestionsBar(draftKey: draftKey, text: text, focus: focus),
         ChatStickerSuggestionsBar(
           draftKey: draftKey,

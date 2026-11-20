@@ -1965,6 +1965,7 @@
   "chatStickerReplies": "Trả lời bằng sticker",
   "chatStickerSuggestionsClose": "Ẩn gợi ý sticker",
   "chatStickerSuggestionsSetting": "Gợi ý sticker",
+  "chatAutoReplySuggestionsSetting": "Tự gợi ý trả lời",
   "chatAiSummaryLanguage": "Ngôn ngữ tóm tắt",
   "panicSwitchTitle": "Thầy vô",
   "panicSwitchSummary": "{group} · {count} người được kích hoạt",
