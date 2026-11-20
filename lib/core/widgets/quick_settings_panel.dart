@@ -109,17 +109,6 @@ class QuickSettingsPanel extends ConsumerWidget {
                 onChanged: controller.setDensity,
               ),
             ),
-            QuickSettingsField(
-              label: l.detailLayout,
-              control: QuickSettingsSegmented<DetailLayout>(
-                value: settings.detailLayout,
-                options: {
-                  DetailLayout.twoPane: l.layoutTwoPane,
-                  DetailLayout.document: l.layoutDocument,
-                },
-                onChanged: controller.setDetailLayout,
-              ),
-            ),
           ],
         ),
         sectionGap,

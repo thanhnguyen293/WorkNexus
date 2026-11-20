@@ -13,6 +13,8 @@ import '../../../../core/widgets/hover_surface.dart';
 /// Translation) and the two-pane MR / PR detail (Overview / Commits / Changes)
 /// so both read as one control. A tab with an entry in [counts] shows it in a
 /// count pill beside its label, as GitLab does (Overview 3 · Changes 13).
+/// [trailing] sits at the strip's right end — a control for how the tabs'
+/// content is shown, kept apart from the header's actions.
 class DetailUnderlineTabs<T> extends StatelessWidget {
   const DetailUnderlineTabs({
     super.key,
@@ -20,12 +22,14 @@ class DetailUnderlineTabs<T> extends StatelessWidget {
     required this.current,
     required this.onSelect,
     this.counts = const {},
+    this.trailing,
   });
 
   final Map<T, String> labels;
   final T current;
   final ValueChanged<T> onSelect;
   final Map<T, int> counts;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +39,26 @@ class DetailUnderlineTabs<T> extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(border: Border(bottom: context.hairlineSide)),
       padding: EdgeInsets.symmetric(horizontal: context.spacing.xl),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final e in labels.entries)
-              _UnderlineTab(
-                label: e.value,
-                count: counts[e.key],
-                selected: e.key == current,
-                onTap: () => onSelect(e.key),
+      child: Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final e in labels.entries)
+                    _UnderlineTab(
+                      label: e.value,
+                      count: counts[e.key],
+                      selected: e.key == current,
+                      onTap: () => onSelect(e.key),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+          ?trailing,
+        ],
       ),
     );
   }
