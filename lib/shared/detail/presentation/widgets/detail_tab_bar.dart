@@ -5,9 +5,11 @@ import '../../../../core/settings/app_settings.dart';
 import '../../../../core/util/translation_languages.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../detail_providers.dart';
+import 'detail_layout_toggle_button.dart';
 import 'detail_underline_tabs.dart';
 
-/// The detail panel's horizontal tab strip.
+/// The detail panel's horizontal tab strip, with the layout switch at its
+/// right end.
 class DetailTabBar extends ConsumerWidget {
   const DetailTabBar({
     super.key,
@@ -32,6 +34,7 @@ class DetailTabBar extends ConsumerWidget {
       current: current,
       onSelect: (tab) =>
           ref.read(detailTabProvider(ticketId).notifier).set(tab),
+      trailing: const DetailLayoutToggleButton(),
     );
   }
 }

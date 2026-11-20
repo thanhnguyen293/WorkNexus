@@ -647,9 +647,8 @@
   "density": "Density",
   "densityComfortable": "Comfortable",
   "densityCompact": "Compact",
-  "detailLayout": "Detail layout",
-  "layoutTwoPane": "Two pane",
-  "layoutDocument": "Document",
+  "layoutDocument": "Document layout",
+  "layoutTwoPane": "Two-pane layout",
   "dateFormat": "Date format",
   "dateFormatIso": "ISO",
   "dateFormatDmy": "DD/MM",
@@ -2317,6 +2316,24 @@
   "codeBlockCopy": "Copy code",
   "codeBlockCopied": "Copied",
   "mrOpenProject": "Open the project in the browser",
+  "sendToChat": "Send to chat",
+  "sendToChatNoteHint": "Add a message (optional)",
+  "sendToChatTo": "{count, plural, =0{Send} =1{Send} other{Send to {count} chats}}",
+  "@sendToChatTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sentToChat": "{count, plural, =1{Sent to chat} other{Sent to {count} chats}}",
+  "@sentToChat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatForward": "Forward",
   "chatForwardTitle": "Forward to…",
   "chatForwardTo": "{count, plural, =1{Forward} other{Forward to {count} chats}}",
@@ -3210,5 +3227,22 @@
   "@whatsNewTitle": {"placeholders": {"version": {"type": "String"}}},
   "miniAppCookiesBrowserUnsupported": "{browser} \u2014 not supported on Windows",
   "@miniAppCookiesBrowserUnsupported": {"placeholders": {"browser": {"type": "String"}}},
-  "miniAppCookiesOnlyChrome": "Only Chrome was found, and importing from Chrome is not supported on Windows: Chrome encrypts its cookies so that only Chrome can read them. Sign in to the site in Edge or Firefox, then import from there."
+  "miniAppCookiesOnlyChrome": "Only Chrome was found, and importing from Chrome is not supported on Windows: Chrome encrypts its cookies so that only Chrome can read them. Sign in to the site in Edge or Firefox, then import from there.",
+  "chatProfileContact": "Contact",
+  "chatProfileOrganisation": "Work",
+  "chatProfileSharedGroups": "Groups in common",
+  "chatProfileOpenWork": "Open work",
+  "chatProfileAssigned": "Assigned",
+  "chatProfileReported": "Reported",
+  "chatProfileMore": "+{count} more",
+  "@chatProfileMore": {"placeholders": {"count": {"type": "int"}}},
+  "chatProfileLoadFailed": "Couldn't load this right now",
+  "chatProfileNoGroups": "No groups in common",
+  "chatProfileCopy": "Copy {label}",
+  "@chatProfileCopy": {"placeholders": {"label": {"type": "String"}}},
+  "chatProfileOpenGroup": "Open {name}",
+  "@chatProfileOpenGroup": {"placeholders": {"name": {"type": "String"}}},
+  "chatProfileMembers": "{count, plural, =1{1 member} other{{count} members}}",
+  "@chatProfileMembers": {"placeholders": {"count": {"type": "int"}}},
+  "chatProfileShowLess": "Show less"
 }
