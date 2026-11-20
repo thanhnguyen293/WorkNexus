@@ -134,20 +134,31 @@ class _TopLine extends StatelessWidget {
     final c = context.colors;
     final severity = ticket.severity;
     final age = _age(AppL10n.of(context), ticket.updatedAt);
+    final s = context.spacing;
     return Row(
-      spacing: context.spacing.sm,
+      spacing: s.sm,
       children: [
-        Text(
-          '#${ticket.externalKey}',
-          style: context.typography.mono.copyWith(color: c.textTertiary),
+        // The tags wrap rather than overflow when a narrow column cannot fit
+        // them beside the age.
+        Expanded(
+          child: Wrap(
+            spacing: s.sm,
+            runSpacing: s.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                '#${ticket.externalKey}',
+                style: context.typography.mono.copyWith(color: c.textTertiary),
+              ),
+              ?switch (severity) {
+                final severity? => SeverityTag(severity),
+                null => null,
+              },
+              if (hasExplicitPriority(ticket))
+                PriorityTag(ticket.providerType, ticket.priority),
+            ],
+          ),
         ),
-        ?switch (severity) {
-          final severity? => SeverityTag(severity),
-          null => null,
-        },
-        if (hasExplicitPriority(ticket))
-          PriorityTag(ticket.providerType, ticket.priority),
-        const Spacer(),
         if (age != null)
           Text(
             age,

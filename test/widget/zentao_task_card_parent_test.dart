@@ -34,37 +34,40 @@ const _task = Ticket(
 );
 
 void main() {
-  Widget harness(Ticket ticket, {List<Ticket> synced = const []}) =>
-      ProviderScope(
-        overrides: [
-          ticketsProvider.overrideWith((ref) => Stream.value(synced)),
-          lookupsProvider.overrideWithValue((
-            accounts: const {},
-            workspaces: const {},
-            projects: const {},
-          )),
-          initialAppSettingsProvider.overrideWithValue(const AppSettings()),
-          openTicketIdProvider.overrideWithValue(null),
-          translationStatusProvider(
-            ticket.id,
-          ).overrideWithValue((state: TranslationState.none, record: null)),
-        ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          theme: buildAppTheme(
-            variant: AppThemeVariant.light,
-            surface: SurfaceStyle.outline,
-            density: AppDensity.comfortable,
-          ),
-          localizationsDelegates: AppL10n.localizationsDelegates,
-          supportedLocales: AppL10n.supportedLocales,
-          home: Scaffold(
-            body: Center(
-              child: SizedBox(width: 256, child: ZenTaoBoardCard(ticket)),
-            ),
-          ),
+  Widget harness(
+    Ticket ticket, {
+    List<Ticket> synced = const [],
+    double width = 256,
+  }) => ProviderScope(
+    overrides: [
+      ticketsProvider.overrideWith((ref) => Stream.value(synced)),
+      lookupsProvider.overrideWithValue((
+        accounts: const {},
+        workspaces: const {},
+        projects: const {},
+      )),
+      initialAppSettingsProvider.overrideWithValue(const AppSettings()),
+      openTicketIdProvider.overrideWithValue(null),
+      translationStatusProvider(
+        ticket.id,
+      ).overrideWithValue((state: TranslationState.none, record: null)),
+    ],
+    child: MaterialApp(
+      locale: const Locale('en'),
+      theme: buildAppTheme(
+        variant: AppThemeVariant.light,
+        surface: SurfaceStyle.outline,
+        density: AppDensity.comfortable,
+      ),
+      localizationsDelegates: AppL10n.localizationsDelegates,
+      supportedLocales: AppL10n.supportedLocales,
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(width: width, child: ZenTaoBoardCard(ticket)),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('a subtask card shows its parent task number and title', (
     tester,
@@ -108,5 +111,24 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ZenTaoCardParent), findsNothing);
+  });
+
+  testWidgets('a narrow bug card wraps its tags instead of overflowing', (
+    tester,
+  ) async {
+    final bug = _task.copyWith(
+      id: 'acc1:bug:1768',
+      externalKey: '1768',
+      externalType: 'Bug',
+      severity: 1,
+      priority: Priority.urgent,
+      updatedAt: DateTime.now().subtract(const Duration(days: 220)),
+    );
+    await tester.pumpWidget(harness(bug, width: 220));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('220d ago'), findsOneWidget);
+    expect(find.text('Critical'), findsOneWidget);
   });
 }

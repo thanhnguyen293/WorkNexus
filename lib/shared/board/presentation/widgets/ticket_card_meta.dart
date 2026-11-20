@@ -45,7 +45,15 @@ class SeverityTag extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           SizedBox(width: context.spacing.xs),
-          Text(label, style: context.typography.badge.copyWith(color: color)),
+          // Shrinks with an ellipsis when a narrow card cannot fit it.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typography.badge.copyWith(color: color),
+            ),
+          ),
         ],
       ),
     );
