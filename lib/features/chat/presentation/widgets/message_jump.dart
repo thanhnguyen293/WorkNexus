@@ -18,6 +18,9 @@ import 'message_list_anchor.dart';
 /// its neighbours growing (images, cards loading) is put back before that
 /// frame is painted. Only a row already laid out near the screen is glided
 /// to.
+///
+/// The same way, it keeps the row being read in place while newer rows are
+/// added below it ([holdPlace]).
 class MessageJump extends ChangeNotifier {
   /// How many older pages a jump may load to find its message.
   static const maxPages = 20;
@@ -41,6 +44,22 @@ class MessageJump extends ChangeNotifier {
 
   /// Server id of the message being sought or held centred, or null.
   int? get target => _target;
+
+  MessageListAnchor? _place;
+
+  /// The row to keep where it is as the rows added below it are laid out.
+  MessageListAnchor? get place => _place;
+
+  /// Keeps [anchor]'s row where it is in the coming layout: put back before
+  /// that frame is painted, so the added rows never push it away.
+  void holdPlace(MessageListAnchor anchor) {
+    _place = anchor;
+    notifyListeners();
+  }
+
+  /// From the list's layout: the row is back in place (or gone).
+  /// Mid-layout: nothing to notify.
+  void settlePlace() => _place = null;
 
   /// Aimed at a message not yet laid out where it belongs: the list paints
   /// nothing rather than the rows it passes on the way.
@@ -127,6 +146,7 @@ class MessageJump extends ChangeNotifier {
   void release() {
     _generation++;
     _finish(false);
+    _place = null;
     if (_target == null) return;
     _target = null;
     notifyListeners();

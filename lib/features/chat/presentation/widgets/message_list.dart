@@ -37,10 +37,6 @@ class MessageList extends ConsumerStatefulWidget {
   ConsumerState<MessageList> createState() => _MessageListState();
 }
 
-/// How close (in pixels) to either end of the loaded messages the user may
-/// scroll before the next page is fetched, so it is usually there in time.
-const double _kLoadThreshold = 600;
-
 /// Distance from the newest message that shows the jump-to-latest button.
 const double _kAwayThreshold = 400;
 
@@ -118,30 +114,7 @@ class _MessageListState extends ConsumerState<MessageList>
         if (!away) _markReadIfSeen();
       });
     }
-    // Not while a jump looks for its row: it is about to move the list.
-    final idle =
-        !mouseDown &&
-        !_jump.seeking &&
-        !loadFailed &&
-        !ref.read(chatMessagesProvider(widget.thread)).isLoading;
-    if (idle &&
-        metrics.extentAfter < _kLoadThreshold &&
-        !loadingOlder &&
-        !reachedStart) {
-      // Not during layout: loading calls setState.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !loadingOlder && !mouseDown) loadOlder();
-      });
-    }
-    if (idle &&
-        window is AroundWindow &&
-        metrics.extentBefore < _kLoadThreshold &&
-        !loadingNewer &&
-        !newerExhausted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !loadingNewer && !mouseDown) loadNewer();
-      });
-    }
+    loadPagesNear(metrics);
     return false;
   }
 

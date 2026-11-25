@@ -23,7 +23,7 @@ RenderSliverMultiBoxAdaptor? messageListSliver(ScrollController scroll) {
 
 /// A message row on screen and how far it sits from the scroll position, so
 /// the list can be put back where the reader was after rows are added below
-/// it. Measured from the laid-out rows: the list's total extent is only an
+/// it (while they are laid out, before they are painted). Measured from the laid-out rows: the list's total extent is only an
 /// estimate, and it moves as rows are added.
 class MessageListAnchor {
   const MessageListAnchor._(this._gid, this._fromPixels);
@@ -48,7 +48,12 @@ class MessageListAnchor {
           offset + child.size.height > pixels &&
           index < rows.length) {
         if (rows[index] case final ChatMessage m) {
-          return MessageListAnchor._(m.gid, offset - pixels);
+          // Its top edge: rows added below change only its bottom (it is
+          // no longer the last of its run), never where its text starts.
+          return MessageListAnchor._(
+            m.gid,
+            offset + child.size.height - pixels,
+          );
         }
       }
       child = sliver.childAfter(child);
@@ -56,26 +61,11 @@ class MessageListAnchor {
     return null;
   }
 
-  /// Scrolls so the anchored row is as far from the scroll position as it
-  /// was; does nothing when the row is no longer laid out.
-  void restore(ScrollController scroll, List<Object> rows) {
-    if (!scroll.hasClients) return;
-    final index = rows.indexWhere((r) => r is ChatMessage && r.gid == _gid);
-    final sliver = messageListSliver(scroll);
-    if (index < 0 || sliver == null) return;
-    for (var child = sliver.firstChild; child != null;) {
-      if (sliver.indexOf(child) == index) {
-        final offset = sliver.childScrollOffset(child);
-        if (offset == null) return;
-        final position = scroll.position;
-        final target = (offset - _fromPixels).clamp(
-          position.minScrollExtent,
-          position.maxScrollExtent,
-        );
-        if ((target - position.pixels).abs() > 0.5) scroll.jumpTo(target);
-        return;
-      }
-      child = sliver.childAfter(child);
-    }
-  }
+  /// The anchored row's index among [rows], or -1 when it is gone.
+  int indexIn(List<Object> rows) =>
+      rows.indexWhere((r) => r is ChatMessage && r.gid == _gid);
+
+  /// The scroll position that puts the row back where it was, given where
+  /// its top edge now is ([rowEnd], in the list's offsets).
+  double pixelsFor(double rowEnd) => rowEnd - _fromPixels;
 }
