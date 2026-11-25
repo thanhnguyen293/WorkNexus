@@ -17,6 +17,7 @@ import 'chat_links.dart';
 import 'chat_privacy_mask.dart';
 import 'chat_user_profile_dialog.dart';
 import 'mention_text.dart';
+import 'message_text_selection.dart';
 import 'notification_body.dart';
 
 /// Whether a message renders as code or formatted Markdown — content that
@@ -168,10 +169,8 @@ class ChatTextBody extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (markdown)
-          // Selectable like plain text (see `MentionText`), with no menu of
-          // its own: a right-click opens the message's menu.
-          SelectionArea(
-            contextMenuBuilder: null,
+          // Selectable like plain text (see `MentionText`).
+          MessageTextSelection(
             child: MarkdownText(
               text,
               fontSize: ink.fontSize,

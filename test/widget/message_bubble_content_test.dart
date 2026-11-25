@@ -4,12 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:work_nexus/core/database/database.dart';
 import 'package:work_nexus/core/theme/app_palette.dart';
 import 'package:work_nexus/core/theme/app_theme.dart';
+import 'package:work_nexus/core/widgets/markdown_text.dart';
 import 'package:work_nexus/features/chat/domain/entities/chat_message.dart';
 import 'package:work_nexus/features/chat/domain/value_objects/message_content.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/chat_link_card_frame.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/mention_text.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_bubble_content.dart';
 import 'package:work_nexus/features/chat/presentation/widgets/message_footer.dart';
+import 'package:work_nexus/features/chat/presentation/widgets/message_text_selection.dart';
 import 'package:work_nexus/l10n/app_localizations.dart';
 
 import '../support/di_test_harness.dart';
@@ -121,9 +123,17 @@ void main() {
       const MessageContent.text('hi [@Dyno](@#31) see https://a.dev/x'),
     );
 
-    final text = tester.widget<SelectableText>(find.byType(SelectableText));
+    // Plain text under the list's one selection area, not a text field.
+    expect(find.byType(SelectableText), findsNothing);
+    final text = tester.widget<Text>(
+      find.descendant(
+        of: find.byType(MessageTextSelection),
+        matching: find.byType(Text),
+      ),
+    );
     final spans = [
-      for (final span in text.textSpan!.children!) span as TextSpan,
+      for (final span in (text.textSpan! as TextSpan).children!)
+        span as TextSpan,
     ];
     final mention = spans.firstWhere((s) => s.text == '@Dyno');
     final link = spans.firstWhere((s) => s.text == 'https://a.dev/x');
@@ -135,13 +145,14 @@ void main() {
   testWidgets('a Markdown message is selectable too', (tester) async {
     await pump(tester, const MessageContent.text('**bold** and `code`'));
 
-    expect(find.byType(SelectionArea), findsOneWidget);
     expect(
-      tester
-          .widget<SelectionArea>(find.byType(SelectionArea))
-          .contextMenuBuilder,
-      isNull,
+      find.ancestor(
+        of: find.byType(MarkdownText),
+        matching: find.byType(MessageTextSelection),
+      ),
+      findsOneWidget,
     );
+    expect(find.byType(SelectionArea), findsNothing);
     await disposeTree(tester);
   });
 
