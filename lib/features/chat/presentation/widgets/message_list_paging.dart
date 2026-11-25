@@ -15,6 +15,10 @@ import 'message_jump.dart';
 import 'message_list.dart';
 import 'message_list_anchor.dart';
 
+/// How close (in pixels) to either end of the loaded messages the user may
+/// scroll before the next page is fetched, so it is usually there in time.
+const double _kLoadThreshold = 600;
+
 /// [MessageList]'s paging: older pages at the top, newer ones at the bottom
 /// of a jump window, and jumps to a message — in place when it is loaded,
 /// else through a window fetched around it.
@@ -103,6 +107,38 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     }
   }
 
+  /// Fetches the next page at the end of the list [metrics] is close to.
+  void loadPagesNear(ScrollMetrics metrics) {
+    if (!_nearOlder(metrics) && !_nearNewer(metrics)) return;
+    // Not during layout (loading calls setState); asked again then, as the
+    // list may have moved since (a jump, a place put back).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !scroll.hasClients) return;
+      if (_nearOlder(scroll.position)) loadOlder();
+      if (_nearNewer(scroll.position)) loadNewer();
+    });
+  }
+
+  /// Not while a jump looks for its row: it is about to move the list.
+  bool get _idle =>
+      !mouseDown &&
+      !jump.seeking &&
+      !loadFailed &&
+      !ref.read(chatMessagesProvider(widget.thread)).isLoading;
+
+  bool _nearOlder(ScrollMetrics m) =>
+      _idle &&
+      m.extentAfter < _kLoadThreshold &&
+      !loadingOlder &&
+      !reachedStart;
+
+  bool _nearNewer(ScrollMetrics m) =>
+      _idle &&
+      window is AroundWindow &&
+      m.extentBefore < _kLoadThreshold &&
+      !loadingNewer &&
+      !newerExhausted;
+
   /// Shows [_pendingRows] more older messages — unless the mouse is held
   /// (likely on the scrollbar thumb): growing the list mid-drag throws the
   /// content away from the cursor, so they wait for the release.
@@ -156,16 +192,15 @@ mixin MessageListPaging on ConsumerState<MessageList> {
     update();
   }
 
-  /// Called when the shown messages change: restores the place held by
-  /// [_holdPlace] once the new rows are laid out. A reload that still shows
+  /// Called when the shown messages change: the place held by [_holdPlace]
+  /// is kept as the new rows are laid out. A reload that still shows
   /// the same rows ([before] is [after]) has not brought them yet.
   void onShownChanged(List<ChatMessage> before, List<ChatMessage> after) {
     final anchor = _anchor;
     if (anchor == null || identical(before, after)) return;
     _anchor = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) anchor.restore(scroll, rows);
-    });
+    // Left at the bottom, it would load newer pages up to the newest one.
+    jump.holdPlace(anchor);
   }
 
   /// Leaves a jump window for the newest messages, scrolled to the bottom.

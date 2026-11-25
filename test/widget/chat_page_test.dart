@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,10 @@ class _FakeChatRepository implements ChatRepository, ChatGroupRepository {
 
   /// Pinned in the team chat.
   List<int> pinned = const [];
+
+  /// When set, the team chat has this many stored messages (index and
+  /// server id 1..[longChat]) for jump windows to page through.
+  int? longChat;
 
   static final _at = DateTime(2026, 10, 8, 9, 30);
 
@@ -341,8 +346,24 @@ class _FakeChatRepository implements ChatRepository, ChatGroupRepository {
     required int toIndex,
     bool reactions = true,
   }) => Stream.value([
-    _msg('old1', 31, 'the very first message', serverId: 1).copyWith(index: 1),
-    _msg('old2', 40, 'the second one', serverId: 2).copyWith(index: 2),
+    if (longChat case final total?)
+      for (var i = fromIndex; i <= toIndex && i <= total; i++)
+        // Tall rows: a page of them reaches past the laid-out rows.
+        _msg(
+          'h$i',
+          31,
+          'message $i\nline\nline\nline\nline',
+          serverId: i,
+        ).copyWith(index: i)
+    else ...[
+      _msg(
+        'old1',
+        31,
+        'the very first message',
+        serverId: 1,
+      ).copyWith(index: 1),
+      _msg('old2', 40, 'the second one', serverId: 2).copyWith(index: 2),
+    ],
   ]);
 
   @override
@@ -352,6 +373,7 @@ class _FakeChatRepository implements ChatRepository, ChatGroupRepository {
     int serverId,
   ) async {
     calls.add('around $serverId');
+    if (longChat != null) return Ok((from: serverId - 25, to: serverId + 25));
     return const Ok((from: 1, to: 2));
   }
 
@@ -377,7 +399,12 @@ class _FakeChatRepository implements ChatRepository, ChatGroupRepository {
     required int index,
     required bool older,
     required int limit,
-  }) async => const Ok(0);
+  }) async {
+    final total = longChat;
+    if (total == null || older) return const Ok(0);
+    calls.add('newer $index');
+    return Ok(math.min(limit, total - index));
+  }
 
   @override
   Future<Result<int>> countOlderMessages(
@@ -986,6 +1013,54 @@ void main() {
     );
     expect(find.text('xin chào'), findsOneWidget);
     expect(find.text('the very first message'), findsNothing);
+  });
+
+  testWidgets('dragging the scrollbar to the bottom of a jump window loads '
+      'one newer page, not every page up to the latest', (tester) async {
+    repo.longChat = 1000;
+    await pumpChat(tester);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ChatPage)),
+    );
+    const thread = (accountId: 'acc', chatGid: 'g1');
+    await openTeamChat(tester);
+    container.read(chatJumpRequestProvider(thread).notifier).state = 300;
+    await tester.pump();
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(
+      container.read(chatMessageWindowProvider(thread)),
+      isA<AroundWindow>(),
+    );
+    repo.calls.clear();
+
+    final list = find.byType(MessageList);
+    final scroll = tester
+        .state<ScrollableState>(
+          find.descendant(of: list, matching: find.byType(Scrollable)).first,
+        )
+        .position;
+    // A held mouse (on the scrollbar thumb) drags the list to the bottom.
+    final mouse = await tester.startGesture(
+      tester.getCenter(list),
+      kind: PointerDeviceKind.mouse,
+    );
+    scroll.jumpTo(0);
+    await tester.pump();
+    // The newest row of the window, at the bottom: where it is read.
+    final read = find.textContaining('message 325');
+    final readAt = tester.getTopLeft(read);
+    await mouse.up();
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      // Not one frame shows it pushed away by the rows added below it.
+      expect(tester.getTopLeft(read), readAt, reason: 'frame $i');
+    }
+
+    final newer = repo.calls.where((c) => c.startsWith('newer')).toList();
+    expect(newer, hasLength(1), reason: '$newer');
+    expect(find.textContaining('message 326'), findsOneWidget);
   });
 
   testWidgets('Enter sends, Shift+Enter does not', (tester) async {
