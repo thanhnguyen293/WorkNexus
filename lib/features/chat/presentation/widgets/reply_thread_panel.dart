@@ -18,6 +18,7 @@ import 'chat_panels.dart';
 import 'chat_side_panel_frame.dart';
 import 'message_body.dart';
 import 'message_bubble.dart';
+import 'message_text_selection.dart';
 
 /// Width of the thread panel beside the chat.
 const double _kThreadPanelWidth = 380;
@@ -81,59 +82,74 @@ class ReplyThreadPanel extends ConsumerWidget {
           Expanded(
             // Pointing anywhere on the thread shows all of it.
             child: PrivacyRevealRegion(
-              child: ListView(
-                padding: EdgeInsets.all(context.spacing.xl3),
-                children: [
-                  if (root == null && rootAsync.isLoading)
-                    const AppInlineSpinner()
-                  else if (root == null && rootAsync.hasError)
-                    AppInlineNote(text: l.stateLoadFailedTitle, isError: true)
-                  else if (root == null)
-                    AppInlineNote(text: l.chatReplyMissing)
-                  else
-                    ChatMessageCard(
-                      message: root,
-                      users: users,
-                      label: l.chatThread,
-                      labelIcon: LucideIcons.messagesSquare300,
-                      body: MessageBody(
-                        accountId: chat.accountId,
-                        message: root,
-                      ),
-                      onViewOriginal: () =>
-                          jumpToChatMessage(ref, chat, rootId),
-                      trailing: AppIconButton(
-                        icon: LucideIcons.reply300,
-                        tooltip: l.chatReply,
-                        size: AppIconButtonSize.small,
-                        onPressed: () => reply(root),
-                      ),
-                    ),
-                  if (replies.isNotEmpty) ...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: context.spacing.lg,
-                      ),
-                      child: Text(
-                        l.chatReplies(replies.length),
-                        style: context.typography.captionStrong.copyWith(
-                          color: c.textSecondary,
+              // Message text selectable as in the chat (see
+              // `MessageSelectionScope`); a right-click opens its menu.
+              child: SelectionArea(
+                contextMenuBuilder: null,
+                child: CustomScrollView(
+                  slivers: [
+                    MessageSelectionScope(
+                      child: SliverPadding(
+                        padding: EdgeInsets.all(context.spacing.xl3),
+                        sliver: SliverList.list(
+                          children: [
+                            if (root == null && rootAsync.isLoading)
+                              const AppInlineSpinner()
+                            else if (root == null && rootAsync.hasError)
+                              AppInlineNote(
+                                text: l.stateLoadFailedTitle,
+                                isError: true,
+                              )
+                            else if (root == null)
+                              AppInlineNote(text: l.chatReplyMissing)
+                            else
+                              ChatMessageCard(
+                                message: root,
+                                users: users,
+                                label: l.chatThread,
+                                labelIcon: LucideIcons.messagesSquare300,
+                                body: MessageBody(
+                                  accountId: chat.accountId,
+                                  message: root,
+                                ),
+                                onViewOriginal: () =>
+                                    jumpToChatMessage(ref, chat, rootId),
+                                trailing: AppIconButton(
+                                  icon: LucideIcons.reply300,
+                                  tooltip: l.chatReply,
+                                  size: AppIconButtonSize.small,
+                                  onPressed: () => reply(root),
+                                ),
+                              ),
+                            if (replies.isNotEmpty) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: context.spacing.lg,
+                                ),
+                                child: Text(
+                                  l.chatReplies(replies.length),
+                                  style: context.typography.captionStrong
+                                      .copyWith(color: c.textSecondary),
+                                ),
+                              ),
+                              // Replies to replies keep their quote so the chain is clear.
+                              for (final r in replies)
+                                MessageBubble(
+                                  key: ValueKey(r.gid),
+                                  chat: chat,
+                                  message: r,
+                                  users: users,
+                                  showQuote: r.replyToId != rootId,
+                                  onOpenThread: (_) {},
+                                  onReply: reply,
+                                ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
-                    // Replies to replies keep their quote so the chain is clear.
-                    for (final r in replies)
-                      MessageBubble(
-                        key: ValueKey(r.gid),
-                        chat: chat,
-                        message: r,
-                        users: users,
-                        showQuote: r.replyToId != rootId,
-                        onOpenThread: (_) {},
-                        onReply: reply,
-                      ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
