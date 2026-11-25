@@ -77,6 +77,28 @@ void main() {
     expect(ran, isEmpty);
   });
 
+  testWidgets('the hover buttons are built only while pointed at, in the '
+      'space kept for them', (tester) async {
+    await pumpBubble(tester);
+    final row = find.byType(MessageHoverActions);
+    final size = tester.getSize(row);
+    // Every message row has them: none built until the pointer comes.
+    expect(find.byType(Tooltip), findsNothing);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(find.text('hello')));
+    await tester.pumpAndSettle();
+    expect(find.byType(Tooltip), findsWidgets);
+    expect(tester.getSize(row), size);
+
+    await mouse.moveTo(const Offset(1, 1));
+    await tester.pumpAndSettle();
+    expect(find.byType(Tooltip), findsNothing);
+    expect(tester.getSize(row), size);
+  });
+
   // Message text is selectable (it has its own secondary-tap handling): a
   // right-click on it must still open the message's menu.
   testWidgets('right-click on selectable text opens the menu', (tester) async {

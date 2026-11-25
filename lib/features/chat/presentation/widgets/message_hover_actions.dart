@@ -59,6 +59,11 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
   /// Keeps the buttons up while the "…" menu is open.
   bool _menuOpen = false;
 
+  /// The buttons exist: from the first hover until they have faded out.
+  /// Every message row has these, and the list builds rows as they scroll
+  /// in — building buttons and tooltips nobody points at slowed it down.
+  bool _built = false;
+
   @override
   Widget build(BuildContext context) {
     final actions = widget.actions;
@@ -68,33 +73,50 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
     final own = actions.take(widget.buttons).toList();
     final rest = actions.skip(widget.buttons).toList();
     final isVisible = _hover || _menuOpen;
+    final count = own.length + (react == null ? 0 : 1) + (rest.isEmpty ? 0 : 1);
     final buttons = AnimatedOpacity(
       opacity: isVisible ? 1 : 0,
       duration: AppMotion.of(context, AppMotion.fast),
       curve: AppMotion.enter,
-      child: IgnorePointer(
-        ignoring: !isVisible,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: s.md),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final (i, a) in own.indexed) ...[
-                if (i > 0) SizedBox(width: s.sm),
-                _RoundButton(icon: a.icon, tooltip: a.tooltip, onTap: a.onTap),
-              ],
-              if (react != null) ...[
-                if (own.isNotEmpty) SizedBox(width: s.sm),
-                _ReactButton(onReact: react),
-              ],
-              if (rest.isNotEmpty) ...[
-                SizedBox(width: s.sm),
-                _MoreButton(onOpen: (at) => _openMenu(rest, at)),
-              ],
-            ],
-          ),
-        ),
-      ),
+      onEnd: () {
+        if (mounted && !_hover && !_menuOpen) setState(() => _built = false);
+      },
+      child: !_built
+          // Their space, kept so the bubble does not shift on hover.
+          ? SizedBox(
+              width:
+                  2 * s.md +
+                  count * context.sizes.controlMd +
+                  (count - 1) * s.sm,
+              height: context.sizes.controlMd,
+            )
+          : IgnorePointer(
+              ignoring: !isVisible,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: s.md),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final (i, a) in own.indexed) ...[
+                      if (i > 0) SizedBox(width: s.sm),
+                      _RoundButton(
+                        icon: a.icon,
+                        tooltip: a.tooltip,
+                        onTap: a.onTap,
+                      ),
+                    ],
+                    if (react != null) ...[
+                      if (own.isNotEmpty) SizedBox(width: s.sm),
+                      _ReactButton(onReact: react),
+                    ],
+                    if (rest.isNotEmpty) ...[
+                      SizedBox(width: s.sm),
+                      _MoreButton(onOpen: (at) => _openMenu(rest, at)),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
     // A raw pointer listener, not a tap recogniser: selectable message text
     // takes part in the gesture arena (it has its own secondary tap) and
@@ -108,7 +130,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
       child: widget.child,
     );
     return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
+      onEnter: (_) => setState(() => _hover = _built = true),
       onExit: (_) => setState(() => _hover = false),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -122,7 +144,7 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
 
   /// Keeps the hover buttons up while a menu of [actions] is open at [at].
   Future<void> _openMenu(List<MessageAction> actions, Offset at) async {
-    setState(() => _menuOpen = true);
+    setState(() => _menuOpen = _built = true);
     final react = widget.onReact;
     final withReact = [
       if (react != null)

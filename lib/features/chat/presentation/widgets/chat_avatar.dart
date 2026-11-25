@@ -97,15 +97,21 @@ class ChatAvatar extends StatelessWidget {
             ? _Placeholder(icon: icon, diameter: diameter)
             : url == null || url.isEmpty
             ? initials
-            : CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.cover,
-                // Decoded at the drawn size: the source is a full photo,
-                // and a chat shows dozens of these at 32 px.
-                memCacheWidth:
-                    (diameter * MediaQuery.devicePixelRatioOf(context)).round(),
-                placeholder: (_, _) => initials,
-                errorWidget: (_, _, _) => initials,
+            // A GIF avatar plays: each of its frames repaints only itself,
+            // not everything up to the screen's own boundary (a header's
+            // avatar repainted the whole window ~30 times a second).
+            : RepaintBoundary(
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  // Decoded at the drawn size: the source is a full photo,
+                  // and a chat shows dozens of these at 32 px.
+                  memCacheWidth:
+                      (diameter * MediaQuery.devicePixelRatioOf(context))
+                          .round(),
+                  placeholder: (_, _) => initials,
+                  errorWidget: (_, _, _) => initials,
+                ),
               ),
       ),
     );
