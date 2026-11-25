@@ -7,6 +7,7 @@ import 'chat_bubble_theme.dart';
 import 'chat_labels.dart';
 import 'chat_links.dart';
 import 'chat_user_profile_dialog.dart';
+import 'message_text_selection.dart';
 
 /// Plain message text: `[@Name](@#id)` mentions as highlighted `@Name`, and
 /// web addresses as tappable links. Colours and size follow the bubble.
@@ -85,13 +86,11 @@ class _MentionTextState extends ConsumerState<MentionText> {
       at = m.end;
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at)));
-    // Selectable, so a part of a message can be copied. Its own right-click
-    // menu is off: a right-click on the bubble opens the message's menu
-    // (see `MessageHoverActions`), and the span taps (mentions, links) work as
-    // they do on plain text.
-    return SelectableText.rich(
-      TextSpan(style: base, children: spans),
-      contextMenuBuilder: null,
+    // Selectable through the list's one selection area, so a part of a
+    // message can be copied; a right-click opens the message's menu (see
+    // `MessageHoverActions`), and the span taps work as on plain text.
+    return MessageTextSelection(
+      child: Text.rich(TextSpan(style: base, children: spans)),
     );
   }
 }
