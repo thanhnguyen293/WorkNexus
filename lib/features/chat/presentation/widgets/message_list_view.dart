@@ -14,6 +14,7 @@ import 'list_row_widget_cache.dart';
 import 'message_jump.dart';
 import 'message_jump_sliver.dart';
 import 'message_list_item.dart';
+import 'message_text_selection.dart';
 import 'steady_extent_child_delegate.dart';
 
 /// The typing row's key; no message gid looks like it.
@@ -150,30 +151,40 @@ class MessageListView extends StatelessWidget {
         onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
         child: NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) => n.depth == 0 && onMetrics(n.metrics),
-          child: CustomScrollView(
-            scrollCacheExtent: const ScrollCacheExtent.pixels(_kCacheExtent),
-            controller: scroll,
-            reverse: true,
-            slivers: [
-              SliverPadding(
-                // Rows add their own side margins, so a highlighted row's
-                // tint spans the full width.
-                padding: EdgeInsets.symmetric(vertical: context.spacing.xl3),
-                sliver: MessageJumpSliver(
-                  jump: jump,
-                  rows: items,
-                  sliver: SliverList(
-                    delegate: SteadyExtentChildDelegate(
-                      row,
-                      estimate: extent,
-                      childCount: items.length + 1,
-                      findChildIndexCallback: (key) =>
-                          key is ValueKey<String> ? rows[key.value] : null,
+          // One selection area for the whole list, so message text needs no
+          // text field per row (see `MessageSelectionScope`). No menu of its
+          // own: a right-click opens the message's menu.
+          child: SelectionArea(
+            contextMenuBuilder: null,
+            child: CustomScrollView(
+              scrollCacheExtent: const ScrollCacheExtent.pixels(_kCacheExtent),
+              controller: scroll,
+              reverse: true,
+              slivers: [
+                MessageSelectionScope(
+                  child: SliverPadding(
+                    // Rows add their own side margins, so a highlighted row's
+                    // tint spans the full width.
+                    padding: EdgeInsets.symmetric(
+                      vertical: context.spacing.xl3,
+                    ),
+                    sliver: MessageJumpSliver(
+                      jump: jump,
+                      rows: items,
+                      sliver: SliverList(
+                        delegate: SteadyExtentChildDelegate(
+                          row,
+                          estimate: extent,
+                          childCount: items.length + 1,
+                          findChildIndexCallback: (key) =>
+                              key is ValueKey<String> ? rows[key.value] : null,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
