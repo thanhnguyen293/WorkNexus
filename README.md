@@ -215,7 +215,7 @@ placeholder; no Jira adapter is implemented yet.
 
 ### AI tools (MCP)
 
-- WorkNexus ships an **MCP server** ([`mcp/`](mcp/)) that lets Claude or any
+- WorkNexus ships an **MCP server** that lets Claude or any
   MCP client list, read and search your ZenTao chats (from the local cache, no
   password) and TBChat (when installed), and send ZenTao messages.
 - **Quick Settings › Chat › AI tools › Connect an AI tool** shows the exact

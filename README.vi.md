@@ -214,7 +214,7 @@ và asset; chưa có adapter Jira.
 
 ### Công cụ AI (MCP)
 
-- WorkNexus có sẵn một **MCP server** ([`mcp/`](mcp/)) để Claude hoặc client
+- WorkNexus có sẵn một **MCP server** để Claude hoặc client
   MCP khác xem danh sách, đọc, tìm tin chat ZenTao (từ cache trên máy, không
   cần mật khẩu) và TBChat (nếu có cài), và gửi tin ZenTao.
 - **Quick Settings › Chat › Công cụ AI › Kết nối công cụ AI** hiện sẵn lệnh /
