@@ -755,11 +755,10 @@ packages:
   flutter_video_caching:
     dependency: "direct main"
     description:
-      name: flutter_video_caching
-      sha256: "37f15a6082b8ed5a51c65455300475ce49e6a6bc717f5dad19937cfa071d7f34"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.6"
+      path: "third_party/flutter_video_caching"
+      relative: true
+    source: path
+    version: "1.1.6+worknexus.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
