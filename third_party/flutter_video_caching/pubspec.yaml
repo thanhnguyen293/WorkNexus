@@ -1,0 +1,34 @@
+name: flutter_video_caching
+description: Video caching, can use with video_player package. It supports formats like m3u8 and mp4,
+  play and cache videos simultaneously, precache the video before playing.
+version: 1.1.6+worknexus.1
+publish_to: none
+homepage: https://github.com/windows7lake/flutter_video_caching
+
+environment:
+  sdk: ^3.0.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  crypto: ^3.0.6
+  flutter_hls_parser: ^2.0.1
+  http: ^1.3.0
+  dio: ^5.9.1
+  native_dio_adapter: ^1.5.1
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  synchronized: ^3.1.0+1
+  logger: ^2.5.0
+
+dev_dependencies:
+  test: ^1.25.15
+  mockito: ^5.6.4
+  path_provider_platform_interface: ^2.1.2
+  plugin_platform_interface: ^2.1.8
+  flutter_test:
+    sdk: flutter
+
+flutter:

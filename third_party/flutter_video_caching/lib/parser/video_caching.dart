@@ -1,0 +1,113 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter_hls_parser/flutter_hls_parser.dart';
+
+import '../export/mp4_cache_exporter.dart';
+import '../ext/string_ext.dart';
+import '../ext/uri_ext.dart';
+import 'url_parser.dart';
+import 'url_parser_factory.dart';
+import 'url_parser_m3u8.dart';
+
+/// Provides video caching and parsing utilities for different video formats.
+/// Supports parsing, caching, and pre-caching of video resources (e.g., MP4, HLS/M3U8).
+class VideoCaching {
+  /// Parses the given [uri] and handles the video request via the appropriate parser.
+  ///
+  /// [socket]: The client socket to send the response to.
+  /// [uri]: The URI of the video resource to be parsed.
+  /// [headers]: HTTP headers for the request.
+  ///
+  /// Returns a [Future] that completes when the parsing and response are done.
+  static Future<void> parse(
+    Socket socket,
+    Uri uri,
+    Map<String, String> headers,
+  ) async {
+    await UrlParserFactory.createParser(uri).parse(socket, uri, headers);
+  }
+
+  /// Whether the video is cached.
+  ///
+  /// [url]: The video URL to check.
+  /// [headers]: Optional HTTP headers to use for the request.
+  /// [cacheSegments]: Number of segments to cache.
+  ///
+  /// Returns `true` if the video is cached, otherwise `false`.
+  static Future<bool> isCached(
+    String url, {
+    Map<String, Object>? headers,
+    int cacheSegments = 2,
+  }) {
+    return UrlParserFactory.createParser(url.toSafeUri())
+        .isCached(url, headers, cacheSegments);
+  }
+
+  /// Pre-caches the video at the specified [url].
+  ///
+  /// [url]: The video URL to be pre-cached.
+  /// [headers]: Optional HTTP headers for the request.
+  /// [cacheSegments]: Number of segments to cache (default: 2).
+  /// [downloadNow]: If true, downloads segments immediately; if false, pushes to the queue (default: true).
+  /// [progressListen]: If true, returns a [StreamController] with progress updates (default: false).
+  /// [priority]: Higher-priority tasks are scheduled before lower-priority queued preloads.
+  ///
+  /// Returns a [StreamController] emitting progress/status updates, or `null` if not listening.
+  static Future<StreamController<Map>?> precache(
+    String url, {
+    Map<String, Object>? headers,
+    int cacheSegments = 2,
+    bool downloadNow = true,
+    bool progressListen = false,
+    int priority = 1,
+  }) {
+    return UrlParserFactory.createParser(url.toSafeUri()).precache(
+      url,
+      headers,
+      cacheSegments,
+      downloadNow,
+      progressListen,
+      priority,
+    );
+  }
+
+  /// Exports the cached MP4 ranges for [url] into one complete local file.
+  ///
+  /// Existing playback cache segments are reused. When [downloadMissingSegments]
+  /// is true, only missing ranges are downloaded before joining the file, and
+  /// the whole export is bounded by [timeout].
+  static Future<File?> exportCachedMp4(
+    String url, {
+    Map<String, Object>? headers,
+    Duration timeout = const Duration(seconds: 30),
+    bool downloadMissingSegments = true,
+    int priority = 5,
+  }) {
+    return Mp4CacheExporter().export(
+      url,
+      headers: headers,
+      timeout: timeout,
+      downloadMissingSegments: downloadMissingSegments,
+      priority: priority,
+    );
+  }
+
+  /// Parses the HLS master playlist from the given [url].
+  ///
+  /// [url]: The URL of the HLS master playlist.
+  /// [headers]: Optional HTTP headers for the request.
+  ///
+  /// Returns an [HlsMasterPlaylist] instance if successful, otherwise returns `null`.
+  static Future<HlsMasterPlaylist?> parseHlsMasterPlaylist(
+    String url, {
+    Map<String, Object>? headers,
+  }) async {
+    Uri uri = url.toSafeUri();
+    UrlParser parser = UrlParserFactory.createParser(uri);
+    if (parser is! UrlParserM3U8) return null;
+    HlsPlaylist? playlist = await parser.parsePlaylist(uri,
+        headers: headers, hlsKey: uri.generateMd5);
+    return playlist is HlsMasterPlaylist ? playlist : null;
+  }
+}
