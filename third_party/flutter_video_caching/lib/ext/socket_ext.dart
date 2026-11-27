@@ -1,9 +1,39 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../ext/log_ext.dart';
 
 /// HTTP request terminator sequence, used to indicate the end of HTTP headers.
 const String httpTerminal = '\r\n\r\n';
+
+/// [WorkNexus patch] Per accepted socket: completes when the player drops the
+/// connection (see [LocalProxyServer]).
+final Expando<Completer<void>> _peerGone = Expando('peerGone');
+
+/// [WorkNexus patch] Whether the player is still on the other end.
+extension SocketPeer on Socket {
+  /// Starts tracking this socket; the returned completer is completed when
+  /// its read side ends.
+  Completer<void> trackPeer() => _peerGone[this] ??= Completer<void>();
+
+  /// Whether the player has dropped this connection.
+  bool get peerClosed => _peerGone[this]?.isCompleted ?? false;
+
+  /// Closes the socket once what was written is sent — or at once when the
+  /// player has left, as closing waits for a flush a reset socket never
+  /// completes.
+  Future<void> closeOrDestroy() async {
+    if (peerClosed) {
+      destroy();
+      return;
+    }
+    try {
+      await close();
+    } catch (_) {
+      destroy();
+    }
+  }
+}
 
 /// Extension on the [Socket] class to provide additional utility methods.
 extension SocketExtension on Socket {

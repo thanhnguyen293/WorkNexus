@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/services.dart';
-
 import '../ext/log_ext.dart';
 import '../ext/socket_ext.dart';
 import '../ext/string_ext.dart';
@@ -117,58 +115,80 @@ class LocalProxyServer {
   /// extracts method, path, protocol, and headers,
   /// and delegates further processing to VideoCaching.
   Future<void> _handleConnection(Socket socket) async {
+    final peer = socket.trackPeer();
+    final request = Completer<String?>();
+    final StringBuffer buffer = StringBuffer();
+    // [WorkNexus patch] Watches the connection while the response is served
+    // (upstream stopped reading until it was done), so a player dropping it —
+    // a seek, a closed video — is seen at once and the serve loop stops
+    // instead of downloading the rest of the file for nobody.
+    void gone() {
+      if (!request.isCompleted) request.complete(null);
+      if (!peer.isCompleted) peer.complete();
+    }
+
+    socket.listen(
+      (data) {
+        if (request.isCompleted) return;
+        buffer.write(String.fromCharCodes(data));
+        final String text = buffer.toString();
+        // Wait until the end of HTTP headers (\r\n\r\n) is detected.
+        if (text.contains(httpTerminal)) {
+          request.complete(text.split(httpTerminal).first);
+        }
+      },
+      onDone: gone,
+      onError: (Object _) => gone(),
+      cancelOnError: true,
+    );
+    // A player that drops the connection with data still unread resets it,
+    // which only the write side reports.
+    socket.done.then((_) => gone(), onError: (Object _) => gone());
     try {
       logV('_handleConnection start');
-      StringBuffer buffer = StringBuffer();
-      // Read data from the socket stream.
-      await for (Uint8List data in socket) {
-        buffer.write(String.fromCharCodes(data));
+      final String? rawHeaders = await request.future;
+      if (rawHeaders == null) return;
+      List<String> lines = rawHeaders.split('\r\n');
 
-        // Wait until the end of HTTP headers (\r\n\r\n) is detected.
-        if (!buffer.toString().contains(httpTerminal)) continue;
+      // Parse the request line (e.g., GET /path HTTP/1.1).
+      List<String>? requestLine = lines.firstOrNull?.split(' ') ?? <String>[];
+      String method = requestLine.isNotEmpty ? requestLine[0] : '';
+      String path = requestLine.length > 1 ? requestLine[1] : '/';
+      String protocol = requestLine.length > 2 ? requestLine[2] : 'HTTP/1.1';
 
-        // Extract raw HTTP headers.
-        String? rawHeaders = buffer.toString().split(httpTerminal).firstOrNull;
-        List<String> lines = rawHeaders?.split('\r\n') ?? <String>[];
-
-        // Parse the request line (e.g., GET /path HTTP/1.1).
-        List<String>? requestLine = lines.firstOrNull?.split(' ') ?? <String>[];
-        String method = requestLine.isNotEmpty ? requestLine[0] : '';
-        String path = requestLine.length > 1 ? requestLine[1] : '/';
-        String protocol = requestLine.length > 2 ? requestLine[2] : 'HTTP/1.1';
-
-        // Parse HTTP headers into a map.
-        Map<String, String> headers = <String, String>{};
-        for (String line in lines.skip(1)) {
-          int index = line.indexOf(':');
-          if (index > 0) {
-            String key = line.substring(0, index).trim().toLowerCase();
-            String value = line.substring(index + 1).trim();
-            headers[key] = value;
-          }
+      // Parse HTTP headers into a map.
+      Map<String, String> headers = <String, String>{};
+      for (String line in lines.skip(1)) {
+        int index = line.indexOf(':');
+        if (index > 0) {
+          String key = line.substring(0, index).trim().toLowerCase();
+          String value = line.substring(index + 1).trim();
+          headers[key] = value;
         }
-
-        // If no headers are found, send a 400 Bad Request response.
-        if (headers.isEmpty) {
-          await send400(socket);
-          return;
-        }
-
-        // Convert the path to a Uri object.
-        Uri originUri = path.toOriginUri();
-        logD('Handling Connections ========================================> \n'
-            'protocol: $protocol, method: $method, path: $path \n'
-            'headers: $headers \n'
-            '$originUri');
-
-        // Delegate request handling to VideoCaching.
-        await VideoCaching.parse(socket, originUri, headers);
       }
+
+      // If no headers are found, send a 400 Bad Request response.
+      if (headers.isEmpty) {
+        await send400(socket);
+        return;
+      }
+
+      // Convert the path to a Uri object.
+      Uri originUri = path.toOriginUri();
+      logD('Handling Connections ========================================> \n'
+          'protocol: $protocol, method: $method, path: $path \n'
+          'headers: $headers \n'
+          '$originUri');
+
+      // Delegate request handling to VideoCaching.
+      await VideoCaching.parse(socket, originUri, headers);
     } catch (e) {
       logW('⚠ ⚠ ⚠ Socket connections close: $e');
     } finally {
-      // Ensure the socket is closed after handling.
-      await socket.close();
+      // Ensure the socket is closed after handling — both ways, so a player
+      // that keeps its end open doesn't hold the read listener.
+      await socket.closeOrDestroy();
+      socket.destroy();
     }
   }
 

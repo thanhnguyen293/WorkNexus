@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/domain/value_objects/media_request.dart';
+import '../../../../core/platform/media_playback_priority.dart';
 import '../../../../core/platform/video_playback_hold.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_state_view.dart';
@@ -80,20 +81,28 @@ class _AttachmentVideoViewState extends State<AttachmentVideoView> {
   /// Starts [player]; keeps it, playing, if it is ready and this view still
   /// shows.
   Future<bool> _use(VideoPlayerController player) async {
+    // The opening load is the wait the user sees, so background video
+    // transfers (a ticket's precache) give way from here — kept until the
+    // playing video's own hold has taken over, so they don't restart between.
+    final opening = mediaPlaybackPriority.hold();
     try {
-      await player.initialize().timeout(const Duration(seconds: 20));
-    } on Exception {
-      await player.dispose();
-      return false;
+      try {
+        await player.initialize().timeout(const Duration(seconds: 20));
+      } on Exception {
+        await player.dispose();
+        return false;
+      }
+      if (!mounted) {
+        await player.dispose();
+        return false;
+      }
+      _release = holdWhileLoading(player);
+      setState(() => _player = player);
+      await player.play();
+      return true;
+    } finally {
+      opening();
     }
-    if (!mounted) {
-      await player.dispose();
-      return false;
-    }
-    _release = holdWhileLoading(player);
-    setState(() => _player = player);
-    await player.play();
-    return true;
   }
 
   @override
