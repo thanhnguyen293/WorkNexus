@@ -98,7 +98,16 @@ class DownloadPool {
 
   HttpClientAdapter _createHttpClientAdapter() {
     try {
-      return NativeAdapter();
+      // [WorkNexus patch] NSURLSession opens 6 connections per host by
+      // default (4 on iOS); a larger pool's extra requests queued inside it,
+      // where priorities don't reach — after a seek, the segment the player
+      // was blocked on waited behind look-ahead downloads. The slack covers
+      // cancelled requests still closing.
+      return NativeAdapter(
+        createCupertinoConfiguration: () =>
+            URLSessionConfiguration.defaultSessionConfiguration()
+              ..httpMaximumConnectionsPerHost = _poolSize + 2,
+      );
     } catch (error) {
       // Some simulator/runtime combinations cannot load native_dio_adapter's
       // Objective-C dynamic library. Falling back keeps VideoProxy usable; the

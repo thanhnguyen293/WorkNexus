@@ -83,20 +83,24 @@ class _Origin {
   }
 }
 
-/// Plays [uri] from the start like a player; stops once [stopAfter] bytes
-/// arrived. Returns how many arrived and the first wrong byte's offset (-1:
-/// none).
-Future<({int bytes, int firstBad})> _play(Uri uri, {int? stopAfter}) async {
+/// Plays [uri] from byte [from] like a player; stops once [stopAfter] bytes
+/// arrived. Returns how many arrived and the first wrong byte's offset in
+/// the file (-1: none).
+Future<({int bytes, int firstBad})> _play(
+  Uri uri, {
+  int from = 0,
+  int? stopAfter,
+}) async {
   final client = HttpClient();
   var got = 0;
   var bad = -1;
   try {
     final req = await client.getUrl(uri);
-    req.headers.set('range', 'bytes=0-');
+    req.headers.set('range', 'bytes=$from-');
     final res = await req.close();
     await for (final chunk in res.timeout(const Duration(seconds: 15))) {
       for (var k = 0; k < chunk.length && bad < 0; k++) {
-        if (chunk[k] != _byteAt(got + k)) bad = got + k;
+        if (chunk[k] != _byteAt(from + got + k)) bad = from + got + k;
       }
       got += chunk.length;
       if (stopAfter != null && got >= stopAfter) break;
@@ -209,4 +213,28 @@ void main() {
       ));
     },
   );
+
+  test('a seek gets its new position\'s window at once', () async {
+    // Playing and still loading: the hold the player takes.
+    final release = priority.hold();
+    addTearDown(release);
+    await _play(await local('seek', 24), stopAfter: 2 * _mb);
+    final seekAt = origin.clock.elapsedMilliseconds;
+
+    final played = await _play(
+      await local('seek', 24),
+      from: 16 * _mb,
+      stopAfter: 2 * _mb,
+    );
+
+    expect(played.bytes, greaterThanOrEqualTo(2 * _mb));
+    expect(played.firstBad, -1);
+    // Upstream counted the old position's downloads in the window, and
+    // NSURLSession queued requests past its 6 per host: the new position got
+    // its first segment only after the old ones finished.
+    final early = origin
+        .gets('seek')
+        .where((g) => g.start >= 16 * _mb && g.atMs < seekAt + 400);
+    expect(early.length, greaterThanOrEqualTo(4));
+  });
 }

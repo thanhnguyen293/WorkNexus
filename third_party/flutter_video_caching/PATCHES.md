@@ -6,11 +6,15 @@ Only the MP4 path and the download pool are touched; HLS is as upstream.
 
 Measured against a fake origin capped at 0.4 MB/s per connection (a ZenTao
 server's rate), playing a 24 MB recording: upstream delivered ~0.47 MB/s, the
-patched copy ~2.1 MB/s.
+patched copy ~2.1 MB/s. A seek from 6 MB to 30 MB of a 40 MB file got its
+first byte after 5.6 s (4 MB after 8.4 s); patched, 2.75 s — as fast as
+opening the file there.
 
 | Problem in 1.1.6 | Fix | Files |
 |---|---|---|
 | A player kept only 2 segments downloading (hard-coded), whatever the pool size | `Config.lookAheadSegments`, set via `VideoProxy.init(lookAheadSegments:)` | `config.dart`, `video_proxy.dart`, `url_parser_mp4.dart` |
+| The window counted every queued task of the video wherever it was: after a seek, the old position's downloads filled it and the new position got a segment at a time | A window by position (the segments after the one being served); downloads no open connection's window covers drop to background priority and are cancelled after `Config.abandonGrace` | `url_parser_mp4.dart` |
+| NSURLSession (macOS/iOS) opens 6 connections per host (4 on iOS); a larger pool's extra requests queued inside it, where priorities don't apply, so a seek's segment waited behind look-ahead downloads | The session's `httpMaximumConnectionsPerHost` is the pool size plus slack | `download_pool.dart` |
 | A finished segment left the task list before it was cached, so a player asking in between downloaded it again | Cache first, then complete the task | `download_pool.dart` |
 | Each task started 500 ms late (debounced scheduler) | `scheduleRound()` runs on the next event-loop turn | `download_pool.dart` |
 | A second pause double-counted the bytes already fetched; the resumed request skipped bytes and a corrupt segment was cached | Resume from the `.tmp` file's real length | `download_pool.dart` |
