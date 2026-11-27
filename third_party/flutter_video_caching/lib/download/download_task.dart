@@ -51,6 +51,10 @@ class DownloadTask {
   /// The CancelToken used to cancel the download request (nullable).
   CancelToken? cancelToken;
 
+  /// [WorkNexus patch] Whether a request for this task is running (or still
+  /// unwinding from a cancel), so a second one is never started beside it.
+  bool inFlight = false;
+
   /// The list of data chunks downloaded (as bytes).
   List<int> data = [];
 

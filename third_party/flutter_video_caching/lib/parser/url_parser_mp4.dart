@@ -58,10 +58,17 @@ class UrlParserMp4 implements UrlParser {
     Uint8List? dataNetwork;
     task.cacheDir = await FileExt.createCachePath(task.uri.generateMd5);
     await VideoProxy.downloadManager.executeTask(task);
+    final String key = task.matchUrl;
     await for (DownloadTask taskStream in VideoProxy.downloadManager.stream) {
-      if (taskStream.status == DownloadStatus.COMPLETED &&
-          taskStream.matchUrl == task.matchUrl) {
+      if (taskStream.matchUrl != key) continue;
+      if (taskStream.status == DownloadStatus.COMPLETED) {
         dataNetwork = Uint8List.fromList(taskStream.data);
+        break;
+      }
+      // [WorkNexus patch] Upstream waited for a completion that a failed or
+      // cancelled download never sends — forever.
+      if (taskStream.status == DownloadStatus.FAILED ||
+          taskStream.status == DownloadStatus.CANCELLED) {
         break;
       }
     }
@@ -80,6 +87,7 @@ class UrlParserMp4 implements UrlParser {
     Uri uri,
     Map<String, String> headers,
   ) async {
+    _streamOpened(uri);
     try {
       // Implementation for parsing and responding to HTTP range requests.
       // Handles both Android and iOS platforms.
@@ -121,15 +129,18 @@ class UrlParserMp4 implements UrlParser {
           headers,
         );
       }
-      await socket.flush();
+      // [WorkNexus patch] Not to a player that left: a reset socket with
+      // bytes still queued never flushes, and the cleanup below never ran.
+      if (!socket.peerClosed) await socket.flush();
       return true;
     } catch (e) {
       // Handles any errors during parsing.
       logW('[UrlParserMp4] ⚠ ⚠ ⚠ parse error: $e');
       return false;
     } finally {
+      _streamClosed(uri);
       // Ensures the socket is closed after processing.
-      await socket.close();
+      await socket.closeOrDestroy();
       logD('Connection closed\n');
     }
   }
@@ -174,7 +185,7 @@ class UrlParserMp4 implements UrlParser {
         requestRangeStart - (requestRangeStart % Config.segmentSize);
     int endRange = startRange + Config.segmentSize - 1;
     int retry = 3;
-    while (downloading) {
+    while (downloading && !socket.peerClosed) {
       // The last segment's endRange must not exceed the file's last byte. When
       // the requested range end is past EOF, some origins (e.g. Aliyun OSS) reply
       // 200 + the whole file instead of a clamped 206; the serve loop then
@@ -198,19 +209,8 @@ class UrlParserMp4 implements UrlParser {
       // and never warmed the next segment, so UI "preload" did not help the
       // next swipe.
       await concurrent(task, headers, contentLength);
-      Uint8List? data = await cache(task);
-      // if the task has been added, wait for the download to complete
-      bool exitUri = VideoProxy.downloadManager.isTaskExit(task);
-      if (exitUri) {
-        while (data == null) {
-          await Future.delayed(const Duration(milliseconds: 100));
-          data = await cache(task);
-        }
-      }
-      if (data == null) {
-        task.priority += 2;
-        data = await download(task);
-      }
+      Uint8List? data = await _awaitSegment(task, socket);
+      if (socket.peerClosed) break;
       if (data == null) {
         retry--;
         if (retry == 0) {
@@ -256,7 +256,7 @@ class UrlParserMp4 implements UrlParser {
     bool partial,
     Map<String, String> headers,
   ) async {
-    final totalContentLength = await _contentLength(uri, headers);
+    final totalContentLength = await contentLength(uri, headers);
     final rangeResponse = Mp4RangeResponse.fromRequest(
       start: requestRangeStart,
       end: requestRangeEnd,
@@ -274,7 +274,7 @@ class UrlParserMp4 implements UrlParser {
         rangeResponse.start - (rangeResponse.start % Config.segmentSize);
     int endRange = startRange + Config.segmentSize - 1;
     int retry = 3;
-    while (downloading) {
+    while (downloading && !socket.peerClosed) {
       // The last segment's endRange must not exceed the file's last byte. When
       // the requested range end is past EOF, some origins (e.g. Aliyun OSS) reply
       // 200 + the whole file instead of a clamped 206; the serve loop then
@@ -295,19 +295,8 @@ class UrlParserMp4 implements UrlParser {
       );
 
       await concurrent(task, headers, totalContentLength);
-      Uint8List? data = await cache(task);
-      // if the task has been added, wait for the download to complete
-      bool exitUri = VideoProxy.downloadManager.isTaskExit(task);
-      if (exitUri) {
-        while (data == null) {
-          await Future.delayed(const Duration(milliseconds: 100));
-          data = await cache(task);
-        }
-      }
-      if (data == null) {
-        task.priority += 2;
-        data = await download(task);
-      }
+      Uint8List? data = await _awaitSegment(task, socket);
+      if (socket.peerClosed) break;
       if (data == null) {
         retry--;
         if (retry == 0) {
@@ -341,7 +330,80 @@ class UrlParserMp4 implements UrlParser {
     }
   }
 
-  Future<int> _contentLength(
+  /// [WorkNexus patch] The segment [task] covers, for the player on
+  /// [socket]: from the cache, else from its download — started, or an
+  /// existing one (a look-ahead, a precache) raised to playback priority so
+  /// neither the pool nor a hold keeps the player waiting. Null when the
+  /// download failed or was cancelled, or the player went away. Upstream
+  /// polled forever for an existing task without raising it: a held
+  /// precache stalled playback, and a failed one hung it.
+  Future<Uint8List?> _awaitSegment(DownloadTask task, Socket socket) async {
+    Uint8List? data = await cache(task);
+    if (data != null) return data;
+    task
+      ..priority = Config.playbackPriority
+      ..cacheDir = await FileExt.createCachePath(task.uri.generateMd5);
+    await VideoProxy.downloadManager.executeTask(task);
+    while (!socket.peerClosed) {
+      data = await cache(task);
+      if (data != null) {
+        // Cached by a download that finished just before this one was
+        // queued: drop the duplicate if it hasn't started.
+        if (task.status != DownloadStatus.DOWNLOADING &&
+            VideoProxy.downloadManager.allTasks.contains(task)) {
+          VideoProxy.downloadManager.cancelTaskById(task.id);
+        }
+        return data;
+      }
+      // Gone without data means failed or cancelled: a completed download
+      // is cached before it leaves the list.
+      if (!VideoProxy.downloadManager.isTaskExit(task)) return cache(task);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    return null;
+  }
+
+  /// [WorkNexus patch] Player connections open per video, by cache key.
+  /// Upstream let a closed video download on to its end.
+  static final Map<String, int> _openStreams = {};
+
+  static String _videoKey(Uri uri) =>
+      VideoProxy.urlMatcherImpl.matchCacheKey(uri).toString();
+
+  static void _streamOpened(Uri uri) {
+    final String key = _videoKey(uri);
+    _openStreams[key] = (_openStreams[key] ?? 0) + 1;
+  }
+
+  /// When a video's last connection closes, its player downloads drop to
+  /// background priority at once — another video's player goes first, and a
+  /// hold pauses them — and those no player raised again by then (a seek
+  /// closes one connection and opens another) are cancelled after
+  /// [Config.abandonGrace].
+  static void _streamClosed(Uri uri) {
+    final String key = _videoKey(uri);
+    final int open = (_openStreams[key] ?? 1) - 1;
+    if (open > 0) {
+      _openStreams[key] = open;
+      return;
+    }
+    _openStreams.remove(key);
+    final List<DownloadTask> lowered = VideoProxy.downloadManager.demoteWhere(
+      (t) => t.priority >= Config.lookAheadPriority && _videoKey(t.uri) == key,
+      Config.backgroundPriority,
+    );
+    if (lowered.isEmpty) return;
+    Timer(Config.abandonGrace, () {
+      VideoProxy.downloadManager.cancelWhere(
+        (t) => t.priority < Config.lookAheadPriority && lowered.contains(t),
+      );
+    });
+  }
+
+  /// The file's length, from the cache when known (a precache or an earlier
+  /// play stored it), else by a HEAD request. Public in the WorkNexus copy, so
+  /// a caller needn't send its own HEAD.
+  Future<int> contentLength(
     Uri uri,
     Map<String, String> headers,
   ) async {
@@ -430,7 +492,7 @@ class UrlParserMp4 implements UrlParser {
     int activeSize = VideoProxy.downloadManager.allTasks
         .where((e) => e.url == newTask.url)
         .length;
-    while (activeSize < 2) {
+    while (activeSize < Config.lookAheadSegments) {
       final nextStartRange = newTask.startRange + Config.segmentSize;
       // Bail when the total length is unknown (head failed) or the next segment
       // would start past EOF. Without the `contentLength <= 0` guard a failed
@@ -445,10 +507,21 @@ class UrlParserMp4 implements UrlParser {
         startRange: nextStartRange,
         endRange: _segmentEndRange(nextStartRange, contentLength),
         headers: headers,
+        priority: Config.lookAheadPriority,
       );
-      bool isExit = VideoProxy.downloadManager.allTasks
-          .where((e) => e.matchUrl == newTask.matchUrl)
-          .isNotEmpty;
+      final String key = newTask.matchUrl;
+      final DownloadTask? queued = VideoProxy.downloadManager.allTasks
+          .where((e) => e.matchUrl == key)
+          .firstOrNull;
+      if (queued != null) {
+        // [WorkNexus patch] A precache of this segment now feeds a player:
+        // raise it with the rest of the look-ahead.
+        if (queued.priority < newTask.priority) {
+          await VideoProxy.downloadManager.executeTask(newTask);
+        }
+        continue;
+      }
+      bool isExit = false;
       Uint8List? dataMemory = await LruCacheSingleton().memoryGet(
         newTask.matchUrl,
       );

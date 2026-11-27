@@ -37,4 +37,26 @@ class Config {
 
   /// A custom cache identifier string.
   static String customCacheId = 'Custom-Cache-ID';
+
+  /// [WorkNexus patch] How many segments of a video a player keeps
+  /// downloading at once, the one it waits for included. Upstream: 2 — a
+  /// slow-per-connection server then delivers far below a video's bitrate.
+  static int lookAheadSegments = 2;
+
+  /// [WorkNexus patch] A precache's priority (the default), and what a
+  /// closed video's downloads drop to.
+  static const int backgroundPriority = 1;
+
+  /// [WorkNexus patch] Priority of the segments a player downloads ahead;
+  /// above a precache's default (1), so holding background work
+  /// ([DownloadManager.holdBelow]) never holds these.
+  static const int lookAheadPriority = 2;
+
+  /// [WorkNexus patch] Priority of the segment a player is waiting for.
+  static const int playbackPriority = 3;
+
+  /// [WorkNexus patch] How long a video's player downloads outlive its last
+  /// open connection before they are cancelled. A seek closes a connection
+  /// and opens another, so not at once.
+  static Duration abandonGrace = const Duration(seconds: 3);
 }

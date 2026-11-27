@@ -8,8 +8,8 @@ import 'package:synchronized/synchronized.dart';
 
 import '../cache/lru_cache_singleton.dart';
 import '../ext/file_ext.dart';
-import '../ext/gesture_ext.dart';
 import '../ext/log_ext.dart';
+import '../global/config.dart';
 import 'download_status.dart';
 import 'download_task.dart';
 
@@ -41,6 +41,13 @@ class DownloadPool {
   /// The last time progress was updated.
   DateTime _progressTime = DateTime.now();
 
+  /// [WorkNexus patch] Tasks below this priority are held: not started, and
+  /// paused if running. 0 holds nothing.
+  int _minPriority = 0;
+
+  /// Whether a [roundTask] is already queued by [scheduleRound].
+  bool _roundScheduled = false;
+
   /// Constructs a [DownloadPool] with the specified [poolSize].
   /// Throws an [ArgumentError] if the pool size is less than or equal to zero.
   DownloadPool({int poolSize = MAX_POOL_SIZE}) : _poolSize = poolSize {
@@ -49,6 +56,28 @@ class DownloadPool {
     }
     _client = Dio()..httpClientAdapter = _createHttpClientAdapter();
     _streamController = StreamController.broadcast();
+  }
+
+  /// [WorkNexus patch] Holds every task below [value] (see [_minPriority]):
+  /// background downloads give way while a player waits for data.
+  int get minPriority => _minPriority;
+
+  set minPriority(int value) {
+    if (value == _minPriority) return;
+    _minPriority = value;
+    scheduleRound();
+  }
+
+  /// [WorkNexus patch] Runs [roundTask] on the next event-loop turn, once for
+  /// any number of calls before it. Upstream debounced it by 500 ms, which
+  /// delayed the start of every segment by half a second.
+  void scheduleRound() {
+    if (_roundScheduled) return;
+    _roundScheduled = true;
+    Timer.run(() {
+      _roundScheduled = false;
+      roundTask();
+    });
   }
 
   /// Returns the stream controller for task updates.
@@ -115,7 +144,7 @@ class DownloadPool {
     } else if (existTask == null) {
       await addTask(task);
     }
-    FunctionProxy.debounce(roundTask);
+    scheduleRound();
     return task;
   }
 
@@ -131,116 +160,168 @@ class DownloadPool {
     if (existingTask.status == DownloadStatus.PAUSED) {
       existingTask.status = DownloadStatus.IDLE;
     }
-    FunctionProxy.debounce(roundTask);
+    scheduleRound();
   }
 
   void updateTaskById(String taskId, DownloadStatus status) {
     final task = findTaskById(taskId);
-    if (task != null) {
-      task.status = status;
-      if (status == DownloadStatus.DOWNLOADING) {
-        if (downloadingTasks.length > _poolSize) {
-          DownloadTask lowest = downloadingTasks
-              .where((e) => e.id != taskId)
-              .reduce((a, b) => a.priority < b.priority ? a : b);
-          lowest.status = DownloadStatus.PAUSED;
-        }
-        _download(task);
-      } else if (status == DownloadStatus.COMPLETED ||
-          status == DownloadStatus.FAILED ||
-          status == DownloadStatus.CANCELLED) {
-        _taskList.removeWhere((task) => task.id == taskId);
-        _notifyTask(task);
-      }
-    }
+    if (task != null) _updateTask(task, status);
   }
 
   void updateTaskByUrl(String url, DownloadStatus status) {
     final task = findTaskByUrl(url);
-    if (task != null) {
-      task.status = status;
-      if (status == DownloadStatus.DOWNLOADING) {
-        if (downloadingTasks.length > _poolSize) {
-          DownloadTask lowest = downloadingTasks
-              .where((e) => e.url != url)
-              .reduce((a, b) => a.priority < b.priority ? a : b);
-          lowest.status = DownloadStatus.PAUSED;
+    if (task != null) _updateTask(task, status);
+  }
+
+  /// [WorkNexus patch] A pause or cancel stops the request at once (upstream
+  /// waited for its next progress event, and a cancel never stopped it), and
+  /// a resume goes through the scheduler: upstream started the request
+  /// directly, even for a task already downloading, so two requests wrote
+  /// the same `.tmp` file.
+  void _updateTask(DownloadTask task, DownloadStatus status) {
+    switch (status) {
+      case DownloadStatus.DOWNLOADING:
+        if (task.status != DownloadStatus.DOWNLOADING) {
+          task.status = DownloadStatus.IDLE;
         }
-        _download(task);
-      } else if (status == DownloadStatus.COMPLETED ||
-          status == DownloadStatus.FAILED ||
-          status == DownloadStatus.CANCELLED) {
-        _taskList.removeWhere((task) => task.url == url);
+        scheduleRound();
+      case DownloadStatus.PAUSED:
+        task.status = DownloadStatus.PAUSED;
+        task.cancelToken?.cancel();
+      case DownloadStatus.COMPLETED ||
+            DownloadStatus.FAILED ||
+            DownloadStatus.CANCELLED:
+        task.status = status;
+        task.cancelToken?.cancel();
+        _taskList.remove(task);
         _notifyTask(task);
-      }
+        scheduleRound();
+      case DownloadStatus.IDLE:
+        task.status = status;
     }
   }
 
   /// Schedules the pool to run tasks, ensuring only one thread runs this logic at a time.
+  ///
+  /// [WorkNexus patch] Free slots go to the highest-priority tasks at or
+  /// above [_minPriority]; a task below it that is running is paused (its
+  /// `.tmp` file kept to resume from). A running task gives up its slot only
+  /// to a segment a player is blocked on ([Config.playbackPriority]) —
+  /// upstream preempted it for any higher priority, so every look-ahead
+  /// segment a player queued restarted some background download.
   Future<void> roundTask() async {
     await _lock.synchronized(() async {
       if (_taskList.isEmpty) return;
-      _taskList.sort((a, b) => b.priority - a.priority);
-      if (_taskList.length > _poolSize) {
-        for (var task in _taskList.sublist(_poolSize)) {
-          if (task.status == DownloadStatus.DOWNLOADING) {
-            task.status = DownloadStatus.PAUSED;
-            _notifyTask(task);
-          }
+      _taskList.sort(_byPriority);
+      for (final task in [..._taskList]) {
+        if (task.status == DownloadStatus.DOWNLOADING &&
+            task.priority < _minPriority) {
+          _pause(task);
         }
       }
-      if (downloadingTasks.length < _poolSize) {
-        for (int i = 0; i < _taskList.length; i++) {
-          DownloadTask task = _taskList[i];
-          if (task.status == DownloadStatus.DOWNLOADING) continue;
-          if (downloadingTasks.length >= _poolSize) {
-            task.status = DownloadStatus.PAUSED;
-            _notifyTask(task);
-            continue;
-          }
-          task.status = DownloadStatus.DOWNLOADING;
-          _notifyTask(task);
-          _download(task);
+      var running = downloadingTasks.length;
+      for (final task in [..._taskList]) {
+        if (task.status == DownloadStatus.DOWNLOADING) continue;
+        if (task.priority < _minPriority) continue;
+        if (running < _poolSize) {
+          running++;
+          _start(task);
+          continue;
         }
+        if (task.priority < Config.playbackPriority) break;
+        // The lowest-priority download below it (the list is sorted).
+        final DownloadTask? victim = _taskList
+            .where(
+              (t) =>
+                  t.status == DownloadStatus.DOWNLOADING &&
+                  t.priority < task.priority,
+            )
+            .lastOrNull;
+        if (victim == null) break;
+        _pause(victim);
+        _start(task);
       }
     });
   }
 
+  void _start(DownloadTask task) {
+    task.status = DownloadStatus.DOWNLOADING;
+    _notifyTask(task);
+    unawaited(_download(task));
+  }
+
+  void _pause(DownloadTask task) {
+    task.status = DownloadStatus.PAUSED;
+    task.cancelToken?.cancel();
+    _notifyTask(task);
+  }
+
+  /// Highest priority first; among equals a running task before a waiting
+  /// one (so an unstable sort never swaps a download for its twin), then the
+  /// oldest first.
+  static int _byPriority(DownloadTask a, DownloadTask b) {
+    final byPriority = b.priority - a.priority;
+    if (byPriority != 0) return byPriority;
+    final aRuns = a.status == DownloadStatus.DOWNLOADING ? 0 : 1;
+    final bRuns = b.status == DownloadStatus.DOWNLOADING ? 0 : 1;
+    if (aRuns != bRuns) return aRuns - bRuns;
+    return (int.tryParse(a.id) ?? 0) - (int.tryParse(b.id) ?? 0);
+  }
+
+  /// [WorkNexus patch] One request per task at a time, resuming from the
+  /// bytes its `.tmp` file really holds. Upstream added up byte counters on
+  /// each pause and double-counted on the second one, so the resumed request
+  /// skipped bytes and a corrupt segment was cached.
   Future<void> _download(DownloadTask task) async {
-    DateTime startTime = DateTime.now();
-    if (task.cancelToken == null) {
-      task.cancelToken = CancelToken();
-    }
-    bool append = task.cachedBytes > 0;
-    Map<String, Object> headers = _downloadHeader(task);
+    if (task.inFlight) return;
+    task.inFlight = true;
+    final DateTime startTime = DateTime.now();
+    final CancelToken cancelToken = task.cancelToken = CancelToken();
     // Write to a temp file and atomically rename it to the final name once the
     // download completes. An interruption (or a killed process) leaves only a
     // `.tmp` file, never a half-written segment under its final name (`.tmp` is
     // skipped during startup restore — see LruCacheSingleton._storageInit).
     final String tmpPath = '${task.savePath}.tmp';
-    await _client.download(
-      task.url,
-      tmpPath,
-      cancelToken: task.cancelToken,
-      fileAccessMode: append ? FileAccessMode.append : FileAccessMode.write,
-      deleteOnError: false,
-      onReceiveProgress: (received, total) {
-        _downloadProgress(task, received, total);
-        if (task.status == DownloadStatus.PAUSED ||
-            task.status == DownloadStatus.COMPLETED) {
-          task.cachedBytes += task.downloadedBytes;
-          task.downloadedBytes = task.cachedBytes;
-          task.cancelToken?.cancel();
-          task.cancelToken = null;
-          _updateProgress(task);
-        }
-      },
-      options: Options(headers: headers),
-    ).then((response) async {
+    var retry = false;
+    try {
+      final File tmpFile = File(tmpPath);
+      var have = await tmpFile.exists() ? await tmpFile.length() : 0;
+      final int? end = task.endRange;
+      if (end != null && have >= end - task.startRange + 1) {
+        // Whole or overlong: nothing to resume — fetch it again.
+        await tmpFile.delete();
+        have = 0;
+      }
+      task.cachedBytes = have;
+      task.downloadedBytes = have;
+      await _client.download(
+        task.url,
+        tmpPath,
+        cancelToken: cancelToken,
+        fileAccessMode: have > 0 ? FileAccessMode.append : FileAccessMode.write,
+        deleteOnError: false,
+        onReceiveProgress: (received, total) {
+          if (task.status != DownloadStatus.DOWNLOADING) {
+            cancelToken.cancel();
+            return;
+          }
+          _downloadProgress(task, received, total);
+        },
+        options: Options(headers: _downloadHeader(task)),
+      );
       await _downloadResponse(task, startTime);
-    }).catchError((error) {
-      _downloadError(task, error);
-    });
+    } catch (error) {
+      retry = _downloadError(task, error);
+    } finally {
+      task.inFlight = false;
+      if (identical(task.cancelToken, cancelToken)) task.cancelToken = null;
+    }
+    // A retry, or asked to run again while this request was still unwinding
+    // from a pause: start it now that the `.tmp` file has settled.
+    final rerun = cancelToken.isCancelled &&
+        task.status == DownloadStatus.DOWNLOADING &&
+        _taskList.contains(task);
+    if (retry || rerun) unawaited(_download(task));
   }
 
   Map<String, Object> _downloadHeader(DownloadTask task) {
@@ -297,49 +378,48 @@ class DownloadPool {
     }
     await tmpFile.rename(task.savePath);
     task.progress = 1;
-    task.data = saveFile.readAsBytesSync();
-    updateTaskById(task.id, DownloadStatus.COMPLETED);
+    task.data = await saveFile.readAsBytes();
     try {
-      // Cache registration is an optimization after the network download has
-      // succeeded. Do not turn cache bookkeeping failures into download errors.
+      // [WorkNexus patch] Cached before the task leaves the list: a reader
+      // that no longer finds the task must find the data. Upstream removed it
+      // first, and a player asking in between downloaded the segment again.
       await LruCacheSingleton().memoryPut(
         task.matchUrl,
         Uint8List.fromList(task.data),
       );
       await LruCacheSingleton().storagePut(task.matchUrl, saveFile);
     } catch (e) {
+      // Cache registration is an optimization after the network download has
+      // succeeded. Do not turn cache bookkeeping failures into download errors.
       logE('[DownloadPool] Cache registration failed: $e');
     }
+    if (_taskList.contains(task)) _updateTask(task, DownloadStatus.COMPLETED);
     int duration = DateTime.now().difference(startTime).inSeconds;
     logV('[DownloadPool] Download done time: $duration s: ${task.toString()}');
-    FunctionProxy.debounce(roundTask);
   }
 
-  void _downloadError(DownloadTask task, dynamic error) {
-    // Partial data lives in the `.tmp` file: keep it on cancel (= pause) so the
-    // download can resume, delete it on a real failure, and never let it reach
-    // the final name.
+  /// Returns whether to retry. A pause or cancel keeps the partial `.tmp`
+  /// file — a later request for the segment resumes from it — while a real
+  /// failure deletes it.
+  bool _downloadError(DownloadTask task, dynamic error) {
     File tmpFile = File('${task.savePath}.tmp');
-    // Check if the download was cancelled.
     if (error is DioException && CancelToken.isCancel(error)) {
-      logV('[DownloadPool] Download file size: '
-          '${tmpFile.existsSync() ? tmpFile.lengthSync() : 0}');
       logV('[DownloadPool] Download ${task.status.name}: ${task.url}');
-    } else {
-      // Handle HTTP errors and retry logic.
-      if (tmpFile.existsSync()) tmpFile.deleteSync();
-      updateTaskById(task.id, DownloadStatus.FAILED);
-      logV('[DownloadPool] Download error: $error');
-      if (error is DioException && error.response?.statusCode == 416) {
-        task.retryTimes = 0;
-      }
-      if (task.retryTimes > 0) {
-        logV('[DownloadPool] Download retry ${task.retryTimes}: ${task.uri}');
-        task.retryTimes--;
-        _download(task);
-      }
-      FunctionProxy.debounce(roundTask);
+      return false;
     }
+    if (tmpFile.existsSync()) tmpFile.deleteSync();
+    logV('[DownloadPool] Download error: $error');
+    if (error is DioException && error.response?.statusCode == 416) {
+      task.retryTimes = 0;
+    }
+    if (!_taskList.contains(task)) return false;
+    if (task.retryTimes > 0) {
+      logV('[DownloadPool] Download retry ${task.retryTimes}: ${task.uri}');
+      task.retryTimes--;
+      return true;
+    }
+    _updateTask(task, DownloadStatus.FAILED);
+    return false;
   }
 
   void _updateProgress(DownloadTask task) {

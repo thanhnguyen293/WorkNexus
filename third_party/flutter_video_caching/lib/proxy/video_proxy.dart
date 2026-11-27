@@ -45,6 +45,7 @@ class VideoProxy {
   /// [logPrint]: Enables or disables logging output (default: false).<br>
   /// [segmentSize]: Size of each video segment in MB (default: 2).<br>
   /// [maxConcurrentDownloads]: Maximum number of concurrent downloads (default: 8).<br>
+  /// [lookAheadSegments]: Segments a player downloads at once (default: 2).<br>
   /// [urlMatcher]: Optional custom URL matcher for video URL filtering.<br>
   /// [httpClientBuilder]: Optional custom HTTP client builder for creating HTTP clients.<br>
   static Future<void> init({
@@ -56,6 +57,7 @@ class VideoProxy {
     bool logPrint = false,
     int segmentSize = 2,
     int maxConcurrentDownloads = 4,
+    int lookAheadSegments = 2,
     UrlMatcher? urlMatcher,
     HttpClientBuilder? httpClientBuilder,
   }) async {
@@ -63,6 +65,7 @@ class VideoProxy {
     Config.memoryCacheSize = maxMemoryCacheSize * Config.mbSize;
     Config.storageCacheSize = maxStorageCacheSize * Config.mbSize;
     Config.segmentSize = segmentSize * Config.mbSize;
+    Config.lookAheadSegments = lookAheadSegments;
 
     // Set the cache root path for file operations.
     FileExt.cacheRootPath = cacheDir;

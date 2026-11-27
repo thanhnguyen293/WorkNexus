@@ -26,21 +26,25 @@ class VideoStreamProxy {
     this.maxStorageMb = 1024,
     MediaPlaybackPriority? priority,
   }) : _cacheDir =
-           cacheDir ??
-           Directory('${Directory.systemTemp.path}/worknexus_video_stream'),
+           cacheDir ?? Directory('$_tempRoot/worknexus_video_stream_v2'),
+       // Segments the old downloader resumed could be missing bytes (it
+       // double-counted a twice-paused download), so its cache is dropped.
+       _legacyDir = cacheDir == null
+           ? Directory('$_tempRoot/worknexus_video_stream')
+           : null,
        _priority = priority ?? mediaPlaybackPriority;
 
+  static String get _tempRoot => Directory.systemTemp.path;
+
   final Directory _cacheDir;
+  final Directory? _legacyDir;
   final int maxStorageMb;
   final MediaPlaybackPriority _priority;
   Future<bool>? _started;
 
   /// The precache's priority in the download pool; a player's own requests
-  /// rank higher, so pausing these never stalls the video being watched.
+  /// rank higher, so holding these never stalls the video being watched.
   static const _backgroundPriority = 1;
-
-  /// Precache downloads paused for a playing video, resumed once it loaded.
-  final _paused = <String>{};
 
   /// [origin] rewritten to go through the proxy; null when the proxy can't
   /// start (the caller then downloads the whole file instead).
@@ -74,7 +78,8 @@ class VideoStreamProxy {
         // downloader, and a player then waits on them forever.
       );
       final parser = UrlParserMp4();
-      final length = await parser.head(origin, headers: headers);
+      // Stored by the precache above: no second HEAD.
+      final length = await parser.contentLength(origin, headers);
       if (length <= _segmentBytes * segments) return;
       // Keyed as playback asks for it: segment-aligned, clamped to the end.
       final last = (length - 1) - (length - 1) % _segmentBytes;
@@ -94,22 +99,10 @@ class VideoStreamProxy {
     }
   }
 
-  /// Pauses the precache while a playing video loads; resumes it after.
+  /// Holds the precache while a playing video loads (the pool neither starts
+  /// nor runs it), and lets it go after.
   void _onPlayback(bool busy) {
-    final downloads = VideoProxy.downloadManager;
-    if (busy) {
-      for (final task in [...downloads.downloadingTasks]) {
-        if (task.priority > _backgroundPriority) continue;
-        _paused.add(task.id);
-        downloads.pauseTaskById(task.id);
-      }
-      return;
-    }
-    final waiting = {for (final t in downloads.allTasks) t.id};
-    for (final id in _paused) {
-      if (waiting.contains(id)) downloads.resumeTaskById(id);
-    }
-    _paused.clear();
+    VideoProxy.downloadManager.holdBelow(busy ? _backgroundPriority + 1 : 0);
   }
 
   /// Bytes of video kept on disk.
@@ -131,6 +124,10 @@ class VideoStreamProxy {
   Future<bool> _start() async {
     try {
       await _cacheDir.create(recursive: true);
+      final legacy = _legacyDir;
+      if (legacy != null && await legacy.exists()) {
+        await legacy.delete(recursive: true);
+      }
       await VideoProxy.init(
         cacheDir: _cacheDir.path,
         maxStorageCacheSize: maxStorageMb,
@@ -141,6 +138,9 @@ class VideoStreamProxy {
         // from ~10-15 s (2 MB × 4) to ~5.5-7 s (1 MB × 8).
         segmentSize: _segmentMb,
         maxConcurrentDownloads: 8,
+        // The playing video's own window: upstream fetched 2 segments at a
+        // time (~0.5 MB/s here), below a phone recording's ~1.8 MB/s.
+        lookAheadSegments: 8,
         urlMatcher: _AnyVideoIsMp4(),
       );
       _priority.changes.listen(_onPlayback);

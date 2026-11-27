@@ -59,7 +59,8 @@ dependencies:
   # Streams an attachment video through a localhost caching proxy, so it plays
   # while it downloads instead of after the whole file is fetched. Its
   # downloader forwards the player's headers (the ZenTao session) upstream.
-  # Vendored 1.1.6 (third_party/flutter_video_caching).
+  # Vendored 1.1.6 with fixes for slow / stalled playback — see
+  # third_party/flutter_video_caching/PATCHES.md.
   flutter_video_caching:
     path: third_party/flutter_video_caching
   # Telegram sticker import: renders an animated (.tgs) sticker's Lottie frames

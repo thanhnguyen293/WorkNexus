@@ -39,6 +39,40 @@ class DownloadManager {
     return _downloadPool.roundTask();
   }
 
+  /// [WorkNexus patch] Holds every task below [priority] — not started, and
+  /// paused if running — until called again with a lower one (0 holds
+  /// nothing). Lets a playing video have the network over background
+  /// precaches; the scheduler would otherwise restart a paused task at its
+  /// next round.
+  void holdBelow(int priority) {
+    _downloadPool.minPriority = priority;
+  }
+
+  /// [WorkNexus patch] Lowers every task [test] matches to [priority], and
+  /// reschedules at once (a hold then pauses them). Returns the tasks lowered.
+  List<DownloadTask> demoteWhere(
+    bool Function(DownloadTask task) test,
+    int priority,
+  ) {
+    final lowered = [
+      for (final task in allTasks)
+        if (test(task) && task.priority > priority) task,
+    ];
+    for (final task in lowered) {
+      task.priority = priority;
+    }
+    if (lowered.isNotEmpty) _downloadPool.scheduleRound();
+    return lowered;
+  }
+
+  /// [WorkNexus patch] Cancels every task [test] matches, stopping its
+  /// request.
+  void cancelWhere(bool Function(DownloadTask task) test) {
+    for (final task in [...allTasks]) {
+      if (test(task)) cancelTaskById(task.id);
+    }
+  }
+
   /// Pauses a task by its [taskId].
   void pauseTaskById(String taskId) {
     _downloadPool.updateTaskById(taskId, DownloadStatus.PAUSED);
